@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { httpsCallable, getFunctions } from 'firebase/functions'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
-import { getStripe, PLAN_FEATURES, type PlanType } from '../../lib/stripe'
-
-const functions = getFunctions()
+import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 
 const plans: { id: PlanType; popular?: boolean }[] = [
   { id: 'free' },
@@ -71,11 +68,6 @@ export default function Plan() {
       // Redirect to Stripe Checkout
       if (data.url) {
         window.location.href = data.url
-      } else {
-        const stripe = await getStripe()
-        if (stripe && data.sessionId) {
-          await stripe.redirectToCheckout({ sessionId: data.sessionId })
-        }
       }
     } catch (error) {
       console.error('Error creating checkout session:', error)

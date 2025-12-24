@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore'
+import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import type { Store, User } from '../../types'
+import type { Store } from '../../types'
 
 interface Stats {
   totalStores: number

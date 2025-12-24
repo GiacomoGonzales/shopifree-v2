@@ -4,13 +4,6 @@ import { db } from '../../lib/firebase'
 import { PLAN_FEATURES } from '../../lib/stripe'
 import type { Store } from '../../types'
 
-interface SubscriptionStats {
-  totalRevenue: number
-  activeSubscriptions: number
-  canceledThisMonth: number
-  mrr: number
-}
-
 export default function AdminPlans() {
   const [stores, setStores] = useState<(Store & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
