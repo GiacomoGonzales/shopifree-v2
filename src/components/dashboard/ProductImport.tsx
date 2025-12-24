@@ -110,7 +110,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
         const parsedProducts: ImportProduct[] = []
         const parseErrors: string[] = []
 
-        jsonData.forEach((row: Record<string, unknown>, index: number) => {
+        (jsonData as Record<string, unknown>[]).forEach((row, index) => {
           const rowNum = index + 2 // Excel rows start at 1, plus header
 
           // Get name (required)
@@ -227,20 +227,20 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
           name: product.name,
           slug: generateSlug(product.name),
           price: product.price,
-          description: product.description || null,
-          sku: product.sku || null,
-          barcode: product.barcode || null,
-          stock: product.stock ?? null,
+          description: product.description || undefined,
+          sku: product.sku || undefined,
+          barcode: product.barcode || undefined,
+          stock: product.stock,
           trackStock: product.stock !== undefined,
-          cost: product.cost ?? null,
-          comparePrice: product.comparePrice ?? null,
-          brand: product.brand || null,
+          cost: product.cost,
+          comparePrice: product.comparePrice,
+          brand: product.brand || undefined,
           tags: product.tags ? product.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-          weight: product.weight ?? null,
-          categoryId,
+          weight: product.weight,
+          categoryId: categoryId || undefined,
           active: product.active ?? true,
           featured: product.featured ?? false,
-          image: null,
+          image: undefined,
         })
         successCount++
       } catch (error) {
