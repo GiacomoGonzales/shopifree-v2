@@ -2,21 +2,21 @@ import { Link } from 'react-router-dom'
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-[#fafbfc] relative overflow-hidden">
+    <div className="min-h-screen relative">
       {/* Animated background gradient mesh */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
         {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#f0f7ff] to-[#e8f4fc]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#e0f0ff]"></div>
 
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f06_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f06_1px,transparent_1px)] bg-[size:3rem_3rem]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f08_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f08_1px,transparent_1px)] bg-[size:3rem_3rem]"></div>
 
-        {/* Animated gradient blobs */}
-        <div className="absolute top-0 -left-20 w-[600px] h-[600px] bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] rounded-full mix-blend-multiply filter blur-[120px] opacity-30 animate-blob"></div>
-        <div className="absolute top-20 -right-20 w-[500px] h-[500px] bg-gradient-to-bl from-[#1e3a5f] to-[#3b82f6] rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-[50%] left-[20%] w-[400px] h-[400px] bg-gradient-to-tr from-[#a78bfa] to-[#818cf8] rounded-full mix-blend-multiply filter blur-[120px] opacity-20 animate-blob animation-delay-4000"></div>
-        <div className="absolute bottom-0 right-[30%] w-[500px] h-[500px] bg-gradient-to-tl from-[#2d6cb5] to-[#38bdf8] rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-[20%] -left-20 w-[350px] h-[350px] bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-blob"></div>
+        {/* Gradient blobs - more visible */}
+        <div className="absolute -top-40 -left-40 w-[700px] h-[700px] bg-[#38bdf8] rounded-full blur-[150px] opacity-40"></div>
+        <div className="absolute top-[20%] -right-40 w-[600px] h-[600px] bg-[#6366f1] rounded-full blur-[150px] opacity-30"></div>
+        <div className="absolute top-[60%] left-[10%] w-[500px] h-[500px] bg-[#a78bfa] rounded-full blur-[150px] opacity-25"></div>
+        <div className="absolute -bottom-40 right-[20%] w-[600px] h-[600px] bg-[#0ea5e9] rounded-full blur-[150px] opacity-35"></div>
+        <div className="absolute bottom-[30%] -left-40 w-[400px] h-[400px] bg-[#22d3ee] rounded-full blur-[120px] opacity-30"></div>
       </div>
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
@@ -249,7 +249,7 @@ export default function Landing() {
               }
             ].map((item) => (
               <div key={item.step} className="relative group">
-                <div className="bg-white rounded-2xl p-8 border border-gray-100 hover:border-[#38bdf8]/50 hover:shadow-xl hover:shadow-[#38bdf8]/10 transition-all duration-300">
+                <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-white/50 hover:border-[#38bdf8]/50 hover:shadow-xl hover:shadow-[#38bdf8]/10 transition-all duration-300 shadow-lg shadow-gray-200/30">
                   <div className="w-16 h-16 bg-gradient-to-br from-[#38bdf8]/20 to-[#1e3a5f]/10 rounded-2xl flex items-center justify-center text-[#1e3a5f] mb-6 group-hover:scale-110 transition-transform">
                     {item.icon}
                   </div>
@@ -346,7 +346,7 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Free */}
-            <div className="bg-white rounded-3xl p-8 border-2 border-gray-100 hover:border-[#38bdf8]/30 transition-colors">
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border-2 border-white/50 hover:border-[#38bdf8]/30 transition-colors shadow-lg shadow-gray-200/50">
               <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">Gratis</h3>
               <p className="text-4xl font-bold text-[#1e3a5f] mb-1">
                 $0
@@ -406,7 +406,7 @@ export default function Landing() {
             </div>
 
             {/* Business */}
-            <div className="bg-white rounded-3xl p-8 border-2 border-gray-100 hover:border-[#38bdf8]/30 transition-colors">
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border-2 border-white/50 hover:border-[#38bdf8]/30 transition-colors shadow-lg shadow-gray-200/50">
               <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">Business</h3>
               <p className="text-4xl font-bold text-[#1e3a5f] mb-1">
                 $9.99
