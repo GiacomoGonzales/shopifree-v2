@@ -142,8 +142,17 @@ export interface Product {
   name: string
   slug: string
   description?: string | null
+  shortDescription?: string | null  // Descripción corta para listados
   price: number
-  comparePrice?: number         // Precio tachado
+  comparePrice?: number         // Precio tachado (antes)
+  cost?: number                 // Costo del producto (para calcular ganancia)
+
+  // === INVENTARIO ===
+  sku?: string                  // Código único del producto
+  barcode?: string              // Código de barras (EAN, UPC)
+  stock?: number                // Cantidad en inventario
+  trackStock?: boolean          // Si se controla el stock
+  lowStockAlert?: number        // Alerta cuando stock sea menor a este número
 
   // === IMÁGENES ===
   image?: string | null         // Imagen principal
@@ -151,7 +160,16 @@ export interface Product {
 
   // === ORGANIZACIÓN ===
   categoryId?: string | null
+  brand?: string                // Marca del producto
   tags?: string[]
+
+  // === FÍSICO (para envíos) ===
+  weight?: number               // Peso en gramos
+  dimensions?: {
+    length?: number             // Largo en cm
+    width?: number              // Ancho en cm
+    height?: number             // Alto en cm
+  }
 
   // === VARIACIONES (para ropa/retail) ===
   hasVariations?: boolean
@@ -160,6 +178,10 @@ export interface Product {
   // === MODIFICADORES (para restaurantes) ===
   hasModifiers?: boolean
   modifierGroups?: ModifierGroup[]
+
+  // === SEO ===
+  metaTitle?: string
+  metaDescription?: string
 
   // === ESTADO ===
   active: boolean

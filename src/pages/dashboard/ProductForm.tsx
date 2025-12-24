@@ -20,8 +20,9 @@ export default function ProductForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // Form state
+  // === CAMPOS BÁSICOS ===
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
@@ -29,25 +30,61 @@ export default function ProductForm() {
   const [categoryId, setCategoryId] = useState('')
   const [active, setActive] = useState(true)
 
+  // === CAMPOS AVANZADOS ===
+  const [comparePrice, setComparePrice] = useState('')
+  const [cost, setCost] = useState('')
+  const [sku, setSku] = useState('')
+  const [barcode, setBarcode] = useState('')
+  const [stock, setStock] = useState('')
+  const [trackStock, setTrackStock] = useState(false)
+  const [lowStockAlert, setLowStockAlert] = useState('')
+  const [brand, setBrand] = useState('')
+  const [tags, setTags] = useState('')
+  const [weight, setWeight] = useState('')
+  const [length, setLength] = useState('')
+  const [width, setWidth] = useState('')
+  const [height, setHeight] = useState('')
+  const [featured, setFeatured] = useState(false)
+
   useEffect(() => {
     const fetchData = async () => {
       if (!store) return
 
       try {
-        // Fetch categories
         const categoriesData = await categoryService.getAll(store.id)
         setCategories(categoriesData)
 
-        // If editing, fetch product
         if (isEditing && productId) {
           const productData = await productService.get(store.id, productId)
           if (productData) {
+            // Básicos
             setName(productData.name)
             setPrice(productData.price.toString())
             setDescription(productData.description || '')
             setImage(productData.image || '')
             setCategoryId(productData.categoryId || '')
             setActive(productData.active)
+
+            // Avanzados
+            setComparePrice(productData.comparePrice?.toString() || '')
+            setCost(productData.cost?.toString() || '')
+            setSku(productData.sku || '')
+            setBarcode(productData.barcode || '')
+            setStock(productData.stock?.toString() || '')
+            setTrackStock(productData.trackStock || false)
+            setLowStockAlert(productData.lowStockAlert?.toString() || '')
+            setBrand(productData.brand || '')
+            setTags(productData.tags?.join(', ') || '')
+            setWeight(productData.weight?.toString() || '')
+            setLength(productData.dimensions?.length?.toString() || '')
+            setWidth(productData.dimensions?.width?.toString() || '')
+            setHeight(productData.dimensions?.height?.toString() || '')
+            setFeatured(productData.featured || false)
+
+            // Si hay datos avanzados, mostrar la sección
+            if (productData.sku || productData.cost || productData.stock || productData.brand) {
+              setShowAdvanced(true)
+            }
           }
         }
       } catch (error) {
@@ -66,7 +103,6 @@ export default function ProductForm() {
 
     setUploading(true)
     try {
-      // Upload to Cloudinary
       const formData = new FormData()
       formData.append('file', file)
       formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
@@ -111,6 +147,23 @@ export default function ProductForm() {
         image: image || null,
         categoryId: categoryId || null,
         active,
+        // Avanzados
+        comparePrice: comparePrice ? parseFloat(comparePrice) : null,
+        cost: cost ? parseFloat(cost) : null,
+        sku: sku || null,
+        barcode: barcode || null,
+        stock: stock ? parseInt(stock) : null,
+        trackStock,
+        lowStockAlert: lowStockAlert ? parseInt(lowStockAlert) : null,
+        brand: brand || null,
+        tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        weight: weight ? parseFloat(weight) : null,
+        dimensions: (length || width || height) ? {
+          length: length ? parseFloat(length) : null,
+          width: width ? parseFloat(width) : null,
+          height: height ? parseFloat(height) : null,
+        } : null,
+        featured,
       }
 
       if (isEditing && productId) {
@@ -153,6 +206,8 @@ export default function ProductForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ========== CAMPOS BÁSICOS ========== */}
+
         {/* Image upload */}
         <div>
           <label className="block text-sm font-semibold text-[#1e3a5f] mb-2">
@@ -224,7 +279,7 @@ export default function ProductForm() {
         {/* Price */}
         <div>
           <label htmlFor="price" className="block text-sm font-semibold text-[#1e3a5f] mb-1">
-            Precio *
+            Precio de venta *
           </label>
           <input
             id="price"
@@ -288,6 +343,265 @@ export default function ProductForm() {
           <span className="text-sm text-[#1e3a5f] font-medium">
             {active ? 'Visible en el catalogo' : 'Oculto del catalogo'}
           </span>
+        </div>
+
+        {/* ========== OPCIONES AVANZADAS ========== */}
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
+          >
+            <span className="text-sm font-semibold text-[#1e3a5f] flex items-center gap-2">
+              <svg className="w-5 h-5 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Opciones avanzadas
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showAdvanced && (
+            <div className="p-4 space-y-5 border-t border-gray-200">
+              {/* Precios */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Precios</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="comparePrice" className="block text-sm font-medium text-gray-700 mb-1">
+                      Precio anterior
+                    </label>
+                    <input
+                      id="comparePrice"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={comparePrice}
+                      onChange={(e) => setComparePrice(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Se mostrara tachado</p>
+                  </div>
+                  <div>
+                    <label htmlFor="cost" className="block text-sm font-medium text-gray-700 mb-1">
+                      Costo
+                    </label>
+                    <input
+                      id="cost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={cost}
+                      onChange={(e) => setCost(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">No visible al cliente</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inventario */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Inventario</h4>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
+                      SKU
+                    </label>
+                    <input
+                      id="sku"
+                      type="text"
+                      value={sku}
+                      onChange={(e) => setSku(e.target.value)}
+                      placeholder="ABC-123"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 mb-1">
+                      Codigo de barras
+                    </label>
+                    <input
+                      id="barcode"
+                      type="text"
+                      value={barcode}
+                      onChange={(e) => setBarcode(e.target.value)}
+                      placeholder="7501234567890"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mb-3">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={trackStock}
+                      onChange={(e) => setTrackStock(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]"></div>
+                  </label>
+                  <span className="text-sm text-gray-700">Controlar stock</span>
+                </div>
+
+                {trackStock && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
+                        Stock disponible
+                      </label>
+                      <input
+                        id="stock"
+                        type="number"
+                        min="0"
+                        value={stock}
+                        onChange={(e) => setStock(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lowStockAlert" className="block text-sm font-medium text-gray-700 mb-1">
+                        Alerta stock bajo
+                      </label>
+                      <input
+                        id="lowStockAlert"
+                        type="number"
+                        min="0"
+                        value={lowStockAlert}
+                        onChange={(e) => setLowStockAlert(e.target.value)}
+                        placeholder="5"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Organizacion */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Organizacion</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                      Marca
+                    </label>
+                    <input
+                      id="brand"
+                      type="text"
+                      value={brand}
+                      onChange={(e) => setBrand(e.target.value)}
+                      placeholder="Nike, Adidas..."
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
+                      Etiquetas
+                    </label>
+                    <input
+                      id="tags"
+                      type="text"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="nuevo, oferta, popular"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Separadas por coma</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Envio */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Envio</h4>
+                <div className="grid grid-cols-4 gap-3">
+                  <div>
+                    <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
+                      Peso (g)
+                    </label>
+                    <input
+                      id="weight"
+                      type="number"
+                      min="0"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      placeholder="500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="length" className="block text-sm font-medium text-gray-700 mb-1">
+                      Largo (cm)
+                    </label>
+                    <input
+                      id="length"
+                      type="number"
+                      min="0"
+                      value={length}
+                      onChange={(e) => setLength(e.target.value)}
+                      placeholder="20"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-1">
+                      Ancho (cm)
+                    </label>
+                    <input
+                      id="width"
+                      type="number"
+                      min="0"
+                      value={width}
+                      onChange={(e) => setWidth(e.target.value)}
+                      placeholder="15"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
+                      Alto (cm)
+                    </label>
+                    <input
+                      id="height"
+                      type="number"
+                      min="0"
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      placeholder="10"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Destacado */}
+              <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                </label>
+                <div>
+                  <span className="text-sm text-gray-800 font-medium">Producto destacado</span>
+                  <p className="text-xs text-gray-500">Se mostrara en la seccion de destacados</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Submit button */}
