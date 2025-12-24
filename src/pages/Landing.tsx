@@ -5,13 +5,18 @@ export default function Landing() {
     <div className="min-h-screen bg-[#fafbfc] relative overflow-hidden">
       {/* Animated background gradient mesh */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f08_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#f0f7ff] to-[#e8f4fc]"></div>
 
-        {/* Animated blobs */}
-        <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-[#38bdf8] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-40 w-[500px] h-[500px] bg-[#1e3a5f] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-40 left-1/2 w-[500px] h-[500px] bg-[#2d6cb5] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f06_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f06_1px,transparent_1px)] bg-[size:3rem_3rem]"></div>
+
+        {/* Animated gradient blobs */}
+        <div className="absolute top-0 -left-20 w-[600px] h-[600px] bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] rounded-full mix-blend-multiply filter blur-[120px] opacity-30 animate-blob"></div>
+        <div className="absolute top-20 -right-20 w-[500px] h-[500px] bg-gradient-to-bl from-[#1e3a5f] to-[#3b82f6] rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-[50%] left-[20%] w-[400px] h-[400px] bg-gradient-to-tr from-[#a78bfa] to-[#818cf8] rounded-full mix-blend-multiply filter blur-[120px] opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute bottom-0 right-[30%] w-[500px] h-[500px] bg-gradient-to-tl from-[#2d6cb5] to-[#38bdf8] rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-[20%] -left-20 w-[350px] h-[350px] bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-blob"></div>
       </div>
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
@@ -195,8 +200,12 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section id="como-funciona" className="py-24 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section id="como-funciona" className="py-24 px-4 relative overflow-hidden">
+        {/* Gradient decorations */}
+        <div className="absolute top-20 -right-40 w-[400px] h-[400px] bg-gradient-to-bl from-[#38bdf8]/30 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 -left-40 w-[350px] h-[350px] bg-gradient-to-tr from-[#a78bfa]/20 to-transparent rounded-full blur-3xl"></div>
+
+        <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
               Así de fácil
@@ -257,8 +266,12 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-4 bg-gradient-to-b from-[#f8fafc] to-white">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Gradient decorations */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[#38bdf8]/10 via-[#a78bfa]/10 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 -right-20 w-[300px] h-[300px] bg-gradient-to-tl from-[#06b6d4]/20 to-transparent rounded-full blur-3xl"></div>
+
+        <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
               Todo lo que necesitas
@@ -316,8 +329,12 @@ export default function Landing() {
       </section>
 
       {/* Pricing */}
-      <section className="py-24 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Gradient decorations */}
+        <div className="absolute top-40 -left-40 w-[400px] h-[400px] bg-gradient-to-br from-[#1e3a5f]/15 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 -right-40 w-[450px] h-[450px] bg-gradient-to-tl from-[#38bdf8]/20 to-transparent rounded-full blur-3xl"></div>
+
+        <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
               Planes simples
