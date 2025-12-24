@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { userService, storeService } from '../../lib/firebase'
-import type { User as FirebaseUser } from 'firebase/auth'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
@@ -14,9 +13,21 @@ export default function Register() {
   const [whatsapp, setWhatsapp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null)
-  const { register, loginWithGoogle, refreshStore } = useAuth()
+  const { register, loginWithGoogle, refreshStore, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Handle returning from Google redirect
+  useEffect(() => {
+    if (!authLoading && firebaseUser) {
+      if (store) {
+        // User already has a store, go to dashboard
+        navigate('/dashboard')
+      } else {
+        // User logged in but no store yet, show step 2
+        setStep(2)
+      }
+    }
+  }, [authLoading, firebaseUser, store, navigate])
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,8 +35,7 @@ export default function Register() {
     setLoading(true)
 
     try {
-      const user = await register(email, password)
-      setCurrentUser(user)
+      await register(email, password)
       setStep(2)
     } catch (err: any) {
       setError(err.message || 'Error al crear cuenta')
@@ -36,17 +46,18 @@ export default function Register() {
 
   const handleGoogleRegister = async () => {
     try {
-      const user = await loginWithGoogle()
-      setCurrentUser(user)
-      setStep(2)
+      setLoading(true)
+      await loginWithGoogle()
+      // Redirect happens automatically
     } catch (err: any) {
       setError(err.message || 'Error al registrarse con Google')
+      setLoading(false)
     }
   }
 
   const handleStoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentUser) return
+    if (!firebaseUser) return
 
     setError('')
     setLoading(true)
@@ -61,15 +72,15 @@ export default function Register() {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
 
-      const storeId = currentUser.uid
+      const storeId = firebaseUser.uid
 
       // Check if this is the admin user
-      const userEmail = currentUser.email || email
+      const userEmail = firebaseUser.email || email
       const isAdmin = userEmail === ADMIN_EMAIL
 
       // Create user in Firestore
-      await userService.create(currentUser.uid, {
-        id: currentUser.uid,
+      await userService.create(firebaseUser.uid, {
+        id: firebaseUser.uid,
         email: userEmail,
         storeId,
         role: isAdmin ? 'admin' : 'user',
@@ -78,7 +89,7 @@ export default function Register() {
       // Create store in Firestore (admin gets Business plan)
       await storeService.create(storeId, {
         id: storeId,
-        ownerId: currentUser.uid,
+        ownerId: firebaseUser.uid,
         name: storeName,
         subdomain,
         whatsapp,

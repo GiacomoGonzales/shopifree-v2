@@ -6,7 +6,8 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 import { userService, storeService } from '../lib/firebase'
@@ -19,7 +20,7 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string) => Promise<FirebaseUser>
-  loginWithGoogle: () => Promise<FirebaseUser>
+  loginWithGoogle: () => Promise<void>
   logout: () => Promise<void>
   refreshStore: () => Promise<void>
 }
@@ -47,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Handle redirect result from Google login
+    getRedirectResult(auth).catch((error) => {
+      console.error('Redirect result error:', error)
+    })
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser)
 
@@ -71,10 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result.user
   }
 
-  const loginWithGoogle = async (): Promise<FirebaseUser> => {
+  const loginWithGoogle = async (): Promise<void> => {
     const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth, provider)
-    return result.user
+    await signInWithRedirect(auth, provider)
   }
 
   const logout = async () => {

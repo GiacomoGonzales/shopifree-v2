@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -7,8 +7,20 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login, loginWithGoogle } = useAuth()
+  const { login, loginWithGoogle, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (!authLoading && firebaseUser) {
+      if (store) {
+        navigate('/dashboard')
+      } else {
+        // User has no store, send to register to complete step 2
+        navigate('/register')
+      }
+    }
+  }, [authLoading, firebaseUser, store, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,10 +39,12 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
+      setLoading(true)
       await loginWithGoogle()
-      navigate('/dashboard')
+      // Redirect happens automatically, no need to navigate
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión con Google')
+      setLoading(false)
     }
   }
 
