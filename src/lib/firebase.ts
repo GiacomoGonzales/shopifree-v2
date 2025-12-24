@@ -24,14 +24,14 @@ export const storage = getStorage(app)
 // ============================================
 
 const convertTimestamps = <T extends DocumentData>(data: T): T => {
-  const converted = { ...data }
+  const converted = { ...data } as Record<string, unknown>
   for (const key in converted) {
     const value = converted[key]
-    if (value && typeof value === 'object' && value instanceof Timestamp) {
-      converted[key] = value.toDate() as T[Extract<keyof T, string>]
+    if (value instanceof Timestamp) {
+      converted[key] = value.toDate()
     }
   }
-  return converted
+  return converted as T
 }
 
 // ============================================
