@@ -15,20 +15,21 @@ export default function Landing() {
       </div>
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex justify-between items-center py-4">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-9" />
+        <div className="max-w-6xl mx-auto px-3 sm:px-6">
+          <div className="flex justify-between items-center py-3 sm:py-4">
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+              <img src="/newlogo.png" alt="Shopifree" className="h-7 sm:h-9" />
             </Link>
-            <div className="flex items-center gap-4">
-              <Link to="/login" className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition">
-                Iniciar sesión
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link to="/login" className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
+                Ingresar
               </Link>
               <Link
                 to="/register"
-                className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-5 py-2.5 rounded-full hover:shadow-lg hover:shadow-[#38bdf8]/25 transition-all duration-300"
+                className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:shadow-lg hover:shadow-[#38bdf8]/25 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
               >
-                Crear catálogo gratis
+                <span className="hidden sm:inline">Crear catálogo gratis</span>
+                <span className="sm:hidden">Crear gratis</span>
               </Link>
             </div>
           </div>
@@ -152,20 +153,20 @@ export default function Landing() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5]">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5]">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center">
             <div>
-              <p className="text-5xl font-bold text-white mb-2">500+</p>
-              <p className="text-[#38bdf8]">Catálogos creados</p>
+              <p className="text-2xl sm:text-5xl font-bold text-white mb-1 sm:mb-2">500+</p>
+              <p className="text-[#38bdf8] text-xs sm:text-base">Catálogos creados</p>
             </div>
             <div>
-              <p className="text-5xl font-bold text-white mb-2">10k+</p>
-              <p className="text-[#38bdf8]">Productos publicados</p>
+              <p className="text-2xl sm:text-5xl font-bold text-white mb-1 sm:mb-2">10k+</p>
+              <p className="text-[#38bdf8] text-xs sm:text-base">Productos publicados</p>
             </div>
             <div>
-              <p className="text-5xl font-bold text-white mb-2">0%</p>
-              <p className="text-[#38bdf8]">Comisión por venta</p>
+              <p className="text-2xl sm:text-5xl font-bold text-white mb-1 sm:mb-2">0%</p>
+              <p className="text-[#38bdf8] text-xs sm:text-base">Comisión por venta</p>
             </div>
           </div>
         </div>
