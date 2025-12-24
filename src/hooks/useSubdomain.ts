@@ -19,27 +19,30 @@ export function useSubdomain(): SubdomainInfo {
   return useMemo(() => {
     const hostname = window.location.hostname
 
-    // Check if we're on localhost or main domain
-    if (MAIN_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`))) {
-      // Check for subdomain on main domains
-      const parts = hostname.split('.')
+    // If hostname exactly matches a main domain, no subdomain
+    if (MAIN_DOMAINS.includes(hostname)) {
+      return { subdomain: null, isSubdomain: false, mainDomain: hostname }
+    }
 
-      // localhost:3000 or shopifree.app
-      if (parts.length <= 2 || hostname === 'localhost') {
-        return { subdomain: null, isSubdomain: false, mainDomain: hostname }
-      }
+    // Check if we're on a subdomain of a main domain
+    const matchedMainDomain = MAIN_DOMAINS.find(domain =>
+      hostname.endsWith(`.${domain}`)
+    )
 
-      // Check if it's www or a store subdomain
-      const potentialSubdomain = parts[0]
-      if (potentialSubdomain === 'www') {
+    if (matchedMainDomain) {
+      // Extract subdomain
+      const subdomain = hostname.replace(`.${matchedMainDomain}`, '')
+
+      // Skip www
+      if (subdomain === 'www') {
         return { subdomain: null, isSubdomain: false, mainDomain: hostname }
       }
 
       // It's a store subdomain like mitienda.shopifree.app
       return {
-        subdomain: potentialSubdomain,
+        subdomain,
         isSubdomain: true,
-        mainDomain: parts.slice(1).join('.')
+        mainDomain: matchedMainDomain
       }
     }
 
