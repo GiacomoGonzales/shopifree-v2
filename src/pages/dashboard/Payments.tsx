@@ -6,7 +6,7 @@ import { useToast } from '../../components/ui/Toast'
 import type { Store } from '../../types'
 
 export default function Payments() {
-  const { user } = useAuth()
+  const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
@@ -20,11 +20,11 @@ export default function Payments() {
 
   useEffect(() => {
     const fetchStore = async () => {
-      if (!user) return
+      if (!firebaseUser) return
 
       try {
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
+        const storeQuery = query(storesRef, where('ownerId', '==', firebaseUser.uid))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -46,7 +46,7 @@ export default function Payments() {
     }
 
     fetchStore()
-  }, [user])
+  }, [firebaseUser])
 
   const handleSave = async () => {
     if (!store) return
@@ -83,7 +83,7 @@ export default function Payments() {
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">Pagos</h1>
           <p className="text-gray-600 mt-1">Configura tus metodos de pago</p>
@@ -91,7 +91,7 @@ export default function Payments() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
           {saving ? 'Guardando...' : 'Guardar cambios'}
         </button>
@@ -197,27 +197,102 @@ export default function Payments() {
           )}
         </div>
 
-        {/* Coming soon */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm opacity-50">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Proximamente</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <div className="w-10 h-10 bg-[#635bff] rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
-              <span className="text-sm font-medium text-gray-600">Stripe</span>
+        {/* Stripe - Coming soon */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm opacity-60 relative">
+          <div className="absolute top-4 right-4">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-[#635bff] rounded-2xl flex items-center justify-center shadow-lg shadow-[#635bff]/20">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+              </svg>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <div className="w-10 h-10 bg-[#003087] rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">PP</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">Stripe</h2>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">Proximamente</span>
               </div>
-              <span className="text-sm font-medium text-gray-600">PayPal</span>
+              <p className="text-gray-500 mt-1">
+                Acepta pagos con tarjeta en todo el mundo. Ideal para ventas internacionales con soporte para mas de 135 monedas.
+              </p>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">+</span>
+          </div>
+        </div>
+
+        {/* PayPal - Coming soon */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm opacity-60 relative">
+          <div className="absolute top-4 right-4">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-[#003087] rounded-2xl flex items-center justify-center shadow-lg shadow-[#003087]/20">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.397 4.403-1.01 6.914-5.44 6.914h-2.19c-.524 0-.968.382-1.05.9l-1.63 10.342a.534.534 0 0 0 .527.618h3.065c.458 0 .85-.336.922-.788l.038-.194.73-4.622.047-.254c.072-.452.464-.788.922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.489-4.641z"/>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">PayPal</h2>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">Proximamente</span>
               </div>
-              <span className="text-sm font-medium text-gray-600">Mas...</span>
+              <p className="text-gray-500 mt-1">
+                Permite a tus clientes pagar con su cuenta PayPal o tarjeta. Popular en Estados Unidos y Europa.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Yape/Plin - Coming soon */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm opacity-60 relative">
+          <div className="absolute top-4 right-4">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#6B21A8] to-[#9333EA] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">Yape / Plin</h2>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">Proximamente</span>
+              </div>
+              <p className="text-gray-500 mt-1">
+                Billeteras digitales populares en Peru. Permite pagos instantaneos desde el celular con codigo QR.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Transferencia Bancaria - Coming soon */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm opacity-60 relative">
+          <div className="absolute top-4 right-4">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-500/20">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">Transferencia Bancaria</h2>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">Proximamente</span>
+              </div>
+              <p className="text-gray-500 mt-1">
+                Recibe pagos directamente en tu cuenta bancaria. Configura tus datos y genera instrucciones automaticas.
+              </p>
             </div>
           </div>
         </div>

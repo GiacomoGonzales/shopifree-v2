@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, getDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
-import type { Product, Category } from '../../types'
+import type { Category } from '../../types'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -12,12 +11,11 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 export default function ProductForm() {
   const { productId } = useParams<{ productId: string }>()
   const isEditing = productId && productId !== 'new'
-  const { user } = useAuth()
+  const { store } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [storeId, setStoreId] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,39 +31,23 @@ export default function ProductForm() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return
+      if (!store) return
 
       try {
-        // Get store
-        const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
-        const storeSnapshot = await getDocs(storeQuery)
+        // Fetch categories
+        const categoriesData = await categoryService.getAll(store.id)
+        setCategories(categoriesData)
 
-        if (!storeSnapshot.empty) {
-          const sid = storeSnapshot.docs[0].id
-          setStoreId(sid)
-
-          // Fetch categories
-          const categoriesRef = collection(db, 'categories')
-          const categoriesQuery = query(categoriesRef, where('storeId', '==', sid))
-          const categoriesSnapshot = await getDocs(categoriesQuery)
-          setCategories(categoriesSnapshot.docs.map(doc => ({
-            ...doc.data() as Category,
-            id: doc.id
-          })))
-
-          // If editing, fetch product
-          if (isEditing && productId) {
-            const productDoc = await getDoc(doc(db, 'products', productId))
-            if (productDoc.exists()) {
-              const productData = productDoc.data() as Product
-              setName(productData.name)
-              setPrice(productData.price.toString())
-              setDescription(productData.description || '')
-              setImage(productData.image || '')
-              setCategoryId(productData.categoryId || '')
-              setActive(productData.active)
-            }
+        // If editing, fetch product
+        if (isEditing && productId) {
+          const productData = await productService.get(store.id, productId)
+          if (productData) {
+            setName(productData.name)
+            setPrice(productData.price.toString())
+            setDescription(productData.description || '')
+            setImage(productData.image || '')
+            setCategoryId(productData.categoryId || '')
+            setActive(productData.active)
           }
         }
       } catch (error) {
@@ -76,7 +58,7 @@ export default function ProductForm() {
     }
 
     fetchData()
-  }, [user, isEditing, productId])
+  }, [store, isEditing, productId])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -109,7 +91,7 @@ export default function ProductForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!storeId) return
+    if (!store) return
 
     setSaving(true)
     try {
@@ -122,7 +104,6 @@ export default function ProductForm() {
         .replace(/^-|-$/g, '')
 
       const productData = {
-        storeId,
         name,
         slug,
         price: parseFloat(price),
@@ -130,17 +111,13 @@ export default function ProductForm() {
         image: image || null,
         categoryId: categoryId || null,
         active,
-        updatedAt: new Date()
       }
 
       if (isEditing && productId) {
-        await updateDoc(doc(db, 'products', productId), productData)
+        await productService.update(store.id, productId, productData)
         showToast('Producto actualizado', 'success')
       } else {
-        await addDoc(collection(db, 'products'), {
-          ...productData,
-          createdAt: new Date()
-        })
+        await productService.create(store.id, productData)
         showToast('Producto creado', 'success')
       }
 

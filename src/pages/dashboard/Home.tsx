@@ -1,42 +1,23 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { productService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
-import type { Store, Product } from '../../types'
+import type { Product } from '../../types'
 
 export default function DashboardHome() {
-  const { user } = useAuth()
-  const [store, setStore] = useState<Store | null>(null)
+  const { store } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return
+      if (!store) return
 
       try {
-        // Fetch store
-        const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
-        const storeSnapshot = await getDocs(storeQuery)
-
-        if (!storeSnapshot.empty) {
-          const storeData = storeSnapshot.docs[0].data() as Store
-          setStore({ ...storeData, id: storeSnapshot.docs[0].id })
-
-          // Fetch products
-          const productsRef = collection(db, 'products')
-          const productsQuery = query(productsRef, where('storeId', '==', storeSnapshot.docs[0].id))
-          const productsSnapshot = await getDocs(productsQuery)
-
-          setProducts(productsSnapshot.docs.map(doc => ({
-            ...doc.data() as Product,
-            id: doc.id
-          })))
-        }
+        const productsData = await productService.getAll(store.id)
+        setProducts(productsData)
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -45,7 +26,7 @@ export default function DashboardHome() {
     }
 
     fetchData()
-  }, [user])
+  }, [store])
 
   const catalogUrl = store ? `${window.location.origin}/c/${store.subdomain}` : ''
 

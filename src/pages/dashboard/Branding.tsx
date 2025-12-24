@@ -10,7 +10,7 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Branding() {
-  const { user } = useAuth()
+  const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
@@ -40,11 +40,11 @@ export default function Branding() {
 
   useEffect(() => {
     const fetchStore = async () => {
-      if (!user) return
+      if (!firebaseUser) return
 
       try {
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
+        const storeQuery = query(storesRef, where('ownerId', '==', firebaseUser.uid))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -66,7 +66,7 @@ export default function Branding() {
     }
 
     fetchStore()
-  }, [user])
+  }, [firebaseUser])
 
   const uploadImage = async (file: File, folder: string): Promise<string> => {
     const formData = new FormData()

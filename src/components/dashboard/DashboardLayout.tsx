@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type JSX } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -128,7 +128,6 @@ function CloseIcon() {
 const navigation: NavElement[] = [
   { name: 'Inicio', href: '/dashboard', icon: HomeIcon },
   { name: 'Productos', href: '/dashboard/products', icon: BoxIcon },
-  { name: 'Categorias', href: '/dashboard/categories', icon: FolderIcon },
   {
     name: 'Mi Tienda',
     icon: StoreIcon,
@@ -142,12 +141,16 @@ const navigation: NavElement[] = [
   { name: 'Mi Cuenta', href: '/dashboard/account', icon: UserIcon },
 ]
 
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
+
 export default function DashboardLayout() {
-  const { user, loading, logout } = useAuth()
+  const { user, firebaseUser, loading, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [openGroups, setOpenGroups] = useState<string[]>(['Mi Tienda'])
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const isAdmin = firebaseUser?.email === ADMIN_EMAIL
 
   useEffect(() => {
     if (!loading && !user) {
@@ -303,6 +306,11 @@ export default function DashboardLayout() {
             <p className="text-sm font-medium text-gray-900 truncate">
               {user.email}
             </p>
+            {isAdmin && (
+              <Link to="/admin" className="text-xs text-gray-400 hover:text-[#2d6cb5] transition-colors">
+                Panel Admin
+              </Link>
+            )}
           </div>
           <button
             onClick={handleLogout}

@@ -6,7 +6,7 @@ import { useToast } from '../../components/ui/Toast'
 import type { Category } from '../../types'
 
 export default function Categories() {
-  const { user } = useAuth()
+  const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [storeId, setStoreId] = useState<string | null>(null)
@@ -17,12 +17,12 @@ export default function Categories() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return
+      if (!firebaseUser) return
 
       try {
         // Fetch store
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
+        const storeQuery = query(storesRef, where('ownerId', '==', firebaseUser.uid))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -47,7 +47,7 @@ export default function Categories() {
     }
 
     fetchData()
-  }, [user])
+  }, [firebaseUser])
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import type { Store, Product, Category } from '../../types'
 
-export default function Catalog() {
+interface CatalogProps {
+  subdomainStore?: string
+}
+
+export default function Catalog({ subdomainStore }: CatalogProps) {
   const { storeSlug } = useParams<{ storeSlug: string }>()
+  // Use subdomain prop if provided, otherwise use URL param
+  const slug = subdomainStore || storeSlug
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -14,12 +20,12 @@ export default function Catalog() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!storeSlug) return
+      if (!slug) return
 
       try {
         // Fetch store by subdomain
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('subdomain', '==', storeSlug))
+        const storeQuery = query(storesRef, where('subdomain', '==', slug))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -64,7 +70,7 @@ export default function Catalog() {
     }
 
     fetchData()
-  }, [storeSlug])
+  }, [slug])
 
   if (loading) {
     return (

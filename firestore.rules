@@ -1,0 +1,127 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'admin@shopifree.app';
+    }
+
+    function isStoreOwner(storeId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid;
+    }
+
+    function isStoreOwnerOrAdmin(storeId) {
+      return isStoreOwner(storeId) || isAdmin();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false; // Never delete users
+
+      // User subscriptions subcollection
+      match /subscriptions/{subId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false; // Only backend can write subscriptions
+      }
+    }
+
+    // Stores collection
+    match /stores/{storeId} {
+      // Anyone can read store (public catalogs)
+      allow read: if true;
+      // Only authenticated users can create stores
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      // Owner or admin can update/delete
+      allow update: if isStoreOwnerOrAdmin(storeId);
+      allow delete: if isStoreOwnerOrAdmin(storeId);
+
+      // Products subcollection
+      match /products/{productId} {
+        allow read: if true; // Public catalog
+        allow create: if isStoreOwner(storeId);
+        allow update: if isStoreOwner(storeId);
+        allow delete: if isStoreOwner(storeId);
+      }
+
+      // Categories subcollection
+      match /categories/{categoryId} {
+        allow read: if true; // Public
+        allow create: if isStoreOwner(storeId);
+        allow update: if isStoreOwner(storeId);
+        allow delete: if isStoreOwner(storeId);
+      }
+
+      // Orders subcollection
+      match /orders/{orderId} {
+        allow read: if isStoreOwner(storeId);
+        allow create: if true; // Customers can create orders
+        allow update: if isStoreOwner(storeId);
+        allow delete: if false; // Never delete orders
+      }
+
+      // Customers subcollection
+      match /customers/{customerId} {
+        allow read: if isStoreOwner(storeId);
+        allow create: if true; // Auto-created on order
+        allow update: if isStoreOwner(storeId);
+        allow delete: if isStoreOwner(storeId);
+      }
+
+      // Coupons subcollection
+      match /coupons/{couponId} {
+        allow read: if true; // Validate coupons publicly
+        allow write: if isStoreOwner(storeId);
+      }
+
+      // Analytics subcollection
+      match /analytics/{date} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if false; // Only backend writes analytics
+      }
+    }
+
+    // Domain indexes (for lookups)
+    match /domains/{domain} {
+      allow read: if true;
+      allow write: if false; // Only backend manages domains
+    }
+
+    match /subdomains/{subdomain} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Only backend
+    }
+
+    // Plans (read-only for everyone)
+    match /plans/{planId} {
+      allow read: if true;
+      allow write: if false; // Admin only
+    }
+
+    // Themes (read-only)
+    match /themes/{themeId} {
+      allow read: if true;
+      allow write: if false; // Admin only
+    }
+
+    // Integrations (sensitive - owner only)
+    match /integrations/{storeId} {
+      allow read: if isStoreOwner(storeId);
+      allow write: if false; // Only backend handles tokens
+    }
+  }
+}

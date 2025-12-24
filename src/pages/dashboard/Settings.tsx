@@ -6,7 +6,7 @@ import { useToast } from '../../components/ui/Toast'
 import type { Store, StoreLocation } from '../../types'
 
 export default function Settings() {
-  const { user } = useAuth()
+  const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
@@ -38,11 +38,11 @@ export default function Settings() {
 
   useEffect(() => {
     const fetchStore = async () => {
-      if (!user) return
+      if (!firebaseUser) return
 
       try {
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
+        const storeQuery = query(storesRef, where('ownerId', '==', firebaseUser.uid))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -79,7 +79,7 @@ export default function Settings() {
     }
 
     fetchStore()
-  }, [user])
+  }, [firebaseUser])
 
   const handleSave = async () => {
     if (!store) return
@@ -121,18 +121,9 @@ export default function Settings() {
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Configuracion</h1>
-          <p className="text-gray-600 mt-1">Configura la informacion de tu tienda</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-        >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
-        </button>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">Configuracion</h1>
+        <p className="text-gray-600 mt-1">Configura la informacion de tu tienda</p>
       </div>
 
       <div className="space-y-8">
@@ -388,6 +379,17 @@ export default function Settings() {
             className="px-4 py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
           >
             Eliminar mi catalogo
+          </button>
+        </div>
+
+        {/* Save button */}
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+          >
+            {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </div>
       </div>

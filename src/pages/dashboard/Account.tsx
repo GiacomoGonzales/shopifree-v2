@@ -9,7 +9,7 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Account() {
-  const { user: authUser } = useAuth()
+  const { firebaseUser, user } = useAuth()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -31,10 +31,10 @@ export default function Account() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!authUser) return
+      if (!firebaseUser) return
 
       try {
-        const userDoc = await getDoc(doc(db, 'users', authUser.uid))
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
         if (userDoc.exists()) {
           const userData = userDoc.data() as User
           setFirstName(userData.firstName || '')
@@ -57,7 +57,7 @@ export default function Account() {
     }
 
     fetchUserData()
-  }, [authUser])
+  }, [firebaseUser])
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -87,13 +87,13 @@ export default function Account() {
   }
 
   const handleSave = async () => {
-    if (!authUser) return
+    if (!firebaseUser) return
 
     setSaving(true)
     try {
-      await setDoc(doc(db, 'users', authUser.uid), {
-        id: authUser.uid,
-        email: authUser.email,
+      await setDoc(doc(db, 'users', firebaseUser.uid), {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
         firstName: firstName || null,
         lastName: lastName || null,
         phone: phone || null,
@@ -126,7 +126,7 @@ export default function Account() {
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">Mi Cuenta</h1>
           <p className="text-gray-600 mt-1">Administra tus datos personales y de facturacion</p>
@@ -134,7 +134,7 @@ export default function Account() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
           {saving ? 'Guardando...' : 'Guardar cambios'}
         </button>
@@ -157,7 +157,7 @@ export default function Account() {
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-2xl font-bold text-white">
-                  {firstName?.[0]?.toUpperCase() || authUser?.email?.[0]?.toUpperCase() || '?'}
+                  {firstName?.[0]?.toUpperCase() || firebaseUser?.email?.[0]?.toUpperCase() || '?'}
                 </span>
               )}
             </div>
@@ -213,7 +213,7 @@ export default function Account() {
             <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Email</label>
             <input
               type="email"
-              value={authUser?.email || ''}
+              value={firebaseUser?.email || ''}
               disabled
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
             />

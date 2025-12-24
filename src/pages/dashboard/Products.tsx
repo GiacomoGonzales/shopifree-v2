@@ -1,43 +1,36 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
-import type { Product, Store } from '../../types'
+import type { Product, Category } from '../../types'
 
 export default function Products() {
-  const { user } = useAuth()
+  const { store } = useAuth()
   const { showToast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
-  const [store, setStore] = useState<Store | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Category management
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [savingCategory, setSavingCategory] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return
+      if (!store) return
 
       try {
-        // Fetch store
-        const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
-        const storeSnapshot = await getDocs(storeQuery)
-
-        if (!storeSnapshot.empty) {
-          const storeData = storeSnapshot.docs[0].data() as Store
-          setStore({ ...storeData, id: storeSnapshot.docs[0].id })
-
-          // Fetch products
-          const productsRef = collection(db, 'products')
-          const productsQuery = query(productsRef, where('storeId', '==', storeSnapshot.docs[0].id))
-          const productsSnapshot = await getDocs(productsQuery)
-
-          setProducts(productsSnapshot.docs.map(doc => ({
-            ...doc.data() as Product,
-            id: doc.id
-          })))
-        }
+        const [productsData, categoriesData] = await Promise.all([
+          productService.getAll(store.id),
+          categoryService.getAll(store.id)
+        ])
+        setProducts(productsData)
+        setCategories(categoriesData)
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -46,19 +39,110 @@ export default function Products() {
     }
 
     fetchData()
-  }, [user])
+  }, [store])
 
-  const handleDelete = async (productId: string) => {
+  const handleDeleteProduct = async (productId: string) => {
+    if (!store) return
     if (!confirm('¿Estas seguro de eliminar este producto?')) return
 
     try {
-      await deleteDoc(doc(db, 'products', productId))
+      await productService.delete(store.id, productId)
       setProducts(products.filter(p => p.id !== productId))
       showToast('Producto eliminado', 'success')
     } catch (error) {
       console.error('Error deleting product:', error)
       showToast('Error al eliminar el producto', 'error')
     }
+  }
+
+  const handleSaveCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!store || !newCategoryName.trim()) return
+
+    setSavingCategory(true)
+    try {
+      const slug = newCategoryName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+      if (editingCategory) {
+        await categoryService.update(store.id, editingCategory.id, {
+          name: newCategoryName.trim(),
+          slug
+        })
+        setCategories(categories.map(c =>
+          c.id === editingCategory.id
+            ? { ...c, name: newCategoryName.trim(), slug }
+            : c
+        ))
+        showToast('Categoria actualizada', 'success')
+      } else {
+        const categoryId = await categoryService.create(store.id, {
+          name: newCategoryName.trim(),
+          slug,
+          order: categories.length
+        })
+        setCategories([...categories, {
+          id: categoryId,
+          storeId: store.id,
+          name: newCategoryName.trim(),
+          slug,
+          order: categories.length,
+          active: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }])
+        showToast('Categoria creada', 'success')
+      }
+
+      setShowCategoryModal(false)
+      setNewCategoryName('')
+      setEditingCategory(null)
+    } catch (error) {
+      console.error('Error saving category:', error)
+      showToast('Error al guardar categoria', 'error')
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  const handleDeleteCategory = async (category: Category) => {
+    if (!store) return
+    if (!confirm(`¿Eliminar la categoría "${category.name}"? Los productos no se eliminarán.`)) return
+
+    try {
+      await categoryService.delete(store.id, category.id)
+      setCategories(categories.filter(c => c.id !== category.id))
+      if (selectedCategory === category.id) {
+        setSelectedCategory(null)
+      }
+      showToast('Categoria eliminada', 'success')
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      showToast('Error al eliminar categoria', 'error')
+    }
+  }
+
+  const openEditCategory = (category: Category) => {
+    setEditingCategory(category)
+    setNewCategoryName(category.name)
+    setShowCategoryModal(true)
+  }
+
+  const filteredProducts = selectedCategory
+    ? selectedCategory === 'uncategorized'
+      ? products.filter(p => !p.categoryId)
+      : products.filter(p => p.categoryId === selectedCategory)
+    : products
+
+  const getProductCount = (categoryId: string | null) => {
+    if (categoryId === null) return products.length
+    if (categoryId === 'uncategorized') return products.filter(p => !p.categoryId).length
+    return products.filter(p => p.categoryId === categoryId).length
   }
 
   if (loading) {
@@ -87,8 +171,91 @@ export default function Products() {
         </Link>
       </div>
 
+      {/* Categories tabs */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-[#1e3a5f]">Categorias</h3>
+          <button
+            onClick={() => {
+              setEditingCategory(null)
+              setNewCategoryName('')
+              setShowCategoryModal(true)
+            }}
+            className="text-sm text-[#2d6cb5] hover:text-[#1e3a5f] font-medium flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              selectedCategory === null
+                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Todos ({getProductCount(null)})
+          </button>
+
+          {categories.map(category => (
+            <div key={category.id} className="relative group">
+              <button
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  selectedCategory === category.id
+                    ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.name} ({getProductCount(category.id)})
+              </button>
+
+              {/* Edit/Delete dropdown */}
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEditCategory(category)
+                  }}
+                  className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteCategory(category)
+                  }}
+                  className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {products.some(p => !p.categoryId) && (
+            <button
+              onClick={() => setSelectedCategory('uncategorized')}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                selectedCategory === 'uncategorized'
+                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Sin categoria ({getProductCount('uncategorized')})
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Products list */}
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
           <div className="w-20 h-20 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,159 +263,118 @@ export default function Products() {
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-[#1e3a5f] mb-2">
-            No tienes productos aun
+            {selectedCategory ? 'No hay productos en esta categoria' : 'No tienes productos aun'}
           </h3>
           <p className="text-gray-600 mb-6">
-            Agrega tu primer producto para empezar a vender
+            {selectedCategory ? 'Agrega productos o cambia de categoria' : 'Agrega tu primer producto para empezar a vender'}
           </p>
           <Link
             to="/dashboard/products/new"
             className="inline-flex px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
           >
-            Agregar mi primer producto
+            Agregar producto
           </Link>
         </div>
       ) : (
-        <>
-          {/* Mobile: Cards */}
-          <div className="md:hidden space-y-3">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-semibold text-[#1e3a5f] truncate">{product.name}</p>
-                      <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-semibold rounded-full ${
-                        product.active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {product.active ? 'Activo' : 'Inactivo'}
-                      </span>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group"
+            >
+              <Link to={`/dashboard/products/${product.id}`}>
+                <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative">
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                     </div>
-                    <p className="text-[#2d6cb5] font-bold text-sm mt-1">
-                      {getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}
+                  )}
+                  {!product.active && (
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900/70 text-white text-xs rounded-lg">
+                      Oculto
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-[#1e3a5f] truncate group-hover:text-[#2d6cb5] transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-[#2d6cb5] font-bold text-sm mt-1">
+                    {getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}
+                  </p>
+                  {product.categoryId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {categories.find(c => c.id === product.categoryId)?.name}
                     </p>
-                  </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                  <Link
-                    to={`/dashboard/products/${product.id}`}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-xl transition-all text-center"
-                  >
-                    Editar
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                  >
-                    Eliminar
-                  </button>
-                </div>
+              </Link>
+              <div className="px-4 pb-4 flex gap-2">
+                <Link
+                  to={`/dashboard/products/${product.id}`}
+                  className="flex-1 px-3 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center"
+                >
+                  Editar
+                </Link>
+                <button
+                  onClick={() => handleDeleteProduct(product.id)}
+                  className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                >
+                  Eliminar
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-          {/* Desktop: Table */}
-          <div className="hidden md:block bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-[#f0f7ff] to-white border-b border-gray-100">
-                <tr>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">
-                    Producto
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">
-                    Precio
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">
-                    Estado
-                  </th>
-                  <th className="text-right px-6 py-4 text-sm font-semibold text-[#1e3a5f]">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-[#f0f7ff]/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-[#1e3a5f]">{product.name}</p>
-                          {product.description && (
-                            <p className="text-sm text-gray-500 truncate max-w-xs">
-                              {product.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[#2d6cb5] font-bold">
-                        {getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                        product.active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {product.active ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/dashboard/products/${product.id}`}
-                          className="px-4 py-2 text-sm font-medium text-[#2d6cb5] hover:bg-[#f0f7ff] rounded-xl transition-all"
-                        >
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-bold text-[#1e3a5f] mb-4">
+              {editingCategory ? 'Editar categoria' : 'Nueva categoria'}
+            </h3>
+            <form onSubmit={handleSaveCategory}>
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Nombre de la categoria"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCategoryModal(false)
+                    setNewCategoryName('')
+                    setEditingCategory(null)
+                  }}
+                  className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newCategoryName.trim() || savingCategory}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-medium disabled:opacity-50"
+                >
+                  {savingCategory ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

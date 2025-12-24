@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024; // Max 5MB
+    }
+
+    function isValidImageSmall() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 1 * 1024 * 1024; // Max 1MB for logos/favicons
+    }
+
+    // User avatars
+    match /users/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidImageSmall();
+    }
+
+    // Store assets - public read
+    match /stores/{storeId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

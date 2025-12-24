@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { doc, setDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
+import { userService, storeService } from '../../lib/firebase'
+import type { User as FirebaseUser } from 'firebase/auth'
+
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
 export default function Register() {
   const [step, setStep] = useState(1)
@@ -12,7 +14,8 @@ export default function Register() {
   const [whatsapp, setWhatsapp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { register, loginWithGoogle, user } = useAuth()
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null)
+  const { register, loginWithGoogle, refreshStore } = useAuth()
   const navigate = useNavigate()
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -21,7 +24,8 @@ export default function Register() {
     setLoading(true)
 
     try {
-      await register(email, password)
+      const user = await register(email, password)
+      setCurrentUser(user)
       setStep(2)
     } catch (err: any) {
       setError(err.message || 'Error al crear cuenta')
@@ -32,7 +36,8 @@ export default function Register() {
 
   const handleGoogleRegister = async () => {
     try {
-      await loginWithGoogle()
+      const user = await loginWithGoogle()
+      setCurrentUser(user)
       setStep(2)
     } catch (err: any) {
       setError(err.message || 'Error al registrarse con Google')
@@ -41,7 +46,7 @@ export default function Register() {
 
   const handleStoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    if (!currentUser) return
 
     setError('')
     setLoading(true)
@@ -56,31 +61,38 @@ export default function Register() {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
 
-      // Create store in Firestore
-      const storeId = user.uid
-      await setDoc(doc(db, 'stores', storeId), {
-        ownerId: user.uid,  // Must be ownerId to match Firestore rules
-        userId: user.uid,
+      const storeId = currentUser.uid
+
+      // Check if this is the admin user
+      const userEmail = currentUser.email || email
+      const isAdmin = userEmail === ADMIN_EMAIL
+
+      // Create user in Firestore
+      await userService.create(currentUser.uid, {
+        id: currentUser.uid,
+        email: userEmail,
+        storeId,
+        role: isAdmin ? 'admin' : 'user',
+      })
+
+      // Create store in Firestore (admin gets Business plan)
+      await storeService.create(storeId, {
+        id: storeId,
+        ownerId: currentUser.uid,
         name: storeName,
         subdomain,
         whatsapp,
-        theme: 'minimal',
         currency: 'PEN',
-        country: 'PE',
-        plan: 'free',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        themeId: 'minimal',
+        plan: isAdmin ? 'business' : 'free',
       })
 
-      // Update user with storeId
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        storeId,
-        createdAt: new Date()
-      }, { merge: true })
+      // Refresh store data in context
+      await refreshStore()
 
       navigate('/dashboard')
     } catch (err: any) {
+      console.error('Error creating store:', err)
       setError(err.message || 'Error al crear tienda')
     } finally {
       setLoading(false)

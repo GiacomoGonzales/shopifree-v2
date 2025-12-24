@@ -1,110 +1,122 @@
 import { useState, useEffect } from 'react'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
+import { useSearchParams } from 'react-router-dom'
+import { httpsCallable, getFunctions } from 'firebase/functions'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
-import type { Store } from '../../types'
+import { getStripe, PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 
-const plans = [
-  {
-    id: 'free',
-    name: 'Gratis',
-    price: 0,
-    description: 'Perfecto para empezar',
-    features: [
-      'Hasta 20 productos',
-      '1 imagen por producto',
-      'Catalogo con tu subdomain',
-      'Pedidos por WhatsApp',
-      'Soporte por email'
-    ],
-    notIncluded: [
-      'Dominio personalizado',
-      'Multiples imagenes',
-      'Variaciones/modificadores',
-      'Sin marca Shopifree',
-      'Analytics avanzados'
-    ]
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 9.99,
-    description: 'Para negocios en crecimiento',
-    popular: true,
-    features: [
-      'Productos ilimitados',
-      'Hasta 5 imagenes por producto',
-      'Dominio personalizado',
-      'Variaciones (talla, color)',
-      'Modificadores (extras)',
-      'Sin marca Shopifree',
-      'Analytics basicos',
-      'Soporte prioritario'
-    ],
-    notIncluded: [
-      'Pasarela de pagos',
-      'Cupones de descuento',
-      'Multi-tienda'
-    ]
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    price: 29.99,
-    description: 'Para negocios establecidos',
-    features: [
-      'Todo de Pro, mas:',
-      'Integracion MercadoPago',
-      'Cupones de descuento',
-      'Analytics avanzados',
-      'Exportar pedidos',
-      'API access',
-      'Soporte 24/7',
-      'Multi-tienda (hasta 3)'
-    ],
-    notIncluded: []
-  }
+const functions = getFunctions()
+
+const plans: { id: PlanType; popular?: boolean }[] = [
+  { id: 'free' },
+  { id: 'pro', popular: true },
+  { id: 'business' }
 ]
 
 export default function Plan() {
-  const { user } = useAuth()
+  const { store, user, firebaseUser, refreshStore } = useAuth()
   const { showToast } = useToast()
-  const [store, setStore] = useState<Store | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [searchParams] = useSearchParams()
+  const [loading, setLoading] = useState(false)
+  const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly')
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null)
 
+  // Handle success/cancel from Stripe
   useEffect(() => {
-    const fetchStore = async () => {
-      if (!user) return
+    if (searchParams.get('success') === 'true') {
+      showToast('Suscripcion activada exitosamente!', 'success')
+      refreshStore()
+    } else if (searchParams.get('canceled') === 'true') {
+      showToast('Pago cancelado', 'info')
+    }
+  }, [searchParams, showToast, refreshStore])
 
-      try {
-        const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
-        const storeSnapshot = await getDocs(storeQuery)
-
-        if (!storeSnapshot.empty) {
-          const storeData = storeSnapshot.docs[0].data() as Store
-          setStore({ ...storeData, id: storeSnapshot.docs[0].id })
-        }
-      } catch (error) {
-        console.error('Error fetching store:', error)
-      } finally {
-        setLoading(false)
-      }
+  const handleSelectPlan = async (planId: PlanType) => {
+    if (!store || !user || !firebaseUser) {
+      showToast('Error: No se encontro tu tienda', 'error')
+      return
     }
 
-    fetchStore()
-  }, [user])
+    if (planId === 'free') {
+      showToast('Ya tienes el plan gratuito', 'info')
+      return
+    }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a5f]"></div>
-      </div>
-    )
+    setProcessingPlan(planId)
+    setLoading(true)
+
+    try {
+      // Call Cloud Function to create checkout session
+      const response = await fetch(
+        `${import.meta.env.VITE_FUNCTIONS_URL || ''}/createCheckoutSession`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            storeId: store.id,
+            plan: planId,
+            billing: selectedBilling,
+            userId: firebaseUser.uid,
+            email: firebaseUser.email
+          })
+        }
+      )
+
+      const data = await response.json()
+
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        const stripe = await getStripe()
+        if (stripe && data.sessionId) {
+          await stripe.redirectToCheckout({ sessionId: data.sessionId })
+        }
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+      showToast('Error al procesar el pago. Intenta de nuevo.', 'error')
+    } finally {
+      setLoading(false)
+      setProcessingPlan(null)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    if (!firebaseUser) return
+
+    setLoading(true)
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_FUNCTIONS_URL || ''}/createPortalSession`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: firebaseUser.uid })
+        }
+      )
+
+      const data = await response.json()
+
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        showToast('No se encontro suscripcion activa', 'info')
+      }
+    } catch (error) {
+      console.error('Error opening portal:', error)
+      showToast('Error al abrir el portal de suscripcion', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const currentPlan = store?.plan || 'free'
+  const hasActiveSubscription = store?.subscription?.status === 'active'
 
   return (
     <div className="max-w-5xl">
@@ -114,7 +126,7 @@ export default function Plan() {
       </div>
 
       {/* Current plan badge */}
-      <div className="bg-gradient-to-r from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl p-4 mb-8 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl p-4 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,23 +135,72 @@ export default function Plan() {
           </div>
           <div>
             <p className="text-sm text-gray-600">Tu plan actual</p>
-            <p className="font-semibold text-[#1e3a5f] capitalize">{currentPlan}</p>
+            <p className="font-semibold text-[#1e3a5f] capitalize">
+              {PLAN_FEATURES[currentPlan].name}
+              {store?.subscription?.cancelAtPeriodEnd && (
+                <span className="text-red-500 text-xs ml-2">(Se cancela al final del periodo)</span>
+              )}
+            </p>
           </div>
         </div>
-        {currentPlan === 'free' && (
-          <span className="text-sm text-gray-500">Prueba gratis por tiempo limitado</span>
-        )}
+        <div className="flex items-center gap-3">
+          {store?.planExpiresAt && (
+            <span className="text-sm text-gray-500">
+              Expira: {new Date(store.planExpiresAt).toLocaleDateString()}
+            </span>
+          )}
+          {hasActiveSubscription && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-[#2d6cb5] bg-white border border-[#2d6cb5] rounded-xl hover:bg-[#f0f7ff] transition-all disabled:opacity-50"
+            >
+              Administrar suscripcion
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Billing toggle */}
+      <div className="flex justify-center mb-8">
+        <div className="bg-gray-100 p-1 rounded-xl flex">
+          <button
+            onClick={() => setSelectedBilling('monthly')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+              selectedBilling === 'monthly'
+                ? 'bg-white text-[#1e3a5f] shadow-sm'
+                : 'text-gray-600 hover:text-[#1e3a5f]'
+            }`}
+          >
+            Mensual
+          </button>
+          <button
+            onClick={() => setSelectedBilling('yearly')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              selectedBilling === 'yearly'
+                ? 'bg-white text-[#1e3a5f] shadow-sm'
+                : 'text-gray-600 hover:text-[#1e3a5f]'
+            }`}
+          >
+            Anual
+            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+              -17%
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Plans grid */}
       <div className="grid md:grid-cols-3 gap-6">
-        {plans.map((plan) => {
-          const isCurrentPlan = plan.id === currentPlan
-          const isPopular = plan.popular
+        {plans.map(({ id: planId, popular: isPopular }) => {
+          const plan = PLAN_FEATURES[planId]
+          const isCurrentPlan = planId === currentPlan
+          const price = selectedBilling === 'yearly' ? plan.priceYearly : plan.price
+          const isProcessing = processingPlan === planId
 
           return (
             <div
-              key={plan.id}
+              key={planId}
               className={`relative bg-white rounded-2xl border-2 p-6 shadow-sm transition-all ${
                 isPopular
                   ? 'border-[#2d6cb5] shadow-lg shadow-[#2d6cb5]/10'
@@ -156,17 +217,21 @@ export default function Plan() {
 
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-[#1e3a5f]">{plan.name}</h3>
-                <p className="text-gray-500 text-sm mt-1">{plan.description}</p>
                 <div className="mt-4">
-                  {plan.price === 0 ? (
+                  {price === 0 ? (
                     <span className="text-4xl font-bold text-[#1e3a5f]">Gratis</span>
                   ) : (
                     <>
-                      <span className="text-4xl font-bold text-[#1e3a5f]">${plan.price}</span>
-                      <span className="text-gray-500">/mes</span>
+                      <span className="text-4xl font-bold text-[#1e3a5f]">${price}</span>
+                      <span className="text-gray-500">/{selectedBilling === 'yearly' ? 'año' : 'mes'}</span>
                     </>
                   )}
                 </div>
+                {selectedBilling === 'yearly' && price > 0 && (
+                  <p className="text-sm text-green-600 mt-1">
+                    Ahorras ${((plan.price * 12) - plan.priceYearly).toFixed(0)}/año
+                  </p>
+                )}
               </div>
 
               <ul className="space-y-3 mb-6">
@@ -178,28 +243,31 @@ export default function Plan() {
                     <span className="text-gray-700">{feature}</span>
                   </li>
                 ))}
-                {plan.notIncluded.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <svg className="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span className="text-gray-400">{feature}</span>
-                  </li>
-                ))}
               </ul>
 
               <button
-                onClick={() => showToast('Proximamente - Pagos con MercadoPago', 'info')}
-                disabled={isCurrentPlan}
-                className={`w-full py-3 rounded-xl font-semibold transition-all ${
-                  isCurrentPlan
+                onClick={() => handleSelectPlan(planId)}
+                disabled={isCurrentPlan || loading || planId === 'free'}
+                className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                  isCurrentPlan || planId === 'free'
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : isPopular
                     ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] shadow-lg shadow-[#1e3a5f]/20'
                     : 'bg-[#f0f7ff] text-[#1e3a5f] hover:bg-[#e0efff]'
                 }`}
               >
-                {isCurrentPlan ? 'Plan actual' : plan.price === 0 ? 'Empezar gratis' : 'Mejorar plan'}
+                {isProcessing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    Procesando...
+                  </>
+                ) : isCurrentPlan ? (
+                  'Plan actual'
+                ) : planId === 'free' ? (
+                  'Plan gratuito'
+                ) : (
+                  'Mejorar plan'
+                )}
               </button>
             </div>
           )
@@ -212,17 +280,36 @@ export default function Plan() {
         <div className="space-y-4">
           <div>
             <h3 className="font-medium text-[#1e3a5f]">Puedo cambiar de plan cuando quiera?</h3>
-            <p className="text-sm text-gray-600 mt-1">Si, puedes mejorar o bajar tu plan en cualquier momento. Los cambios se aplican inmediatamente.</p>
+            <p className="text-sm text-gray-600 mt-1">Si, puedes mejorar o bajar tu plan en cualquier momento desde el portal de suscripcion.</p>
           </div>
           <div>
             <h3 className="font-medium text-[#1e3a5f]">Que metodos de pago aceptan?</h3>
-            <p className="text-sm text-gray-600 mt-1">Aceptamos tarjetas de credito/debito y MercadoPago en todos los paises de Latinoamerica.</p>
+            <p className="text-sm text-gray-600 mt-1">Aceptamos todas las tarjetas de credito/debito principales a traves de Stripe.</p>
+          </div>
+          <div>
+            <h3 className="font-medium text-[#1e3a5f]">Puedo cancelar cuando quiera?</h3>
+            <p className="text-sm text-gray-600 mt-1">Si, puedes cancelar tu suscripcion en cualquier momento. Mantendras acceso hasta el final del periodo pagado.</p>
           </div>
           <div>
             <h3 className="font-medium text-[#1e3a5f]">Hay periodo de prueba?</h3>
             <p className="text-sm text-gray-600 mt-1">El plan gratuito no tiene limite de tiempo. Puedes usarlo el tiempo que quieras antes de decidir mejorar.</p>
           </div>
         </div>
+      </div>
+
+      {/* Stripe badge */}
+      <div className="mt-8 text-center">
+        <p className="text-sm text-gray-400 flex items-center justify-center gap-2">
+          <svg className="h-4" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M59.64 14.28c0-4.67-2.27-8.35-6.6-8.35-4.35 0-6.99 3.68-6.99 8.31 0 5.48 3.11 8.24 7.58 8.24 2.18 0 3.83-.49 5.08-1.18v-3.64c-1.25.62-2.69 1.01-4.51 1.01-1.78 0-3.37-.62-3.57-2.78h8.99c0-.24.02-1.18.02-1.61zm-9.09-1.73c0-2.06 1.27-2.92 2.43-2.92 1.13 0 2.32.86 2.32 2.92h-4.75z" fill="currentColor"/>
+            <path d="M40.94 5.93c-1.8 0-2.95.84-3.6 1.43l-.24-1.14h-4.04v21.08l4.59-.97v-5.12c.66.48 1.64 1.16 3.26 1.16 3.29 0 6.29-2.64 6.29-8.46-.01-5.34-3.06-8.98-6.26-8.98zm-1.1 13.81c-1.09 0-1.73-.39-2.17-.87v-6.9c.48-.53 1.14-.91 2.17-.91 1.66 0 2.8 1.85 2.8 4.33 0 2.54-1.12 4.35-2.8 4.35z" fill="currentColor"/>
+            <path d="M27.56 4.47l4.6-.98V0l-4.6.97v3.5zM32.16 6.15h-4.6v16.05h4.6V6.15z" fill="currentColor"/>
+            <path d="M22.48 7.4l-.29-1.25h-3.97v16.05h4.59v-10.9c1.09-1.41 2.92-1.16 3.5-.96V6.15c-.6-.22-2.79-.63-3.83 1.25z" fill="currentColor"/>
+            <path d="M13.28 2.45l-4.48.95-.02 14.7c0 2.72 2.04 4.72 4.77 4.72 1.51 0 2.62-.28 3.23-.6v-3.72c-.59.24-3.5 1.08-3.5-1.64V9.87h3.5V6.15h-3.5V2.45z" fill="currentColor"/>
+            <path d="M4.67 10.2c0-.72.59-1 1.57-1 1.4 0 3.17.42 4.57 1.18V6.28c-1.53-.61-3.04-.84-4.57-.84C2.49 5.44 0 7.36 0 10.56c0 4.94 6.8 4.15 6.8 6.28 0 .85-.74 1.13-1.77 1.13-1.53 0-3.49-.63-5.03-1.48v4.15c1.71.74 3.45 1.05 5.03 1.05 3.87 0 6.54-1.91 6.54-5.15-.02-5.33-6.9-4.38-6.9-6.34z" fill="currentColor"/>
+          </svg>
+          Pagos seguros con Stripe
+        </p>
       </div>
     </div>
   )

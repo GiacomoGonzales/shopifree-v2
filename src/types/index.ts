@@ -19,6 +19,10 @@ export interface User {
   }
   // Referencia
   storeId?: string
+  // Admin role
+  role?: 'user' | 'admin'
+  // Stripe
+  stripeCustomerId?: string
   createdAt: Date
   updatedAt?: Date
 }
@@ -75,9 +79,10 @@ export interface Store {
   // === PAGOS ===
   payments?: StorePayments
 
-  // === PLAN ===
+  // === PLAN & SUBSCRIPTION ===
   plan: 'free' | 'pro' | 'business'
   planExpiresAt?: Date
+  subscription?: StoreSubscription
 
   // === TIPO DE NEGOCIO ===
   businessType?: 'retail' | 'restaurant' | 'services' | 'other'
@@ -114,6 +119,16 @@ export interface StorePayments {
     sandbox: boolean
   }
   // Estructura lista para agregar más pasarelas
+}
+
+export interface StoreSubscription {
+  stripeCustomerId: string      // cus_xxx
+  stripeSubscriptionId: string  // sub_xxx
+  stripePriceId: string         // price_xxx
+  status: 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing'
+  currentPeriodStart: Date
+  currentPeriodEnd: Date
+  cancelAtPeriodEnd: boolean
 }
 
 // ============================================
