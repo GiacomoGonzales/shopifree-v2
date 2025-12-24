@@ -29,10 +29,10 @@ export default function Login() {
 
     try {
       await login(email, password)
-      navigate('/dashboard')
+      // useEffect will handle navigation when auth state changes
     } catch (err: any) {
+      console.error('Login error:', err)
       setError(err.message || 'Error al iniciar sesión')
-    } finally {
       setLoading(false)
     }
   }
@@ -41,9 +41,10 @@ export default function Login() {
     try {
       setLoading(true)
       await loginWithGoogle()
-      // Redirect happens automatically, no need to navigate
+      // useEffect will handle navigation based on store status
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión con Google')
+    } finally {
       setLoading(false)
     }
   }

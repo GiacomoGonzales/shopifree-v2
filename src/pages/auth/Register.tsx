@@ -48,9 +48,10 @@ export default function Register() {
     try {
       setLoading(true)
       await loginWithGoogle()
-      // Redirect happens automatically
+      // useEffect will handle showing step 2 if no store
     } catch (err: any) {
       setError(err.message || 'Error al registrarse con Google')
+    } finally {
       setLoading(false)
     }
   }
