@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { collection, query, where, getDocs, doc, addDoc, deleteDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../components/ui/Toast'
 import type { Category } from '../../types'
 
 export default function Categories() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [storeId, setStoreId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -20,7 +22,7 @@ export default function Categories() {
       try {
         // Fetch store
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('userId', '==', user.uid))
+        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -65,6 +67,7 @@ export default function Categories() {
         name: newCategoryName.trim(),
         slug,
         order: categories.length,
+        active: true,
         createdAt: new Date(),
         updatedAt: new Date()
       })
@@ -75,13 +78,14 @@ export default function Categories() {
         name: newCategoryName.trim(),
         slug,
         order: categories.length,
+        active: true,
         createdAt: new Date(),
         updatedAt: new Date()
       }])
       setNewCategoryName('')
     } catch (error) {
       console.error('Error adding category:', error)
-      alert('Error al agregar categoría')
+      showToast('Error al agregar categoria', 'error')
     }
   }
 
@@ -93,7 +97,7 @@ export default function Categories() {
       setCategories(categories.filter(c => c.id !== categoryId))
     } catch (error) {
       console.error('Error deleting category:', error)
-      alert('Error al eliminar categoría')
+      showToast('Error al eliminar categoria', 'error')
     }
   }
 
@@ -129,7 +133,7 @@ export default function Categories() {
       setEditingName('')
     } catch (error) {
       console.error('Error updating category:', error)
-      alert('Error al actualizar categoría')
+      showToast('Error al actualizar categoria', 'error')
     }
   }
 

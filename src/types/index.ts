@@ -1,105 +1,319 @@
-// Store types
+// ============================================
+// USER TYPES
+// ============================================
+export interface User {
+  id: string                    // Firebase Auth UID
+  email: string
+  // Datos personales
+  firstName?: string
+  lastName?: string
+  phone?: string
+  avatar?: string
+  // Datos de empresa (para facturación)
+  company?: {
+    name?: string
+    taxId?: string              // RUC, CUIT, RFC, etc.
+    address?: string
+    city?: string
+    country?: string
+  }
+  // Referencia
+  storeId?: string
+  createdAt: Date
+  updatedAt?: Date
+}
+
+// ============================================
+// STORE TYPES
+// ============================================
 export interface Store {
   id: string
-  userId: string
+  ownerId: string               // user.id
+
+  // === BÁSICO ===
   name: string
-  subdomain: string
-  description?: string
+  subdomain: string             // mitienda.shopifree.app
+  customDomain?: string         // mitienda.com (premium)
+
+  // === BRANDING ===
+  logo?: string                 // URL Cloudinary
+  heroImage?: string            // URL Cloudinary (2:3 ratio)
+  favicon?: string
+
+  // === TIRA PUBLICITARIA ===
+  announcement?: StoreAnnouncement
+
+  // === CONTACTO ===
   whatsapp: string
-  logo?: string
-  banner?: string
-  theme: string
-  primaryColor?: string
-  currency: string
-  country: string
-  plan: 'free' | 'premium' | 'pro'
+  email?: string
+  instagram?: string
+  facebook?: string
+  tiktok?: string
+
+  // === UBICACIÓN ===
+  location?: StoreLocation
+
+  // === SOBRE NOSOTROS ===
+  about?: {
+    slogan?: string             // Frase corta
+    description?: string        // Texto más largo
+  }
+
+  // === CONFIGURACIÓN ===
+  currency: string              // 'PEN', 'MXN', 'USD'
+  timezone?: string
+  language?: string             // 'es', 'en'
+
+  // === TEMA ===
+  themeId?: string              // ID del tema seleccionado
+  themeSettings?: {
+    primaryColor?: string
+    secondaryColor?: string
+    fontFamily?: string
+  }
+
+  // === PAGOS ===
+  payments?: StorePayments
+
+  // === PLAN ===
+  plan: 'free' | 'pro' | 'business'
+  planExpiresAt?: Date
+
+  // === TIPO DE NEGOCIO ===
+  businessType?: 'retail' | 'restaurant' | 'services' | 'other'
+
+  // === META ===
   createdAt: Date
   updatedAt: Date
 }
 
-// Product types - simplified for catalog mode
+export interface StoreAnnouncement {
+  enabled: boolean
+  text: string                  // "Envío gratis en compras +$50"
+  link?: string                 // URL opcional
+  backgroundColor?: string      // hex color
+  textColor?: string
+}
+
+export interface StoreLocation {
+  address?: string
+  city?: string
+  state?: string
+  country: string               // 'PE', 'MX', 'CO', etc.
+  coordinates?: {
+    lat: number
+    lng: number
+  }
+}
+
+export interface StorePayments {
+  mercadopago?: {
+    enabled: boolean
+    publicKey?: string
+    accessToken?: string        // encrypted
+    sandbox: boolean
+  }
+  // Estructura lista para agregar más pasarelas
+}
+
+// ============================================
+// PRODUCT TYPES
+// ============================================
 export interface Product {
   id: string
   storeId: string
+
+  // === BÁSICO ===
   name: string
   slug: string
   description?: string | null
   price: number
-  comparePrice?: number
-  image?: string | null  // Single image for basic version
-  images?: string[]      // Multiple images for premium
+  comparePrice?: number         // Precio tachado
+
+  // === IMÁGENES ===
+  image?: string | null         // Imagen principal
+  images?: string[]             // Galería (premium)
+
+  // === ORGANIZACIÓN ===
   categoryId?: string | null
-  variations?: Variation[]
-  stock?: number
-  trackStock?: boolean
+  tags?: string[]
+
+  // === VARIACIONES (para ropa/retail) ===
+  hasVariations?: boolean
+  variations?: ProductVariation[]
+
+  // === MODIFICADORES (para restaurantes) ===
+  hasModifiers?: boolean
+  modifierGroups?: ModifierGroup[]
+
+  // === ESTADO ===
   active: boolean
+  featured?: boolean
   order?: number
+
+  // === META ===
   createdAt: Date
   updatedAt: Date
 }
 
-export interface Variation {
+// Para RETAIL: Variaciones simples (sin stock)
+export interface ProductVariation {
   id: string
-  type: 'color' | 'size' | 'custom'
-  name: string
+  name: string                  // "Color", "Talla"
   options: VariationOption[]
 }
 
 export interface VariationOption {
   id: string
-  value: string
-  image?: string
-  stock?: number
-  priceModifier?: number
+  value: string                 // "Rojo", "XL"
+  image?: string                // Imagen de esa variante
+  available: boolean            // Si está disponible
 }
 
-// Category types
+// Para RESTAURANTES: Modificadores
+export interface ModifierGroup {
+  id: string
+  name: string                  // "Tipo de pan", "Extras"
+  required: boolean             // Obligatorio?
+  minSelect: number             // Mínimo a seleccionar (0 si opcional)
+  maxSelect: number             // Máximo a seleccionar
+  options: ModifierOption[]
+}
+
+export interface ModifierOption {
+  id: string
+  name: string                  // "Pan francés", "Queso extra"
+  price: number                 // 0 si no tiene costo adicional
+  available: boolean
+}
+
+// ============================================
+// CATEGORY TYPES
+// ============================================
 export interface Category {
   id: string
   storeId: string
   name: string
-  slug?: string
+  slug: string
   description?: string
   image?: string
   order: number
-  active?: boolean
-  createdAt?: Date
-  updatedAt?: Date
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
-// Order types (for WhatsApp orders)
+// ============================================
+// THEME TYPES
+// ============================================
+export interface Theme {
+  id: string
+  name: string                  // "Minimal", "Bold", "Classic"
+  description: string
+  thumbnail: string             // Preview image
+  category: 'all' | 'retail' | 'restaurant' | 'services'
+  isPremium: boolean
+  isNew: boolean                // Para destacar en landing
+  createdAt: Date
+  colors?: {
+    primary: string
+    background: string
+    accent: string
+  }
+}
+
+// ============================================
+// NEWSLETTER TYPES
+// ============================================
+export interface NewsletterSubscriber {
+  id: string
+  email: string
+  source: 'landing' | 'store'   // De dónde se suscribió
+  storeId?: string              // Si fue desde una tienda
+  createdAt: Date
+  unsubscribedAt?: Date
+}
+
+// ============================================
+// ORDER TYPES
+// ============================================
 export interface Order {
   id: string
   storeId: string
+  orderNumber: string           // ORD-001
+
+  // Items del pedido
   items: OrderItem[]
-  customer: {
+
+  // Cliente
+  customer?: {
     name?: string
     phone: string
     email?: string
   }
+
+  // Totales
+  subtotal: number
   total: number
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
-  paymentMethod?: string
-  paymentStatus?: 'pending' | 'paid' | 'failed'
+
+  // Estado
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+
+  // Pago
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'cash'
+  paymentStatus?: 'pending' | 'paid' | 'refunded'
+  paymentId?: string            // ID de MercadoPago
+
+  // Notas
   notes?: string
+
   createdAt: Date
+  updatedAt: Date
 }
 
 export interface OrderItem {
   productId: string
-  name: string
+  productName: string
+  productImage?: string
   price: number
   quantity: number
-  variation?: string
-  image?: string
+  // Variaciones seleccionadas
+  selectedVariations?: {
+    name: string                // "Color"
+    value: string               // "Rojo"
+  }[]
+  // Modificadores seleccionados
+  selectedModifiers?: {
+    groupName: string           // "Extras"
+    options: {
+      name: string              // "Queso extra"
+      price: number
+    }[]
+  }[]
+  itemTotal: number
 }
 
-// User types
-export interface User {
+// ============================================
+// BLOG TYPES (para artículos hardcodeados)
+// ============================================
+export interface BlogArticle {
   id: string
-  email: string
-  name?: string
-  phone?: string
-  storeId?: string
-  createdAt: Date
+  slug: string
+  title: string
+  excerpt: string
+  content: string               // Contenido en markdown o HTML
+  image: string
+  author: string
+  publishedAt: Date
+  tags?: string[]
+}
+
+// ============================================
+// FAQ TYPES
+// ============================================
+export interface FAQItem {
+  id: string
+  question: string
+  answer: string
+  order: number
 }

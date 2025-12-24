@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, getDoc } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../../lib/firebase'
+import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../components/ui/Toast'
 import type { Product, Category } from '../../types'
+
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function ProductForm() {
   const { productId } = useParams<{ productId: string }>()
   const isEditing = productId && productId !== 'new'
   const { user } = useAuth()
+  const { showToast } = useToast()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -34,7 +38,7 @@ export default function ProductForm() {
       try {
         // Get store
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('userId', '==', user.uid))
+        const storeQuery = query(storesRef, where('ownerId', '==', user.uid))
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -76,18 +80,28 @@ export default function ProductForm() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !storeId) return
+    if (!file) return
 
     setUploading(true)
     try {
-      const filename = `${Date.now()}-${file.name}`
-      const storageRef = ref(storage, `products/${storeId}/${filename}`)
-      await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(storageRef)
-      setImage(url)
+      // Upload to Cloudinary
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      formData.append('folder', 'shopifree/products')
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: formData }
+      )
+
+      if (!response.ok) throw new Error('Upload failed')
+
+      const data = await response.json()
+      setImage(data.secure_url)
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert('Error al subir la imagen')
+      showToast('Error al subir la imagen', 'error')
     } finally {
       setUploading(false)
     }
@@ -121,17 +135,19 @@ export default function ProductForm() {
 
       if (isEditing && productId) {
         await updateDoc(doc(db, 'products', productId), productData)
+        showToast('Producto actualizado', 'success')
       } else {
         await addDoc(collection(db, 'products'), {
           ...productData,
           createdAt: new Date()
         })
+        showToast('Producto creado', 'success')
       }
 
       navigate('/dashboard/products')
     } catch (error) {
       console.error('Error saving product:', error)
-      alert('Error al guardar el producto')
+      showToast('Error al guardar el producto', 'error')
     } finally {
       setSaving(false)
     }
@@ -140,7 +156,7 @@ export default function ProductForm() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a5f]"></div>
       </div>
     )
   }
@@ -148,12 +164,12 @@ export default function ProductForm() {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">
           {isEditing ? 'Editar producto' : 'Nuevo producto'}
         </h1>
         <button
           onClick={() => navigate('/dashboard/products')}
-          className="text-gray-600 hover:text-gray-900"
+          className="text-gray-600 hover:text-[#1e3a5f] transition-colors"
         >
           Cancelar
         </button>
@@ -162,12 +178,12 @@ export default function ProductForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Image upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-[#1e3a5f] mb-2">
             Foto del producto
           </label>
           <div
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed border-gray-300 rounded-xl overflow-hidden cursor-pointer hover:border-gray-400 transition ${
+            className={`border-2 border-dashed border-[#38bdf8]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all bg-gradient-to-br from-[#f0f7ff] to-white ${
               image ? 'aspect-square max-w-xs' : 'aspect-video'
             }`}
           >
@@ -177,15 +193,18 @@ export default function ProductForm() {
               <div className="flex flex-col items-center justify-center h-full p-8 text-gray-500">
                 {uploading ? (
                   <>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mb-2"></div>
-                    <p>Subiendo...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
+                    <p className="text-[#2d6cb5] font-medium">Subiendo...</p>
                   </>
                 ) : (
                   <>
-                    <svg className="w-12 h-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p>Click para subir foto</p>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-[#38bdf8]/20">
+                      <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-[#1e3a5f] font-medium">Click para subir foto</p>
+                    <p className="text-gray-400 text-sm mt-1">o arrastra y suelta</p>
                   </>
                 )}
               </div>
@@ -202,7 +221,7 @@ export default function ProductForm() {
             <button
               type="button"
               onClick={() => setImage('')}
-              className="mt-2 text-sm text-red-600 hover:text-red-700"
+              className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
             >
               Eliminar foto
             </button>
@@ -211,7 +230,7 @@ export default function ProductForm() {
 
         {/* Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="name" className="block text-sm font-semibold text-[#1e3a5f] mb-1">
             Nombre del producto *
           </label>
           <input
@@ -221,13 +240,13 @@ export default function ProductForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ej: Torta de chocolate"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
           />
         </div>
 
         {/* Price */}
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="price" className="block text-sm font-semibold text-[#1e3a5f] mb-1">
             Precio *
           </label>
           <input
@@ -239,14 +258,14 @@ export default function ProductForm() {
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             placeholder="0.00"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción (opcional)
+          <label htmlFor="description" className="block text-sm font-semibold text-[#1e3a5f] mb-1">
+            Descripcion (opcional)
           </label>
           <textarea
             id="description"
@@ -254,23 +273,23 @@ export default function ProductForm() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="Describe tu producto..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black resize-none"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
           />
         </div>
 
         {/* Category */}
         {categories.length > 0 && (
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-              Categoría (opcional)
+            <label htmlFor="category" className="block text-sm font-semibold text-[#1e3a5f] mb-1">
+              Categoria (opcional)
             </label>
             <select
               id="category"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
             >
-              <option value="">Sin categoría</option>
+              <option value="">Sin categoria</option>
               {categories.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
@@ -279,7 +298,7 @@ export default function ProductForm() {
         )}
 
         {/* Active toggle */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20">
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -287,10 +306,10 @@ export default function ProductForm() {
               onChange={(e) => setActive(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
           </label>
-          <span className="text-sm text-gray-700">
-            {active ? 'Visible en el catálogo' : 'Oculto del catálogo'}
+          <span className="text-sm text-[#1e3a5f] font-medium">
+            {active ? 'Visible en el catalogo' : 'Oculto del catalogo'}
           </span>
         </div>
 
@@ -298,7 +317,7 @@ export default function ProductForm() {
         <button
           type="submit"
           disabled={saving || !name || !price}
-          className="w-full py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition font-medium disabled:opacity-50"
+          className="w-full py-3.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
           {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear producto'}
         </button>
