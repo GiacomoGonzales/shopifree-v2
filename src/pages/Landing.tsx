@@ -336,10 +336,12 @@ export default function Landing() {
             {/* Pro */}
             <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-3xl p-8 text-white relative overflow-hidden transform md:scale-105 shadow-xl">
               <div className="absolute top-0 right-0 w-40 h-40 bg-[#38bdf8]/20 rounded-full blur-3xl"></div>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#38bdf8] text-white text-sm px-4 py-1 rounded-full font-medium">
-                Popular
+              <div className="flex justify-center mb-4">
+                <span className="bg-[#38bdf8] text-white text-sm px-4 py-1 rounded-full font-medium shadow-lg">
+                  Popular
+                </span>
               </div>
-              <h3 className="text-xl font-bold mb-2 mt-4">Pro</h3>
+              <h3 className="text-xl font-bold mb-2">Pro</h3>
               <p className="text-4xl font-bold mb-1">
                 $4.99
               </p>
