@@ -108,31 +108,45 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Phone frame */}
-            <div className="relative mx-auto w-72 md:w-80">
-              <div className="bg-[#1e3a5f] rounded-[3rem] p-3 shadow-2xl">
-                <div className="bg-white rounded-[2.5rem] overflow-hidden">
-                  {/* Phone header */}
-                  <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] px-6 py-4">
+            {/* Phone frame - iPhone style */}
+            <div className="relative mx-auto w-[280px] md:w-[320px]">
+              {/* Phone outer frame */}
+              <div className="relative bg-[#1a1a1a] rounded-[45px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
+                {/* Side buttons */}
+                <div className="absolute -left-[2px] top-24 w-[3px] h-8 bg-[#1a1a1a] rounded-l-sm"></div>
+                <div className="absolute -left-[2px] top-36 w-[3px] h-12 bg-[#1a1a1a] rounded-l-sm"></div>
+                <div className="absolute -left-[2px] top-52 w-[3px] h-12 bg-[#1a1a1a] rounded-l-sm"></div>
+                <div className="absolute -right-[2px] top-32 w-[3px] h-16 bg-[#1a1a1a] rounded-r-sm"></div>
+
+                {/* Screen */}
+                <div className="relative bg-white rounded-[38px] overflow-hidden">
+                  {/* Dynamic Island */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[30px] bg-black rounded-full z-20"></div>
+
+                  {/* Status bar */}
+                  <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] px-6 pt-12 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 rounded-full"></div>
+                      <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
+                        <span className="text-white text-lg">🧁</span>
+                      </div>
                       <div>
                         <p className="text-white font-semibold text-sm">Dulces María</p>
                         <p className="text-[#38bdf8] text-xs">dulcesmaria.shopifree.app</p>
                       </div>
                     </div>
                   </div>
+
                   {/* Catalog preview */}
-                  <div className="p-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 space-y-3 bg-gray-50">
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         { img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop', name: 'Torta Chocolate', price: 'S/ 45' },
                         { img: 'https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=200&h=200&fit=crop', name: 'Cupcakes x6', price: 'S/ 25' },
                         { img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200&h=200&fit=crop', name: 'Brownies x4', price: 'S/ 18' },
                         { img: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=200&h=200&fit=crop', name: 'Cookies x12', price: 'S/ 20' },
                       ].map((product, i) => (
-                        <div key={i} className="bg-gray-50 rounded-xl p-2 animate-fade-in" style={{ animationDelay: `${i * 0.15}s` }}>
-                          <div className="aspect-square rounded-lg mb-2 overflow-hidden">
+                        <div key={i} className="bg-white rounded-2xl p-2 shadow-sm">
+                          <div className="aspect-square rounded-xl mb-2 overflow-hidden">
                             <img src={product.img} alt={product.name} className="w-full h-full object-cover" />
                           </div>
                           <p className="text-xs font-medium text-gray-800 truncate">{product.name}</p>
@@ -141,9 +155,17 @@ export default function Landing() {
                       ))}
                     </div>
                     {/* WhatsApp button */}
-                    <div className="bg-green-500 text-white text-center py-3 rounded-xl text-sm font-medium">
+                    <div className="bg-[#25D366] text-white text-center py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                      </svg>
                       Pedir por WhatsApp
                     </div>
+                  </div>
+
+                  {/* Home indicator */}
+                  <div className="bg-gray-50 pb-2 pt-1">
+                    <div className="mx-auto w-32 h-1 bg-gray-300 rounded-full"></div>
                   </div>
                 </div>
               </div>
