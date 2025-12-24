@@ -110,7 +110,8 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
         const parsedProducts: ImportProduct[] = []
         const parseErrors: string[] = []
 
-        (jsonData as Record<string, unknown>[]).forEach((row, index) => {
+        const rows = jsonData as Record<string, unknown>[]
+        rows.forEach((row: Record<string, unknown>, index: number) => {
           const rowNum = index + 2 // Excel rows start at 1, plus header
 
           // Get name (required)
