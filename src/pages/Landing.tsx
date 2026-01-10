@@ -113,66 +113,95 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Phone frame - iPhone style */}
-            <div className="relative mx-auto w-[280px] md:w-[320px]">
-              {/* Phone outer frame */}
-              <div className="relative bg-[#1a1a1a] rounded-[45px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
-                {/* Side buttons */}
-                <div className="absolute -left-[2px] top-24 w-[3px] h-8 bg-[#1a1a1a] rounded-l-sm"></div>
-                <div className="absolute -left-[2px] top-36 w-[3px] h-12 bg-[#1a1a1a] rounded-l-sm"></div>
-                <div className="absolute -left-[2px] top-52 w-[3px] h-12 bg-[#1a1a1a] rounded-l-sm"></div>
-                <div className="absolute -right-[2px] top-32 w-[3px] h-16 bg-[#1a1a1a] rounded-r-sm"></div>
+            {/* Phone frame - iPhone 15 Pro style */}
+            <div className="relative mx-auto w-[280px] md:w-[300px]">
+              {/* Glow effect behind phone */}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#38bdf8]/20 via-transparent to-[#1e3a5f]/20 blur-3xl scale-150 -z-10"></div>
 
-                {/* Screen */}
-                <div className="relative bg-white rounded-[38px] overflow-hidden">
-                  {/* Dynamic Island */}
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[30px] bg-black rounded-full z-20"></div>
+              {/* Phone outer frame - Titanium style */}
+              <div className="relative bg-gradient-to-b from-[#2a2a2c] via-[#1d1d1f] to-[#2a2a2c] rounded-[55px] p-[12px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_-3px_10px_rgba(255,255,255,0.05)_inset]">
+                {/* Titanium edge highlight */}
+                <div className="absolute inset-0 rounded-[55px] bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none"></div>
 
-                  {/* Status bar */}
-                  <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] px-6 pt-12 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-white text-lg">🧁</span>
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold text-sm">Dulces María</p>
-                        <p className="text-[#38bdf8] text-xs">dulcesmaria.shopifree.app</p>
-                      </div>
+                {/* Side buttons - more realistic */}
+                <div className="absolute -left-[1.5px] top-[100px] w-[3px] h-7 bg-gradient-to-r from-[#3a3a3c] to-[#2a2a2c] rounded-l-sm shadow-sm"></div>
+                <div className="absolute -left-[1.5px] top-[140px] w-[3px] h-14 bg-gradient-to-r from-[#3a3a3c] to-[#2a2a2c] rounded-l-sm shadow-sm"></div>
+                <div className="absolute -left-[1.5px] top-[195px] w-[3px] h-14 bg-gradient-to-r from-[#3a3a3c] to-[#2a2a2c] rounded-l-sm shadow-sm"></div>
+                <div className="absolute -right-[1.5px] top-[155px] w-[3px] h-20 bg-gradient-to-l from-[#3a3a3c] to-[#2a2a2c] rounded-r-sm shadow-sm"></div>
+
+                {/* Screen bezel */}
+                <div className="relative bg-black rounded-[46px] p-[2px] overflow-hidden">
+                  {/* Screen */}
+                  <div className="relative bg-white rounded-[44px] overflow-hidden">
+                    {/* Dynamic Island */}
+                    <div className="absolute top-[10px] left-1/2 -translate-x-1/2 w-[90px] h-[28px] bg-black rounded-full z-20 flex items-center justify-center gap-2">
+                      <div className="w-[8px] h-[8px] rounded-full bg-[#1a1a1a] ring-1 ring-gray-800"></div>
+                      <div className="w-[6px] h-[6px] rounded-full bg-[#0a3d2e]"></div>
                     </div>
-                  </div>
 
-                  {/* Catalog preview */}
-                  <div className="p-3 space-y-3 bg-gray-50">
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop', name: 'Torta Chocolate', price: 'S/ 45' },
-                        { img: 'https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=200&h=200&fit=crop', name: 'Cupcakes x6', price: 'S/ 25' },
-                        { img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200&h=200&fit=crop', name: 'Brownies x4', price: 'S/ 18' },
-                        { img: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=200&h=200&fit=crop', name: 'Cookies x12', price: 'S/ 20' },
-                      ].map((product, i) => (
-                        <div key={i} className="bg-white rounded-2xl p-2 shadow-sm">
-                          <div className="aspect-square rounded-xl mb-2 overflow-hidden">
-                            <img src={product.img} alt={product.name} className="w-full h-full object-cover" />
+                    {/* Status bar icons */}
+                    <div className="absolute top-[14px] left-6 right-6 flex justify-between items-center z-10 text-white text-[10px] font-semibold">
+                      <span>9:41</span>
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                        <div className="flex items-center">
+                          <div className="w-6 h-3 border border-white rounded-sm flex items-center p-[1px]">
+                            <div className="h-full w-4/5 bg-white rounded-sm"></div>
                           </div>
-                          <p className="text-xs font-medium text-gray-800 truncate">{product.name}</p>
-                          <p className="text-xs font-bold text-[#1e3a5f]">{product.price}</p>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                    {/* WhatsApp button */}
-                    <div className="bg-[#25D366] text-white text-center py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                      </svg>
-                      Pedir por WhatsApp
-                    </div>
-                  </div>
 
-                  {/* Home indicator */}
-                  <div className="bg-gray-50 pb-2 pt-1">
-                    <div className="mx-auto w-32 h-1 bg-gray-300 rounded-full"></div>
+                    {/* Store header */}
+                    <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] px-5 pt-14 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-lg">🧁</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-[13px]">Dulces María</p>
+                          <p className="text-[#7dd3fc] text-[10px]">dulcesmaria.shopifree.app</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Catalog preview */}
+                    <div className="p-3 space-y-2.5 bg-gray-50/80">
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop', name: 'Torta Chocolate', price: 'S/ 45' },
+                          { img: 'https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=200&h=200&fit=crop', name: 'Cupcakes x6', price: 'S/ 25' },
+                          { img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200&h=200&fit=crop', name: 'Brownies x4', price: 'S/ 18' },
+                          { img: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=200&h=200&fit=crop', name: 'Cookies x12', price: 'S/ 20' },
+                        ].map((product, i) => (
+                          <div key={i} className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+                            <div className="aspect-square rounded-lg mb-1.5 overflow-hidden">
+                              <img src={product.img} alt={product.name} className="w-full h-full object-cover" />
+                            </div>
+                            <p className="text-[10px] font-medium text-gray-800 truncate px-0.5">{product.name}</p>
+                            <p className="text-[10px] font-bold text-[#1e3a5f] px-0.5">{product.price}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {/* WhatsApp button */}
+                      <div className="bg-[#25D366] text-white text-center py-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 shadow-md">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        </svg>
+                        Pedir por WhatsApp
+                      </div>
+                    </div>
+
+                    {/* Home indicator */}
+                    <div className="bg-gray-50/80 pb-2 pt-1">
+                      <div className="mx-auto w-28 h-[4px] bg-black/80 rounded-full"></div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Screen reflection */}
+                <div className="absolute inset-[12px] rounded-[46px] bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
               </div>
             </div>
           </div>
