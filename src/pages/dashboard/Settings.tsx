@@ -126,10 +126,10 @@ export default function Settings() {
         <p className="text-gray-600 mt-1">Configura la informacion de tu tienda</p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Basic Info */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-6">Informacion basica</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4 sm:mb-6">Informacion basica</h2>
 
           <div className="space-y-4">
             <div>
@@ -189,8 +189,8 @@ export default function Settings() {
         </div>
 
         {/* About */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-6">Sobre tu negocio</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4 sm:mb-6">Sobre tu negocio</h2>
 
           <div className="space-y-4">
             <div>
@@ -222,8 +222,8 @@ export default function Settings() {
         </div>
 
         {/* Location */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-6">Ubicacion</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4 sm:mb-6">Ubicacion</h2>
 
           <div className="space-y-4">
             <div>
@@ -247,7 +247,7 @@ export default function Settings() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                   Ciudad
@@ -290,8 +290,8 @@ export default function Settings() {
         </div>
 
         {/* Contact */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-6">Contacto y redes sociales</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4 sm:mb-6">Contacto y redes sociales</h2>
 
           <div className="space-y-4">
             <div>
@@ -327,7 +327,7 @@ export default function Settings() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                   Instagram
@@ -369,14 +369,14 @@ export default function Settings() {
         </div>
 
         {/* Danger zone */}
-        <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Zona de peligro</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="bg-white rounded-2xl border border-red-200 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-red-600 mb-2">Zona de peligro</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mb-4">
             Eliminar tu catalogo borrara permanentemente todos tus productos y datos.
           </p>
           <button
             onClick={() => showToast('Funcionalidad proximamente', 'info')}
-            className="px-4 py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
+            className="w-full sm:w-auto px-4 py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
           >
             Eliminar mi catalogo
           </button>
@@ -387,7 +387,7 @@ export default function Settings() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+            className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>

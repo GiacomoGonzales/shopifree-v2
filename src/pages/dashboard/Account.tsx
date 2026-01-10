@@ -140,10 +140,10 @@ export default function Account() {
         </button>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Personal Data */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-6">Datos personales</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4 sm:mb-6">Datos personales</h2>
 
           {/* Avatar */}
           <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
@@ -186,7 +186,7 @@ export default function Account() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Nombre</label>
               <input
@@ -233,9 +233,9 @@ export default function Account() {
         </div>
 
         {/* Billing Data */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">Datos de facturacion</h2>
-          <p className="text-sm text-gray-600 mb-6">Opcional - para facturas y comprobantes</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2">Datos de facturacion</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Opcional - para facturas y comprobantes</p>
 
           <div className="space-y-4">
             <div>
@@ -271,7 +271,7 @@ export default function Account() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Ciudad</label>
                 <input
@@ -306,11 +306,11 @@ export default function Account() {
         </div>
 
         {/* Security */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Seguridad</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4">Seguridad</h2>
           <button
             onClick={() => showToast('Funcionalidad proximamente', 'info')}
-            className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+            className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
           >
             Cambiar contrasena
           </button>
