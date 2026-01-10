@@ -73,7 +73,7 @@ export default function Register() {
 
   const simulateProgress = () => {
     return new Promise<void>((resolve) => {
-      const duration = 4000 // 4 seconds total
+      const duration = 6500 // 6.5 seconds total
       const steps = 100
       const interval = duration / steps
       let currentStep = 0
