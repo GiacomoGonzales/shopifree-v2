@@ -71,30 +71,27 @@ export default function Register() {
     }
   }
 
-  const simulateProgress = () => {
-    return new Promise<void>((resolve) => {
-      const duration = 6500 // 6.5 seconds total
-      const steps = 100
-      const interval = duration / steps
-      let currentStep = 0
+  // Animate progress bar over specified duration
+  const animateProgress = (durationMs: number) => {
+    const startTime = Date.now()
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const newProgress = Math.min(Math.floor((elapsed / durationMs) * 100), 100)
 
-      const timer = setInterval(() => {
-        currentStep++
-        setProgress(currentStep)
+      setProgress(newProgress)
 
-        // Update message based on progress
-        const messageIndex = Math.min(
-          Math.floor((currentStep / 100) * PROGRESS_MESSAGES.length),
-          PROGRESS_MESSAGES.length - 1
-        )
-        setProgressMessage(messageIndex)
+      // Update message based on progress
+      const messageIndex = Math.min(
+        Math.floor((newProgress / 100) * PROGRESS_MESSAGES.length),
+        PROGRESS_MESSAGES.length - 1
+      )
+      setProgressMessage(messageIndex)
 
-        if (currentStep >= steps) {
-          clearInterval(timer)
-          resolve()
-        }
-      }, interval)
-    })
+      if (newProgress < 100) {
+        requestAnimationFrame(animate)
+      }
+    }
+    requestAnimationFrame(animate)
   }
 
   const handleStoreSubmit = async (e: React.FormEvent) => {
@@ -124,42 +121,50 @@ export default function Register() {
       const userEmail = firebaseUser.email || email
       const isAdmin = userEmail === ADMIN_EMAIL
 
-      // Start progress animation and actual creation in parallel
-      const [,] = await Promise.all([
-        simulateProgress(),
-        (async () => {
-          // Create user in Firestore
-          await userService.create(firebaseUser.uid, {
-            id: firebaseUser.uid,
-            email: userEmail,
-            storeId,
-            role: isAdmin ? 'admin' : 'user',
-          })
+      const ANIMATION_DURATION = 6500 // 6.5 seconds minimum
 
-          // Create store in Firestore (admin gets Business plan)
-          await storeService.create(storeId, {
-            id: storeId,
-            ownerId: firebaseUser.uid,
-            name: storeName,
-            subdomain,
-            whatsapp,
-            currency: 'PEN',
-            themeId: 'minimal',
-            plan: isAdmin ? 'business' : 'free',
-          })
+      // Start animation immediately
+      animateProgress(ANIMATION_DURATION)
+      const animationStart = Date.now()
 
-          // Create subdomain in Vercel (non-blocking)
-          try {
-            await createSubdomain(subdomain)
-            console.log('[Register] Subdominio creado:', `${subdomain}.shopifree.app`)
-          } catch (subdomainError) {
-            console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
-          }
+      // Create user in Firestore
+      await userService.create(firebaseUser.uid, {
+        id: firebaseUser.uid,
+        email: userEmail,
+        storeId,
+        role: isAdmin ? 'admin' : 'user',
+      })
 
-          // Refresh store data in context
-          await refreshStore()
-        })()
-      ])
+      // Create store in Firestore (admin gets Business plan)
+      await storeService.create(storeId, {
+        id: storeId,
+        ownerId: firebaseUser.uid,
+        name: storeName,
+        subdomain,
+        whatsapp,
+        currency: 'PEN',
+        themeId: 'minimal',
+        plan: isAdmin ? 'business' : 'free',
+      })
+
+      // Create subdomain in Vercel (non-blocking)
+      try {
+        await createSubdomain(subdomain)
+        console.log('[Register] Subdominio creado:', `${subdomain}.shopifree.app`)
+      } catch (subdomainError) {
+        console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
+      }
+
+      // Refresh store data in context
+      await refreshStore()
+
+      // Wait for remaining animation time if creation was faster
+      const elapsed = Date.now() - animationStart
+      const remainingTime = Math.max(0, ANIMATION_DURATION - elapsed)
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime))
+      }
+      setProgress(100)
 
       // Show success state
       setCreationComplete(true)
