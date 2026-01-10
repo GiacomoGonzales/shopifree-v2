@@ -119,8 +119,7 @@ export default function MinimalTheme({ store, products, categories }: Props) {
               <img
                 src={store.heroImage}
                 alt=""
-                className="w-full object-cover"
-                style={{ aspectRatio: '3/2', maxHeight: '500px' }}
+                className="w-full object-cover aspect-[16/9] md:aspect-[21/9] md:max-h-[400px]"
               />
             </div>
           )}

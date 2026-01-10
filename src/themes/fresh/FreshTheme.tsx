@@ -126,7 +126,7 @@ export default function FreshTheme({ store, products, categories }: Props) {
       {/* ===================== HERO ===================== */}
       <section className="relative overflow-hidden">
         {store.heroImage ? (
-          <div className="relative h-[45vh] md:h-[55vh]">
+          <div className="relative aspect-[16/9] md:aspect-[21/9] md:max-h-[400px]">
             <img
               src={store.heroImage}
               alt=""

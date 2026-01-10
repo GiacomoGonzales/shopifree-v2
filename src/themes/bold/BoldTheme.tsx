@@ -161,7 +161,7 @@ export default function BoldTheme({ store, products, categories }: Props) {
       {store.heroImage ? (
         // Hero WITH image - dramatic diagonal cut
         <section className="relative">
-          <div className="aspect-[3/2] md:aspect-[21/9] overflow-hidden">
+          <div className="aspect-[16/9] md:aspect-[21/9] md:max-h-[400px] overflow-hidden">
             <img
               src={store.heroImage}
               alt={store.name}

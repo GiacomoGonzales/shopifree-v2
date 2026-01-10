@@ -121,7 +121,7 @@ export default function BoutiqueTheme({ store, products, categories }: Props) {
       {/* ===================== HERO ===================== */}
       <section className="relative">
         {store.heroImage ? (
-          <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
+          <div className="relative aspect-[16/9] md:aspect-[21/9] md:max-h-[400px] overflow-hidden">
             <img
               src={store.heroImage}
               alt=""
