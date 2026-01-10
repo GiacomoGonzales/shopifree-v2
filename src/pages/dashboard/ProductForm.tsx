@@ -139,38 +139,44 @@ export default function ProductForm() {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
 
-      const productData = {
+      // Build product data dynamically to avoid undefined values (Firebase rejects them)
+      const productData: Record<string, unknown> = {
         name,
         slug,
         price: parseFloat(price),
-        description: description || undefined,
-        image: image || undefined,
-        categoryId: categoryId || undefined,
         active,
-        // Avanzados
-        comparePrice: comparePrice ? parseFloat(comparePrice) : undefined,
-        cost: cost ? parseFloat(cost) : undefined,
-        sku: sku || undefined,
-        barcode: barcode || undefined,
-        stock: stock ? parseInt(stock) : undefined,
         trackStock,
-        lowStockAlert: lowStockAlert ? parseInt(lowStockAlert) : undefined,
-        brand: brand || undefined,
-        tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        weight: weight ? parseFloat(weight) : undefined,
-        dimensions: (length || width || height) ? {
-          length: length ? parseFloat(length) : undefined,
-          width: width ? parseFloat(width) : undefined,
-          height: height ? parseFloat(height) : undefined,
-        } : undefined,
         featured,
+        tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      }
+
+      // Add optional fields only if they have values
+      if (description) productData.description = description
+      if (image) productData.image = image
+      if (categoryId) productData.categoryId = categoryId
+      if (comparePrice) productData.comparePrice = parseFloat(comparePrice)
+      if (cost) productData.cost = parseFloat(cost)
+      if (sku) productData.sku = sku
+      if (barcode) productData.barcode = barcode
+      if (stock) productData.stock = parseInt(stock)
+      if (lowStockAlert) productData.lowStockAlert = parseInt(lowStockAlert)
+      if (brand) productData.brand = brand
+      if (weight) productData.weight = parseFloat(weight)
+
+      // Add dimensions only if at least one dimension is provided
+      if (length || width || height) {
+        const dimensions: Record<string, number> = {}
+        if (length) dimensions.length = parseFloat(length)
+        if (width) dimensions.width = parseFloat(width)
+        if (height) dimensions.height = parseFloat(height)
+        productData.dimensions = dimensions
       }
 
       if (isEditing && productId) {
-        await productService.update(store.id, productId, productData)
+        await productService.update(store.id, productId, productData as Parameters<typeof productService.update>[2])
         showToast('Producto actualizado', 'success')
       } else {
-        await productService.create(store.id, productData)
+        await productService.create(store.id, productData as Parameters<typeof productService.create>[1])
         showToast('Producto creado', 'success')
       }
 

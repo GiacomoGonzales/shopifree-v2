@@ -33,31 +33,28 @@ export default function Catalog({ subdomainStore }: CatalogProps) {
           const storeId = storeSnapshot.docs[0].id
           setStore({ ...storeData, id: storeId })
 
-          // Fetch products
-          const productsRef = collection(db, 'products')
+          // Fetch products from subcollection
+          const productsRef = collection(db, 'stores', storeId, 'products')
           const productsQuery = query(
             productsRef,
-            where('storeId', '==', storeId),
             where('active', '==', true)
           )
           const productsSnapshot = await getDocs(productsQuery)
           setProducts(productsSnapshot.docs.map(doc => ({
             ...doc.data() as Product,
-            id: doc.id
+            id: doc.id,
+            storeId
           })))
 
-          // Fetch categories
-          const categoriesRef = collection(db, 'categories')
-          const categoriesQuery = query(
-            categoriesRef,
-            where('storeId', '==', storeId)
-          )
-          const categoriesSnapshot = await getDocs(categoriesQuery)
+          // Fetch categories from subcollection
+          const categoriesRef = collection(db, 'stores', storeId, 'categories')
+          const categoriesSnapshot = await getDocs(categoriesRef)
           setCategories(
             categoriesSnapshot.docs
               .map(doc => ({
                 ...doc.data() as Category,
-                id: doc.id
+                id: doc.id,
+                storeId
               }))
               .sort((a, b) => (a.order || 0) - (b.order || 0))
           )
