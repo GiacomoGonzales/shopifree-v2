@@ -3,13 +3,14 @@
 
 import MinimalTheme from './minimal/MinimalTheme'
 import BoldTheme from './bold/BoldTheme'
+import BoutiqueTheme from './boutique/BoutiqueTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
   minimal: MinimalTheme,
   bold: BoldTheme,
-  // These will use Minimal as fallback until implemented:
-  boutique: MinimalTheme,
+  boutique: BoutiqueTheme,
+  // These will use fallback until implemented:
   fresh: MinimalTheme,
   neon: BoldTheme, // Uses Bold (dark theme) as base
   luxe: BoldTheme,
@@ -21,4 +22,4 @@ export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme }
