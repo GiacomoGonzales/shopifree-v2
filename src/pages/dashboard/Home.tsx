@@ -28,7 +28,7 @@ export default function DashboardHome() {
     fetchData()
   }, [store])
 
-  const catalogUrl = store ? `${window.location.origin}/c/${store.subdomain}` : ''
+  const catalogUrl = store ? `https://${store.subdomain}.shopifree.app` : ''
 
   const copyLink = () => {
     navigator.clipboard.writeText(catalogUrl)

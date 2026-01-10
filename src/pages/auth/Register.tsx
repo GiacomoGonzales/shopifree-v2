@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { userService, storeService } from '../../lib/firebase'
+import { createSubdomain } from '../../lib/subdomain'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
@@ -98,6 +99,15 @@ export default function Register() {
         themeId: 'minimal',
         plan: isAdmin ? 'business' : 'free',
       })
+
+      // Create subdomain in Vercel (non-blocking)
+      try {
+        await createSubdomain(subdomain)
+        console.log('[Register] Subdominio creado:', `${subdomain}.shopifree.app`)
+      } catch (subdomainError) {
+        // Log but don't block registration if subdomain creation fails
+        console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
+      }
 
       // Refresh store data in context
       await refreshStore()

@@ -87,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshStore = async () => {
     if (firebaseUser) {
+      // Reload both user and store data
+      const userData = await userService.get(firebaseUser.uid)
+      setUser(userData)
       const storeData = await storeService.getByOwner(firebaseUser.uid)
       setStore(storeData)
     }

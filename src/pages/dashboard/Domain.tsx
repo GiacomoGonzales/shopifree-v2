@@ -42,7 +42,7 @@ export default function Domain() {
     )
   }
 
-  const catalogUrl = store ? `${window.location.origin}/c/${store.subdomain}` : ''
+  const catalogUrl = store ? `https://${store.subdomain}.shopifree.app` : ''
 
   return (
     <div className="max-w-3xl">

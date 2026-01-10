@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
+import { PLAN_FEATURES } from '../../lib/stripe'
 import type { Store } from '../../types'
 
 export default function AdminStores() {
@@ -147,7 +148,7 @@ export default function AdminStores() {
                   </td>
                   <td className="px-6 py-4">
                     <a
-                      href={`/c/${store.subdomain}`}
+                      href={`https://${store.subdomain}.shopifree.app`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#2d6cb5] hover:underline text-sm"
@@ -227,7 +228,7 @@ export default function AdminStores() {
                   <div>
                     <p className="font-semibold text-[#1e3a5f] capitalize">{plan}</p>
                     <p className="text-sm text-gray-500">
-                      {plan === 'free' ? 'Gratis' : plan === 'pro' ? '$9.99/mes' : '$29.99/mes'}
+                      {plan === 'free' ? 'Gratis' : `$${PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES].price}/mes`}
                     </p>
                   </div>
                   {editingStore.plan === plan && (

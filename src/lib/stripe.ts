@@ -31,29 +31,28 @@ export const PLAN_FEATURES = {
     price: 0,
     priceYearly: 0,
     features: [
-      'Hasta 10 productos',
-      '1 imagen por producto',
-      'Subdominio shopifree.app',
-      'Soporte por email'
+      'Hasta 20 productos',
+      'Pedidos por WhatsApp',
+      'Link compartible',
+      'Codigo QR de tu catalogo'
     ],
     limits: {
-      products: 10,
+      products: 20,
       imagesPerProduct: 1,
       categories: 3
     }
   },
   pro: {
     name: 'Pro',
-    price: 9.99,
-    priceYearly: 99,
+    price: 4.99,
+    priceYearly: 49.99,
     features: [
       'Productos ilimitados',
-      'Hasta 5 imágenes por producto',
-      'Categorías ilimitadas',
-      'Dominio personalizado',
-      'Sin marca de agua',
-      'Estadísticas avanzadas',
-      'Soporte prioritario'
+      'Sin marca Shopifree',
+      'Multiples fotos por producto',
+      'Categorias ilimitadas',
+      'Estadisticas basicas',
+      'Soporte por email'
     ],
     limits: {
       products: -1, // unlimited
@@ -63,22 +62,20 @@ export const PLAN_FEATURES = {
   },
   business: {
     name: 'Business',
-    price: 29.99,
-    priceYearly: 299,
+    price: 9.99,
+    priceYearly: 99.99,
     features: [
       'Todo lo de Pro',
-      'Múltiples tiendas',
-      'API access',
-      'Cupones y descuentos',
-      'Integraciones (WhatsApp Business)',
-      'Reportes personalizados',
-      'Soporte dedicado 24/7'
+      'Cupones de descuento',
+      'Analytics avanzados',
+      'Dominio personalizado',
+      'Pagos en linea',
+      'Soporte prioritario'
     ],
     limits: {
       products: -1,
       imagesPerProduct: 10,
-      categories: -1,
-      stores: 5
+      categories: -1
     }
   }
 }

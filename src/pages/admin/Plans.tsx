@@ -34,7 +34,7 @@ export default function AdminPlans() {
   const businessSubscriptions = activeSubscriptions.filter(s => s.plan === 'business')
 
   // Calculate MRR (Monthly Recurring Revenue)
-  const mrr = (proSubscriptions.length * 9.99) + (businessSubscriptions.length * 29.99)
+  const mrr = (proSubscriptions.length * PLAN_FEATURES.pro.price) + (businessSubscriptions.length * PLAN_FEATURES.business.price)
 
   if (loading) {
     return (
