@@ -67,6 +67,17 @@ export default function DashboardHome() {
             {catalogUrl}
           </code>
           <div className="flex gap-2 sm:flex-shrink-0">
+            <a
+              href={catalogUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 sm:flex-none px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition text-sm font-medium flex items-center justify-center gap-2 shadow-lg shadow-[#1e3a5f]/20"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span className="hidden sm:inline">Ir</span>
+            </a>
             <button
               onClick={copyLink}
               className={`flex-1 sm:flex-none px-4 py-3 rounded-xl transition text-sm font-medium ${
