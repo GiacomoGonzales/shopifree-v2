@@ -1,0 +1,21 @@
+# Robots.txt for Shopifree
+# https://shopifree.app
+
+User-agent: *
+Allow: /
+
+# Disallow admin and dashboard routes from indexing
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /admin
+Disallow: /admin/*
+
+# Allow login and register for SEO
+Allow: /login
+Allow: /register
+
+# Sitemap location
+Sitemap: https://shopifree.app/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

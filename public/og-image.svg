@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2d6cb5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38bdf8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="200" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1100" cy="530" r="250" fill="rgba(255,255,255,0.05)"/>
+
+  <!-- Logo icon -->
+  <rect x="100" y="215" width="80" height="80" rx="16" fill="white"/>
+  <text x="140" y="275" font-family="Arial, sans-serif" font-size="50" font-weight="bold" fill="#1e3a5f" text-anchor="middle">S</text>
+
+  <!-- Main text -->
+  <text x="200" y="270" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="white">Shopifree</text>
+
+  <!-- Tagline -->
+  <text x="100" y="370" font-family="Arial, sans-serif" font-size="36" fill="rgba(255,255,255,0.9)">Crea tu catalogo online gratis</text>
+  <text x="100" y="420" font-family="Arial, sans-serif" font-size="36" fill="rgba(255,255,255,0.9)">y vende por WhatsApp</text>
+
+  <!-- CTA -->
+  <rect x="100" y="480" width="300" height="60" rx="30" fill="white"/>
+  <text x="250" y="520" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e3a5f" text-anchor="middle">Sin comisiones</text>
+
+  <!-- URL -->
+  <text x="1100" y="580" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.7)" text-anchor="end">shopifree.app</text>
+</svg>

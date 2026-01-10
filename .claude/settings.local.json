@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(firebase deploy:*)",
+      "Bash(dir \"C:\\\\Users\\\\giaco\\\\shopifree-v2\")",
+      "Bash(curl:*)",
+      "Bash(python -c:*)",
+      "Bash(node -e:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
