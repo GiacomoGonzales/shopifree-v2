@@ -282,7 +282,7 @@ export default function Branding() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de fondo</label>
                 <div className="flex items-center gap-3">
@@ -290,13 +290,13 @@ export default function Branding() {
                     type="color"
                     value={announcement.backgroundColor}
                     onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                    className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+                    className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
                   />
                   <input
                     type="text"
                     value={announcement.backgroundColor}
                     onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
                   />
                 </div>
               </div>
@@ -307,13 +307,13 @@ export default function Branding() {
                     type="color"
                     value={announcement.textColor}
                     onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                    className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+                    className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
                   />
                   <input
                     type="text"
                     value={announcement.textColor}
                     onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
                   />
                 </div>
               </div>
