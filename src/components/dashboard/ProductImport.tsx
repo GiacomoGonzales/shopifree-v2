@@ -224,26 +224,34 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
           categoryId = categoryMap.get(product.category.toLowerCase()) || null
         }
 
-        await productService.create(store.id, {
+        // Build product data, only including defined values
+        const productData: Record<string, unknown> = {
           name: product.name,
           slug: generateSlug(product.name),
           price: product.price,
-          description: product.description || null,
-          sku: product.sku || null,
-          barcode: product.barcode || null,
-          stock: product.stock ?? null,
-          trackStock: product.stock !== undefined && product.stock !== null,
-          cost: product.cost ?? null,
-          comparePrice: product.comparePrice ?? null,
-          brand: product.brand || null,
           tags: product.tags ? product.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-          weight: product.weight ?? null,
-          categoryId: categoryId || null,
           active: product.active ?? true,
           featured: product.featured ?? false,
-          image: null,
           images: [],
-        })
+        }
+
+        // Add optional fields only if they have values
+        if (product.description) productData.description = product.description
+        if (product.sku) productData.sku = product.sku
+        if (product.barcode) productData.barcode = product.barcode
+        if (product.stock !== undefined && product.stock !== null) {
+          productData.stock = product.stock
+          productData.trackStock = true
+        } else {
+          productData.trackStock = false
+        }
+        if (product.cost !== undefined && product.cost !== null) productData.cost = product.cost
+        if (product.comparePrice !== undefined && product.comparePrice !== null) productData.comparePrice = product.comparePrice
+        if (product.brand) productData.brand = product.brand
+        if (product.weight !== undefined && product.weight !== null) productData.weight = product.weight
+        if (categoryId) productData.categoryId = categoryId
+
+        await productService.create(store.id, productData as Parameters<typeof productService.create>[1])
         successCount++
       } catch (error) {
         console.error(`Error importing product ${product.name}:`, error)
