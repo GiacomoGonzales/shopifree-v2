@@ -6,6 +6,15 @@ import { createSubdomain } from '../../lib/subdomain'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
+// Mensajes de progreso para la animación
+const PROGRESS_MESSAGES = [
+  { text: 'Creando tu cuenta...', icon: '👤' },
+  { text: 'Configurando tu tienda...', icon: '🏪' },
+  { text: 'Generando tu link personalizado...', icon: '🔗' },
+  { text: 'Preparando tu catálogo...', icon: '📦' },
+  { text: '¡Casi listo!', icon: '✨' },
+]
+
 export default function Register() {
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
@@ -14,6 +23,11 @@ export default function Register() {
   const [whatsapp, setWhatsapp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [creatingStore, setCreatingStore] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState(0)
+  const [creationComplete, setCreationComplete] = useState(false)
+  const [generatedSubdomain, setGeneratedSubdomain] = useState('')
   const { register, loginWithGoogle, refreshStore, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
@@ -57,12 +71,40 @@ export default function Register() {
     }
   }
 
+  const simulateProgress = () => {
+    return new Promise<void>((resolve) => {
+      const duration = 4000 // 4 seconds total
+      const steps = 100
+      const interval = duration / steps
+      let currentStep = 0
+
+      const timer = setInterval(() => {
+        currentStep++
+        setProgress(currentStep)
+
+        // Update message based on progress
+        const messageIndex = Math.min(
+          Math.floor((currentStep / 100) * PROGRESS_MESSAGES.length),
+          PROGRESS_MESSAGES.length - 1
+        )
+        setProgressMessage(messageIndex)
+
+        if (currentStep >= steps) {
+          clearInterval(timer)
+          resolve()
+        }
+      }, interval)
+    })
+  }
+
   const handleStoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!firebaseUser) return
 
     setError('')
-    setLoading(true)
+    setCreatingStore(true)
+    setProgress(0)
+    setProgressMessage(0)
 
     try {
       // Generate subdomain from store name
@@ -74,51 +116,165 @@ export default function Register() {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
 
+      setGeneratedSubdomain(subdomain)
+
       const storeId = firebaseUser.uid
 
       // Check if this is the admin user
       const userEmail = firebaseUser.email || email
       const isAdmin = userEmail === ADMIN_EMAIL
 
-      // Create user in Firestore
-      await userService.create(firebaseUser.uid, {
-        id: firebaseUser.uid,
-        email: userEmail,
-        storeId,
-        role: isAdmin ? 'admin' : 'user',
-      })
+      // Start progress animation and actual creation in parallel
+      const [,] = await Promise.all([
+        simulateProgress(),
+        (async () => {
+          // Create user in Firestore
+          await userService.create(firebaseUser.uid, {
+            id: firebaseUser.uid,
+            email: userEmail,
+            storeId,
+            role: isAdmin ? 'admin' : 'user',
+          })
 
-      // Create store in Firestore (admin gets Business plan)
-      await storeService.create(storeId, {
-        id: storeId,
-        ownerId: firebaseUser.uid,
-        name: storeName,
-        subdomain,
-        whatsapp,
-        currency: 'PEN',
-        themeId: 'minimal',
-        plan: isAdmin ? 'business' : 'free',
-      })
+          // Create store in Firestore (admin gets Business plan)
+          await storeService.create(storeId, {
+            id: storeId,
+            ownerId: firebaseUser.uid,
+            name: storeName,
+            subdomain,
+            whatsapp,
+            currency: 'PEN',
+            themeId: 'minimal',
+            plan: isAdmin ? 'business' : 'free',
+          })
 
-      // Create subdomain in Vercel (non-blocking)
-      try {
-        await createSubdomain(subdomain)
-        console.log('[Register] Subdominio creado:', `${subdomain}.shopifree.app`)
-      } catch (subdomainError) {
-        // Log but don't block registration if subdomain creation fails
-        console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
-      }
+          // Create subdomain in Vercel (non-blocking)
+          try {
+            await createSubdomain(subdomain)
+            console.log('[Register] Subdominio creado:', `${subdomain}.shopifree.app`)
+          } catch (subdomainError) {
+            console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
+          }
 
-      // Refresh store data in context
-      await refreshStore()
+          // Refresh store data in context
+          await refreshStore()
+        })()
+      ])
 
-      navigate('/dashboard')
+      // Show success state
+      setCreationComplete(true)
+
+      // Wait 2 seconds to show success message, then navigate
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 2000)
+
     } catch (err: any) {
       console.error('Error creating store:', err)
       setError(err.message || 'Error al crear tienda')
-    } finally {
-      setLoading(false)
+      setCreatingStore(false)
     }
+  }
+
+  // Show creation animation screen
+  if (creatingStore) {
+    return (
+      <div className="min-h-screen bg-[#fafbfc] relative overflow-hidden flex flex-col items-center justify-center px-4">
+        {/* Animated background */}
+        <div className="fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f08_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+          <div className="absolute top-0 -left-40 w-[400px] h-[400px] bg-[#38bdf8] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
+          <div className="absolute top-0 -right-40 w-[400px] h-[400px] bg-[#1e3a5f] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-40 left-1/2 w-[400px] h-[400px] bg-[#2d6cb5] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
+        </div>
+
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img src="/newlogo.png" alt="Shopifree" className="h-12" />
+          </div>
+
+          {/* Card */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl shadow-[#1e3a5f]/10 border border-white/50">
+            {!creationComplete ? (
+              <>
+                {/* Animated icon */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl flex items-center justify-center shadow-lg shadow-[#38bdf8]/30 animate-pulse">
+                      <span className="text-3xl">{PROGRESS_MESSAGES[progressMessage].icon}</span>
+                    </div>
+                    {/* Spinning ring */}
+                    <div className="absolute -inset-2">
+                      <div className="w-full h-full rounded-3xl border-2 border-transparent border-t-[#38bdf8] animate-spin"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress message */}
+                <h2 className="text-xl font-bold text-[#1e3a5f] text-center mb-2">
+                  {PROGRESS_MESSAGES[progressMessage].text}
+                </h2>
+                <p className="text-gray-500 text-sm text-center mb-6">
+                  Esto solo tomará un momento
+                </p>
+
+                {/* Progress bar */}
+                <div className="relative">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] rounded-full transition-all duration-100 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 text-center mt-2">{progress}%</p>
+                </div>
+
+                {/* Store preview */}
+                {generatedSubdomain && (
+                  <div className="mt-6 p-4 bg-[#f0f7ff] rounded-xl border border-[#38bdf8]/20">
+                    <p className="text-xs text-gray-500 text-center mb-1">Tu link será</p>
+                    <p className="text-sm font-semibold text-[#1e3a5f] text-center">
+                      {generatedSubdomain}.shopifree.app
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Success state */}
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 animate-bounce">
+                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <h2 className="text-xl font-bold text-[#1e3a5f] text-center mb-2">
+                  ¡Tu catálogo está listo!
+                </h2>
+                <p className="text-gray-500 text-sm text-center mb-4">
+                  Bienvenido a Shopifree
+                </p>
+
+                {/* Store link */}
+                <div className="p-4 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-xl">
+                  <p className="text-xs text-[#38bdf8] text-center mb-1">Tu catálogo</p>
+                  <p className="text-base font-bold text-white text-center">
+                    {generatedSubdomain}.shopifree.app
+                  </p>
+                </div>
+
+                <p className="text-xs text-gray-400 text-center mt-4">
+                  Redirigiendo al dashboard...
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
