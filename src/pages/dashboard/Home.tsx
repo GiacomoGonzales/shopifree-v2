@@ -71,7 +71,7 @@ export default function DashboardHome() {
               href={catalogUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition flex items-center justify-center shadow-lg shadow-[#1e3a5f]/20"
+              className="flex-1 sm:flex-none px-3 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition flex items-center justify-center shadow-lg shadow-[#1e3a5f]/20"
               title="Abrir catálogo"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,7 +80,7 @@ export default function DashboardHome() {
             </a>
             <button
               onClick={copyLink}
-              className={`px-3 py-3 rounded-xl transition flex items-center justify-center ${
+              className={`flex-1 sm:flex-none px-3 py-3 rounded-xl transition flex items-center justify-center ${
                 copied
                   ? 'bg-green-100 text-green-700'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -99,7 +99,7 @@ export default function DashboardHome() {
             </button>
             <button
               onClick={shareWhatsApp}
-              className="px-3 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition flex items-center justify-center shadow-lg shadow-green-600/20"
+              className="flex-1 sm:flex-none px-3 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition flex items-center justify-center shadow-lg shadow-green-600/20"
               title="Compartir en WhatsApp"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
