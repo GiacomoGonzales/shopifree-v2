@@ -114,25 +114,36 @@ export default function MinimalTheme({ store, products, categories }: Props) {
         <div className="max-w-6xl mx-auto">
 
           {/* Hero Image */}
-          {store.heroImage && (
-            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl mb-8">
-              <img
-                src={store.heroImage}
-                alt=""
-                className="w-full object-cover aspect-[16/9] md:aspect-[21/9] md:max-h-[400px]"
-              />
-            </div>
+          {(store.heroImage || store.heroImageMobile) && (
+            <>
+              {/* Mobile Hero */}
+              <div className="md:hidden relative overflow-hidden rounded-2xl mb-8 flex justify-center bg-gray-100">
+                <img
+                  src={store.heroImageMobile || store.heroImage}
+                  alt=""
+                  className="w-full h-auto max-h-[400px] object-contain"
+                />
+              </div>
+              {/* Desktop Hero */}
+              <div className="hidden md:block relative overflow-hidden rounded-3xl mb-8">
+                <img
+                  src={store.heroImage || store.heroImageMobile}
+                  alt=""
+                  className="w-full aspect-[16/5] object-cover"
+                />
+              </div>
+            </>
           )}
 
           {/* Store Identity */}
-          <div className={`${store.heroImage ? 'text-left' : 'text-center py-8 md:py-16'}`}>
-            {!store.heroImage && (
+          <div className={`${(store.heroImage || store.heroImageMobile) ? 'text-left' : 'text-center py-8 md:py-16'}`}>
+            {!(store.heroImage || store.heroImageMobile) && (
               <h1 className="text-4xl md:text-6xl font-light tracking-tight text-gray-900 mb-4">
                 {store.name}
               </h1>
             )}
             {store.about?.slogan && (
-              <p className={`text-gray-500 ${store.heroImage ? 'text-base md:text-lg' : 'text-lg md:text-xl'} max-w-2xl ${store.heroImage ? '' : 'mx-auto'}`}>
+              <p className={`text-gray-500 ${(store.heroImage || store.heroImageMobile) ? 'text-base md:text-lg' : 'text-lg md:text-xl'} max-w-2xl ${(store.heroImage || store.heroImageMobile) ? '' : 'mx-auto'}`}>
                 {store.about.slogan}
               </p>
             )}
@@ -144,7 +155,7 @@ export default function MinimalTheme({ store, products, categories }: Props) {
       {categories.length > 0 && (
         <nav className="sticky top-16 z-40 bg-white/80 backdrop-blur-lg border-y border-gray-100">
           <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex gap-1 py-3 overflow-x-auto scrollbar-hide">
+            <div className="flex md:justify-center gap-1 py-3 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveCategory(null)}
                 className={`flex-shrink-0 px-5 py-2 rounded-full text-sm transition-all duration-200 ${

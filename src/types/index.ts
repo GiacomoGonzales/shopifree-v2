@@ -41,7 +41,8 @@ export interface Store {
 
   // === BRANDING ===
   logo?: string                 // URL Cloudinary
-  heroImage?: string            // URL Cloudinary (2:3 ratio)
+  heroImage?: string            // URL Cloudinary - Desktop (1920x600 recomendado)
+  heroImageMobile?: string      // URL Cloudinary - Móvil (1200x800 recomendado, ratio 3:2)
   favicon?: string
 
   // === TIRA PUBLICITARIA ===

@@ -120,23 +120,43 @@ export default function BoutiqueTheme({ store, products, categories }: Props) {
 
       {/* ===================== HERO ===================== */}
       <section className="relative">
-        {store.heroImage ? (
-          <div className="relative aspect-[16/9] md:aspect-[21/9] md:max-h-[400px] overflow-hidden">
-            <img
-              src={store.heroImage}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
-              <div className="max-w-6xl mx-auto">
-                <h2 className="font-serif text-3xl md:text-5xl mb-2">{store.name}</h2>
-                {store.about?.slogan && (
-                  <p className="text-lg md:text-xl text-white/90 font-light">{store.about.slogan}</p>
-                )}
+        {(store.heroImage || store.heroImageMobile) ? (
+          <>
+            {/* Mobile Hero */}
+            <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center bg-pink-50">
+              <img
+                src={store.heroImageMobile || store.heroImage}
+                alt=""
+                className="w-full h-auto max-h-[400px] object-contain"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="max-w-6xl mx-auto">
+                  <h2 className="font-serif text-3xl mb-2">{store.name}</h2>
+                  {store.about?.slogan && (
+                    <p className="text-lg text-white/90 font-light">{store.about.slogan}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block relative overflow-hidden">
+              <img
+                src={store.heroImage || store.heroImageMobile}
+                alt=""
+                className="w-full aspect-[16/5] object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
+                <div className="max-w-6xl mx-auto">
+                  <h2 className="font-serif text-5xl mb-2">{store.name}</h2>
+                  {store.about?.slogan && (
+                    <p className="text-xl text-white/90 font-light">{store.about.slogan}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="py-16 md:py-24 text-center bg-gradient-to-b from-white to-pink-50">
             <div className="max-w-3xl mx-auto px-6">
@@ -218,7 +238,7 @@ export default function BoutiqueTheme({ store, products, categories }: Props) {
       {categories.length > 0 && (
         <nav className="sticky top-20 z-40 bg-white border-y border-pink-100">
           <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex gap-2 py-4 overflow-x-auto scrollbar-hide">
+            <div className="flex md:justify-center gap-2 py-4 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveCategory(null)}
                 className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${

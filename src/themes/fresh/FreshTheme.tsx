@@ -125,31 +125,59 @@ export default function FreshTheme({ store, products, categories }: Props) {
 
       {/* ===================== HERO ===================== */}
       <section className="relative overflow-hidden">
-        {store.heroImage ? (
-          <div className="relative aspect-[16/9] md:aspect-[21/9] md:max-h-[400px]">
-            <img
-              src={store.heroImage}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/60 to-transparent" />
-            <div className="absolute inset-0 flex items-center">
-              <div className="max-w-6xl mx-auto px-6 w-full">
-                <div className="max-w-lg">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm mb-4">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    100% Natural
+        {(store.heroImage || store.heroImageMobile) ? (
+          <>
+            {/* Mobile Hero */}
+            <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center bg-emerald-50">
+              <img
+                src={store.heroImageMobile || store.heroImage}
+                alt=""
+                className="w-full h-auto max-h-[400px] object-contain"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/60 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 flex items-center">
+                <div className="max-w-6xl mx-auto px-6 w-full">
+                  <div className="max-w-lg">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm mb-4">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                      100% Natural
+                    </div>
+                    <h2 className="text-3xl font-bold text-white mb-3">{store.name}</h2>
+                    {store.about?.slogan && (
+                      <p className="text-lg text-white/90">{store.about.slogan}</p>
+                    )}
                   </div>
-                  <h2 className="text-3xl md:text-5xl font-bold text-white mb-3">{store.name}</h2>
-                  {store.about?.slogan && (
-                    <p className="text-lg text-white/90">{store.about.slogan}</p>
-                  )}
                 </div>
               </div>
             </div>
-          </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block relative overflow-hidden">
+              <img
+                src={store.heroImage || store.heroImageMobile}
+                alt=""
+                className="w-full aspect-[16/5] object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/60 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 flex items-center">
+                <div className="max-w-6xl mx-auto px-6 w-full">
+                  <div className="max-w-lg">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm mb-4">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                      100% Natural
+                    </div>
+                    <h2 className="text-5xl font-bold text-white mb-3">{store.name}</h2>
+                    {store.about?.slogan && (
+                      <p className="text-lg text-white/90">{store.about.slogan}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="py-16 md:py-20 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 relative">
             {/* Decorative elements */}
@@ -208,7 +236,7 @@ export default function FreshTheme({ store, products, categories }: Props) {
       {categories.length > 0 && (
         <nav className="sticky top-16 z-40 bg-white/80 backdrop-blur-lg border-b border-emerald-100">
           <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex gap-2 py-3 overflow-x-auto scrollbar-hide">
+            <div className="flex md:justify-center gap-2 py-3 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveCategory(null)}
                 className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${

@@ -155,34 +155,65 @@ export default function NeonTheme({ store, products, categories }: Props) {
 
       {/* ===================== HERO ===================== */}
       <section className="relative overflow-hidden">
-        {store.heroImage ? (
-          <div className="relative aspect-[16/9] md:aspect-[21/9] md:max-h-[400px]">
-            <img
-              src={store.heroImage}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-            {/* Neon overlay */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(135deg, ${neonGreen}40 0%, transparent 50%, ${neonCyan}30 100%)`
-              }}
-            />
-            <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
+        {(store.heroImage || store.heroImageMobile) ? (
+          <>
+            {/* Mobile Hero */}
+            <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center" style={{ backgroundColor: darkBg }}>
+              <img
+                src={store.heroImageMobile || store.heroImage}
+                alt=""
+                className="w-full h-auto max-h-[400px] object-contain"
+              />
+              {/* Neon overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg, ${neonGreen}40 0%, transparent 50%, ${neonCyan}30 100%)`
+                }}
+              />
+              <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
 
-            {/* Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-              <div className="max-w-6xl mx-auto">
-                <h2 className="text-3xl md:text-5xl font-bold neon-glow" style={{ color: neonGreen }}>
-                  {store.name}
-                </h2>
-                {store.about?.slogan && (
-                  <p className="text-white/70 text-lg mt-2">{store.about.slogan}</p>
-                )}
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="max-w-6xl mx-auto">
+                  <h2 className="text-3xl font-bold neon-glow" style={{ color: neonGreen }}>
+                    {store.name}
+                  </h2>
+                  {store.about?.slogan && (
+                    <p className="text-white/70 text-lg mt-2">{store.about.slogan}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block relative overflow-hidden">
+              <img
+                src={store.heroImage || store.heroImageMobile}
+                alt=""
+                className="w-full aspect-[16/5] object-cover"
+              />
+              {/* Neon overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg, ${neonGreen}40 0%, transparent 50%, ${neonCyan}30 100%)`
+                }}
+              />
+              <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
+
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-10">
+                <div className="max-w-6xl mx-auto">
+                  <h2 className="text-5xl font-bold neon-glow" style={{ color: neonGreen }}>
+                    {store.name}
+                  </h2>
+                  {store.about?.slogan && (
+                    <p className="text-white/70 text-lg mt-2">{store.about.slogan}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="py-20 md:py-28 grid-bg relative">
             {/* Glow orbs */}
@@ -221,7 +252,7 @@ export default function NeonTheme({ store, products, categories }: Props) {
           style={{ backgroundColor: `${darkBg}ee`, borderColor: `${neonGreen}20` }}
         >
           <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex gap-2 py-3 overflow-x-auto scrollbar-hide">
+            <div className="flex md:justify-center gap-2 py-3 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveCategory(null)}
                 className="flex-shrink-0 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300"

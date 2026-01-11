@@ -158,29 +158,56 @@ export default function BoldTheme({ store, products, categories }: Props) {
       </header>
 
       {/* === HERO SECTION === */}
-      {store.heroImage ? (
+      {(store.heroImage || store.heroImageMobile) ? (
         // Hero WITH image - dramatic diagonal cut
         <section className="relative">
-          <div className="aspect-[16/9] md:aspect-[21/9] md:max-h-[400px] overflow-hidden">
+          {/* Mobile Hero */}
+          <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center" style={{ backgroundColor: '#111' }}>
             <img
-              src={store.heroImage}
+              src={store.heroImageMobile || store.heroImage}
               alt={store.name}
-              className="w-full h-full object-cover"
+              className="w-full h-auto max-h-[400px] object-contain"
             />
             {/* Diagonal overlay */}
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 pointer-events-none"
               style={{
                 background: `linear-gradient(135deg, ${accent}CC 0%, transparent 50%, black 100%)`
               }}
             />
             {/* Store name overlay */}
-            <div className="absolute bottom-0 left-0 p-6 md:p-10">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter text-white leading-none">
+            <div className="absolute bottom-0 left-0 p-6">
+              <h1 className="text-4xl font-black uppercase tracking-tighter text-white leading-none">
                 {store.name}
               </h1>
               {store.about?.slogan && (
-                <p className="text-white/80 text-lg md:text-xl mt-2 max-w-lg uppercase tracking-wide font-medium">
+                <p className="text-white/80 text-lg mt-2 max-w-lg uppercase tracking-wide font-medium">
+                  {store.about.slogan}
+                </p>
+              )}
+            </div>
+          </div>
+          {/* Desktop Hero */}
+          <div className="hidden md:block relative overflow-hidden">
+            <img
+              src={store.heroImage || store.heroImageMobile}
+              alt={store.name}
+              className="w-full aspect-[16/5] object-cover"
+            />
+            {/* Diagonal overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `linear-gradient(135deg, ${accent}CC 0%, transparent 50%, black 100%)`
+              }}
+            />
+            {/* Store name overlay */}
+            <div className="absolute bottom-0 left-0 p-10">
+              <h1 className="text-6xl lg:text-7xl font-black uppercase tracking-tighter text-white leading-none">
+                {store.name}
+              </h1>
+              {store.about?.slogan && (
+                <p className="text-white/80 text-xl mt-2 max-w-lg uppercase tracking-wide font-medium">
                   {store.about.slogan}
                 </p>
               )}
@@ -223,7 +250,7 @@ export default function BoldTheme({ store, products, categories }: Props) {
       {categories.length > 0 && (
         <nav className="sticky top-[72px] z-40 bg-black border-y-2" style={{ borderColor: `${accent}33` }}>
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex overflow-x-auto scrollbar-hide gap-1 py-3">
+            <div className="flex md:justify-center overflow-x-auto scrollbar-hide gap-1 py-3">
               <button
                 onClick={() => setActiveCategory(null)}
                 className={`flex-shrink-0 px-6 py-3 font-black uppercase text-sm tracking-wider transition-all ${
