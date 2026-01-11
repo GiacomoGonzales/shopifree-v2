@@ -169,65 +169,176 @@ export default function Branding() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">Diseno de tu tienda</h1>
-        <p className="text-gray-600 mt-1">Personaliza la apariencia de tu catalogo</p>
+    <div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">Diseno de tu tienda</h1>
+          <p className="text-gray-600 mt-1">Personaliza la apariencia de tu catalogo</p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+        >
+          {saving ? 'Guardando...' : 'Guardar cambios'}
+        </button>
       </div>
 
-      <div className="space-y-8">
-        {/* Logo */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Logo</h2>
-          <div className="flex items-start gap-6">
-            <div
-              onClick={() => logoInputRef.current?.click()}
-              className="w-32 h-32 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
-            >
-              {uploadingLogo ? (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5]"></div>
-              ) : logo ? (
-                <img src={logo} alt="Logo" className="w-full h-full object-contain p-2" />
-              ) : (
-                <div className="text-center p-4">
-                  <svg className="w-8 h-8 text-[#38bdf8] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="text-xs text-gray-500">Subir logo</span>
-                </div>
-              )}
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          {/* Logo */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Logo</h2>
+            <div className="flex items-start gap-4">
+              <div
+                onClick={() => logoInputRef.current?.click()}
+                className="w-24 h-24 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
+              >
+                {uploadingLogo ? (
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2d6cb5]"></div>
+                ) : logo ? (
+                  <img src={logo} alt="Logo" className="w-full h-full object-contain p-2" />
+                ) : (
+                  <div className="text-center p-2">
+                    <svg className="w-6 h-6 text-[#38bdf8] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span className="text-[10px] text-gray-500">Subir</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-600 mb-2">
+                  Imagen cuadrada 200x200px en PNG con fondo transparente.
+                </p>
+                {logo && (
+                  <button
+                    onClick={() => setLogo('')}
+                    className="text-sm text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Eliminar logo
+                  </button>
+                )}
+              </div>
             </div>
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
-              className="hidden"
-            />
-            <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-2">
-                Sube el logo de tu negocio. Recomendamos una imagen cuadrada de al menos 200x200px en formato PNG con fondo transparente.
-              </p>
-              {logo && (
-                <button
-                  onClick={() => setLogo('')}
-                  className="text-sm text-red-600 hover:text-red-700 font-medium"
-                >
-                  Eliminar logo
-                </button>
+          </div>
+
+          {/* Announcement Bar */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#1e3a5f]">Tira publicitaria</h2>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={announcement.enabled}
+                  onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+              </label>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Barra promocional en la parte superior de tu catalogo.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Mensaje</label>
+                <input
+                  type="text"
+                  value={announcement.text}
+                  onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
+                  placeholder="Ej: Envio gratis en compras mayores a $50"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Enlace (opcional)</label>
+                <input
+                  type="url"
+                  value={announcement.link || ''}
+                  onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de fondo</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={announcement.backgroundColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
+                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={announcement.backgroundColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
+                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de texto</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={announcement.textColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
+                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={announcement.textColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
+                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview */}
+              {announcement.enabled && announcement.text && (
+                <div>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-2">Vista previa</label>
+                  <div
+                    className="py-2.5 px-4 text-center text-sm font-medium rounded-lg"
+                    style={{
+                      backgroundColor: announcement.backgroundColor,
+                      color: announcement.textColor
+                    }}
+                  >
+                    {announcement.text}
+                  </div>
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Hero Images */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        {/* Right Column - Hero Images */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">Imagenes de portada</h2>
           <p className="text-sm text-gray-600 mb-6">
-            Para mejores resultados, sube dos imagenes: una horizontal para computadoras y una cuadrada para celulares.
+            Sube dos imagenes: horizontal para desktop y 3:2 para movil.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
             {/* Desktop Image */}
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -235,7 +346,7 @@ export default function Branding() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <span className="font-medium text-[#1e3a5f]">Desktop</span>
-                <span className="text-xs text-gray-400">(1920x600 recomendado)</span>
+                <span className="text-xs text-gray-400">(1920x600)</span>
               </div>
               <div
                 onClick={() => heroInputRef.current?.click()}
@@ -278,11 +389,11 @@ export default function Branding() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 <span className="font-medium text-[#1e3a5f]">Movil</span>
-                <span className="text-xs text-gray-400">(1200x800 recomendado)</span>
+                <span className="text-xs text-gray-400">(1200x800)</span>
               </div>
               <div
                 onClick={() => heroMobileInputRef.current?.click()}
-                className="w-full aspect-[3/2] max-w-[300px] bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
+                className="w-full aspect-[3/2] max-w-[280px] bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
               >
                 {uploadingHeroMobile ? (
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5]"></div>
@@ -316,209 +427,101 @@ export default function Branding() {
           </div>
 
           {/* Tip */}
-          <div className="mt-6 p-4 bg-[#f0f7ff] rounded-xl">
-            <p className="text-sm text-[#1e3a5f]">
-              <span className="font-medium">Tip:</span> Si solo subes una imagen, se usara en ambos dispositivos. Para mejores resultados, sube las dos.
+          <div className="mt-6 p-3 bg-[#f0f7ff] rounded-xl">
+            <p className="text-xs text-[#1e3a5f]">
+              <span className="font-medium">Tip:</span> Si solo subes una, se usara en ambos dispositivos.
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Announcement Bar */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#1e3a5f]">Tira publicitaria</h2>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={announcement.enabled}
-                onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
-            </label>
-          </div>
+      {/* Theme Selector - Full Width */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">Tema del catalogo</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Elige el estilo visual de tu catalogo. Todos los temas son gratuitos.
+        </p>
 
-          <p className="text-sm text-gray-600 mb-4">
-            Muestra una barra con un mensaje promocional en la parte superior de tu catalogo.
-          </p>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Mensaje</label>
-              <input
-                type="text"
-                value={announcement.text}
-                onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
-                placeholder="Ej: Envio gratis en compras mayores a $50"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Enlace (opcional)</label>
-              <input
-                type="url"
-                value={announcement.link || ''}
-                onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
-                placeholder="https://..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de fondo</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={announcement.backgroundColor}
-                    onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                    className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={announcement.backgroundColor}
-                    onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                    className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de texto</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={announcement.textColor}
-                    onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                    className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={announcement.textColor}
-                    onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                    className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Preview */}
-            {announcement.enabled && announcement.text && (
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-2">Vista previa</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {themes.map((theme) => {
+            const isSelected = selectedTheme === theme.id
+            return (
+              <button
+                key={theme.id}
+                onClick={() => setSelectedTheme(theme.id)}
+                className={`relative rounded-2xl overflow-hidden border-2 transition-all text-left ${
+                  isSelected
+                    ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
+                    : 'border-gray-200 hover:border-[#38bdf8]/50'
+                }`}
+              >
+                {/* Theme Preview */}
                 <div
-                  className="py-2.5 px-4 text-center text-sm font-medium rounded-lg"
-                  style={{
-                    backgroundColor: announcement.backgroundColor,
-                    color: announcement.textColor
-                  }}
+                  className="aspect-[3/4] p-3 flex flex-col"
+                  style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
                 >
-                  {announcement.text}
+                  {/* Mini header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      className="w-6 h-2 rounded-full"
+                      style={{ backgroundColor: theme.colors?.primary || '#000' }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: theme.colors?.accent || '#666' }}
+                    />
+                  </div>
+                  {/* Mini product grid */}
+                  <div className="flex-1 grid grid-cols-2 gap-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="rounded aspect-square"
+                        style={{
+                          backgroundColor: theme.colors?.primary
+                            ? `${theme.colors.primary}15`
+                            : '#f3f4f6'
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {/* Mini footer */}
+                  <div className="mt-2 flex items-center gap-1">
+                    <div
+                      className="flex-1 h-2 rounded-full"
+                      style={{ backgroundColor: theme.colors?.primary || '#000' }}
+                    />
+                    <div
+                      className="w-6 h-6 rounded-lg"
+                      style={{ backgroundColor: theme.colors?.accent || '#666' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Theme Selector */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">Tema del catalogo</h2>
-          <p className="text-sm text-gray-600 mb-6">
-            Elige el estilo visual de tu catalogo. Todos los temas son gratuitos.
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {themes.map((theme) => {
-              const isSelected = selectedTheme === theme.id
-              return (
-                <button
-                  key={theme.id}
-                  onClick={() => setSelectedTheme(theme.id)}
-                  className={`relative rounded-2xl overflow-hidden border-2 transition-all text-left ${
-                    isSelected
-                      ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
-                      : 'border-gray-200 hover:border-[#38bdf8]/50'
-                  }`}
-                >
-                  {/* Theme Preview */}
-                  <div
-                    className="aspect-[3/4] p-3 flex flex-col"
-                    style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
-                  >
-                    {/* Mini header */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div
-                        className="w-6 h-2 rounded-full"
-                        style={{ backgroundColor: theme.colors?.primary || '#000' }}
-                      />
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: theme.colors?.accent || '#666' }}
-                      />
-                    </div>
-                    {/* Mini product grid */}
-                    <div className="flex-1 grid grid-cols-2 gap-1">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          key={i}
-                          className="rounded aspect-square"
-                          style={{
-                            backgroundColor: theme.colors?.primary
-                              ? `${theme.colors.primary}15`
-                              : '#f3f4f6'
-                          }}
-                        />
-                      ))}
-                    </div>
-                    {/* Mini footer */}
-                    <div className="mt-2 flex items-center gap-1">
-                      <div
-                        className="flex-1 h-2 rounded-full"
-                        style={{ backgroundColor: theme.colors?.primary || '#000' }}
-                      />
-                      <div
-                        className="w-6 h-6 rounded-lg"
-                        style={{ backgroundColor: theme.colors?.accent || '#666' }}
-                      />
-                    </div>
+                {/* Theme Info */}
+                <div className="p-3 bg-white border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm text-[#1e3a5f]">{theme.name}</span>
+                    {theme.isNew && (
+                      <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full">
+                        NEW
+                      </span>
+                    )}
                   </div>
+                  <p className="text-xs text-gray-500 line-clamp-2">{theme.description}</p>
+                </div>
 
-                  {/* Theme Info */}
-                  <div className="p-3 bg-white border-t border-gray-100">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-sm text-[#1e3a5f]">{theme.name}</span>
-                      {theme.isNew && (
-                        <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full">
-                          NEW
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 line-clamp-2">{theme.description}</p>
+                {/* Selected indicator */}
+                {isSelected && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
-
-                  {/* Selected indicator */}
-                  {isSelected && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Save Button */}
-        <div className="pt-4">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-          >
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </button>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>

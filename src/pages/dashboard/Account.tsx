@@ -125,7 +125,8 @@ export default function Account() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div>
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">Mi Cuenta</h1>
@@ -140,23 +141,24 @@ export default function Account() {
         </button>
       </div>
 
-      <div className="space-y-6 sm:space-y-8">
-        {/* Personal Data */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4 sm:mb-6">Datos personales</h2>
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Left Column - Personal Data */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Datos personales</h2>
 
           {/* Avatar */}
-          <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
+          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
             <div
               onClick={() => avatarInputRef.current?.click()}
-              className="w-20 h-20 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-all flex items-center justify-center shadow-lg shadow-[#38bdf8]/20"
+              className="w-16 h-16 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-all flex items-center justify-center shadow-lg shadow-[#38bdf8]/20 flex-shrink-0"
             >
               {uploadingAvatar ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : avatar ? (
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-bold text-white">
+                <span className="text-xl font-bold text-white">
                   {firstName?.[0]?.toUpperCase() || firebaseUser?.email?.[0]?.toUpperCase() || '?'}
                 </span>
               )}
@@ -186,78 +188,81 @@ export default function Account() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Nombre</label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Tu nombre"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Tu nombre"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Apellido</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Tu apellido"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Apellido</label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Tu apellido"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Email</label>
+                <input
+                  type="email"
+                  value={firebaseUser?.email || ''}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Telefono</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+51 999 888 777"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
             </div>
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Email</label>
-            <input
-              type="email"
-              value={firebaseUser?.email || ''}
-              disabled
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
-            />
-            <p className="text-xs text-gray-500 mt-1">El email no se puede cambiar</p>
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Telefono</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+51 999 888 777"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-            />
           </div>
         </div>
 
-        {/* Billing Data */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2">Datos de facturacion</h2>
-          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Opcional - para facturas y comprobantes</p>
+        {/* Right Column - Billing Data */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Datos de facturacion</h2>
+          <p className="text-sm text-gray-600 mb-4">Opcional - para facturas y comprobantes</p>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Nombre o Razon social</label>
-              <input
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Ej: Mi Empresa SAC"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">RUC / NIT / RFC</label>
-              <input
-                type="text"
-                value={taxId}
-                onChange={(e) => setTaxId(e.target.value)}
-                placeholder="Numero de identificacion fiscal"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Razon social</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Mi Empresa SAC"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">RUC / NIT / RFC</label>
+                <input
+                  type="text"
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  placeholder="20123456789"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
             </div>
 
             <div>
@@ -271,7 +276,7 @@ export default function Account() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Ciudad</label>
                 <input
@@ -304,13 +309,18 @@ export default function Account() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Security */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-4">Seguridad</h2>
+      {/* Security - Full Width */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Seguridad</h2>
+            <p className="text-sm text-gray-600">Gestiona tu contrasena y opciones de seguridad</p>
+          </div>
           <button
             onClick={() => showToast('Funcionalidad proximamente', 'info')}
-            className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+            className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm flex-shrink-0"
           >
             Cambiar contrasena
           </button>
