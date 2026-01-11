@@ -355,3 +355,16 @@ export interface FAQItem {
   answer: string
   order: number
 }
+
+// ============================================
+// ANALYTICS TYPES
+// ============================================
+export interface AnalyticsEvent {
+  id: string
+  storeId: string
+  type: 'page_view' | 'whatsapp_click' | 'product_view' | 'cart_add'
+  productId?: string
+  timestamp: Date
+  // For deduplication (session-based)
+  sessionId?: string
+}

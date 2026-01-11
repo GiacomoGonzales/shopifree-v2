@@ -20,9 +20,10 @@ interface Props {
   store: Store
   products: Product[]
   categories: Category[]
+  onWhatsAppClick?: () => void
 }
 
-export default function BoldTheme({ store, products, categories }: Props) {
+export default function BoldTheme({ store, products, categories, onWhatsAppClick }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -45,6 +46,7 @@ export default function BoldTheme({ store, products, categories }: Props) {
 
   const handleWhatsAppOrder = () => {
     if (!store.whatsapp || items.length === 0) return
+    onWhatsAppClick?.()
 
     const orderLines = items.map(item =>
       `${item.product.name} x${item.quantity} - ${formatPrice(item.product.price * item.quantity, store.currency)}`
@@ -401,6 +403,7 @@ export default function BoldTheme({ store, products, categories }: Props) {
                     href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => onWhatsAppClick?.()}
                     className="text-white/60 hover:text-white transition-colors text-sm uppercase tracking-wide"
                   >
                     WhatsApp →
@@ -451,6 +454,7 @@ export default function BoldTheme({ store, products, categories }: Props) {
           href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => onWhatsAppClick?.()}
           className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-[#25D366] flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
         >
           <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">

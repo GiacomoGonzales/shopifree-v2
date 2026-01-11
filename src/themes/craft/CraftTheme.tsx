@@ -20,9 +20,10 @@ interface Props {
   store: Store
   products: Product[]
   categories: Category[]
+  onWhatsAppClick?: () => void
 }
 
-export default function CraftTheme({ store, products, categories }: Props) {
+export default function CraftTheme({ store, products, categories, onWhatsAppClick }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -51,6 +52,7 @@ export default function CraftTheme({ store, products, categories }: Props) {
 
   const sendWhatsAppOrder = () => {
     if (!store.whatsapp || items.length === 0) return
+    onWhatsAppClick?.()
     let message = `Hola! Me gustaria pedir:\n\n`
     items.forEach(item => {
       message += `- ${item.product.name} x${item.quantity} - ${formatPrice(item.product.price * item.quantity, store.currency)}\n`
@@ -386,6 +388,7 @@ export default function CraftTheme({ store, products, categories }: Props) {
                 href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => onWhatsAppClick?.()}
                 className="w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105"
                 style={{ backgroundColor: `${terracotta}15`, color: terracotta }}
               >
@@ -433,6 +436,7 @@ export default function CraftTheme({ store, products, categories }: Props) {
           href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola! Vi tu catalogo ${store.name}`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => onWhatsAppClick?.()}
           className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40"
           style={{ backgroundColor: terracotta, color: cream }}
         >

@@ -20,7 +20,6 @@ export default function ProductForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   // === CAMPOS BÁSICOS ===
   const [name, setName] = useState('')
@@ -80,11 +79,6 @@ export default function ProductForm() {
             setWidth(productData.dimensions?.width?.toString() || '')
             setHeight(productData.dimensions?.height?.toString() || '')
             setFeatured(productData.featured || false)
-
-            // Si hay datos avanzados, mostrar la sección
-            if (productData.sku || productData.cost || productData.stock || productData.brand) {
-              setShowAdvanced(true)
-            }
           }
         }
       } catch (error) {

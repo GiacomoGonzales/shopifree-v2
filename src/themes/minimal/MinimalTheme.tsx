@@ -9,9 +9,10 @@ interface Props {
   store: Store
   products: Product[]
   categories: Category[]
+  onWhatsAppClick?: () => void
 }
 
-export default function MinimalTheme({ store, products, categories }: Props) {
+export default function MinimalTheme({ store, products, categories, onWhatsAppClick }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -33,6 +34,7 @@ export default function MinimalTheme({ store, products, categories }: Props) {
 
   const sendWhatsAppOrder = () => {
     if (!store.whatsapp || items.length === 0) return
+    onWhatsAppClick?.()
     let message = `Hola! Me interesa:\n\n`
     items.forEach(item => {
       message += `• ${item.product.name} x${item.quantity} - ${formatPrice(item.product.price * item.quantity, store.currency)}\n`
@@ -297,6 +299,7 @@ export default function MinimalTheme({ store, products, categories }: Props) {
                   href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => onWhatsAppClick?.()}
                   className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -344,6 +347,7 @@ export default function MinimalTheme({ store, products, categories }: Props) {
           href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola! Vi tu catálogo ${store.name}`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => onWhatsAppClick?.()}
           className="fixed bottom-6 right-6 w-14 h-14 bg-[#25D366] rounded-full shadow-xl shadow-green-500/25 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-40"
         >
           <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">

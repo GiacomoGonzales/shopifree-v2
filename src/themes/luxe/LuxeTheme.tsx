@@ -20,9 +20,10 @@ interface Props {
   store: Store
   products: Product[]
   categories: Category[]
+  onWhatsAppClick?: () => void
 }
 
-export default function LuxeTheme({ store, products, categories }: Props) {
+export default function LuxeTheme({ store, products, categories, onWhatsAppClick }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -49,6 +50,7 @@ export default function LuxeTheme({ store, products, categories }: Props) {
 
   const sendWhatsAppOrder = () => {
     if (!store.whatsapp || items.length === 0) return
+    onWhatsAppClick?.()
     let message = `Hola, me gustaria ordenar:\n\n`
     items.forEach(item => {
       message += `- ${item.product.name} x${item.quantity} - ${formatPrice(item.product.price * item.quantity, store.currency)}\n`
@@ -345,6 +347,7 @@ export default function LuxeTheme({ store, products, categories }: Props) {
                 href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => onWhatsAppClick?.()}
                 className="w-12 h-12 border flex items-center justify-center transition-all duration-300 hover:border-opacity-100"
                 style={{ borderColor: `${gold}50`, color: gold }}
               >
@@ -392,6 +395,7 @@ export default function LuxeTheme({ store, products, categories }: Props) {
           href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, vi su catalogo ${store.name}`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => onWhatsAppClick?.()}
           className="fixed bottom-6 right-6 w-14 h-14 flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform z-40"
           style={{ backgroundColor: gold }}
         >

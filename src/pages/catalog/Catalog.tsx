@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { collection, query, where, getDocs } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
+import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import type { Store, Product, Category } from '../../types'
 
@@ -17,6 +17,7 @@ export default function Catalog({ subdomainStore }: CatalogProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const trackedRef = useRef(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +33,12 @@ export default function Catalog({ subdomainStore }: CatalogProps) {
           const storeData = storeSnapshot.docs[0].data() as Store
           const storeId = storeSnapshot.docs[0].id
           setStore({ ...storeData, id: storeId })
+
+          // Track page view (only once per session)
+          if (!trackedRef.current) {
+            trackedRef.current = true
+            analyticsService.track(storeId, 'page_view')
+          }
 
           // Fetch products from subcollection
           const productsRef = collection(db, 'stores', storeId, 'products')
@@ -105,11 +112,18 @@ export default function Catalog({ subdomainStore }: CatalogProps) {
   // Get the theme component based on store's themeId
   const ThemeComponent = getThemeComponent(store.themeId || 'minimal')
 
+  const handleWhatsAppClick = () => {
+    if (store) {
+      analyticsService.track(store.id, 'whatsapp_click')
+    }
+  }
+
   return (
     <ThemeComponent
       store={store}
       products={products}
       categories={categories}
+      onWhatsAppClick={handleWhatsAppClick}
     />
   )
 }

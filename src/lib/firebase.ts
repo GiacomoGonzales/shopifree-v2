@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import type { User, Store, Product, Category, Order } from '../types'
 
@@ -335,6 +335,55 @@ export const storageService = {
     const path = `stores/${storeId}/products/${productId}/${fileName}`
     const storageRef = ref(storage, path)
     await deleteObject(storageRef)
+  }
+}
+
+// ============================================
+// ANALYTICS SERVICES
+// ============================================
+
+export const analyticsService = {
+  getCollection(storeId: string) {
+    return collection(db, 'stores', storeId, 'analytics')
+  },
+
+  async track(storeId: string, type: 'page_view' | 'whatsapp_click' | 'product_view' | 'cart_add', productId?: string): Promise<void> {
+    try {
+      await addDoc(this.getCollection(storeId), {
+        type,
+        productId: productId || null,
+        timestamp: new Date()
+      })
+    } catch (error) {
+      console.error('Error tracking analytics:', error)
+    }
+  },
+
+  async getWeeklyStats(storeId: string): Promise<{ pageViews: number; whatsappClicks: number }> {
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+    try {
+      const q = query(
+        this.getCollection(storeId),
+        where('timestamp', '>=', oneWeekAgo)
+      )
+      const snapshot = await getDocs(q)
+
+      let pageViews = 0
+      let whatsappClicks = 0
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        if (data.type === 'page_view') pageViews++
+        if (data.type === 'whatsapp_click') whatsappClicks++
+      })
+
+      return { pageViews, whatsappClicks }
+    } catch (error) {
+      console.error('Error getting analytics:', error)
+      return { pageViews: 0, whatsappClicks: 0 }
+    }
   }
 }
 
