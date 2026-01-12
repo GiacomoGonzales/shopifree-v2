@@ -330,7 +330,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
           <div className="text-center mb-12">
             {store.logo ? (
               <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
-                <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain brightness-0 invert" />
+                <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
               </div>
             ) : (
               <h3 className="font-serif-luxe text-3xl text-white mb-4">{store.name}</h3>

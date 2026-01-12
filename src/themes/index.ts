@@ -121,6 +121,66 @@ export const themes: Theme[] = [
       background: '#ffffff',
       accent: '#ec4899'
     }
+  },
+  {
+    id: 'metro',
+    name: 'Metro',
+    description: 'Moderno y tecnologico con azul electrico. Ideal para startups y productos tech.',
+    thumbnail: '/themes/metro.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-05-01'),
+    colors: {
+      primary: '#0066FF',
+      background: '#ffffff',
+      accent: '#00D4FF'
+    }
+  },
+  {
+    id: 'vintage',
+    name: 'Vintage',
+    description: 'Clasico y nostalgico con tonos sepia. Perfecto para antiguedades y productos artesanales.',
+    thumbnail: '/themes/vintage.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-05-15'),
+    colors: {
+      primary: '#5D4037',
+      background: '#FDF8F3',
+      accent: '#C9A962'
+    }
+  },
+  {
+    id: 'flavor',
+    name: 'Flavor',
+    description: 'Calido y apetitoso con tonos rojos. Ideal para restaurantes, cafeterias y delivery.',
+    thumbnail: '/themes/flavor.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-06-01'),
+    colors: {
+      primary: '#E53935',
+      background: '#FFFDF7',
+      accent: '#FF6D00'
+    }
+  },
+  {
+    id: 'urban',
+    name: 'Urban',
+    description: 'Audaz y urbano con negro y neon. Perfecto para streetwear, sneakers y moda urbana.',
+    thumbnail: '/themes/urban.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-06-15'),
+    colors: {
+      primary: '#CCFF00',
+      background: '#0A0A0A',
+      accent: '#FFFFFF'
+    }
   }
 ]
 

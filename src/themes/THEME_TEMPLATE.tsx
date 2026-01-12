@@ -252,8 +252,8 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
             {/* About */}
             <div>
               <h3 className="font-semibold mb-4" style={{ color: colors.text }}>{store.name}</h3>
-              {store.about && (
-                <p className="text-sm" style={{ color: colors.textMuted }}>{store.about}</p>
+              {store.about?.description && (
+                <p className="text-sm" style={{ color: colors.textMuted }}>{store.about.description}</p>
               )}
             </div>
 
@@ -368,7 +368,7 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
           >
             {/* Product Image */}
             {selectedProduct.images && selectedProduct.images.length > 0 ? (
-              <ProductGallery images={selectedProduct.images} name={selectedProduct.name} />
+              <ProductGallery images={selectedProduct.images} productName={selectedProduct.name} />
             ) : selectedProduct.image ? (
               <div className="aspect-square bg-gray-100">
                 <img

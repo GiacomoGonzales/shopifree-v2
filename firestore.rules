@@ -88,9 +88,10 @@ service cloud.firestore {
       }
 
       // Analytics subcollection
-      match /analytics/{date} {
+      match /analytics/{eventId} {
         allow read: if isStoreOwner(storeId);
-        allow write: if false; // Only backend writes analytics
+        allow create: if true; // Anyone can track events (page views, clicks)
+        allow update, delete: if false; // Protect analytics data
       }
     }
 
