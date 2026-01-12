@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
+import { canAddProduct, getMaxImagesPerProduct, type PlanType } from '../../lib/stripe'
 import type { Category } from '../../types'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
@@ -17,6 +18,7 @@ export default function ProductForm() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [productCount, setProductCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -25,7 +27,7 @@ export default function ProductForm() {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
-  const [image, setImage] = useState('')
+  const [images, setImages] = useState<string[]>([])
   const [categoryId, setCategoryId] = useState('')
   const [active, setActive] = useState(true)
 
@@ -50,8 +52,12 @@ export default function ProductForm() {
       if (!store) return
 
       try {
-        const categoriesData = await categoryService.getAll(store.id)
+        const [categoriesData, productsData] = await Promise.all([
+          categoryService.getAll(store.id),
+          productService.getAll(store.id)
+        ])
         setCategories(categoriesData)
+        setProductCount(productsData.length)
 
         if (isEditing && productId) {
           const productData = await productService.get(store.id, productId)
@@ -60,7 +66,14 @@ export default function ProductForm() {
             setName(productData.name)
             setPrice(productData.price.toString())
             setDescription(productData.description || '')
-            setImage(productData.image || '')
+            // Load images - prefer images array, fallback to legacy image field
+            if (productData.images?.length) {
+              setImages(productData.images)
+            } else if (productData.image) {
+              setImages([productData.image])
+            } else {
+              setImages([])
+            }
             setCategoryId(productData.categoryId || '')
             setActive(productData.active)
 
@@ -91,37 +104,84 @@ export default function ProductForm() {
     fetchData()
   }, [store, isEditing, productId])
 
+  const plan = (store?.plan || 'free') as PlanType
+  const maxImages = getMaxImagesPerProduct(plan)
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
+    // Check limit
+    const remainingSlots = maxImages - images.length
+    if (remainingSlots <= 0) {
+      showToast(`Limite de ${maxImages} ${maxImages === 1 ? 'imagen' : 'imagenes'} alcanzado. Actualiza a Pro para mas.`, 'error')
+      return
+    }
+
+    const filesToUpload = Array.from(files).slice(0, remainingSlots)
     setUploading(true)
+
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'shopifree/products')
+      const uploadPromises = filesToUpload.map(async (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+        formData.append('folder', 'shopifree/products')
 
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+          { method: 'POST', body: formData }
+        )
 
-      if (!response.ok) throw new Error('Upload failed')
+        if (!response.ok) throw new Error('Upload failed')
+        const data = await response.json()
+        return data.secure_url
+      })
 
-      const data = await response.json()
-      setImage(data.secure_url)
+      const uploadedUrls = await Promise.all(uploadPromises)
+      setImages(prev => [...prev, ...uploadedUrls])
+
+      if (filesToUpload.length < files.length) {
+        showToast(`Solo se subieron ${filesToUpload.length} de ${files.length} imagenes (limite del plan)`, 'info')
+      }
     } catch (error) {
       console.error('Error uploading image:', error)
       showToast('Error al subir la imagen', 'error')
     } finally {
       setUploading(false)
+      // Clear file input
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleRemoveImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleMoveImage = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return
+    if (direction === 'down' && index === images.length - 1) return
+
+    const newImages = [...images]
+    const swapIndex = direction === 'up' ? index - 1 : index + 1
+    ;[newImages[index], newImages[swapIndex]] = [newImages[swapIndex], newImages[index]]
+    setImages(newImages)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!store) return
+
+    // Check product limit for new products
+    if (!isEditing) {
+      const plan = (store.plan || 'free') as PlanType
+      const limitCheck = canAddProduct(plan, productCount)
+      if (!limitCheck.allowed) {
+        showToast(limitCheck.message || 'Has alcanzado el limite de productos', 'error')
+        navigate('/dashboard/plan')
+        return
+      }
+    }
 
     setSaving(true)
     try {
@@ -146,7 +206,11 @@ export default function ProductForm() {
 
       // Add optional fields only if they have values
       if (description) productData.description = description
-      if (image) productData.image = image
+      // Save first image as main image (backwards compatible) + all images
+      if (images.length > 0) {
+        productData.image = images[0]
+        productData.images = images
+      }
       if (categoryId) productData.categoryId = categoryId
       if (comparePrice) productData.comparePrice = parseFloat(comparePrice)
       if (cost) productData.cost = parseFloat(cost)
@@ -225,21 +289,79 @@ export default function ProductForm() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Basic Info */}
           <div className="space-y-6">
-            {/* Image upload */}
+            {/* Image upload - Multiple images */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <label className="block text-sm font-semibold text-[#1e3a5f] mb-3">
-                Foto del producto
-              </label>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all bg-gradient-to-br from-[#f0f7ff] to-white ${
-                  image ? 'aspect-square' : 'aspect-[4/3]'
-                }`}
-              >
-                {image ? (
-                  <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full p-6 text-gray-500">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-[#1e3a5f]">
+                  Fotos del producto
+                </label>
+                <span className="text-xs text-gray-500">
+                  {images.length}/{maxImages} {maxImages === 1 ? 'imagen' : 'imagenes'}
+                </span>
+              </div>
+
+              {/* Image Gallery */}
+              {images.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {images.map((img, index) => (
+                    <div key={img} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
+                      <img src={img} alt={`Foto ${index + 1}`} className="w-full h-full object-cover" />
+                      {index === 0 && (
+                        <span className="absolute top-1 left-1 bg-[#1e3a5f] text-white text-[10px] px-1.5 py-0.5 rounded">
+                          Principal
+                        </span>
+                      )}
+                      {/* Overlay controls */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMoveImage(index, 'up')}
+                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                            title="Mover izquierda"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                        )}
+                        {index < images.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMoveImage(index, 'down')}
+                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                            title="Mover derecha"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600"
+                          title="Eliminar"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload area */}
+              {images.length < maxImages ? (
+                <div
+                  onClick={() => !uploading && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all bg-gradient-to-br from-[#f0f7ff] to-white ${
+                    images.length === 0 ? 'aspect-[4/3]' : 'py-6'
+                  }`}
+                >
+                  <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500">
                     {uploading ? (
                       <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
@@ -247,33 +369,40 @@ export default function ProductForm() {
                       </>
                     ) : (
                       <>
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20">
-                          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
                         </div>
-                        <p className="text-[#1e3a5f] font-medium text-sm">Click para subir</p>
+                        <p className="text-[#1e3a5f] font-medium text-sm">
+                          {images.length === 0 ? 'Click para subir fotos' : 'Agregar mas fotos'}
+                        </p>
+                        {maxImages > 1 && (
+                          <p className="text-xs text-gray-400 mt-1">Puedes seleccionar varias a la vez</p>
+                        )}
                       </>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-600">Limite de imagenes alcanzado</p>
+                  {maxImages === 1 && (
+                    <a href="/dashboard/plan" className="text-xs text-[#2d6cb5] hover:underline mt-1 inline-block">
+                      Actualiza a Pro para subir hasta 5 imagenes
+                    </a>
+                  )}
+                </div>
+              )}
+
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple={maxImages > 1}
                 onChange={handleImageUpload}
                 className="hidden"
               />
-              {image && (
-                <button
-                  type="button"
-                  onClick={() => setImage('')}
-                  className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
-                >
-                  Eliminar foto
-                </button>
-              )}
             </div>
 
             {/* Basic Fields */}

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
+import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
 import type { Product, Category } from '../../types'
 
@@ -13,6 +14,7 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 export default function Products() {
   const { store } = useAuth()
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -24,8 +26,39 @@ export default function Products() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [savingCategory, setSavingCategory] = useState(false)
 
+  // Limit warning modal
+  const [showLimitModal, setShowLimitModal] = useState(false)
+  const [limitMessage, setLimitMessage] = useState('')
+
   // Import modal
   const [showImportModal, setShowImportModal] = useState(false)
+
+  // Plan limits
+  const plan = (store?.plan || 'free') as PlanType
+  const productLimit = canAddProduct(plan, products.length)
+  const categoryLimit = canAddCategory(plan, categories.length)
+  const remainingProducts = getRemainingProducts(plan, products.length)
+  const remainingCategories = getRemainingCategories(plan, categories.length)
+
+  const handleAddProduct = () => {
+    if (!productLimit.allowed) {
+      setLimitMessage(productLimit.message || 'Has alcanzado el limite de productos')
+      setShowLimitModal(true)
+      return
+    }
+    navigate('/dashboard/products/new')
+  }
+
+  const handleAddCategory = () => {
+    if (!categoryLimit.allowed) {
+      setLimitMessage(categoryLimit.message || 'Has alcanzado el limite de categorias')
+      setShowLimitModal(true)
+      return
+    }
+    setEditingCategory(null)
+    setNewCategoryName('')
+    setShowCategoryModal(true)
+  }
 
   // Image upload
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null)
@@ -240,6 +273,11 @@ export default function Products() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Productos</h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
             {products.length} producto{products.length !== 1 ? 's' : ''} en tu catalogo
+            {remainingProducts !== 'unlimited' && (
+              <span className={`ml-2 ${remainingProducts <= 3 ? 'text-orange-500' : 'text-gray-400'}`}>
+                ({remainingProducts} restantes)
+              </span>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
@@ -252,26 +290,37 @@ export default function Products() {
             </svg>
             <span className="hidden sm:inline">Importar</span>
           </button>
-          <Link
-            to="/dashboard/products/new"
-            className="px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20 text-center"
+          <button
+            onClick={handleAddProduct}
+            className={`px-4 py-2.5 rounded-xl transition-all text-sm font-semibold text-center ${
+              productLimit.allowed
+                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] shadow-lg shadow-[#1e3a5f]/20'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
           >
             + Agregar producto
-          </Link>
+          </button>
         </div>
       </div>
 
       {/* Categories tabs */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-[#1e3a5f]">Categorias</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-[#1e3a5f]">Categorias</h3>
+            {remainingCategories !== 'unlimited' && (
+              <p className={`text-xs ${remainingCategories <= 1 ? 'text-orange-500' : 'text-gray-400'}`}>
+                {remainingCategories} restantes
+              </p>
+            )}
+          </div>
           <button
-            onClick={() => {
-              setEditingCategory(null)
-              setNewCategoryName('')
-              setShowCategoryModal(true)
-            }}
-            className="text-sm text-[#2d6cb5] hover:text-[#1e3a5f] font-medium flex items-center gap-1"
+            onClick={handleAddCategory}
+            className={`text-sm font-medium flex items-center gap-1 ${
+              categoryLimit.allowed
+                ? 'text-[#2d6cb5] hover:text-[#1e3a5f]'
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -358,12 +407,16 @@ export default function Products() {
           <p className="text-gray-600 mb-6">
             {selectedCategory ? 'Agrega productos o cambia de categoria' : 'Agrega tu primer producto para empezar a vender'}
           </p>
-          <Link
-            to="/dashboard/products/new"
-            className="inline-flex px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+          <button
+            onClick={handleAddProduct}
+            className={`inline-flex px-6 py-3 rounded-xl transition-all font-semibold ${
+              productLimit.allowed
+                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] shadow-lg shadow-[#1e3a5f]/20'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
           >
             Agregar producto
-          </Link>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -501,6 +554,39 @@ export default function Products() {
           onSuccess={refreshProducts}
           categories={categories.map(c => ({ id: c.id, name: c.name }))}
         />
+      )}
+
+      {/* Limit Modal */}
+      {showLimitModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-[#1e3a5f] text-center mb-2">
+              Limite alcanzado
+            </h3>
+            <p className="text-gray-600 text-center mb-6">
+              {limitMessage}
+            </p>
+            <div className="space-y-3">
+              <Link
+                to="/dashboard/plan"
+                className="block w-full px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-center rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+              >
+                Actualizar a Pro - ${PLAN_FEATURES.pro.price}/mes
+              </Link>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="block w-full px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

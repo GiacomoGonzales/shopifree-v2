@@ -27,11 +27,13 @@ export default function AdminStores() {
       })) as (Store & { id: string })[]
 
       // Sort by creation date
-      storesData.sort((a, b) => {
-        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt)
-        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt)
-        return dateB.getTime() - dateA.getTime()
-      })
+      const toDate = (d: any) => {
+        if (!d) return new Date(0)
+        if (d.toDate) return d.toDate()
+        if (d instanceof Date) return d
+        return new Date(d)
+      }
+      storesData.sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
 
       setStores(storesData)
     } catch (error) {
@@ -179,9 +181,13 @@ export default function AdminStores() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {store.createdAt instanceof Date
-                      ? store.createdAt.toLocaleDateString()
-                      : new Date(store.createdAt).toLocaleDateString()
+                    {store.createdAt
+                      ? (store.createdAt as any).toDate
+                        ? (store.createdAt as any).toDate().toLocaleDateString()
+                        : store.createdAt instanceof Date
+                          ? store.createdAt.toLocaleDateString()
+                          : new Date(store.createdAt).toLocaleDateString()
+                      : '-'
                     }
                   </td>
                   <td className="px-6 py-4">

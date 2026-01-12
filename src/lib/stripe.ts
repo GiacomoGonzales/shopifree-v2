@@ -81,3 +81,68 @@ export const PLAN_FEATURES = {
 }
 
 export type PlanType = keyof typeof PLAN_FEATURES
+
+// ============================================
+// PLAN LIMITS HELPERS
+// ============================================
+
+export function getPlanLimits(plan: PlanType) {
+  return PLAN_FEATURES[plan]?.limits || PLAN_FEATURES.free.limits
+}
+
+export function canAddProduct(plan: PlanType, currentProductCount: number): { allowed: boolean; limit: number; message?: string } {
+  const limits = getPlanLimits(plan)
+  const limit = limits.products
+
+  // -1 means unlimited
+  if (limit === -1) {
+    return { allowed: true, limit: -1 }
+  }
+
+  if (currentProductCount >= limit) {
+    return {
+      allowed: false,
+      limit,
+      message: `Has alcanzado el limite de ${limit} productos en el plan ${PLAN_FEATURES[plan].name}. Actualiza a Pro para productos ilimitados.`
+    }
+  }
+
+  return { allowed: true, limit }
+}
+
+export function canAddCategory(plan: PlanType, currentCategoryCount: number): { allowed: boolean; limit: number; message?: string } {
+  const limits = getPlanLimits(plan)
+  const limit = limits.categories
+
+  // -1 means unlimited
+  if (limit === -1) {
+    return { allowed: true, limit: -1 }
+  }
+
+  if (currentCategoryCount >= limit) {
+    return {
+      allowed: false,
+      limit,
+      message: `Has alcanzado el limite de ${limit} categorias en el plan ${PLAN_FEATURES[plan].name}. Actualiza a Pro para categorias ilimitadas.`
+    }
+  }
+
+  return { allowed: true, limit }
+}
+
+export function getMaxImagesPerProduct(plan: PlanType): number {
+  const limits = getPlanLimits(plan)
+  return limits.imagesPerProduct
+}
+
+export function getRemainingProducts(plan: PlanType, currentProductCount: number): number | 'unlimited' {
+  const limits = getPlanLimits(plan)
+  if (limits.products === -1) return 'unlimited'
+  return Math.max(0, limits.products - currentProductCount)
+}
+
+export function getRemainingCategories(plan: PlanType, currentCategoryCount: number): number | 'unlimited' {
+  const limits = getPlanLimits(plan)
+  if (limits.categories === -1) return 'unlimited'
+  return Math.max(0, limits.categories - currentCategoryCount)
+}

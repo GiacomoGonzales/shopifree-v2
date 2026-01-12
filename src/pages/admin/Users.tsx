@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import type { User } from '../../types'
+
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
 export default function AdminUsers() {
   const { showToast } = useToast()
   const [users, setUsers] = useState<(User & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -23,11 +26,13 @@ export default function AdminUsers() {
       })) as (User & { id: string })[]
 
       // Sort by creation date
-      usersData.sort((a, b) => {
-        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt)
-        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt)
-        return dateB.getTime() - dateA.getTime()
-      })
+      const toDate = (d: any) => {
+        if (!d) return new Date(0)
+        if (d.toDate) return d.toDate()
+        if (d instanceof Date) return d
+        return new Date(d)
+      }
+      usersData.sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
 
       setUsers(usersData)
     } catch (error) {
@@ -38,11 +43,39 @@ export default function AdminUsers() {
     }
   }
 
+  const handleToggleRole = async (userId: string, currentRole: string | undefined) => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin'
+    setUpdatingRole(userId)
+
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: newRole,
+        updatedAt: new Date()
+      })
+
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, role: newRole } : u
+      ))
+
+      showToast(`Rol actualizado a ${newRole}`, 'success')
+    } catch (error) {
+      console.error('Error updating role:', error)
+      showToast('Error al actualizar el rol', 'error')
+    } finally {
+      setUpdatingRole(null)
+    }
+  }
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.firstName && user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.lastName && user.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
   )
+
+  // Check if user is admin by email or role
+  const isUserAdmin = (user: User) => {
+    return user.role === 'admin' || user.email === ADMIN_EMAIL
+  }
 
   if (loading) {
     return (
@@ -86,6 +119,7 @@ export default function AdminUsers() {
                 <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Rol</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Stripe ID</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Registrado</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -117,14 +151,17 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {user.email}
+                    {user.email === ADMIN_EMAIL && (
+                      <span className="ml-2 text-xs text-red-500">(Super Admin)</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 text-xs rounded-full font-medium ${
-                      user.role === 'admin'
+                      isUserAdmin(user)
                         ? 'bg-red-100 text-red-700'
                         : 'bg-gray-100 text-gray-600'
                     }`}>
-                      {user.role || 'user'}
+                      {isUserAdmin(user) ? 'admin' : 'user'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm">
@@ -137,10 +174,39 @@ export default function AdminUsers() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {user.createdAt instanceof Date
-                      ? user.createdAt.toLocaleDateString()
-                      : new Date(user.createdAt).toLocaleDateString()
+                    {user.createdAt
+                      ? (user.createdAt as any).toDate
+                        ? (user.createdAt as any).toDate().toLocaleDateString()
+                        : user.createdAt instanceof Date
+                          ? user.createdAt.toLocaleDateString()
+                          : new Date(user.createdAt).toLocaleDateString()
+                      : '-'
                     }
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleToggleRole(user.id, user.role)}
+                      disabled={updatingRole === user.id}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                        isUserAdmin(user)
+                          ? 'text-gray-600 hover:bg-gray-100'
+                          : 'text-red-600 hover:bg-red-50'
+                      }`}
+                    >
+                      {updatingRole === user.id ? (
+                        <span className="flex items-center gap-1">
+                          <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Actualizando...
+                        </span>
+                      ) : isUserAdmin(user) ? (
+                        'Quitar admin'
+                      ) : (
+                        'Hacer admin'
+                      )}
+                    </button>
                   </td>
                 </tr>
               ))}

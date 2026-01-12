@@ -171,18 +171,9 @@ export default function Branding() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Diseno de tu tienda</h1>
-          <p className="text-gray-600 mt-1">Personaliza la apariencia de tu catalogo</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-        >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
-        </button>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">Diseno de tu tienda</h1>
+        <p className="text-gray-600 mt-1">Personaliza la apariencia de tu catalogo</p>
       </div>
 
       {/* Two Column Layout */}
@@ -523,6 +514,17 @@ export default function Branding() {
             )
           })}
         </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="mt-8 flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+        >
+          {saving ? 'Guardando...' : 'Guardar cambios'}
+        </button>
       </div>
     </div>
   )

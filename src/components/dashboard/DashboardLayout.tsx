@@ -136,7 +136,7 @@ const navigation: NavElement[] = [
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
 export default function DashboardLayout() {
-  const { user, firebaseUser, loading, logout } = useAuth()
+  const { user, firebaseUser, store, loading, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [openGroups, setOpenGroups] = useState<string[]>(['Mi Tienda'])
@@ -272,36 +272,71 @@ export default function DashboardLayout() {
 
       {/* Plan badge */}
       <div className="px-4 mb-4">
-        <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">Plan Gratuito</span>
+        {store?.plan === 'free' || !store?.plan ? (
+          <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">Plan Gratuito</span>
+            </div>
+            <p className="text-xs text-gray-600 mb-3">Desbloquea mas funciones</p>
+            <Link
+              to="/dashboard/plan"
+              className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
+            >
+              Ver planes
+            </Link>
           </div>
-          <p className="text-xs text-gray-600 mb-3">Desbloquea mas funciones</p>
-          <Link
-            to="/dashboard/plan"
-            className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
-          >
-            Ver planes
-          </Link>
-        </div>
+        ) : store?.plan === 'pro' ? (
+          <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200/50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Plan Pro</span>
+            </div>
+            <p className="text-xs text-gray-500">Todas las funciones desbloqueadas</p>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-200/50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Plan Business</span>
+            </div>
+            <p className="text-xs text-gray-500">Plan empresarial activo</p>
+          </div>
+        )}
       </div>
 
       {/* User section */}
       <div className="p-4 border-t border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center shadow-md shadow-[#38bdf8]/20">
-            <span className="text-sm font-semibold text-white">
-              {user.email?.[0].toUpperCase()}
-            </span>
-          </div>
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.firstName || user.email}
+              className="w-9 h-9 rounded-xl object-cover shadow-md"
+            />
+          ) : (
+            <div className="w-9 h-9 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center shadow-md shadow-[#38bdf8]/20">
+              <span className="text-sm font-semibold text-white">
+                {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
+              </span>
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {user.email}
+              {user.firstName && user.lastName
+                ? `${user.firstName} ${user.lastName}`
+                : user.firstName || user.email
+              }
             </p>
-            {isAdmin && (
+            {isAdmin ? (
               <Link to="/admin" className="text-xs text-gray-400 hover:text-[#2d6cb5] transition-colors">
                 Panel Admin
               </Link>
+            ) : user.firstName && (
+              <p className="text-xs text-gray-400 truncate">{user.email}</p>
             )}
           </div>
           <button

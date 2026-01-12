@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'admin@shopifree.app';
+      return isAuthenticated() && request.auth.token.email == 'giiacomo@gmail.com';
     }
 
     function isStoreOwner(storeId) {
@@ -25,9 +25,10 @@ service cloud.firestore {
       return isStoreOwner(storeId) || isAdmin();
     }
 
-    // Users collection
+    // Users collection - Admin can list all users
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if false; // Never delete users

@@ -47,12 +47,14 @@ export default function AdminDashboard() {
         })
 
         // Get recent stores (last 5)
+        const toDate = (d: any) => {
+          if (!d) return new Date(0)
+          if (d.toDate) return d.toDate()
+          if (d instanceof Date) return d
+          return new Date(d)
+        }
         const recentStores = stores
-          .sort((a, b) => {
-            const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt)
-            const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt)
-            return dateB.getTime() - dateA.getTime()
-          })
+          .sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
           .slice(0, 5)
 
         setStats({
