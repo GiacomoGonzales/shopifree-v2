@@ -171,11 +171,82 @@
   },
   "settings": {
     "title": "Settings",
-    "storeName": "Store name",
-    "description": "Description",
-    "whatsapp": "WhatsApp",
-    "currency": "Currency",
-    "save": "Save"
+    "subtitle": "Configure your store information",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "toast": {
+      "saved": "Settings saved",
+      "error": "Error saving settings",
+      "comingSoon": "Coming soon"
+    },
+    "basic": {
+      "title": "Basic information",
+      "storeName": "Store name",
+      "businessType": "Business type",
+      "currency": "Currency",
+      "businessTypes": {
+        "retail": "Store / Retail",
+        "restaurant": "Restaurant / Food",
+        "services": "Services",
+        "other": "Other"
+      },
+      "currencies": {
+        "PEN": "S/ - Peruvian Sol",
+        "USD": "$ - US Dollar",
+        "MXN": "$ - Mexican Peso",
+        "COP": "$ - Colombian Peso",
+        "ARS": "$ - Argentine Peso",
+        "CLP": "$ - Chilean Peso",
+        "BRL": "R$ - Brazilian Real",
+        "EUR": "€ - Euro"
+      }
+    },
+    "about": {
+      "title": "About your business",
+      "slogan": "Slogan or tagline",
+      "sloganPlaceholder": "E.g.: The best desserts in town",
+      "description": "About us",
+      "descriptionPlaceholder": "Tell your customers about your business..."
+    },
+    "location": {
+      "title": "Location",
+      "country": "Country",
+      "city": "City",
+      "cityPlaceholder": "E.g.: Lima",
+      "state": "State/Province",
+      "statePlaceholder": "Optional",
+      "address": "Address",
+      "addressPlaceholder": "Street, number...",
+      "countries": {
+        "PE": "Peru",
+        "MX": "Mexico",
+        "CO": "Colombia",
+        "AR": "Argentina",
+        "CL": "Chile",
+        "EC": "Ecuador",
+        "VE": "Venezuela",
+        "US": "United States",
+        "ES": "Spain"
+      }
+    },
+    "contact": {
+      "title": "Contact and social media",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1 555 123 4567",
+      "email": "Email",
+      "emailPlaceholder": "contact@mystore.com",
+      "instagram": "Instagram",
+      "instagramPlaceholder": "@mystore",
+      "facebook": "Facebook",
+      "facebookPlaceholder": "mystore",
+      "tiktok": "TikTok",
+      "tiktokPlaceholder": "@mystore"
+    },
+    "danger": {
+      "title": "Danger zone",
+      "description": "Deleting your catalog will permanently remove all your products and data.",
+      "deleteCatalog": "Delete my catalog"
+    }
   },
   "plan": {
     "title": "Plans and pricing",

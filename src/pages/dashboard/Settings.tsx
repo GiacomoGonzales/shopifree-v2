@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import type { Store, StoreLocation } from '../../types'
 
 export default function Settings() {
+  const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
@@ -102,10 +104,10 @@ export default function Settings() {
         tiktok: tiktok || null,
         updatedAt: new Date()
       })
-      showToast('Configuracion guardada', 'success')
+      showToast(t('settings.toast.saved'), 'success')
     } catch (error) {
       console.error('Error saving settings:', error)
-      showToast('Error al guardar la configuracion', 'error')
+      showToast(t('settings.toast.error'), 'error')
     } finally {
       setSaving(false)
     }
@@ -124,15 +126,15 @@ export default function Settings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Configuracion</h1>
-          <p className="text-gray-600 mt-1">Configura la informacion de tu tienda</p>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('settings.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('settings.subtitle')}</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
           className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? t('settings.saving') : t('settings.saveChanges')}
         </button>
       </div>
 
@@ -142,12 +144,12 @@ export default function Settings() {
         <div className="space-y-6">
           {/* Basic Info */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Informacion basica</h2>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.basic.title')}</h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                  Nombre de la tienda
+                  {t('settings.basic.storeName')}
                 </label>
                 <input
                   type="text"
@@ -160,37 +162,37 @@ export default function Settings() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Tipo de negocio
+                    {t('settings.basic.businessType')}
                   </label>
                   <select
                     value={businessType}
                     onChange={(e) => setBusinessType(e.target.value as Store['businessType'])}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   >
-                    <option value="retail">Tienda / Retail</option>
-                    <option value="restaurant">Restaurante / Comida</option>
-                    <option value="services">Servicios</option>
-                    <option value="other">Otro</option>
+                    <option value="retail">{t('settings.basic.businessTypes.retail')}</option>
+                    <option value="restaurant">{t('settings.basic.businessTypes.restaurant')}</option>
+                    <option value="services">{t('settings.basic.businessTypes.services')}</option>
+                    <option value="other">{t('settings.basic.businessTypes.other')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Moneda
+                    {t('settings.basic.currency')}
                   </label>
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   >
-                    <option value="PEN">S/ - Sol Peruano</option>
-                    <option value="USD">$ - Dolar Americano</option>
-                    <option value="MXN">$ - Peso Mexicano</option>
-                    <option value="COP">$ - Peso Colombiano</option>
-                    <option value="ARS">$ - Peso Argentino</option>
-                    <option value="CLP">$ - Peso Chileno</option>
-                    <option value="BRL">R$ - Real Brasileno</option>
-                    <option value="EUR">€ - Euro</option>
+                    <option value="PEN">{t('settings.basic.currencies.PEN')}</option>
+                    <option value="USD">{t('settings.basic.currencies.USD')}</option>
+                    <option value="MXN">{t('settings.basic.currencies.MXN')}</option>
+                    <option value="COP">{t('settings.basic.currencies.COP')}</option>
+                    <option value="ARS">{t('settings.basic.currencies.ARS')}</option>
+                    <option value="CLP">{t('settings.basic.currencies.CLP')}</option>
+                    <option value="BRL">{t('settings.basic.currencies.BRL')}</option>
+                    <option value="EUR">{t('settings.basic.currencies.EUR')}</option>
                   </select>
                 </div>
               </div>
@@ -199,31 +201,31 @@ export default function Settings() {
 
           {/* About */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Sobre tu negocio</h2>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.about.title')}</h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                  Slogan o frase corta
+                  {t('settings.about.slogan')}
                 </label>
                 <input
                   type="text"
                   value={slogan}
                   onChange={(e) => setSlogan(e.target.value)}
-                  placeholder="Ej: Los mejores postres de la ciudad"
+                  placeholder={t('settings.about.sloganPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                  Quienes somos
+                  {t('settings.about.description')}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  placeholder="Cuentale a tus clientes sobre tu negocio..."
+                  placeholder={t('settings.about.descriptionPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
                 />
               </div>
@@ -235,39 +237,39 @@ export default function Settings() {
         <div className="space-y-6">
           {/* Location */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Ubicacion</h2>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.location.title')}</h2>
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Pais
+                    {t('settings.location.country')}
                   </label>
                   <select
                     value={location.country}
                     onChange={(e) => setLocation({ ...location, country: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   >
-                    <option value="PE">Peru</option>
-                    <option value="MX">Mexico</option>
-                    <option value="CO">Colombia</option>
-                    <option value="AR">Argentina</option>
-                    <option value="CL">Chile</option>
-                    <option value="EC">Ecuador</option>
-                    <option value="VE">Venezuela</option>
-                    <option value="US">Estados Unidos</option>
-                    <option value="ES">Espana</option>
+                    <option value="PE">{t('settings.location.countries.PE')}</option>
+                    <option value="MX">{t('settings.location.countries.MX')}</option>
+                    <option value="CO">{t('settings.location.countries.CO')}</option>
+                    <option value="AR">{t('settings.location.countries.AR')}</option>
+                    <option value="CL">{t('settings.location.countries.CL')}</option>
+                    <option value="EC">{t('settings.location.countries.EC')}</option>
+                    <option value="VE">{t('settings.location.countries.VE')}</option>
+                    <option value="US">{t('settings.location.countries.US')}</option>
+                    <option value="ES">{t('settings.location.countries.ES')}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Ciudad
+                    {t('settings.location.city')}
                   </label>
                   <input
                     type="text"
                     value={location.city || ''}
                     onChange={(e) => setLocation({ ...location, city: e.target.value })}
-                    placeholder="Ej: Lima"
+                    placeholder={t('settings.location.cityPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
@@ -276,25 +278,25 @@ export default function Settings() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Estado/Provincia
+                    {t('settings.location.state')}
                   </label>
                   <input
                     type="text"
                     value={location.state || ''}
                     onChange={(e) => setLocation({ ...location, state: e.target.value })}
-                    placeholder="Opcional"
+                    placeholder={t('settings.location.statePlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Direccion
+                    {t('settings.location.address')}
                   </label>
                   <input
                     type="text"
                     value={location.address || ''}
                     onChange={(e) => setLocation({ ...location, address: e.target.value })}
-                    placeholder="Calle, numero..."
+                    placeholder={t('settings.location.addressPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
@@ -304,13 +306,13 @@ export default function Settings() {
 
           {/* Contact */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Contacto y redes sociales</h2>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.contact.title')}</h2>
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    WhatsApp
+                    {t('settings.contact.whatsapp')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -322,7 +324,7 @@ export default function Settings() {
                       type="tel"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
-                      placeholder="+51 999 888 777"
+                      placeholder={t('settings.contact.whatsappPlaceholder')}
                       className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                     />
                   </div>
@@ -330,13 +332,13 @@ export default function Settings() {
 
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Email
+                    {t('settings.contact.email')}
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="contacto@mitienda.com"
+                    placeholder={t('settings.contact.emailPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
@@ -345,37 +347,37 @@ export default function Settings() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Instagram
+                    {t('settings.contact.instagram')}
                   </label>
                   <input
                     type="text"
                     value={instagram}
                     onChange={(e) => setInstagram(e.target.value)}
-                    placeholder="@mitienda"
+                    placeholder={t('settings.contact.instagramPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Facebook
+                    {t('settings.contact.facebook')}
                   </label>
                   <input
                     type="text"
                     value={facebook}
                     onChange={(e) => setFacebook(e.target.value)}
-                    placeholder="mitienda"
+                    placeholder={t('settings.contact.facebookPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    TikTok
+                    {t('settings.contact.tiktok')}
                   </label>
                   <input
                     type="text"
                     value={tiktok}
                     onChange={(e) => setTiktok(e.target.value)}
-                    placeholder="@mitienda"
+                    placeholder={t('settings.contact.tiktokPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
@@ -389,16 +391,16 @@ export default function Settings() {
       <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-red-600 mb-1">Zona de peligro</h2>
+            <h2 className="text-lg font-semibold text-red-600 mb-1">{t('settings.danger.title')}</h2>
             <p className="text-sm text-gray-600">
-              Eliminar tu catalogo borrara permanentemente todos tus productos y datos.
+              {t('settings.danger.description')}
             </p>
           </div>
           <button
-            onClick={() => showToast('Funcionalidad proximamente', 'info')}
+            onClick={() => showToast(t('settings.toast.comingSoon'), 'info')}
             className="w-full sm:w-auto px-4 py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium flex-shrink-0"
           >
-            Eliminar mi catalogo
+            {t('settings.danger.deleteCatalog')}
           </button>
         </div>
       </div>

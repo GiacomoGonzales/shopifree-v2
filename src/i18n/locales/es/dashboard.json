@@ -171,11 +171,82 @@
   },
   "settings": {
     "title": "Configuración",
-    "storeName": "Nombre de la tienda",
-    "description": "Descripción",
-    "whatsapp": "WhatsApp",
-    "currency": "Moneda",
-    "save": "Guardar"
+    "subtitle": "Configura la información de tu tienda",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar cambios",
+    "toast": {
+      "saved": "Configuración guardada",
+      "error": "Error al guardar la configuración",
+      "comingSoon": "Funcionalidad próximamente"
+    },
+    "basic": {
+      "title": "Información básica",
+      "storeName": "Nombre de la tienda",
+      "businessType": "Tipo de negocio",
+      "currency": "Moneda",
+      "businessTypes": {
+        "retail": "Tienda / Retail",
+        "restaurant": "Restaurante / Comida",
+        "services": "Servicios",
+        "other": "Otro"
+      },
+      "currencies": {
+        "PEN": "S/ - Sol Peruano",
+        "USD": "$ - Dólar Americano",
+        "MXN": "$ - Peso Mexicano",
+        "COP": "$ - Peso Colombiano",
+        "ARS": "$ - Peso Argentino",
+        "CLP": "$ - Peso Chileno",
+        "BRL": "R$ - Real Brasileño",
+        "EUR": "€ - Euro"
+      }
+    },
+    "about": {
+      "title": "Sobre tu negocio",
+      "slogan": "Slogan o frase corta",
+      "sloganPlaceholder": "Ej: Los mejores postres de la ciudad",
+      "description": "Quiénes somos",
+      "descriptionPlaceholder": "Cuéntale a tus clientes sobre tu negocio..."
+    },
+    "location": {
+      "title": "Ubicación",
+      "country": "País",
+      "city": "Ciudad",
+      "cityPlaceholder": "Ej: Lima",
+      "state": "Estado/Provincia",
+      "statePlaceholder": "Opcional",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle, número...",
+      "countries": {
+        "PE": "Perú",
+        "MX": "México",
+        "CO": "Colombia",
+        "AR": "Argentina",
+        "CL": "Chile",
+        "EC": "Ecuador",
+        "VE": "Venezuela",
+        "US": "Estados Unidos",
+        "ES": "España"
+      }
+    },
+    "contact": {
+      "title": "Contacto y redes sociales",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+51 999 888 777",
+      "email": "Email",
+      "emailPlaceholder": "contacto@mitienda.com",
+      "instagram": "Instagram",
+      "instagramPlaceholder": "@mitienda",
+      "facebook": "Facebook",
+      "facebookPlaceholder": "mitienda",
+      "tiktok": "TikTok",
+      "tiktokPlaceholder": "@mitienda"
+    },
+    "danger": {
+      "title": "Zona de peligro",
+      "description": "Eliminar tu catálogo borrará permanentemente todos tus productos y datos.",
+      "deleteCatalog": "Eliminar mi catálogo"
+    }
   },
   "plan": {
     "title": "Planes y precios",
