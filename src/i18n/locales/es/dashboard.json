@@ -388,6 +388,48 @@
       }
     }
   },
+  "domain": {
+    "title": "Dominio",
+    "subtitle": "Configura tu dominio personalizado",
+    "toast": {
+      "copied": "Link copiado",
+      "comingSoon": "Funcionalidad próximamente"
+    },
+    "currentUrl": {
+      "title": "Tu URL actual",
+      "copy": "Copiar",
+      "freeLink": "Enlace gratuito de tu catálogo"
+    },
+    "custom": {
+      "title": "Dominio personalizado",
+      "description": "URL profesional como <strong>www.tutienda.com</strong>",
+      "proBadge": "PRO",
+      "proPlan": "Plan Pro",
+      "upgradeMessage": "Mejora tu plan para conectar tu dominio.",
+      "viewPlans": "Ver planes"
+    },
+    "instructions": {
+      "title": "Cómo conectar tu dominio",
+      "step1": {
+        "title": "Compra tu dominio",
+        "description": "Namecheap, GoDaddy u otro proveedor"
+      },
+      "step2": {
+        "title": "Ingresa tu dominio",
+        "description": "En el campo de configuración"
+      },
+      "step3": {
+        "title": "Configura DNS",
+        "description": "Te daremos los registros necesarios"
+      },
+      "step4": {
+        "title": "Verificación",
+        "description": "Puede tomar hasta 48 horas"
+      },
+      "tip": "Tip:",
+      "tipText": "Si necesitas ayuda configurando tu dominio, contáctanos por WhatsApp."
+    }
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",

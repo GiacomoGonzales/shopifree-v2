@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -6,6 +7,7 @@ import { useToast } from '../../components/ui/Toast'
 import type { Store } from '../../types'
 
 export default function Domain() {
+  const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
@@ -48,8 +50,8 @@ export default function Domain() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">Dominio</h1>
-        <p className="text-gray-600 mt-1">Configura tu dominio personalizado</p>
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('domain.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('domain.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -58,7 +60,7 @@ export default function Domain() {
         <div className="space-y-6">
           {/* Current URL */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Tu URL actual</h2>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('domain.currentUrl.title')}</h2>
             <div className="flex gap-3">
               <code className="flex-1 px-4 py-3 bg-[#f0f7ff] rounded-xl text-sm text-[#1e3a5f] font-medium border border-[#38bdf8]/20 break-all">
                 {catalogUrl}
@@ -66,15 +68,15 @@ export default function Domain() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(catalogUrl)
-                  showToast('Link copiado', 'success')
+                  showToast(t('domain.toast.copied'), 'success')
                 }}
                 className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all text-sm font-medium whitespace-nowrap flex-shrink-0"
               >
-                Copiar
+                {t('domain.currentUrl.copy')}
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Enlace gratuito de tu catalogo
+              {t('domain.currentUrl.freeLink')}
             </p>
           </div>
 
@@ -87,24 +89,22 @@ export default function Domain() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-[#1e3a5f]">Dominio personalizado</h2>
-                <p className="text-sm text-gray-600 mt-1 mb-4">
-                  URL profesional como <strong>www.tutienda.com</strong>
-                </p>
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('domain.custom.title')}</h2>
+                <p className="text-sm text-gray-600 mt-1 mb-4" dangerouslySetInnerHTML={{ __html: t('domain.custom.description') }} />
 
                 <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 bg-[#2d6cb5] text-white text-xs font-semibold rounded-full">PRO</span>
-                    <span className="text-sm font-medium text-[#1e3a5f]">Plan Pro</span>
+                    <span className="px-2 py-0.5 bg-[#2d6cb5] text-white text-xs font-semibold rounded-full">{t('domain.custom.proBadge')}</span>
+                    <span className="text-sm font-medium text-[#1e3a5f]">{t('domain.custom.proPlan')}</span>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">
-                    Mejora tu plan para conectar tu dominio.
+                    {t('domain.custom.upgradeMessage')}
                   </p>
                   <button
-                    onClick={() => showToast('Funcionalidad proximamente', 'info')}
+                    onClick={() => showToast(t('domain.toast.comingSoon'), 'info')}
                     className="w-full px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
                   >
-                    Ver planes
+                    {t('domain.custom.viewPlans')}
                   </button>
                 </div>
               </div>
@@ -114,41 +114,41 @@ export default function Domain() {
 
         {/* Right Column - Instructions */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Como conectar tu dominio</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('domain.instructions.title')}</h2>
           <ol className="space-y-4 text-sm text-gray-600">
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">1</span>
               <div>
-                <p className="font-medium text-[#1e3a5f]">Compra tu dominio</p>
-                <p className="text-xs text-gray-500 mt-0.5">Namecheap, GoDaddy u otro proveedor</p>
+                <p className="font-medium text-[#1e3a5f]">{t('domain.instructions.step1.title')}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('domain.instructions.step1.description')}</p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">2</span>
               <div>
-                <p className="font-medium text-[#1e3a5f]">Ingresa tu dominio</p>
-                <p className="text-xs text-gray-500 mt-0.5">En el campo de configuracion</p>
+                <p className="font-medium text-[#1e3a5f]">{t('domain.instructions.step2.title')}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('domain.instructions.step2.description')}</p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">3</span>
               <div>
-                <p className="font-medium text-[#1e3a5f]">Configura DNS</p>
-                <p className="text-xs text-gray-500 mt-0.5">Te daremos los registros necesarios</p>
+                <p className="font-medium text-[#1e3a5f]">{t('domain.instructions.step3.title')}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('domain.instructions.step3.description')}</p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">4</span>
               <div>
-                <p className="font-medium text-[#1e3a5f]">Verificacion</p>
-                <p className="text-xs text-gray-500 mt-0.5">Puede tomar hasta 48 horas</p>
+                <p className="font-medium text-[#1e3a5f]">{t('domain.instructions.step4.title')}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('domain.instructions.step4.description')}</p>
               </div>
             </li>
           </ol>
 
           <div className="mt-6 p-3 bg-[#f0f7ff] rounded-xl">
             <p className="text-xs text-[#1e3a5f]">
-              <span className="font-medium">Tip:</span> Si necesitas ayuda configurando tu dominio, contactanos por WhatsApp.
+              <span className="font-medium">{t('domain.instructions.tip')}</span> {t('domain.instructions.tipText')}
             </p>
           </div>
         </div>

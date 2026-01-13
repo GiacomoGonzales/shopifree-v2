@@ -388,6 +388,48 @@
       }
     }
   },
+  "domain": {
+    "title": "Domain",
+    "subtitle": "Configure your custom domain",
+    "toast": {
+      "copied": "Link copied",
+      "comingSoon": "Coming soon"
+    },
+    "currentUrl": {
+      "title": "Your current URL",
+      "copy": "Copy",
+      "freeLink": "Free link to your catalog"
+    },
+    "custom": {
+      "title": "Custom domain",
+      "description": "Professional URL like <strong>www.yourstore.com</strong>",
+      "proBadge": "PRO",
+      "proPlan": "Pro Plan",
+      "upgradeMessage": "Upgrade your plan to connect your domain.",
+      "viewPlans": "View plans"
+    },
+    "instructions": {
+      "title": "How to connect your domain",
+      "step1": {
+        "title": "Buy your domain",
+        "description": "Namecheap, GoDaddy or another provider"
+      },
+      "step2": {
+        "title": "Enter your domain",
+        "description": "In the configuration field"
+      },
+      "step3": {
+        "title": "Configure DNS",
+        "description": "We'll give you the necessary records"
+      },
+      "step4": {
+        "title": "Verification",
+        "description": "May take up to 48 hours"
+      },
+      "tip": "Tip:",
+      "tipText": "If you need help configuring your domain, contact us on WhatsApp."
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
