@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
@@ -14,19 +14,28 @@ export default function Plan() {
   const { store, user, firebaseUser, refreshStore } = useAuth()
   const { showToast } = useToast()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [processingPlan, setProcessingPlan] = useState<string | null>(null)
+  const toastShownRef = useRef(false)
 
   // Handle success/cancel from Stripe
   useEffect(() => {
+    if (toastShownRef.current) return
+
     if (searchParams.get('success') === 'true') {
+      toastShownRef.current = true
       showToast('Suscripcion activada exitosamente!', 'success')
       refreshStore()
+      // Clear URL params
+      navigate('/dashboard/plan', { replace: true })
     } else if (searchParams.get('canceled') === 'true') {
+      toastShownRef.current = true
       showToast('Pago cancelado', 'info')
+      navigate('/dashboard/plan', { replace: true })
     }
-  }, [searchParams, showToast, refreshStore])
+  }, [searchParams, showToast, refreshStore, navigate])
 
   const handleSelectPlan = async (planId: PlanType) => {
     if (!store || !user || !firebaseUser) {
