@@ -163,11 +163,49 @@
   },
   "branding": {
     "title": "Store design",
-    "logo": "Logo",
-    "banner": "Banner",
-    "theme": "Theme",
-    "colors": "Colors",
-    "save": "Save changes"
+    "subtitle": "Customize the appearance of your catalog",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "toast": {
+      "saved": "Changes saved successfully",
+      "error": "Error saving changes",
+      "logoError": "Error uploading logo",
+      "imageError": "Error uploading image"
+    },
+    "logo": {
+      "title": "Logo",
+      "description": "Square image 200x200px in PNG with transparent background.",
+      "upload": "Upload",
+      "delete": "Delete logo"
+    },
+    "announcement": {
+      "title": "Announcement bar",
+      "description": "Promotional bar at the top of your catalog.",
+      "message": "Message",
+      "messagePlaceholder": "E.g.: Free shipping on orders over $50",
+      "link": "Link (optional)",
+      "linkPlaceholder": "https://...",
+      "backgroundColor": "Background color",
+      "textColor": "Text color",
+      "preview": "Preview"
+    },
+    "hero": {
+      "title": "Cover images",
+      "description": "Upload two images: horizontal for desktop and 3:2 for mobile.",
+      "desktop": "Desktop",
+      "desktopSize": "(1920x600)",
+      "mobile": "Mobile",
+      "mobileSize": "(1200x800)",
+      "uploadHorizontal": "Upload horizontal image",
+      "uploadSquare": "Upload 3:2 image",
+      "delete": "Delete",
+      "tip": "Tip:",
+      "tipText": "If you only upload one, it will be used on both devices."
+    },
+    "theme": {
+      "title": "Catalog theme",
+      "description": "Choose the visual style of your catalog. All themes are free."
+    }
   },
   "settings": {
     "title": "Settings",

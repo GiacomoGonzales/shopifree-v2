@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
@@ -10,6 +11,7 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Branding() {
+  const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
@@ -100,7 +102,7 @@ export default function Branding() {
       setLogo(url)
     } catch (error) {
       console.error('Error uploading logo:', error)
-      showToast('Error al subir el logo', 'error')
+      showToast(t('branding.toast.logoError'), 'error')
     } finally {
       setUploadingLogo(false)
     }
@@ -116,7 +118,7 @@ export default function Branding() {
       setHeroImage(url)
     } catch (error) {
       console.error('Error uploading hero:', error)
-      showToast('Error al subir la imagen', 'error')
+      showToast(t('branding.toast.imageError'), 'error')
     } finally {
       setUploadingHero(false)
     }
@@ -132,7 +134,7 @@ export default function Branding() {
       setHeroImageMobile(url)
     } catch (error) {
       console.error('Error uploading hero mobile:', error)
-      showToast('Error al subir la imagen', 'error')
+      showToast(t('branding.toast.imageError'), 'error')
     } finally {
       setUploadingHeroMobile(false)
     }
@@ -151,10 +153,10 @@ export default function Branding() {
         announcement,
         updatedAt: new Date()
       })
-      showToast('Cambios guardados correctamente', 'success')
+      showToast(t('branding.toast.saved'), 'success')
     } catch (error) {
       console.error('Error saving:', error)
-      showToast('Error al guardar los cambios', 'error')
+      showToast(t('branding.toast.error'), 'error')
     } finally {
       setSaving(false)
     }
@@ -172,8 +174,8 @@ export default function Branding() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">Diseno de tu tienda</h1>
-        <p className="text-gray-600 mt-1">Personaliza la apariencia de tu catalogo</p>
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('branding.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('branding.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -182,7 +184,7 @@ export default function Branding() {
         <div className="space-y-6">
           {/* Logo */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Logo</h2>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('branding.logo.title')}</h2>
             <div className="flex items-start gap-4">
               <div
                 onClick={() => logoInputRef.current?.click()}
@@ -197,7 +199,7 @@ export default function Branding() {
                     <svg className="w-6 h-6 text-[#38bdf8] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span className="text-[10px] text-gray-500">Subir</span>
+                    <span className="text-[10px] text-gray-500">{t('branding.logo.upload')}</span>
                   </div>
                 )}
               </div>
@@ -210,14 +212,14 @@ export default function Branding() {
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-600 mb-2">
-                  Imagen cuadrada 200x200px en PNG con fondo transparente.
+                  {t('branding.logo.description')}
                 </p>
                 {logo && (
                   <button
                     onClick={() => setLogo('')}
                     className="text-sm text-red-600 hover:text-red-700 font-medium"
                   >
-                    Eliminar logo
+                    {t('branding.logo.delete')}
                   </button>
                 )}
               </div>
@@ -227,7 +229,7 @@ export default function Branding() {
           {/* Announcement Bar */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-[#1e3a5f]">Tira publicitaria</h2>
+              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.announcement.title')}</h2>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -240,35 +242,35 @@ export default function Branding() {
             </div>
 
             <p className="text-sm text-gray-600 mb-4">
-              Barra promocional en la parte superior de tu catalogo.
+              {t('branding.announcement.description')}
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Mensaje</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
                 <input
                   type="text"
                   value={announcement.text}
                   onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
-                  placeholder="Ej: Envio gratis en compras mayores a $50"
+                  placeholder={t('branding.announcement.messagePlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Enlace (opcional)</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.link')}</label>
                 <input
                   type="url"
                   value={announcement.link || ''}
                   onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
-                  placeholder="https://..."
+                  placeholder={t('branding.announcement.linkPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de fondo</label>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.backgroundColor')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -285,7 +287,7 @@ export default function Branding() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Color de texto</label>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.textColor')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -306,7 +308,7 @@ export default function Branding() {
               {/* Preview */}
               {announcement.enabled && announcement.text && (
                 <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-2">Vista previa</label>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-2">{t('branding.announcement.preview')}</label>
                   <div
                     className="py-2.5 px-4 text-center text-sm font-medium rounded-lg"
                     style={{
@@ -324,9 +326,9 @@ export default function Branding() {
 
         {/* Right Column - Hero Images */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">Imagenes de portada</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">{t('branding.hero.title')}</h2>
           <p className="text-sm text-gray-600 mb-6">
-            Sube dos imagenes: horizontal para desktop y 3:2 para movil.
+            {t('branding.hero.description')}
           </p>
 
           <div className="space-y-6">
@@ -336,8 +338,8 @@ export default function Branding() {
                 <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium text-[#1e3a5f]">Desktop</span>
-                <span className="text-xs text-gray-400">(1920x600)</span>
+                <span className="font-medium text-[#1e3a5f]">{t('branding.hero.desktop')}</span>
+                <span className="text-xs text-gray-400">{t('branding.hero.desktopSize')}</span>
               </div>
               <div
                 onClick={() => heroInputRef.current?.click()}
@@ -352,7 +354,7 @@ export default function Branding() {
                     <svg className="w-8 h-8 text-[#38bdf8] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <p className="text-sm text-gray-500">Subir imagen horizontal</p>
+                    <p className="text-sm text-gray-500">{t('branding.hero.uploadHorizontal')}</p>
                   </div>
                 )}
               </div>
@@ -368,7 +370,7 @@ export default function Branding() {
                   onClick={() => setHeroImage('')}
                   className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
-                  Eliminar
+                  {t('branding.hero.delete')}
                 </button>
               )}
             </div>
@@ -379,8 +381,8 @@ export default function Branding() {
                 <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium text-[#1e3a5f]">Movil</span>
-                <span className="text-xs text-gray-400">(1200x800)</span>
+                <span className="font-medium text-[#1e3a5f]">{t('branding.hero.mobile')}</span>
+                <span className="text-xs text-gray-400">{t('branding.hero.mobileSize')}</span>
               </div>
               <div
                 onClick={() => heroMobileInputRef.current?.click()}
@@ -395,7 +397,7 @@ export default function Branding() {
                     <svg className="w-8 h-8 text-[#38bdf8] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <p className="text-sm text-gray-500">Subir imagen 3:2</p>
+                    <p className="text-sm text-gray-500">{t('branding.hero.uploadSquare')}</p>
                   </div>
                 )}
               </div>
@@ -411,7 +413,7 @@ export default function Branding() {
                   onClick={() => setHeroImageMobile('')}
                   className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
-                  Eliminar
+                  {t('branding.hero.delete')}
                 </button>
               )}
             </div>
@@ -420,7 +422,7 @@ export default function Branding() {
           {/* Tip */}
           <div className="mt-6 p-3 bg-[#f0f7ff] rounded-xl">
             <p className="text-xs text-[#1e3a5f]">
-              <span className="font-medium">Tip:</span> Si solo subes una, se usara en ambos dispositivos.
+              <span className="font-medium">{t('branding.hero.tip')}</span> {t('branding.hero.tipText')}
             </p>
           </div>
         </div>
@@ -428,9 +430,9 @@ export default function Branding() {
 
       {/* Theme Selector - Full Width */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">Tema del catalogo</h2>
+        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">{t('branding.theme.title')}</h2>
         <p className="text-sm text-gray-600 mb-6">
-          Elige el estilo visual de tu catalogo. Todos los temas son gratuitos.
+          {t('branding.theme.description')}
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -523,7 +525,7 @@ export default function Branding() {
           disabled={saving}
           className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? t('branding.saving') : t('branding.saveChanges')}
         </button>
       </div>
     </div>

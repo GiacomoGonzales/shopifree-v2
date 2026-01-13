@@ -163,11 +163,49 @@
   },
   "branding": {
     "title": "Diseño de tu tienda",
-    "logo": "Logo",
-    "banner": "Banner",
-    "theme": "Tema",
-    "colors": "Colores",
-    "save": "Guardar cambios"
+    "subtitle": "Personaliza la apariencia de tu catálogo",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar cambios",
+    "toast": {
+      "saved": "Cambios guardados correctamente",
+      "error": "Error al guardar los cambios",
+      "logoError": "Error al subir el logo",
+      "imageError": "Error al subir la imagen"
+    },
+    "logo": {
+      "title": "Logo",
+      "description": "Imagen cuadrada 200x200px en PNG con fondo transparente.",
+      "upload": "Subir",
+      "delete": "Eliminar logo"
+    },
+    "announcement": {
+      "title": "Tira publicitaria",
+      "description": "Barra promocional en la parte superior de tu catálogo.",
+      "message": "Mensaje",
+      "messagePlaceholder": "Ej: Envío gratis en compras mayores a $50",
+      "link": "Enlace (opcional)",
+      "linkPlaceholder": "https://...",
+      "backgroundColor": "Color de fondo",
+      "textColor": "Color de texto",
+      "preview": "Vista previa"
+    },
+    "hero": {
+      "title": "Imágenes de portada",
+      "description": "Sube dos imágenes: horizontal para desktop y 3:2 para móvil.",
+      "desktop": "Desktop",
+      "desktopSize": "(1920x600)",
+      "mobile": "Móvil",
+      "mobileSize": "(1200x800)",
+      "uploadHorizontal": "Subir imagen horizontal",
+      "uploadSquare": "Subir imagen 3:2",
+      "delete": "Eliminar",
+      "tip": "Tip:",
+      "tipText": "Si solo subes una, se usará en ambos dispositivos."
+    },
+    "theme": {
+      "title": "Tema del catálogo",
+      "description": "Elige el estilo visual de tu catálogo. Todos los temas son gratuitos."
+    }
   },
   "settings": {
     "title": "Configuración",
