@@ -22,6 +22,7 @@ export default function AdminStores() {
   const [loading, setLoading] = useState(true)
   const [editingStore, setEditingStore] = useState<(Store & { id: string }) | null>(null)
   const [saving, setSaving] = useState(false)
+  const [syncingStore, setSyncingStore] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterPlan, setFilterPlan] = useState<string>('all')
 
@@ -52,6 +53,40 @@ export default function AdminStores() {
       showToast('Error al cargar las tiendas', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSyncSubscription = async (storeId: string) => {
+    setSyncingStore(storeId)
+    try {
+      const response = await fetch('/api/sync-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storeId })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Update local state
+        setStores(stores.map(s =>
+          s.id === storeId
+            ? {
+                ...s,
+                plan: data.plan,
+                subscription: { ...s.subscription, status: data.status }
+              }
+            : s
+        ))
+        showToast(`Sincronizado: ${SUBSCRIPTION_STATUS_LABELS[data.status] || data.status}`, 'success')
+      } else {
+        showToast(data.error || 'Error al sincronizar', 'error')
+      }
+    } catch (error) {
+      console.error('Error syncing subscription:', error)
+      showToast('Error al sincronizar con Stripe', 'error')
+    } finally {
+      setSyncingStore(null)
     }
   }
 
@@ -179,18 +214,39 @@ export default function AdminStores() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {store.subscription ? (
-                      <span className={`px-3 py-1 text-xs rounded-full font-medium ${
-                        store.subscription.status === 'active' ? 'bg-green-100 text-green-700' :
-                        store.subscription.status === 'trialing' ? 'bg-blue-100 text-blue-700' :
-                        store.subscription.status === 'past_due' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 text-sm">Sin suscripcion</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {store.subscription ? (
+                        <>
+                          <span className={`px-3 py-1 text-xs rounded-full font-medium ${
+                            store.subscription.status === 'active' ? 'bg-green-100 text-green-700' :
+                            store.subscription.status === 'trialing' ? 'bg-blue-100 text-blue-700' :
+                            store.subscription.status === 'past_due' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
+                          </span>
+                          <button
+                            onClick={() => handleSyncSubscription(store.id)}
+                            disabled={syncingStore === store.id}
+                            className="p-1 text-gray-400 hover:text-[#2d6cb5] hover:bg-[#f0f7ff] rounded transition-all disabled:opacity-50"
+                            title="Sincronizar con Stripe"
+                          >
+                            {syncingStore === store.id ? (
+                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 text-sm">Sin suscripcion</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {store.createdAt
