@@ -178,17 +178,63 @@
     "save": "Guardar"
   },
   "plan": {
-    "title": "Tu plan",
-    "current": "Plan actual",
-    "upgrade": "Mejorar plan",
+    "title": "Planes y precios",
+    "subtitle": "Elige el plan que mejor se adapte a tu negocio",
+    "current": "Tu plan actual",
     "manage": "Administrar suscripción",
-    "free": "Plan Gratuito",
-    "freeDescription": "Desbloquea más funciones",
-    "viewPlans": "Ver planes",
-    "pro": "Plan Pro",
-    "proDescription": "Todas las funciones desbloqueadas",
-    "business": "Plan Business",
-    "businessDescription": "Plan empresarial activo"
+    "cancelAtPeriodEnd": "Se cancela al final del periodo",
+    "expires": "Expira: {{date}}",
+    "billing": {
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "discount": "-17%",
+      "perMonth": "/mes",
+      "perYear": "/año",
+      "savings": "Ahorras ${{amount}}/año"
+    },
+    "buttons": {
+      "current": "Plan actual",
+      "free": "Gratuito",
+      "upgrade": "Mejorar",
+      "processing": "Procesando..."
+    },
+    "badge": {
+      "popular": "Popular",
+      "free": "Gratis"
+    },
+    "support": {
+      "title": "¿Necesitas ayuda?",
+      "description": "Contáctanos por WhatsApp para resolver cualquier duda sobre los planes.",
+      "stripe": "Pagos seguros con Stripe"
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "changePlan": {
+        "question": "¿Puedo cambiar de plan cuando quiera?",
+        "answer": "Sí, puedes mejorar o bajar tu plan en cualquier momento desde el portal de suscripción."
+      },
+      "paymentMethods": {
+        "question": "¿Qué métodos de pago aceptan?",
+        "answer": "Aceptamos todas las tarjetas de crédito/débito principales a través de Stripe."
+      },
+      "cancel": {
+        "question": "¿Puedo cancelar cuando quiera?",
+        "answer": "Sí, puedes cancelar tu suscripción en cualquier momento. Mantendrás acceso hasta el final del periodo."
+      },
+      "trial": {
+        "question": "¿Hay periodo de prueba?",
+        "answer": "El plan gratuito no tiene límite de tiempo. Puedes usarlo el tiempo que quieras antes de decidir mejorar."
+      }
+    },
+    "toast": {
+      "success": "¡Suscripción activada exitosamente!",
+      "canceled": "Pago cancelado",
+      "storeNotFound": "Error: No se encontró tu tienda",
+      "alreadyFree": "Ya tienes el plan gratuito",
+      "paymentError": "Error al procesar el pago. Intenta de nuevo.",
+      "noSubscription": "No se encontró suscripción activa",
+      "portalError": "Error al abrir el portal de suscripción"
+    }
   },
   "common": {
     "save": "Guardar",

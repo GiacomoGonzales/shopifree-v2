@@ -178,17 +178,63 @@
     "save": "Save"
   },
   "plan": {
-    "title": "Your plan",
-    "current": "Current plan",
-    "upgrade": "Upgrade plan",
+    "title": "Plans and pricing",
+    "subtitle": "Choose the plan that best fits your business",
+    "current": "Your current plan",
     "manage": "Manage subscription",
-    "free": "Free Plan",
-    "freeDescription": "Unlock more features",
-    "viewPlans": "View plans",
-    "pro": "Pro Plan",
-    "proDescription": "All features unlocked",
-    "business": "Business Plan",
-    "businessDescription": "Business plan active"
+    "cancelAtPeriodEnd": "Cancels at end of period",
+    "expires": "Expires: {{date}}",
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "discount": "-17%",
+      "perMonth": "/mo",
+      "perYear": "/yr",
+      "savings": "Save ${{amount}}/yr"
+    },
+    "buttons": {
+      "current": "Current plan",
+      "free": "Free",
+      "upgrade": "Upgrade",
+      "processing": "Processing..."
+    },
+    "badge": {
+      "popular": "Popular",
+      "free": "Free"
+    },
+    "support": {
+      "title": "Need help?",
+      "description": "Contact us on WhatsApp to resolve any questions about plans.",
+      "stripe": "Secure payments with Stripe"
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "changePlan": {
+        "question": "Can I change plans anytime?",
+        "answer": "Yes, you can upgrade or downgrade your plan anytime from the subscription portal."
+      },
+      "paymentMethods": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept all major credit/debit cards through Stripe."
+      },
+      "cancel": {
+        "question": "Can I cancel anytime?",
+        "answer": "Yes, you can cancel your subscription anytime. You'll keep access until the end of the period."
+      },
+      "trial": {
+        "question": "Is there a free trial?",
+        "answer": "The free plan has no time limit. You can use it as long as you want before deciding to upgrade."
+      }
+    },
+    "toast": {
+      "success": "Subscription activated successfully!",
+      "canceled": "Payment canceled",
+      "storeNotFound": "Error: Store not found",
+      "alreadyFree": "You already have the free plan",
+      "paymentError": "Error processing payment. Please try again.",
+      "noSubscription": "No active subscription found",
+      "portalError": "Error opening subscription portal"
+    }
   },
   "common": {
     "save": "Save",

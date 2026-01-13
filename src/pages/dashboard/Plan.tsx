@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 
@@ -11,6 +13,8 @@ const plans: { id: PlanType; popular?: boolean }[] = [
 ]
 
 export default function Plan() {
+  const { t } = useTranslation('dashboard')
+  const { localePath } = useLanguage()
   const { store, user, firebaseUser, refreshStore } = useAuth()
   const { showToast } = useToast()
   const [searchParams] = useSearchParams()
@@ -26,25 +30,25 @@ export default function Plan() {
 
     if (searchParams.get('success') === 'true') {
       toastShownRef.current = true
-      showToast('Suscripcion activada exitosamente!', 'success')
+      showToast(t('plan.toast.success'), 'success')
       refreshStore()
       // Clear URL params
-      navigate('/dashboard/plan', { replace: true })
+      navigate(localePath('/dashboard/plan'), { replace: true })
     } else if (searchParams.get('canceled') === 'true') {
       toastShownRef.current = true
-      showToast('Pago cancelado', 'info')
-      navigate('/dashboard/plan', { replace: true })
+      showToast(t('plan.toast.canceled'), 'info')
+      navigate(localePath('/dashboard/plan'), { replace: true })
     }
-  }, [searchParams, showToast, refreshStore, navigate])
+  }, [searchParams, showToast, refreshStore, navigate, t, localePath])
 
   const handleSelectPlan = async (planId: PlanType) => {
     if (!store || !user || !firebaseUser) {
-      showToast('Error: No se encontro tu tienda', 'error')
+      showToast(t('plan.toast.storeNotFound'), 'error')
       return
     }
 
     if (planId === 'free') {
-      showToast('Ya tienes el plan gratuito', 'info')
+      showToast(t('plan.toast.alreadyFree'), 'info')
       return
     }
 
@@ -81,7 +85,7 @@ export default function Plan() {
       }
     } catch (error) {
       console.error('Error creating checkout session:', error)
-      showToast('Error al procesar el pago. Intenta de nuevo.', 'error')
+      showToast(t('plan.toast.paymentError'), 'error')
     } finally {
       setLoading(false)
       setProcessingPlan(null)
@@ -108,11 +112,11 @@ export default function Plan() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        showToast('No se encontro suscripcion activa', 'info')
+        showToast(t('plan.toast.noSubscription'), 'info')
       }
     } catch (error) {
       console.error('Error opening portal:', error)
-      showToast('Error al abrir el portal de suscripcion', 'error')
+      showToast(t('plan.toast.portalError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -126,8 +130,8 @@ export default function Plan() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Planes y precios</h1>
-          <p className="text-gray-600 mt-1">Elige el plan que mejor se adapte a tu negocio</p>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('plan.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('plan.subtitle')}</p>
         </div>
         {/* Billing toggle */}
         <div className="bg-gray-100 p-1 rounded-xl flex w-fit">
@@ -139,7 +143,7 @@ export default function Plan() {
                 : 'text-gray-600 hover:text-[#1e3a5f]'
             }`}
           >
-            Mensual
+            {t('plan.billing.monthly')}
           </button>
           <button
             onClick={() => setSelectedBilling('yearly')}
@@ -149,8 +153,8 @@ export default function Plan() {
                 : 'text-gray-600 hover:text-[#1e3a5f]'
             }`}
           >
-            Anual
-            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">-17%</span>
+            {t('plan.billing.yearly')}
+            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">{t('plan.billing.discount')}</span>
           </button>
         </div>
       </div>
@@ -168,7 +172,7 @@ export default function Plan() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Tu plan actual</p>
+                <p className="text-sm text-gray-600">{t('plan.current')}</p>
                 <p className="font-bold text-[#1e3a5f] text-lg capitalize">
                   {PLAN_FEATURES[currentPlan].name}
                 </p>
@@ -177,13 +181,13 @@ export default function Plan() {
 
             {store?.subscription?.cancelAtPeriodEnd && (
               <div className="p-3 bg-red-50 rounded-xl mb-4">
-                <p className="text-sm text-red-600">Se cancela al final del periodo</p>
+                <p className="text-sm text-red-600">{t('plan.cancelAtPeriodEnd')}</p>
               </div>
             )}
 
             {store?.planExpiresAt && (
               <p className="text-sm text-gray-500 mb-4">
-                Expira: {new Date(store.planExpiresAt).toLocaleDateString()}
+                {t('plan.expires', { date: new Date(store.planExpiresAt).toLocaleDateString() })}
               </p>
             )}
 
@@ -193,16 +197,16 @@ export default function Plan() {
                 disabled={loading}
                 className="w-full px-4 py-2.5 text-sm font-medium text-[#2d6cb5] bg-[#f0f7ff] border border-[#2d6cb5]/20 rounded-xl hover:bg-[#e0efff] transition-all disabled:opacity-50"
               >
-                Administrar suscripcion
+                {t('plan.manage')}
               </button>
             )}
           </div>
 
           {/* Support */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h3 className="font-semibold text-[#1e3a5f] mb-3">Necesitas ayuda?</h3>
+            <h3 className="font-semibold text-[#1e3a5f] mb-3">{t('plan.support.title')}</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Contactanos por WhatsApp para resolver cualquier duda sobre los planes.
+              {t('plan.support.description')}
             </p>
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <svg className="h-4" viewBox="0 0 60 25" fill="currentColor">
@@ -213,7 +217,7 @@ export default function Plan() {
                 <path d="M13.28 2.45l-4.48.95-.02 14.7c0 2.72 2.04 4.72 4.77 4.72 1.51 0 2.62-.28 3.23-.6v-3.72c-.59.24-3.5 1.08-3.5-1.64V9.87h3.5V6.15h-3.5V2.45z"/>
                 <path d="M4.67 10.2c0-.72.59-1 1.57-1 1.4 0 3.17.42 4.57 1.18V6.28c-1.53-.61-3.04-.84-4.57-.84C2.49 5.44 0 7.36 0 10.56c0 4.94 6.8 4.15 6.8 6.28 0 .85-.74 1.13-1.77 1.13-1.53 0-3.49-.63-5.03-1.48v4.15c1.71.74 3.45 1.05 5.03 1.05 3.87 0 6.54-1.91 6.54-5.15-.02-5.33-6.9-4.38-6.9-6.34z"/>
               </svg>
-              Pagos seguros con Stripe
+              {t('plan.support.stripe')}
             </div>
           </div>
         </div>
@@ -239,7 +243,7 @@ export default function Plan() {
                   {isPopular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="px-3 py-1 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-xs font-semibold rounded-full shadow-lg">
-                        Popular
+                        {t('plan.badge.popular')}
                       </span>
                     </div>
                   )}
@@ -248,17 +252,17 @@ export default function Plan() {
                     <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
                     <div className="mt-3">
                       {price === 0 ? (
-                        <span className="text-3xl font-bold text-[#1e3a5f]">Gratis</span>
+                        <span className="text-3xl font-bold text-[#1e3a5f]">{t('plan.badge.free')}</span>
                       ) : (
                         <>
                           <span className="text-3xl font-bold text-[#1e3a5f]">${price}</span>
-                          <span className="text-gray-500 text-sm">/{selectedBilling === 'yearly' ? 'año' : 'mes'}</span>
+                          <span className="text-gray-500 text-sm">{selectedBilling === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}</span>
                         </>
                       )}
                     </div>
                     {selectedBilling === 'yearly' && price > 0 && (
                       <p className="text-xs text-green-600 mt-1">
-                        Ahorras ${((plan.price * 12) - plan.priceYearly).toFixed(0)}/año
+                        {t('plan.billing.savings', { amount: ((plan.price * 12) - plan.priceYearly).toFixed(0) })}
                       </p>
                     )}
                   </div>
@@ -288,14 +292,14 @@ export default function Plan() {
                     {isProcessing ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                        Procesando...
+                        {t('plan.buttons.processing')}
                       </>
                     ) : isCurrentPlan ? (
-                      'Plan actual'
+                      t('plan.buttons.current')
                     ) : planId === 'free' ? (
-                      'Gratuito'
+                      t('plan.buttons.free')
                     ) : (
-                      'Mejorar'
+                      t('plan.buttons.upgrade')
                     )}
                   </button>
                 </div>
@@ -307,26 +311,26 @@ export default function Plan() {
 
       {/* FAQ - Two Columns */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Preguntas frecuentes</h2>
+        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('plan.faq.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <h3 className="font-medium text-[#1e3a5f] text-sm">Puedo cambiar de plan cuando quiera?</h3>
-              <p className="text-xs text-gray-600 mt-1">Si, puedes mejorar o bajar tu plan en cualquier momento desde el portal de suscripcion.</p>
+              <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.changePlan.question')}</h3>
+              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.changePlan.answer')}</p>
             </div>
             <div>
-              <h3 className="font-medium text-[#1e3a5f] text-sm">Que metodos de pago aceptan?</h3>
-              <p className="text-xs text-gray-600 mt-1">Aceptamos todas las tarjetas de credito/debito principales a traves de Stripe.</p>
+              <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.paymentMethods.question')}</h3>
+              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.paymentMethods.answer')}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <h3 className="font-medium text-[#1e3a5f] text-sm">Puedo cancelar cuando quiera?</h3>
-              <p className="text-xs text-gray-600 mt-1">Si, puedes cancelar tu suscripcion en cualquier momento. Mantendras acceso hasta el final del periodo.</p>
+              <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.cancel.question')}</h3>
+              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.cancel.answer')}</p>
             </div>
             <div>
-              <h3 className="font-medium text-[#1e3a5f] text-sm">Hay periodo de prueba?</h3>
-              <p className="text-xs text-gray-600 mt-1">El plan gratuito no tiene limite de tiempo. Puedes usarlo el tiempo que quieras antes de decidir mejorar.</p>
+              <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.trial.question')}</h3>
+              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.trial.answer')}</p>
             </div>
           </div>
         </div>
