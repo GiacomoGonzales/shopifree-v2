@@ -1,0 +1,70 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "myStore": "My Store",
+    "design": "Design",
+    "settings": "Settings",
+    "domain": "Domain",
+    "payments": "Payments",
+    "myAccount": "My Account",
+    "plan": "Plan",
+    "logout": "Logout"
+  },
+  "home": {
+    "welcome": "Welcome!",
+    "catalogLink": "Your catalog link",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "viewCatalog": "View catalog",
+    "quickStats": "Quick stats",
+    "visits": "Visits",
+    "orders": "Orders",
+    "products": "Products",
+    "recentProducts": "Recent products",
+    "addProduct": "Add product",
+    "noProducts": "You don't have products yet",
+    "addFirstProduct": "Add your first product"
+  },
+  "products": {
+    "title": "Products",
+    "add": "Add product",
+    "search": "Search products...",
+    "noProducts": "No products",
+    "edit": "Edit",
+    "delete": "Delete",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "branding": {
+    "title": "Store design",
+    "logo": "Logo",
+    "banner": "Banner",
+    "theme": "Theme",
+    "colors": "Colors",
+    "save": "Save changes"
+  },
+  "settings": {
+    "title": "Settings",
+    "storeName": "Store name",
+    "description": "Description",
+    "whatsapp": "WhatsApp",
+    "currency": "Currency",
+    "save": "Save"
+  },
+  "plan": {
+    "title": "Your plan",
+    "current": "Current plan",
+    "upgrade": "Upgrade plan",
+    "manage": "Manage subscription"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "products": "Productos",
+    "myStore": "Mi Tienda",
+    "design": "Diseño",
+    "settings": "Configuración",
+    "domain": "Dominio",
+    "payments": "Pagos",
+    "myAccount": "Mi Cuenta",
+    "plan": "Plan",
+    "logout": "Cerrar sesión"
+  },
+  "home": {
+    "welcome": "¡Bienvenido!",
+    "catalogLink": "Link de tu catálogo",
+    "copyLink": "Copiar link",
+    "linkCopied": "Link copiado",
+    "viewCatalog": "Ver catálogo",
+    "quickStats": "Estadísticas rápidas",
+    "visits": "Visitas",
+    "orders": "Pedidos",
+    "products": "Productos",
+    "recentProducts": "Productos recientes",
+    "addProduct": "Agregar producto",
+    "noProducts": "Aún no tienes productos",
+    "addFirstProduct": "Agrega tu primer producto"
+  },
+  "products": {
+    "title": "Productos",
+    "add": "Agregar producto",
+    "search": "Buscar productos...",
+    "noProducts": "No hay productos",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "branding": {
+    "title": "Diseño de tu tienda",
+    "logo": "Logo",
+    "banner": "Banner",
+    "theme": "Tema",
+    "colors": "Colores",
+    "save": "Guardar cambios"
+  },
+  "settings": {
+    "title": "Configuración",
+    "storeName": "Nombre de la tienda",
+    "description": "Descripción",
+    "whatsapp": "WhatsApp",
+    "currency": "Moneda",
+    "save": "Guardar"
+  },
+  "plan": {
+    "title": "Tu plan",
+    "current": "Plan actual",
+    "upgrade": "Mejorar plan",
+    "manage": "Administrar suscripción"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  }
+}

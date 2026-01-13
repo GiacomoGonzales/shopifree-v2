@@ -1,0 +1,107 @@
+{
+  "hero": {
+    "badge": "Más de 500 catálogos creados",
+    "title": "Crea tu catálogo y vende por",
+    "titleHighlight": "WhatsApp",
+    "subtitle": "En 3 minutos tienes tu catálogo online. Comparte el link y recibe pedidos directo en tu WhatsApp.",
+    "noCommissions": "Sin comisiones."
+  },
+  "mockup": {
+    "newOrder": "Nuevo pedido",
+    "orderMessage": "María pidió 3 productos",
+    "visitsToday": "+45 visitas hoy",
+    "catalogGrowing": "Tu catálogo está creciendo",
+    "orderViaWhatsApp": "Pedir por WhatsApp"
+  },
+  "stats": {
+    "catalogsCreated": "Catálogos creados",
+    "productsPublished": "Productos publicados",
+    "commissionPerSale": "Comisión por venta"
+  },
+  "howItWorks": {
+    "title": "Así de fácil",
+    "subtitle": "Solo 3 pasos para empezar a vender",
+    "step1": {
+      "title": "Sube tus productos",
+      "description": "Foto, nombre y precio. Listo."
+    },
+    "step2": {
+      "title": "Comparte tu link",
+      "description": "En WhatsApp, Instagram, donde quieras."
+    },
+    "step3": {
+      "title": "Recibe pedidos",
+      "description": "Directo en tu WhatsApp. Sin intermediarios."
+    }
+  },
+  "features": {
+    "title": "Todo lo que necesitas",
+    "subtitle": "Funciones pensadas para emprendedores",
+    "mobileCatalog": {
+      "title": "Catálogo móvil",
+      "description": "Optimizado para celulares"
+    },
+    "customLink": {
+      "title": "Link personalizado",
+      "description": "tutienda.shopifree.app"
+    },
+    "qrCode": {
+      "title": "Código QR",
+      "description": "Para tu local o tarjetas"
+    },
+    "categories": {
+      "title": "Categorías",
+      "description": "Organiza tus productos"
+    },
+    "directWhatsApp": {
+      "title": "WhatsApp directo",
+      "description": "Pedidos al instante"
+    },
+    "statistics": {
+      "title": "Estadísticas",
+      "description": "Ve quién visita tu catálogo"
+    }
+  },
+  "pricing": {
+    "title": "Planes simples",
+    "subtitle": "Empieza gratis, crece cuando quieras",
+    "popular": "Popular",
+    "perMonth": "por mes",
+    "forever": "Para siempre",
+    "free": {
+      "name": "Gratis",
+      "features": {
+        "products": "Hasta 20 productos",
+        "whatsappOrders": "Pedidos por WhatsApp",
+        "shareableLink": "Link compartible",
+        "qrCode": "Código QR"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "features": {
+        "unlimitedProducts": "Productos ilimitados",
+        "noBranding": "Sin marca Shopifree",
+        "multiplePhotos": "Múltiples fotos",
+        "unlimitedCategories": "Categorías ilimitadas",
+        "basicStats": "Estadísticas básicas",
+        "emailSupport": "Soporte por email"
+      }
+    },
+    "business": {
+      "name": "Business",
+      "features": {
+        "everythingPro": "Todo lo de Pro",
+        "discountCoupons": "Cupones de descuento",
+        "advancedAnalytics": "Analytics avanzados",
+        "customDomain": "Dominio personalizado",
+        "onlinePayments": "Pagos en línea",
+        "prioritySupport": "Soporte prioritario"
+      }
+    }
+  },
+  "cta": {
+    "title": "¿Listo para empezar a vender?",
+    "subtitle": "Crea tu catálogo en menos de 3 minutos. Es gratis."
+  }
+}

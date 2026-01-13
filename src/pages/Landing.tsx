@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useLanguage } from '../hooks/useLanguage'
 
 export default function Landing() {
+  const { t } = useTranslation(['landing', 'common'])
+  const { localePath } = useLanguage()
   return (
     <div className="min-h-screen relative">
       {/* Animated background gradient mesh */}
@@ -22,19 +26,19 @@ export default function Landing() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-3 sm:px-6">
           <div className="flex justify-between items-center py-3 sm:py-4">
-            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <Link to={localePath('/')} className="flex items-center gap-2 flex-shrink-0">
               <img src="/newlogo.png" alt="Shopifree" className="h-7 sm:h-9" />
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
-              <Link to="/login" className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
-                Ingresar
+              <Link to={localePath('/login')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
+                {t('common:nav.login')}
               </Link>
               <Link
-                to="/register"
+                to={localePath('/register')}
                 className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:shadow-lg hover:shadow-[#38bdf8]/25 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
               >
-                <span className="hidden sm:inline">Crear catálogo gratis</span>
-                <span className="sm:hidden">Crear gratis</span>
+                <span className="hidden sm:inline">{t('common:nav.createCatalog')}</span>
+                <span className="sm:hidden">{t('common:nav.createFree')}</span>
               </Link>
             </div>
           </div>
@@ -50,25 +54,25 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-[#38bdf8]/10 text-[#1e3a5f] px-4 py-2 rounded-full text-sm font-medium mb-6">
             <span className="w-2 h-2 bg-[#38bdf8] rounded-full animate-pulse"></span>
-            Más de 500 catálogos creados
+            {t('hero.badge')}
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#1e3a5f] mb-6 leading-tight">
-            Crea tu catálogo y vende por{' '}
-            <span className="text-gradient-brand">WhatsApp</span>
+            {t('hero.title')}{' '}
+            <span className="text-gradient-brand">{t('hero.titleHighlight')}</span>
           </h1>
 
           <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-            En 3 minutos tienes tu catálogo online. Comparte el link y recibe pedidos directo en tu WhatsApp.
-            <span className="text-[#1e3a5f] font-semibold"> Sin comisiones.</span>
+            {t('hero.subtitle')}
+            <span className="text-[#1e3a5f] font-semibold"> {t('hero.noCommissions')}</span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Link
-              to="/register"
+              to={localePath('/register')}
               className="group bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-[#38bdf8]/30 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              Crear mi catálogo gratis
+              {t('common:buttons.createMyCatalog')}
               <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -77,7 +81,7 @@ export default function Landing() {
               href="#como-funciona"
               className="border-2 border-[#1e3a5f]/20 text-[#1e3a5f] px-8 py-4 rounded-full text-lg font-semibold hover:border-[#38bdf8] hover:bg-[#38bdf8]/5 transition-all duration-300"
             >
-              Ver cómo funciona
+              {t('common:buttons.seeHowItWorks')}
             </a>
           </div>
 
@@ -92,8 +96,8 @@ export default function Landing() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Nuevo pedido</p>
-                  <p className="text-xs text-gray-500">María pidió 3 productos</p>
+                  <p className="text-sm font-semibold text-gray-900">{t('mockup.newOrder')}</p>
+                  <p className="text-xs text-gray-500">{t('mockup.orderMessage')}</p>
                 </div>
               </div>
             </div>
@@ -107,8 +111,8 @@ export default function Landing() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">+45 visitas hoy</p>
-                  <p className="text-xs text-gray-500">Tu catálogo está creciendo</p>
+                  <p className="text-sm font-semibold text-gray-900">{t('mockup.visitsToday')}</p>
+                  <p className="text-xs text-gray-500">{t('mockup.catalogGrowing')}</p>
                 </div>
               </div>
             </div>
@@ -189,7 +193,7 @@ export default function Landing() {
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                         </svg>
-                        Pedir por WhatsApp
+                        {t('mockup.orderViaWhatsApp')}
                       </div>
                     </div>
 
@@ -214,15 +218,15 @@ export default function Landing() {
           <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center">
             <div>
               <p className="text-2xl sm:text-5xl font-bold text-white mb-1 sm:mb-2">500+</p>
-              <p className="text-[#38bdf8] text-xs sm:text-base">Catálogos creados</p>
+              <p className="text-[#38bdf8] text-xs sm:text-base">{t('stats.catalogsCreated')}</p>
             </div>
             <div>
               <p className="text-2xl sm:text-5xl font-bold text-white mb-1 sm:mb-2">10k+</p>
-              <p className="text-[#38bdf8] text-xs sm:text-base">Productos publicados</p>
+              <p className="text-[#38bdf8] text-xs sm:text-base">{t('stats.productsPublished')}</p>
             </div>
             <div>
               <p className="text-2xl sm:text-5xl font-bold text-white mb-1 sm:mb-2">0%</p>
-              <p className="text-[#38bdf8] text-xs sm:text-base">Comisión por venta</p>
+              <p className="text-[#38bdf8] text-xs sm:text-base">{t('stats.commissionPerSale')}</p>
             </div>
           </div>
         </div>
@@ -237,10 +241,10 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
-              Así de fácil
+              {t('howItWorks.title')}
             </h2>
             <p className="text-gray-600 text-lg">
-              Solo 3 pasos para empezar a vender
+              {t('howItWorks.subtitle')}
             </p>
           </div>
 
@@ -248,8 +252,8 @@ export default function Landing() {
             {[
               {
                 step: '1',
-                title: 'Sube tus productos',
-                description: 'Foto, nombre y precio. Listo.',
+                title: t('howItWorks.step1.title'),
+                description: t('howItWorks.step1.description'),
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -258,8 +262,8 @@ export default function Landing() {
               },
               {
                 step: '2',
-                title: 'Comparte tu link',
-                description: 'En WhatsApp, Instagram, donde quieras.',
+                title: t('howItWorks.step2.title'),
+                description: t('howItWorks.step2.description'),
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -268,8 +272,8 @@ export default function Landing() {
               },
               {
                 step: '3',
-                title: 'Recibe pedidos',
-                description: 'Directo en tu WhatsApp. Sin intermediarios.',
+                title: t('howItWorks.step3.title'),
+                description: t('howItWorks.step3.description'),
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -303,43 +307,43 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
-              Todo lo que necesitas
+              {t('features.title')}
             </h2>
             <p className="text-gray-600 text-lg">
-              Funciones pensadas para emprendedores
+              {t('features.subtitle')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                title: 'Catálogo móvil',
-                desc: 'Optimizado para celulares',
+                title: t('features.mobileCatalog.title'),
+                desc: t('features.mobileCatalog.description'),
                 icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
               },
               {
-                title: 'Link personalizado',
-                desc: 'tutienda.shopifree.app',
+                title: t('features.customLink.title'),
+                desc: t('features.customLink.description'),
                 icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
               },
               {
-                title: 'Código QR',
-                desc: 'Para tu local o tarjetas',
+                title: t('features.qrCode.title'),
+                desc: t('features.qrCode.description'),
                 icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
               },
               {
-                title: 'Categorías',
-                desc: 'Organiza tus productos',
+                title: t('features.categories.title'),
+                desc: t('features.categories.description'),
                 icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
               },
               {
-                title: 'WhatsApp directo',
-                desc: 'Pedidos al instante',
+                title: t('features.directWhatsApp.title'),
+                desc: t('features.directWhatsApp.description'),
                 icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
               },
               {
-                title: 'Estadísticas',
-                desc: 'Ve quién visita tu catálogo',
+                title: t('features.statistics.title'),
+                desc: t('features.statistics.description'),
                 icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
               },
             ].map((feature, i) => (
@@ -366,23 +370,23 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
-              Planes simples
+              {t('pricing.title')}
             </h2>
             <p className="text-gray-600 text-lg">
-              Empieza gratis, crece cuando quieras
+              {t('pricing.subtitle')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Free */}
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border-2 border-white/50 hover:border-[#38bdf8]/30 transition-colors shadow-lg shadow-gray-200/50">
-              <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">Gratis</h3>
+              <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">{t('pricing.free.name')}</h3>
               <p className="text-4xl font-bold text-[#1e3a5f] mb-1">
                 $0
               </p>
-              <p className="text-gray-400 text-sm mb-6">Para siempre</p>
+              <p className="text-gray-400 text-sm mb-6">{t('pricing.forever')}</p>
               <ul className="space-y-3 mb-8">
-                {['Hasta 20 productos', 'Pedidos por WhatsApp', 'Link compartible', 'Código QR'].map((item, i) => (
+                {[t('pricing.free.features.products'), t('pricing.free.features.whatsappOrders'), t('pricing.free.features.shareableLink'), t('pricing.free.features.qrCode')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
                     <div className="w-5 h-5 bg-[#38bdf8]/20 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-[#1e3a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -394,10 +398,10 @@ export default function Landing() {
                 ))}
               </ul>
               <Link
-                to="/register"
+                to={localePath('/register')}
                 className="block w-full text-center border-2 border-[#1e3a5f] text-[#1e3a5f] px-6 py-3 rounded-full font-semibold hover:bg-[#1e3a5f] hover:text-white transition-all duration-300"
               >
-                Empezar gratis
+                {t('common:buttons.startFree')}
               </Link>
             </div>
 
@@ -406,16 +410,16 @@ export default function Landing() {
               <div className="absolute top-0 right-0 w-40 h-40 bg-[#38bdf8]/20 rounded-full blur-3xl"></div>
               <div className="flex justify-center mb-4">
                 <span className="bg-[#38bdf8] text-white text-sm px-4 py-1 rounded-full font-medium shadow-lg">
-                  Popular
+                  {t('pricing.popular')}
                 </span>
               </div>
-              <h3 className="text-xl font-bold mb-2">Pro</h3>
+              <h3 className="text-xl font-bold mb-2">{t('pricing.pro.name')}</h3>
               <p className="text-4xl font-bold mb-1">
                 $4.99
               </p>
-              <p className="text-[#38bdf8] text-sm mb-6">por mes</p>
+              <p className="text-[#38bdf8] text-sm mb-6">{t('pricing.perMonth')}</p>
               <ul className="space-y-3 mb-8">
-                {['Productos ilimitados', 'Sin marca Shopifree', 'Múltiples fotos', 'Categorías ilimitadas', 'Estadísticas básicas', 'Soporte por email'].map((item, i) => (
+                {[t('pricing.pro.features.unlimitedProducts'), t('pricing.pro.features.noBranding'), t('pricing.pro.features.multiplePhotos'), t('pricing.pro.features.unlimitedCategories'), t('pricing.pro.features.basicStats'), t('pricing.pro.features.emailSupport')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
                     <div className="w-5 h-5 bg-[#38bdf8]/30 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -427,22 +431,22 @@ export default function Landing() {
                 ))}
               </ul>
               <Link
-                to="/register"
+                to={localePath('/register')}
                 className="block w-full text-center bg-white text-[#1e3a5f] px-6 py-3 rounded-full font-semibold hover:bg-[#38bdf8] hover:text-white transition-all duration-300"
               >
-                Probar 7 días gratis
+                {t('common:buttons.tryFree')}
               </Link>
             </div>
 
             {/* Business */}
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border-2 border-white/50 hover:border-[#38bdf8]/30 transition-colors shadow-lg shadow-gray-200/50">
-              <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">Business</h3>
+              <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">{t('pricing.business.name')}</h3>
               <p className="text-4xl font-bold text-[#1e3a5f] mb-1">
                 $9.99
               </p>
-              <p className="text-gray-400 text-sm mb-6">por mes</p>
+              <p className="text-gray-400 text-sm mb-6">{t('pricing.perMonth')}</p>
               <ul className="space-y-3 mb-8">
-                {['Todo lo de Pro', 'Cupones de descuento', 'Analytics avanzados', 'Dominio personalizado', 'Pagos en línea', 'Soporte prioritario'].map((item, i) => (
+                {[t('pricing.business.features.everythingPro'), t('pricing.business.features.discountCoupons'), t('pricing.business.features.advancedAnalytics'), t('pricing.business.features.customDomain'), t('pricing.business.features.onlinePayments'), t('pricing.business.features.prioritySupport')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
                     <div className="w-5 h-5 bg-[#38bdf8]/20 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-[#1e3a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -454,10 +458,10 @@ export default function Landing() {
                 ))}
               </ul>
               <Link
-                to="/register"
+                to={localePath('/register')}
                 className="block w-full text-center border-2 border-[#1e3a5f] text-[#1e3a5f] px-6 py-3 rounded-full font-semibold hover:bg-[#1e3a5f] hover:text-white transition-all duration-300"
               >
-                Probar 7 días gratis
+                {t('common:buttons.tryFree')}
               </Link>
             </div>
           </div>
@@ -468,16 +472,16 @@ export default function Landing() {
       <section className="py-24 px-4 bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center relative">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            ¿Listo para empezar a vender?
+            {t('cta.title')}
           </h2>
           <p className="text-xl text-white/80 mb-10">
-            Crea tu catálogo en menos de 3 minutos. Es gratis.
+            {t('cta.subtitle')}
           </p>
           <Link
-            to="/register"
+            to={localePath('/register')}
             className="inline-flex items-center gap-2 bg-white text-[#1e3a5f] px-10 py-4 rounded-full text-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300"
           >
-            Crear mi catálogo gratis
+            {t('common:buttons.createMyCatalog')}
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
@@ -493,12 +497,12 @@ export default function Landing() {
               <img src="/newlogo.png" alt="Shopifree" className="h-8 brightness-0 invert" />
             </div>
             <p className="text-[#38bdf8]/60 text-sm">
-              © 2024 Shopifree. Todos los derechos reservados.
+              {t('common:footer.copyright')}
             </p>
             <div className="flex gap-6">
-              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">Términos</a>
-              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">Privacidad</a>
-              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">Contacto</a>
+              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.terms')}</a>
+              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.privacy')}</a>
+              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.contact')}</a>
             </div>
           </div>
         </div>

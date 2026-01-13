@@ -1,0 +1,107 @@
+{
+  "hero": {
+    "badge": "Over 500 catalogs created",
+    "title": "Create your catalog and sell via",
+    "titleHighlight": "WhatsApp",
+    "subtitle": "In 3 minutes you have your online catalog. Share the link and receive orders directly on WhatsApp.",
+    "noCommissions": "No commissions."
+  },
+  "mockup": {
+    "newOrder": "New order",
+    "orderMessage": "Maria ordered 3 products",
+    "visitsToday": "+45 visits today",
+    "catalogGrowing": "Your catalog is growing",
+    "orderViaWhatsApp": "Order via WhatsApp"
+  },
+  "stats": {
+    "catalogsCreated": "Catalogs created",
+    "productsPublished": "Products published",
+    "commissionPerSale": "Commission per sale"
+  },
+  "howItWorks": {
+    "title": "That easy",
+    "subtitle": "Just 3 steps to start selling",
+    "step1": {
+      "title": "Upload your products",
+      "description": "Photo, name and price. Done."
+    },
+    "step2": {
+      "title": "Share your link",
+      "description": "On WhatsApp, Instagram, wherever you want."
+    },
+    "step3": {
+      "title": "Receive orders",
+      "description": "Directly on your WhatsApp. No middlemen."
+    }
+  },
+  "features": {
+    "title": "Everything you need",
+    "subtitle": "Features designed for entrepreneurs",
+    "mobileCatalog": {
+      "title": "Mobile catalog",
+      "description": "Optimized for phones"
+    },
+    "customLink": {
+      "title": "Custom link",
+      "description": "yourstore.shopifree.app"
+    },
+    "qrCode": {
+      "title": "QR Code",
+      "description": "For your store or business cards"
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Organize your products"
+    },
+    "directWhatsApp": {
+      "title": "Direct WhatsApp",
+      "description": "Instant orders"
+    },
+    "statistics": {
+      "title": "Statistics",
+      "description": "See who visits your catalog"
+    }
+  },
+  "pricing": {
+    "title": "Simple plans",
+    "subtitle": "Start free, grow when you want",
+    "popular": "Popular",
+    "perMonth": "per month",
+    "forever": "Forever",
+    "free": {
+      "name": "Free",
+      "features": {
+        "products": "Up to 20 products",
+        "whatsappOrders": "Orders via WhatsApp",
+        "shareableLink": "Shareable link",
+        "qrCode": "QR Code"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "features": {
+        "unlimitedProducts": "Unlimited products",
+        "noBranding": "No Shopifree branding",
+        "multiplePhotos": "Multiple photos",
+        "unlimitedCategories": "Unlimited categories",
+        "basicStats": "Basic statistics",
+        "emailSupport": "Email support"
+      }
+    },
+    "business": {
+      "name": "Business",
+      "features": {
+        "everythingPro": "Everything from Pro",
+        "discountCoupons": "Discount coupons",
+        "advancedAnalytics": "Advanced analytics",
+        "customDomain": "Custom domain",
+        "onlinePayments": "Online payments",
+        "prioritySupport": "Priority support"
+      }
+    }
+  },
+  "cta": {
+    "title": "Ready to start selling?",
+    "subtitle": "Create your catalog in less than 3 minutes. It's free."
+  }
+}

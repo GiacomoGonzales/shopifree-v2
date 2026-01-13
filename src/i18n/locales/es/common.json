@@ -1,0 +1,24 @@
+{
+  "nav": {
+    "login": "Ingresar",
+    "createCatalog": "Crear catálogo gratis",
+    "createFree": "Crear gratis"
+  },
+  "footer": {
+    "copyright": "© 2024 Shopifree. Todos los derechos reservados.",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "contact": "Contacto"
+  },
+  "buttons": {
+    "startFree": "Empezar gratis",
+    "tryFree": "Probar 7 días gratis",
+    "createMyCatalog": "Crear mi catálogo gratis",
+    "seeHowItWorks": "Ver cómo funciona"
+  },
+  "language": {
+    "select": "Idioma",
+    "es": "Español",
+    "en": "English"
+  }
+}
