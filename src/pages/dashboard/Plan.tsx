@@ -44,8 +44,9 @@ export default function Plan() {
 
     try {
       // Call Vercel API to create checkout session
+      const apiBase = import.meta.env.DEV ? 'https://shopifree.app' : ''
       const response = await fetch(
-        '/api/create-checkout',
+        `${apiBase}/api/create-checkout`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -83,8 +84,9 @@ export default function Plan() {
 
     setLoading(true)
     try {
+      const apiBase = import.meta.env.DEV ? 'https://shopifree.app' : ''
       const response = await fetch(
-        '/api/create-portal',
+        `${apiBase}/api/create-portal`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
