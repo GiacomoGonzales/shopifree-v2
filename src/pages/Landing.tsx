@@ -30,6 +30,9 @@ export default function Landing() {
               <img src="/newlogo.png" alt="Shopifree" className="h-7 sm:h-9" />
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
+              <Link to={localePath('/blog')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base hidden sm:inline">
+                Blog
+              </Link>
               <Link to={localePath('/login')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
                 {t('common:nav.login')}
               </Link>
@@ -500,6 +503,7 @@ export default function Landing() {
               {t('common:footer.copyright')}
             </p>
             <div className="flex gap-6">
+              <Link to={localePath('/blog')} className="text-white/60 hover:text-[#38bdf8] transition text-sm">Blog</Link>
               <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.terms')}</a>
               <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.privacy')}</a>
               <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.contact')}</a>

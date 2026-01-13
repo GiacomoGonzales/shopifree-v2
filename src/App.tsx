@@ -22,6 +22,10 @@ import Payments from './pages/dashboard/Payments'
 import Plan from './pages/dashboard/Plan'
 import Catalog from './pages/catalog/Catalog'
 
+// Blog Pages
+import BlogList from './pages/blog/BlogList'
+import BlogPost from './pages/blog/BlogPost'
+
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -102,6 +106,10 @@ function AppRoutes() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
 
+        {/* Blog routes */}
+        <Route path="blog" element={<BlogList />} />
+        <Route path="blog/:slug" element={<BlogPost />} />
+
         {/* Dashboard routes */}
         <Route path="dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardHome />} />
@@ -133,6 +141,8 @@ function AppRoutes() {
       <Route path="/register" element={<Navigate to="/es/register" replace />} />
       <Route path="/dashboard/*" element={<Navigate to="/es/dashboard" replace />} />
       <Route path="/admin/*" element={<Navigate to="/es/admin" replace />} />
+      <Route path="/blog" element={<Navigate to="/es/blog" replace />} />
+      <Route path="/blog/*" element={<Navigate to="/es/blog" replace />} />
     </Routes>
   )
 }
