@@ -69,13 +69,15 @@ export default function AdminStores() {
 
       if (response.ok) {
         // Update local state
-        setStores(stores.map(s =>
+        setStores(prev => prev.map(s =>
           s.id === storeId
             ? {
                 ...s,
                 plan: data.plan,
-                subscription: { ...s.subscription, status: data.status }
-              }
+                subscription: s.subscription
+                  ? { ...s.subscription, status: data.status }
+                  : undefined
+              } as Store & { id: string }
             : s
         ))
         showToast(`Sincronizado: ${SUBSCRIPTION_STATUS_LABELS[data.status] || data.status}`, 'success')
