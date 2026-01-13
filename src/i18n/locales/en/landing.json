@@ -100,6 +100,10 @@
       }
     }
   },
+  "demoStores": {
+    "title": "Stores created with Shopifree",
+    "subtitle": "See real examples of what you can create"
+  },
   "cta": {
     "title": "Ready to start selling?",
     "subtitle": "Create your catalog in less than 3 minutes. It's free."
