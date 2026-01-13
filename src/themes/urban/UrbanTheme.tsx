@@ -526,8 +526,12 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="w-full md:max-w-lg max-h-[85vh] md:max-h-[90vh] overflow-y-auto animate-slideUp"
-            style={{ backgroundColor: darkGray }}
+            className="w-full md:max-w-lg max-h-[85vh] md:max-h-[90vh] overflow-y-auto animate-slideUp scrollbar-thin"
+            style={{
+              backgroundColor: darkGray,
+              scrollbarWidth: 'thin',
+              scrollbarColor: `${gray} transparent`
+            }}
             onClick={e => e.stopPropagation()}
           >
             {/* Close - Fixed position */}
