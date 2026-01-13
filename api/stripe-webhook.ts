@@ -1,29 +1,42 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, Firestore } from 'firebase-admin/firestore'
 
-// Initialize Firebase Admin (only once)
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
+let db: Firestore
+
+// Initialize Firebase Admin lazily
+function getDb(): Firestore {
+  if (!db) {
+    if (!getApps().length) {
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey
+        })
+      })
+    }
+    db = getFirestore()
+  }
+  return db
+}
+
+function getStripe(): Stripe {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2023-10-16'
   })
 }
 
-const db = getFirestore()
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16'
-})
-
-const PRICES = {
-  [process.env.STRIPE_PRICE_PRO_MONTHLY!]: 'pro',
-  [process.env.STRIPE_PRICE_PRO_YEARLY!]: 'pro',
-  [process.env.STRIPE_PRICE_BUSINESS_MONTHLY!]: 'business',
-  [process.env.STRIPE_PRICE_BUSINESS_YEARLY!]: 'business'
+function getPlanFromPrice(priceId: string): string {
+  const prices: Record<string, string> = {
+    [process.env.STRIPE_PRICE_PRO_MONTHLY || '']: 'pro',
+    [process.env.STRIPE_PRICE_PRO_YEARLY || '']: 'pro',
+    [process.env.STRIPE_PRICE_BUSINESS_MONTHLY || '']: 'business',
+    [process.env.STRIPE_PRICE_BUSINESS_YEARLY || '']: 'business'
+  }
+  return prices[priceId] || 'pro'
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -39,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Get raw body
     const rawBody = await getRawBody(req)
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret)
+    event = getStripe().webhooks.constructEvent(rawBody, sig, webhookSecret)
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
     return res.status(400).json({ error: 'Webhook signature verification failed' })
@@ -69,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
         if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+          const subscription = await getStripe().subscriptions.retrieve(invoice.subscription as string)
           await handleSubscriptionUpdate(subscription)
         }
         break
@@ -101,9 +114,9 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   }
 
   const priceId = subscription.items.data[0]?.price.id
-  const plan = PRICES[priceId] || 'pro'
+  const plan = getPlanFromPrice(priceId)
 
-  await db.collection('stores').doc(storeId).update({
+  await getDb().collection('stores').doc(storeId).update({
     plan,
     planExpiresAt: new Date(subscription.current_period_end * 1000),
     subscription: {
@@ -129,7 +142,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     return
   }
 
-  await db.collection('stores').doc(storeId).update({
+  await getDb().collection('stores').doc(storeId).update({
     plan: 'free',
     planExpiresAt: null,
     'subscription.status': 'canceled',
@@ -143,7 +156,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
 async function handleInvoiceFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string
 
-  const storesSnapshot = await db.collection('stores')
+  const storesSnapshot = await getDb().collection('stores')
     .where('subscription.stripeCustomerId', '==', customerId)
     .get()
 
