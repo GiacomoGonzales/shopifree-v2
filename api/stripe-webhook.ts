@@ -118,18 +118,27 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const plan = getPlanFromPrice(priceId)
 
   console.log(`Updating store ${storeId} with plan ${plan}, priceId: ${priceId}`)
+  console.log(`Subscription data: period_end=${subscription.current_period_end}, period_start=${subscription.current_period_start}`)
+
+  // Safely convert timestamps
+  const periodEnd = subscription.current_period_end
+    ? new Date(Number(subscription.current_period_end) * 1000)
+    : null
+  const periodStart = subscription.current_period_start
+    ? new Date(Number(subscription.current_period_start) * 1000)
+    : null
 
   await getDb().collection('stores').doc(storeId).set({
     plan,
-    planExpiresAt: new Date(subscription.current_period_end * 1000),
+    planExpiresAt: periodEnd,
     subscription: {
       stripeCustomerId: subscription.customer as string,
       stripeSubscriptionId: subscription.id,
       stripePriceId: priceId,
       status: subscription.status,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false
     },
     updatedAt: new Date()
   }, { merge: true })
