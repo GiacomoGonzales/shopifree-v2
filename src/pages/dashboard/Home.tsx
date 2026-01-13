@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { productService, analyticsService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
 import type { Product } from '../../types'
 
 export default function DashboardHome() {
+  const { t } = useTranslation('dashboard')
+  const { localePath } = useLanguage()
   const { store } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,7 +46,7 @@ export default function DashboardHome() {
   }
 
   const shareWhatsApp = () => {
-    const text = `Mira mi catálogo: ${catalogUrl}`
+    const text = t('home.shareMessage', { url: catalogUrl })
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
@@ -58,15 +62,15 @@ export default function DashboardHome() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">Mi Catálogo</h1>
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('home.title')}</h1>
         <p className="text-gray-600 mt-1">
-          Bienvenido, {store?.name || 'tu tienda'}
+          {t('home.welcomeStore', { store: store?.name || 'Store' })}
         </p>
       </div>
 
       {/* Quick share */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
-        <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">Tu link:</h2>
+        <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">{t('home.yourLink')}</h2>
         <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
           <code className="block w-full px-4 py-3 bg-[#f0f7ff] rounded-xl text-xs sm:text-sm text-[#1e3a5f] font-medium border border-[#38bdf8]/20 truncate">
             {catalogUrl}
@@ -77,7 +81,7 @@ export default function DashboardHome() {
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 sm:flex-none px-3 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition flex items-center justify-center shadow-lg shadow-[#1e3a5f]/20"
-              title="Abrir catálogo"
+              title={t('home.openCatalog')}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -90,7 +94,7 @@ export default function DashboardHome() {
                   ? 'bg-green-100 text-green-700'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
-              title={copied ? 'Copiado!' : 'Copiar link'}
+              title={copied ? t('home.copied') : t('home.copyLink')}
             >
               {copied ? (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +109,7 @@ export default function DashboardHome() {
             <button
               onClick={shareWhatsApp}
               className="flex-1 sm:flex-none px-3 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition flex items-center justify-center shadow-lg shadow-green-600/20"
-              title="Compartir en WhatsApp"
+              title={t('home.shareWhatsApp')}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -124,7 +128,7 @@ export default function DashboardHome() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-[#1e3a5f]">{products.length}</p>
-          <p className="text-gray-600 text-sm mt-1">Productos</p>
+          <p className="text-gray-600 text-sm mt-1">{t('home.products')}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
           <div className="w-10 h-10 bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-[#1e3a5f]/20">
@@ -134,7 +138,7 @@ export default function DashboardHome() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-[#1e3a5f]">{analytics.pageViews}</p>
-          <p className="text-gray-600 text-sm mt-1">Visitas esta semana</p>
+          <p className="text-gray-600 text-sm mt-1">{t('home.visitsWeek')}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
           <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-green-400/20">
@@ -143,7 +147,7 @@ export default function DashboardHome() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-[#1e3a5f]">{analytics.whatsappClicks}</p>
-          <p className="text-gray-600 text-sm mt-1">Clicks en WhatsApp</p>
+          <p className="text-gray-600 text-sm mt-1">{t('home.whatsappClicks')}</p>
         </div>
       </div>
 
@@ -151,13 +155,13 @@ export default function DashboardHome() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">
-            Tus Productos ({products.length})
+            {t('home.yourProducts', { count: products.length })}
           </h2>
           <Link
-            to="/dashboard/products/new"
+            to={localePath('/dashboard/products/new')}
             className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
           >
-            + Agregar producto
+            {t('home.addProduct')}
           </Link>
         </div>
 
@@ -169,16 +173,16 @@ export default function DashboardHome() {
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-[#1e3a5f] mb-2">
-              No tienes productos aún
+              {t('home.noProductsTitle')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Agrega tu primer producto para empezar a vender
+              {t('home.noProductsDesc')}
             </p>
             <Link
-              to="/dashboard/products/new"
+              to={localePath('/dashboard/products/new')}
               className="inline-flex px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
             >
-              Agregar mi primer producto
+              {t('home.addFirstProduct')}
             </Link>
           </div>
         ) : (
@@ -186,7 +190,7 @@ export default function DashboardHome() {
             {products.map((product) => (
               <Link
                 key={product.id}
-                to={`/dashboard/products/${product.id}`}
+                to={localePath(`/dashboard/products/${product.id}`)}
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group"
               >
                 <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100">
@@ -222,16 +226,16 @@ export default function DashboardHome() {
       <div className="bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] rounded-2xl p-4 sm:p-6 text-white shadow-xl shadow-[#1e3a5f]/20">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="font-bold text-lg">Quieres mas funciones?</h3>
+            <h3 className="font-bold text-lg">{t('home.upgradeTitle')}</h3>
             <p className="text-white/80 mt-1 text-sm sm:text-base">
-              Productos ilimitados, multiples fotos, categorias, cupones y mas
+              {t('home.upgradeDesc')}
             </p>
           </div>
           <Link
-            to="/dashboard/plan"
+            to={localePath('/dashboard/plan')}
             className="px-6 py-3 bg-white text-[#1e3a5f] rounded-xl hover:bg-white/90 transition font-semibold shadow-lg text-center sm:flex-shrink-0"
           >
-            Ver planes
+            {t('home.viewPlans')}
           </Link>
         </div>
       </div>

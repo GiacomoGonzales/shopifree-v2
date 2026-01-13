@@ -1,6 +1,8 @@
-import { useEffect, useState, type JSX } from 'react'
+import { useEffect, useState, useMemo, type JSX } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 
 // Tipos para la navegacion
 interface NavItem {
@@ -116,39 +118,41 @@ function CloseIcon() {
   )
 }
 
-// Estructura de navegacion
-const navigation: NavElement[] = [
-  { name: 'Inicio', href: '/dashboard', icon: HomeIcon },
-  { name: 'Productos', href: '/dashboard/products', icon: BoxIcon },
-  {
-    name: 'Mi Tienda',
-    icon: StoreIcon,
-    items: [
-      { name: 'Diseno', href: '/dashboard/branding', icon: PaletteIcon },
-      { name: 'Configuracion', href: '/dashboard/settings', icon: SettingsIcon },
-      { name: 'Dominio', href: '/dashboard/domain', icon: GlobeIcon },
-      { name: 'Pagos', href: '/dashboard/payments', icon: CreditCardIcon },
-    ]
-  },
-  { name: 'Mi Cuenta', href: '/dashboard/account', icon: UserIcon },
-]
-
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
 export default function DashboardLayout() {
+  const { t } = useTranslation('dashboard')
+  const { localePath } = useLanguage()
   const { user, firebaseUser, store, loading, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [openGroups, setOpenGroups] = useState<string[]>(['Mi Tienda'])
+  const [openGroups, setOpenGroups] = useState<string[]>([t('nav.myStore')])
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Dynamic navigation with translations
+  const navigation: NavElement[] = useMemo(() => [
+    { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
+    { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
+    {
+      name: t('nav.myStore'),
+      icon: StoreIcon,
+      items: [
+        { name: t('nav.design'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
+        { name: t('nav.settings'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
+        { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
+        { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
+      ]
+    },
+    { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
+  ], [t, localePath])
 
   const isAdmin = firebaseUser?.email === ADMIN_EMAIL
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/login')
+      navigate(localePath('/login'))
     }
-  }, [user, loading, navigate])
+  }, [user, loading, navigate, localePath])
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -179,12 +183,13 @@ export default function DashboardLayout() {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
+    navigate(localePath('/login'))
   }
 
   const isItemActive = (href: string) => {
-    if (href === '/dashboard') {
-      return location.pathname === '/dashboard'
+    const dashboardPath = localePath('/dashboard')
+    if (href === dashboardPath) {
+      return location.pathname === dashboardPath
     }
     return location.pathname === href || location.pathname.startsWith(href + '/')
   }
@@ -275,14 +280,14 @@ export default function DashboardLayout() {
         {store?.plan === 'free' || !store?.plan ? (
           <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">Plan Gratuito</span>
+              <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">{t('plan.free')}</span>
             </div>
-            <p className="text-xs text-gray-600 mb-3">Desbloquea mas funciones</p>
+            <p className="text-xs text-gray-600 mb-3">{t('plan.freeDescription')}</p>
             <Link
-              to="/dashboard/plan"
+              to={localePath('/dashboard/plan')}
               className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
             >
-              Ver planes
+              {t('plan.viewPlans')}
             </Link>
           </div>
         ) : store?.plan === 'pro' ? (
@@ -291,9 +296,9 @@ export default function DashboardLayout() {
               <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Plan Pro</span>
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">{t('plan.pro')}</span>
             </div>
-            <p className="text-xs text-gray-500">Todas las funciones desbloqueadas</p>
+            <p className="text-xs text-gray-500">{t('plan.proDescription')}</p>
           </div>
         ) : (
           <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-200/50 rounded-xl p-4">
@@ -301,9 +306,9 @@ export default function DashboardLayout() {
               <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Plan Business</span>
+              <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">{t('plan.business')}</span>
             </div>
-            <p className="text-xs text-gray-500">Plan empresarial activo</p>
+            <p className="text-xs text-gray-500">{t('plan.businessDescription')}</p>
           </div>
         )}
       </div>
@@ -332,8 +337,8 @@ export default function DashboardLayout() {
               }
             </p>
             {isAdmin ? (
-              <Link to="/admin" className="text-xs text-gray-400 hover:text-[#2d6cb5] transition-colors">
-                Panel Admin
+              <Link to={localePath('/admin')} className="text-xs text-gray-400 hover:text-[#2d6cb5] transition-colors">
+                Admin
               </Link>
             ) : user.firstName && (
               <p className="text-xs text-gray-400 truncate">{user.email}</p>
@@ -342,7 +347,7 @@ export default function DashboardLayout() {
           <button
             onClick={handleLogout}
             className="text-gray-400 hover:text-[#1e3a5f] transition-colors p-1.5 rounded-lg hover:bg-gray-100"
-            title="Cerrar sesion"
+            title={t('nav.logout')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -363,7 +368,7 @@ export default function DashboardLayout() {
         >
           <MenuIcon />
         </button>
-        <Link to="/dashboard">
+        <Link to={localePath('/dashboard')}>
           <img src="/newlogo.png" alt="Shopifree" className="h-7" />
         </Link>
         <div className="w-10" /> {/* Spacer */}
@@ -386,7 +391,7 @@ export default function DashboardLayout() {
         <div className="flex flex-col h-full">
           {/* Logo + Close */}
           <div className="flex items-center justify-between h-14 px-4 border-b border-gray-100">
-            <Link to="/dashboard" className="flex items-center gap-2">
+            <Link to={localePath('/dashboard')} className="flex items-center gap-2">
               <img src="/newlogo.png" alt="Shopifree" className="h-7" />
             </Link>
             <button
@@ -406,7 +411,7 @@ export default function DashboardLayout() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b border-gray-100">
-            <Link to="/dashboard" className="flex items-center gap-2">
+            <Link to={localePath('/dashboard')} className="flex items-center gap-2">
               <img src="/newlogo.png" alt="Shopifree" className="h-8" />
             </Link>
           </div>

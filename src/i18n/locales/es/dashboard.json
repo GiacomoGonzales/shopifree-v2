@@ -12,19 +12,25 @@
     "logout": "Cerrar sesión"
   },
   "home": {
-    "welcome": "¡Bienvenido!",
-    "catalogLink": "Link de tu catálogo",
+    "title": "Mi Catálogo",
+    "welcomeStore": "Bienvenido, {{store}}",
+    "yourLink": "Tu link:",
+    "openCatalog": "Abrir catálogo",
     "copyLink": "Copiar link",
-    "linkCopied": "Link copiado",
-    "viewCatalog": "Ver catálogo",
-    "quickStats": "Estadísticas rápidas",
-    "visits": "Visitas",
-    "orders": "Pedidos",
+    "copied": "¡Copiado!",
+    "shareWhatsApp": "Compartir en WhatsApp",
+    "shareMessage": "Mira mi catálogo: {{url}}",
     "products": "Productos",
-    "recentProducts": "Productos recientes",
-    "addProduct": "Agregar producto",
-    "noProducts": "Aún no tienes productos",
-    "addFirstProduct": "Agrega tu primer producto"
+    "visitsWeek": "Visitas esta semana",
+    "whatsappClicks": "Clicks en WhatsApp",
+    "yourProducts": "Tus Productos ({{count}})",
+    "addProduct": "+ Agregar producto",
+    "noProductsTitle": "No tienes productos aún",
+    "noProductsDesc": "Agrega tu primer producto para empezar a vender",
+    "addFirstProduct": "Agregar mi primer producto",
+    "upgradeTitle": "¿Quieres más funciones?",
+    "upgradeDesc": "Productos ilimitados, múltiples fotos, categorías, cupones y más",
+    "viewPlans": "Ver planes"
   },
   "products": {
     "title": "Productos",
@@ -56,7 +62,14 @@
     "title": "Tu plan",
     "current": "Plan actual",
     "upgrade": "Mejorar plan",
-    "manage": "Administrar suscripción"
+    "manage": "Administrar suscripción",
+    "free": "Plan Gratuito",
+    "freeDescription": "Desbloquea más funciones",
+    "viewPlans": "Ver planes",
+    "pro": "Plan Pro",
+    "proDescription": "Todas las funciones desbloqueadas",
+    "business": "Plan Business",
+    "businessDescription": "Plan empresarial activo"
   },
   "common": {
     "save": "Guardar",
