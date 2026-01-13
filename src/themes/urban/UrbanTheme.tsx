@@ -102,15 +102,14 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
+            {/* Logo + Store Name */}
             <div className="flex items-center gap-3">
-              {store.logo ? (
+              {store.logo && (
                 <img src={store.logo} alt={store.name} className="h-8 w-auto" />
-              ) : (
-                <h1 className="text-xl font-black uppercase tracking-tight" style={{ color: white }}>
-                  {store.name}
-                </h1>
               )}
+              <h1 className="text-xl font-black uppercase tracking-tight" style={{ color: white }}>
+                {store.name}
+              </h1>
             </div>
 
             {/* Nav Actions */}
@@ -527,12 +526,23 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="w-full md:max-w-lg max-h-[90vh] overflow-hidden animate-slideUp"
+            className="w-full md:max-w-lg max-h-[85vh] md:max-h-[90vh] overflow-y-auto animate-slideUp"
             style={{ backgroundColor: darkGray }}
             onClick={e => e.stopPropagation()}
           >
+            {/* Close - Fixed position */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="sticky top-4 ml-auto mr-4 z-10 w-10 h-10 flex items-center justify-center transition-colors"
+              style={{ backgroundColor: black, color: white }}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             {/* Image */}
-            <div className="relative">
+            <div className="relative -mt-14">
               {selectedProduct.images && selectedProduct.images.length > 0 ? (
                 <ProductGallery images={selectedProduct.images} productName={selectedProduct.name} variant="dark" />
               ) : selectedProduct.image ? (
@@ -550,17 +560,6 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
                   </svg>
                 </div>
               )}
-
-              {/* Close */}
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center transition-colors"
-                style={{ backgroundColor: black, color: white }}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
 
               {/* Badges */}
               {selectedProduct.featured && (
