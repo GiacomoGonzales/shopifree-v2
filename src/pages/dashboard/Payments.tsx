@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -6,6 +7,7 @@ import { useToast } from '../../components/ui/Toast'
 import type { Store } from '../../types'
 
 export default function Payments() {
+  const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
@@ -64,10 +66,10 @@ export default function Payments() {
         },
         updatedAt: new Date()
       })
-      showToast('Configuracion guardada', 'success')
+      showToast(t('payments.toast.saved'), 'success')
     } catch (error) {
       console.error('Error saving:', error)
-      showToast('Error al guardar', 'error')
+      showToast(t('payments.toast.error'), 'error')
     } finally {
       setSaving(false)
     }
@@ -86,15 +88,15 @@ export default function Payments() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Pagos</h1>
-          <p className="text-gray-600 mt-1">Configura tus metodos de pago</p>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('payments.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('payments.subtitle')}</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
           className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? t('payments.saving') : t('payments.saveChanges')}
         </button>
       </div>
 
@@ -113,10 +115,10 @@ export default function Payments() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-[#1e3a5f]">WhatsApp</h2>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Activo</span>
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{t('payments.whatsapp.active')}</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
-                  Los clientes hacen pedidos por WhatsApp. Siempre disponible.
+                  {t('payments.whatsapp.description')}
                 </p>
               </div>
             </div>
@@ -142,7 +144,7 @@ export default function Payments() {
                   </label>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
-                  Tarjetas, efectivo y mas. Peru, Mexico, Argentina, Colombia, Chile, Brasil.
+                  {t('payments.mercadopago.description')}
                 </p>
               </div>
             </div>
@@ -151,13 +153,13 @@ export default function Payments() {
               <div className="space-y-4 pt-4 mt-4 border-t border-gray-100">
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                   <p className="text-xs text-amber-800">
-                    <strong>Importante:</strong> Necesitas cuenta de MercadoPago. <a href="https://www.mercadopago.com/developers" target="_blank" rel="noopener noreferrer" className="underline">Obtener credenciales</a>
+                    <strong>{t('payments.mercadopago.important')}</strong> {t('payments.mercadopago.needAccount')} <a href="https://www.mercadopago.com/developers" target="_blank" rel="noopener noreferrer" className="underline">{t('payments.mercadopago.getCredentials')}</a>
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Public Key</label>
+                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.mercadopago.publicKey')}</label>
                     <input
                       type="text"
                       value={mpPublicKey}
@@ -168,7 +170,7 @@ export default function Payments() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Access Token</label>
+                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.mercadopago.accessToken')}</label>
                     <input
                       type="password"
                       value={mpAccessToken}
@@ -190,8 +192,8 @@ export default function Payments() {
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                   </label>
                   <div>
-                    <span className="text-sm font-medium text-[#1e3a5f]">Modo Sandbox</span>
-                    <p className="text-xs text-gray-500">Prueba sin cobrar dinero real</p>
+                    <span className="text-sm font-medium text-[#1e3a5f]">{t('payments.mercadopago.sandbox')}</span>
+                    <p className="text-xs text-gray-500">{t('payments.mercadopago.sandboxDescription')}</p>
                   </div>
                 </div>
               </div>
@@ -202,7 +204,7 @@ export default function Payments() {
         {/* Right Column - Coming Soon */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Proximamente</h3>
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('payments.comingSoon.title')}</h3>
 
             <div className="space-y-4">
               {/* Stripe */}
@@ -213,8 +215,8 @@ export default function Payments() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">Stripe</h4>
-                  <p className="text-xs text-gray-500">Pagos internacionales, +135 monedas</p>
+                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.stripe.name')}</h4>
+                  <p className="text-xs text-gray-500">{t('payments.comingSoon.stripe.description')}</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -229,8 +231,8 @@ export default function Payments() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">PayPal</h4>
-                  <p className="text-xs text-gray-500">Popular en USA y Europa</p>
+                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.paypal.name')}</h4>
+                  <p className="text-xs text-gray-500">{t('payments.comingSoon.paypal.description')}</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -245,8 +247,8 @@ export default function Payments() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">Yape / Plin</h4>
-                  <p className="text-xs text-gray-500">Billeteras digitales Peru</p>
+                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.yape.name')}</h4>
+                  <p className="text-xs text-gray-500">{t('payments.comingSoon.yape.description')}</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -261,8 +263,8 @@ export default function Payments() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">Transferencia</h4>
-                  <p className="text-xs text-gray-500">Deposito directo a tu cuenta</p>
+                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.transfer.name')}</h4>
+                  <p className="text-xs text-gray-500">{t('payments.comingSoon.transfer.description')}</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />

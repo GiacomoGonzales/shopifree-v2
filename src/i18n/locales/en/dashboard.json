@@ -345,6 +345,49 @@
       "portalError": "Error opening subscription portal"
     }
   },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Configure your payment methods",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "toast": {
+      "saved": "Settings saved",
+      "error": "Error saving"
+    },
+    "whatsapp": {
+      "active": "Active",
+      "description": "Customers place orders via WhatsApp. Always available."
+    },
+    "mercadopago": {
+      "description": "Cards, cash and more. Peru, Mexico, Argentina, Colombia, Chile, Brazil.",
+      "important": "Important:",
+      "needAccount": "You need a MercadoPago account.",
+      "getCredentials": "Get credentials",
+      "publicKey": "Public Key",
+      "accessToken": "Access Token",
+      "sandbox": "Sandbox Mode",
+      "sandboxDescription": "Test without charging real money"
+    },
+    "comingSoon": {
+      "title": "Coming Soon",
+      "stripe": {
+        "name": "Stripe",
+        "description": "International payments, +135 currencies"
+      },
+      "paypal": {
+        "name": "PayPal",
+        "description": "Popular in USA and Europe"
+      },
+      "yape": {
+        "name": "Yape / Plin",
+        "description": "Digital wallets Peru"
+      },
+      "transfer": {
+        "name": "Bank Transfer",
+        "description": "Direct deposit to your account"
+      }
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

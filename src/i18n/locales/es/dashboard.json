@@ -345,6 +345,49 @@
       "portalError": "Error al abrir el portal de suscripción"
     }
   },
+  "payments": {
+    "title": "Pagos",
+    "subtitle": "Configura tus métodos de pago",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar cambios",
+    "toast": {
+      "saved": "Configuración guardada",
+      "error": "Error al guardar"
+    },
+    "whatsapp": {
+      "active": "Activo",
+      "description": "Los clientes hacen pedidos por WhatsApp. Siempre disponible."
+    },
+    "mercadopago": {
+      "description": "Tarjetas, efectivo y más. Perú, México, Argentina, Colombia, Chile, Brasil.",
+      "important": "Importante:",
+      "needAccount": "Necesitas cuenta de MercadoPago.",
+      "getCredentials": "Obtener credenciales",
+      "publicKey": "Public Key",
+      "accessToken": "Access Token",
+      "sandbox": "Modo Sandbox",
+      "sandboxDescription": "Prueba sin cobrar dinero real"
+    },
+    "comingSoon": {
+      "title": "Próximamente",
+      "stripe": {
+        "name": "Stripe",
+        "description": "Pagos internacionales, +135 monedas"
+      },
+      "paypal": {
+        "name": "PayPal",
+        "description": "Popular en USA y Europa"
+      },
+      "yape": {
+        "name": "Yape / Plin",
+        "description": "Billeteras digitales Perú"
+      },
+      "transfer": {
+        "name": "Transferencia",
+        "description": "Depósito directo a tu cuenta"
+      }
+    }
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
