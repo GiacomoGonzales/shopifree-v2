@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { canAddProduct, getMaxImagesPerProduct, type PlanType } from '../../lib/stripe'
@@ -10,6 +12,8 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function ProductForm() {
+  const { t } = useTranslation('dashboard')
+  const { localePath } = useLanguage()
   const { productId } = useParams<{ productId: string }>()
   const isEditing = productId && productId !== 'new'
   const { store } = useAuth()
@@ -114,7 +118,9 @@ export default function ProductForm() {
     // Check limit
     const remainingSlots = maxImages - images.length
     if (remainingSlots <= 0) {
-      showToast(`Limite de ${maxImages} ${maxImages === 1 ? 'imagen' : 'imagenes'} alcanzado. Actualiza a Pro para mas.`, 'error')
+      showToast(maxImages === 1
+        ? t('productForm.photos.limitError', { count: maxImages })
+        : t('productForm.photos.limitErrorPlural', { count: maxImages }), 'error')
       return
     }
 
@@ -142,11 +148,11 @@ export default function ProductForm() {
       setImages(prev => [...prev, ...uploadedUrls])
 
       if (filesToUpload.length < files.length) {
-        showToast(`Solo se subieron ${filesToUpload.length} de ${files.length} imagenes (limite del plan)`, 'info')
+        showToast(t('productForm.photos.partialUpload', { uploaded: filesToUpload.length, total: files.length }), 'info')
       }
     } catch (error) {
       console.error('Error uploading image:', error)
-      showToast('Error al subir la imagen', 'error')
+      showToast(t('productForm.photos.uploadError'), 'error')
     } finally {
       setUploading(false)
       // Clear file input
@@ -177,8 +183,8 @@ export default function ProductForm() {
       const plan = (store.plan || 'free') as PlanType
       const limitCheck = canAddProduct(plan, productCount)
       if (!limitCheck.allowed) {
-        showToast(limitCheck.message || 'Has alcanzado el limite de productos', 'error')
-        navigate('/dashboard/plan')
+        showToast(limitCheck.message || t('productForm.limitReached'), 'error')
+        navigate(localePath('/dashboard/plan'))
         return
       }
     }
@@ -232,16 +238,16 @@ export default function ProductForm() {
 
       if (isEditing && productId) {
         await productService.update(store.id, productId, productData as Parameters<typeof productService.update>[2])
-        showToast('Producto actualizado', 'success')
+        showToast(t('productForm.updated'), 'success')
       } else {
         await productService.create(store.id, productData as Parameters<typeof productService.create>[1])
-        showToast('Producto creado', 'success')
+        showToast(t('productForm.created'), 'success')
       }
 
-      navigate('/dashboard/products')
+      navigate(localePath('/dashboard/products'))
     } catch (error) {
       console.error('Error saving product:', error)
-      showToast('Error al guardar el producto', 'error')
+      showToast(t('productForm.saveError'), 'error')
     } finally {
       setSaving(false)
     }
@@ -261,25 +267,25 @@ export default function ProductForm() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">
-            {isEditing ? 'Editar producto' : 'Nuevo producto'}
+            {isEditing ? t('productForm.editTitle') : t('productForm.newTitle')}
           </h1>
           <p className="text-gray-600 mt-1">
-            {isEditing ? 'Modifica los datos del producto' : 'Agrega un nuevo producto a tu catalogo'}
+            {isEditing ? t('productForm.editDescription') : t('productForm.newDescription')}
           </p>
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/dashboard/products')}
+            onClick={() => navigate(localePath('/dashboard/products'))}
             className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
           >
-            Cancelar
+            {t('productForm.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving || !name || !price}
             className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
           >
-            {saving ? 'Guardando...' : isEditing ? 'Guardar' : 'Crear'}
+            {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
           </button>
         </div>
       </div>
@@ -293,10 +299,12 @@ export default function ProductForm() {
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-semibold text-[#1e3a5f]">
-                  Fotos del producto
+                  {t('productForm.photos.title')}
                 </label>
                 <span className="text-xs text-gray-500">
-                  {images.length}/{maxImages} {maxImages === 1 ? 'imagen' : 'imagenes'}
+                  {maxImages === 1
+                    ? t('productForm.photos.countSingular', { count: images.length, max: maxImages })
+                    : t('productForm.photos.count', { count: images.length, max: maxImages })}
                 </span>
               </div>
 
@@ -305,10 +313,10 @@ export default function ProductForm() {
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {images.map((img, index) => (
                     <div key={img} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
-                      <img src={img} alt={`Foto ${index + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`${t('productForm.photos.title')} ${index + 1}`} className="w-full h-full object-cover" />
                       {index === 0 && (
                         <span className="absolute top-1 left-1 bg-[#1e3a5f] text-white text-[10px] px-1.5 py-0.5 rounded">
-                          Principal
+                          {t('productForm.photos.main')}
                         </span>
                       )}
                       {/* Overlay controls */}
@@ -318,7 +326,7 @@ export default function ProductForm() {
                             type="button"
                             onClick={() => handleMoveImage(index, 'up')}
                             className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100"
-                            title="Mover izquierda"
+                            title={t('productForm.photos.moveLeft')}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -330,7 +338,7 @@ export default function ProductForm() {
                             type="button"
                             onClick={() => handleMoveImage(index, 'down')}
                             className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100"
-                            title="Mover derecha"
+                            title={t('productForm.photos.moveRight')}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -341,7 +349,7 @@ export default function ProductForm() {
                           type="button"
                           onClick={() => handleRemoveImage(index)}
                           className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600"
-                          title="Eliminar"
+                          title={t('productForm.photos.delete')}
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -365,7 +373,7 @@ export default function ProductForm() {
                     {uploading ? (
                       <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
-                        <p className="text-[#2d6cb5] font-medium">Subiendo...</p>
+                        <p className="text-[#2d6cb5] font-medium">{t('productForm.photos.uploading')}</p>
                       </>
                     ) : (
                       <>
@@ -375,10 +383,10 @@ export default function ProductForm() {
                           </svg>
                         </div>
                         <p className="text-[#1e3a5f] font-medium text-sm">
-                          {images.length === 0 ? 'Click para subir fotos' : 'Agregar mas fotos'}
+                          {images.length === 0 ? t('productForm.photos.clickToUpload') : t('productForm.photos.addMore')}
                         </p>
                         {maxImages > 1 && (
-                          <p className="text-xs text-gray-400 mt-1">Puedes seleccionar varias a la vez</p>
+                          <p className="text-xs text-gray-400 mt-1">{t('productForm.photos.selectMultiple')}</p>
                         )}
                       </>
                     )}
@@ -386,10 +394,10 @@ export default function ProductForm() {
                 </div>
               ) : (
                 <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <p className="text-sm text-gray-600">Limite de imagenes alcanzado</p>
+                  <p className="text-sm text-gray-600">{t('productForm.photos.limitReached')}</p>
                   {maxImages === 1 && (
-                    <a href="/dashboard/plan" className="text-xs text-[#2d6cb5] hover:underline mt-1 inline-block">
-                      Actualiza a Pro para subir hasta 5 imagenes
+                    <a href={localePath('/dashboard/plan')} className="text-xs text-[#2d6cb5] hover:underline mt-1 inline-block">
+                      {t('productForm.photos.upgradeForMore')}
                     </a>
                   )}
                 </div>
@@ -407,12 +415,12 @@ export default function ProductForm() {
 
             {/* Basic Fields */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Informacion basica</h2>
+              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.basic.title')}</h2>
               <div className="space-y-4">
                 {/* Name */}
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Nombre *
+                    {t('productForm.basic.name')} *
                   </label>
                   <input
                     id="name"
@@ -420,7 +428,7 @@ export default function ProductForm() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ej: Torta de chocolate"
+                    placeholder={t('productForm.basic.namePlaceholder')}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
@@ -429,7 +437,7 @@ export default function ProductForm() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="price" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      Precio *
+                      {t('productForm.basic.price')} *
                     </label>
                     <input
                       id="price"
@@ -445,7 +453,7 @@ export default function ProductForm() {
                   </div>
                   <div>
                     <label htmlFor="comparePrice" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      Precio anterior
+                      {t('productForm.basic.comparePrice')}
                     </label>
                     <input
                       id="comparePrice"
@@ -463,14 +471,14 @@ export default function ProductForm() {
                 {/* Description */}
                 <div>
                   <label htmlFor="description" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    Descripcion
+                    {t('productForm.basic.description')}
                   </label>
                   <textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
-                    placeholder="Describe tu producto..."
+                    placeholder={t('productForm.basic.descriptionPlaceholder')}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
                   />
                 </div>
@@ -479,7 +487,7 @@ export default function ProductForm() {
                 {categories.length > 0 && (
                   <div>
                     <label htmlFor="category" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      Categoria
+                      {t('productForm.basic.category')}
                     </label>
                     <select
                       id="category"
@@ -487,7 +495,7 @@ export default function ProductForm() {
                       onChange={(e) => setCategoryId(e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                     >
-                      <option value="">Sin categoria</option>
+                      <option value="">{t('productForm.basic.noCategory')}</option>
                       {categories.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
@@ -499,11 +507,11 @@ export default function ProductForm() {
 
             {/* Visibility */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Visibilidad</h2>
+              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.visibility.title')}</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-[#f0f7ff] rounded-xl">
                   <span className="text-sm text-[#1e3a5f] font-medium">
-                    {active ? 'Visible en catalogo' : 'Oculto'}
+                    {active ? t('productForm.visibility.visible') : t('productForm.visibility.hidden')}
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -517,8 +525,8 @@ export default function ProductForm() {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-200">
                   <div>
-                    <span className="text-sm text-gray-800 font-medium">Destacado</span>
-                    <p className="text-xs text-gray-500">Aparece en destacados</p>
+                    <span className="text-sm text-gray-800 font-medium">{t('productForm.visibility.featured')}</span>
+                    <p className="text-xs text-gray-500">{t('productForm.visibility.featuredDescription')}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -538,11 +546,11 @@ export default function ProductForm() {
           <div className="space-y-6">
             {/* Inventory */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Inventario</h2>
+              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.inventory.title')}</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="sku" className="block text-sm font-medium text-[#1e3a5f] mb-1">SKU</label>
+                    <label htmlFor="sku" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.sku')}</label>
                     <input
                       id="sku"
                       type="text"
@@ -553,7 +561,7 @@ export default function ProductForm() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="barcode" className="block text-sm font-medium text-[#1e3a5f] mb-1">Codigo de barras</label>
+                    <label htmlFor="barcode" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.barcode')}</label>
                     <input
                       id="barcode"
                       type="text"
@@ -566,7 +574,7 @@ export default function ProductForm() {
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm text-gray-700">Controlar stock</span>
+                  <span className="text-sm text-gray-700">{t('productForm.inventory.trackStock')}</span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -581,7 +589,7 @@ export default function ProductForm() {
                 {trackStock && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="stock" className="block text-sm font-medium text-[#1e3a5f] mb-1">Stock</label>
+                      <label htmlFor="stock" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.stock')}</label>
                       <input
                         id="stock"
                         type="number"
@@ -593,7 +601,7 @@ export default function ProductForm() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="lowStockAlert" className="block text-sm font-medium text-[#1e3a5f] mb-1">Alerta bajo</label>
+                      <label htmlFor="lowStockAlert" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.lowStockAlert')}</label>
                       <input
                         id="lowStockAlert"
                         type="number"
@@ -608,7 +616,7 @@ export default function ProductForm() {
                 )}
 
                 <div>
-                  <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">Costo (no visible)</label>
+                  <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.cost')}</label>
                   <input
                     id="cost"
                     type="number"
@@ -625,40 +633,40 @@ export default function ProductForm() {
 
             {/* Organization */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Organizacion</h2>
+              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.title')}</h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="brand" className="block text-sm font-medium text-[#1e3a5f] mb-1">Marca</label>
+                  <label htmlFor="brand" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.organization.brand')}</label>
                   <input
                     id="brand"
                     type="text"
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
-                    placeholder="Nike, Adidas..."
+                    placeholder={t('productForm.organization.brandPlaceholder')}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                   />
                 </div>
                 <div>
-                  <label htmlFor="tags" className="block text-sm font-medium text-[#1e3a5f] mb-1">Etiquetas</label>
+                  <label htmlFor="tags" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.organization.tags')}</label>
                   <input
                     id="tags"
                     type="text"
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
-                    placeholder="nuevo, oferta, popular"
+                    placeholder={t('productForm.organization.tagsPlaceholder')}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Separadas por coma</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('productForm.organization.tagsHint')}</p>
                 </div>
               </div>
             </div>
 
             {/* Shipping */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Envio</h2>
+              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.shipping.title')}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="weight" className="block text-sm font-medium text-[#1e3a5f] mb-1">Peso (g)</label>
+                  <label htmlFor="weight" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.weight')}</label>
                   <input
                     id="weight"
                     type="number"
@@ -670,7 +678,7 @@ export default function ProductForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="length" className="block text-sm font-medium text-[#1e3a5f] mb-1">Largo (cm)</label>
+                  <label htmlFor="length" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.length')}</label>
                   <input
                     id="length"
                     type="number"
@@ -682,7 +690,7 @@ export default function ProductForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="width" className="block text-sm font-medium text-[#1e3a5f] mb-1">Ancho (cm)</label>
+                  <label htmlFor="width" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.width')}</label>
                   <input
                     id="width"
                     type="number"
@@ -694,7 +702,7 @@ export default function ProductForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="height" className="block text-sm font-medium text-[#1e3a5f] mb-1">Alto (cm)</label>
+                  <label htmlFor="height" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.height')}</label>
                   <input
                     id="height"
                     type="number"

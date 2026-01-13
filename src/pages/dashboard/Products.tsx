@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
@@ -12,6 +14,8 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Products() {
+  const { t } = useTranslation('dashboard')
+  const { localePath } = useLanguage()
   const { store } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -42,16 +46,16 @@ export default function Products() {
 
   const handleAddProduct = () => {
     if (!productLimit.allowed) {
-      setLimitMessage(productLimit.message || 'Has alcanzado el limite de productos')
+      setLimitMessage(productLimit.message || t('products.limit.products'))
       setShowLimitModal(true)
       return
     }
-    navigate('/dashboard/products/new')
+    navigate(localePath('/dashboard/products/new'))
   }
 
   const handleAddCategory = () => {
     if (!categoryLimit.allowed) {
-      setLimitMessage(categoryLimit.message || 'Has alcanzado el limite de categorias')
+      setLimitMessage(categoryLimit.message || t('products.limit.categories'))
       setShowLimitModal(true)
       return
     }
@@ -87,15 +91,15 @@ export default function Products() {
 
   const handleDeleteProduct = async (productId: string) => {
     if (!store) return
-    if (!confirm('¿Estas seguro de eliminar este producto?')) return
+    if (!confirm(t('products.confirmDelete'))) return
 
     try {
       await productService.delete(store.id, productId)
       setProducts(products.filter(p => p.id !== productId))
-      showToast('Producto eliminado', 'success')
+      showToast(t('products.deleted'), 'success')
     } catch (error) {
       console.error('Error deleting product:', error)
-      showToast('Error al eliminar el producto', 'error')
+      showToast(t('products.deleteError'), 'error')
     }
   }
 
@@ -127,10 +131,10 @@ export default function Products() {
         p.id === productId ? { ...p, image: imageUrl } : p
       ))
 
-      showToast('Foto agregada', 'success')
+      showToast(t('products.photoAdded'), 'success')
     } catch (error) {
       console.error('Error uploading image:', error)
-      showToast('Error al subir la foto', 'error')
+      showToast(t('products.photoError'), 'error')
     } finally {
       setUploadingProductId(null)
     }
@@ -181,7 +185,7 @@ export default function Products() {
             ? { ...c, name: newCategoryName.trim(), slug }
             : c
         ))
-        showToast('Categoria actualizada', 'success')
+        showToast(t('products.categories.updated'), 'success')
       } else {
         const categoryId = await categoryService.create(store.id, {
           name: newCategoryName.trim(),
@@ -198,7 +202,7 @@ export default function Products() {
           createdAt: new Date(),
           updatedAt: new Date()
         }])
-        showToast('Categoria creada', 'success')
+        showToast(t('products.categories.created'), 'success')
       }
 
       setShowCategoryModal(false)
@@ -206,7 +210,7 @@ export default function Products() {
       setEditingCategory(null)
     } catch (error) {
       console.error('Error saving category:', error)
-      showToast('Error al guardar categoria', 'error')
+      showToast(t('products.categories.saveError'), 'error')
     } finally {
       setSavingCategory(false)
     }
@@ -214,7 +218,7 @@ export default function Products() {
 
   const handleDeleteCategory = async (category: Category) => {
     if (!store) return
-    if (!confirm(`¿Eliminar la categoría "${category.name}"? Los productos no se eliminarán.`)) return
+    if (!confirm(t('products.categories.confirmDelete', { name: category.name }))) return
 
     try {
       await categoryService.delete(store.id, category.id)
@@ -222,10 +226,10 @@ export default function Products() {
       if (selectedCategory === category.id) {
         setSelectedCategory(null)
       }
-      showToast('Categoria eliminada', 'success')
+      showToast(t('products.categories.deleted'), 'success')
     } catch (error) {
       console.error('Error deleting category:', error)
-      showToast('Error al eliminar categoria', 'error')
+      showToast(t('products.categories.deleteError'), 'error')
     }
   }
 
@@ -270,12 +274,14 @@ export default function Products() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Productos</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">{t('products.title')}</h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
-            {products.length} producto{products.length !== 1 ? 's' : ''} en tu catalogo
+            {products.length === 1
+              ? t('products.subtitle', { count: products.length })
+              : t('products.subtitle_plural', { count: products.length })}
             {remainingProducts !== 'unlimited' && (
               <span className={`ml-2 ${remainingProducts <= 3 ? 'text-orange-500' : 'text-gray-400'}`}>
-                ({remainingProducts} restantes)
+                ({t('products.remaining', { count: remainingProducts })})
               </span>
             )}
           </p>
@@ -288,7 +294,7 @@ export default function Products() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <span className="hidden sm:inline">Importar</span>
+            <span className="hidden sm:inline">{t('products.import')}</span>
           </button>
           <button
             onClick={handleAddProduct}
@@ -298,7 +304,7 @@ export default function Products() {
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            + Agregar producto
+            {t('products.add')}
           </button>
         </div>
       </div>
@@ -307,10 +313,10 @@ export default function Products() {
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-sm font-semibold text-[#1e3a5f]">Categorias</h3>
+            <h3 className="text-sm font-semibold text-[#1e3a5f]">{t('products.categories.title')}</h3>
             {remainingCategories !== 'unlimited' && (
               <p className={`text-xs ${remainingCategories <= 1 ? 'text-orange-500' : 'text-gray-400'}`}>
-                {remainingCategories} restantes
+                {t('products.remaining', { count: remainingCategories })}
               </p>
             )}
           </div>
@@ -325,7 +331,7 @@ export default function Products() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nueva
+            {t('products.categories.new')}
           </button>
         </div>
 
@@ -338,7 +344,7 @@ export default function Products() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Todos ({getProductCount(null)})
+            {t('products.categories.all')} ({getProductCount(null)})
           </button>
 
           {categories.map(category => (
@@ -363,7 +369,7 @@ export default function Products() {
                   }}
                   className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
                 >
-                  Editar
+                  {t('products.categories.edit')}
                 </button>
                 <button
                   onClick={(e) => {
@@ -372,7 +378,7 @@ export default function Products() {
                   }}
                   className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
                 >
-                  Eliminar
+                  {t('products.categories.delete')}
                 </button>
               </div>
             </div>
@@ -387,7 +393,7 @@ export default function Products() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Sin categoria ({getProductCount('uncategorized')})
+              {t('products.categories.uncategorized')} ({getProductCount('uncategorized')})
             </button>
           )}
         </div>
@@ -402,10 +408,10 @@ export default function Products() {
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-[#1e3a5f] mb-2">
-            {selectedCategory ? 'No hay productos en esta categoria' : 'No tienes productos aun'}
+            {selectedCategory ? t('products.empty.titleFiltered') : t('products.empty.title')}
           </h3>
           <p className="text-gray-600 mb-6">
-            {selectedCategory ? 'Agrega productos o cambia de categoria' : 'Agrega tu primer producto para empezar a vender'}
+            {selectedCategory ? t('products.empty.descriptionFiltered') : t('products.empty.description')}
           </p>
           <button
             onClick={handleAddProduct}
@@ -415,7 +421,7 @@ export default function Products() {
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            Agregar producto
+            {t('products.addProduct')}
           </button>
         </div>
       ) : (
@@ -428,7 +434,7 @@ export default function Products() {
               {/* Image section */}
               <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative">
                 {product.image ? (
-                  <Link to={`/dashboard/products/${product.id}`}>
+                  <Link to={localePath(`/dashboard/products/${product.id}`)}>
                     <img
                       src={product.image}
                       alt={product.name}
@@ -438,7 +444,7 @@ export default function Products() {
                 ) : uploadingProductId === product.id ? (
                   <div className="w-full h-full flex flex-col items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
-                    <p className="text-xs text-[#2d6cb5] font-medium">Subiendo...</p>
+                    <p className="text-xs text-[#2d6cb5] font-medium">{t('products.uploading')}</p>
                   </div>
                 ) : (
                   <div
@@ -452,8 +458,8 @@ export default function Products() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <p className="text-xs text-[#2d6cb5] font-medium">Agregar foto</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Click o arrastra</p>
+                    <p className="text-xs text-[#2d6cb5] font-medium">{t('products.addPhoto')}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t('products.clickOrDrag')}</p>
                     <input
                       ref={(el) => { fileInputRefs.current[product.id] = el }}
                       type="file"
@@ -465,13 +471,13 @@ export default function Products() {
                 )}
                 {!product.active && (
                   <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900/70 text-white text-xs rounded-lg">
-                    Oculto
+                    {t('products.hidden')}
                   </div>
                 )}
               </div>
 
               {/* Product info */}
-              <Link to={`/dashboard/products/${product.id}`}>
+              <Link to={localePath(`/dashboard/products/${product.id}`)}>
                 <div className="p-4">
                   <h3 className="font-semibold text-[#1e3a5f] truncate group-hover:text-[#2d6cb5] transition-colors">
                     {product.name}
@@ -489,16 +495,16 @@ export default function Products() {
 
               <div className="px-4 pb-4 flex gap-2">
                 <Link
-                  to={`/dashboard/products/${product.id}`}
+                  to={localePath(`/dashboard/products/${product.id}`)}
                   className="flex-1 px-3 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center"
                 >
-                  Editar
+                  {t('products.edit')}
                 </Link>
                 <button
                   onClick={() => handleDeleteProduct(product.id)}
                   className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
                 >
-                  Eliminar
+                  {t('products.delete')}
                 </button>
               </div>
             </div>
@@ -511,14 +517,14 @@ export default function Products() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold text-[#1e3a5f] mb-4">
-              {editingCategory ? 'Editar categoria' : 'Nueva categoria'}
+              {editingCategory ? t('products.categories.editTitle') : t('products.categories.newTitle')}
             </h3>
             <form onSubmit={handleSaveCategory}>
               <input
                 type="text"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="Nombre de la categoria"
+                placeholder={t('products.categories.namePlaceholder')}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all mb-4"
                 autoFocus
               />
@@ -532,14 +538,14 @@ export default function Products() {
                   }}
                   className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
                 >
-                  Cancelar
+                  {t('products.categories.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={!newCategoryName.trim() || savingCategory}
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-medium disabled:opacity-50"
                 >
-                  {savingCategory ? 'Guardando...' : 'Guardar'}
+                  {savingCategory ? t('products.categories.saving') : t('products.categories.save')}
                 </button>
               </div>
             </form>
@@ -566,23 +572,23 @@ export default function Products() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-[#1e3a5f] text-center mb-2">
-              Limite alcanzado
+              {t('products.limit.title')}
             </h3>
             <p className="text-gray-600 text-center mb-6">
               {limitMessage}
             </p>
             <div className="space-y-3">
               <Link
-                to="/dashboard/plan"
+                to={localePath('/dashboard/plan')}
                 className="block w-full px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-center rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
               >
-                Actualizar a Pro - ${PLAN_FEATURES.pro.price}/mes
+                {t('products.limit.upgrade', { price: PLAN_FEATURES.pro.price })}
               </Link>
               <button
                 onClick={() => setShowLimitModal(false)}
                 className="block w-full px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
               >
-                Cerrar
+                {t('products.limit.close')}
               </button>
             </div>
           </div>
