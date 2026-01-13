@@ -289,6 +289,13 @@
   "plan": {
     "title": "Plans and pricing",
     "subtitle": "Choose the plan that best fits your business",
+    "free": "Free Plan",
+    "freeDescription": "Upgrade to unlock more features",
+    "viewPlans": "View plans",
+    "pro": "Pro Plan",
+    "proDescription": "All features unlocked",
+    "business": "Business Plan",
+    "businessDescription": "Unlimited premium features",
     "current": "Your current plan",
     "manage": "Manage subscription",
     "cancelAtPeriodEnd": "Cancels at end of period",
@@ -432,7 +439,7 @@
   },
   "account": {
     "title": "My Account",
-    "subtitle": "Manage your personal and billing information",
+    "subtitle": "Manage your personal information",
     "saving": "Saving...",
     "saveChanges": "Save changes",
     "toast": {
@@ -453,35 +460,75 @@
       "phone": "Phone",
       "phonePlaceholder": "+1 555 123 4567"
     },
-    "billing": {
-      "title": "Billing information",
-      "subtitle": "Optional - for invoices and receipts",
-      "companyName": "Company name",
-      "companyNamePlaceholder": "My Company Inc.",
-      "taxId": "Tax ID / EIN",
-      "taxIdPlaceholder": "12-3456789",
-      "address": "Billing address",
-      "addressPlaceholder": "Street, number, etc.",
-      "city": "City",
-      "cityPlaceholder": "Your city",
-      "country": "Country",
-      "selectCountry": "Select",
-      "countries": {
-        "PE": "Peru",
-        "MX": "Mexico",
-        "CO": "Colombia",
-        "AR": "Argentina",
-        "CL": "Chile",
-        "EC": "Ecuador",
-        "VE": "Venezuela",
-        "US": "United States",
-        "ES": "Spain"
-      }
-    },
     "security": {
       "title": "Security",
-      "subtitle": "Manage your password and security options",
+      "subtitle": "Manage your password",
       "changePassword": "Change password"
+    },
+    "danger": {
+      "deleteCatalog": "Delete catalog",
+      "description": "This action is permanent and cannot be undone"
+    }
+  },
+  "subscription": {
+    "title": "My Subscription",
+    "subtitle": "Manage your plan and billing",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "billingCycle": "Billing cycle",
+    "currentPeriod": "Current period started",
+    "nextBilling": "Next billing",
+    "currentPlan": "Current plan",
+    "cancelScheduled": "Cancellation scheduled",
+    "cancelScheduledDesc": "Your subscription will be canceled on {{date}}. You'll keep access until then.",
+    "upgradeMessage": "Unlock more features by upgrading your plan.",
+    "viewPlans": "View plans",
+    "includedFeatures": "Included features",
+    "actions": "Actions",
+    "changePlan": "Change plan",
+    "downgrade": "Downgrade",
+    "updatePayment": "Update payment method",
+    "viewInvoices": "View invoices",
+    "cancelSubscription": "Cancel subscription",
+    "needHelp": "Need help?",
+    "helpDescription": "Contact us on WhatsApp for any questions about your subscription.",
+    "securePayments": "Secure payments with Stripe",
+    "usage": {
+      "title": "Plan usage",
+      "products": "Products",
+      "categories": "Categories",
+      "imagesPerProduct": "Images per product",
+      "unlimited": "Unlimited",
+      "perProduct": "per product",
+      "almostLimit": "You're close to the limit. Consider upgrading your plan."
+    },
+    "planFeatures": {
+      "products": "{{count}} products",
+      "categories": "{{count}} categories",
+      "images": "{{count}} images per product",
+      "unlimitedProducts": "Unlimited products",
+      "unlimitedCategories": "Unlimited categories"
+    },
+    "danger": {
+      "title": "Danger zone",
+      "description": "Canceling your subscription will downgrade you to the free plan at the end of the current period."
+    },
+    "status": {
+      "none": "No subscription",
+      "active": "Active",
+      "past_due": "Past due",
+      "canceled": "Canceled",
+      "unpaid": "Unpaid",
+      "trialing": "Trial",
+      "incomplete": "Incomplete",
+      "incomplete_expired": "Expired",
+      "paused": "Paused"
+    },
+    "toast": {
+      "noSubscription": "You don't have an active subscription",
+      "portalError": "Error opening payment portal"
     }
   },
   "common": {

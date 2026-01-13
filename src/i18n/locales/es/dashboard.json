@@ -289,6 +289,13 @@
   "plan": {
     "title": "Planes y precios",
     "subtitle": "Elige el plan que mejor se adapte a tu negocio",
+    "free": "Plan Free",
+    "freeDescription": "Mejora para desbloquear más funciones",
+    "viewPlans": "Ver planes",
+    "pro": "Plan Pro",
+    "proDescription": "Todas las funciones desbloqueadas",
+    "business": "Plan Business",
+    "businessDescription": "Funciones premium ilimitadas",
     "current": "Tu plan actual",
     "manage": "Administrar suscripción",
     "cancelAtPeriodEnd": "Se cancela al final del periodo",
@@ -432,7 +439,7 @@
   },
   "account": {
     "title": "Mi Cuenta",
-    "subtitle": "Administra tus datos personales y de facturación",
+    "subtitle": "Administra tus datos personales",
     "saving": "Guardando...",
     "saveChanges": "Guardar cambios",
     "toast": {
@@ -453,35 +460,75 @@
       "phone": "Teléfono",
       "phonePlaceholder": "+51 999 888 777"
     },
-    "billing": {
-      "title": "Datos de facturación",
-      "subtitle": "Opcional - para facturas y comprobantes",
-      "companyName": "Razón social",
-      "companyNamePlaceholder": "Mi Empresa SAC",
-      "taxId": "RUC / NIT / RFC",
-      "taxIdPlaceholder": "20123456789",
-      "address": "Dirección fiscal",
-      "addressPlaceholder": "Calle, número, etc.",
-      "city": "Ciudad",
-      "cityPlaceholder": "Tu ciudad",
-      "country": "País",
-      "selectCountry": "Seleccionar",
-      "countries": {
-        "PE": "Perú",
-        "MX": "México",
-        "CO": "Colombia",
-        "AR": "Argentina",
-        "CL": "Chile",
-        "EC": "Ecuador",
-        "VE": "Venezuela",
-        "US": "Estados Unidos",
-        "ES": "España"
-      }
-    },
     "security": {
       "title": "Seguridad",
-      "subtitle": "Gestiona tu contraseña y opciones de seguridad",
+      "subtitle": "Gestiona tu contraseña",
       "changePassword": "Cambiar contraseña"
+    },
+    "danger": {
+      "deleteCatalog": "Eliminar catálogo",
+      "description": "Esta acción es permanente y no se puede deshacer"
+    }
+  },
+  "subscription": {
+    "title": "Mi Suscripción",
+    "subtitle": "Gestiona tu plan y facturación",
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "monthly": "Mensual",
+    "yearly": "Anual",
+    "billingCycle": "Ciclo de facturación",
+    "currentPeriod": "Periodo actual desde",
+    "nextBilling": "Próximo cobro",
+    "currentPlan": "Plan actual",
+    "cancelScheduled": "Cancelación programada",
+    "cancelScheduledDesc": "Tu suscripción se cancelará el {{date}}. Seguirás teniendo acceso hasta esa fecha.",
+    "upgradeMessage": "Desbloquea más funciones mejorando tu plan.",
+    "viewPlans": "Ver planes",
+    "includedFeatures": "Funciones incluidas",
+    "actions": "Acciones",
+    "changePlan": "Cambiar plan",
+    "downgrade": "Bajar plan",
+    "updatePayment": "Actualizar método de pago",
+    "viewInvoices": "Ver facturas",
+    "cancelSubscription": "Cancelar suscripción",
+    "needHelp": "¿Necesitas ayuda?",
+    "helpDescription": "Contáctanos por WhatsApp para resolver cualquier duda sobre tu suscripción.",
+    "securePayments": "Pagos seguros con Stripe",
+    "usage": {
+      "title": "Uso de tu plan",
+      "products": "Productos",
+      "categories": "Categorías",
+      "imagesPerProduct": "Imágenes por producto",
+      "unlimited": "Ilimitado",
+      "perProduct": "por producto",
+      "almostLimit": "Estás cerca del límite. Considera mejorar tu plan."
+    },
+    "planFeatures": {
+      "products": "{{count}} productos",
+      "categories": "{{count}} categorías",
+      "images": "{{count}} imágenes por producto",
+      "unlimitedProducts": "Productos ilimitados",
+      "unlimitedCategories": "Categorías ilimitadas"
+    },
+    "danger": {
+      "title": "Zona de peligro",
+      "description": "Cancelar tu suscripción te bajará al plan gratuito al final del periodo actual."
+    },
+    "status": {
+      "none": "Sin suscripción",
+      "active": "Activa",
+      "past_due": "Pago pendiente",
+      "canceled": "Cancelada",
+      "unpaid": "Impagada",
+      "trialing": "Prueba",
+      "incomplete": "Incompleta",
+      "incomplete_expired": "Expirada",
+      "paused": "Pausada"
+    },
+    "toast": {
+      "noSubscription": "No tienes una suscripción activa",
+      "portalError": "Error al abrir el portal de pagos"
     }
   },
   "common": {

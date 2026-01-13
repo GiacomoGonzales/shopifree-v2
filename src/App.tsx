@@ -116,6 +116,7 @@ function AppRoutes() {
           {/* Account & Plan */}
           <Route path="account" element={<Account />} />
           <Route path="plan" element={<Plan />} />
+          <Route path="subscription" element={<Navigate to="account" replace />} />
         </Route>
 
         {/* Admin routes (protected for admin@shopifree.app) */}

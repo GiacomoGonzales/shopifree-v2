@@ -386,24 +386,6 @@ export default function Settings() {
           </div>
         </div>
       </div>
-
-      {/* Danger zone - Full Width */}
-      <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-red-600 mb-1">{t('settings.danger.title')}</h2>
-            <p className="text-sm text-gray-600">
-              {t('settings.danger.description')}
-            </p>
-          </div>
-          <button
-            onClick={() => showToast(t('settings.toast.comingSoon'), 'info')}
-            className="w-full sm:w-auto px-4 py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium flex-shrink-0"
-          >
-            {t('settings.danger.deleteCatalog')}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
