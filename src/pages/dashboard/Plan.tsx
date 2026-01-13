@@ -43,9 +43,9 @@ export default function Plan() {
     setLoading(true)
 
     try {
-      // Call Cloud Function to create checkout session
+      // Call Vercel API to create checkout session
       const response = await fetch(
-        `${import.meta.env.VITE_FUNCTIONS_URL || ''}/createCheckoutSession`,
+        '/api/create-checkout',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ export default function Plan() {
     setLoading(true)
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_FUNCTIONS_URL || ''}/createPortalSession`,
+        '/api/create-portal',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
