@@ -5,6 +5,17 @@ import { useToast } from '../../components/ui/Toast'
 import { PLAN_FEATURES } from '../../lib/stripe'
 import type { Store } from '../../types'
 
+const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
+  active: 'Activa',
+  past_due: 'Pago pendiente',
+  canceled: 'Cancelada',
+  unpaid: 'Impagada',
+  trialing: 'Prueba',
+  incomplete: 'Incompleta',
+  incomplete_expired: 'Expirada',
+  paused: 'Pausada'
+}
+
 export default function AdminStores() {
   const { showToast } = useToast()
   const [stores, setStores] = useState<(Store & { id: string })[]>([])
@@ -171,10 +182,11 @@ export default function AdminStores() {
                     {store.subscription ? (
                       <span className={`px-3 py-1 text-xs rounded-full font-medium ${
                         store.subscription.status === 'active' ? 'bg-green-100 text-green-700' :
+                        store.subscription.status === 'trialing' ? 'bg-blue-100 text-blue-700' :
                         store.subscription.status === 'past_due' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
                       }`}>
-                        {store.subscription.status}
+                        {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
                       </span>
                     ) : (
                       <span className="text-gray-400 text-sm">Sin suscripcion</span>
