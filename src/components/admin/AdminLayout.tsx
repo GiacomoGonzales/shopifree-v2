@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
@@ -53,25 +54,27 @@ function CloseIcon() {
   )
 }
 
-const navigation = [
-  { name: 'Dashboard', path: '/admin', icon: DashboardIcon },
-  { name: 'Tiendas', path: '/admin/stores', icon: StoresIcon },
-  { name: 'Usuarios', path: '/admin/users', icon: UsersIcon },
-  { name: 'Planes', path: '/admin/plans', icon: PlansIcon },
-]
-
 export default function AdminLayout() {
   const { firebaseUser, loading, logout } = useAuth()
+  const { localePath } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Dynamic navigation with language prefix
+  const navigation = useMemo(() => [
+    { name: 'Dashboard', path: localePath('/admin'), icon: DashboardIcon },
+    { name: 'Tiendas', path: localePath('/admin/stores'), icon: StoresIcon },
+    { name: 'Usuarios', path: localePath('/admin/users'), icon: UsersIcon },
+    { name: 'Planes', path: localePath('/admin/plans'), icon: PlansIcon },
+  ], [localePath])
+
   // Check admin access
   useEffect(() => {
     if (!loading && (!firebaseUser || firebaseUser.email !== ADMIN_EMAIL)) {
-      navigate('/')
+      navigate(localePath('/'))
     }
-  }, [firebaseUser, loading, navigate])
+  }, [firebaseUser, loading, navigate, localePath])
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -80,12 +83,14 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
+    navigate(localePath('/login'))
   }
 
+  const adminPath = localePath('/admin')
+
   const isItemActive = (path: string) => {
-    if (path === '/admin') {
-      return location.pathname === '/admin'
+    if (path === adminPath) {
+      return location.pathname === adminPath
     }
     return location.pathname.startsWith(path)
   }
@@ -135,7 +140,7 @@ export default function AdminLayout() {
           </div>
           <p className="text-xs text-gray-600 mb-3">Panel de administracion</p>
           <Link
-            to="/dashboard"
+            to={localePath('/dashboard')}
             className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
           >
             Ir al Dashboard
