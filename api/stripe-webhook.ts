@@ -100,8 +100,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ received: true })
   } catch (err) {
-    console.error('Error processing webhook:', err)
-    return res.status(500).json({ error: 'Webhook processing failed' })
+    const error = err as Error
+    console.error('Error processing webhook:', error.message, error.stack)
+    return res.status(500).json({ error: 'Webhook processing failed', details: error.message })
   }
 }
 
@@ -116,7 +117,9 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
   const plan = getPlanFromPrice(priceId)
 
-  await getDb().collection('stores').doc(storeId).update({
+  console.log(`Updating store ${storeId} with plan ${plan}, priceId: ${priceId}`)
+
+  await getDb().collection('stores').doc(storeId).set({
     plan,
     planExpiresAt: new Date(subscription.current_period_end * 1000),
     subscription: {
@@ -129,7 +132,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       cancelAtPeriodEnd: subscription.cancel_at_period_end
     },
     updatedAt: new Date()
-  })
+  }, { merge: true })
 
   console.log(`Store ${storeId} subscription updated to ${plan}`)
 }
