@@ -430,6 +430,60 @@
       "tipText": "Si necesitas ayuda configurando tu dominio, contáctanos por WhatsApp."
     }
   },
+  "account": {
+    "title": "Mi Cuenta",
+    "subtitle": "Administra tus datos personales y de facturación",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar cambios",
+    "toast": {
+      "saved": "Datos guardados",
+      "error": "Error al guardar los datos",
+      "avatarError": "Error al subir la imagen",
+      "comingSoon": "Funcionalidad próximamente"
+    },
+    "personal": {
+      "title": "Datos personales",
+      "changePhoto": "Cambiar foto",
+      "removePhoto": "Eliminar",
+      "firstName": "Nombre",
+      "firstNamePlaceholder": "Tu nombre",
+      "lastName": "Apellido",
+      "lastNamePlaceholder": "Tu apellido",
+      "email": "Email",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+51 999 888 777"
+    },
+    "billing": {
+      "title": "Datos de facturación",
+      "subtitle": "Opcional - para facturas y comprobantes",
+      "companyName": "Razón social",
+      "companyNamePlaceholder": "Mi Empresa SAC",
+      "taxId": "RUC / NIT / RFC",
+      "taxIdPlaceholder": "20123456789",
+      "address": "Dirección fiscal",
+      "addressPlaceholder": "Calle, número, etc.",
+      "city": "Ciudad",
+      "cityPlaceholder": "Tu ciudad",
+      "country": "País",
+      "selectCountry": "Seleccionar",
+      "countries": {
+        "PE": "Perú",
+        "MX": "México",
+        "CO": "Colombia",
+        "AR": "Argentina",
+        "CL": "Chile",
+        "EC": "Ecuador",
+        "VE": "Venezuela",
+        "US": "Estados Unidos",
+        "ES": "España"
+      }
+    },
+    "security": {
+      "title": "Seguridad",
+      "subtitle": "Gestiona tu contraseña y opciones de seguridad",
+      "changePassword": "Cambiar contraseña"
+    }
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",

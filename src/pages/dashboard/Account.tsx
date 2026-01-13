@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -9,6 +10,7 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Account() {
+  const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
@@ -80,7 +82,7 @@ export default function Account() {
       setAvatar(data.secure_url)
     } catch (error) {
       console.error('Error uploading avatar:', error)
-      showToast('Error al subir la imagen', 'error')
+      showToast(t('account.toast.avatarError'), 'error')
     } finally {
       setUploadingAvatar(false)
     }
@@ -107,10 +109,10 @@ export default function Account() {
         },
         updatedAt: new Date()
       }, { merge: true })
-      showToast('Datos guardados', 'success')
+      showToast(t('account.toast.saved'), 'success')
     } catch (error) {
       console.error('Error saving user data:', error)
-      showToast('Error al guardar los datos', 'error')
+      showToast(t('account.toast.error'), 'error')
     } finally {
       setSaving(false)
     }
@@ -129,15 +131,15 @@ export default function Account() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Mi Cuenta</h1>
-          <p className="text-gray-600 mt-1">Administra tus datos personales y de facturacion</p>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('account.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('account.subtitle')}</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
           className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
         >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? t('account.saving') : t('account.saveChanges')}
         </button>
       </div>
 
@@ -145,7 +147,7 @@ export default function Account() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Left Column - Personal Data */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Datos personales</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('account.personal.title')}</h2>
 
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
@@ -175,14 +177,14 @@ export default function Account() {
                 onClick={() => avatarInputRef.current?.click()}
                 className="text-sm font-medium text-[#2d6cb5] hover:text-[#1e3a5f]"
               >
-                Cambiar foto
+                {t('account.personal.changePhoto')}
               </button>
               {avatar && (
                 <button
                   onClick={() => setAvatar('')}
                   className="block text-sm text-red-600 hover:text-red-700 mt-1"
                 >
-                  Eliminar
+                  {t('account.personal.removePhoto')}
                 </button>
               )}
             </div>
@@ -191,22 +193,22 @@ export default function Account() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.firstName')}</label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Tu nombre"
+                  placeholder={t('account.personal.firstNamePlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Apellido</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.lastName')}</label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Tu apellido"
+                  placeholder={t('account.personal.lastNamePlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
@@ -214,7 +216,7 @@ export default function Account() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Email</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.email')}</label>
                 <input
                   type="email"
                   value={firebaseUser?.email || ''}
@@ -223,12 +225,12 @@ export default function Account() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Telefono</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.phone')}</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+51 999 888 777"
+                  placeholder={t('account.personal.phonePlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
@@ -238,72 +240,72 @@ export default function Account() {
 
         {/* Right Column - Billing Data */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Datos de facturacion</h2>
-          <p className="text-sm text-gray-600 mb-4">Opcional - para facturas y comprobantes</p>
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">{t('account.billing.title')}</h2>
+          <p className="text-sm text-gray-600 mb-4">{t('account.billing.subtitle')}</p>
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Razon social</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.billing.companyName')}</label>
                 <input
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Mi Empresa SAC"
+                  placeholder={t('account.billing.companyNamePlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">RUC / NIT / RFC</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.billing.taxId')}</label>
                 <input
                   type="text"
                   value={taxId}
                   onChange={(e) => setTaxId(e.target.value)}
-                  placeholder="20123456789"
+                  placeholder={t('account.billing.taxIdPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Direccion fiscal</label>
+              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.billing.address')}</label>
               <input
                 type="text"
                 value={companyAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
-                placeholder="Calle, numero, etc."
+                placeholder={t('account.billing.addressPlaceholder')}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Ciudad</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.billing.city')}</label>
                 <input
                   type="text"
                   value={companyCity}
                   onChange={(e) => setCompanyCity(e.target.value)}
-                  placeholder="Tu ciudad"
+                  placeholder={t('account.billing.cityPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Pais</label>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.billing.country')}</label>
                 <select
                   value={companyCountry}
                   onChange={(e) => setCompanyCountry(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 >
-                  <option value="">Seleccionar</option>
-                  <option value="PE">Peru</option>
-                  <option value="MX">Mexico</option>
-                  <option value="CO">Colombia</option>
-                  <option value="AR">Argentina</option>
-                  <option value="CL">Chile</option>
-                  <option value="EC">Ecuador</option>
-                  <option value="VE">Venezuela</option>
-                  <option value="US">Estados Unidos</option>
-                  <option value="ES">Espana</option>
+                  <option value="">{t('account.billing.selectCountry')}</option>
+                  <option value="PE">{t('account.billing.countries.PE')}</option>
+                  <option value="MX">{t('account.billing.countries.MX')}</option>
+                  <option value="CO">{t('account.billing.countries.CO')}</option>
+                  <option value="AR">{t('account.billing.countries.AR')}</option>
+                  <option value="CL">{t('account.billing.countries.CL')}</option>
+                  <option value="EC">{t('account.billing.countries.EC')}</option>
+                  <option value="VE">{t('account.billing.countries.VE')}</option>
+                  <option value="US">{t('account.billing.countries.US')}</option>
+                  <option value="ES">{t('account.billing.countries.ES')}</option>
                 </select>
               </div>
             </div>
@@ -315,14 +317,14 @@ export default function Account() {
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Seguridad</h2>
-            <p className="text-sm text-gray-600">Gestiona tu contrasena y opciones de seguridad</p>
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">{t('account.security.title')}</h2>
+            <p className="text-sm text-gray-600">{t('account.security.subtitle')}</p>
           </div>
           <button
-            onClick={() => showToast('Funcionalidad proximamente', 'info')}
+            onClick={() => showToast(t('account.toast.comingSoon'), 'info')}
             className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm flex-shrink-0"
           >
-            Cambiar contrasena
+            {t('account.security.changePassword')}
           </button>
         </div>
       </div>

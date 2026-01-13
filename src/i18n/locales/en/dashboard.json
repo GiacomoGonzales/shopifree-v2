@@ -430,6 +430,60 @@
       "tipText": "If you need help configuring your domain, contact us on WhatsApp."
     }
   },
+  "account": {
+    "title": "My Account",
+    "subtitle": "Manage your personal and billing information",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "toast": {
+      "saved": "Data saved",
+      "error": "Error saving data",
+      "avatarError": "Error uploading image",
+      "comingSoon": "Coming soon"
+    },
+    "personal": {
+      "title": "Personal information",
+      "changePhoto": "Change photo",
+      "removePhoto": "Remove",
+      "firstName": "First name",
+      "firstNamePlaceholder": "Your first name",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Your last name",
+      "email": "Email",
+      "phone": "Phone",
+      "phonePlaceholder": "+1 555 123 4567"
+    },
+    "billing": {
+      "title": "Billing information",
+      "subtitle": "Optional - for invoices and receipts",
+      "companyName": "Company name",
+      "companyNamePlaceholder": "My Company Inc.",
+      "taxId": "Tax ID / EIN",
+      "taxIdPlaceholder": "12-3456789",
+      "address": "Billing address",
+      "addressPlaceholder": "Street, number, etc.",
+      "city": "City",
+      "cityPlaceholder": "Your city",
+      "country": "Country",
+      "selectCountry": "Select",
+      "countries": {
+        "PE": "Peru",
+        "MX": "Mexico",
+        "CO": "Colombia",
+        "AR": "Argentina",
+        "CL": "Chile",
+        "EC": "Ecuador",
+        "VE": "Venezuela",
+        "US": "United States",
+        "ES": "Spain"
+      }
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Manage your password and security options",
+      "changePassword": "Change password"
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
