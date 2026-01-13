@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { useLanguage } from '../../hooks/useLanguage'
 import type { Store } from '../../types'
 
 interface Stats {
@@ -16,6 +17,7 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
+  const { localePath } = useLanguage()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -76,7 +78,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a5f]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#38bdf8]"></div>
       </div>
     )
   }
@@ -84,13 +86,13 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">Vista general de la plataforma</p>
+        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+        <p className="text-slate-400 mt-1">Vista general de la plataforma</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <div className="bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -98,27 +100,27 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <p className="text-3xl font-bold text-[#1e3a5f]">{stats?.totalStores || 0}</p>
-              <p className="text-gray-600 text-sm">Tiendas totales</p>
+              <p className="text-3xl font-bold text-white">{stats?.totalStores || 0}</p>
+              <p className="text-slate-400 text-sm">Tiendas totales</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <div className="bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-slate-500 to-slate-700 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-3xl font-bold text-[#1e3a5f]">{stats?.totalUsers || 0}</p>
-              <p className="text-gray-600 text-sm">Usuarios totales</p>
+              <p className="text-3xl font-bold text-white">{stats?.totalUsers || 0}</p>
+              <p className="text-slate-400 text-sm">Usuarios totales</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <div className="bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,13 +128,13 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <p className="text-3xl font-bold text-[#1e3a5f]">{stats?.planDistribution.pro || 0}</p>
-              <p className="text-gray-600 text-sm">Planes Pro</p>
+              <p className="text-3xl font-bold text-white">{stats?.planDistribution.pro || 0}</p>
+              <p className="text-slate-400 text-sm">Planes Pro</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <div className="bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,8 +142,8 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <p className="text-3xl font-bold text-[#1e3a5f]">{stats?.planDistribution.business || 0}</p>
-              <p className="text-gray-600 text-sm">Planes Business</p>
+              <p className="text-3xl font-bold text-white">{stats?.planDistribution.business || 0}</p>
+              <p className="text-slate-400 text-sm">Planes Business</p>
             </div>
           </div>
         </div>
@@ -149,8 +151,8 @@ export default function AdminDashboard() {
 
       {/* Plan Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">Distribucion de planes</h2>
+        <div className="bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
+          <h2 className="text-lg font-semibold text-white mb-4">Distribucion de planes</h2>
           <div className="space-y-4">
             {['free', 'pro', 'business'].map((plan) => {
               const count = stats?.planDistribution[plan as keyof typeof stats.planDistribution] || 0
@@ -160,14 +162,14 @@ export default function AdminDashboard() {
               return (
                 <div key={plan}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="capitalize text-gray-600">{plan}</span>
-                    <span className="font-medium text-[#1e3a5f]">{count} ({percentage}%)</span>
+                    <span className="capitalize text-slate-400">{plan}</span>
+                    <span className="font-medium text-white">{count} ({percentage}%)</span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        plan === 'free' ? 'bg-gray-400' :
-                        plan === 'pro' ? 'bg-[#2d6cb5]' :
+                        plan === 'free' ? 'bg-slate-500' :
+                        plan === 'pro' ? 'bg-[#38bdf8]' :
                         'bg-purple-500'
                       }`}
                       style={{ width: `${percentage}%` }}
@@ -180,40 +182,40 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Stores */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <div className="bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#1e3a5f]">Tiendas recientes</h2>
-            <Link to="/admin/stores" className="text-sm text-[#2d6cb5] hover:underline">
+            <h2 className="text-lg font-semibold text-white">Tiendas recientes</h2>
+            <Link to={localePath('/admin/stores')} className="text-sm text-[#38bdf8] hover:underline">
               Ver todas
             </Link>
           </div>
           <div className="space-y-3">
             {stats?.recentStores.map((store) => (
-              <div key={store.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+              <div key={store.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   {store.logo ? (
                     <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover" />
                   ) : (
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-lg flex items-center justify-center">
-                      <span className="text-[#2d6cb5] font-bold">{store.name.charAt(0)}</span>
+                    <div className="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
+                      <span className="text-[#38bdf8] font-bold">{store.name.charAt(0)}</span>
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-[#1e3a5f]">{store.name}</p>
-                    <p className="text-xs text-gray-500">{store.subdomain}.shopifree.app</p>
+                    <p className="font-medium text-white">{store.name}</p>
+                    <p className="text-xs text-slate-500">{store.subdomain}.shopifree.app</p>
                   </div>
                 </div>
                 <span className={`px-2 py-1 text-xs rounded-full font-medium capitalize ${
-                  store.plan === 'free' ? 'bg-gray-100 text-gray-600' :
-                  store.plan === 'pro' ? 'bg-blue-100 text-blue-700' :
-                  'bg-purple-100 text-purple-700'
+                  store.plan === 'free' ? 'bg-slate-700 text-slate-300' :
+                  store.plan === 'pro' ? 'bg-[#38bdf8]/20 text-[#38bdf8]' :
+                  'bg-purple-500/20 text-purple-400'
                 }`}>
                   {store.plan}
                 </span>
               </div>
             ))}
             {(!stats?.recentStores || stats.recentStores.length === 0) && (
-              <p className="text-gray-500 text-center py-4">No hay tiendas registradas</p>
+              <p className="text-slate-500 text-center py-4">No hay tiendas registradas</p>
             )}
           </div>
         </div>

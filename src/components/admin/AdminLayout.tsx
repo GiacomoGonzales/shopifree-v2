@@ -97,8 +97,8 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fafbfc] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a5f]"></div>
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#38bdf8]"></div>
       </div>
     )
   }
@@ -119,8 +119,8 @@ export default function AdminLayout() {
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md shadow-[#1e3a5f]/20'
-                  : 'text-gray-600 hover:bg-[#f0f7ff] hover:text-[#1e3a5f]'
+                  ? 'bg-[#38bdf8] text-[#0f172a] shadow-md shadow-[#38bdf8]/20'
+                  : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
               }`}
             >
               <item.icon />
@@ -132,16 +132,16 @@ export default function AdminLayout() {
 
       {/* Admin Badge */}
       <div className="px-4 mb-4">
-        <div className="bg-gradient-to-br from-red-50 to-white border border-red-200/50 rounded-xl p-4">
+        <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
               ADMIN
             </span>
           </div>
-          <p className="text-xs text-gray-600 mb-3">Panel de administracion</p>
+          <p className="text-xs text-slate-400 mb-3">Panel de administracion</p>
           <Link
             to={localePath('/dashboard')}
-            className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+            className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-slate-600 text-white hover:bg-slate-500 transition-all"
           >
             Ir al Dashboard
           </Link>
@@ -149,7 +149,7 @@ export default function AdminLayout() {
       </div>
 
       {/* User section */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-slate-700">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
             <span className="text-sm font-semibold text-white">
@@ -157,14 +157,14 @@ export default function AdminLayout() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-sm font-medium text-white truncate">
               {firebaseUser.email}
             </p>
-            <p className="text-xs text-red-500 font-medium">Super Admin</p>
+            <p className="text-xs text-red-400 font-medium">Super Admin</p>
           </div>
           <button
             onClick={handleLogout}
-            className="text-gray-400 hover:text-[#1e3a5f] transition-colors p-1.5 rounded-lg hover:bg-gray-100"
+            className="text-slate-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-700"
             title="Cerrar sesion"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -177,17 +177,17 @@ export default function AdminLayout() {
   )
 
   return (
-    <div className="min-h-screen bg-[#fafbfc]">
+    <div className="min-h-screen bg-[#0f172a]">
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-100 z-40 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#1e293b] border-b border-slate-700 z-40 flex items-center justify-between px-4">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="p-2 -ml-2 text-gray-600 hover:text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
+          className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
         >
           <MenuIcon />
         </button>
         <div className="flex items-center gap-2">
-          <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+          <img src="/newlogo.png" alt="Shopifree" className="h-7 brightness-0 invert" />
           <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
             Admin
           </span>
@@ -198,29 +198,29 @@ export default function AdminLayout() {
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/70 z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar - Mobile */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-[#1e293b] border-r border-slate-700 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo + Close */}
-          <div className="flex items-center justify-between h-14 px-4 border-b border-gray-100">
+          <div className="flex items-center justify-between h-14 px-4 border-b border-slate-700">
             <div className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+              <img src="/newlogo.png" alt="Shopifree" className="h-7 brightness-0 invert" />
               <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
                 Admin
               </span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2 -mr-2 text-gray-600 hover:text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
+              className="p-2 -mr-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
             >
               <CloseIcon />
             </button>
@@ -231,12 +231,12 @@ export default function AdminLayout() {
       </aside>
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 shadow-sm">
+      <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-[#1e293b] border-r border-slate-700">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center h-16 px-6 border-b border-gray-100">
+          <div className="flex items-center h-16 px-6 border-b border-slate-700">
             <div className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-8" />
+              <img src="/newlogo.png" alt="Shopifree" className="h-8 brightness-0 invert" />
               <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
                 Admin
               </span>

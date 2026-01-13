@@ -124,7 +124,7 @@ export default function AdminStores() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a5f]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#38bdf8]"></div>
       </div>
     )
   }
@@ -133,8 +133,8 @@ export default function AdminStores() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Tiendas</h1>
-          <p className="text-gray-600 mt-1">{stores.length} tiendas registradas</p>
+          <h1 className="text-2xl font-bold text-white">Tiendas</h1>
+          <p className="text-slate-400 mt-1">{stores.length} tiendas registradas</p>
         </div>
       </div>
 
@@ -146,16 +146,16 @@ export default function AdminStores() {
             placeholder="Buscar por nombre o subdominio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-[#1e293b] border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-white placeholder-slate-500"
           />
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
         <select
           value={filterPlan}
           onChange={(e) => setFilterPlan(e.target.value)}
-          className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+          className="px-4 py-2.5 bg-[#1e293b] border border-slate-600 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-white"
         >
           <option value="all">Todos los planes</option>
           <option value="free">Free</option>
@@ -165,34 +165,34 @@ export default function AdminStores() {
       </div>
 
       {/* Stores Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-[#1e293b] rounded-2xl border border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Tienda</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Subdominio</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Plan</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Estado Suscripcion</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Creada</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-[#1e3a5f]">Acciones</th>
+              <tr className="bg-slate-800/50 border-b border-slate-700">
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">Tienda</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">Subdominio</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">Plan</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">Estado Suscripcion</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">Creada</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredStores.map((store) => (
-                <tr key={store.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                <tr key={store.id} className="border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       {store.logo ? (
                         <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover" />
                       ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-lg flex items-center justify-center">
-                          <span className="text-[#2d6cb5] font-bold">{store.name.charAt(0)}</span>
+                        <div className="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
+                          <span className="text-[#38bdf8] font-bold">{store.name.charAt(0)}</span>
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-[#1e3a5f]">{store.name}</p>
-                        <p className="text-xs text-gray-500">{store.whatsapp}</p>
+                        <p className="font-medium text-white">{store.name}</p>
+                        <p className="text-xs text-slate-500">{store.whatsapp}</p>
                       </div>
                     </div>
                   </td>
@@ -201,16 +201,16 @@ export default function AdminStores() {
                       href={`https://${store.subdomain}.shopifree.app`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#2d6cb5] hover:underline text-sm"
+                      className="text-[#38bdf8] hover:underline text-sm"
                     >
                       {store.subdomain}.shopifree.app
                     </a>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 text-xs rounded-full font-medium capitalize ${
-                      store.plan === 'free' ? 'bg-gray-100 text-gray-600' :
-                      store.plan === 'pro' ? 'bg-blue-100 text-blue-700' :
-                      'bg-purple-100 text-purple-700'
+                      store.plan === 'free' ? 'bg-slate-700 text-slate-300' :
+                      store.plan === 'pro' ? 'bg-[#38bdf8]/20 text-[#38bdf8]' :
+                      'bg-purple-500/20 text-purple-400'
                     }`}>
                       {store.plan}
                     </span>
@@ -220,17 +220,17 @@ export default function AdminStores() {
                       {store.subscription ? (
                         <>
                           <span className={`px-3 py-1 text-xs rounded-full font-medium ${
-                            store.subscription.status === 'active' ? 'bg-green-100 text-green-700' :
-                            store.subscription.status === 'trialing' ? 'bg-blue-100 text-blue-700' :
-                            store.subscription.status === 'past_due' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
+                            store.subscription.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                            store.subscription.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
+                            store.subscription.status === 'past_due' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
                           }`}>
                             {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
                           </span>
                           <button
                             onClick={() => handleSyncSubscription(store.id)}
                             disabled={syncingStore === store.id}
-                            className="p-1 text-gray-400 hover:text-[#2d6cb5] hover:bg-[#f0f7ff] rounded transition-all disabled:opacity-50"
+                            className="p-1 text-slate-500 hover:text-[#38bdf8] hover:bg-slate-700 rounded transition-all disabled:opacity-50"
                             title="Sincronizar con Stripe"
                           >
                             {syncingStore === store.id ? (
@@ -246,11 +246,11 @@ export default function AdminStores() {
                           </button>
                         </>
                       ) : (
-                        <span className="text-gray-400 text-sm">Sin suscripcion</span>
+                        <span className="text-slate-500 text-sm">Sin suscripcion</span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm text-slate-400">
                     {store.createdAt
                       ? (store.createdAt as any).toDate
                         ? (store.createdAt as any).toDate().toLocaleDateString()
@@ -263,7 +263,7 @@ export default function AdminStores() {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => setEditingStore(store)}
-                      className="px-3 py-1.5 text-sm font-medium text-[#2d6cb5] hover:bg-[#f0f7ff] rounded-lg transition-all"
+                      className="px-3 py-1.5 text-sm font-medium text-[#38bdf8] hover:bg-slate-700 rounded-lg transition-all"
                     >
                       Editar plan
                     </button>
@@ -275,7 +275,7 @@ export default function AdminStores() {
         </div>
 
         {filteredStores.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-slate-500">
             No se encontraron tiendas
           </div>
         )}
@@ -283,9 +283,9 @@ export default function AdminStores() {
 
       {/* Edit Plan Modal */}
       {editingStore && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-[#1e3a5f] mb-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e293b] rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-700">
+            <h3 className="text-lg font-bold text-white mb-4">
               Editar plan: {editingStore.name}
             </h3>
 
@@ -297,18 +297,18 @@ export default function AdminStores() {
                   disabled={saving || editingStore.plan === plan}
                   className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
                     editingStore.plan === plan
-                      ? 'border-[#2d6cb5] bg-[#f0f7ff]'
-                      : 'border-gray-200 hover:border-[#38bdf8]'
+                      ? 'border-[#38bdf8] bg-[#38bdf8]/10'
+                      : 'border-slate-600 hover:border-[#38bdf8]/50'
                   }`}
                 >
                   <div>
-                    <p className="font-semibold text-[#1e3a5f] capitalize">{plan}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-semibold text-white capitalize">{plan}</p>
+                    <p className="text-sm text-slate-400">
                       {plan === 'free' ? 'Gratis' : `$${PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES].price}/mes`}
                     </p>
                   </div>
                   {editingStore.plan === plan && (
-                    <span className="px-2 py-1 bg-[#2d6cb5] text-white text-xs rounded-lg">
+                    <span className="px-2 py-1 bg-[#38bdf8] text-[#0f172a] text-xs rounded-lg font-semibold">
                       Actual
                     </span>
                   )}
@@ -319,7 +319,7 @@ export default function AdminStores() {
             <div className="flex gap-3">
               <button
                 onClick={() => setEditingStore(null)}
-                className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                className="flex-1 px-4 py-3 text-white bg-slate-700 rounded-xl hover:bg-slate-600 transition-all font-medium"
               >
                 Cancelar
               </button>
