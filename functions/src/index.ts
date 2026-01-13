@@ -8,24 +8,28 @@ admin.initializeApp()
 
 const db = admin.firestore()
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16'
-})
+// Lazy initialization for Stripe
+let stripeInstance: Stripe | null = null
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2023-10-16'
+    })
+  }
+  return stripeInstance
+}
 
 // CORS middleware
 const corsHandler = cors({ origin: true })
 
-// Admin email from environment
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@shopifree.app'
-
-// Price IDs from Stripe Dashboard
-const PRICES = {
+// Lazy getters for config
+const getAdminEmail = () => process.env.ADMIN_EMAIL || 'admin@shopifree.app'
+const getPrices = () => ({
   pro_monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || '',
   pro_yearly: process.env.STRIPE_PRICE_PRO_YEARLY || '',
   business_monthly: process.env.STRIPE_PRICE_BUSINESS_MONTHLY || '',
   business_yearly: process.env.STRIPE_PRICE_BUSINESS_YEARLY || ''
-}
+})
 
 // ============================================
 // CREATE CHECKOUT SESSION
@@ -46,8 +50,8 @@ export const createCheckoutSession = functions.https.onRequest((req, res) => {
       }
 
       // Get price ID based on plan and billing
-      const priceKey = `${plan}_${billing}` as keyof typeof PRICES
-      const priceId = PRICES[priceKey]
+      const priceKey = `${plan}_${billing}` as 'pro_monthly' | 'pro_yearly' | 'business_monthly' | 'business_yearly'
+      const priceId = getPrices()[priceKey]
 
       if (!priceId) {
         res.status(400).json({ error: 'Invalid plan or billing cycle' })
@@ -61,7 +65,7 @@ export const createCheckoutSession = functions.https.onRequest((req, res) => {
 
       // Create customer if doesn't exist
       if (!customerId) {
-        const customer = await stripe.customers.create({
+        const customer = await getStripe().customers.create({
           email,
           metadata: {
             userId,
@@ -77,7 +81,7 @@ export const createCheckoutSession = functions.https.onRequest((req, res) => {
       }
 
       // Create checkout session
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
         line_items: [
@@ -139,7 +143,7 @@ export const createPortalSession = functions.https.onRequest((req, res) => {
       }
 
       // Create portal session
-      const session = await stripe.billingPortal.sessions.create({
+      const session = await getStripe().billingPortal.sessions.create({
         customer: userData.stripeCustomerId,
         return_url: `${req.headers.origin}/dashboard/plan`
       })
@@ -162,7 +166,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret)
+    event = getStripe().webhooks.constructEvent(req.rawBody, sig, webhookSecret)
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
     res.status(400).send(`Webhook Error: ${(err as Error).message}`)
@@ -236,9 +240,9 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
   let determinedPlan = plan || 'pro'
 
-  if (priceId === PRICES.business_monthly || priceId === PRICES.business_yearly) {
+  if (priceId === getPrices().business_monthly || priceId === getPrices().business_yearly) {
     determinedPlan = 'business'
-  } else if (priceId === PRICES.pro_monthly || priceId === PRICES.pro_yearly) {
+  } else if (priceId === getPrices().pro_monthly || priceId === getPrices().pro_yearly) {
     determinedPlan = 'pro'
   }
 
@@ -285,7 +289,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const subscriptionId = invoice.subscription as string
   if (!subscriptionId) return
 
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
   await handleSubscriptionUpdate(subscription)
 }
 
@@ -317,13 +321,13 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice) {
 // ============================================
 
 // Get all stores (admin only)
-export const adminGetAllStores = functions.https.onCall(async (data, context) => {
+export const adminGetAllStores = functions.https.onCall(async (request) => {
   // Verify admin
-  if (!context.auth?.token.email || context.auth.token.email !== ADMIN_EMAIL) {
+  if (!request.auth?.token.email || request.auth.token.email !== getAdminEmail()) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
-  const { limit: limitNum = 50, startAfter } = data || {}
+  const { limit: limitNum = 50, startAfter } = request.data || {}
 
   let query = db.collection('stores')
     .orderBy('createdAt', 'desc')
@@ -346,13 +350,13 @@ export const adminGetAllStores = functions.https.onCall(async (data, context) =>
 })
 
 // Update store plan manually (admin only)
-export const adminUpdateStorePlan = functions.https.onCall(async (data, context) => {
+export const adminUpdateStorePlan = functions.https.onCall(async (request) => {
   // Verify admin
-  if (!context.auth?.token.email || context.auth.token.email !== ADMIN_EMAIL) {
+  if (!request.auth?.token.email || request.auth.token.email !== getAdminEmail()) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
-  const { storeId, plan, expiresAt } = data
+  const { storeId, plan, expiresAt } = request.data
 
   if (!storeId || !plan) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing storeId or plan')
@@ -368,13 +372,13 @@ export const adminUpdateStorePlan = functions.https.onCall(async (data, context)
 })
 
 // Get all users (admin only)
-export const adminGetAllUsers = functions.https.onCall(async (data, context) => {
+export const adminGetAllUsers = functions.https.onCall(async (request) => {
   // Verify admin
-  if (!context.auth?.token.email || context.auth.token.email !== ADMIN_EMAIL) {
+  if (!request.auth?.token.email || request.auth.token.email !== getAdminEmail()) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
-  const { limit: limitNum = 50, startAfter } = data || {}
+  const { limit: limitNum = 50, startAfter } = request.data || {}
 
   let query = db.collection('users')
     .orderBy('createdAt', 'desc')
@@ -397,9 +401,9 @@ export const adminGetAllUsers = functions.https.onCall(async (data, context) => 
 })
 
 // Dashboard stats (admin only)
-export const adminGetDashboardStats = functions.https.onCall(async (_data, context) => {
+export const adminGetDashboardStats = functions.https.onCall(async (request) => {
   // Verify admin
-  if (!context.auth?.token.email || context.auth.token.email !== ADMIN_EMAIL) {
+  if (!request.auth?.token.email || request.auth.token.email !== getAdminEmail()) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
