@@ -193,7 +193,10 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                 <div className="w-16 h-0.5 bg-gradient-to-r from-pink-400 to-rose-400 mt-2"></div>
               </div>
               <button
-                onClick={() => setActiveCategory(null)}
+                onClick={() => {
+                  setActiveCategory(null)
+                  document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })
+                }}
                 className="text-sm text-pink-600 hover:text-pink-700 font-medium flex items-center gap-1"
               >
                 {t.view} {t.all.toLowerCase()}
@@ -272,7 +275,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
       )}
 
       {/* ===================== PRODUCTS ===================== */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-14">
+      <main id="products-section" className="scroll-mt-32 max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-14">
         {filteredProducts.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-pink-100 flex items-center justify-center">
