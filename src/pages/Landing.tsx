@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../hooks/useLanguage'
+import DemoStoresCarousel from '../components/landing/DemoStoresCarousel'
 
 export default function Landing() {
   const { t } = useTranslation(['landing', 'common'])
@@ -304,7 +305,7 @@ export default function Landing() {
       {/* Demo Stores */}
       <section className="py-24 px-4 relative overflow-hidden bg-gradient-to-b from-white to-[#f0f7ff]">
         <div className="max-w-6xl mx-auto relative">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-[#1e3a5f] mb-4">
               {t('demoStores.title', 'Tiendas creadas con Shopifree')}
             </h2>
@@ -313,68 +314,9 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Demo Store 1 - Alien Store */}
-            <a
-              href="https://alienstore.shopifree.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-2xl hover:border-[#38bdf8]/30 transition-all duration-300"
-            >
-              <div className="aspect-[4/3] bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <span className="text-6xl">👽</span>
-                    <p className="text-white font-bold mt-2">Alien Store</p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <span className="inline-block px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full">
-                    Tema Urban
-                  </span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-[#1e3a5f] group-hover:text-[#2d6cb5] transition-colors">
-                      Alien Store
-                    </h3>
-                    <p className="text-sm text-gray-500">alienstore.shopifree.app</p>
-                  </div>
-                  <div className="w-10 h-10 bg-[#f0f7ff] rounded-full flex items-center justify-center group-hover:bg-[#38bdf8] transition-colors">
-                    <svg className="w-5 h-5 text-[#1e3a5f] group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </a>
+          <DemoStoresCarousel />
 
-            {/* Placeholder for future stores */}
-            <div className="bg-gradient-to-br from-[#f0f7ff] to-white rounded-2xl border-2 border-dashed border-[#38bdf8]/30 flex flex-col items-center justify-center p-8 text-center min-h-[280px]">
-              <div className="w-16 h-16 bg-[#38bdf8]/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </div>
-              <p className="text-[#1e3a5f] font-semibold mb-1">Tu tienda aqui</p>
-              <p className="text-gray-500 text-sm">Crea tu tienda gratis y aparece en esta galeria</p>
-            </div>
-
-            <div className="bg-gradient-to-br from-[#f0f7ff] to-white rounded-2xl border-2 border-dashed border-[#38bdf8]/30 flex flex-col items-center justify-center p-8 text-center min-h-[280px] hidden lg:flex">
-              <div className="w-16 h-16 bg-[#38bdf8]/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </div>
-              <p className="text-[#1e3a5f] font-semibold mb-1">Proximamente</p>
-              <p className="text-gray-500 text-sm">Mas tiendas se agregaran pronto</p>
-            </div>
-          </div>
-
-          <div className="text-center mt-10">
+          <div className="text-center mt-12">
             <Link
               to={localePath('/register')}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-8 py-3 rounded-full font-semibold hover:shadow-xl hover:shadow-[#38bdf8]/30 transition-all duration-300"
