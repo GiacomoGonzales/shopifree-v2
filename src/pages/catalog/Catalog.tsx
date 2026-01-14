@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
+import StoreSEO from '../../components/seo/StoreSEO'
 import type { Store, Product, Category } from '../../types'
 
 interface CatalogProps {
@@ -130,11 +131,14 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   }
 
   return (
-    <ThemeComponent
-      store={store}
-      products={products}
-      categories={categories}
-      onWhatsAppClick={handleWhatsAppClick}
-    />
+    <>
+      <StoreSEO store={store} products={products} categories={categories} />
+      <ThemeComponent
+        store={store}
+        products={products}
+        categories={categories}
+        onWhatsAppClick={handleWhatsAppClick}
+      />
+    </>
   )
 }
