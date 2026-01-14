@@ -38,6 +38,8 @@ export interface Store {
   name: string
   subdomain: string             // mitienda.shopifree.app
   customDomain?: string         // mitienda.com (premium)
+  domainStatus?: 'pending_verification' | 'verified' | 'not_found'
+  domainVerification?: DomainVerification[]
 
   // === BRANDING ===
   logo?: string                 // URL Cloudinary
@@ -99,6 +101,13 @@ export interface StoreAnnouncement {
   link?: string                 // URL opcional
   backgroundColor?: string      // hex color
   textColor?: string
+}
+
+export interface DomainVerification {
+  type: string                  // 'TXT' or 'CNAME'
+  domain: string
+  value: string
+  reason: string
 }
 
 export interface StoreLocation {

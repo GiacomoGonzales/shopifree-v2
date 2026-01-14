@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import type { Store } from '../../types'
+
+const API_URL = 'https://shopifree.app/api'
 
 export default function Domain() {
   const { t } = useTranslation('dashboard')
@@ -13,6 +15,7 @@ export default function Domain() {
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [verifying, setVerifying] = useState(false)
   const [customDomain, setCustomDomain] = useState('')
 
   useEffect(() => {
@@ -59,13 +62,30 @@ export default function Domain() {
 
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'stores', store.id), {
-        customDomain: cleanDomain,
-        updatedAt: new Date()
+      const response = await fetch(`${API_URL}/add-domain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: store.id,
+          domain: cleanDomain
+        })
       })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        showToast(data.error || 'Error al agregar dominio', 'error')
+        return
+      }
+
       setCustomDomain(cleanDomain)
-      setStore({ ...store, customDomain: cleanDomain })
-      showToast('Dominio guardado correctamente', 'success')
+      setStore({
+        ...store,
+        customDomain: cleanDomain,
+        domainStatus: 'pending_verification',
+        domainVerification: data.verification
+      })
+      showToast('Dominio agregado correctamente', 'success')
     } catch (error) {
       console.error('Error saving domain:', error)
       showToast('Error al guardar el dominio', 'error')
@@ -75,22 +95,79 @@ export default function Domain() {
   }
 
   const handleRemoveDomain = async () => {
-    if (!store) return
+    if (!store || !store.customDomain) return
 
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'stores', store.id), {
-        customDomain: null,
-        updatedAt: new Date()
+      const response = await fetch(`${API_URL}/remove-domain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: store.id,
+          domain: store.customDomain
+        })
       })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        showToast(data.error || 'Error al eliminar dominio', 'error')
+        return
+      }
+
       setCustomDomain('')
-      setStore({ ...store, customDomain: undefined })
+      setStore({
+        ...store,
+        customDomain: undefined,
+        domainStatus: undefined,
+        domainVerification: undefined
+      })
       showToast('Dominio eliminado', 'success')
     } catch (error) {
       console.error('Error removing domain:', error)
       showToast('Error al eliminar el dominio', 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleVerifyDomain = async () => {
+    if (!store || !store.customDomain) return
+
+    setVerifying(true)
+    try {
+      const response = await fetch(`${API_URL}/verify-domain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: store.id,
+          domain: store.customDomain
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        showToast(data.error || 'Error al verificar dominio', 'error')
+        return
+      }
+
+      setStore({
+        ...store,
+        domainStatus: data.status,
+        domainVerification: data.verification
+      })
+
+      if (data.verified) {
+        showToast('¡Dominio verificado correctamente!', 'success')
+      } else {
+        showToast('El DNS aún no está configurado correctamente', 'info')
+      }
+    } catch (error) {
+      console.error('Error verifying domain:', error)
+      showToast('Error al verificar el dominio', 'error')
+    } finally {
+      setVerifying(false)
     }
   }
 
@@ -104,6 +181,7 @@ export default function Domain() {
 
   const catalogUrl = store ? `https://${store.subdomain}.shopifree.app` : ''
   const hasDomainConfigured = store?.customDomain && store.customDomain.length > 0
+  const isVerified = store?.domainStatus === 'verified'
 
   return (
     <div>
@@ -151,7 +229,7 @@ export default function Domain() {
                 <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('domain.custom.title')}</h2>
                 <p className="text-sm text-gray-600 mt-1 mb-4" dangerouslySetInnerHTML={{ __html: t('domain.custom.description') }} />
 
-                {store?.plan === 'pro' ? (
+                {store?.plan === 'pro' || store?.plan === 'business' ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-semibold rounded-full">PRO</span>
@@ -161,46 +239,75 @@ export default function Domain() {
                     {hasDomainConfigured ? (
                       // Dominio ya configurado
                       <div className="space-y-4">
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                        <div className={`p-4 rounded-xl border ${isVerified ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
                           <div className="flex items-center gap-2 mb-2">
-                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className="font-medium text-green-800">Dominio configurado</span>
+                            {isVerified ? (
+                              <>
+                                <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="font-medium text-green-800">Dominio verificado</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-5 h-5 text-amber-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="font-medium text-amber-800">Pendiente de verificación</span>
+                              </>
+                            )}
                           </div>
-                          <code className="text-sm text-green-700 font-mono">{store.customDomain}</code>
+                          <code className={`text-sm font-mono ${isVerified ? 'text-green-700' : 'text-amber-700'}`}>
+                            {store.customDomain}
+                          </code>
                         </div>
 
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                          <p className="text-sm text-amber-800 font-medium mb-2">
-                            Configura tu DNS para activar el dominio:
-                          </p>
-                          <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-amber-100">
-                            <div className="grid grid-cols-3 gap-2 text-amber-700">
-                              <span className="font-semibold">Tipo</span>
-                              <span className="font-semibold">Nombre</span>
-                              <span className="font-semibold">Valor</span>
+                        {!isVerified && (
+                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                            <p className="text-sm text-blue-800 font-medium mb-2">
+                              Configura tu DNS para activar el dominio:
+                            </p>
+                            <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-blue-100 overflow-x-auto">
+                              <div className="grid grid-cols-3 gap-2 text-blue-700 min-w-[300px]">
+                                <span className="font-semibold">Tipo</span>
+                                <span className="font-semibold">Nombre</span>
+                                <span className="font-semibold">Valor</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                <span>CNAME</span>
+                                <span>@</span>
+                                <span className="break-all">cname.vercel-dns.com</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                <span>CNAME</span>
+                                <span>www</span>
+                                <span className="break-all">cname.vercel-dns.com</span>
+                              </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-2 text-amber-900">
-                              <span>CNAME</span>
-                              <span>@</span>
-                              <span className="break-all">cname.vercel-dns.com</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-amber-900">
-                              <span>CNAME</span>
-                              <span>www</span>
-                              <span className="break-all">cname.vercel-dns.com</span>
-                            </div>
+                            <p className="text-xs text-blue-600 mt-2">
+                              Los cambios de DNS pueden tardar hasta 48 horas en propagarse.
+                            </p>
                           </div>
-                        </div>
+                        )}
 
-                        <button
-                          onClick={handleRemoveDomain}
-                          disabled={saving}
-                          className="w-full px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-all text-sm font-medium disabled:opacity-50"
-                        >
-                          {saving ? 'Eliminando...' : 'Eliminar dominio'}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          {!isVerified && (
+                            <button
+                              onClick={handleVerifyDomain}
+                              disabled={verifying}
+                              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold disabled:opacity-50"
+                            >
+                              {verifying ? 'Verificando...' : 'Verificar DNS'}
+                            </button>
+                          )}
+                          <button
+                            onClick={handleRemoveDomain}
+                            disabled={saving}
+                            className="flex-1 px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-all text-sm font-medium disabled:opacity-50"
+                          >
+                            {saving ? 'Eliminando...' : 'Eliminar dominio'}
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       // Formulario para agregar dominio
@@ -280,8 +387,8 @@ export default function Domain() {
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">4</span>
               <div>
-                <p className="font-medium text-[#1e3a5f]">Espera la propagación</p>
-                <p className="text-xs text-gray-500 mt-0.5">Los cambios de DNS pueden tardar hasta 48 horas en propagarse.</p>
+                <p className="font-medium text-[#1e3a5f]">Verifica el dominio</p>
+                <p className="text-xs text-gray-500 mt-0.5">Haz clic en "Verificar DNS" para confirmar que está configurado correctamente.</p>
               </div>
             </li>
           </ol>
