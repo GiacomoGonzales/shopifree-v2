@@ -7,9 +7,10 @@ import type { Store, Product, Category } from '../../types'
 
 interface CatalogProps {
   subdomainStore?: string
+  customDomain?: string
 }
 
-export default function Catalog({ subdomainStore }: CatalogProps) {
+export default function Catalog({ subdomainStore, customDomain }: CatalogProps) {
   const { storeSlug } = useParams<{ storeSlug: string }>()
   // Use subdomain prop if provided, otherwise use URL param
   const slug = subdomainStore || storeSlug
@@ -21,12 +22,22 @@ export default function Catalog({ subdomainStore }: CatalogProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!slug) return
+      // Need either a slug or custom domain to fetch store
+      if (!slug && !customDomain) return
 
       try {
-        // Fetch store by subdomain
+        // Fetch store by subdomain OR custom domain
         const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('subdomain', '==', slug))
+        let storeQuery
+
+        if (customDomain) {
+          // Query by custom domain
+          storeQuery = query(storesRef, where('customDomain', '==', customDomain))
+        } else {
+          // Query by subdomain
+          storeQuery = query(storesRef, where('subdomain', '==', slug))
+        }
+
         const storeSnapshot = await getDocs(storeQuery)
 
         if (!storeSnapshot.empty) {
@@ -74,7 +85,7 @@ export default function Catalog({ subdomainStore }: CatalogProps) {
     }
 
     fetchData()
-  }, [slug])
+  }, [slug, customDomain])
 
   if (loading) {
     return (

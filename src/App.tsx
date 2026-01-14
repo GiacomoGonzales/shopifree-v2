@@ -38,6 +38,11 @@ function SubdomainCatalog({ subdomain }: { subdomain: string }) {
   return <Catalog subdomainStore={subdomain} />
 }
 
+// Custom domain catalog wrapper
+function CustomDomainCatalog({ domain }: { domain: string }) {
+  return <Catalog customDomain={domain} />
+}
+
 // Detect browser language and redirect to appropriate language route
 function LanguageRedirect() {
   const navigate = useNavigate()
@@ -77,15 +82,24 @@ function LanguageLayout() {
   return <Outlet />
 }
 
-// Main app with subdomain detection
+// Main app with subdomain and custom domain detection
 function AppRoutes() {
-  const { subdomain, isSubdomain } = useSubdomain()
+  const { subdomain, isSubdomain, isCustomDomain, customDomain } = useSubdomain()
 
   // If we're on a subdomain, show only the catalog
   if (isSubdomain && subdomain) {
     return (
       <Routes>
         <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
+      </Routes>
+    )
+  }
+
+  // If we're on a custom domain, show only the catalog
+  if (isCustomDomain && customDomain) {
+    return (
+      <Routes>
+        <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
       </Routes>
     )
   }

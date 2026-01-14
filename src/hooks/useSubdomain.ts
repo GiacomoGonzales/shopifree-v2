@@ -12,6 +12,8 @@ const MAIN_DOMAINS = [
 interface SubdomainInfo {
   subdomain: string | null
   isSubdomain: boolean
+  isCustomDomain: boolean
+  customDomain: string | null
   mainDomain: string
 }
 
@@ -21,7 +23,7 @@ export function useSubdomain(): SubdomainInfo {
 
     // If hostname exactly matches a main domain, no subdomain
     if (MAIN_DOMAINS.includes(hostname)) {
-      return { subdomain: null, isSubdomain: false, mainDomain: hostname }
+      return { subdomain: null, isSubdomain: false, isCustomDomain: false, customDomain: null, mainDomain: hostname }
     }
 
     // Check if we're on a subdomain of a main domain
@@ -35,13 +37,15 @@ export function useSubdomain(): SubdomainInfo {
 
       // Skip www
       if (subdomain === 'www') {
-        return { subdomain: null, isSubdomain: false, mainDomain: hostname }
+        return { subdomain: null, isSubdomain: false, isCustomDomain: false, customDomain: null, mainDomain: hostname }
       }
 
       // It's a store subdomain like mitienda.shopifree.app
       return {
         subdomain,
         isSubdomain: true,
+        isCustomDomain: false,
+        customDomain: null,
         mainDomain: matchedMainDomain
       }
     }
@@ -51,19 +55,31 @@ export function useSubdomain(): SubdomainInfo {
       const parts = hostname.split('.')
       // project-name.vercel.app (no subdomain)
       if (parts.length === 3) {
-        return { subdomain: null, isSubdomain: false, mainDomain: hostname }
+        return { subdomain: null, isSubdomain: false, isCustomDomain: false, customDomain: null, mainDomain: hostname }
       }
       // subdomain.project-name.vercel.app
       if (parts.length === 4) {
         return {
           subdomain: parts[0],
           isSubdomain: true,
+          isCustomDomain: false,
+          customDomain: null,
           mainDomain: parts.slice(1).join('.')
         }
       }
     }
 
-    return { subdomain: null, isSubdomain: false, mainDomain: hostname }
+    // If we get here, it's likely a custom domain (e.g., mystore.com)
+    // Strip www. prefix if present
+    const cleanHostname = hostname.startsWith('www.') ? hostname.slice(4) : hostname
+
+    return {
+      subdomain: null,
+      isSubdomain: false,
+      isCustomDomain: true,
+      customDomain: cleanHostname,
+      mainDomain: hostname
+    }
   }, [])
 }
 
