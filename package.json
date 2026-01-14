@@ -12,6 +12,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^8.6.0",
     "@tailwindcss/typography": "^0.5.19",
+    "@vercel/edge": "^1.2.2",
     "@vercel/node": "^5.5.16",
     "autoprefixer": "^10.4.23",
     "firebase": "^12.7.0",
