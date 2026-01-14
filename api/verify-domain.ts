@@ -113,18 +113,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Build DNS records from Vercel response
-    const dnsRecords = []
+    const dnsRecords: Array<{type: string, name: string, value: string}> = []
 
-    // Add A record for apex domain
-    if (configData?.configuredBy !== 'CNAME' && configData?.misconfigured !== false) {
+    // Add A record for apex domain with specific value from config
+    if (configData?.aValues && configData.aValues.length > 0) {
       dnsRecords.push({
         type: 'A',
         name: '@',
-        value: configData?.aValues?.[0] || '76.76.21.21'
+        value: configData.aValues[0]
       })
     }
 
-    // Add verification records if any
+    // Add CNAME record for www with specific target from config
+    if (configData?.cnameTarget) {
+      dnsRecords.push({
+        type: 'CNAME',
+        name: 'www',
+        value: configData.cnameTarget
+      })
+    }
+
+    // Add verification records if any (TXT records)
     if (domainData.verification && domainData.verification.length > 0) {
       domainData.verification.forEach((v: { type: string; domain: string; value: string }) => {
         dnsRecords.push({

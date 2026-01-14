@@ -128,9 +128,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Continue even if www fails - main domain is more important
     }
 
-    // Get domain configuration to get specific DNS records
-    let dnsRecords = []
+    // Get domain-specific DNS records from Vercel config endpoint
+    let dnsRecords: Array<{type: string, name: string, value: string}> = []
     try {
+      // Use the domain config endpoint to get specific DNS values
       const configResponse = await fetch(
         `https://api.vercel.com/v6/domains/${cleanDomain}/config`,
         {
@@ -140,9 +141,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
       )
+
       if (configResponse.ok) {
         const configData = await configResponse.json()
-        // Add A record
+        console.log('Domain config response:', JSON.stringify(configData))
+
+        // Get specific A record value from aValues array
         if (configData.aValues && configData.aValues.length > 0) {
           dnsRecords.push({
             type: 'A',
@@ -150,22 +154,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             value: configData.aValues[0]
           })
         }
-        // Add CNAME for www
-        if (configData.cnames && configData.cnames.length > 0) {
+
+        // Get specific CNAME target for www
+        if (configData.cnameTarget) {
           dnsRecords.push({
             type: 'CNAME',
             name: 'www',
-            value: configData.cnames[0]
+            value: configData.cnameTarget
+          })
+        }
+      }
+
+      // Also check domain details for verification records
+      const domainDetailsResponse = await fetch(
+        `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/${cleanDomain}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`
+          }
+        }
+      )
+
+      if (domainDetailsResponse.ok) {
+        const domainDetails = await domainDetailsResponse.json()
+
+        // Add verification records if present (TXT records for domain verification)
+        if (domainDetails.verification && domainDetails.verification.length > 0) {
+          domainDetails.verification.forEach((v: { type: string; domain: string; value: string }) => {
+            dnsRecords.push({
+              type: v.type,
+              name: v.domain.replace(`.${cleanDomain}`, '').replace(cleanDomain, '@'),
+              value: v.value
+            })
           })
         }
       }
     } catch (configError) {
       console.error('Error getting domain config:', configError)
-      // Use default values if config fails
-      dnsRecords = [
-        { type: 'A', name: '@', value: '76.76.21.21' },
-        { type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' }
-      ]
     }
 
     // If no DNS records found, use defaults
