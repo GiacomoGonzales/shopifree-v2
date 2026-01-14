@@ -40,6 +40,7 @@ export interface Store {
   customDomain?: string         // mitienda.com (premium)
   domainStatus?: 'pending_verification' | 'verified' | 'not_found'
   domainVerification?: DomainVerification[]
+  domainDnsRecords?: DnsRecord[]
 
   // === BRANDING ===
   logo?: string                 // URL Cloudinary
@@ -108,6 +109,12 @@ export interface DomainVerification {
   domain: string
   value: string
   reason: string
+}
+
+export interface DnsRecord {
+  type: string                  // 'A', 'CNAME', 'TXT'
+  name: string                  // '@', 'www', etc.
+  value: string                 // IP or domain
 }
 
 export interface StoreLocation {

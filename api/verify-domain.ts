@@ -93,11 +93,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const domainData = await vercelResponse.json()
 
-    // Update store with domain status
+    // Get domain configuration details
+    let configData = null
+    try {
+      const configResponse = await fetch(
+        `https://api.vercel.com/v6/domains/${domain}/config`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`
+          }
+        }
+      )
+      if (configResponse.ok) {
+        configData = await configResponse.json()
+      }
+    } catch (configError) {
+      console.error('Error getting domain config:', configError)
+    }
+
+    // Build DNS records from Vercel response
+    const dnsRecords = []
+
+    // Add A record for apex domain
+    if (configData?.configuredBy !== 'CNAME' && configData?.misconfigured !== false) {
+      dnsRecords.push({
+        type: 'A',
+        name: '@',
+        value: configData?.aValues?.[0] || '76.76.21.21'
+      })
+    }
+
+    // Add verification records if any
+    if (domainData.verification && domainData.verification.length > 0) {
+      domainData.verification.forEach((v: { type: string; domain: string; value: string }) => {
+        dnsRecords.push({
+          type: v.type,
+          name: v.domain.replace(`.${domain}`, '').replace(domain, '@'),
+          value: v.value
+        })
+      })
+    }
+
+    // Update store with domain status and DNS records
     const newStatus = domainData.verified ? 'verified' : 'pending_verification'
     await db.collection('stores').doc(storeId).update({
       domainStatus: newStatus,
       domainVerification: domainData.verification || null,
+      domainDnsRecords: dnsRecords,
       updatedAt: new Date()
     })
 
@@ -105,6 +148,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       verified: domainData.verified,
       status: newStatus,
       verification: domainData.verification,
+      dnsRecords: dnsRecords,
       message: domainData.verified
         ? 'Dominio verificado correctamente'
         : 'Pendiente de verificación DNS'

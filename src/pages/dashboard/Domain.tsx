@@ -83,7 +83,8 @@ export default function Domain() {
         ...store,
         customDomain: cleanDomain,
         domainStatus: 'pending_verification',
-        domainVerification: data.verification
+        domainVerification: data.verification,
+        domainDnsRecords: data.dnsRecords
       })
       showToast('Dominio agregado correctamente', 'success')
     } catch (error) {
@@ -155,7 +156,8 @@ export default function Domain() {
       setStore({
         ...store,
         domainStatus: data.status,
-        domainVerification: data.verification
+        domainVerification: data.verification,
+        domainDnsRecords: data.dnsRecords || store.domainDnsRecords
       })
 
       if (data.verified) {
@@ -273,16 +275,28 @@ export default function Domain() {
                                 <span className="font-semibold">Nombre</span>
                                 <span className="font-semibold">Valor</span>
                               </div>
-                              <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
-                                <span>A</span>
-                                <span>@</span>
-                                <span>76.76.21.21</span>
-                              </div>
-                              <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
-                                <span>CNAME</span>
-                                <span>www</span>
-                                <span className="break-all">cname.vercel-dns.com</span>
-                              </div>
+                              {store.domainDnsRecords && store.domainDnsRecords.length > 0 ? (
+                                store.domainDnsRecords.map((record, index) => (
+                                  <div key={index} className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                    <span>{record.type}</span>
+                                    <span>{record.name}</span>
+                                    <span className="break-all">{record.value}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <>
+                                  <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                    <span>A</span>
+                                    <span>@</span>
+                                    <span>76.76.21.21</span>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                    <span>CNAME</span>
+                                    <span>www</span>
+                                    <span className="break-all">cname.vercel-dns.com</span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                             <p className="text-xs text-blue-600 mt-2">
                               Los cambios de DNS pueden tardar hasta 48 horas en propagarse.

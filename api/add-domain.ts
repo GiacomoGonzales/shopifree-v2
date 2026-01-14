@@ -128,11 +128,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Continue even if www fails - main domain is more important
     }
 
+    // Get domain configuration to get specific DNS records
+    let dnsRecords = []
+    try {
+      const configResponse = await fetch(
+        `https://api.vercel.com/v6/domains/${cleanDomain}/config`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`
+          }
+        }
+      )
+      if (configResponse.ok) {
+        const configData = await configResponse.json()
+        // Add A record
+        if (configData.aValues && configData.aValues.length > 0) {
+          dnsRecords.push({
+            type: 'A',
+            name: '@',
+            value: configData.aValues[0]
+          })
+        }
+        // Add CNAME for www
+        if (configData.cnames && configData.cnames.length > 0) {
+          dnsRecords.push({
+            type: 'CNAME',
+            name: 'www',
+            value: configData.cnames[0]
+          })
+        }
+      }
+    } catch (configError) {
+      console.error('Error getting domain config:', configError)
+      // Use default values if config fails
+      dnsRecords = [
+        { type: 'A', name: '@', value: '76.76.21.21' },
+        { type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' }
+      ]
+    }
+
+    // If no DNS records found, use defaults
+    if (dnsRecords.length === 0) {
+      dnsRecords = [
+        { type: 'A', name: '@', value: '76.76.21.21' },
+        { type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' }
+      ]
+    }
+
     // Update store with domain info
     await db.collection('stores').doc(storeId).update({
       customDomain: cleanDomain,
       domainStatus: 'pending_verification',
       domainVerification: vercelData.verification || null,
+      domainDnsRecords: dnsRecords,
       updatedAt: new Date()
     })
 
@@ -140,6 +189,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       domain: cleanDomain,
       verification: vercelData.verification,
+      dnsRecords: dnsRecords,
       configured: vercelData.verified
     })
   } catch (error) {
