@@ -92,8 +92,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const domainData = await vercelResponse.json()
+    console.log('Domain data from Vercel:', JSON.stringify(domainData))
 
-    // Get domain configuration details
+    // Get domain configuration details (this tells us if DNS is actually configured)
     let configData = null
     try {
       const configResponse = await fetch(
@@ -107,6 +108,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       )
       if (configResponse.ok) {
         configData = await configResponse.json()
+        console.log('Domain config from Vercel:', JSON.stringify(configData))
+      } else {
+        console.error('Config response not OK:', configResponse.status)
       }
     } catch (configError) {
       console.error('Error getting domain config:', configError)
@@ -115,25 +119,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Build DNS records from Vercel response
     const dnsRecords: Array<{type: string, name: string, value: string}> = []
 
-    // Add A record for apex domain with specific value from config
-    if (configData?.aValues && configData.aValues.length > 0) {
-      dnsRecords.push({
-        type: 'A',
-        name: '@',
-        value: configData.aValues[0]
-      })
-    }
+    // Add A record - use specific value if available, otherwise use Vercel's default
+    const aRecordValue = configData?.aValues?.[0] || '76.76.21.21'
+    dnsRecords.push({
+      type: 'A',
+      name: '@',
+      value: aRecordValue
+    })
 
-    // Add CNAME record for www with specific target from config
-    if (configData?.cnameTarget) {
-      dnsRecords.push({
-        type: 'CNAME',
-        name: 'www',
-        value: configData.cnameTarget
-      })
-    }
+    // Add CNAME record - use specific value if available, otherwise use Vercel's default
+    const cnameValue = configData?.cnameTarget || 'cname.vercel-dns.com'
+    dnsRecords.push({
+      type: 'CNAME',
+      name: 'www',
+      value: cnameValue
+    })
 
-    // Add verification records if any (TXT records)
+    // Add verification TXT records if any (needed for domain ownership verification)
     if (domainData.verification && domainData.verification.length > 0) {
       domainData.verification.forEach((v: { type: string; domain: string; value: string }) => {
         dnsRecords.push({
@@ -144,8 +146,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // Update store with domain status and DNS records
-    const newStatus = domainData.verified ? 'verified' : 'pending_verification'
+    // Determine actual status: DNS is configured when misconfigured is false
+    // configData.misconfigured = true means DNS is NOT properly set up
+    // configData.misconfigured = false means DNS IS properly set up
+    const isDnsConfigured = configData?.misconfigured === false
+    const newStatus = isDnsConfigured ? 'verified' : 'pending_verification'
+
     await db.collection('stores').doc(storeId).update({
       domainStatus: newStatus,
       domainVerification: domainData.verification || null,
@@ -154,13 +160,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     return res.status(200).json({
-      verified: domainData.verified,
+      verified: isDnsConfigured,
       status: newStatus,
       verification: domainData.verification,
       dnsRecords: dnsRecords,
-      message: domainData.verified
-        ? 'Dominio verificado correctamente'
-        : 'Pendiente de verificación DNS'
+      configData: configData, // Include for debugging
+      message: isDnsConfigured
+        ? 'Dominio verificado correctamente - DNS configurado'
+        : 'Pendiente de configuración DNS'
     })
   } catch (error) {
     console.error('Error verifying domain:', error)
