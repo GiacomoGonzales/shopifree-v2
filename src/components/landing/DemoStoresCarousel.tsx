@@ -1,57 +1,57 @@
 import { useState, useEffect, useRef } from 'react'
+import { collection, getDocs } from 'firebase/firestore'
+import { db } from '../../lib/firebase'
 
 interface DemoStore {
+  id: string
   name: string
   subdomain: string
   theme: string
   screenshot: string
   color: string
+  order: number
 }
 
-const demoStores: DemoStore[] = [
-  {
-    name: 'Alien Store',
-    subdomain: 'alienstore',
-    theme: 'Urban',
-    screenshot: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=800&fit=crop',
-    color: '#1a1a2e'
-  },
-  {
-    name: 'Fashion Boutique',
-    subdomain: 'demo-boutique',
-    theme: 'Boutique',
-    screenshot: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=800&fit=crop',
-    color: '#f8f4f0'
-  },
-  {
-    name: 'Tech Store',
-    subdomain: 'demo-tech',
-    theme: 'Minimal',
-    screenshot: 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400&h=800&fit=crop',
-    color: '#0f172a'
-  },
-  {
-    name: 'Café Delicia',
-    subdomain: 'demo-cafe',
-    theme: 'Metro',
-    screenshot: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=800&fit=crop',
-    color: '#78350f'
-  },
-  {
-    name: 'Vintage Shop',
-    subdomain: 'demo-vintage',
-    theme: 'Vintage',
-    screenshot: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=800&fit=crop',
-    color: '#451a03'
-  }
+// Fallback data in case Firebase is empty
+const fallbackStores: DemoStore[] = [
+  { id: '1', name: 'Alien Store', subdomain: 'alienstore', theme: 'Urban', screenshot: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=800&fit=crop', color: '#1a1a2e', order: 0 },
+  { id: '2', name: 'Fashion Boutique', subdomain: 'demo-boutique', theme: 'Boutique', screenshot: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=800&fit=crop', color: '#f8f4f0', order: 1 },
+  { id: '3', name: 'Tech Store', subdomain: 'demo-tech', theme: 'Minimal', screenshot: 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400&h=800&fit=crop', color: '#0f172a', order: 2 },
+  { id: '4', name: 'Café Delicia', subdomain: 'demo-cafe', theme: 'Metro', screenshot: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=800&fit=crop', color: '#78350f', order: 3 },
+  { id: '5', name: 'Vintage Shop', subdomain: 'demo-vintage', theme: 'Vintage', screenshot: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=800&fit=crop', color: '#451a03', order: 4 },
 ]
 
 export default function DemoStoresCarousel() {
+  const [demoStores, setDemoStores] = useState<DemoStore[]>(fallbackStores)
   const [activeIndex, setActiveIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const carouselRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef<number>(0)
   const touchEndX = useRef<number>(0)
+
+  // Fetch demo stores from Firebase
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'demoStores'))
+        if (!snapshot.empty) {
+          const stores = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as DemoStore))
+            .filter(store => store.screenshot && store.subdomain) // Only show stores with data
+            .sort((a, b) => a.order - b.order)
+
+          if (stores.length > 0) {
+            setDemoStores(stores)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching demo stores:', error)
+        // Keep fallback data on error
+      }
+    }
+
+    fetchStores()
+  }, [])
 
   // Auto-play carousel
   useEffect(() => {
