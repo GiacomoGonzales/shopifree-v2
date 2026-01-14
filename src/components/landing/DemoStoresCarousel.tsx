@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 
 interface DemoStore {
   name: string
@@ -48,7 +47,6 @@ const demoStores: DemoStore[] = [
 ]
 
 export default function DemoStoresCarousel() {
-  const { t } = useTranslation('landing')
   const [activeIndex, setActiveIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const carouselRef = useRef<HTMLDivElement>(null)
