@@ -114,9 +114,9 @@ export default function DemoStoresCarousel() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`absolute transition-all duration-500 ease-out cursor-pointer
-                  ${isActive ? 'z-30 scale-100 opacity-100' : 'z-10 scale-75 opacity-50 hover:opacity-70'}
-                  ${isPrev ? '-translate-x-[60%] md:-translate-x-[80%]' : ''}
-                  ${isNext ? 'translate-x-[60%] md:translate-x-[80%]' : ''}
+                  ${isActive ? 'z-30 scale-100' : 'z-10 scale-[0.7] brightness-75 hover:brightness-90'}
+                  ${isPrev ? '-translate-x-[55%] md:-translate-x-[75%]' : ''}
+                  ${isNext ? 'translate-x-[55%] md:translate-x-[75%]' : ''}
                 `}
                 onClick={(e) => {
                   if (!isActive) {
