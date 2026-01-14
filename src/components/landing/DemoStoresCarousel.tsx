@@ -193,18 +193,6 @@ export default function DemoStoresCarousel() {
                   {/* Reflection effect */}
                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[80%] h-8 bg-gradient-to-t from-transparent to-black/10 blur-xl rounded-full" />
                 </div>
-
-                {/* Visit button (only on active) */}
-                {isActive && (
-                  <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg text-sm font-medium text-[#1e3a5f] hover:shadow-xl transition-shadow">
-                      Visitar tienda
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </span>
-                  </div>
-                )}
               </a>
             )
           })}
@@ -238,7 +226,7 @@ export default function DemoStoresCarousel() {
       </p>
 
       {/* Dots navigation */}
-      <div className="flex items-center justify-center gap-2 mt-8">
+      <div className="flex items-center justify-center gap-2 mt-6">
         {demoStores.map((store, index) => (
           <button
             key={store.subdomain}
@@ -253,11 +241,6 @@ export default function DemoStoresCarousel() {
           />
         ))}
       </div>
-
-      {/* Store counter */}
-      <p className="text-center text-sm text-gray-500 mt-4">
-        {activeIndex + 1} / {demoStores.length} tiendas
-      </p>
     </div>
   )
 }
