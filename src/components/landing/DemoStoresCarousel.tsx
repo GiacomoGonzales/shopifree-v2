@@ -50,6 +50,8 @@ export default function DemoStoresCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef<number>(0)
+  const touchEndX = useRef<number>(0)
 
   // Auto-play carousel
   useEffect(() => {
@@ -61,6 +63,33 @@ export default function DemoStoresCarousel() {
 
     return () => clearInterval(interval)
   }, [isAutoPlaying])
+
+  // Handle touch events for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    setIsAutoPlaying(false)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current
+    const minSwipeDistance = 50
+
+    if (Math.abs(diff) > minSwipeDistance) {
+      if (diff > 0) {
+        // Swipe left - go next
+        setActiveIndex((prev) => (prev + 1) % demoStores.length)
+      } else {
+        // Swipe right - go prev
+        setActiveIndex((prev) => (prev - 1 + demoStores.length) % demoStores.length)
+      }
+    }
+
+    setTimeout(() => setIsAutoPlaying(true), 10000)
+  }
 
   const goToSlide = (index: number) => {
     setActiveIndex(index)
@@ -86,7 +115,10 @@ export default function DemoStoresCarousel() {
       {/* Carousel container */}
       <div
         ref={carouselRef}
-        className="relative flex items-center justify-center min-h-[500px] md:min-h-[600px]"
+        className="relative flex items-center justify-center min-h-[500px] md:min-h-[600px] touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Background glow effect */}
         <div
@@ -178,27 +210,32 @@ export default function DemoStoresCarousel() {
           })}
         </div>
 
-        {/* Navigation arrows */}
+        {/* Navigation arrows - hidden on mobile, visible on desktop */}
         <button
           onClick={goToPrev}
-          className="absolute left-2 md:left-8 z-40 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1e3a5f] hover:bg-white hover:scale-110 transition-all"
+          className="absolute left-8 z-40 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center text-[#1e3a5f] hover:bg-white hover:scale-110 transition-all"
           aria-label="Previous store"
         >
-          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
         <button
           onClick={goToNext}
-          className="absolute right-2 md:right-8 z-40 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-[#1e3a5f] hover:bg-white hover:scale-110 transition-all"
+          className="absolute right-8 z-40 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center text-[#1e3a5f] hover:bg-white hover:scale-110 transition-all"
           aria-label="Next store"
         >
-          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
+
+      {/* Swipe hint for mobile */}
+      <p className="text-center text-xs text-gray-400 mt-2 md:hidden">
+        Desliza para ver más tiendas
+      </p>
 
       {/* Dots navigation */}
       <div className="flex items-center justify-center gap-2 mt-8">
