@@ -59,6 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error' })
     }
 
+    // Remove main domain
     const vercelResponse = await fetch(
       `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/${domain}`,
       {
@@ -76,6 +77,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({
         error: vercelData.error?.message || 'Error al eliminar dominio de Vercel'
       })
+    }
+
+    // Also remove www subdomain
+    try {
+      await fetch(
+        `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/www.${domain}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`
+          }
+        }
+      )
+    } catch (wwwError) {
+      console.error('Error removing www subdomain:', wwwError)
+      // Continue even if www removal fails
     }
 
     // Update store to remove domain info

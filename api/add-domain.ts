@@ -66,6 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error' })
     }
 
+    // Add main domain
     const vercelResponse = await fetch(
       `https://api.vercel.com/v10/projects/${vercelProjectId}/domains`,
       {
@@ -102,6 +103,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: vercelData.error?.message || 'Error al agregar dominio en Vercel',
         code: vercelData.error?.code
       })
+    }
+
+    // Add www subdomain with redirect to main domain
+    const wwwDomain = `www.${cleanDomain}`
+    try {
+      await fetch(
+        `https://api.vercel.com/v10/projects/${vercelProjectId}/domains`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: wwwDomain,
+            redirect: cleanDomain,
+            redirectStatusCode: 308
+          })
+        }
+      )
+    } catch (wwwError) {
+      console.error('Error adding www subdomain:', wwwError)
+      // Continue even if www fails - main domain is more important
     }
 
     // Update store with domain info

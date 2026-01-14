@@ -274,9 +274,9 @@ export default function Domain() {
                                 <span className="font-semibold">Valor</span>
                               </div>
                               <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
-                                <span>CNAME</span>
+                                <span>A</span>
                                 <span>@</span>
-                                <span className="break-all">cname.vercel-dns.com</span>
+                                <span>76.76.21.21</span>
                               </div>
                               <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
                                 <span>CNAME</span>
@@ -381,7 +381,7 @@ export default function Domain() {
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">3</span>
               <div>
                 <p className="font-medium text-[#1e3a5f]">Configura el DNS</p>
-                <p className="text-xs text-gray-500 mt-0.5">Agrega un registro CNAME apuntando a <code className="bg-gray-100 px-1 rounded">cname.vercel-dns.com</code></p>
+                <p className="text-xs text-gray-500 mt-0.5">Agrega un registro A apuntando a <code className="bg-gray-100 px-1 rounded">76.76.21.21</code> y un CNAME para www</p>
               </div>
             </li>
             <li className="flex gap-3">
