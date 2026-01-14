@@ -18,6 +18,7 @@ export default function Settings() {
   const [name, setName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [currency, setCurrency] = useState('PEN')
+  const [language, setLanguage] = useState('es')
   const [businessType, setBusinessType] = useState<Store['businessType']>('retail')
 
   // About
@@ -56,6 +57,7 @@ export default function Settings() {
           setName(storeData.name || '')
           setWhatsapp(storeData.whatsapp || '')
           setCurrency(storeData.currency || 'PEN')
+          setLanguage(storeData.language || 'es')
           setBusinessType(storeData.businessType || 'retail')
 
           // About
@@ -92,6 +94,7 @@ export default function Settings() {
         name,
         whatsapp,
         currency,
+        language,
         businessType,
         about: {
           slogan: slogan || null,
@@ -195,6 +198,24 @@ export default function Settings() {
                     <option value="EUR">{t('settings.basic.currencies.EUR')}</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                  {t('settings.basic.language', 'Idioma de la tienda')}
+                </label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                >
+                  <option value="es">Espanol</option>
+                  <option value="en">English</option>
+                  <option value="pt">Portugues</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {t('settings.basic.languageHint', 'Idioma de botones y textos de tu catalogo (Carrito, Agregar, etc.)')}
+                </p>
               </div>
             </div>
           </div>
