@@ -127,18 +127,9 @@ export default function Settings() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('settings.title')}</h1>
-          <p className="text-gray-600 mt-1">{t('settings.subtitle')}</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-        >
-          {saving ? t('settings.saving') : t('settings.saveChanges')}
-        </button>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('settings.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('settings.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -162,7 +153,7 @@ export default function Settings() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.basic.businessType')}
@@ -261,7 +252,7 @@ export default function Settings() {
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.location.title')}</h2>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.location.country')}
@@ -296,7 +287,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.location.state')}
@@ -330,7 +321,7 @@ export default function Settings() {
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.contact.title')}</h2>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.contact.whatsapp')}
@@ -365,7 +356,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.contact.instagram')}
@@ -406,6 +397,17 @@ export default function Settings() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+        >
+          {saving ? t('settings.saving') : t('settings.saveChanges')}
+        </button>
       </div>
     </div>
   )
