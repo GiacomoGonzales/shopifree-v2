@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { useCart } from '../../hooks/useCart'
+import { getThemeTranslations } from '../shared/translations'
 import ProductGallery from '../shared/ProductGallery'
 import '../shared/animations.css'
 
@@ -25,6 +26,7 @@ interface Props {
 
 export default function MetroTheme({ store, products, categories, onWhatsAppClick }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
+  const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -53,7 +55,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
   const sendWhatsAppOrder = () => {
     if (!store.whatsapp || items.length === 0) return
     onWhatsAppClick?.()
-    let message = `Hola! Me interesa:\n\n`
+    let message = `${t.whatsappOrder}\n\n`
     items.forEach(item => {
       message += `• ${item.product.name} x${item.quantity} - ${formatPrice(item.product.price * item.quantity, store.currency)}\n`
     })
@@ -208,7 +210,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                 }`}
                 style={!activeCategory ? { backgroundColor: blue } : { color: dark }}
               >
-                Todos
+                {t.all}
               </button>
               {categories.map(cat => (
                 <button
@@ -235,7 +237,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
           {/* Products count */}
           <div className="mb-6">
             <p className="text-sm font-medium" style={{ color: gray }}>
-              {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
+              {filteredProducts.length} {filteredProducts.length !== 1 ? t.items : t.item}
             </p>
           </div>
 
@@ -277,7 +279,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                       className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold text-white"
                       style={{ backgroundColor: blue }}
                     >
-                      Destacado
+                      {t.hot}
                     </div>
                   )}
                 </div>
@@ -315,8 +317,8 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
               </div>
-              <p className="font-medium" style={{ color: dark }}>No hay productos</p>
-              <p className="text-sm mt-1" style={{ color: gray }}>Vuelve pronto para ver novedades</p>
+              <p className="font-medium" style={{ color: dark }}>{t.noItems}</p>
+              <p className="text-sm mt-1" style={{ color: gray }}>{t.checkBackSoon}</p>
             </div>
           )}
         </div>
@@ -343,7 +345,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
 
             {/* Contacto */}
             <div>
-              <h4 className="font-semibold mb-4" style={{ color: dark }}>Contacto</h4>
+              <h4 className="font-semibold mb-4" style={{ color: dark }}>{t.contact}</h4>
               <div className="space-y-3">
                 {store.whatsapp && (
                   <a
@@ -392,7 +394,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
 
             {/* Siguenos */}
             <div>
-              <h4 className="font-semibold mb-4" style={{ color: dark }}>Siguenos</h4>
+              <h4 className="font-semibold mb-4" style={{ color: dark }}>{t.followUs}</h4>
               <div className="flex items-center gap-3">
                 {store.instagram && (
                   <a
@@ -450,7 +452,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                 className="text-sm font-medium transition-colors hover:opacity-70"
                 style={{ color: blue }}
               >
-                Creado con Shopifree
+                {t.poweredBy}
               </a>
             )}
           </div>
@@ -460,7 +462,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
       {/* ===================== WHATSAPP FLOAT ===================== */}
       {store.whatsapp && totalItems === 0 && (
         <a
-          href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola! Vi tu catalogo ${store.name}`)}`}
+          href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`${t.whatsappGreeting} ${store.name}`)}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onWhatsAppClick?.()}
@@ -490,7 +492,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                 {totalItems}
               </div>
               <div className="text-left">
-                <p className="text-xs opacity-60">Ver carrito</p>
+                <p className="text-xs opacity-60">{t.view} {t.cart.toLowerCase()}</p>
                 <p className="font-bold">{formatPrice(totalPrice, store.currency)}</p>
               </div>
             </button>
@@ -501,7 +503,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
               </svg>
-              Pedir
+              {t.checkout}
             </button>
           </div>
         </div>
@@ -574,12 +576,12 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                 <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
                   {selectedProduct.brand && (
                     <p className="text-sm" style={{ color: gray }}>
-                      <span className="font-medium" style={{ color: dark }}>Marca:</span> {selectedProduct.brand}
+                      <span className="font-medium" style={{ color: dark }}>{t.brand}:</span> {selectedProduct.brand}
                     </p>
                   )}
                   {selectedProduct.sku && (
                     <p className="text-sm" style={{ color: gray }}>
-                      <span className="font-medium" style={{ color: dark }}>SKU:</span> {selectedProduct.sku}
+                      <span className="font-medium" style={{ color: dark }}>{t.sku}:</span> {selectedProduct.sku}
                     </p>
                   )}
                 </div>
@@ -597,7 +599,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Agregar al carrito
+                {t.addToCart}
               </button>
             </div>
           </div>
@@ -617,7 +619,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-bold" style={{ color: dark }}>
-                Carrito ({totalItems})
+                {t.cart} ({totalItems})
               </h2>
               <button
                 onClick={() => setIsCartOpen(false)}
@@ -688,7 +690,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 flex-shrink-0">
               <div className="flex justify-between items-center mb-4">
-                <span className="font-medium" style={{ color: gray }}>Total</span>
+                <span className="font-medium" style={{ color: gray }}>{t.total}</span>
                 <span className="text-2xl font-bold" style={{ color: dark }}>
                   {formatPrice(totalPrice, store.currency)}
                 </span>
@@ -700,7 +702,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
-                Enviar pedido por WhatsApp
+                {t.orderViaWhatsApp}
               </button>
             </div>
           </div>
