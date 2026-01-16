@@ -125,5 +125,11 @@ service cloud.firestore {
       allow read: if isStoreOwner(storeId);
       allow write: if false; // Only backend handles tokens
     }
+
+    // Demo stores for landing carousel
+    match /demoStores/{storeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }
