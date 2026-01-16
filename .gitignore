@@ -24,3 +24,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor - Android build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+android/captures/
+android/*.iml
+android/.idea/
+android/local.properties
+
+# Capacitor - iOS build artifacts
+ios/App/Pods/
+ios/App/build/
+ios/App/*.xcworkspace/xcuserdata/
+ios/App/*.xcodeproj/xcuserdata/
+ios/DerivedData/
