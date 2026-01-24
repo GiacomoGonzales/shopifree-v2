@@ -44,6 +44,11 @@ export interface ThemeTranslations {
   hitUsUp: string
   orderViaWhatsApp: string
 
+  // Business type specific
+  book: string
+  schedule: string
+  customize: string
+
   // Powered by
   poweredBy: string
 }
@@ -88,6 +93,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     hitUsUp: 'Contactanos',
     orderViaWhatsApp: 'Pedir por WhatsApp',
 
+    // Business type specific
+    book: 'Reservar',
+    schedule: 'Agendar',
+    customize: 'Personalizar',
+
     // Powered by
     poweredBy: 'Creado con Shopifree',
   },
@@ -131,6 +141,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     hitUsUp: 'Contact us',
     orderViaWhatsApp: 'Order via WhatsApp',
 
+    // Business type specific
+    book: 'Book',
+    schedule: 'Schedule',
+    customize: 'Customize',
+
     // Powered by
     poweredBy: 'Powered by Shopifree',
   },
@@ -173,6 +188,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // CTA buttons
     hitUsUp: 'Fale conosco',
     orderViaWhatsApp: 'Pedir pelo WhatsApp',
+
+    // Business type specific
+    book: 'Reservar',
+    schedule: 'Agendar',
+    customize: 'Personalizar',
 
     // Powered by
     poweredBy: 'Criado com Shopifree',

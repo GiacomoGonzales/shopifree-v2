@@ -222,6 +222,22 @@
       "storeName": "Store name",
       "businessType": "Business type",
       "currency": "Currency",
+      "featuresEnabled": "Features enabled:",
+      "features": {
+        "modifiers": "Modifiers",
+        "prepTime": "Prep time",
+        "variants": "Variants",
+        "duration": "Duration",
+        "booking": "Booking button",
+        "customOrder": "Custom order",
+        "limitedStock": "Limited stock",
+        "specs": "Specifications",
+        "warranty": "Warranty",
+        "model": "Model",
+        "petType": "Pet type",
+        "petAge": "Pet age",
+        "gallery": "Gallery"
+      },
       "businessTypes": {
         "retail": "Store / Retail",
         "restaurant": "Restaurant / Food",

@@ -5,6 +5,13 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import type { Store, StoreLocation } from '../../types'
+import {
+  type BusinessType,
+  getAllBusinessTypes,
+  getBusinessTypeConfig,
+  normalizeBusinessType,
+} from '../../hooks/useBusinessType'
+import BusinessTypeIcon from '../../components/ui/BusinessTypeIcon'
 
 export default function Settings() {
   const { t } = useTranslation('dashboard')
@@ -19,7 +26,7 @@ export default function Settings() {
   const [whatsapp, setWhatsapp] = useState('')
   const [currency, setCurrency] = useState('PEN')
   const [language, setLanguage] = useState('es')
-  const [businessType, setBusinessType] = useState<Store['businessType']>('retail')
+  const [businessType, setBusinessType] = useState<BusinessType>('general')
 
   // About
   const [slogan, setSlogan] = useState('')
@@ -58,7 +65,7 @@ export default function Settings() {
           setWhatsapp(storeData.whatsapp || '')
           setCurrency(storeData.currency || 'PEN')
           setLanguage(storeData.language || 'es')
-          setBusinessType(storeData.businessType || 'retail')
+          setBusinessType(normalizeBusinessType(storeData.businessType))
 
           // About
           setSlogan(storeData.about?.slogan || '')
@@ -153,23 +160,42 @@ export default function Settings() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    {t('settings.basic.businessType')}
-                  </label>
-                  <select
-                    value={businessType}
-                    onChange={(e) => setBusinessType(e.target.value as Store['businessType'])}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                  >
-                    <option value="retail">{t('settings.basic.businessTypes.retail')}</option>
-                    <option value="restaurant">{t('settings.basic.businessTypes.restaurant')}</option>
-                    <option value="services">{t('settings.basic.businessTypes.services')}</option>
-                    <option value="other">{t('settings.basic.businessTypes.other')}</option>
-                  </select>
+              {/* Business Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-2">
+                  {t('settings.basic.businessType')}
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {getAllBusinessTypes().map((bt) => {
+                    const lang = language === 'en' ? 'en' : language === 'pt' ? 'pt' : 'es'
+                    const labels = bt.labels[lang]
+                    const isSelected = businessType === bt.type
+                    return (
+                      <button
+                        key={bt.type}
+                        type="button"
+                        onClick={() => setBusinessType(bt.type)}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? 'border-[#38bdf8] bg-[#f0f7ff]'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className={isSelected ? 'text-[#1e3a5f]' : 'text-gray-500'}>
+                          <BusinessTypeIcon type={bt.type} className="w-6 h-6" />
+                        </span>
+                        <span className={`text-xs font-medium text-center leading-tight ${
+                          isSelected ? 'text-[#1e3a5f]' : 'text-gray-600'
+                        }`}>
+                          {labels.name.split(' / ')[0]}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.basic.currency')}
@@ -208,6 +234,47 @@ export default function Settings() {
                   {t('settings.basic.languageHint', 'Idioma de botones y textos de tu catalogo (Carrito, Agregar, etc.)')}
                 </p>
               </div>
+
+              {/* Business Type Features Preview */}
+              {businessType && businessType !== 'general' && (
+                <div className="mt-4 p-4 bg-gradient-to-br from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20">
+                  <p className="text-sm font-medium text-[#1e3a5f] mb-2">
+                    {t('settings.basic.featuresEnabled', 'Funciones habilitadas:')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const config = getBusinessTypeConfig(businessType)
+                      const features = config.features
+                      // Only show product-related features, not form field visibility options
+                      const featureLabels: Record<string, string> = {
+                        showModifiers: t('settings.basic.features.modifiers', 'Modificadores'),
+                        showPrepTime: t('settings.basic.features.prepTime', 'Tiempo de preparacion'),
+                        showVariants: t('settings.basic.features.variants', 'Variantes'),
+                        showServiceDuration: t('settings.basic.features.duration', 'Duracion'),
+                        showBookingCTA: t('settings.basic.features.booking', 'Boton de reserva'),
+                        showCustomOrder: t('settings.basic.features.customOrder', 'Pedido personalizado'),
+                        showLimitedStock: t('settings.basic.features.limitedStock', 'Stock limitado'),
+                        showSpecs: t('settings.basic.features.specs', 'Especificaciones'),
+                        showWarranty: t('settings.basic.features.warranty', 'Garantia'),
+                        showModel: t('settings.basic.features.model', 'Modelo'),
+                        showPetType: t('settings.basic.features.petType', 'Tipo de mascota'),
+                        showPetAge: t('settings.basic.features.petAge', 'Edad de mascota'),
+                        multipleImages: t('settings.basic.features.gallery', 'Galeria'),
+                      }
+                      return Object.entries(features)
+                        .filter(([key, enabled]) => enabled && featureLabels[key])
+                        .map(([feature]) => (
+                          <span
+                            key={feature}
+                            className="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-[#38bdf8]/10 text-[#1e3a5f] rounded-full"
+                          >
+                            {featureLabels[feature] || feature}
+                          </span>
+                        ))
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

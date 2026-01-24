@@ -89,7 +89,10 @@ export interface Store {
   subscription?: StoreSubscription
 
   // === TIPO DE NEGOCIO ===
-  businessType?: 'retail' | 'restaurant' | 'services' | 'other'
+  // New 7 business types (legacy values are normalized via normalizeBusinessType)
+  businessType?: 'food' | 'fashion' | 'beauty' | 'craft' | 'tech' | 'pets' | 'general' |
+                 // Legacy values (for backwards compatibility, normalized on read)
+                 'retail' | 'restaurant' | 'services' | 'other'
 
   // === META ===
   createdAt: Date
@@ -192,9 +195,44 @@ export interface Product {
   hasVariations?: boolean
   variations?: ProductVariation[]
 
-  // === MODIFICADORES (para restaurantes) ===
+  // === MODIFICADORES (para restaurantes/food) ===
   hasModifiers?: boolean
   modifierGroups?: ModifierGroup[]
+
+  // === BUSINESS TYPE SPECIFIC FIELDS ===
+
+  // Food: Preparation time
+  prepTime?: {
+    min: number
+    max: number
+    unit: 'min' | 'hr'
+  }
+
+  // Beauty: Service duration
+  duration?: {
+    value: number
+    unit: 'min' | 'hr'
+  }
+
+  // Craft: Custom orders
+  customizable?: boolean
+  customizationInstructions?: string
+  availableQuantity?: number     // For "Only X left" badge
+
+  // Tech: Specifications and warranty
+  specs?: Array<{
+    key: string                  // E.g.: "RAM", "Storage", "Battery"
+    value: string                // E.g.: "8GB", "256GB", "5000mAh"
+  }>
+  warranty?: {
+    months: number
+    description?: string         // E.g.: "Manufacturer warranty"
+  }
+  model?: string                 // Model number
+
+  // Pets: Pet type and age
+  petType?: 'dog' | 'cat' | 'bird' | 'fish' | 'small' | 'other'  // small = hamsters, rabbits, etc.
+  petAge?: 'puppy' | 'adult' | 'senior' | 'all'
 
   // === SEO ===
   metaTitle?: string

@@ -6,7 +6,18 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { canAddProduct, getMaxImagesPerProduct, type PlanType } from '../../lib/stripe'
-import type { Category } from '../../types'
+import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
+import type { Category, ModifierGroup, ProductVariation } from '../../types'
+import {
+  ModifiersSection,
+  PrepTimeSection,
+  VariationsSection,
+  DurationSection,
+  CustomOrderSection,
+  SpecsSection,
+  WarrantySection,
+  PetTypeSection,
+} from '../../components/dashboard/product-form'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -50,6 +61,35 @@ export default function ProductForm() {
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
   const [featured, setFeatured] = useState(false)
+
+  // === BUSINESS TYPE SPECIFIC FIELDS ===
+  // Food
+  const [modifierGroups, setModifierGroups] = useState<ModifierGroup[]>([])
+  const [prepTime, setPrepTime] = useState<{ min: number; max: number; unit: 'min' | 'hr' } | undefined>()
+
+  // Fashion/Pets
+  const [variations, setVariations] = useState<ProductVariation[]>([])
+
+  // Beauty
+  const [duration, setDuration] = useState<{ value: number; unit: 'min' | 'hr' } | undefined>()
+
+  // Craft
+  const [customizable, setCustomizable] = useState(false)
+  const [customizationInstructions, setCustomizationInstructions] = useState<string | undefined>()
+  const [availableQuantity, setAvailableQuantity] = useState<number | undefined>()
+
+  // Tech
+  const [specs, setSpecs] = useState<Array<{ key: string; value: string }>>([])
+  const [warranty, setWarranty] = useState<{ months: number; description?: string } | undefined>()
+  const [model, setModel] = useState<string | undefined>()
+
+  // Pets
+  const [petType, setPetType] = useState<'dog' | 'cat' | 'bird' | 'fish' | 'small' | 'other' | undefined>()
+  const [petAge, setPetAge] = useState<'puppy' | 'adult' | 'senior' | 'all' | undefined>()
+
+  // Get business type features
+  const businessType = normalizeBusinessType(store?.businessType)
+  const features = getBusinessTypeFeatures(businessType)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +136,31 @@ export default function ProductForm() {
             setWidth(productData.dimensions?.width?.toString() || '')
             setHeight(productData.dimensions?.height?.toString() || '')
             setFeatured(productData.featured || false)
+
+            // Business type specific fields
+            // Food
+            setModifierGroups(productData.modifierGroups || [])
+            setPrepTime(productData.prepTime)
+
+            // Fashion/Pets
+            setVariations(productData.variations || [])
+
+            // Beauty
+            setDuration(productData.duration)
+
+            // Craft
+            setCustomizable(productData.customizable || false)
+            setCustomizationInstructions(productData.customizationInstructions)
+            setAvailableQuantity(productData.availableQuantity)
+
+            // Tech
+            setSpecs(productData.specs || [])
+            setWarranty(productData.warranty)
+            setModel(productData.model)
+
+            // Pets
+            setPetType(productData.petType)
+            setPetAge(productData.petAge)
           }
         }
       } catch (error) {
@@ -234,6 +299,57 @@ export default function ProductForm() {
         if (width) dimensions.width = parseFloat(width)
         if (height) dimensions.height = parseFloat(height)
         productData.dimensions = dimensions
+      }
+
+      // === BUSINESS TYPE SPECIFIC FIELDS ===
+      // Food
+      if (features.showModifiers && modifierGroups.length > 0) {
+        productData.hasModifiers = true
+        productData.modifierGroups = modifierGroups
+      }
+      if (features.showPrepTime && prepTime) {
+        productData.prepTime = prepTime
+      }
+
+      // Fashion/Pets
+      if (features.showVariants && variations.length > 0) {
+        productData.hasVariations = true
+        productData.variations = variations
+      }
+
+      // Beauty
+      if (features.showServiceDuration && duration) {
+        productData.duration = duration
+      }
+
+      // Craft
+      if (features.showCustomOrder) {
+        productData.customizable = customizable
+        if (customizable && customizationInstructions) {
+          productData.customizationInstructions = customizationInstructions
+        }
+      }
+      if (features.showLimitedStock && availableQuantity !== undefined) {
+        productData.availableQuantity = availableQuantity
+      }
+
+      // Tech
+      if (features.showSpecs && specs.length > 0) {
+        productData.specs = specs.filter(s => s.key && s.value)
+      }
+      if (features.showWarranty && warranty) {
+        productData.warranty = warranty
+      }
+      if (features.showModel && model) {
+        productData.model = model
+      }
+
+      // Pets
+      if (features.showPetType && petType) {
+        productData.petType = petType
+      }
+      if (features.showPetAge && petAge) {
+        productData.petAge = petAge
       }
 
       if (isEditing && productId) {
@@ -434,7 +550,7 @@ export default function ProductForm() {
                 </div>
 
                 {/* Price & Compare Price */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={features.showComparePrice ? "grid grid-cols-2 gap-4" : ""}>
                   <div>
                     <label htmlFor="price" className="block text-sm font-medium text-[#1e3a5f] mb-1">
                       {t('productForm.basic.price')} *
@@ -451,21 +567,23 @@ export default function ProductForm() {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                     />
                   </div>
-                  <div>
-                    <label htmlFor="comparePrice" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      {t('productForm.basic.comparePrice')}
-                    </label>
-                    <input
-                      id="comparePrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={comparePrice}
-                      onChange={(e) => setComparePrice(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                    />
-                  </div>
+                  {features.showComparePrice && (
+                    <div>
+                      <label htmlFor="comparePrice" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {t('productForm.basic.comparePrice')}
+                      </label>
+                      <input
+                        id="comparePrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={comparePrice}
+                        onChange={(e) => setComparePrice(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -482,29 +600,56 @@ export default function ProductForm() {
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
                   />
                 </div>
-
-                {/* Category */}
-                {categories.length > 0 && (
-                  <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      {t('productForm.basic.category')}
-                    </label>
-                    <select
-                      id="category"
-                      value={categoryId}
-                      onChange={(e) => setCategoryId(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                    >
-                      <option value="">{t('productForm.basic.noCategory')}</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </div>
             </div>
 
+            {/* Organization - Category & Tags (always show if categories exist or tags enabled) */}
+            {(categories.length > 0 || features.showTags) && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.title')}</h2>
+                <div className="space-y-4">
+                  {/* Category */}
+                  {categories.length > 0 && (
+                    <div>
+                      <label htmlFor="category" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {t('productForm.basic.category')}
+                      </label>
+                      <select
+                        id="category"
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                      >
+                        <option value="">{t('productForm.basic.noCategory')}</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {/* Tags */}
+                  {features.showTags && (
+                    <div>
+                      <label htmlFor="tags" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.organization.tags')}</label>
+                      <input
+                        id="tags"
+                        type="text"
+                        value={tags}
+                        onChange={(e) => setTags(e.target.value)}
+                        placeholder={t('productForm.organization.tagsPlaceholder')}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">{t('productForm.organization.tagsHint')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Right Column - Visibility + Business Type Sections + Advanced Options */}
+          <div className="space-y-6">
             {/* Visibility */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.visibility.title')}</h2>
@@ -540,103 +685,190 @@ export default function ProductForm() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column - Advanced Options */}
-          <div className="space-y-6">
-            {/* Inventory */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.inventory.title')}</h2>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="sku" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.sku')}</label>
-                    <input
-                      id="sku"
-                      type="text"
-                      value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      placeholder="ABC-123"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="barcode" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.barcode')}</label>
-                    <input
-                      id="barcode"
-                      type="text"
-                      value={barcode}
-                      onChange={(e) => setBarcode(e.target.value)}
-                      placeholder="7501234567890"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                    />
-                  </div>
-                </div>
+            {/* === BUSINESS TYPE SPECIFIC SECTIONS === */}
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm text-gray-700">{t('productForm.inventory.trackStock')}</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={trackStock}
-                      onChange={(e) => setTrackStock(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]"></div>
-                  </label>
-                </div>
+            {/* Food: Modifiers */}
+            {features.showModifiers && (
+              <ModifiersSection
+                modifierGroups={modifierGroups}
+                onChange={setModifierGroups}
+              />
+            )}
 
-                {trackStock && (
-                  <div className="grid grid-cols-2 gap-4">
+            {/* Food: Prep Time */}
+            {features.showPrepTime && (
+              <PrepTimeSection
+                prepTime={prepTime}
+                onChange={setPrepTime}
+              />
+            )}
+
+            {/* Fashion/Pets: Variations */}
+            {features.showVariants && (
+              <VariationsSection
+                variations={variations}
+                onChange={setVariations}
+              />
+            )}
+
+            {/* Beauty: Duration */}
+            {features.showServiceDuration && (
+              <DurationSection
+                duration={duration}
+                onChange={setDuration}
+              />
+            )}
+
+            {/* Craft: Custom Order */}
+            {(features.showCustomOrder || features.showLimitedStock) && (
+              <CustomOrderSection
+                customizable={customizable}
+                customizationInstructions={customizationInstructions}
+                availableQuantity={availableQuantity}
+                onCustomizableChange={setCustomizable}
+                onInstructionsChange={setCustomizationInstructions}
+                onQuantityChange={setAvailableQuantity}
+              />
+            )}
+
+            {/* Tech: Specs */}
+            {features.showSpecs && (
+              <SpecsSection
+                specs={specs}
+                model={model}
+                onChange={setSpecs}
+                onModelChange={setModel}
+              />
+            )}
+
+            {/* Tech: Warranty */}
+            {features.showWarranty && (
+              <WarrantySection
+                warranty={warranty}
+                onChange={setWarranty}
+              />
+            )}
+
+            {/* Pets: Pet Type */}
+            {features.showPetType && (
+              <PetTypeSection
+                petType={petType}
+                petAge={petAge}
+                onPetTypeChange={setPetType}
+                onPetAgeChange={setPetAge}
+              />
+            )}
+            {/* Inventory - show if any inventory feature is enabled */}
+            {(features.showSku || features.showBarcode || features.showStock || features.showCost) && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.inventory.title')}</h2>
+                <div className="space-y-4">
+                  {/* SKU & Barcode */}
+                  {(features.showSku || features.showBarcode) && (
+                    <div className={`grid gap-4 ${features.showSku && features.showBarcode ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                      {features.showSku && (
+                        <div>
+                          <label htmlFor="sku" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.sku')}</label>
+                          <input
+                            id="sku"
+                            type="text"
+                            value={sku}
+                            onChange={(e) => setSku(e.target.value)}
+                            placeholder="ABC-123"
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                          />
+                        </div>
+                      )}
+                      {features.showBarcode && (
+                        <div>
+                          <label htmlFor="barcode" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.barcode')}</label>
+                          <input
+                            id="barcode"
+                            type="text"
+                            value={barcode}
+                            onChange={(e) => setBarcode(e.target.value)}
+                            placeholder="7501234567890"
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Track Stock */}
+                  {features.showStock && (
+                    <>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <span className="text-sm text-gray-700">{t('productForm.inventory.trackStock')}</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={trackStock}
+                            onChange={(e) => setTrackStock(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]"></div>
+                        </label>
+                      </div>
+
+                      {trackStock && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="stock" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.stock')}</label>
+                            <input
+                              id="stock"
+                              type="number"
+                              min="0"
+                              value={stock}
+                              onChange={(e) => setStock(e.target.value)}
+                              placeholder="0"
+                              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="lowStockAlert" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.lowStockAlert')}</label>
+                            <input
+                              id="lowStockAlert"
+                              type="number"
+                              min="0"
+                              value={lowStockAlert}
+                              onChange={(e) => setLowStockAlert(e.target.value)}
+                              placeholder="5"
+                              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Cost */}
+                  {features.showCost && (
                     <div>
-                      <label htmlFor="stock" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.stock')}</label>
+                      <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.cost')}</label>
                       <input
-                        id="stock"
+                        id="cost"
                         type="number"
                         min="0"
-                        value={stock}
-                        onChange={(e) => setStock(e.target.value)}
-                        placeholder="0"
+                        step="0.01"
+                        value={cost}
+                        onChange={(e) => setCost(e.target.value)}
+                        placeholder="0.00"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                       />
+                      <p className="text-xs text-gray-400 mt-1">{t('productForm.inventory.costHint', 'Para calcular tu margen de ganancia')}</p>
                     </div>
-                    <div>
-                      <label htmlFor="lowStockAlert" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.lowStockAlert')}</label>
-                      <input
-                        id="lowStockAlert"
-                        type="number"
-                        min="0"
-                        value={lowStockAlert}
-                        onChange={(e) => setLowStockAlert(e.target.value)}
-                        placeholder="5"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.cost')}</label>
-                  <input
-                    id="cost"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={cost}
-                    onChange={(e) => setCost(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Organization */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.title')}</h2>
-              <div className="space-y-4">
+            {/* Brand - only show if enabled */}
+            {features.showBrand && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.brand')}</h2>
                 <div>
-                  <label htmlFor="brand" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.organization.brand')}</label>
                   <input
                     id="brand"
                     type="text"
@@ -646,75 +878,65 @@ export default function ProductForm() {
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                   />
                 </div>
-                <div>
-                  <label htmlFor="tags" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.organization.tags')}</label>
-                  <input
-                    id="tags"
-                    type="text"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    placeholder={t('productForm.organization.tagsPlaceholder')}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">{t('productForm.organization.tagsHint')}</p>
-                </div>
               </div>
-            </div>
+            )}
 
-            {/* Shipping */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.shipping.title')}</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="weight" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.weight')}</label>
-                  <input
-                    id="weight"
-                    type="number"
-                    min="0"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder="500"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="length" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.length')}</label>
-                  <input
-                    id="length"
-                    type="number"
-                    min="0"
-                    value={length}
-                    onChange={(e) => setLength(e.target.value)}
-                    placeholder="20"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="width" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.width')}</label>
-                  <input
-                    id="width"
-                    type="number"
-                    min="0"
-                    value={width}
-                    onChange={(e) => setWidth(e.target.value)}
-                    placeholder="15"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="height" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.height')}</label>
-                  <input
-                    id="height"
-                    type="number"
-                    min="0"
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                    placeholder="10"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
+            {/* Shipping - only show if enabled */}
+            {features.showShipping && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.shipping.title')}</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="weight" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.weight')}</label>
+                    <input
+                      id="weight"
+                      type="number"
+                      min="0"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      placeholder="500"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="length" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.length')}</label>
+                    <input
+                      id="length"
+                      type="number"
+                      min="0"
+                      value={length}
+                      onChange={(e) => setLength(e.target.value)}
+                      placeholder="20"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="width" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.width')}</label>
+                    <input
+                      id="width"
+                      type="number"
+                      min="0"
+                      value={width}
+                      onChange={(e) => setWidth(e.target.value)}
+                      placeholder="15"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="height" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.height')}</label>
+                    <input
+                      id="height"
+                      type="number"
+                      min="0"
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      placeholder="10"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </form>

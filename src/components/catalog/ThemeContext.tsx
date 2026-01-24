@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 import type { Store } from '../../types'
+import { BusinessTypeProvider } from '../../hooks/useBusinessType'
 
 /**
  * Theme configuration that each theme provides
@@ -74,14 +75,18 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
+  const language = store.language || 'es'
+
   return (
     <ThemeContext.Provider value={{
       theme,
       store,
       currency: store.currency || 'USD',
-      language: store.language || 'es'
+      language
     }}>
-      {children}
+      <BusinessTypeProvider businessType={store.businessType} language={language}>
+        {children}
+      </BusinessTypeProvider>
     </ThemeContext.Provider>
   )
 }

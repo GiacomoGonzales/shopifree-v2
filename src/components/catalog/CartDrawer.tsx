@@ -8,8 +8,8 @@ interface CartDrawerProps {
   items: CartItem[]
   totalPrice: number
   onClose: () => void
-  onUpdateQuantity: (productId: string, quantity: number) => void
-  onRemoveItem: (productId: string) => void
+  onUpdateQuantity: (index: number, quantity: number) => void
+  onRemoveItem: (index: number) => void
   onCheckout: () => void
 }
 
@@ -91,8 +91,8 @@ export default function CartDrawer({
             </div>
           ) : (
             <div className="space-y-5">
-              {items.map(item => (
-                <div key={item.product.id} className="flex gap-4">
+              {items.map((item, index) => (
+                <div key={`${item.product.id}-${index}`} className="flex gap-4">
                   <div
                     className="w-20 h-20 overflow-hidden flex-shrink-0"
                     style={{
@@ -132,12 +132,33 @@ export default function CartDrawer({
                       className="text-sm"
                       style={{ color: theme.colors.textMuted }}
                     >
-                      {formatPrice(item.product.price, currency)}
+                      {formatPrice(item.itemPrice, currency)}
                     </p>
+
+                    {/* Show selected variants */}
+                    {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (
+                      <p className="text-xs mt-1" style={{ color: theme.colors.textMuted }}>
+                        {Object.entries(item.selectedVariants).map(([key, value]) => `${key}: ${value}`).join(', ')}
+                      </p>
+                    )}
+
+                    {/* Show selected modifiers */}
+                    {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                      <p className="text-xs mt-1" style={{ color: theme.colors.textMuted }}>
+                        {item.selectedModifiers.map(m => m.options.map(o => o.name).join(', ')).join('; ')}
+                      </p>
+                    )}
+
+                    {/* Show custom note */}
+                    {item.customNote && (
+                      <p className="text-xs mt-1 italic" style={{ color: theme.colors.textMuted }}>
+                        "{item.customNote}"
+                      </p>
+                    )}
 
                     <div className="flex items-center gap-3 mt-3">
                       <button
-                        onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                        onClick={() => onUpdateQuantity(index, item.quantity - 1)}
                         className="w-8 h-8 flex items-center justify-center transition-colors"
                         style={{
                           backgroundColor: theme.colors.surfaceHover,
@@ -152,7 +173,7 @@ export default function CartDrawer({
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                        onClick={() => onUpdateQuantity(index, item.quantity + 1)}
                         className="w-8 h-8 flex items-center justify-center transition-colors"
                         style={{
                           backgroundColor: theme.colors.surfaceHover,
@@ -165,7 +186,7 @@ export default function CartDrawer({
                       </button>
 
                       <button
-                        onClick={() => onRemoveItem(item.product.id)}
+                        onClick={() => onRemoveItem(index)}
                         className="ml-auto p-2 transition-colors hover:text-red-500"
                         style={{ color: theme.colors.border }}
                       >

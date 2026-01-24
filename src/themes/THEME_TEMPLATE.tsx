@@ -443,8 +443,8 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
 
             {/* Items */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-              {items.map(item => (
-                <div key={item.product.id} className="flex gap-4 p-3 bg-gray-50 rounded-xl">
+              {items.map((item, index) => (
+                <div key={`${item.product.id}-${index}`} className="flex gap-4 p-3 bg-gray-50 rounded-xl">
                   <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                     {item.product.image && (
                       <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
@@ -453,24 +453,24 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium truncate" style={{ color: colors.text }}>{item.product.name}</h3>
                     <p className="text-sm font-bold" style={{ color: colors.secondary }}>
-                      {formatPrice(item.product.price, store.currency)}
+                      {formatPrice(item.itemPrice, store.currency)}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(index, item.quantity - 1)}
                         className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
                       >
                         -
                       </button>
                       <span className="w-8 text-center">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(index, item.quantity + 1)}
                         className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
                       >
                         +
                       </button>
                       <button
-                        onClick={() => removeItem(item.product.id)}
+                        onClick={() => removeItem(index)}
                         className="ml-auto text-red-500 text-sm"
                       >
                         Eliminar
