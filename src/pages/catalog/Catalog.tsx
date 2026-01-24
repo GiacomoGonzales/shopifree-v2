@@ -22,6 +22,29 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   const [loading, setLoading] = useState(true)
   const trackedRef = useRef(false)
 
+  // Analytics callbacks - must be before any conditional returns
+  const handleWhatsAppClick = useCallback(() => {
+    if (store) {
+      analyticsService.track(store.id, 'whatsapp_click')
+    }
+  }, [store])
+
+  const handleProductView = useCallback((product: Product) => {
+    if (store) {
+      analyticsService.track(store.id, 'product_view', product.id, {
+        productName: product.name
+      })
+    }
+  }, [store])
+
+  const handleCartAdd = useCallback((product: Product) => {
+    if (store) {
+      analyticsService.track(store.id, 'cart_add', product.id, {
+        productName: product.name
+      })
+    }
+  }, [store])
+
   useEffect(() => {
     const fetchData = async () => {
       // Need either a slug or custom domain to fetch store
@@ -127,28 +150,6 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
 
   // Get the theme component based on store's themeId
   const ThemeComponent = getThemeComponent(store.themeId || 'minimal')
-
-  const handleWhatsAppClick = useCallback(() => {
-    if (store) {
-      analyticsService.track(store.id, 'whatsapp_click')
-    }
-  }, [store])
-
-  const handleProductView = useCallback((product: Product) => {
-    if (store) {
-      analyticsService.track(store.id, 'product_view', product.id, {
-        productName: product.name
-      })
-    }
-  }, [store])
-
-  const handleCartAdd = useCallback((product: Product) => {
-    if (store) {
-      analyticsService.track(store.id, 'cart_add', product.id, {
-        productName: product.name
-      })
-    }
-  }, [store])
 
   return (
     <>
