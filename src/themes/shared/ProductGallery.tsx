@@ -42,10 +42,11 @@ export default function ProductGallery({ images, productName, variant = 'light' 
     })
   }
 
-  // If only one image, just show it without gallery controls
+  // If only one image, show it with taller aspect ratio on mobile
   if (images.length <= 1) {
+    const isDark = variant === 'dark'
     return (
-      <div className="aspect-square bg-gray-50 relative">
+      <div className={`aspect-[4/5] relative ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
         {images[0] ? (
           <img
             src={optimizeImage(images[0], 'gallery')}
@@ -55,7 +56,7 @@ export default function ProductGallery({ images, productName, variant = 'light' 
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg
-              className={`w-20 h-20 ${variant === 'dark' ? 'text-white/10' : 'text-gray-200'}`}
+              className={`w-20 h-20 ${isDark ? 'text-white/10' : 'text-gray-200'}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -82,7 +83,7 @@ export default function ProductGallery({ images, productName, variant = 'light' 
           <div
             key={index}
             ref={(el) => { imageRefs.current[index] = el }}
-            className="w-full flex-shrink-0 snap-center aspect-square"
+            className="w-full flex-shrink-0 snap-center aspect-[4/5]"
           >
             <img
               src={optimizeImage(image, 'gallery')}
