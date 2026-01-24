@@ -12,10 +12,10 @@ interface SizeConfig {
 }
 
 const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
-  thumbnail: { width: 80, height: 80, crop: 'fill' },
-  card: { width: 400, height: 500, crop: 'fill' },
-  gallery: { width: 800, height: 800, crop: 'fit' },
-  hero: { width: 1200, crop: 'limit' },
+  thumbnail: { width: 160, height: 160, crop: 'fill' },  // 2x for retina
+  card: { width: 600, crop: 'limit' },  // Only limit width, preserve aspect ratio
+  gallery: { width: 1000, crop: 'limit' },  // Higher quality for detail view
+  hero: { width: 1600, crop: 'limit' },
 }
 
 /**
