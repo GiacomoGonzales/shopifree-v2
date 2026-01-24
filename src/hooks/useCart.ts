@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import type { Product } from '../types'
 
-interface CartItem {
+export interface CartItem {
   product: Product
   quantity: number
 }
