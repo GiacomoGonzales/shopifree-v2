@@ -4,6 +4,7 @@ import { formatPrice } from '../../lib/currency'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import ProductGallery from '../shared/ProductGallery'
+import { optimizeImage } from '../../utils/cloudinary'
 import '../shared/animations.css'
 
 interface Props {
@@ -134,7 +135,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
             {/* Mobile Hero */}
             <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center bg-emerald-50">
               <img
-                src={store.heroImageMobile || store.heroImage}
+                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
                 alt=""
                 className="w-full h-auto max-h-[400px] object-contain"
               />
@@ -159,7 +160,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
             {/* Desktop Hero */}
             <div className="hidden md:block relative overflow-hidden">
               <img
-                src={store.heroImage || store.heroImageMobile}
+                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                 alt=""
                 className="w-full aspect-[16/5] object-cover"
               />
@@ -309,7 +310,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                   <div className="relative aspect-square overflow-hidden bg-emerald-50">
                     {product.image ? (
                       <img
-                        src={product.image}
+                        src={optimizeImage(product.image, 'card')}
                         alt={product.name}
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                         loading="lazy"
@@ -687,7 +688,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                     <div key={item.product.id} className="flex gap-4 bg-emerald-50/50 rounded-xl p-3">
                       <div className="w-20 h-20 rounded-xl overflow-hidden bg-white flex-shrink-0">
                         {item.product.image ? (
-                          <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                          <img src={optimizeImage(item.product.image, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <svg className="w-6 h-6 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">

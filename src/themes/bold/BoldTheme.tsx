@@ -4,6 +4,7 @@ import { formatPrice } from '../../lib/currency'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import ProductGallery from '../shared/ProductGallery'
+import { optimizeImage } from '../../utils/cloudinary'
 import '../shared/animations.css'
 
 /**
@@ -168,7 +169,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
           {/* Mobile Hero */}
           <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center" style={{ backgroundColor: '#111' }}>
             <img
-              src={store.heroImageMobile || store.heroImage}
+              src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
               alt={store.name}
               className="w-full h-auto max-h-[400px] object-contain"
             />
@@ -194,7 +195,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
           {/* Desktop Hero */}
           <div className="hidden md:block relative overflow-hidden">
             <img
-              src={store.heroImage || store.heroImageMobile}
+              src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
               alt={store.name}
               className="w-full aspect-[16/5] object-cover"
             />
@@ -309,7 +310,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                   <div className="relative aspect-square overflow-hidden">
                     {product.image ? (
                       <img
-                        src={product.image}
+                        src={optimizeImage(product.image, 'card')}
                         alt={product.name}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
@@ -692,7 +693,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                       <div className="w-20 h-20 bg-black flex-shrink-0">
                         {item.product.image ? (
                           <img
-                            src={item.product.image}
+                            src={optimizeImage(item.product.image, 'thumbnail')}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                           />

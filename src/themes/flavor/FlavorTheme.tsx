@@ -15,6 +15,7 @@ import { formatPrice } from '../../lib/currency'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import ProductGallery from '../shared/ProductGallery'
+import { optimizeImage } from '../../utils/cloudinary'
 import '../shared/animations.css'
 
 interface Props {
@@ -158,7 +159,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                 <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
               )}
               <img
-                src={store.heroImage}
+                src={optimizeImage(store.heroImage, 'hero')}
                 alt={store.name}
                 className="w-full h-full object-cover"
               />
@@ -263,7 +264,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                 <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden flex-shrink-0">
                   {product.image ? (
                     <img
-                      src={product.image}
+                      src={optimizeImage(product.image, 'card')}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
@@ -652,7 +653,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                 >
                   <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                     {item.product.image ? (
-                      <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                      <img src={optimizeImage(item.product.image, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: cream, color: warmGray }}>
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">

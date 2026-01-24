@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { optimizeImage } from '../../utils/cloudinary'
 
 interface ProductGalleryProps {
   images: string[]
@@ -47,7 +48,7 @@ export default function ProductGallery({ images, productName, variant = 'light' 
       <div className="aspect-square bg-gray-50 relative">
         {images[0] ? (
           <img
-            src={images[0]}
+            src={optimizeImage(images[0], 'gallery')}
             alt={productName}
             className="w-full h-full object-cover"
           />
@@ -84,7 +85,7 @@ export default function ProductGallery({ images, productName, variant = 'light' 
             className="w-full flex-shrink-0 snap-center aspect-square"
           >
             <img
-              src={image}
+              src={optimizeImage(image, 'gallery')}
               alt={`${productName} - ${index + 1}`}
               className="w-full h-full object-cover"
               loading={index === 0 ? 'eager' : 'lazy'}
@@ -110,7 +111,7 @@ export default function ProductGallery({ images, productName, variant = 'light' 
             }`}
           >
             <img
-              src={image}
+              src={optimizeImage(image, 'thumbnail')}
               alt={`${productName} thumbnail ${index + 1}`}
               className="w-full h-full object-cover"
             />

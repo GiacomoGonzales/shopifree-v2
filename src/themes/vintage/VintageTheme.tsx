@@ -15,6 +15,7 @@ import { formatPrice } from '../../lib/currency'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import ProductGallery from '../shared/ProductGallery'
+import { optimizeImage } from '../../utils/cloudinary'
 import '../shared/animations.css'
 
 interface Props {
@@ -159,7 +160,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
                 <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
               )}
               <img
-                src={store.heroImage}
+                src={optimizeImage(store.heroImage, 'hero')}
                 alt={store.name}
                 className="w-full h-full object-cover"
                 style={{ filter: 'sepia(15%)' }}
@@ -271,7 +272,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
                 >
                   {product.image ? (
                     <img
-                      src={product.image}
+                      src={optimizeImage(product.image, 'card')}
                       alt={product.name}
                       className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                       style={{ filter: 'sepia(10%)' }}
@@ -663,7 +664,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
                     style={{ border: `2px solid ${sepia}`, padding: '2px' }}
                   >
                     {item.product.image ? (
-                      <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" style={{ filter: 'sepia(10%)' }} />
+                      <img src={optimizeImage(item.product.image, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover" style={{ filter: 'sepia(10%)' }} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: lightBrown, color: sepia }}>
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
