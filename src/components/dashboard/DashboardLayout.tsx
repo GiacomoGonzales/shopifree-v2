@@ -11,17 +11,7 @@ interface NavItem {
   icon: () => JSX.Element
 }
 
-interface NavGroup {
-  name: string
-  icon: () => JSX.Element
-  items: NavItem[]
-}
-
-type NavElement = NavItem | NavGroup
-
-function isNavGroup(item: NavElement): item is NavGroup {
-  return 'items' in item
-}
+type NavElement = NavItem | 'separator'
 
 // Iconos
 function HomeIcon() {
@@ -48,13 +38,6 @@ function ChartIcon() {
   )
 }
 
-function StoreIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-  )
-}
 
 function PaletteIcon() {
   return (
@@ -97,18 +80,6 @@ function UserIcon() {
   )
 }
 
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  )
-}
 
 function MenuIcon() {
   return (
@@ -134,24 +105,19 @@ export default function DashboardLayout() {
   const { user, firebaseUser, store, loading, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [openGroups, setOpenGroups] = useState<string[]>([t('nav.myStore')])
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // Dynamic navigation with translations
+  // Dynamic navigation with translations - flat structure with separators
   const navigation: NavElement[] = useMemo(() => [
     { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
     { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
     { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
-    {
-      name: t('nav.myStore'),
-      icon: StoreIcon,
-      items: [
-        { name: t('nav.design'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
-        { name: t('nav.settings'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
-        { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
-        { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
-      ]
-    },
+    'separator',
+    { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
+    { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
+    { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
+    { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
+    'separator',
     { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
   ], [t, localePath])
 
@@ -168,27 +134,6 @@ export default function DashboardLayout() {
     setSidebarOpen(false)
   }, [location.pathname])
 
-  // Auto-expand group if a child is active
-  useEffect(() => {
-    navigation.forEach(item => {
-      if (isNavGroup(item)) {
-        const isChildActive = item.items.some(child =>
-          location.pathname === child.href || location.pathname.startsWith(child.href + '/')
-        )
-        if (isChildActive && !openGroups.includes(item.name)) {
-          setOpenGroups(prev => [...prev, item.name])
-        }
-      }
-    })
-  }, [location.pathname])
-
-  const toggleGroup = (name: string) => {
-    setOpenGroups(prev =>
-      prev.includes(name)
-        ? prev.filter(g => g !== name)
-        : [...prev, name]
-    )
-  }
 
   const handleLogout = async () => {
     await logout()
@@ -219,50 +164,11 @@ export default function DashboardLayout() {
     <>
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
-          if (isNavGroup(item)) {
-            const isOpen = openGroups.includes(item.name)
-            const isGroupActive = item.items.some(child => isItemActive(child.href))
-
+        {navigation.map((item, index) => {
+          // Render separator
+          if (item === 'separator') {
             return (
-              <div key={item.name}>
-                <button
-                  onClick={() => toggleGroup(item.name)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isGroupActive
-                      ? 'text-[#1e3a5f] bg-[#f0f7ff]'
-                      : 'text-gray-600 hover:bg-[#f0f7ff] hover:text-[#1e3a5f]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon />
-                    {item.name}
-                  </div>
-                  <ChevronIcon open={isOpen} />
-                </button>
-
-                {isOpen && (
-                  <div className="mt-1 ml-4 pl-4 border-l border-gray-100 space-y-1">
-                    {item.items.map((subItem) => {
-                      const isActive = isItemActive(subItem.href)
-                      return (
-                        <Link
-                          key={subItem.name}
-                          to={subItem.href}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                            isActive
-                              ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md shadow-[#1e3a5f]/20'
-                              : 'text-gray-600 hover:bg-[#f0f7ff] hover:text-[#1e3a5f]'
-                          }`}
-                        >
-                          <subItem.icon />
-                          {subItem.name}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+              <div key={`separator-${index}`} className="my-3 mx-3 border-t border-gray-100" />
             )
           }
 

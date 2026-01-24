@@ -2,10 +2,9 @@
   "nav": {
     "home": "Inicio",
     "products": "Productos",
-    "analytics": "Estadisticas",
-    "myStore": "Mi Tienda",
-    "design": "Diseño",
-    "settings": "Configuración",
+    "analytics": "Estadísticas",
+    "appearance": "Apariencia",
+    "myBusiness": "Mi Negocio",
     "domain": "Dominio",
     "payments": "Pagos",
     "myAccount": "Mi Cuenta",
