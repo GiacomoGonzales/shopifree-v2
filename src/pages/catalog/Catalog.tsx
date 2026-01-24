@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import StoreSEO from '../../components/seo/StoreSEO'
+import { getDeviceType, getReferrer } from '../../utils/deviceDetection'
 import type { Store, Product, Category } from '../../types'
 
 interface CatalogProps {
@@ -49,7 +50,10 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
           // Track page view (only once per session)
           if (!trackedRef.current) {
             trackedRef.current = true
-            analyticsService.track(storeId, 'page_view')
+            analyticsService.track(storeId, 'page_view', undefined, {
+              deviceType: getDeviceType(),
+              referrer: getReferrer()
+            })
           }
 
           // Fetch products from subcollection
@@ -124,11 +128,27 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   // Get the theme component based on store's themeId
   const ThemeComponent = getThemeComponent(store.themeId || 'minimal')
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = useCallback(() => {
     if (store) {
       analyticsService.track(store.id, 'whatsapp_click')
     }
-  }
+  }, [store])
+
+  const handleProductView = useCallback((product: Product) => {
+    if (store) {
+      analyticsService.track(store.id, 'product_view', product.id, {
+        productName: product.name
+      })
+    }
+  }, [store])
+
+  const handleCartAdd = useCallback((product: Product) => {
+    if (store) {
+      analyticsService.track(store.id, 'cart_add', product.id, {
+        productName: product.name
+      })
+    }
+  }, [store])
 
   return (
     <>
@@ -138,6 +158,8 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
         products={products}
         categories={categories}
         onWhatsAppClick={handleWhatsAppClick}
+        onProductView={handleProductView}
+        onCartAdd={handleCartAdd}
       />
     </>
   )

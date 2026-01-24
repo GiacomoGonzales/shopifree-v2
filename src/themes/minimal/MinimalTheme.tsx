@@ -62,9 +62,11 @@ interface Props {
   products: Product[]
   categories: Category[]
   onWhatsAppClick?: () => void
+  onProductView?: (product: Product) => void
+  onCartAdd?: (product: Product) => void
 }
 
-export default function MinimalTheme({ store, products, categories, onWhatsAppClick }: Props) {
+export default function MinimalTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -86,6 +88,16 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
       ? products.filter(p => p.categoryId === activeCategory)
       : products
   }, [products, activeCategory])
+
+  const handleSelectProduct = (product: Product) => {
+    setSelectedProduct(product)
+    onProductView?.(product)
+  }
+
+  const handleAddToCart = (product: Product, extras?: Parameters<typeof addItem>[1]) => {
+    addItem(product, extras)
+    onCartAdd?.(product)
+  }
 
   const sendWhatsAppOrder = () => {
     if (!store.whatsapp || items.length === 0) return
@@ -193,8 +205,8 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
         <main className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-14">
           <ProductGrid
             products={filteredProducts}
-            onSelectProduct={setSelectedProduct}
-            onQuickAdd={addItem}
+            onSelectProduct={handleSelectProduct}
+            onQuickAdd={handleAddToCart}
           />
         </main>
 
@@ -222,7 +234,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
           <ProductDrawer
             product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
-            onAddToCart={addItem}
+            onAddToCart={handleAddToCart}
           />
         )}
 

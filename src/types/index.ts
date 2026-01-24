@@ -413,12 +413,45 @@ export interface FAQItem {
 // ============================================
 // ANALYTICS TYPES
 // ============================================
+export interface AnalyticsEventMetadata {
+  deviceType?: 'mobile' | 'desktop'
+  referrer?: string
+  productName?: string
+}
+
 export interface AnalyticsEvent {
   id: string
   storeId: string
   type: 'page_view' | 'whatsapp_click' | 'product_view' | 'cart_add'
   productId?: string
   timestamp: Date
+  metadata?: AnalyticsEventMetadata
   // For deduplication (session-based)
   sessionId?: string
+}
+
+export interface AnalyticsSummary {
+  pageViews: number
+  productViews: number
+  cartAdds: number
+  whatsappClicks: number
+}
+
+export interface DailyStats {
+  date: string // YYYY-MM-DD format
+  pageViews: number
+  productViews: number
+  cartAdds: number
+  whatsappClicks: number
+}
+
+export interface TopProduct {
+  productId: string
+  productName: string
+  views: number
+}
+
+export interface DeviceStats {
+  mobile: number
+  desktop: number
 }

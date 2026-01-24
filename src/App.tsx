@@ -5,9 +5,11 @@ import { useSubdomain } from './hooks/useSubdomain'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supportedLanguages, type SupportedLanguage } from './i18n'
+import { Capacitor } from '@capacitor/core'
 
 // Pages
 import Landing from './pages/Landing'
+import MobileWelcome from './pages/mobile/MobileWelcome'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import DashboardLayout from './components/dashboard/DashboardLayout'
@@ -20,6 +22,7 @@ import Account from './pages/dashboard/Account'
 import Domain from './pages/dashboard/Domain'
 import Payments from './pages/dashboard/Payments'
 import Plan from './pages/dashboard/Plan'
+import Analytics from './pages/dashboard/Analytics'
 import Catalog from './pages/catalog/Catalog'
 
 // Blog Pages
@@ -116,8 +119,8 @@ function AppRoutes() {
 
       {/* Language-prefixed routes */}
       <Route path="/:lang" element={<LanguageLayout />}>
-        {/* Public routes */}
-        <Route index element={<Landing />} />
+        {/* Public routes - Show MobileWelcome on native, Landing on web */}
+        <Route index element={Capacitor.isNativePlatform() ? <MobileWelcome /> : <Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
 
@@ -131,6 +134,7 @@ function AppRoutes() {
           <Route path="products" element={<Products />} />
           <Route path="products/:productId" element={<ProductForm />} />
           <Route path="categories" element={<Navigate to="products" replace />} />
+          <Route path="analytics" element={<Analytics />} />
           {/* Mi Tienda */}
           <Route path="branding" element={<Branding />} />
           <Route path="settings" element={<Settings />} />

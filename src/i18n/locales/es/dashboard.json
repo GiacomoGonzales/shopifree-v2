@@ -2,6 +2,7 @@
   "nav": {
     "home": "Inicio",
     "products": "Productos",
+    "analytics": "Estadisticas",
     "myStore": "Mi Tienda",
     "design": "Diseño",
     "settings": "Configuración",
@@ -31,6 +32,28 @@
     "upgradeTitle": "¿Quieres más funciones?",
     "upgradeDesc": "Productos ilimitados, múltiples fotos, categorías, cupones y más",
     "viewPlans": "Ver planes"
+  },
+  "analytics": {
+    "title": "Estadisticas",
+    "subtitle": "Analiza el rendimiento de tu catalogo",
+    "noData": "Sin datos",
+    "conversionRate": "Tasa de conversion",
+    "dateRange": {
+      "7days": "Ultimos 7 dias",
+      "30days": "Ultimos 30 dias"
+    },
+    "summary": {
+      "totalVisits": "Visitas totales",
+      "productViews": "Vistas de productos",
+      "cartAdds": "Agregados al carrito",
+      "whatsappClicks": "Clicks en WhatsApp"
+    },
+    "charts": {
+      "dailyVisits": "Visitas diarias",
+      "topProducts": "Productos mas vistos",
+      "conversionFunnel": "Embudo de conversion",
+      "deviceDistribution": "Por dispositivo"
+    }
   },
   "products": {
     "title": "Productos",

@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import type { User, Store, Product, Category, Order } from '../types'
+import type { User, Store, Product, Category, Order, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats } from '../types'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -347,12 +347,18 @@ export const analyticsService = {
     return collection(db, 'stores', storeId, 'analytics')
   },
 
-  async track(storeId: string, type: 'page_view' | 'whatsapp_click' | 'product_view' | 'cart_add', productId?: string): Promise<void> {
+  async track(
+    storeId: string,
+    type: 'page_view' | 'whatsapp_click' | 'product_view' | 'cart_add',
+    productId?: string,
+    metadata?: AnalyticsEventMetadata
+  ): Promise<void> {
     try {
       await addDoc(this.getCollection(storeId), {
         type,
         productId: productId || null,
-        timestamp: new Date()
+        timestamp: new Date(),
+        ...(metadata && { metadata })
       })
     } catch (error) {
       console.error('Error tracking analytics:', error)
@@ -383,6 +389,171 @@ export const analyticsService = {
     } catch (error) {
       console.error('Error getting analytics:', error)
       return { pageViews: 0, whatsappClicks: 0 }
+    }
+  },
+
+  async getDateRangeStats(storeId: string, startDate: Date, endDate: Date): Promise<AnalyticsSummary> {
+    try {
+      const q = query(
+        this.getCollection(storeId),
+        where('timestamp', '>=', startDate),
+        where('timestamp', '<=', endDate)
+      )
+      const snapshot = await getDocs(q)
+
+      const stats: AnalyticsSummary = {
+        pageViews: 0,
+        productViews: 0,
+        cartAdds: 0,
+        whatsappClicks: 0
+      }
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        switch (data.type) {
+          case 'page_view': stats.pageViews++; break
+          case 'product_view': stats.productViews++; break
+          case 'cart_add': stats.cartAdds++; break
+          case 'whatsapp_click': stats.whatsappClicks++; break
+        }
+      })
+
+      return stats
+    } catch (error) {
+      console.error('Error getting date range stats:', error)
+      return { pageViews: 0, productViews: 0, cartAdds: 0, whatsappClicks: 0 }
+    }
+  },
+
+  async getDailyStats(storeId: string, startDate: Date, endDate: Date): Promise<DailyStats[]> {
+    try {
+      const q = query(
+        this.getCollection(storeId),
+        where('timestamp', '>=', startDate),
+        where('timestamp', '<=', endDate)
+      )
+      const snapshot = await getDocs(q)
+
+      // Group by date
+      const dailyMap: Record<string, DailyStats> = {}
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        const timestamp = data.timestamp instanceof Timestamp ? data.timestamp.toDate() : new Date(data.timestamp)
+        const dateKey = timestamp.toISOString().split('T')[0]
+
+        if (!dailyMap[dateKey]) {
+          dailyMap[dateKey] = {
+            date: dateKey,
+            pageViews: 0,
+            productViews: 0,
+            cartAdds: 0,
+            whatsappClicks: 0
+          }
+        }
+
+        switch (data.type) {
+          case 'page_view': dailyMap[dateKey].pageViews++; break
+          case 'product_view': dailyMap[dateKey].productViews++; break
+          case 'cart_add': dailyMap[dateKey].cartAdds++; break
+          case 'whatsapp_click': dailyMap[dateKey].whatsappClicks++; break
+        }
+      })
+
+      // Fill in missing dates with zeros
+      const result: DailyStats[] = []
+      const current = new Date(startDate)
+      while (current <= endDate) {
+        const dateKey = current.toISOString().split('T')[0]
+        result.push(dailyMap[dateKey] || {
+          date: dateKey,
+          pageViews: 0,
+          productViews: 0,
+          cartAdds: 0,
+          whatsappClicks: 0
+        })
+        current.setDate(current.getDate() + 1)
+      }
+
+      return result
+    } catch (error) {
+      console.error('Error getting daily stats:', error)
+      return []
+    }
+  },
+
+  async getTopProducts(storeId: string, startDate: Date, limitCount = 5): Promise<TopProduct[]> {
+    try {
+      // Query only by timestamp to avoid needing composite index
+      const q = query(
+        this.getCollection(storeId),
+        where('timestamp', '>=', startDate)
+      )
+      const snapshot = await getDocs(q)
+
+      // Count views per product (filter by type client-side)
+      const productCounts: Record<string, { views: number; name: string }> = {}
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        // Filter by type client-side
+        if (data.type !== 'product_view') return
+
+        if (data.productId) {
+          if (!productCounts[data.productId]) {
+            productCounts[data.productId] = {
+              views: 0,
+              name: data.metadata?.productName || 'Unknown'
+            }
+          }
+          productCounts[data.productId].views++
+          // Update name if we have it in metadata
+          if (data.metadata?.productName) {
+            productCounts[data.productId].name = data.metadata.productName
+          }
+        }
+      })
+
+      // Sort and limit
+      return Object.entries(productCounts)
+        .map(([productId, { views, name }]) => ({ productId, productName: name, views }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, limitCount)
+    } catch (error) {
+      console.error('Error getting top products:', error)
+      return []
+    }
+  },
+
+  async getDeviceStats(storeId: string, startDate: Date, endDate: Date): Promise<DeviceStats> {
+    try {
+      // Query only by timestamp to avoid needing composite index
+      const q = query(
+        this.getCollection(storeId),
+        where('timestamp', '>=', startDate),
+        where('timestamp', '<=', endDate)
+      )
+      const snapshot = await getDocs(q)
+
+      const stats: DeviceStats = { mobile: 0, desktop: 0 }
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        // Filter by type client-side
+        if (data.type !== 'page_view') return
+
+        const deviceType = data.metadata?.deviceType || 'desktop'
+        if (deviceType === 'mobile') {
+          stats.mobile++
+        } else {
+          stats.desktop++
+        }
+      })
+
+      return stats
+    } catch (error) {
+      console.error('Error getting device stats:', error)
+      return { mobile: 0, desktop: 0 }
     }
   }
 }
