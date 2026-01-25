@@ -87,6 +87,7 @@ export interface ThemeTranslations {
   orderNumber: string
   orderPending: string
   orderProcessing: string
+  whatsappCTA: string
   backToStore: string
 
   // Bank transfer
@@ -212,6 +213,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     orderNumber: 'Numero de pedido',
     orderPending: 'Tu pedido esta pendiente de pago',
     orderProcessing: 'Estamos procesando tu pedido',
+    whatsappCTA: 'Haz clic para enviar tu pedido por WhatsApp',
     backToStore: 'Volver a la tienda',
 
     // Bank transfer
@@ -336,6 +338,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     orderNumber: 'Order number',
     orderPending: 'Your order is pending payment',
     orderProcessing: 'We are processing your order',
+    whatsappCTA: 'Click to send your order via WhatsApp',
     backToStore: 'Back to store',
 
     // Bank transfer
@@ -460,6 +463,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     orderNumber: 'Numero do pedido',
     orderPending: 'Seu pedido esta pendente de pagamento',
     orderProcessing: 'Estamos processando seu pedido',
+    whatsappCTA: 'Clique para enviar seu pedido pelo WhatsApp',
     backToStore: 'Voltar para a loja',
 
     // Bank transfer

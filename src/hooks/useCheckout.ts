@@ -300,37 +300,19 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const createdOrder = await createOrder('whatsapp')
       setOrder(createdOrder)
 
-      // Build WhatsApp URL
+      // Build WhatsApp URL using api.whatsapp.com (better emoji support than wa.me)
       const message = generateWhatsAppMessage(createdOrder.orderNumber)
       const phone = store.whatsapp.replace(/\D/g, '')
       const encodedMessage = encodeURIComponent(message)
+      const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`
 
-      // Detect mobile device
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      // Save WhatsApp URL for the confirmation page button
+      setWhatsappUrl(waUrl)
 
-      // Use different URL schemes for mobile (native app) vs desktop (web)
-      // whatsapp:// opens the app directly on mobile without browser redirect
-      const waUrl = isMobile
-        ? `whatsapp://send?phone=${phone}&text=${encodedMessage}`
-        : `https://wa.me/${phone}?text=${encodedMessage}`
-
-      // Save WhatsApp URL for the confirmation page button (always use wa.me for button)
-      setWhatsappUrl(`https://wa.me/${phone}?text=${encodedMessage}`)
-
-      // Show confirmation first
+      // Show confirmation - user will click the WhatsApp button manually
+      // (auto-opening is blocked by browsers and causes issues)
       setStep('confirmation')
       onOrderComplete?.(createdOrder)
-
-      // Open WhatsApp after a small delay to ensure state updates
-      setTimeout(() => {
-        if (isMobile) {
-          // On mobile, use native whatsapp:// scheme to open app directly
-          window.location.href = waUrl
-        } else {
-          // On desktop, open WhatsApp Web in new tab
-          window.open(waUrl, '_blank')
-        }
-      }, 100)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating order')
     } finally {
