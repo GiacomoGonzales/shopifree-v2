@@ -61,6 +61,7 @@ export interface ThemeTranslations {
   emailOptional: string
   continueBtn: string
   backBtn: string
+  sendOrderBtn: string
 
   // Delivery
   howToReceive: string
@@ -187,6 +188,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     emailOptional: 'opcional',
     continueBtn: 'Continuar',
     backBtn: 'Atras',
+    sendOrderBtn: 'Enviar pedido',
 
     // Delivery
     howToReceive: 'Como quieres recibir tu pedido?',
@@ -312,6 +314,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     emailOptional: 'optional',
     continueBtn: 'Continue',
     backBtn: 'Back',
+    sendOrderBtn: 'Send order',
 
     // Delivery
     howToReceive: 'How do you want to receive your order?',
@@ -437,6 +440,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     emailOptional: 'opcional',
     continueBtn: 'Continuar',
     backBtn: 'Voltar',
+    sendOrderBtn: 'Enviar pedido',
 
     // Delivery
     howToReceive: 'Como deseja receber seu pedido?',

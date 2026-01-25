@@ -92,6 +92,20 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     onClose()
   }, [onClose])
 
+  const handlePaymentSubmit = useCallback((method: 'whatsapp' | 'mercadopago' | 'transfer') => {
+    switch (method) {
+      case 'whatsapp':
+        processWhatsApp()
+        break
+      case 'mercadopago':
+        processMercadoPago()
+        break
+      case 'transfer':
+        processTransfer()
+        break
+    }
+  }, [processWhatsApp, processMercadoPago, processTransfer])
+
   // Step indicators
   const steps = ['customer', 'delivery', 'payment']
   const currentStepIndex = step === 'confirmation' ? 3 : steps.indexOf(step)
@@ -191,9 +205,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <PaymentSelector
               store={store}
               loading={loading}
-              onSelectWhatsApp={processWhatsApp}
-              onSelectMercadoPago={processMercadoPago}
-              onSelectTransfer={processTransfer}
+              onSubmit={handlePaymentSubmit}
               onBack={goBack}
               error={error}
               t={t}
