@@ -189,13 +189,33 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     const t = getThemeTranslations(store.language)
     const lines: string[] = []
 
+    // Emoji constants (using Unicode code points for reliability)
+    const emoji = {
+      wave: String.fromCodePoint(0x1F44B),      // 👋
+      receipt: String.fromCodePoint(0x1F9FE),   // 🧾
+      package: String.fromCodePoint(0x1F4E6),   // 📦
+      label: String.fromCodePoint(0x1F3F7),     // 🏷
+      plus: String.fromCodePoint(0x2795),       // ➕
+      memo: String.fromCodePoint(0x1F4DD),      // 📝
+      money: String.fromCodePoint(0x1F4B0),     // 💰
+      dollar: String.fromCodePoint(0x1F4B5),    // 💵
+      store: String.fromCodePoint(0x1F3EA),     // 🏪
+      truck: String.fromCodePoint(0x1F69A),     // 🚚
+      pin: String.fromCodePoint(0x1F4CD),       // 📍
+      pushpin: String.fromCodePoint(0x1F4CC),   // 📌
+      person: String.fromCodePoint(0x1F464),    // 👤
+      phone: String.fromCodePoint(0x1F4F1),     // 📱
+      email: String.fromCodePoint(0x1F4E7),     // 📧
+      sparkles: String.fromCodePoint(0x2728)    // ✨
+    }
+
     // Header with greeting and order number
-    lines.push(`👋 ${t.waGreeting}`)
-    lines.push(`🧾 *${t.waOrderNumber}: ${orderNumber}*`)
+    lines.push(`${emoji.wave} ${t.waGreeting}`)
+    lines.push(`${emoji.receipt} *${t.waOrderNumber}: ${orderNumber}*`)
     lines.push('')
 
     // Order details section
-    lines.push(`📦 *${t.waOrderDetails}:*`)
+    lines.push(`${emoji.package} *${t.waOrderDetails}:*`)
     lines.push('─────────────────')
 
     items.forEach((item, index) => {
@@ -207,7 +227,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       // Selected variants (size, color, etc.)
       if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
         Object.entries(item.selectedVariants).forEach(([name, value]) => {
-          lines.push(`   🏷️ ${name}: ${value}`)
+          lines.push(`   ${emoji.label} ${name}: ${value}`)
         })
       }
 
@@ -218,55 +238,55 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
             const priceStr = o.price > 0 ? ` (+${formatPrice(o.price, store.currency)})` : ''
             return `${o.name}${priceStr}`
           }).join(', ')
-          lines.push(`   ➕ ${mod.groupName}: ${opts}`)
+          lines.push(`   ${emoji.plus} ${mod.groupName}: ${opts}`)
         })
       }
 
       // Item custom note
       if (item.customNote) {
-        lines.push(`   📝 "${item.customNote}"`)
+        lines.push(`   ${emoji.memo} "${item.customNote}"`)
       }
 
       // Item subtotal
-      lines.push(`   💰 ${t.waSubtotal}: ${formatPrice(item.itemPrice * item.quantity, store.currency)}`)
+      lines.push(`   ${emoji.money} ${t.waSubtotal}: ${formatPrice(item.itemPrice * item.quantity, store.currency)}`)
       lines.push('')
     })
 
     lines.push('─────────────────')
-    lines.push(`💵 *${t.waTotal}: ${formatPrice(totalPrice, store.currency)}*`)
+    lines.push(`${emoji.dollar} *${t.waTotal}: ${formatPrice(totalPrice, store.currency)}*`)
     lines.push('')
 
     // Delivery information
     if (data.delivery?.method === 'pickup') {
-      lines.push(`🏪 *${t.waPickup}*`)
+      lines.push(`${emoji.store} *${t.waPickup}*`)
     } else if (data.delivery?.address) {
-      lines.push(`🚚 *${t.waDelivery}*`)
-      lines.push(`📍 ${t.waDeliveryAddress}:`)
+      lines.push(`${emoji.truck} *${t.waDelivery}*`)
+      lines.push(`${emoji.pin} ${t.waDeliveryAddress}:`)
       lines.push(`   ${data.delivery.address.street}`)
       lines.push(`   ${data.delivery.address.city}`)
       if (data.delivery.address.reference) {
-        lines.push(`   📌 ${t.waReference}: ${data.delivery.address.reference}`)
+        lines.push(`   ${emoji.pushpin} ${t.waReference}: ${data.delivery.address.reference}`)
       }
     }
     lines.push('')
 
     // Observations
     if (data.delivery?.observations) {
-      lines.push(`📝 *${t.waObservations}:*`)
+      lines.push(`${emoji.memo} *${t.waObservations}:*`)
       lines.push(`   ${data.delivery.observations}`)
       lines.push('')
     }
 
     // Customer information
-    lines.push(`👤 *${t.waCustomer}:* ${data.customer?.name || ''}`)
-    lines.push(`📱 *${t.waPhone}:* ${data.customer?.phone || ''}`)
+    lines.push(`${emoji.person} *${t.waCustomer}:* ${data.customer?.name || ''}`)
+    lines.push(`${emoji.phone} *${t.waPhone}:* ${data.customer?.phone || ''}`)
     if (data.customer?.email) {
-      lines.push(`📧 *Email:* ${data.customer.email}`)
+      lines.push(`${emoji.email} *Email:* ${data.customer.email}`)
     }
     lines.push('')
 
     // Thank you message
-    lines.push(`✨ ${t.waThankYou}`)
+    lines.push(`${emoji.sparkles} ${t.waThankYou}`)
 
     return lines.join('\n')
   }, [items, totalPrice, store.currency, store.language, data.delivery, data.customer])
