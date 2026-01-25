@@ -300,11 +300,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const createdOrder = await createOrder('whatsapp')
       setOrder(createdOrder)
 
-      // Build WhatsApp URL using api.whatsapp.com (better emoji support than wa.me)
+      // Build WhatsApp URL using wa.me (same as floating button)
       const message = generateWhatsAppMessage(createdOrder.orderNumber)
       const phone = store.whatsapp.replace(/\D/g, '')
       const encodedMessage = encodeURIComponent(message)
-      const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`
+      const waUrl = `https://wa.me/${phone}?text=${encodedMessage}`
 
       // Save WhatsApp URL for the confirmation page button
       setWhatsappUrl(waUrl)
