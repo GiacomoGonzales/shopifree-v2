@@ -41,6 +41,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const [step, setStep] = useState<CheckoutStep>('customer')
   const [data, setData] = useState<CheckoutData>({})
   const [order, setOrder] = useState<Order | null>(null)
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -279,13 +280,31 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const createdOrder = await createOrder('whatsapp')
       setOrder(createdOrder)
 
-      // Open WhatsApp
+      // Build WhatsApp URL
       const message = generateWhatsAppMessage(createdOrder.orderNumber)
       const phone = store.whatsapp.replace(/\D/g, '')
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 
+      // Save WhatsApp URL for the confirmation page button
+      setWhatsappUrl(waUrl)
+
+      // Detect mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+      // Show confirmation first
       setStep('confirmation')
       onOrderComplete?.(createdOrder)
+
+      // Open WhatsApp after a small delay to ensure state updates
+      setTimeout(() => {
+        if (isMobile) {
+          // On mobile, use location.href to avoid popup blockers
+          window.location.href = waUrl
+        } else {
+          // On desktop, open in new tab
+          window.open(waUrl, '_blank')
+        }
+      }, 100)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating order')
     } finally {
@@ -403,6 +422,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     step,
     data,
     order,
+    whatsappUrl,
     loading,
     error,
     setStep: goToStep,

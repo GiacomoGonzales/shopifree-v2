@@ -28,6 +28,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     step,
     data,
     order,
+    whatsappUrl,
     loading,
     error,
     goBack,
@@ -203,6 +204,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
           {step === 'confirmation' && order && (
             <OrderConfirmation
               order={order}
+              whatsappUrl={whatsappUrl || undefined}
               onBackToStore={handleBackToStore}
               t={t}
             />
