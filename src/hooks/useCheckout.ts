@@ -182,6 +182,66 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     return createdOrder
   }, [store.id, data, totalPrice, createOrderItems])
 
+  // Build WhatsApp message with full order details
+  const buildWhatsAppMessage = useCallback((order: Order): string => {
+    const currency = store.currency || 'USD'
+    const currencySymbol = currency === 'PEN' ? 'S/' : currency === 'MXN' ? '$' : currency === 'COP' ? '$' : currency === 'ARS' ? '$' : '$'
+
+    let message = `*Nuevo Pedido ${order.orderNumber}*\n\n`
+
+    // Customer info
+    message += `*Cliente:*\n`
+    message += `Nombre: ${order.customer?.name || '-'}\n`
+    message += `Tel: ${order.customer?.phone || '-'}\n`
+    if (order.customer?.email) {
+      message += `Email: ${order.customer.email}\n`
+    }
+    message += `\n`
+
+    // Delivery info
+    message += `*Entrega:*\n`
+    if (order.deliveryMethod === 'pickup') {
+      message += `Retiro en tienda\n`
+    } else if (order.deliveryMethod === 'delivery' && order.deliveryAddress) {
+      message += `Delivery\n`
+      message += `${order.deliveryAddress.street}, ${order.deliveryAddress.city}\n`
+      if (order.deliveryAddress.reference) {
+        message += `Ref: ${order.deliveryAddress.reference}\n`
+      }
+    }
+    message += `\n`
+
+    // Order items
+    message += `*Productos:*\n`
+    order.items.forEach(item => {
+      message += `${item.quantity}x ${item.productName} - ${currencySymbol}${item.itemTotal.toFixed(2)}\n`
+      // Show selected modifiers if any
+      if (item.selectedModifiers && item.selectedModifiers.length > 0) {
+        item.selectedModifiers.forEach(mod => {
+          mod.options.forEach(opt => {
+            message += `   + ${opt.name}${opt.price > 0 ? ` (+${currencySymbol}${opt.price.toFixed(2)})` : ''}\n`
+          })
+        })
+      }
+      // Show selected variations if any
+      if (item.selectedVariations && item.selectedVariations.length > 0) {
+        const variations = item.selectedVariations.map(v => `${v.name}: ${v.value}`).join(', ')
+        message += `   (${variations})\n`
+      }
+    })
+    message += `\n`
+
+    // Total
+    message += `*Total: ${currencySymbol}${order.total.toFixed(2)}*\n`
+
+    // Notes if any
+    if (order.notes) {
+      message += `\n*Notas:* ${order.notes}\n`
+    }
+
+    return message
+  }, [store.currency])
+
   // Process WhatsApp payment
   const processWhatsApp = useCallback(async () => {
     setLoading(true)
@@ -191,9 +251,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const createdOrder = await createOrder('whatsapp')
       setOrder(createdOrder)
 
-      // Build WhatsApp URL
+      // Build WhatsApp URL with full order details
       const phone = store.whatsapp.replace(/\D/g, '')
-      const message = encodeURIComponent(`Hola, hice el pedido ${createdOrder.orderNumber}`)
+      const message = encodeURIComponent(buildWhatsAppMessage(createdOrder))
       const waUrl = `https://wa.me/${phone}?text=${message}`
 
       // Save for confirmation page button (backup)
@@ -210,7 +270,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     } finally {
       setLoading(false)
     }
-  }, [createOrder, store.whatsapp, onOrderComplete])
+  }, [createOrder, store.whatsapp, onOrderComplete, buildWhatsAppMessage])
 
   // Process MercadoPago payment
   const processMercadoPago = useCallback(async () => {
