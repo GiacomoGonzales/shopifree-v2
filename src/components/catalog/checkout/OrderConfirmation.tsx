@@ -18,7 +18,16 @@ export default function OrderConfirmation({ order, whatsappUrl, onBackToStore, t
 
   const handleOpenWhatsApp = () => {
     if (whatsappUrl) {
-      window.location.href = whatsappUrl
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      if (isMobile) {
+        // Convert wa.me URL to native whatsapp:// scheme for direct app opening
+        const url = new URL(whatsappUrl)
+        const phone = url.pathname.replace('/', '')
+        const text = url.searchParams.get('text') || ''
+        window.location.href = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(text)}`
+      } else {
+        window.open(whatsappUrl, '_blank')
+      }
     }
   }
 

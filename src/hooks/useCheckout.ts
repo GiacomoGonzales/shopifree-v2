@@ -303,13 +303,19 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       // Build WhatsApp URL
       const message = generateWhatsAppMessage(createdOrder.orderNumber)
       const phone = store.whatsapp.replace(/\D/g, '')
-      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
-
-      // Save WhatsApp URL for the confirmation page button
-      setWhatsappUrl(waUrl)
+      const encodedMessage = encodeURIComponent(message)
 
       // Detect mobile device
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+      // Use different URL schemes for mobile (native app) vs desktop (web)
+      // whatsapp:// opens the app directly on mobile without browser redirect
+      const waUrl = isMobile
+        ? `whatsapp://send?phone=${phone}&text=${encodedMessage}`
+        : `https://wa.me/${phone}?text=${encodedMessage}`
+
+      // Save WhatsApp URL for the confirmation page button (always use wa.me for button)
+      setWhatsappUrl(`https://wa.me/${phone}?text=${encodedMessage}`)
 
       // Show confirmation first
       setStep('confirmation')
@@ -318,10 +324,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       // Open WhatsApp after a small delay to ensure state updates
       setTimeout(() => {
         if (isMobile) {
-          // On mobile, use location.href to avoid popup blockers
+          // On mobile, use native whatsapp:// scheme to open app directly
           window.location.href = waUrl
         } else {
-          // On desktop, open in new tab
+          // On desktop, open WhatsApp Web in new tab
           window.open(waUrl, '_blank')
         }
       }, 100)

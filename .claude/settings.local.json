@@ -14,7 +14,13 @@
       "WebSearch",
       "Bash(npx vercel logs shopifree.app --token=$VERCEL_TOKEN)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(cd:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npx cap:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:decants-alta-gracia.shopifree.app)",
+      "Bash(find:*)"
     ]
   }
 }
