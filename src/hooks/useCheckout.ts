@@ -3,8 +3,6 @@ import type { Store, Order, OrderItem } from '../types'
 import type { CartItem } from './useCart'
 import { orderService } from '../lib/firebase'
 import { createPreference, getInitPoint, cartToPreference } from '../lib/mercadopago'
-import { formatPrice } from '../lib/currency'
-import { getThemeTranslations } from '../themes/shared/translations'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'confirmation'
 
@@ -184,49 +182,6 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     return createdOrder
   }, [store.id, data, totalPrice, createOrderItems])
 
-  // Generate WhatsApp message with order details (simple format, no emojis for reliability)
-  const generateWhatsAppMessage = useCallback((orderNumber: string): string => {
-    const t = getThemeTranslations(store.language)
-    const lines: string[] = []
-
-    // Header
-    lines.push(t.waGreeting)
-    lines.push(`${t.waOrderNumber}: ${orderNumber}`)
-    lines.push('')
-
-    // Order details
-    lines.push(`${t.waOrderDetails}:`)
-    items.forEach((item, index) => {
-      let itemLine = `${index + 1}. ${item.product.name} x${item.quantity}`
-
-      // Add variants if any
-      if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
-        const variants = Object.entries(item.selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ')
-        itemLine += ` (${variants})`
-      }
-
-      // Add price
-      itemLine += ` - ${formatPrice(item.itemPrice * item.quantity, store.currency)}`
-      lines.push(itemLine)
-    })
-    lines.push('')
-    lines.push(`${t.waTotal}: ${formatPrice(totalPrice, store.currency)}`)
-    lines.push('')
-
-    // Delivery
-    if (data.delivery?.method === 'pickup') {
-      lines.push(t.waPickup)
-    } else if (data.delivery?.address) {
-      lines.push(`${t.waDelivery}: ${data.delivery.address.street}, ${data.delivery.address.city}`)
-    }
-
-    // Customer
-    lines.push(`${t.waCustomer}: ${data.customer?.name || ''}`)
-    lines.push(`${t.waPhone}: ${data.customer?.phone || ''}`)
-
-    return lines.join('\n')
-  }, [items, totalPrice, store.currency, store.language, data.delivery, data.customer])
-
   // Process WhatsApp payment
   const processWhatsApp = useCallback(async () => {
     setLoading(true)
@@ -236,25 +191,26 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const createdOrder = await createOrder('whatsapp')
       setOrder(createdOrder)
 
-      // Build WhatsApp URL using wa.me (same as floating button)
-      const message = generateWhatsAppMessage(createdOrder.orderNumber)
+      // Build WhatsApp URL
       const phone = store.whatsapp.replace(/\D/g, '')
-      const encodedMessage = encodeURIComponent(message)
-      const waUrl = `https://wa.me/${phone}?text=${encodedMessage}`
+      const message = encodeURIComponent(`Hola, hice el pedido ${createdOrder.orderNumber}`)
+      const waUrl = `https://wa.me/${phone}?text=${message}`
 
-      // Save WhatsApp URL for the confirmation page button
+      // Save for confirmation page button (backup)
       setWhatsappUrl(waUrl)
 
-      // Show confirmation - user will click the WhatsApp button manually
-      // (auto-opening is blocked by browsers and causes issues)
+      // Show confirmation
       setStep('confirmation')
       onOrderComplete?.(createdOrder)
+
+      // Open WhatsApp directly using location.href (doesn't get blocked like window.open)
+      window.location.href = waUrl
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating order')
     } finally {
       setLoading(false)
     }
-  }, [createOrder, generateWhatsAppMessage, store.whatsapp, onOrderComplete])
+  }, [createOrder, store.whatsapp, onOrderComplete])
 
   // Process MercadoPago payment
   const processMercadoPago = useCallback(async () => {
