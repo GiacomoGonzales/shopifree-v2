@@ -3,6 +3,7 @@
     "home": "Inicio",
     "products": "Productos",
     "orders": "Pedidos",
+    "customers": "Clientes",
     "analytics": "Estadísticas",
     "appearance": "Apariencia",
     "myBusiness": "Mi Negocio",
@@ -85,6 +86,30 @@
     "empty": {
       "title": "No hay pedidos",
       "description": "Los pedidos de tu tienda aparecerán aquí"
+    }
+  },
+  "customers": {
+    "title": "Clientes",
+    "customer": "cliente",
+    "customers": "clientes",
+    "order": "pedido",
+    "ordersLabel": "pedidos",
+    "orders": "Pedidos",
+    "phone": "Teléfono",
+    "totalSpent": "Total gastado",
+    "totalOrders": "Total pedidos",
+    "lastOrder": "Último pedido",
+    "actions": "Acciones",
+    "view": "Ver",
+    "contactInfo": "Información de contacto",
+    "orderHistory": "Historial de pedidos",
+    "contactWhatsApp": "Contactar por WhatsApp",
+    "close": "Cerrar",
+    "searchPlaceholder": "Buscar por nombre, teléfono o email...",
+    "fetchError": "Error al cargar clientes",
+    "empty": {
+      "title": "No hay clientes",
+      "description": "Los clientes de tu tienda aparecerán aquí cuando realicen pedidos"
     }
   },
   "products": {

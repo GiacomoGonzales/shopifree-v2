@@ -24,6 +24,7 @@ import Payments from './pages/dashboard/Payments'
 import Plan from './pages/dashboard/Plan'
 import Analytics from './pages/dashboard/Analytics'
 import Orders from './pages/dashboard/Orders'
+import Customers from './pages/dashboard/Customers'
 import Catalog from './pages/catalog/Catalog'
 
 // Blog Pages
@@ -150,6 +151,7 @@ function AppRoutes() {
           <Route path="products/:productId" element={<ProductForm />} />
           <Route path="categories" element={<Navigate to="products" replace />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="customers" element={<Customers />} />
           <Route path="analytics" element={<Analytics />} />
           {/* Mi Tienda */}
           <Route path="branding" element={<Branding />} />

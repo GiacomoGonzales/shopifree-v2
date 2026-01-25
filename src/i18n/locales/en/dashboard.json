@@ -3,6 +3,7 @@
     "home": "Home",
     "products": "Products",
     "orders": "Orders",
+    "customers": "Customers",
     "analytics": "Analytics",
     "appearance": "Appearance",
     "myBusiness": "My Business",
@@ -85,6 +86,30 @@
     "empty": {
       "title": "No orders",
       "description": "Your store orders will appear here"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "customer": "customer",
+    "customers": "customers",
+    "order": "order",
+    "ordersLabel": "orders",
+    "orders": "Orders",
+    "phone": "Phone",
+    "totalSpent": "Total spent",
+    "totalOrders": "Total orders",
+    "lastOrder": "Last order",
+    "actions": "Actions",
+    "view": "View",
+    "contactInfo": "Contact information",
+    "orderHistory": "Order history",
+    "contactWhatsApp": "Contact via WhatsApp",
+    "close": "Close",
+    "searchPlaceholder": "Search by name, phone or email...",
+    "fetchError": "Error loading customers",
+    "empty": {
+      "title": "No customers",
+      "description": "Your customers will appear here when they place orders"
     }
   },
   "products": {
