@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "products": "Products",
+    "orders": "Orders",
     "analytics": "Analytics",
     "appearance": "Appearance",
     "myBusiness": "My Business",
@@ -52,6 +53,38 @@
       "topProducts": "Top products",
       "conversionFunnel": "Conversion funnel",
       "deviceDistribution": "By device"
+    }
+  },
+  "orders": {
+    "title": "Orders",
+    "order": "order",
+    "orders": "orders",
+    "all": "All",
+    "fetchError": "Error loading orders",
+    "statusUpdated": "Status updated",
+    "statusError": "Error updating status",
+    "orderNumber": "Order #",
+    "customer": "Customer",
+    "total": "Total",
+    "status": "Status",
+    "date": "Date",
+    "actions": "Actions",
+    "view": "View",
+    "customerInfo": "Customer information",
+    "name": "Name",
+    "phone": "Phone",
+    "deliveryInfo": "Delivery information",
+    "method": "Method",
+    "pickup": "Store pickup",
+    "delivery": "Delivery",
+    "address": "Address",
+    "items": "Products",
+    "paymentMethod": "Payment method",
+    "close": "Close",
+    "searchPlaceholder": "Search by order #, name or phone...",
+    "empty": {
+      "title": "No orders",
+      "description": "Your store orders will appear here"
     }
   },
   "products": {

@@ -2,6 +2,7 @@
   "nav": {
     "home": "Inicio",
     "products": "Productos",
+    "orders": "Pedidos",
     "analytics": "Estadísticas",
     "appearance": "Apariencia",
     "myBusiness": "Mi Negocio",
@@ -52,6 +53,38 @@
       "topProducts": "Productos mas vistos",
       "conversionFunnel": "Embudo de conversion",
       "deviceDistribution": "Por dispositivo"
+    }
+  },
+  "orders": {
+    "title": "Pedidos",
+    "order": "pedido",
+    "orders": "pedidos",
+    "all": "Todos",
+    "fetchError": "Error al cargar pedidos",
+    "statusUpdated": "Estado actualizado",
+    "statusError": "Error al actualizar estado",
+    "orderNumber": "Nº Pedido",
+    "customer": "Cliente",
+    "total": "Total",
+    "status": "Estado",
+    "date": "Fecha",
+    "actions": "Acciones",
+    "view": "Ver",
+    "customerInfo": "Información del cliente",
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "deliveryInfo": "Información de entrega",
+    "method": "Método",
+    "pickup": "Retiro en tienda",
+    "delivery": "Delivery",
+    "address": "Dirección",
+    "items": "Productos",
+    "paymentMethod": "Método de pago",
+    "close": "Cerrar",
+    "searchPlaceholder": "Buscar por nº pedido, nombre o teléfono...",
+    "empty": {
+      "title": "No hay pedidos",
+      "description": "Los pedidos de tu tienda aparecerán aquí"
     }
   },
   "products": {

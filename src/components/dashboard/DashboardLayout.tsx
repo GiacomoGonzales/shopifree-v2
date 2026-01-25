@@ -38,6 +38,14 @@ function ChartIcon() {
   )
 }
 
+function OrdersIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    </svg>
+  )
+}
+
 
 function PaletteIcon() {
   return (
@@ -111,6 +119,7 @@ export default function DashboardLayout() {
   const navigation: NavElement[] = useMemo(() => [
     { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
     { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
+    { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
     { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
     'separator',
     { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
