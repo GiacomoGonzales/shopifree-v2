@@ -61,6 +61,26 @@
     "order": "order",
     "orders": "orders",
     "all": "All",
+    "filters": "Filters",
+    "date": {
+      "label": "Date",
+      "all": "All",
+      "today": "Today",
+      "week": "This week",
+      "month": "This month"
+    },
+    "payment": {
+      "all": "All payments",
+      "whatsapp": "WhatsApp",
+      "mercadopago": "MercadoPago",
+      "transfer": "Transfer"
+    },
+    "stats": {
+      "totalOrders": "Total orders",
+      "totalRevenue": "Total revenue",
+      "avgOrder": "Avg. order",
+      "pendingOrders": "Pending"
+    },
     "fetchError": "Error loading orders",
     "statusUpdated": "Status updated",
     "statusError": "Error updating status",
@@ -68,7 +88,6 @@
     "customer": "Customer",
     "total": "Total",
     "status": "Status",
-    "date": "Date",
     "actions": "Actions",
     "view": "View",
     "customerInfo": "Customer information",
@@ -83,6 +102,11 @@
     "paymentMethod": "Payment method",
     "close": "Close",
     "searchPlaceholder": "Search by order #, name or phone...",
+    "clearFilters": "Clear filters",
+    "showingResults": "Showing {{count}} of {{total}} orders",
+    "noResults": "No results",
+    "tryDifferentFilters": "Try different filters or search terms",
+    "pagination": "{{start}}-{{end}} of {{total}}",
     "empty": {
       "title": "No orders",
       "description": "Your store orders will appear here"

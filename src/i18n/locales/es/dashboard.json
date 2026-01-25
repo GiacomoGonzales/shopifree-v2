@@ -71,6 +71,30 @@
     "date": "Fecha",
     "actions": "Acciones",
     "view": "Ver",
+    "filters": "Filtros",
+    "clearFilters": "Limpiar filtros",
+    "totalOrders": "Total pedidos",
+    "totalRevenue": "Ingresos totales",
+    "avgOrder": "Ticket promedio",
+    "pendingOrders": "Pendientes",
+    "dateFilter": "Período",
+    "date": {
+      "all": "Todos",
+      "today": "Hoy",
+      "week": "Esta semana",
+      "month": "Este mes"
+    },
+    "paymentFilter": "Método de pago",
+    "payment": {
+      "all": "Todos",
+      "whatsapp": "WhatsApp",
+      "mercadopago": "MercadoPago",
+      "transfer": "Transferencia"
+    },
+    "showingResults": "Mostrando {{count}} de {{total}} pedidos",
+    "noResults": "Sin resultados",
+    "tryDifferentFilters": "Intenta con otros filtros o términos de búsqueda",
+    "pagination": "{{start}}-{{end}} de {{total}}",
     "customerInfo": "Información del cliente",
     "name": "Nombre",
     "phone": "Teléfono",
@@ -81,6 +105,7 @@
     "address": "Dirección",
     "items": "Productos",
     "paymentMethod": "Método de pago",
+    "contactWhatsApp": "Contactar por WhatsApp",
     "close": "Cerrar",
     "searchPlaceholder": "Buscar por nº pedido, nombre o teléfono...",
     "empty": {
