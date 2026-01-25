@@ -159,14 +159,25 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       orderData.notes = data.delivery.observations
     }
 
-    const orderId = await orderService.create(store.id, orderData)
+    const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-    // Fetch the created order to get the order number
-    const orders = await orderService.getAll(store.id, 1)
-    const createdOrder = orders.find(o => o.id === orderId)
-
-    if (!createdOrder) {
-      throw new Error('Failed to retrieve created order')
+    // Build the order object from the data we have (no need to fetch)
+    const createdOrder: Order = {
+      id: orderId,
+      storeId: store.id,
+      orderNumber,
+      items: orderData.items!,
+      customer: orderData.customer,
+      deliveryMethod: orderData.deliveryMethod,
+      deliveryAddress: orderData.deliveryAddress,
+      subtotal: totalPrice,
+      total: totalPrice,
+      status: 'pending',
+      paymentMethod,
+      paymentStatus: 'pending',
+      notes: orderData.notes,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
 
     return createdOrder

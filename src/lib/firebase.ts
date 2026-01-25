@@ -281,13 +281,14 @@ export const orderService = {
     })) as Order[]
   },
 
-  async create(storeId: string, data: Partial<Order>): Promise<string> {
+  async create(storeId: string, data: Partial<Order>): Promise<{ id: string; orderNumber: string }> {
     const ordersRef = this.getCollection(storeId)
     const newDocRef = doc(ordersRef)
 
-    // Generate order number
-    const snapshot = await getDocs(query(this.getCollection(storeId)))
-    const orderNumber = `ORD-${String(snapshot.size + 1).padStart(3, '0')}`
+    // Generate order number using timestamp + random suffix (no read required)
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+    const orderNumber = `ORD-${timestamp.toString(36).toUpperCase().slice(-4)}${random}`
 
     await setDoc(newDocRef, {
       ...data,
@@ -298,7 +299,7 @@ export const orderService = {
       createdAt: new Date(),
       updatedAt: new Date()
     })
-    return newDocRef.id
+    return { id: newDocRef.id, orderNumber }
   },
 
   async updateStatus(storeId: string, orderId: string, status: Order['status']): Promise<void> {
