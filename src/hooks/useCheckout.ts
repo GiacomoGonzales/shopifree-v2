@@ -182,37 +182,92 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     return createdOrder
   }, [store.id, data, totalPrice, createOrderItems])
 
+  // WhatsApp message translations
+  const getMessageLabels = useCallback(() => {
+    const lang = store.language || 'es'
+    const businessType = store.businessType || 'general'
+
+    // Adapt "items" label based on business type
+    const getItemsLabel = () => {
+      if (lang === 'en') {
+        switch (businessType) {
+          case 'food': return 'Items'
+          case 'beauty': return 'Services'
+          default: return 'Products'
+        }
+      }
+      // Spanish (default)
+      switch (businessType) {
+        case 'food': return 'Pedido'
+        case 'beauty': return 'Servicios'
+        default: return 'Productos'
+      }
+    }
+
+    if (lang === 'en') {
+      return {
+        newOrder: 'New Order',
+        customer: 'Customer',
+        name: 'Name',
+        phone: 'Phone',
+        delivery: 'Delivery',
+        pickup: 'Store pickup',
+        homeDelivery: 'Home delivery',
+        ref: 'Ref',
+        items: getItemsLabel(),
+        total: 'Total',
+        notes: 'Notes'
+      }
+    }
+
+    // Spanish (default)
+    return {
+      newOrder: 'Nuevo Pedido',
+      customer: 'Cliente',
+      name: 'Nombre',
+      phone: 'Tel',
+      delivery: 'Entrega',
+      pickup: 'Retiro en tienda',
+      homeDelivery: 'Delivery',
+      ref: 'Ref',
+      items: getItemsLabel(),
+      total: 'Total',
+      notes: 'Notas'
+    }
+  }, [store.language, store.businessType])
+
   // Build WhatsApp message with full order details
   const buildWhatsAppMessage = useCallback((order: Order): string => {
     const currency = store.currency || 'USD'
     const currencySymbol = currency === 'PEN' ? 'S/' : currency === 'MXN' ? '$' : currency === 'COP' ? '$' : currency === 'ARS' ? '$' : '$'
+    const labels = getMessageLabels()
 
-    let message = `*Nuevo Pedido ${order.orderNumber}*\n\n`
+    let message = `*${labels.newOrder} ${order.orderNumber}*\n\n`
 
     // Customer info
-    message += `*Cliente:*\n`
-    message += `Nombre: ${order.customer?.name || '-'}\n`
-    message += `Tel: ${order.customer?.phone || '-'}\n`
+    message += `*${labels.customer}:*\n`
+    message += `${labels.name}: ${order.customer?.name || '-'}\n`
+    message += `${labels.phone}: ${order.customer?.phone || '-'}\n`
     if (order.customer?.email) {
       message += `Email: ${order.customer.email}\n`
     }
     message += `\n`
 
     // Delivery info
-    message += `*Entrega:*\n`
+    message += `*${labels.delivery}:*\n`
     if (order.deliveryMethod === 'pickup') {
-      message += `Retiro en tienda\n`
+      message += `${labels.pickup}\n`
     } else if (order.deliveryMethod === 'delivery' && order.deliveryAddress) {
-      message += `Delivery\n`
+      message += `${labels.homeDelivery}\n`
       message += `${order.deliveryAddress.street}, ${order.deliveryAddress.city}\n`
       if (order.deliveryAddress.reference) {
-        message += `Ref: ${order.deliveryAddress.reference}\n`
+        message += `${labels.ref}: ${order.deliveryAddress.reference}\n`
       }
     }
     message += `\n`
 
     // Order items
-    message += `*Productos:*\n`
+    message += `*${labels.items}:*\n`
     order.items.forEach(item => {
       message += `${item.quantity}x ${item.productName} - ${currencySymbol}${item.itemTotal.toFixed(2)}\n`
       // Show selected modifiers if any
@@ -232,15 +287,15 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     message += `\n`
 
     // Total
-    message += `*Total: ${currencySymbol}${order.total.toFixed(2)}*\n`
+    message += `*${labels.total}: ${currencySymbol}${order.total.toFixed(2)}*\n`
 
     // Notes if any
     if (order.notes) {
-      message += `\n*Notas:* ${order.notes}\n`
+      message += `\n*${labels.notes}:* ${order.notes}\n`
     }
 
     return message
-  }, [store.currency])
+  }, [store.currency, getMessageLabels])
 
   // Process WhatsApp payment
   const processWhatsApp = useCallback(async () => {
