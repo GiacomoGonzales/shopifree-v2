@@ -184,109 +184,45 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     return createdOrder
   }, [store.id, data, totalPrice, createOrderItems])
 
-  // Generate WhatsApp message with order details (with emojis and translations)
+  // Generate WhatsApp message with order details (simple format, no emojis for reliability)
   const generateWhatsAppMessage = useCallback((orderNumber: string): string => {
     const t = getThemeTranslations(store.language)
     const lines: string[] = []
 
-    // Emoji constants (using Unicode code points for reliability)
-    const emoji = {
-      wave: String.fromCodePoint(0x1F44B),      // 👋
-      receipt: String.fromCodePoint(0x1F9FE),   // 🧾
-      package: String.fromCodePoint(0x1F4E6),   // 📦
-      label: String.fromCodePoint(0x1F3F7),     // 🏷
-      plus: String.fromCodePoint(0x2795),       // ➕
-      memo: String.fromCodePoint(0x1F4DD),      // 📝
-      money: String.fromCodePoint(0x1F4B0),     // 💰
-      dollar: String.fromCodePoint(0x1F4B5),    // 💵
-      store: String.fromCodePoint(0x1F3EA),     // 🏪
-      truck: String.fromCodePoint(0x1F69A),     // 🚚
-      pin: String.fromCodePoint(0x1F4CD),       // 📍
-      pushpin: String.fromCodePoint(0x1F4CC),   // 📌
-      person: String.fromCodePoint(0x1F464),    // 👤
-      phone: String.fromCodePoint(0x1F4F1),     // 📱
-      email: String.fromCodePoint(0x1F4E7),     // 📧
-      sparkles: String.fromCodePoint(0x2728)    // ✨
-    }
-
-    // Header with greeting and order number
-    lines.push(`${emoji.wave} ${t.waGreeting}`)
-    lines.push(`${emoji.receipt} *${t.waOrderNumber}: ${orderNumber}*`)
+    // Header
+    lines.push(t.waGreeting)
+    lines.push(`${t.waOrderNumber}: ${orderNumber}`)
     lines.push('')
 
-    // Order details section
-    lines.push(`${emoji.package} *${t.waOrderDetails}:*`)
-    lines.push('─────────────────')
-
+    // Order details
+    lines.push(`${t.waOrderDetails}:`)
     items.forEach((item, index) => {
-      // Product name and basic info
-      lines.push(`${index + 1}. *${item.product.name}*`)
-      lines.push(`   ${t.waQuantity}: ${item.quantity}`)
-      lines.push(`   ${t.waUnitPrice}: ${formatPrice(item.product.price, store.currency)}`)
+      let itemLine = `${index + 1}. ${item.product.name} x${item.quantity}`
 
-      // Selected variants (size, color, etc.)
+      // Add variants if any
       if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
-        Object.entries(item.selectedVariants).forEach(([name, value]) => {
-          lines.push(`   ${emoji.label} ${name}: ${value}`)
-        })
+        const variants = Object.entries(item.selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ')
+        itemLine += ` (${variants})`
       }
 
-      // Selected modifiers (extras, additions)
-      if (item.selectedModifiers && item.selectedModifiers.length > 0) {
-        item.selectedModifiers.forEach(mod => {
-          const opts = mod.options.map(o => {
-            const priceStr = o.price > 0 ? ` (+${formatPrice(o.price, store.currency)})` : ''
-            return `${o.name}${priceStr}`
-          }).join(', ')
-          lines.push(`   ${emoji.plus} ${mod.groupName}: ${opts}`)
-        })
-      }
-
-      // Item custom note
-      if (item.customNote) {
-        lines.push(`   ${emoji.memo} "${item.customNote}"`)
-      }
-
-      // Item subtotal
-      lines.push(`   ${emoji.money} ${t.waSubtotal}: ${formatPrice(item.itemPrice * item.quantity, store.currency)}`)
-      lines.push('')
+      // Add price
+      itemLine += ` - ${formatPrice(item.itemPrice * item.quantity, store.currency)}`
+      lines.push(itemLine)
     })
-
-    lines.push('─────────────────')
-    lines.push(`${emoji.dollar} *${t.waTotal}: ${formatPrice(totalPrice, store.currency)}*`)
+    lines.push('')
+    lines.push(`${t.waTotal}: ${formatPrice(totalPrice, store.currency)}`)
     lines.push('')
 
-    // Delivery information
+    // Delivery
     if (data.delivery?.method === 'pickup') {
-      lines.push(`${emoji.store} *${t.waPickup}*`)
+      lines.push(t.waPickup)
     } else if (data.delivery?.address) {
-      lines.push(`${emoji.truck} *${t.waDelivery}*`)
-      lines.push(`${emoji.pin} ${t.waDeliveryAddress}:`)
-      lines.push(`   ${data.delivery.address.street}`)
-      lines.push(`   ${data.delivery.address.city}`)
-      if (data.delivery.address.reference) {
-        lines.push(`   ${emoji.pushpin} ${t.waReference}: ${data.delivery.address.reference}`)
-      }
-    }
-    lines.push('')
-
-    // Observations
-    if (data.delivery?.observations) {
-      lines.push(`${emoji.memo} *${t.waObservations}:*`)
-      lines.push(`   ${data.delivery.observations}`)
-      lines.push('')
+      lines.push(`${t.waDelivery}: ${data.delivery.address.street}, ${data.delivery.address.city}`)
     }
 
-    // Customer information
-    lines.push(`${emoji.person} *${t.waCustomer}:* ${data.customer?.name || ''}`)
-    lines.push(`${emoji.phone} *${t.waPhone}:* ${data.customer?.phone || ''}`)
-    if (data.customer?.email) {
-      lines.push(`${emoji.email} *Email:* ${data.customer.email}`)
-    }
-    lines.push('')
-
-    // Thank you message
-    lines.push(`${emoji.sparkles} ${t.waThankYou}`)
+    // Customer
+    lines.push(`${t.waCustomer}: ${data.customer?.name || ''}`)
+    lines.push(`${t.waPhone}: ${data.customer?.phone || ''}`)
 
     return lines.join('\n')
   }, [items, totalPrice, store.currency, store.language, data.delivery, data.customer])
