@@ -51,6 +51,82 @@ export interface ThemeTranslations {
 
   // Powered by
   poweredBy: string
+
+  // Checkout
+  checkoutTitle: string
+  customerInfo: string
+  yourName: string
+  yourPhone: string
+  yourEmail: string
+  emailOptional: string
+  continueBtn: string
+  backBtn: string
+
+  // Delivery
+  howToReceive: string
+  pickupInStore: string
+  homeDelivery: string
+  deliveryAddress: string
+  streetAddress: string
+  city: string
+  reference: string
+  referenceOptional: string
+  storeAddress: string
+
+  // Payment
+  selectPayment: string
+  payViaWhatsApp: string
+  payViaMercadoPago: string
+  payViaTransfer: string
+  whatsappPaymentDesc: string
+  mercadopagoPaymentDesc: string
+  transferPaymentDesc: string
+
+  // Order confirmation
+  orderPlaced: string
+  orderNumber: string
+  orderPending: string
+  orderProcessing: string
+  backToStore: string
+
+  // Bank transfer
+  bankTransferInfo: string
+  bankName: string
+  accountHolder: string
+  accountNumber: string
+  copyToClipboard: string
+  copied: string
+
+  // Validation
+  nameRequired: string
+  phoneRequired: string
+  addressRequired: string
+  cityRequired: string
+
+  // Order summary
+  orderSummary: string
+  subtotal: string
+
+  // Observations
+  observations: string
+  observationsPlaceholder: string
+
+  // WhatsApp message parts
+  waGreeting: string
+  waOrderNumber: string
+  waOrderDetails: string
+  waQuantity: string
+  waUnitPrice: string
+  waSubtotal: string
+  waTotal: string
+  waDelivery: string
+  waPickup: string
+  waDeliveryAddress: string
+  waReference: string
+  waObservations: string
+  waCustomer: string
+  waPhone: string
+  waThankYou: string
 }
 
 export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
@@ -100,6 +176,82 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
 
     // Powered by
     poweredBy: 'Creado con Shopifree',
+
+    // Checkout
+    checkoutTitle: 'Finalizar pedido',
+    customerInfo: 'Tus datos',
+    yourName: 'Tu nombre',
+    yourPhone: 'Tu telefono',
+    yourEmail: 'Tu email',
+    emailOptional: 'opcional',
+    continueBtn: 'Continuar',
+    backBtn: 'Atras',
+
+    // Delivery
+    howToReceive: 'Como quieres recibir tu pedido?',
+    pickupInStore: 'Retiro en tienda',
+    homeDelivery: 'Delivery a domicilio',
+    deliveryAddress: 'Direccion de entrega',
+    streetAddress: 'Calle y numero',
+    city: 'Ciudad',
+    reference: 'Referencia',
+    referenceOptional: 'ej: cerca del parque',
+    storeAddress: 'Direccion de la tienda',
+
+    // Payment
+    selectPayment: 'Metodo de pago',
+    payViaWhatsApp: 'Coordinar por WhatsApp',
+    payViaMercadoPago: 'Pagar con MercadoPago',
+    payViaTransfer: 'Transferencia bancaria',
+    whatsappPaymentDesc: 'Te contactaremos para coordinar',
+    mercadopagoPaymentDesc: 'Pago seguro con tarjeta o efectivo',
+    transferPaymentDesc: 'Transferencia a cuenta bancaria',
+
+    // Order confirmation
+    orderPlaced: 'Pedido realizado!',
+    orderNumber: 'Numero de pedido',
+    orderPending: 'Tu pedido esta pendiente de pago',
+    orderProcessing: 'Estamos procesando tu pedido',
+    backToStore: 'Volver a la tienda',
+
+    // Bank transfer
+    bankTransferInfo: 'Datos para transferencia',
+    bankName: 'Banco',
+    accountHolder: 'Titular',
+    accountNumber: 'Numero de cuenta',
+    copyToClipboard: 'Copiar',
+    copied: 'Copiado!',
+
+    // Validation
+    nameRequired: 'El nombre es requerido',
+    phoneRequired: 'El telefono es requerido',
+    addressRequired: 'La direccion es requerida',
+    cityRequired: 'La ciudad es requerida',
+
+    // Order summary
+    orderSummary: 'Resumen del pedido',
+    subtotal: 'Subtotal',
+
+    // Observations
+    observations: 'Observaciones',
+    observationsPlaceholder: 'Alguna indicacion especial para tu pedido?',
+
+    // WhatsApp message parts
+    waGreeting: 'Hola! Acabo de realizar un pedido',
+    waOrderNumber: 'Pedido',
+    waOrderDetails: 'Detalle del pedido',
+    waQuantity: 'Cantidad',
+    waUnitPrice: 'Precio unitario',
+    waSubtotal: 'Subtotal',
+    waTotal: 'Total',
+    waDelivery: 'Entrega a domicilio',
+    waPickup: 'Retiro en tienda',
+    waDeliveryAddress: 'Direccion de entrega',
+    waReference: 'Referencia',
+    waObservations: 'Observaciones',
+    waCustomer: 'Cliente',
+    waPhone: 'Telefono',
+    waThankYou: 'Gracias por tu compra!',
   },
 
   en: {
@@ -148,6 +300,82 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
 
     // Powered by
     poweredBy: 'Powered by Shopifree',
+
+    // Checkout
+    checkoutTitle: 'Complete order',
+    customerInfo: 'Your info',
+    yourName: 'Your name',
+    yourPhone: 'Your phone',
+    yourEmail: 'Your email',
+    emailOptional: 'optional',
+    continueBtn: 'Continue',
+    backBtn: 'Back',
+
+    // Delivery
+    howToReceive: 'How do you want to receive your order?',
+    pickupInStore: 'Store pickup',
+    homeDelivery: 'Home delivery',
+    deliveryAddress: 'Delivery address',
+    streetAddress: 'Street address',
+    city: 'City',
+    reference: 'Reference',
+    referenceOptional: 'e.g: near the park',
+    storeAddress: 'Store address',
+
+    // Payment
+    selectPayment: 'Payment method',
+    payViaWhatsApp: 'Coordinate via WhatsApp',
+    payViaMercadoPago: 'Pay with MercadoPago',
+    payViaTransfer: 'Bank transfer',
+    whatsappPaymentDesc: 'We will contact you to coordinate',
+    mercadopagoPaymentDesc: 'Secure payment with card or cash',
+    transferPaymentDesc: 'Transfer to bank account',
+
+    // Order confirmation
+    orderPlaced: 'Order placed!',
+    orderNumber: 'Order number',
+    orderPending: 'Your order is pending payment',
+    orderProcessing: 'We are processing your order',
+    backToStore: 'Back to store',
+
+    // Bank transfer
+    bankTransferInfo: 'Bank transfer details',
+    bankName: 'Bank',
+    accountHolder: 'Account holder',
+    accountNumber: 'Account number',
+    copyToClipboard: 'Copy',
+    copied: 'Copied!',
+
+    // Validation
+    nameRequired: 'Name is required',
+    phoneRequired: 'Phone is required',
+    addressRequired: 'Address is required',
+    cityRequired: 'City is required',
+
+    // Order summary
+    orderSummary: 'Order summary',
+    subtotal: 'Subtotal',
+
+    // Observations
+    observations: 'Notes',
+    observationsPlaceholder: 'Any special instructions for your order?',
+
+    // WhatsApp message parts
+    waGreeting: 'Hi! I just placed an order',
+    waOrderNumber: 'Order',
+    waOrderDetails: 'Order details',
+    waQuantity: 'Quantity',
+    waUnitPrice: 'Unit price',
+    waSubtotal: 'Subtotal',
+    waTotal: 'Total',
+    waDelivery: 'Home delivery',
+    waPickup: 'Store pickup',
+    waDeliveryAddress: 'Delivery address',
+    waReference: 'Reference',
+    waObservations: 'Notes',
+    waCustomer: 'Customer',
+    waPhone: 'Phone',
+    waThankYou: 'Thank you for your purchase!',
   },
 
   pt: {
@@ -196,6 +424,82 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
 
     // Powered by
     poweredBy: 'Criado com Shopifree',
+
+    // Checkout
+    checkoutTitle: 'Finalizar pedido',
+    customerInfo: 'Seus dados',
+    yourName: 'Seu nome',
+    yourPhone: 'Seu telefone',
+    yourEmail: 'Seu email',
+    emailOptional: 'opcional',
+    continueBtn: 'Continuar',
+    backBtn: 'Voltar',
+
+    // Delivery
+    howToReceive: 'Como deseja receber seu pedido?',
+    pickupInStore: 'Retirar na loja',
+    homeDelivery: 'Entrega em domicilio',
+    deliveryAddress: 'Endereco de entrega',
+    streetAddress: 'Rua e numero',
+    city: 'Cidade',
+    reference: 'Referencia',
+    referenceOptional: 'ex: perto do parque',
+    storeAddress: 'Endereco da loja',
+
+    // Payment
+    selectPayment: 'Forma de pagamento',
+    payViaWhatsApp: 'Combinar pelo WhatsApp',
+    payViaMercadoPago: 'Pagar com MercadoPago',
+    payViaTransfer: 'Transferencia bancaria',
+    whatsappPaymentDesc: 'Entraremos em contato para combinar',
+    mercadopagoPaymentDesc: 'Pagamento seguro com cartao ou dinheiro',
+    transferPaymentDesc: 'Transferencia para conta bancaria',
+
+    // Order confirmation
+    orderPlaced: 'Pedido realizado!',
+    orderNumber: 'Numero do pedido',
+    orderPending: 'Seu pedido esta pendente de pagamento',
+    orderProcessing: 'Estamos processando seu pedido',
+    backToStore: 'Voltar para a loja',
+
+    // Bank transfer
+    bankTransferInfo: 'Dados para transferencia',
+    bankName: 'Banco',
+    accountHolder: 'Titular',
+    accountNumber: 'Numero da conta',
+    copyToClipboard: 'Copiar',
+    copied: 'Copiado!',
+
+    // Validation
+    nameRequired: 'Nome e obrigatorio',
+    phoneRequired: 'Telefone e obrigatorio',
+    addressRequired: 'Endereco e obrigatorio',
+    cityRequired: 'Cidade e obrigatoria',
+
+    // Order summary
+    orderSummary: 'Resumo do pedido',
+    subtotal: 'Subtotal',
+
+    // Observations
+    observations: 'Observacoes',
+    observationsPlaceholder: 'Alguma instrucao especial para seu pedido?',
+
+    // WhatsApp message parts
+    waGreeting: 'Ola! Acabei de fazer um pedido',
+    waOrderNumber: 'Pedido',
+    waOrderDetails: 'Detalhes do pedido',
+    waQuantity: 'Quantidade',
+    waUnitPrice: 'Preco unitario',
+    waSubtotal: 'Subtotal',
+    waTotal: 'Total',
+    waDelivery: 'Entrega em domicilio',
+    waPickup: 'Retirar na loja',
+    waDeliveryAddress: 'Endereco de entrega',
+    waReference: 'Referencia',
+    waObservations: 'Observacoes',
+    waCustomer: 'Cliente',
+    waPhone: 'Telefone',
+    waThankYou: 'Obrigado pela compra!',
   },
 }
 

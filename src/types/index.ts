@@ -344,6 +344,14 @@ export interface Order {
     email?: string
   }
 
+  // Delivery
+  deliveryMethod?: 'pickup' | 'delivery'
+  deliveryAddress?: {
+    street: string
+    city: string
+    reference?: string
+  }
+
   // Totales
   subtotal: number
   total: number
@@ -352,7 +360,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 
   // Pago
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'cash'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'transfer' | 'cash'
   paymentStatus?: 'pending' | 'paid' | 'refunded'
   paymentId?: string            // ID de MercadoPago
 

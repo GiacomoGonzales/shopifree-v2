@@ -1,0 +1,227 @@
+import { useState } from 'react'
+import { useTheme } from '../ThemeContext'
+import type { DeliveryData } from '../../../hooks/useCheckout'
+import type { ThemeTranslations } from '../../../themes/shared/translations'
+import type { Store } from '../../../types'
+
+interface Props {
+  data?: DeliveryData
+  store: Store
+  onSubmit: (data: DeliveryData) => void
+  onBack: () => void
+  error?: string | null
+  t: ThemeTranslations
+}
+
+export default function DeliverySelector({ data, store, onSubmit, onBack, error, t }: Props) {
+  const { theme } = useTheme()
+  const [method, setMethod] = useState<'pickup' | 'delivery'>(data?.method || 'pickup')
+  const [street, setStreet] = useState(data?.address?.street || '')
+  const [city, setCity] = useState(data?.address?.city || '')
+  const [reference, setReference] = useState(data?.address?.reference || '')
+  const [observations, setObservations] = useState(data?.observations || '')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Build delivery data and pass to parent
+    const deliveryData: DeliveryData = {
+      method,
+      address: method === 'delivery' ? { street, city, reference: reference || undefined } : undefined,
+      observations: observations || undefined
+    }
+    onSubmit(deliveryData)
+  }
+
+  const inputStyle = {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    color: theme.colors.text,
+    borderRadius: theme.radius.md
+  }
+
+  const optionStyle = (selected: boolean) => ({
+    backgroundColor: selected ? `${theme.colors.primary}10` : theme.colors.surface,
+    borderColor: selected ? theme.colors.primary : theme.colors.border,
+    color: theme.colors.text,
+    borderRadius: theme.radius.md
+  })
+
+  const storeAddress = store.location
+    ? `${store.location.address || ''}, ${store.location.city || ''}`
+    : null
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <h3
+        className="text-lg font-semibold"
+        style={{ color: theme.colors.text }}
+      >
+        {t.howToReceive}
+      </h3>
+
+      {/* Delivery method options */}
+      <div className="flex flex-col gap-3">
+        {/* Pickup option */}
+        <button
+          type="button"
+          onClick={() => setMethod('pickup')}
+          className="flex items-start gap-3 p-4 border-2 transition-all text-left"
+          style={optionStyle(method === 'pickup')}
+        >
+          <div
+            className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5"
+            style={{ borderColor: method === 'pickup' ? theme.colors.primary : theme.colors.border }}
+          >
+            {method === 'pickup' && (
+              <div
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: theme.colors.primary }}
+              />
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span className="font-medium">{t.pickupInStore}</span>
+            </div>
+            {storeAddress && method === 'pickup' && (
+              <p
+                className="text-sm mt-1"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {storeAddress}
+              </p>
+            )}
+          </div>
+        </button>
+
+        {/* Delivery option */}
+        <button
+          type="button"
+          onClick={() => setMethod('delivery')}
+          className="flex items-start gap-3 p-4 border-2 transition-all text-left"
+          style={optionStyle(method === 'delivery')}
+        >
+          <div
+            className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5"
+            style={{ borderColor: method === 'delivery' ? theme.colors.primary : theme.colors.border }}
+          >
+            {method === 'delivery' && (
+              <div
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: theme.colors.primary }}
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="font-medium">{t.homeDelivery}</span>
+          </div>
+        </button>
+      </div>
+
+      {/* Delivery address form */}
+      {method === 'delivery' && (
+        <div className="flex flex-col gap-3 mt-2 animate-fadeIn">
+          <h4
+            className="text-sm font-medium"
+            style={{ color: theme.colors.textMuted }}
+          >
+            {t.deliveryAddress}
+          </h4>
+
+          <input
+            type="text"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+            style={{
+              ...inputStyle,
+              boxShadow: error === 'addressRequired' ? `0 0 0 2px #ef4444` : undefined
+            }}
+            placeholder={t.streetAddress}
+            required
+          />
+          {error === 'addressRequired' && (
+            <p className="text-sm text-red-500 -mt-2">{t.addressRequired}</p>
+          )}
+
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+            style={{
+              ...inputStyle,
+              boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
+            }}
+            placeholder={t.city}
+            required
+          />
+          {error === 'cityRequired' && (
+            <p className="text-sm text-red-500 -mt-2">{t.cityRequired}</p>
+          )}
+
+          <input
+            type="text"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+            style={inputStyle}
+            placeholder={t.referenceOptional}
+          />
+        </div>
+      )}
+
+      {/* Observations field - always visible */}
+      <div className="mt-4">
+        <label
+          className="block text-sm font-medium mb-1.5"
+          style={{ color: theme.colors.textMuted }}
+        >
+          {t.observations}
+        </label>
+        <textarea
+          value={observations}
+          onChange={(e) => setObservations(e.target.value)}
+          className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all resize-none"
+          style={inputStyle}
+          placeholder={t.observationsPlaceholder}
+          rows={3}
+        />
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="flex gap-3 mt-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex-1 py-3.5 font-medium border transition-all"
+          style={{
+            borderColor: theme.colors.border,
+            color: theme.colors.text,
+            borderRadius: theme.radius.md
+          }}
+        >
+          {t.backBtn}
+        </button>
+        <button
+          type="submit"
+          className="flex-1 py-3.5 font-medium transition-all"
+          style={{
+            backgroundColor: theme.colors.primary,
+            color: theme.colors.textInverted,
+            borderRadius: theme.radius.md
+          }}
+        >
+          {t.continueBtn}
+        </button>
+      </div>
+    </form>
+  )
+}

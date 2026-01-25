@@ -11,7 +11,6 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
-import { formatPrice } from '../../lib/currency'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { optimizeImage } from '../../utils/cloudinary'
@@ -23,7 +22,8 @@ import {
   CartBar,
   CategoryNav,
   WhatsAppButton,
-  StoreFooter
+  StoreFooter,
+  CheckoutDrawer
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -78,11 +78,12 @@ interface Props {
 }
 
 export default function FlavorTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd }: Props) {
-  const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
+  const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [announcementDismissed, setAnnouncementDismissed] = useState(false)
 
@@ -112,18 +113,6 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
   const handleAddToCart = (product: Product, extras?: Parameters<typeof addItem>[1]) => {
     addItem(product, extras)
     onCartAdd?.(product)
-  }
-
-  const sendWhatsAppOrder = () => {
-    if (!store.whatsapp || items.length === 0) return
-    onWhatsAppClick?.()
-    let message = `${t.whatsappOrder}\n\n`
-    items.forEach(item => {
-      message += `- ${item.product.name} x${item.quantity} - ${formatPrice(item.product.price * item.quantity, store.currency)}\n`
-    })
-    message += `\n*${t.total}: ${formatPrice(totalPrice, store.currency)}*`
-    const phone = store.whatsapp.replace(/\D/g, '')
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
   }
 
   return (
@@ -306,7 +295,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
           totalItems={totalItems}
           totalPrice={totalPrice}
           onViewCart={() => setIsCartOpen(true)}
-          onCheckout={sendWhatsAppOrder}
+          onCheckout={() => setIsCheckoutOpen(true)}
         />
 
         {/* Product Drawer */}
@@ -326,7 +315,24 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
             onClose={() => setIsCartOpen(false)}
             onUpdateQuantity={updateQuantity}
             onRemoveItem={removeItem}
-            onCheckout={sendWhatsAppOrder}
+            onCheckout={() => {
+              setIsCartOpen(false)
+              setIsCheckoutOpen(true)
+            }}
+          />
+        )}
+
+        {/* Checkout Drawer */}
+        {isCheckoutOpen && (
+          <CheckoutDrawer
+            items={items}
+            totalPrice={totalPrice}
+            store={store}
+            onClose={() => setIsCheckoutOpen(false)}
+            onOrderComplete={() => {
+              clearCart()
+              setIsCheckoutOpen(false)
+            }}
           />
         )}
       </div>

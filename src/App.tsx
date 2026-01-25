@@ -37,6 +37,9 @@ import AdminUsers from './pages/admin/Users'
 import AdminPlans from './pages/admin/Plans'
 import AdminScreenshots from './pages/admin/DemoScreenshots'
 
+// Payment Pages
+import PaymentSuccess from './pages/payment/PaymentSuccess'
+
 // Subdomain catalog wrapper
 function SubdomainCatalog({ subdomain }: { subdomain: string }) {
   return <Catalog subdomainStore={subdomain} />
@@ -94,6 +97,9 @@ function AppRoutes() {
   if (isSubdomain && subdomain) {
     return (
       <Routes>
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/failure" element={<PaymentSuccess />} />
+        <Route path="/payment/pending" element={<PaymentSuccess />} />
         <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
       </Routes>
     )
@@ -103,6 +109,9 @@ function AppRoutes() {
   if (isCustomDomain && customDomain) {
     return (
       <Routes>
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/failure" element={<PaymentSuccess />} />
+        <Route path="/payment/pending" element={<PaymentSuccess />} />
         <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
       </Routes>
     )
@@ -113,6 +122,11 @@ function AppRoutes() {
     <Routes>
       {/* Root redirect to detected language */}
       <Route path="/" element={<LanguageRedirect />} />
+
+      {/* Payment return pages (no language prefix - used by MercadoPago) */}
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/failure" element={<PaymentSuccess />} />
+      <Route path="/payment/pending" element={<PaymentSuccess />} />
 
       {/* Public catalog (no language prefix) */}
       <Route path="/c/:storeSlug" element={<Catalog />} />
