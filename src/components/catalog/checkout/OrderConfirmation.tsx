@@ -5,16 +5,21 @@ import BankTransferInfo from './BankTransferInfo'
 
 interface Props {
   order: Order
-  whatsappUrl?: string
+  whatsapp: string
   onBackToStore: () => void
   t: ThemeTranslations
 }
 
-export default function OrderConfirmation({ order, whatsappUrl, onBackToStore, t }: Props) {
+export default function OrderConfirmation({ order, whatsapp, onBackToStore, t }: Props) {
   const { theme } = useTheme()
 
   const showBankTransfer = order.paymentMethod === 'transfer'
-  const showWhatsAppButton = order.paymentMethod === 'whatsapp' && whatsappUrl
+  const showWhatsAppButton = order.paymentMethod === 'whatsapp' && whatsapp
+
+  // Build WhatsApp URL directly here - same pattern as floating WhatsApp button
+  const phone = whatsapp?.replace(/\D/g, '') || ''
+  const message = encodeURIComponent(`Hola, hice el pedido ${order.orderNumber}`)
+  const whatsappUrl = `https://wa.me/${phone}?text=${message}`
 
   return (
     <div className="flex flex-col items-center text-center gap-6 py-4">
