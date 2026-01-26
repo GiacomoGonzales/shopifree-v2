@@ -226,6 +226,21 @@ export const themes: Theme[] = [
       background: '#0C0C0C',
       accent: '#D4A853'
     }
+  },
+  {
+    id: 'trattoria',
+    name: 'Trattoria',
+    description: 'Calido y rustico con estilo italiano. Ideal para pizzerias, pastas y cocina mediterranea.',
+    thumbnail: '/themes/trattoria.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-07-25'),
+    colors: {
+      primary: '#C2410C',
+      background: '#FEF7ED',
+      accent: '#65A30D'
+    }
   }
 ]
 
