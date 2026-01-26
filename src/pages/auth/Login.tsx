@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import LanguageSelector from '../../components/common/LanguageSelector'
 
 export default function Login() {
   const { t } = useTranslation('auth')
@@ -64,9 +65,12 @@ export default function Login() {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to={localePath('/')} className="flex justify-center">
-          <img src="/newlogo.png" alt="Shopifree" className="h-12" />
-        </Link>
+        <div className="flex justify-center items-center gap-4 mb-2">
+          <Link to={localePath('/')}>
+            <img src="/newlogo.png" alt="Shopifree" className="h-12" />
+          </Link>
+          <LanguageSelector />
+        </div>
         <h2 className="mt-6 text-center text-2xl font-bold text-[#1e3a5f]">
           {t('login.title')}
         </h2>

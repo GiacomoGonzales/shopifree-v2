@@ -13,6 +13,7 @@ import MetroTheme from './metro/MetroTheme'
 import VintageTheme from './vintage/VintageTheme'
 import FlavorTheme from './flavor/FlavorTheme'
 import UrbanTheme from './urban/UrbanTheme'
+import BistroTheme from './bistro/BistroTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -28,10 +29,11 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   vintage: VintageTheme,
   flavor: FlavorTheme,
   urban: UrbanTheme,
+  bistro: BistroTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme }

@@ -194,16 +194,18 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
     es: {
       nombre: businessType === 'food' ? 'Hamburguesa clasica' :
               businessType === 'fashion' ? 'Camiseta basica' :
-              businessType === 'beauty' ? 'Manicure gel' :
+              businessType === 'cosmetics' ? 'Labial mate rojo' :
+              businessType === 'grocery' ? 'Galletas integrales' :
               businessType === 'tech' ? 'Audifonos Bluetooth' :
               businessType === 'pets' ? 'Alimento premium' :
               businessType === 'craft' ? 'Macrame colgante' :
               'Producto ejemplo',
-      precio: businessType === 'beauty' ? 35 : 99.99,
+      precio: 99.99,
       descripcion: 'Descripcion del producto',
       categoria: businessType === 'food' ? 'Hamburguesas' :
                  businessType === 'fashion' ? 'Camisetas' :
-                 businessType === 'beauty' ? 'Unas' :
+                 businessType === 'cosmetics' ? 'Labiales' :
+                 businessType === 'grocery' ? 'Galletas' :
                  businessType === 'tech' ? 'Audio' :
                  businessType === 'pets' ? 'Alimentos' :
                  businessType === 'craft' ? 'Decoracion' :
@@ -225,9 +227,6 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
       tiempo_prep_min: 15,
       tiempo_prep_max: 25,
       modificadores: 'Tipo de pan:Pan brioche|Pan integral;Extras:Queso extra:+5|Tocino:+8',
-      // Beauty
-      duracion_valor: 45,
-      duracion_unidad: 'min',
       // Tech
       modelo: 'BT-500',
       garantia_meses: 12,
@@ -245,16 +244,18 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
     en: {
       name: businessType === 'food' ? 'Classic burger' :
             businessType === 'fashion' ? 'Basic t-shirt' :
-            businessType === 'beauty' ? 'Gel manicure' :
+            businessType === 'cosmetics' ? 'Red matte lipstick' :
+            businessType === 'grocery' ? 'Whole grain cookies' :
             businessType === 'tech' ? 'Bluetooth headphones' :
             businessType === 'pets' ? 'Premium food' :
             businessType === 'craft' ? 'Macrame wall hanging' :
             'Example product',
-      price: businessType === 'beauty' ? 35 : 99.99,
+      price: 99.99,
       description: 'Product description',
       category: businessType === 'food' ? 'Burgers' :
                 businessType === 'fashion' ? 'T-shirts' :
-                businessType === 'beauty' ? 'Nails' :
+                businessType === 'cosmetics' ? 'Lipsticks' :
+                businessType === 'grocery' ? 'Cookies' :
                 businessType === 'tech' ? 'Audio' :
                 businessType === 'pets' ? 'Food' :
                 businessType === 'craft' ? 'Decoration' :
@@ -274,8 +275,6 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
       prep_time_min: 15,
       prep_time_max: 25,
       modifiers: 'Bread type:Brioche|Whole wheat;Extras:Extra cheese:+5|Bacon:+8',
-      duration_value: 45,
-      duration_unit: 'min',
       model: 'BT-500',
       warranty_months: 12,
       specifications: 'Bluetooth:5.0;Battery:20h;Driver:40mm',
@@ -779,12 +778,13 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
 
   // Get business type label for display
   const businessTypeLabels: Record<BusinessType, string> = {
-    food: 'Restaurante / Comida',
     fashion: 'Moda / Ropa',
-    beauty: 'Belleza / Servicios',
-    craft: 'Artesanal / Handmade',
+    food: 'Restaurante / Comida',
+    grocery: 'Alimentos / Abarrotes',
+    cosmetics: 'Cosmeticos / Belleza',
     tech: 'Tecnologia / Electronica',
     pets: 'Mascotas',
+    craft: 'Artesanal / Handmade',
     general: 'General'
   }
 

@@ -89,10 +89,10 @@ export interface Store {
   subscription?: StoreSubscription
 
   // === TIPO DE NEGOCIO ===
-  // New 7 business types (legacy values are normalized via normalizeBusinessType)
-  businessType?: 'food' | 'fashion' | 'beauty' | 'craft' | 'tech' | 'pets' | 'general' |
+  // New 8 business types (legacy values are normalized via normalizeBusinessType)
+  businessType?: 'fashion' | 'food' | 'grocery' | 'cosmetics' | 'tech' | 'pets' | 'craft' | 'general' |
                  // Legacy values (for backwards compatibility, normalized on read)
-                 'retail' | 'restaurant' | 'services' | 'other'
+                 'retail' | 'restaurant' | 'services' | 'other' | 'beauty'
 
   // === META ===
   createdAt: Date

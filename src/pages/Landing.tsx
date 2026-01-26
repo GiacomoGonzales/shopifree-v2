@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../hooks/useLanguage'
 import DemoStoresCarousel from '../components/landing/DemoStoresCarousel'
+import LanguageSelector from '../components/common/LanguageSelector'
 
 export default function Landing() {
   const { t } = useTranslation(['landing', 'common'])
@@ -31,6 +32,7 @@ export default function Landing() {
               <img src="/newlogo.png" alt="Shopifree" className="h-7 sm:h-9" />
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
+              <LanguageSelector className="hidden sm:flex" />
               <Link to={localePath('/blog')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base hidden sm:inline">
                 Blog
               </Link>

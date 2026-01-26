@@ -3,7 +3,7 @@
  * Defines feature flags and labels for each business type
  */
 
-export type BusinessType = 'food' | 'fashion' | 'beauty' | 'craft' | 'tech' | 'pets' | 'general'
+export type BusinessType = 'fashion' | 'food' | 'grocery' | 'cosmetics' | 'tech' | 'pets' | 'craft' | 'general'
 
 export interface BusinessTypeFeatures {
   // Food features
@@ -13,7 +13,7 @@ export interface BusinessTypeFeatures {
   // Fashion features
   showVariants: boolean         // Size, color variations
 
-  // Beauty features
+  // Legacy service features (kept for backwards compatibility)
   showServiceDuration: boolean  // Service duration
   showBookingCTA: boolean       // "Book via WhatsApp" CTA
 
@@ -94,50 +94,6 @@ const defaultFeatures: BusinessTypeFeatures = {
 }
 
 export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
-  food: {
-    type: 'food',
-    features: {
-      ...defaultFeatures,
-      showModifiers: true,
-      showPrepTime: true,
-      // Food: only cost for margin calculation
-      showCost: true,
-      showTags: true,
-    },
-    labels: {
-      es: {
-        name: 'Restaurante / Comida',
-        description: 'Restaurantes, cafes, delivery de comida',
-        icon: 'food',
-        productName: 'Nombre del platillo',
-        productNamePlaceholder: 'Ej: Hamburguesa clasica',
-        priceLabel: 'Precio',
-        addToCartLabel: 'Agregar',
-        orderLabel: 'Ordenar',
-      },
-      en: {
-        name: 'Restaurant / Food',
-        description: 'Restaurants, cafes, food delivery',
-        icon: 'food',
-        productName: 'Dish name',
-        productNamePlaceholder: 'E.g.: Classic burger',
-        priceLabel: 'Price',
-        addToCartLabel: 'Add',
-        orderLabel: 'Order',
-      },
-      pt: {
-        name: 'Restaurante / Comida',
-        description: 'Restaurantes, cafes, delivery de comida',
-        icon: 'food',
-        productName: 'Nome do prato',
-        productNamePlaceholder: 'Ex: Hamburguer classico',
-        priceLabel: 'Preco',
-        addToCartLabel: 'Adicionar',
-        orderLabel: 'Pedir',
-      },
-    },
-  },
-
   fashion: {
     type: 'fashion',
     features: {
@@ -155,7 +111,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     },
     labels: {
       es: {
-        name: 'Moda / Ropa',
+        name: 'Moda',
         description: 'Ropa, accesorios, boutiques',
         icon: 'fashion',
         productName: 'Nombre del producto',
@@ -165,7 +121,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
         orderLabel: 'Comprar',
       },
       en: {
-        name: 'Fashion / Clothing',
+        name: 'Fashion',
         description: 'Clothing, accessories, boutiques',
         icon: 'fashion',
         productName: 'Product name',
@@ -175,7 +131,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
         orderLabel: 'Buy',
       },
       pt: {
-        name: 'Moda / Roupas',
+        name: 'Moda',
         description: 'Roupas, acessorios, boutiques',
         icon: 'fashion',
         productName: 'Nome do produto',
@@ -187,91 +143,144 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     },
   },
 
-  beauty: {
-    type: 'beauty',
+  food: {
+    type: 'food',
     features: {
       ...defaultFeatures,
-      showServiceDuration: true,
-      showBookingCTA: true,
-      // Beauty: services - minimal fields, no inventory/shipping
-      showTags: true,
-    },
-    labels: {
-      es: {
-        name: 'Belleza / Servicios',
-        description: 'Salones, spas, servicios de belleza',
-        icon: 'beauty',
-        productName: 'Nombre del servicio',
-        productNamePlaceholder: 'Ej: Manicure gel',
-        priceLabel: 'Precio',
-        addToCartLabel: 'Reservar',
-        orderLabel: 'Agendar',
-      },
-      en: {
-        name: 'Beauty / Services',
-        description: 'Salons, spas, beauty services',
-        icon: 'beauty',
-        productName: 'Service name',
-        productNamePlaceholder: 'E.g.: Gel manicure',
-        priceLabel: 'Price',
-        addToCartLabel: 'Book',
-        orderLabel: 'Schedule',
-      },
-      pt: {
-        name: 'Beleza / Servicos',
-        description: 'Saloes, spas, servicos de beleza',
-        icon: 'beauty',
-        productName: 'Nome do servico',
-        productNamePlaceholder: 'Ex: Manicure em gel',
-        priceLabel: 'Preco',
-        addToCartLabel: 'Reservar',
-        orderLabel: 'Agendar',
-      },
-    },
-  },
-
-  craft: {
-    type: 'craft',
-    features: {
-      ...defaultFeatures,
-      showCustomOrder: true,
-      showLimitedStock: true,
-      multipleImages: true,
-      // Craft: handmade - cost for margin, tags, no barcodes
-      showComparePrice: true,
+      showModifiers: true,
+      showPrepTime: true,
+      // Food: only cost for margin calculation
       showCost: true,
       showTags: true,
     },
     labels: {
       es: {
-        name: 'Artesanal / Handmade',
-        description: 'Productos artesanales, hechos a mano',
-        icon: 'craft',
-        productName: 'Nombre del producto',
-        productNamePlaceholder: 'Ej: Macrame colgante',
+        name: 'Restaurante',
+        description: 'Restaurantes, cafes, delivery de comida',
+        icon: 'food',
+        productName: 'Nombre del platillo',
+        productNamePlaceholder: 'Ej: Hamburguesa clasica',
         priceLabel: 'Precio',
         addToCartLabel: 'Agregar',
-        orderLabel: 'Encargar',
+        orderLabel: 'Ordenar',
       },
       en: {
-        name: 'Craft / Handmade',
-        description: 'Handmade, artisanal products',
-        icon: 'craft',
-        productName: 'Product name',
-        productNamePlaceholder: 'E.g.: Macrame wall hanging',
+        name: 'Restaurant',
+        description: 'Restaurants, cafes, food delivery',
+        icon: 'food',
+        productName: 'Dish name',
+        productNamePlaceholder: 'E.g.: Classic burger',
         priceLabel: 'Price',
         addToCartLabel: 'Add',
         orderLabel: 'Order',
       },
       pt: {
-        name: 'Artesanal / Handmade',
-        description: 'Produtos artesanais, feitos a mao',
-        icon: 'craft',
-        productName: 'Nome do produto',
-        productNamePlaceholder: 'Ex: Macrame decorativo',
+        name: 'Restaurante',
+        description: 'Restaurantes, cafes, delivery de comida',
+        icon: 'food',
+        productName: 'Nome do prato',
+        productNamePlaceholder: 'Ex: Hamburguer classico',
         priceLabel: 'Preco',
         addToCartLabel: 'Adicionar',
-        orderLabel: 'Encomendar',
+        orderLabel: 'Pedir',
+      },
+    },
+  },
+
+  grocery: {
+    type: 'grocery',
+    features: {
+      ...defaultFeatures,
+      multipleImages: true,
+      // Grocery: retail features for food products
+      showComparePrice: true,
+      showSku: true,
+      showBarcode: true,
+      showStock: true,
+      showCost: true,
+      showBrand: true,
+      showTags: true,
+      showShipping: true,
+    },
+    labels: {
+      es: {
+        name: 'Alimentos',
+        description: 'Tiendas de alimentos, abarrotes, productos empacados',
+        icon: 'grocery',
+        productName: 'Nombre del producto',
+        productNamePlaceholder: 'Ej: Galletas integrales',
+        priceLabel: 'Precio',
+        addToCartLabel: 'Agregar',
+        orderLabel: 'Comprar',
+      },
+      en: {
+        name: 'Grocery',
+        description: 'Food stores, groceries, packaged products',
+        icon: 'grocery',
+        productName: 'Product name',
+        productNamePlaceholder: 'E.g.: Whole grain cookies',
+        priceLabel: 'Price',
+        addToCartLabel: 'Add',
+        orderLabel: 'Buy',
+      },
+      pt: {
+        name: 'Alimentos',
+        description: 'Lojas de alimentos, mercearias, produtos embalados',
+        icon: 'grocery',
+        productName: 'Nome do produto',
+        productNamePlaceholder: 'Ex: Biscoitos integrais',
+        priceLabel: 'Preco',
+        addToCartLabel: 'Adicionar',
+        orderLabel: 'Comprar',
+      },
+    },
+  },
+
+  cosmetics: {
+    type: 'cosmetics',
+    features: {
+      ...defaultFeatures,
+      multipleImages: true,
+      // Cosmetics: retail features for beauty products
+      showComparePrice: true,
+      showSku: true,
+      showBarcode: true,
+      showStock: true,
+      showCost: true,
+      showBrand: true,
+      showTags: true,
+      showShipping: true,
+    },
+    labels: {
+      es: {
+        name: 'Cosmeticos',
+        description: 'Maquillaje, skincare, productos de belleza',
+        icon: 'cosmetics',
+        productName: 'Nombre del producto',
+        productNamePlaceholder: 'Ej: Labial mate rojo',
+        priceLabel: 'Precio',
+        addToCartLabel: 'Agregar',
+        orderLabel: 'Comprar',
+      },
+      en: {
+        name: 'Cosmetics',
+        description: 'Makeup, skincare, beauty products',
+        icon: 'cosmetics',
+        productName: 'Product name',
+        productNamePlaceholder: 'E.g.: Red matte lipstick',
+        priceLabel: 'Price',
+        addToCartLabel: 'Add',
+        orderLabel: 'Buy',
+      },
+      pt: {
+        name: 'Cosmeticos',
+        description: 'Maquiagem, skincare, produtos de beleza',
+        icon: 'cosmetics',
+        productName: 'Nome do produto',
+        productNamePlaceholder: 'Ex: Batom vermelho mate',
+        priceLabel: 'Preco',
+        addToCartLabel: 'Adicionar',
+        orderLabel: 'Comprar',
       },
     },
   },
@@ -296,7 +305,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     },
     labels: {
       es: {
-        name: 'Tecnologia / Electronica',
+        name: 'Tecnologia',
         description: 'Electronica, gadgets, accesorios tech',
         icon: 'tech',
         productName: 'Nombre del producto',
@@ -306,7 +315,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
         orderLabel: 'Comprar',
       },
       en: {
-        name: 'Tech / Electronics',
+        name: 'Technology',
         description: 'Electronics, gadgets, tech accessories',
         icon: 'tech',
         productName: 'Product name',
@@ -316,7 +325,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
         orderLabel: 'Buy',
       },
       pt: {
-        name: 'Tecnologia / Eletronica',
+        name: 'Tecnologia',
         description: 'Eletronicos, gadgets, acessorios tech',
         icon: 'tech',
         productName: 'Nome do produto',
@@ -379,6 +388,52 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     },
   },
 
+  craft: {
+    type: 'craft',
+    features: {
+      ...defaultFeatures,
+      showCustomOrder: true,
+      showLimitedStock: true,
+      multipleImages: true,
+      // Craft: handmade - cost for margin, tags, no barcodes
+      showComparePrice: true,
+      showCost: true,
+      showTags: true,
+    },
+    labels: {
+      es: {
+        name: 'Artesanal',
+        description: 'Productos artesanales, hechos a mano',
+        icon: 'craft',
+        productName: 'Nombre del producto',
+        productNamePlaceholder: 'Ej: Macrame colgante',
+        priceLabel: 'Precio',
+        addToCartLabel: 'Agregar',
+        orderLabel: 'Encargar',
+      },
+      en: {
+        name: 'Handmade',
+        description: 'Handmade, artisanal products',
+        icon: 'craft',
+        productName: 'Product name',
+        productNamePlaceholder: 'E.g.: Macrame wall hanging',
+        priceLabel: 'Price',
+        addToCartLabel: 'Add',
+        orderLabel: 'Order',
+      },
+      pt: {
+        name: 'Artesanal',
+        description: 'Produtos artesanais, feitos a mao',
+        icon: 'craft',
+        productName: 'Nome do produto',
+        productNamePlaceholder: 'Ex: Macrame decorativo',
+        priceLabel: 'Preco',
+        addToCartLabel: 'Adicionar',
+        orderLabel: 'Encomendar',
+      },
+    },
+  },
+
   general: {
     type: 'general',
     features: {
@@ -394,7 +449,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     labels: {
       es: {
         name: 'General',
-        description: 'Catalogo basico sin features especiales',
+        description: 'Catalogo general para cualquier tipo de producto',
         icon: 'general',
         productName: 'Nombre del producto',
         productNamePlaceholder: 'Ej: Mi producto',
@@ -404,7 +459,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
       },
       en: {
         name: 'General',
-        description: 'Basic catalog without special features',
+        description: 'General catalog for any type of product',
         icon: 'general',
         productName: 'Product name',
         productNamePlaceholder: 'E.g.: My product',
@@ -414,7 +469,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
       },
       pt: {
         name: 'Geral',
-        description: 'Catalogo basico sem features especiais',
+        description: 'Catalogo geral para qualquer tipo de produto',
         icon: 'general',
         productName: 'Nome do produto',
         productNamePlaceholder: 'Ex: Meu produto',
@@ -450,7 +505,7 @@ export function hasFeature(type: BusinessType | string | undefined, feature: key
 
 /**
  * Normalize legacy business types to new ones
- * Handles migration from old values (retail, restaurant, services, other)
+ * Handles migration from old values (retail, restaurant, services, other, beauty)
  */
 export function normalizeBusinessType(type: string | undefined): BusinessType {
   if (!type) return 'general'
@@ -464,8 +519,9 @@ export function normalizeBusinessType(type: string | undefined): BusinessType {
   const legacyMap: Record<string, BusinessType> = {
     retail: 'general',
     restaurant: 'food',
-    services: 'beauty',
+    services: 'general',
     other: 'general',
+    beauty: 'cosmetics', // beauty was renamed to cosmetics
   }
 
   return legacyMap[type] || 'general'

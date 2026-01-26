@@ -181,6 +181,21 @@ export const themes: Theme[] = [
       background: '#0A0A0A',
       accent: '#FFFFFF'
     }
+  },
+  {
+    id: 'bistro',
+    name: 'Bistro',
+    description: 'Elegante y sofisticado con tonos oscuros y cobre. Ideal para restaurantes finos y wine bars.',
+    thumbnail: '/themes/bistro.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-07-01'),
+    colors: {
+      primary: '#B87333',
+      background: '#1C1917',
+      accent: '#722F37'
+    }
   }
 ]
 

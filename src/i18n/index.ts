@@ -47,8 +47,11 @@ i18n
       escapeValue: false
     },
     detection: {
-      order: ['path', 'navigator'],
-      lookupFromPathIndex: 0
+      // Order: 1) URL path, 2) saved preference, 3) browser language
+      order: ['path', 'localStorage', 'navigator'],
+      lookupFromPathIndex: 0,
+      lookupLocalStorage: 'shopifree-lang',
+      caches: ['localStorage']
     }
   })
 
