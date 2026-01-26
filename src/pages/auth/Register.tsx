@@ -1,21 +1,65 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { userService, storeService } from '../../lib/firebase'
 import { createSubdomain } from '../../lib/subdomain'
+import { BUSINESS_TYPES, type BusinessType } from '../../config/businessTypes'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
 
+// Business type icons
+const BusinessTypeIcon = ({ type }: { type: BusinessType }) => {
+  const icons: Record<BusinessType, React.ReactElement> = {
+    food: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    fashion: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+      </svg>
+    ),
+    beauty: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    ),
+    craft: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+    ),
+    tech: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
+    pets: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+      </svg>
+    ),
+    general: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    ),
+  }
+  return icons[type] || icons.general
+}
+
 export default function Register() {
-  const { t } = useTranslation('auth')
+  const { t, i18n } = useTranslation('auth')
   const { localePath } = useLanguage()
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [storeName, setStoreName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [businessType, setBusinessType] = useState<BusinessType>('general')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [creatingStore, setCreatingStore] = useState(false)
@@ -25,6 +69,8 @@ export default function Register() {
   const [generatedSubdomain, setGeneratedSubdomain] = useState('')
   const { register, loginWithGoogle, refreshStore, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  const currentLang = (i18n.language?.substring(0, 2) || 'es') as 'es' | 'en' | 'pt'
 
   // Progress messages for animation
   const PROGRESS_MESSAGES = [
@@ -75,6 +121,11 @@ export default function Register() {
     }
   }
 
+  const handleStoreInfoSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setStep(3)
+  }
+
   // Animate progress bar over specified duration
   const animateProgress = (durationMs: number) => {
     const startTime = Date.now()
@@ -98,8 +149,7 @@ export default function Register() {
     requestAnimationFrame(animate)
   }
 
-  const handleStoreSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleFinalSubmit = async () => {
     if (!firebaseUser) return
 
     setError('')
@@ -149,6 +199,7 @@ export default function Register() {
         currency: 'PEN',
         themeId: 'minimal',
         plan: isAdmin ? 'business' : 'free',
+        businessType,
       })
 
       // Create subdomain in Vercel (non-blocking)
@@ -286,6 +337,20 @@ export default function Register() {
     )
   }
 
+  // Get step title
+  const getStepTitle = () => {
+    if (step === 1) return t('register.title')
+    if (step === 2) return t('register.titleStep2')
+    return t('register.titleStep3')
+  }
+
+  // Get step description
+  const getStepDescription = () => {
+    if (step === 1) return t('register.step1')
+    if (step === 2) return t('register.step2')
+    return t('register.step3')
+  }
+
   return (
     <div className="min-h-screen bg-[#fafbfc] relative overflow-hidden flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       {/* Animated background */}
@@ -301,8 +366,9 @@ export default function Register() {
           <img src="/newlogo.png" alt="Shopifree" className="h-12" />
         </Link>
         <h2 className="mt-6 text-center text-2xl font-bold text-[#1e3a5f]">
-          {step === 1 ? t('register.title') : t('register.titleStep2')}
+          {getStepTitle()}
         </h2>
+        {/* Step indicator - 3 steps */}
         <div className="mt-4 flex justify-center">
           <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
@@ -310,16 +376,22 @@ export default function Register() {
             }`}>
               1
             </div>
-            <div className={`w-12 h-1 rounded ${step >= 2 ? 'bg-[#38bdf8]' : 'bg-gray-200'}`}></div>
+            <div className={`w-8 h-1 rounded ${step >= 2 ? 'bg-[#38bdf8]' : 'bg-gray-200'}`}></div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
               step >= 2 ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white' : 'bg-gray-200 text-gray-500'
             }`}>
               2
             </div>
+            <div className={`w-8 h-1 rounded ${step >= 3 ? 'bg-[#38bdf8]' : 'bg-gray-200'}`}></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+              step >= 3 ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white' : 'bg-gray-200 text-gray-500'
+            }`}>
+              3
+            </div>
           </div>
         </div>
         <p className="mt-2 text-center text-sm text-gray-600">
-          {step === 1 ? t('register.step1') : t('register.step2')}
+          {getStepDescription()}
         </p>
       </div>
 
@@ -331,7 +403,7 @@ export default function Register() {
             </div>
           )}
 
-          {step === 1 ? (
+          {step === 1 && (
             <>
               <form onSubmit={handleEmailSubmit} className="space-y-6">
                 <div>
@@ -404,8 +476,10 @@ export default function Register() {
                 </Link>
               </p>
             </>
-          ) : (
-            <form onSubmit={handleStoreSubmit} className="space-y-6">
+          )}
+
+          {step === 2 && (
+            <form onSubmit={handleStoreInfoSubmit} className="space-y-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl mx-auto mb-3 flex items-center justify-center">
                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -451,9 +525,73 @@ export default function Register() {
                 disabled={loading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-[#1e3a5f]/20 text-sm font-semibold text-white bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] hover:from-[#2d6cb5] hover:to-[#38bdf8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all duration-300"
               >
-                {loading ? t('register.store.creating') : t('register.store.submit')}
+                {t('register.continue')}
               </button>
             </form>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6">
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl mx-auto mb-3 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </div>
+                <p className="text-gray-600 text-sm">{t('register.businessType.subtitle')}</p>
+              </div>
+
+              {/* Business type grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {(Object.keys(BUSINESS_TYPES) as BusinessType[]).map((type) => {
+                  const config = BUSINESS_TYPES[type]
+                  const labels = config.labels[currentLang] || config.labels.es
+                  const isSelected = businessType === type
+
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setBusinessType(type)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        isSelected
+                          ? 'border-[#38bdf8] bg-[#f0f7ff] ring-2 ring-[#38bdf8]/20'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                        isSelected
+                          ? 'bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] text-white'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        <BusinessTypeIcon type={type} />
+                      </div>
+                      <p className={`text-sm font-semibold ${isSelected ? 'text-[#1e3a5f]' : 'text-gray-700'}`}>
+                        {labels.name}
+                      </p>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="flex-1 py-3 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  {t('register.back')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFinalSubmit}
+                  disabled={loading}
+                  className="flex-1 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-[#1e3a5f]/20 text-sm font-semibold text-white bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] hover:from-[#2d6cb5] hover:to-[#38bdf8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all duration-300"
+                >
+                  {t('register.store.submit')}
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
