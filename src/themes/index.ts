@@ -196,6 +196,36 @@ export const themes: Theme[] = [
       background: '#1C1917',
       accent: '#722F37'
     }
+  },
+  {
+    id: 'taqueria',
+    name: 'Taqueria',
+    description: 'Vibrante y festivo con colores mexicanos. Ideal para taquerias, comida mexicana y food trucks.',
+    thumbnail: '/themes/taqueria.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-07-15'),
+    colors: {
+      primary: '#F97316',
+      background: '#FFFBEB',
+      accent: '#84CC16'
+    }
+  },
+  {
+    id: 'sakura',
+    name: 'Sakura',
+    description: 'Minimalista y zen con estetica japonesa. Ideal para sushi bars, ramen shops e izakayas.',
+    thumbnail: '/themes/sakura.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2024-07-20'),
+    colors: {
+      primary: '#DC2626',
+      background: '#0C0C0C',
+      accent: '#D4A853'
+    }
   }
 ]
 

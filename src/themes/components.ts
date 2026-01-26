@@ -14,6 +14,8 @@ import VintageTheme from './vintage/VintageTheme'
 import FlavorTheme from './flavor/FlavorTheme'
 import UrbanTheme from './urban/UrbanTheme'
 import BistroTheme from './bistro/BistroTheme'
+import TaqueriaTheme from './taqueria/TaqueriaTheme'
+import SakuraTheme from './sakura/SakuraTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -30,10 +32,12 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   flavor: FlavorTheme,
   urban: UrbanTheme,
   bistro: BistroTheme,
+  taqueria: TaqueriaTheme,
+  sakura: SakuraTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme }
