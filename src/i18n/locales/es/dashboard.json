@@ -77,15 +77,15 @@
     "totalRevenue": "Ingresos totales",
     "avgOrder": "Ticket promedio",
     "pendingOrders": "Pendientes",
-    "dateFilter": "Período",
-    "date": {
+    "dateFilter": {
+      "label": "Período",
       "all": "Todos",
       "today": "Hoy",
       "week": "Esta semana",
       "month": "Este mes"
     },
-    "paymentFilter": "Método de pago",
-    "payment": {
+    "paymentFilter": {
+      "label": "Método de pago",
       "all": "Todos",
       "whatsapp": "WhatsApp",
       "mercadopago": "MercadoPago",

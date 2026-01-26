@@ -380,7 +380,7 @@ export default function Orders() {
             {/* Date filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('orders.dateFilter')}
+                {t('orders.dateFilter.label')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {(['all', 'today', 'week', 'month'] as DateFilter[]).map(value => (
@@ -393,7 +393,7 @@ export default function Orders() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {t(`orders.date.${value}`)}
+                    {t(`orders.dateFilter.${value}`)}
                   </button>
                 ))}
               </div>
@@ -402,7 +402,7 @@ export default function Orders() {
             {/* Payment filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('orders.paymentFilter')}
+                {t('orders.paymentFilter.label')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {(['all', 'whatsapp', 'mercadopago', 'transfer'] as PaymentFilter[]).map(value => (
@@ -415,7 +415,7 @@ export default function Orders() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {t(`orders.payment.${value}`)}
+                    {t(`orders.paymentFilter.${value}`)}
                   </button>
                 ))}
               </div>
