@@ -15,7 +15,7 @@ interface DemoStore {
 // Fallback data in case Firebase is empty
 const fallbackStores: DemoStore[] = [
   { id: '1', name: 'Alien Store', subdomain: 'alienstore', theme: 'Urban', screenshot: '/demos/alienstore.jpg', color: '#CCFF00', order: 0 },
-  { id: '2', name: 'La Braseria del Abuelo', subdomain: 'braseriadelabuelo', theme: 'Bistro', screenshot: '/demos/braseria.jpg', color: '#B87333', order: 1 },
+  { id: '2', name: 'La Braseria del Abuelo', subdomain: 'la-braseria-del-abuelo', theme: 'Bistro', screenshot: '/demos/braseria.jpg', color: '#B87333', order: 1 },
 ]
 
 export default function DemoStoresCarousel() {
