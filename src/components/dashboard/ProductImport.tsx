@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
+import { getBusinessTypeFeatures, type BusinessType } from '../../config/businessTypes'
+import type { ProductVariation, ModifierGroup } from '../../types'
 
 interface ImportProduct {
   name: string
@@ -20,12 +22,467 @@ interface ImportProduct {
   category?: string
   active?: boolean
   featured?: boolean
+  // Fashion: Variations
+  variations?: ProductVariation[]
+  // Food: Modifiers and prep time
+  modifierGroups?: ModifierGroup[]
+  prepTimeMin?: number
+  prepTimeMax?: number
+  // Beauty: Duration
+  durationValue?: number
+  durationUnit?: 'min' | 'hr'
+  // Tech: Specs, warranty, model
+  model?: string
+  warrantyMonths?: number
+  specs?: Array<{ key: string; value: string }>
+  // Pets
+  petType?: string
+  petAge?: string
+  // Craft
+  customizable?: boolean
+  customizationInstructions?: string
+  availableQuantity?: number
 }
 
 interface ProductImportProps {
   onClose: () => void
   onSuccess: () => void
   categories: { id: string; name: string }[]
+}
+
+// Template column definitions by business type
+const getTemplateColumns = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => {
+  const features = getBusinessTypeFeatures(businessType)
+
+  const labels = {
+    es: {
+      // Base fields
+      nombre: 'nombre',
+      precio: 'precio',
+      descripcion: 'descripcion',
+      categoria: 'categoria',
+      activo: 'activo',
+      destacado: 'destacado',
+      // Inventory
+      sku: 'sku',
+      codigo_barras: 'codigo_barras',
+      stock: 'stock',
+      costo: 'costo',
+      precio_anterior: 'precio_anterior',
+      marca: 'marca',
+      etiquetas: 'etiquetas',
+      peso_gramos: 'peso_gramos',
+      // Fashion
+      variante_1_nombre: 'variante_1_nombre',
+      variante_1_opciones: 'variante_1_opciones',
+      variante_2_nombre: 'variante_2_nombre',
+      variante_2_opciones: 'variante_2_opciones',
+      // Food
+      tiempo_prep_min: 'tiempo_prep_min',
+      tiempo_prep_max: 'tiempo_prep_max',
+      modificadores: 'modificadores',
+      // Beauty
+      duracion_valor: 'duracion_valor',
+      duracion_unidad: 'duracion_unidad',
+      // Tech
+      modelo: 'modelo',
+      garantia_meses: 'garantia_meses',
+      especificaciones: 'especificaciones',
+      // Pets
+      tipo_mascota: 'tipo_mascota',
+      edad_mascota: 'edad_mascota',
+      // Craft
+      personalizable: 'personalizable',
+      instrucciones_personalizacion: 'instrucciones_personalizacion',
+      cantidad_disponible: 'cantidad_disponible',
+    },
+    en: {
+      nombre: 'name',
+      precio: 'price',
+      descripcion: 'description',
+      categoria: 'category',
+      activo: 'active',
+      destacado: 'featured',
+      sku: 'sku',
+      codigo_barras: 'barcode',
+      stock: 'stock',
+      costo: 'cost',
+      precio_anterior: 'compare_price',
+      marca: 'brand',
+      etiquetas: 'tags',
+      peso_gramos: 'weight_grams',
+      variante_1_nombre: 'variant_1_name',
+      variante_1_opciones: 'variant_1_options',
+      variante_2_nombre: 'variant_2_name',
+      variante_2_opciones: 'variant_2_options',
+      tiempo_prep_min: 'prep_time_min',
+      tiempo_prep_max: 'prep_time_max',
+      modificadores: 'modifiers',
+      duracion_valor: 'duration_value',
+      duracion_unidad: 'duration_unit',
+      modelo: 'model',
+      garantia_meses: 'warranty_months',
+      especificaciones: 'specifications',
+      tipo_mascota: 'pet_type',
+      edad_mascota: 'pet_age',
+      personalizable: 'customizable',
+      instrucciones_personalizacion: 'customization_instructions',
+      cantidad_disponible: 'available_quantity',
+    }
+  }
+
+  const l = labels[lang]
+
+  // Build columns array based on business type features
+  const columns: string[] = [l.nombre, l.precio, l.descripcion, l.categoria]
+
+  if (features.showSku) columns.push(l.sku)
+  if (features.showBarcode) columns.push(l.codigo_barras)
+  if (features.showStock) columns.push(l.stock)
+  if (features.showCost) columns.push(l.costo)
+  if (features.showComparePrice) columns.push(l.precio_anterior)
+  if (features.showBrand) columns.push(l.marca)
+  if (features.showTags) columns.push(l.etiquetas)
+  if (features.showShipping) columns.push(l.peso_gramos)
+
+  // Fashion: Variations
+  if (features.showVariants) {
+    columns.push(l.variante_1_nombre, l.variante_1_opciones)
+    columns.push(l.variante_2_nombre, l.variante_2_opciones)
+  }
+
+  // Food: Prep time and modifiers
+  if (features.showPrepTime) {
+    columns.push(l.tiempo_prep_min, l.tiempo_prep_max)
+  }
+  if (features.showModifiers) {
+    columns.push(l.modificadores)
+  }
+
+  // Beauty: Duration
+  if (features.showServiceDuration) {
+    columns.push(l.duracion_valor, l.duracion_unidad)
+  }
+
+  // Tech: Model, warranty, specs
+  if (features.showModel) columns.push(l.modelo)
+  if (features.showWarranty) columns.push(l.garantia_meses)
+  if (features.showSpecs) columns.push(l.especificaciones)
+
+  // Pets
+  if (features.showPetType) columns.push(l.tipo_mascota)
+  if (features.showPetAge) columns.push(l.edad_mascota)
+
+  // Craft
+  if (features.showCustomOrder) {
+    columns.push(l.personalizable, l.instrucciones_personalizacion)
+  }
+  if (features.showLimitedStock) {
+    columns.push(l.cantidad_disponible)
+  }
+
+  columns.push(l.activo, l.destacado)
+
+  return columns
+}
+
+// Generate example row based on business type
+const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => {
+  const columns = getTemplateColumns(businessType, lang)
+
+  const examples: Record<string, Record<string, string | number>> = {
+    es: {
+      nombre: businessType === 'food' ? 'Hamburguesa clasica' :
+              businessType === 'fashion' ? 'Camiseta basica' :
+              businessType === 'beauty' ? 'Manicure gel' :
+              businessType === 'tech' ? 'Audifonos Bluetooth' :
+              businessType === 'pets' ? 'Alimento premium' :
+              businessType === 'craft' ? 'Macrame colgante' :
+              'Producto ejemplo',
+      precio: businessType === 'beauty' ? 35 : 99.99,
+      descripcion: 'Descripcion del producto',
+      categoria: businessType === 'food' ? 'Hamburguesas' :
+                 businessType === 'fashion' ? 'Camisetas' :
+                 businessType === 'beauty' ? 'Unas' :
+                 businessType === 'tech' ? 'Audio' :
+                 businessType === 'pets' ? 'Alimentos' :
+                 businessType === 'craft' ? 'Decoracion' :
+                 'Categoria ejemplo',
+      sku: 'SKU-001',
+      codigo_barras: '7501234567890',
+      stock: 100,
+      costo: 50,
+      precio_anterior: 120,
+      marca: 'Mi Marca',
+      etiquetas: 'nuevo, oferta',
+      peso_gramos: 500,
+      // Fashion
+      variante_1_nombre: 'Talla',
+      variante_1_opciones: 'S, M, L, XL',
+      variante_2_nombre: 'Color',
+      variante_2_opciones: 'Negro, Blanco, Azul',
+      // Food
+      tiempo_prep_min: 15,
+      tiempo_prep_max: 25,
+      modificadores: 'Tipo de pan:Pan brioche|Pan integral;Extras:Queso extra:+5|Tocino:+8',
+      // Beauty
+      duracion_valor: 45,
+      duracion_unidad: 'min',
+      // Tech
+      modelo: 'BT-500',
+      garantia_meses: 12,
+      especificaciones: 'Bluetooth:5.0;Bateria:20h;Driver:40mm',
+      // Pets
+      tipo_mascota: 'dog',
+      edad_mascota: 'adult',
+      // Craft
+      personalizable: 'si',
+      instrucciones_personalizacion: 'Puedes elegir el color de las cuerdas',
+      cantidad_disponible: 5,
+      activo: 'si',
+      destacado: 'no'
+    },
+    en: {
+      name: businessType === 'food' ? 'Classic burger' :
+            businessType === 'fashion' ? 'Basic t-shirt' :
+            businessType === 'beauty' ? 'Gel manicure' :
+            businessType === 'tech' ? 'Bluetooth headphones' :
+            businessType === 'pets' ? 'Premium food' :
+            businessType === 'craft' ? 'Macrame wall hanging' :
+            'Example product',
+      price: businessType === 'beauty' ? 35 : 99.99,
+      description: 'Product description',
+      category: businessType === 'food' ? 'Burgers' :
+                businessType === 'fashion' ? 'T-shirts' :
+                businessType === 'beauty' ? 'Nails' :
+                businessType === 'tech' ? 'Audio' :
+                businessType === 'pets' ? 'Food' :
+                businessType === 'craft' ? 'Decoration' :
+                'Example category',
+      sku: 'SKU-001',
+      barcode: '7501234567890',
+      stock: 100,
+      cost: 50,
+      compare_price: 120,
+      brand: 'My Brand',
+      tags: 'new, sale',
+      weight_grams: 500,
+      variant_1_name: 'Size',
+      variant_1_options: 'S, M, L, XL',
+      variant_2_name: 'Color',
+      variant_2_options: 'Black, White, Blue',
+      prep_time_min: 15,
+      prep_time_max: 25,
+      modifiers: 'Bread type:Brioche|Whole wheat;Extras:Extra cheese:+5|Bacon:+8',
+      duration_value: 45,
+      duration_unit: 'min',
+      model: 'BT-500',
+      warranty_months: 12,
+      specifications: 'Bluetooth:5.0;Battery:20h;Driver:40mm',
+      pet_type: 'dog',
+      pet_age: 'adult',
+      customizable: 'yes',
+      customization_instructions: 'You can choose the rope color',
+      available_quantity: 5,
+      active: 'yes',
+      featured: 'no'
+    }
+  }
+
+  const row: Record<string, string | number> = {}
+  const exampleData = examples[lang]
+
+  columns.forEach(col => {
+    if (exampleData[col] !== undefined) {
+      row[col] = exampleData[col]
+    }
+  })
+
+  return row
+}
+
+// Get field help text for business type
+const getFieldHelp = (businessType: BusinessType, lang: 'es' | 'en' = 'es'): { field: string; description: string }[] => {
+  const features = getBusinessTypeFeatures(businessType)
+  const helps: { field: string; description: string }[] = []
+
+  if (lang === 'es') {
+    helps.push({ field: 'nombre', description: 'Nombre del producto (requerido)' })
+    helps.push({ field: 'precio', description: 'Precio de venta (requerido)' })
+
+    if (features.showVariants) {
+      helps.push({
+        field: 'variantes',
+        description: 'variante_1_nombre: "Talla", variante_1_opciones: "S, M, L, XL" (separadas por coma)'
+      })
+    }
+    if (features.showModifiers) {
+      helps.push({
+        field: 'modificadores',
+        description: 'Formato: Grupo:Opcion1|Opcion2:+precio;OtroGrupo:Opcion:+precio'
+      })
+    }
+    if (features.showPrepTime) {
+      helps.push({ field: 'tiempo_prep', description: 'Tiempo minimo y maximo de preparacion en minutos' })
+    }
+    if (features.showServiceDuration) {
+      helps.push({ field: 'duracion', description: 'duracion_valor: numero, duracion_unidad: "min" o "hr"' })
+    }
+    if (features.showSpecs) {
+      helps.push({ field: 'especificaciones', description: 'Formato: Clave:Valor;OtraClave:OtroValor' })
+    }
+    if (features.showPetType) {
+      helps.push({ field: 'tipo_mascota', description: 'Valores: dog, cat, bird, fish, small, other' })
+    }
+    if (features.showPetAge) {
+      helps.push({ field: 'edad_mascota', description: 'Valores: puppy, adult, senior, all' })
+    }
+  } else {
+    helps.push({ field: 'name', description: 'Product name (required)' })
+    helps.push({ field: 'price', description: 'Sale price (required)' })
+
+    if (features.showVariants) {
+      helps.push({
+        field: 'variants',
+        description: 'variant_1_name: "Size", variant_1_options: "S, M, L, XL" (comma separated)'
+      })
+    }
+    if (features.showModifiers) {
+      helps.push({
+        field: 'modifiers',
+        description: 'Format: Group:Option1|Option2:+price;OtherGroup:Option:+price'
+      })
+    }
+    if (features.showPrepTime) {
+      helps.push({ field: 'prep_time', description: 'Min and max preparation time in minutes' })
+    }
+    if (features.showServiceDuration) {
+      helps.push({ field: 'duration', description: 'duration_value: number, duration_unit: "min" or "hr"' })
+    }
+    if (features.showSpecs) {
+      helps.push({ field: 'specifications', description: 'Format: Key:Value;OtherKey:OtherValue' })
+    }
+    if (features.showPetType) {
+      helps.push({ field: 'pet_type', description: 'Values: dog, cat, bird, fish, small, other' })
+    }
+    if (features.showPetAge) {
+      helps.push({ field: 'pet_age', description: 'Values: puppy, adult, senior, all' })
+    }
+  }
+
+  return helps
+}
+
+// Parse variations from import row
+const parseVariations = (row: Record<string, unknown>): ProductVariation[] => {
+  const variations: ProductVariation[] = []
+
+  // Variant 1
+  const var1Name = String(row['variante_1_nombre'] || row['variant_1_name'] || '').trim()
+  const var1Options = String(row['variante_1_opciones'] || row['variant_1_options'] || '').trim()
+
+  if (var1Name && var1Options) {
+    const options = var1Options.split(',').map(opt => opt.trim()).filter(Boolean)
+    if (options.length > 0) {
+      variations.push({
+        id: `var-${Date.now()}-1`,
+        name: var1Name,
+        options: options.map((value, i) => ({
+          id: `opt-${Date.now()}-1-${i}`,
+          value,
+          available: true
+        }))
+      })
+    }
+  }
+
+  // Variant 2
+  const var2Name = String(row['variante_2_nombre'] || row['variant_2_name'] || '').trim()
+  const var2Options = String(row['variante_2_opciones'] || row['variant_2_options'] || '').trim()
+
+  if (var2Name && var2Options) {
+    const options = var2Options.split(',').map(opt => opt.trim()).filter(Boolean)
+    if (options.length > 0) {
+      variations.push({
+        id: `var-${Date.now()}-2`,
+        name: var2Name,
+        options: options.map((value, i) => ({
+          id: `opt-${Date.now()}-2-${i}`,
+          value,
+          available: true
+        }))
+      })
+    }
+  }
+
+  return variations
+}
+
+// Parse modifiers from import row
+// Format: "Grupo:Opcion1|Opcion2:+precio;OtroGrupo:Opcion"
+const parseModifiers = (row: Record<string, unknown>): ModifierGroup[] => {
+  const modifiersStr = String(row['modificadores'] || row['modifiers'] || '').trim()
+  if (!modifiersStr) return []
+
+  const groups: ModifierGroup[] = []
+  const groupStrings = modifiersStr.split(';')
+
+  groupStrings.forEach((groupStr, groupIndex) => {
+    const parts = groupStr.split(':')
+    if (parts.length < 2) return
+
+    const groupName = parts[0].trim()
+    const optionsStr = parts.slice(1).join(':') // Rejoin in case option has price with :
+
+    if (!groupName) return
+
+    const options = optionsStr.split('|').map((optStr, optIndex) => {
+      // Check if option has a price: "Queso extra:+5" or just "Pan brioche"
+      const optParts = optStr.split(':')
+      const optName = optParts[0].trim()
+      let price = 0
+
+      if (optParts.length > 1) {
+        const priceStr = optParts[1].replace('+', '').trim()
+        price = parseFloat(priceStr) || 0
+      }
+
+      return {
+        id: `mod-opt-${Date.now()}-${groupIndex}-${optIndex}`,
+        name: optName,
+        price,
+        available: true
+      }
+    }).filter(opt => opt.name)
+
+    if (options.length > 0) {
+      groups.push({
+        id: `mod-group-${Date.now()}-${groupIndex}`,
+        name: groupName,
+        required: false,
+        minSelect: 0,
+        maxSelect: options.length,
+        options
+      })
+    }
+  })
+
+  return groups
+}
+
+// Parse specifications from import row
+// Format: "Key:Value;OtherKey:OtherValue"
+const parseSpecs = (row: Record<string, unknown>): Array<{ key: string; value: string }> => {
+  const specsStr = String(row['especificaciones'] || row['specifications'] || '').trim()
+  if (!specsStr) return []
+
+  return specsStr.split(';').map(specStr => {
+    const [key, ...valueParts] = specStr.split(':')
+    return {
+      key: key.trim(),
+      value: valueParts.join(':').trim()
+    }
+  }).filter(spec => spec.key && spec.value)
 }
 
 export default function ProductImport({ onClose, onSuccess, categories }: ProductImportProps) {
@@ -39,6 +496,10 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
   const [importing, setImporting] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
 
+  const businessType = (store?.businessType as BusinessType) || 'general'
+  const features = useMemo(() => getBusinessTypeFeatures(businessType), [businessType])
+  const fieldHelps = useMemo(() => getFieldHelp(businessType, 'es'), [businessType])
+
   const generateSlug = (name: string): string => {
     return name
       .toLowerCase()
@@ -50,48 +511,20 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
   }
 
   const downloadTemplate = () => {
-    const template = [
-      {
-        nombre: 'Producto ejemplo',
-        precio: 99.99,
-        descripcion: 'Descripcion del producto',
-        sku: 'SKU-001',
-        codigo_barras: '7501234567890',
-        stock: 100,
-        costo: 50,
-        precio_anterior: 120,
-        marca: 'Mi Marca',
-        etiquetas: 'nuevo, oferta',
-        peso_gramos: 500,
-        categoria: 'Categoria ejemplo',
-        activo: 'si',
-        destacado: 'no'
-      }
-    ]
+    const columns = getTemplateColumns(businessType, 'es')
+    const exampleRow = getExampleRow(businessType, 'es')
 
-    const ws = XLSX.utils.json_to_sheet(template)
+    const template = [exampleRow]
+
+    const ws = XLSX.utils.json_to_sheet(template, { header: columns })
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Productos')
 
-    // Set column widths
-    ws['!cols'] = [
-      { wch: 20 }, // nombre
-      { wch: 10 }, // precio
-      { wch: 30 }, // descripcion
-      { wch: 12 }, // sku
-      { wch: 15 }, // codigo_barras
-      { wch: 8 },  // stock
-      { wch: 10 }, // costo
-      { wch: 12 }, // precio_anterior
-      { wch: 15 }, // marca
-      { wch: 20 }, // etiquetas
-      { wch: 12 }, // peso_gramos
-      { wch: 15 }, // categoria
-      { wch: 8 },  // activo
-      { wch: 10 }, // destacado
-    ]
+    // Set column widths based on content
+    ws['!cols'] = columns.map(col => ({ wch: Math.max(15, col.length + 5) }))
 
-    XLSX.writeFile(wb, 'plantilla_productos_shopifree.xlsx')
+    const fileName = `plantilla_productos_${businessType}_shopifree.xlsx`
+    XLSX.writeFile(wb, fileName)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,10 +573,92 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
             comparePrice: row['precio_anterior'] || row['compare_price'] ? parseFloat(String(row['precio_anterior'] || row['compare_price'])) : undefined,
             brand: String(row['marca'] || row['brand'] || row['Marca'] || '').trim() || undefined,
             tags: String(row['etiquetas'] || row['tags'] || row['Etiquetas'] || '').trim() || undefined,
-            weight: row['peso_gramos'] || row['weight'] ? parseFloat(String(row['peso_gramos'] || row['weight'])) : undefined,
+            weight: row['peso_gramos'] || row['weight_grams'] || row['weight'] ? parseFloat(String(row['peso_gramos'] || row['weight_grams'] || row['weight'])) : undefined,
             category: String(row['categoria'] || row['category'] || row['Categoria'] || '').trim() || undefined,
             active: ['si', 'yes', '1', 'true', 'activo'].includes(String(row['activo'] || row['active'] || 'si').toLowerCase()),
             featured: ['si', 'yes', '1', 'true'].includes(String(row['destacado'] || row['featured'] || 'no').toLowerCase()),
+          }
+
+          // Parse business-type specific fields
+
+          // Fashion: Variations
+          if (features.showVariants) {
+            const variations = parseVariations(row)
+            if (variations.length > 0) {
+              product.variations = variations
+            }
+          }
+
+          // Food: Modifiers and prep time
+          if (features.showModifiers) {
+            const modifiers = parseModifiers(row)
+            if (modifiers.length > 0) {
+              product.modifierGroups = modifiers
+            }
+          }
+
+          if (features.showPrepTime) {
+            const prepMin = row['tiempo_prep_min'] || row['prep_time_min']
+            const prepMax = row['tiempo_prep_max'] || row['prep_time_max']
+            if (prepMin !== undefined) {
+              product.prepTimeMin = parseInt(String(prepMin)) || undefined
+            }
+            if (prepMax !== undefined) {
+              product.prepTimeMax = parseInt(String(prepMax)) || undefined
+            }
+          }
+
+          // Beauty: Duration
+          if (features.showServiceDuration) {
+            const durVal = row['duracion_valor'] || row['duration_value']
+            const durUnit = String(row['duracion_unidad'] || row['duration_unit'] || 'min').toLowerCase()
+            if (durVal !== undefined) {
+              product.durationValue = parseInt(String(durVal)) || undefined
+              product.durationUnit = (durUnit === 'hr' || durUnit === 'hour') ? 'hr' : 'min'
+            }
+          }
+
+          // Tech: Model, warranty, specs
+          if (features.showModel) {
+            product.model = String(row['modelo'] || row['model'] || '').trim() || undefined
+          }
+          if (features.showWarranty) {
+            const warranty = row['garantia_meses'] || row['warranty_months']
+            if (warranty !== undefined) {
+              product.warrantyMonths = parseInt(String(warranty)) || undefined
+            }
+          }
+          if (features.showSpecs) {
+            const specs = parseSpecs(row)
+            if (specs.length > 0) {
+              product.specs = specs
+            }
+          }
+
+          // Pets
+          if (features.showPetType) {
+            const petType = String(row['tipo_mascota'] || row['pet_type'] || '').toLowerCase().trim()
+            if (['dog', 'cat', 'bird', 'fish', 'small', 'other'].includes(petType)) {
+              product.petType = petType
+            }
+          }
+          if (features.showPetAge) {
+            const petAge = String(row['edad_mascota'] || row['pet_age'] || '').toLowerCase().trim()
+            if (['puppy', 'adult', 'senior', 'all'].includes(petAge)) {
+              product.petAge = petAge
+            }
+          }
+
+          // Craft
+          if (features.showCustomOrder) {
+            product.customizable = ['si', 'yes', '1', 'true'].includes(String(row['personalizable'] || row['customizable'] || 'no').toLowerCase())
+            product.customizationInstructions = String(row['instrucciones_personalizacion'] || row['customization_instructions'] || '').trim() || undefined
+          }
+          if (features.showLimitedStock) {
+            const availQty = row['cantidad_disponible'] || row['available_quantity']
+            if (availQty !== undefined) {
+              product.availableQuantity = parseInt(String(availQty)) || undefined
+            }
           }
 
           parsedProducts.push(product)
@@ -251,6 +766,62 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
         if (product.weight !== undefined && product.weight !== null) productData.weight = product.weight
         if (categoryId) productData.categoryId = categoryId
 
+        // Business-type specific fields
+
+        // Fashion: Variations
+        if (product.variations && product.variations.length > 0) {
+          productData.hasVariations = true
+          productData.variations = product.variations
+        }
+
+        // Food: Modifiers and prep time
+        if (product.modifierGroups && product.modifierGroups.length > 0) {
+          productData.hasModifiers = true
+          productData.modifierGroups = product.modifierGroups
+        }
+
+        if (product.prepTimeMin !== undefined || product.prepTimeMax !== undefined) {
+          productData.prepTime = {
+            min: product.prepTimeMin || 0,
+            max: product.prepTimeMax || product.prepTimeMin || 0,
+            unit: 'min'
+          }
+        }
+
+        // Beauty: Duration
+        if (product.durationValue !== undefined) {
+          productData.duration = {
+            value: product.durationValue,
+            unit: product.durationUnit || 'min'
+          }
+        }
+
+        // Tech
+        if (product.model) productData.model = product.model
+        if (product.warrantyMonths !== undefined) {
+          productData.warranty = {
+            months: product.warrantyMonths
+          }
+        }
+        if (product.specs && product.specs.length > 0) {
+          productData.specs = product.specs
+        }
+
+        // Pets
+        if (product.petType) productData.petType = product.petType
+        if (product.petAge) productData.petAge = product.petAge
+
+        // Craft
+        if (product.customizable !== undefined) {
+          productData.customizable = product.customizable
+          if (product.customizationInstructions) {
+            productData.customizationInstructions = product.customizationInstructions
+          }
+        }
+        if (product.availableQuantity !== undefined) {
+          productData.availableQuantity = product.availableQuantity
+        }
+
         await productService.create(store.id, productData as Parameters<typeof productService.create>[1])
         successCount++
       } catch (error) {
@@ -279,12 +850,26 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
     }
   }
 
+  // Get business type label for display
+  const businessTypeLabels: Record<BusinessType, string> = {
+    food: 'Restaurante / Comida',
+    fashion: 'Moda / Ropa',
+    beauty: 'Belleza / Servicios',
+    craft: 'Artesanal / Handmade',
+    tech: 'Tecnologia / Electronica',
+    pets: 'Mascotas',
+    general: 'General'
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#1e3a5f]">Importar productos</h2>
+          <div>
+            <h2 className="text-lg font-bold text-[#1e3a5f]">Importar productos</h2>
+            <p className="text-sm text-gray-500">Plantilla para: {businessTypeLabels[businessType]}</p>
+          </div>
           <button
             onClick={onClose}
             disabled={importing}
@@ -311,7 +896,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                   <div className="flex-1">
                     <h4 className="font-semibold text-[#1e3a5f] mb-1">Paso 1: Descarga la plantilla</h4>
                     <p className="text-sm text-gray-600 mb-3">
-                      Usa nuestra plantilla de Excel para asegurarte de que los datos esten en el formato correcto.
+                      Plantilla personalizada para <strong>{businessTypeLabels[businessType]}</strong> con los campos relevantes para tu tipo de negocio.
                     </p>
                     <button
                       onClick={downloadTemplate}
@@ -348,19 +933,21 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                 />
               </div>
 
-              {/* Info */}
+              {/* Field help for business type */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                 <div className="flex gap-3">
                   <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-1">Campos requeridos:</p>
-                    <ul className="list-disc list-inside text-yellow-700">
-                      <li><strong>nombre</strong> - Nombre del producto</li>
-                      <li><strong>precio</strong> - Precio de venta</li>
+                    <p className="font-medium mb-2">Campos para {businessTypeLabels[businessType]}:</p>
+                    <ul className="space-y-1 text-yellow-700">
+                      {fieldHelps.map((help, i) => (
+                        <li key={i}>
+                          <strong>{help.field}</strong>: {help.description}
+                        </li>
+                      ))}
                     </ul>
-                    <p className="mt-2 text-yellow-700">Los demas campos son opcionales.</p>
                   </div>
                 </div>
               </div>
@@ -403,9 +990,19 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                       <tr>
                         <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Nombre</th>
                         <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Precio</th>
-                        <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">SKU</th>
-                        <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Stock</th>
+                        {features.showSku && (
+                          <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">SKU</th>
+                        )}
+                        {features.showStock && (
+                          <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Stock</th>
+                        )}
                         <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Categoria</th>
+                        {features.showVariants && (
+                          <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Variantes</th>
+                        )}
+                        {features.showModifiers && (
+                          <th className="px-4 py-3 text-left font-semibold text-[#1e3a5f]">Modificadores</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -413,9 +1010,27 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                         <tr key={i} className="hover:bg-gray-50">
                           <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                           <td className="px-4 py-3 text-gray-600">{getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-gray-600">{product.sku || '-'}</td>
-                          <td className="px-4 py-3 text-gray-600">{product.stock ?? '-'}</td>
+                          {features.showSku && (
+                            <td className="px-4 py-3 text-gray-600">{product.sku || '-'}</td>
+                          )}
+                          {features.showStock && (
+                            <td className="px-4 py-3 text-gray-600">{product.stock ?? '-'}</td>
+                          )}
                           <td className="px-4 py-3 text-gray-600">{product.category || '-'}</td>
+                          {features.showVariants && (
+                            <td className="px-4 py-3 text-gray-600">
+                              {product.variations?.length
+                                ? product.variations.map(v => `${v.name}: ${v.options.length}`).join(', ')
+                                : '-'}
+                            </td>
+                          )}
+                          {features.showModifiers && (
+                            <td className="px-4 py-3 text-gray-600">
+                              {product.modifierGroups?.length
+                                ? `${product.modifierGroups.length} grupo${product.modifierGroups.length > 1 ? 's' : ''}`
+                                : '-'}
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
