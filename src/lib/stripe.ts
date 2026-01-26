@@ -34,7 +34,9 @@ export const PLAN_FEATURES = {
       'Hasta 20 productos',
       'Pedidos por WhatsApp',
       'Link compartible',
-      'Codigo QR de tu catalogo'
+      'Codigo QR de tu catalogo',
+      '1 foto por producto',
+      'Hasta 3 categorias'
     ],
     limits: {
       products: 20,
@@ -47,15 +49,14 @@ export const PLAN_FEATURES = {
     price: 4.99,
     priceYearly: 49.99,
     features: [
-      'Productos ilimitados',
-      'Sin marca Shopifree',
+      'Hasta 200 productos',
+      'Dominio personalizado',
       'Multiples fotos por producto',
       'Categorias ilimitadas',
-      'Estadisticas basicas',
-      'Soporte por email'
+      'Estadisticas avanzadas'
     ],
     limits: {
-      products: -1, // unlimited
+      products: 200,
       imagesPerProduct: 5,
       categories: -1
     }
@@ -66,10 +67,9 @@ export const PLAN_FEATURES = {
     priceYearly: 99.99,
     features: [
       'Todo lo de Pro',
-      'Cupones de descuento',
-      'Analytics avanzados',
-      'Dominio personalizado',
-      'Pagos en linea',
+      'Productos ilimitados',
+      'Pasarela de pago',
+      'Sin marca Shopifree',
       'Soporte prioritario'
     ],
     limits: {
@@ -100,10 +100,11 @@ export function canAddProduct(plan: PlanType, currentProductCount: number): { al
   }
 
   if (currentProductCount >= limit) {
+    const upgradePlan = plan === 'free' ? 'Pro' : 'Business'
     return {
       allowed: false,
       limit,
-      message: `Has alcanzado el limite de ${limit} productos en el plan ${PLAN_FEATURES[plan].name}. Actualiza a Pro para productos ilimitados.`
+      message: `Has alcanzado el limite de ${limit} productos en el plan ${PLAN_FEATURES[plan].name}. Actualiza a ${upgradePlan} para mas productos.`
     }
   }
 
