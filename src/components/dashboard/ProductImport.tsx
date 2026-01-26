@@ -301,78 +301,6 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
   return row
 }
 
-// Get field help text for business type
-const getFieldHelp = (businessType: BusinessType, lang: 'es' | 'en' = 'es'): { field: string; description: string }[] => {
-  const features = getBusinessTypeFeatures(businessType)
-  const helps: { field: string; description: string }[] = []
-
-  if (lang === 'es') {
-    helps.push({ field: 'nombre', description: 'Nombre del producto (requerido)' })
-    helps.push({ field: 'precio', description: 'Precio de venta (requerido)' })
-
-    if (features.showVariants) {
-      helps.push({
-        field: 'variantes',
-        description: 'variante_1_nombre: "Talla", variante_1_opciones: "S, M, L, XL" (separadas por coma)'
-      })
-    }
-    if (features.showModifiers) {
-      helps.push({
-        field: 'modificadores',
-        description: 'Formato: Grupo:Opcion1|Opcion2:+precio;OtroGrupo:Opcion:+precio'
-      })
-    }
-    if (features.showPrepTime) {
-      helps.push({ field: 'tiempo_prep', description: 'Tiempo minimo y maximo de preparacion en minutos' })
-    }
-    if (features.showServiceDuration) {
-      helps.push({ field: 'duracion', description: 'duracion_valor: numero, duracion_unidad: "min" o "hr"' })
-    }
-    if (features.showSpecs) {
-      helps.push({ field: 'especificaciones', description: 'Formato: Clave:Valor;OtraClave:OtroValor' })
-    }
-    if (features.showPetType) {
-      helps.push({ field: 'tipo_mascota', description: 'Valores: dog, cat, bird, fish, small, other' })
-    }
-    if (features.showPetAge) {
-      helps.push({ field: 'edad_mascota', description: 'Valores: puppy, adult, senior, all' })
-    }
-  } else {
-    helps.push({ field: 'name', description: 'Product name (required)' })
-    helps.push({ field: 'price', description: 'Sale price (required)' })
-
-    if (features.showVariants) {
-      helps.push({
-        field: 'variants',
-        description: 'variant_1_name: "Size", variant_1_options: "S, M, L, XL" (comma separated)'
-      })
-    }
-    if (features.showModifiers) {
-      helps.push({
-        field: 'modifiers',
-        description: 'Format: Group:Option1|Option2:+price;OtherGroup:Option:+price'
-      })
-    }
-    if (features.showPrepTime) {
-      helps.push({ field: 'prep_time', description: 'Min and max preparation time in minutes' })
-    }
-    if (features.showServiceDuration) {
-      helps.push({ field: 'duration', description: 'duration_value: number, duration_unit: "min" or "hr"' })
-    }
-    if (features.showSpecs) {
-      helps.push({ field: 'specifications', description: 'Format: Key:Value;OtherKey:OtherValue' })
-    }
-    if (features.showPetType) {
-      helps.push({ field: 'pet_type', description: 'Values: dog, cat, bird, fish, small, other' })
-    }
-    if (features.showPetAge) {
-      helps.push({ field: 'pet_age', description: 'Values: puppy, adult, senior, all' })
-    }
-  }
-
-  return helps
-}
-
 // Parse variations from import row
 const parseVariations = (row: Record<string, unknown>): ProductVariation[] => {
   const variations: ProductVariation[] = []
@@ -498,7 +426,6 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
 
   const businessType = (store?.businessType as BusinessType) || 'general'
   const features = useMemo(() => getBusinessTypeFeatures(businessType), [businessType])
-  const fieldHelps = useMemo(() => getFieldHelp(businessType, 'es'), [businessType])
 
   const generateSlug = (name: string): string => {
     return name
@@ -933,24 +860,6 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                 />
               </div>
 
-              {/* Field help for business type */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                <div className="flex gap-3">
-                  <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-2">Campos para {businessTypeLabels[businessType]}:</p>
-                    <ul className="space-y-1 text-yellow-700">
-                      {fieldHelps.map((help, i) => (
-                        <li key={i}>
-                          <strong>{help.field}</strong>: {help.description}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
