@@ -172,17 +172,6 @@ export default function DemoStoresCarousel() {
                           className="w-full h-full object-cover"
                         />
 
-                        {/* Overlay gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                        {/* Store info overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                          <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur-sm text-xs rounded-full mb-2">
-                            Tema {store.theme}
-                          </span>
-                          <h3 className="font-bold text-lg">{store.name}</h3>
-                          <p className="text-xs text-white/70">{store.subdomain}.shopifree.app</p>
-                        </div>
                       </div>
                     </div>
                   </div>

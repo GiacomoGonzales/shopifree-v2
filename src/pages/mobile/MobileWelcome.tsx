@@ -125,15 +125,6 @@ export default function MobileWelcome() {
                         alt={store.name}
                         className="w-full h-full object-cover"
                       />
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                      {/* Store info */}
-                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                        <span className="text-[10px] px-2 py-0.5 bg-white/20 rounded-full backdrop-blur-sm">
-                          {store.theme}
-                        </span>
-                        <h3 className="font-semibold text-sm mt-1">{store.name}</h3>
-                      </div>
                     </div>
                   </div>
                 </div>
