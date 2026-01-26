@@ -54,6 +54,11 @@
       "topProducts": "Productos mas vistos",
       "conversionFunnel": "Embudo de conversion",
       "deviceDistribution": "Por dispositivo"
+    },
+    "upgrade": {
+      "title": "Estadísticas Avanzadas",
+      "description": "Accede a estadísticas detalladas de tu catálogo: visitas, productos más vistos, conversiones y más. Disponible en el plan Pro.",
+      "button": "Actualizar a Pro"
     }
   },
   "orders": {
@@ -513,7 +518,9 @@
       "publicKey": "Public Key",
       "accessToken": "Access Token",
       "sandbox": "Modo Sandbox",
-      "sandboxDescription": "Prueba sin cobrar dinero real"
+      "sandboxDescription": "Prueba sin cobrar dinero real",
+      "businessOnly": "La pasarela de pago está disponible exclusivamente en el plan Business. Acepta pagos con tarjeta y más.",
+      "upgradeToBusiness": "Actualizar a Business"
     },
     "comingSoon": {
       "title": "Próximamente",

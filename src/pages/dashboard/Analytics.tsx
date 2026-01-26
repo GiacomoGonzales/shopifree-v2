@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { analyticsService } from '../../lib/firebase'
 import type { AnalyticsSummary, DailyStats, TopProduct, DeviceStats } from '../../types'
 import {
@@ -60,6 +62,7 @@ const DEVICE_COLORS = ['#6366f1', '#22c55e']
 export default function Analytics() {
   const { t } = useTranslation('dashboard')
   const { store } = useAuth()
+  const { localePath } = useLanguage()
   const [dateRange, setDateRange] = useState<DateRange>('7days')
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
@@ -135,6 +138,32 @@ export default function Analytics() {
       { name: 'Desktop', value: deviceStats.desktop }
     ]
   }, [deviceStats])
+
+  // Check plan - Analytics is only for Pro and Business
+  if (store?.plan === 'free' || !store?.plan) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="max-w-md text-center p-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl mx-auto mb-6 flex items-center justify-center">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#1e3a5f] mb-3">{t('analytics.upgrade.title')}</h2>
+          <p className="text-gray-600 mb-6">{t('analytics.upgrade.description')}</p>
+          <Link
+            to={localePath('/dashboard/plan')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-lg shadow-[#1e3a5f]/20"
+          >
+            {t('analytics.upgrade.button')}
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import type { Store } from '../../types'
 
 export default function Payments() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
+  const { localePath } = useLanguage()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
@@ -124,81 +127,111 @@ export default function Payments() {
             </div>
           </div>
 
-          {/* MercadoPago */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-[#00b1ea] rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0">
-                <span className="text-white font-bold text-lg">MP</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-[#1e3a5f]">MercadoPago</h2>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mpEnabled}
-                      onChange={(e) => setMpEnabled(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
-                  </label>
+          {/* MercadoPago - Business plan only */}
+          {store?.plan === 'business' ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-[#00b1ea] rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0">
+                  <span className="text-white font-bold text-lg">MP</span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  {t('payments.mercadopago.description')}
-                </p>
-              </div>
-            </div>
-
-            {mpEnabled && (
-              <div className="space-y-4 pt-4 mt-4 border-t border-gray-100">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <p className="text-xs text-amber-800">
-                    <strong>{t('payments.mercadopago.important')}</strong> {t('payments.mercadopago.needAccount')} <a href="https://www.mercadopago.com/developers" target="_blank" rel="noopener noreferrer" className="underline">{t('payments.mercadopago.getCredentials')}</a>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-[#1e3a5f]">MercadoPago</h2>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mpEnabled}
+                        onChange={(e) => setMpEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {t('payments.mercadopago.description')}
                   </p>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.mercadopago.publicKey')}</label>
-                    <input
-                      type="text"
-                      value={mpPublicKey}
-                      onChange={(e) => setMpPublicKey(e.target.value)}
-                      placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
-                    />
+              {mpEnabled && (
+                <div className="space-y-4 pt-4 mt-4 border-t border-gray-100">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p className="text-xs text-amber-800">
+                      <strong>{t('payments.mercadopago.important')}</strong> {t('payments.mercadopago.needAccount')} <a href="https://www.mercadopago.com/developers" target="_blank" rel="noopener noreferrer" className="underline">{t('payments.mercadopago.getCredentials')}</a>
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.mercadopago.accessToken')}</label>
-                    <input
-                      type="password"
-                      value={mpAccessToken}
-                      onChange={(e) => setMpAccessToken(e.target.value)}
-                      placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
-                    />
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.mercadopago.publicKey')}</label>
+                      <input
+                        type="text"
+                        value={mpPublicKey}
+                        onChange={(e) => setMpPublicKey(e.target.value)}
+                        placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.mercadopago.accessToken')}</label>
+                      <input
+                        type="password"
+                        value={mpAccessToken}
+                        onChange={(e) => setMpAccessToken(e.target.value)}
+                        placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mpSandbox}
+                        onChange={(e) => setMpSandbox(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                    <div>
+                      <span className="text-sm font-medium text-[#1e3a5f]">{t('payments.mercadopago.sandbox')}</span>
+                      <p className="text-xs text-gray-500">{t('payments.mercadopago.sandboxDescription')}</p>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mpSandbox}
-                      onChange={(e) => setMpSandbox(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-                  </label>
-                  <div>
-                    <span className="text-sm font-medium text-[#1e3a5f]">{t('payments.mercadopago.sandbox')}</span>
-                    <p className="text-xs text-gray-500">{t('payments.mercadopago.sandboxDescription')}</p>
-                  </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-6 shadow-sm text-white">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-lg">MP</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold">MercadoPago</h2>
+                  <p className="text-sm text-white/80 mt-1">
+                    {t('payments.mercadopago.description')}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
+              <div className="mt-4 p-4 bg-white/10 rounded-xl">
+                <p className="text-sm text-white/90 mb-3">
+                  {t('payments.mercadopago.businessOnly')}
+                </p>
+                <Link
+                  to={localePath('/dashboard/plan')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#1e3a5f] rounded-lg font-semibold text-sm hover:bg-[#38bdf8] hover:text-white transition-all"
+                >
+                  {t('payments.mercadopago.upgradeToBusiness')}
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Coming Soon */}

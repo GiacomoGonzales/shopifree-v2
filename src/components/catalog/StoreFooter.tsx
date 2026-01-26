@@ -179,7 +179,7 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
           <p className="text-sm" style={{ color: theme.colors.border }}>
             © {new Date().getFullYear()} {store.name}
           </p>
-          {(!store.plan || store.plan === 'free') && (
+          {store.plan !== 'business' && (
             <a
               href="https://shopifree.app"
               target="_blank"

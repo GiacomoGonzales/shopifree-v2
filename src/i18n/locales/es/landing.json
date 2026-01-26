@@ -74,28 +74,28 @@
         "products": "Hasta 20 productos",
         "whatsappOrders": "Pedidos por WhatsApp",
         "shareableLink": "Link compartible",
-        "qrCode": "Código QR"
+        "qrCode": "Código QR de tu catálogo",
+        "onePhoto": "1 foto por producto",
+        "threeCategories": "Hasta 3 categorías"
       }
     },
     "pro": {
       "name": "Pro",
       "features": {
-        "unlimitedProducts": "Productos ilimitados",
-        "noBranding": "Sin marca Shopifree",
-        "multiplePhotos": "Múltiples fotos",
+        "products": "Hasta 200 productos",
+        "customDomain": "Dominio personalizado",
+        "multiplePhotos": "Múltiples fotos por producto",
         "unlimitedCategories": "Categorías ilimitadas",
-        "basicStats": "Estadísticas básicas",
-        "emailSupport": "Soporte por email"
+        "advancedStats": "Estadísticas avanzadas"
       }
     },
     "business": {
       "name": "Business",
       "features": {
         "everythingPro": "Todo lo de Pro",
-        "discountCoupons": "Cupones de descuento",
-        "advancedAnalytics": "Analytics avanzados",
-        "customDomain": "Dominio personalizado",
-        "onlinePayments": "Pagos en línea",
+        "unlimitedProducts": "Productos ilimitados",
+        "paymentGateway": "Pasarela de pago",
+        "noBranding": "Sin marca Shopifree",
         "prioritySupport": "Soporte prioritario"
       }
     }

@@ -54,6 +54,11 @@
       "topProducts": "Top products",
       "conversionFunnel": "Conversion funnel",
       "deviceDistribution": "By device"
+    },
+    "upgrade": {
+      "title": "Advanced Analytics",
+      "description": "Access detailed statistics for your catalog: visits, most viewed products, conversions and more. Available on the Pro plan.",
+      "button": "Upgrade to Pro"
     }
   },
   "orders": {
@@ -512,7 +517,9 @@
       "publicKey": "Public Key",
       "accessToken": "Access Token",
       "sandbox": "Sandbox Mode",
-      "sandboxDescription": "Test without charging real money"
+      "sandboxDescription": "Test without charging real money",
+      "businessOnly": "Payment gateway is exclusively available on the Business plan. Accept card payments and more.",
+      "upgradeToBusiness": "Upgrade to Business"
     },
     "comingSoon": {
       "title": "Coming Soon",

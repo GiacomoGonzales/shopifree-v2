@@ -93,12 +93,13 @@ export default function Register() {
       if (store) {
         // User already has a store, go to dashboard
         navigate(localePath('/dashboard'))
-      } else {
-        // User logged in but no store yet, show step 2
+      } else if (step === 1) {
+        // User just logged in but no store yet, advance to step 2
+        // Only do this if on step 1 to avoid resetting from step 3
         setStep(2)
       }
     }
-  }, [authLoading, firebaseUser, store, navigate, localePath])
+  }, [authLoading, firebaseUser, store, navigate, localePath, step])
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

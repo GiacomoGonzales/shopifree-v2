@@ -272,7 +272,7 @@ export default function Landing() {
               </p>
               <p className="text-gray-400 text-sm mb-6">{t('pricing.forever')}</p>
               <ul className="space-y-3 mb-8">
-                {[t('pricing.free.features.products'), t('pricing.free.features.whatsappOrders'), t('pricing.free.features.shareableLink'), t('pricing.free.features.qrCode')].map((item, i) => (
+                {[t('pricing.free.features.products'), t('pricing.free.features.whatsappOrders'), t('pricing.free.features.shareableLink'), t('pricing.free.features.qrCode'), t('pricing.free.features.onePhoto'), t('pricing.free.features.threeCategories')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
                     <div className="w-5 h-5 bg-[#38bdf8]/20 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-[#1e3a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -305,7 +305,7 @@ export default function Landing() {
               </p>
               <p className="text-[#38bdf8] text-sm mb-6">{t('pricing.perMonth')}</p>
               <ul className="space-y-3 mb-8">
-                {[t('pricing.pro.features.unlimitedProducts'), t('pricing.pro.features.noBranding'), t('pricing.pro.features.multiplePhotos'), t('pricing.pro.features.unlimitedCategories'), t('pricing.pro.features.basicStats'), t('pricing.pro.features.emailSupport')].map((item, i) => (
+                {[t('pricing.pro.features.products'), t('pricing.pro.features.customDomain'), t('pricing.pro.features.multiplePhotos'), t('pricing.pro.features.unlimitedCategories'), t('pricing.pro.features.advancedStats')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
                     <div className="w-5 h-5 bg-[#38bdf8]/30 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -332,7 +332,7 @@ export default function Landing() {
               </p>
               <p className="text-gray-400 text-sm mb-6">{t('pricing.perMonth')}</p>
               <ul className="space-y-3 mb-8">
-                {[t('pricing.business.features.everythingPro'), t('pricing.business.features.discountCoupons'), t('pricing.business.features.advancedAnalytics'), t('pricing.business.features.customDomain'), t('pricing.business.features.onlinePayments'), t('pricing.business.features.prioritySupport')].map((item, i) => (
+                {[t('pricing.business.features.everythingPro'), t('pricing.business.features.unlimitedProducts'), t('pricing.business.features.paymentGateway'), t('pricing.business.features.noBranding'), t('pricing.business.features.prioritySupport')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
                     <div className="w-5 h-5 bg-[#38bdf8]/20 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-[#1e3a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -74,28 +74,28 @@
         "products": "Up to 20 products",
         "whatsappOrders": "Orders via WhatsApp",
         "shareableLink": "Shareable link",
-        "qrCode": "QR Code"
+        "qrCode": "QR Code for your catalog",
+        "onePhoto": "1 photo per product",
+        "threeCategories": "Up to 3 categories"
       }
     },
     "pro": {
       "name": "Pro",
       "features": {
-        "unlimitedProducts": "Unlimited products",
-        "noBranding": "No Shopifree branding",
-        "multiplePhotos": "Multiple photos",
+        "products": "Up to 200 products",
+        "customDomain": "Custom domain",
+        "multiplePhotos": "Multiple photos per product",
         "unlimitedCategories": "Unlimited categories",
-        "basicStats": "Basic statistics",
-        "emailSupport": "Email support"
+        "advancedStats": "Advanced statistics"
       }
     },
     "business": {
       "name": "Business",
       "features": {
         "everythingPro": "Everything from Pro",
-        "discountCoupons": "Discount coupons",
-        "advancedAnalytics": "Advanced analytics",
-        "customDomain": "Custom domain",
-        "onlinePayments": "Online payments",
+        "unlimitedProducts": "Unlimited products",
+        "paymentGateway": "Payment gateway",
+        "noBranding": "No Shopifree branding",
         "prioritySupport": "Priority support"
       }
     }
