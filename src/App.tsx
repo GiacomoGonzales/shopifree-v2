@@ -37,7 +37,6 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminStores from './pages/admin/Stores'
 import AdminUsers from './pages/admin/Users'
 import AdminPlans from './pages/admin/Plans'
-import AdminScreenshots from './pages/admin/DemoScreenshots'
 
 // Payment Pages
 import PaymentSuccess from './pages/payment/PaymentSuccess'
@@ -170,7 +169,6 @@ function AppRoutes() {
           <Route path="stores" element={<AdminStores />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="plans" element={<AdminPlans />} />
-          <Route path="screenshots" element={<AdminScreenshots />} />
         </Route>
       </Route>
 

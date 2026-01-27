@@ -422,6 +422,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
   const [errors, setErrors] = useState<string[]>([])
   const [importing, setImporting] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
+  const [isDragging, setIsDragging] = useState(false)
 
   const businessType = (store?.businessType as BusinessType) || 'general'
   const features = useMemo(() => getBusinessTypeFeatures(businessType), [businessType])
@@ -453,10 +454,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
     XLSX.writeFile(wb, fileName)
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const processFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = (event) => {
       try {
@@ -604,6 +602,43 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
       }
     }
     reader.readAsBinaryString(file)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    processFile(file)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['.xlsx', '.xls', '.csv']
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    if (!validTypes.includes(fileExtension)) {
+      showToast('Formato no soportado. Usa .xlsx, .xls o .csv', 'error')
+      return
+    }
+
+    processFile(file)
   }
 
   const handleImport = async () => {
@@ -840,14 +875,24 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                 <h4 className="font-semibold text-[#1e3a5f] mb-3">Paso 2: Sube tu archivo</h4>
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-[#38bdf8] transition-colors"
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                    isDragging
+                      ? 'border-[#38bdf8] bg-[#f0f7ff]'
+                      : 'border-gray-200 hover:border-[#38bdf8]'
+                  }`}
                 >
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#38bdf8]/20">
+                  <div className={`w-14 h-14 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#38bdf8]/20 transition-transform ${isDragging ? 'scale-110' : ''}`}>
                     <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                   </div>
-                  <p className="text-[#1e3a5f] font-medium mb-1">Click para seleccionar archivo</p>
+                  <p className="text-[#1e3a5f] font-medium mb-1">
+                    {isDragging ? 'Suelta el archivo aqui' : 'Click para seleccionar archivo'}
+                  </p>
                   <p className="text-gray-400 text-sm">o arrastra y suelta aqui</p>
                   <p className="text-gray-400 text-xs mt-2">Formatos soportados: .xlsx, .xls, .csv</p>
                 </div>

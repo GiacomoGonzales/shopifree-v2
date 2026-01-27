@@ -131,8 +131,8 @@ export default function Payments() {
           {store?.plan === 'business' ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-[#00b1ea] rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0">
-                  <span className="text-white font-bold text-lg">MP</span>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0 overflow-hidden">
+                  <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
@@ -206,8 +206,8 @@ export default function Payments() {
           ) : (
             <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-6 shadow-sm text-white">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-lg">MP</span>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold">MercadoPago</h2>

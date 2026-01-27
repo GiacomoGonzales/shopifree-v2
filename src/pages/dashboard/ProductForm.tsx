@@ -37,6 +37,7 @@ export default function ProductForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   // === CAMPOS BÁSICOS ===
   const [name, setName] = useState('')
@@ -176,9 +177,9 @@ export default function ProductForm() {
   const plan = (store?.plan || 'free') as PlanType
   const maxImages = getMaxImagesPerProduct(plan)
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+  const uploadFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files)
+    if (fileArray.length === 0) return
 
     // Check limit
     const remainingSlots = maxImages - images.length
@@ -189,7 +190,7 @@ export default function ProductForm() {
       return
     }
 
-    const filesToUpload = Array.from(files).slice(0, remainingSlots)
+    const filesToUpload = fileArray.slice(0, remainingSlots)
     setUploading(true)
 
     try {
@@ -212,8 +213,8 @@ export default function ProductForm() {
       const uploadedUrls = await Promise.all(uploadPromises)
       setImages(prev => [...prev, ...uploadedUrls])
 
-      if (filesToUpload.length < files.length) {
-        showToast(t('productForm.photos.partialUpload', { uploaded: filesToUpload.length, total: files.length }), 'info')
+      if (filesToUpload.length < fileArray.length) {
+        showToast(t('productForm.photos.partialUpload', { uploaded: filesToUpload.length, total: fileArray.length }), 'info')
       }
     } catch (error) {
       console.error('Error uploading image:', error)
@@ -223,6 +224,42 @@ export default function ProductForm() {
       // Clear file input
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    await uploadFiles(files)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = e.dataTransfer.files
+    if (!files || files.length === 0) return
+
+    // Filter only image files
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) {
+      showToast(t('productForm.photos.invalidFormat', 'Solo se permiten archivos de imagen'), 'error')
+      return
+    }
+
+    await uploadFiles(imageFiles)
   }
 
   const handleRemoveImage = (index: number) => {
@@ -481,9 +518,15 @@ export default function ProductForm() {
               {images.length < maxImages ? (
                 <div
                   onClick={() => !uploading && fileInputRef.current?.click()}
-                  className={`border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all bg-gradient-to-br from-[#f0f7ff] to-white ${
-                    images.length === 0 ? 'aspect-[4/3]' : 'py-6'
-                  }`}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all ${
+                    isDragging
+                      ? 'border-[#38bdf8] bg-[#e0f2fe]'
+                      : 'border-[#38bdf8]/30 hover:border-[#38bdf8] bg-gradient-to-br from-[#f0f7ff] to-white'
+                  } ${images.length === 0 ? 'aspect-[4/3]' : 'py-6'}`}
                 >
                   <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500">
                     {uploading ? (
@@ -493,16 +536,22 @@ export default function ProductForm() {
                       </>
                     ) : (
                       <>
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20">
+                        <div className={`w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20 transition-transform ${isDragging ? 'scale-110' : ''}`}>
                           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
                         </div>
                         <p className="text-[#1e3a5f] font-medium text-sm">
-                          {images.length === 0 ? t('productForm.photos.clickToUpload') : t('productForm.photos.addMore')}
+                          {isDragging
+                            ? t('productForm.photos.dropHere', 'Suelta la imagen aqui')
+                            : images.length === 0
+                              ? t('productForm.photos.clickToUpload')
+                              : t('productForm.photos.addMore')}
                         </p>
-                        {maxImages > 1 && (
-                          <p className="text-xs text-gray-400 mt-1">{t('productForm.photos.selectMultiple')}</p>
+                        {!isDragging && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            {maxImages > 1 ? t('productForm.photos.selectMultiple') : t('productForm.photos.dragAndDrop', 'o arrastra y suelta')}
+                          </p>
                         )}
                       </>
                     )}

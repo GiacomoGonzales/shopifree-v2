@@ -76,11 +76,16 @@ export default function Branding() {
     fetchStore()
   }, [firebaseUser])
 
-  const uploadImage = async (file: File, folder: string): Promise<string> => {
+  const uploadImage = async (file: File, folder: string, highQuality = false): Promise<string> => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
     formData.append('folder', `shopifree/${folder}`)
+
+    // For hero images, use good quality (balance between quality and file size)
+    if (highQuality) {
+      formData.append('quality', 'auto:good')
+    }
 
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -114,7 +119,7 @@ export default function Branding() {
 
     setUploadingHero(true)
     try {
-      const url = await uploadImage(file, 'heroes')
+      const url = await uploadImage(file, 'heroes', true)
       setHeroImage(url)
     } catch (error) {
       console.error('Error uploading hero:', error)
@@ -130,7 +135,7 @@ export default function Branding() {
 
     setUploadingHeroMobile(true)
     try {
-      const url = await uploadImage(file, 'heroes')
+      const url = await uploadImage(file, 'heroes', true)
       setHeroImageMobile(url)
     } catch (error) {
       console.error('Error uploading hero mobile:', error)
