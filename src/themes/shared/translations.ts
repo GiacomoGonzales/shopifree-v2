@@ -110,6 +110,7 @@ export interface ThemeTranslations {
   subtotal: string
   shipping: string
   freeShipping: string
+  freeShippingAbove: string
 
   // Observations
   observations: string
@@ -239,6 +240,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     subtotal: 'Subtotal',
     shipping: 'Envio',
     freeShipping: 'Gratis',
+    freeShippingAbove: 'Envio gratis en compras mayores a {{amount}}',
 
     // Observations
     observations: 'Observaciones',
@@ -367,6 +369,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     subtotal: 'Subtotal',
     shipping: 'Shipping',
     freeShipping: 'Free',
+    freeShippingAbove: 'Free shipping on orders over {{amount}}',
 
     // Observations
     observations: 'Notes',
@@ -495,6 +498,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     subtotal: 'Subtotal',
     shipping: 'Frete',
     freeShipping: 'Gratis',
+    freeShippingAbove: 'Frete gratis em compras acima de {{amount}}',
 
     // Observations
     observations: 'Observacoes',

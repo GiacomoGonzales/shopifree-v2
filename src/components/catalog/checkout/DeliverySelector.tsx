@@ -3,10 +3,12 @@ import { useTheme } from '../ThemeContext'
 import type { DeliveryData } from '../../../hooks/useCheckout'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
+import { formatPrice } from '../../../lib/currency'
 
 interface Props {
   data?: DeliveryData
   store: Store
+  subtotal: number
   onSubmit: (data: DeliveryData) => void
   error?: string | null
   t: ThemeTranslations
@@ -16,13 +18,23 @@ export interface DeliverySelectorRef {
   submit: () => boolean
 }
 
-const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, onSubmit, error, t }, ref) => {
+const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, error, t }, ref) => {
   const { theme } = useTheme()
   const [method, setMethod] = useState<'pickup' | 'delivery'>(data?.method || 'pickup')
   const [street, setStreet] = useState(data?.address?.street || '')
   const [city, setCity] = useState(data?.address?.city || '')
   const [reference, setReference] = useState(data?.address?.reference || '')
   const [observations, setObservations] = useState(data?.observations || '')
+
+  // Calculate shipping cost for display
+  const getShippingCost = (): number => {
+    if (!store.shipping?.enabled) return 0
+    if (store.shipping.freeAbove && subtotal >= store.shipping.freeAbove) return 0
+    return store.shipping.cost || 0
+  }
+
+  const shippingCost = getShippingCost()
+  const isFreeShipping = store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
 
   useImperativeHandle(ref, () => ({
     submit: () => {
@@ -122,12 +134,35 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
               />
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="font-medium">{t.homeDelivery}</span>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="font-medium">{t.homeDelivery}</span>
+              </div>
+              {/* Show shipping cost */}
+              {store.shipping?.enabled && (
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: isFreeShipping ? theme.colors.accent : theme.colors.primary }}
+                >
+                  {isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
+                </span>
+              )}
+            </div>
+            {/* Show free shipping threshold info */}
+            {store.shipping?.enabled && store.shipping.freeAbove && !isFreeShipping && (
+              <p
+                className="text-xs mt-1"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {t.freeShippingAbove?.replace('{{amount}}', formatPrice(store.shipping.freeAbove, store.currency)) ||
+                  `Envío gratis en compras mayores a ${formatPrice(store.shipping.freeAbove, store.currency)}`}
+              </p>
+            )}
           </div>
         </button>
       </div>

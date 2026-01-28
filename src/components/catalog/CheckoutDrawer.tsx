@@ -223,6 +223,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
               ref={deliverySelectorRef}
               data={data.delivery}
               store={store}
+              subtotal={totalPrice}
               onSubmit={handleDeliverySubmit}
               error={error}
               t={t}
