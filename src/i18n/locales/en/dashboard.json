@@ -337,7 +337,20 @@
       "tip": "Tip:",
       "tipText": "If you only upload one, it will be used on both devices.",
       "cropTitle": "Adjust cover image",
-      "cropDescription": "Drag and use zoom to adjust your image"
+      "cropDescription": "Drag and use zoom to adjust your image",
+      "orChooseStock": "Or choose from our gallery",
+      "browseGallery": "Browse cover gallery",
+      "stockCategories": {
+        "restaurant": "Restaurant",
+        "bakery": "Bakery",
+        "beauty": "Beauty",
+        "fashion": "Fashion",
+        "pets": "Pets",
+        "grocery": "Grocery",
+        "tech": "Technology"
+      },
+      "selectCover": "Select cover",
+      "close": "Close"
     },
     "theme": {
       "title": "Catalog theme",

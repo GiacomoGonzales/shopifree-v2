@@ -11,6 +11,68 @@ import type { Store, StoreAnnouncement, Product, Category } from '../../types'
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
+// Predefined cover images from Unsplash (free for commercial use)
+const COVER_IMAGES = {
+  restaurant: [
+    { id: 'pizza-1', url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1920&q=80&fit=crop', label: 'Pizza' },
+    { id: 'pizza-2', url: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1920&q=80&fit=crop', label: 'Pizza italiana' },
+    { id: 'burger-1', url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1920&q=80&fit=crop', label: 'Hamburguesa' },
+    { id: 'burger-2', url: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=1920&q=80&fit=crop', label: 'Burger gourmet' },
+    { id: 'sushi-1', url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1920&q=80&fit=crop', label: 'Sushi' },
+    { id: 'pasta-1', url: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1920&q=80&fit=crop', label: 'Pasta' },
+  ],
+  bakery: [
+    { id: 'bread-1', url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1920&q=80&fit=crop', label: 'Pan artesanal' },
+    { id: 'croissant-1', url: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=1920&q=80&fit=crop', label: 'Croissants' },
+    { id: 'pastry-1', url: 'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1920&q=80&fit=crop', label: 'Pasteles' },
+    { id: 'coffee-1', url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1920&q=80&fit=crop', label: 'Cafe y pan' },
+    { id: 'donut-1', url: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=1920&q=80&fit=crop', label: 'Donuts' },
+    { id: 'cake-1', url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1920&q=80&fit=crop', label: 'Torta' },
+  ],
+  beauty: [
+    { id: 'makeup-1', url: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1920&q=80&fit=crop', label: 'Maquillaje' },
+    { id: 'skincare-1', url: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1920&q=80&fit=crop', label: 'Skincare' },
+    { id: 'cosmetics-1', url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1920&q=80&fit=crop', label: 'Cosmeticos' },
+    { id: 'lipstick-1', url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=1920&q=80&fit=crop', label: 'Labiales' },
+    { id: 'spa-1', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1920&q=80&fit=crop', label: 'Spa' },
+    { id: 'nails-1', url: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1920&q=80&fit=crop', label: 'Unas' },
+  ],
+  fashion: [
+    { id: 'clothing-1', url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80&fit=crop', label: 'Tienda ropa' },
+    { id: 'fashion-1', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80&fit=crop', label: 'Moda' },
+    { id: 'shoes-1', url: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1920&q=80&fit=crop', label: 'Zapatillas' },
+    { id: 'bags-1', url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1920&q=80&fit=crop', label: 'Bolsos' },
+    { id: 'jewelry-1', url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&q=80&fit=crop', label: 'Joyeria' },
+    { id: 'watches-1', url: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=1920&q=80&fit=crop', label: 'Relojes' },
+  ],
+  pets: [
+    { id: 'dog-1', url: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1920&q=80&fit=crop', label: 'Perro feliz' },
+    { id: 'dog-2', url: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1920&q=80&fit=crop', label: 'Perros jugando' },
+    { id: 'cat-1', url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1920&q=80&fit=crop', label: 'Gato' },
+    { id: 'cat-2', url: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=1920&q=80&fit=crop', label: 'Gato tierno' },
+    { id: 'petfood-1', url: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=1920&q=80&fit=crop', label: 'Comida mascotas' },
+    { id: 'pets-1', url: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1920&q=80&fit=crop', label: 'Perro y gato' },
+  ],
+  grocery: [
+    { id: 'fruits-1', url: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1920&q=80&fit=crop', label: 'Frutas' },
+    { id: 'vegetables-1', url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1920&q=80&fit=crop', label: 'Verduras' },
+    { id: 'market-1', url: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1920&q=80&fit=crop', label: 'Mercado' },
+    { id: 'organic-1', url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920&q=80&fit=crop', label: 'Organico' },
+    { id: 'grocery-1', url: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=1920&q=80&fit=crop', label: 'Abarrotes' },
+    { id: 'healthy-1', url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1920&q=80&fit=crop', label: 'Saludable' },
+  ],
+  tech: [
+    { id: 'tech-1', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1920&q=80&fit=crop', label: 'Tecnologia' },
+    { id: 'laptop-1', url: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1920&q=80&fit=crop', label: 'Laptop' },
+    { id: 'phone-1', url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1920&q=80&fit=crop', label: 'Smartphone' },
+    { id: 'gadgets-1', url: 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1920&q=80&fit=crop', label: 'Gadgets' },
+    { id: 'gaming-1', url: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=1920&q=80&fit=crop', label: 'Gaming' },
+    { id: 'workspace-1', url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=80&fit=crop', label: 'Workspace' },
+  ],
+}
+
+type CoverCategory = keyof typeof COVER_IMAGES
+
 export default function Branding() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
@@ -58,6 +120,10 @@ export default function Branding() {
 
   // Theme category filter
   const [themeCategoryFilter, setThemeCategoryFilter] = useState<string>('all')
+
+  // Cover selection
+  const [showCoverSelector, setShowCoverSelector] = useState(false)
+  const [coverCategory, setCoverCategory] = useState<CoverCategory>('restaurant')
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -284,6 +350,28 @@ export default function Branding() {
     } catch (error) {
       console.error('Error deleting hero mobile image:', error)
       showToast(t('branding.toast.error'), 'error')
+    }
+  }
+
+  // Select predefined cover image (from Unsplash)
+  const handleSelectCover = async (imageUrl: string) => {
+    if (!store) return
+
+    setUploadingHero(true)
+    setShowCoverSelector(false)
+
+    try {
+      await updateDoc(doc(db, 'stores', store.id), {
+        heroImage: imageUrl,
+        updatedAt: new Date()
+      })
+      setHeroImage(imageUrl)
+      showToast(t('branding.toast.saved'), 'success')
+    } catch (error) {
+      console.error('Error saving cover image:', error)
+      showToast(t('branding.toast.error'), 'error')
+    } finally {
+      setUploadingHero(false)
     }
   }
 
@@ -571,6 +659,22 @@ export default function Branding() {
             </div>
           </div>
 
+          {/* Gallery option */}
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <p className="text-sm text-gray-600 mb-3">
+              {t('branding.hero.orChooseStock')}
+            </p>
+            <button
+              onClick={() => setShowCoverSelector(true)}
+              className="w-full px-4 py-3 border-2 border-dashed border-[#38bdf8]/40 rounded-xl text-[#2d6cb5] font-medium hover:border-[#38bdf8] hover:bg-[#f0f7ff] transition-all flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {t('branding.hero.browseGallery')}
+            </button>
+          </div>
+
           {/* Tip */}
           <div className="mt-6 p-3 bg-[#f0f7ff] rounded-xl">
             <p className="text-xs text-[#1e3a5f]">
@@ -852,6 +956,124 @@ export default function Branding() {
           }}
         />
       )}
+
+      {/* Cover Selector Modal */}
+      {showCoverSelector && (
+        <CoverSelectorModal
+          category={coverCategory}
+          onCategoryChange={setCoverCategory}
+          onSelect={handleSelectCover}
+          onClose={() => setShowCoverSelector(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Cover Selector Modal Component
+interface CoverSelectorModalProps {
+  category: CoverCategory
+  onCategoryChange: (category: CoverCategory) => void
+  onSelect: (url: string) => void
+  onClose: () => void
+}
+
+function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: CoverSelectorModalProps) {
+  const { t } = useTranslation('dashboard')
+
+  const categories: { id: CoverCategory; label: string }[] = [
+    { id: 'restaurant', label: t('branding.hero.stockCategories.restaurant') },
+    { id: 'bakery', label: t('branding.hero.stockCategories.bakery') },
+    { id: 'beauty', label: t('branding.hero.stockCategories.beauty') },
+    { id: 'fashion', label: t('branding.hero.stockCategories.fashion') },
+    { id: 'pets', label: t('branding.hero.stockCategories.pets') },
+    { id: 'grocery', label: t('branding.hero.stockCategories.grocery') },
+    { id: 'tech', label: t('branding.hero.stockCategories.tech') },
+  ]
+
+  const images = COVER_IMAGES[category]
+
+  // Prevent body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+          <h3 className="text-lg font-semibold text-[#1e3a5f]">
+            {t('branding.hero.selectCover')}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-2 -m-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Category tabs */}
+        <div className="px-6 py-3 border-b border-gray-100 flex-shrink-0 overflow-x-auto">
+          <div className="flex gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => onCategoryChange(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                  category === cat.id
+                    ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Image grid */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {images.map((image) => (
+              <button
+                key={image.id}
+                onClick={() => onSelect(image.url)}
+                className="group relative aspect-[16/9] rounded-xl overflow-hidden border-2 border-transparent hover:border-[#2d6cb5] transition-all"
+              >
+                <img
+                  src={image.url.replace('w=1920', 'w=400')}
+                  alt={image.label}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="px-4 py-2 bg-white text-[#1e3a5f] rounded-lg font-medium text-sm">
+                    {image.label}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            {t('branding.hero.close')}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

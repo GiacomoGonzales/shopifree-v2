@@ -338,7 +338,20 @@
       "tip": "Tip:",
       "tipText": "Si solo subes una, se usará en ambos dispositivos.",
       "cropTitle": "Ajustar imagen de portada",
-      "cropDescription": "Arrastra y usa el zoom para ajustar tu imagen"
+      "cropDescription": "Arrastra y usa el zoom para ajustar tu imagen",
+      "orChooseStock": "O elige una imagen de nuestra galería",
+      "browseGallery": "Ver galería de portadas",
+      "stockCategories": {
+        "restaurant": "Restaurante",
+        "bakery": "Panadería",
+        "beauty": "Belleza",
+        "fashion": "Moda",
+        "pets": "Mascotas",
+        "grocery": "Mercado",
+        "tech": "Tecnología"
+      },
+      "selectCover": "Seleccionar portada",
+      "close": "Cerrar"
     },
     "theme": {
       "title": "Tema del catálogo",
