@@ -241,6 +241,21 @@ export const themes: Theme[] = [
       background: '#FEF7ED',
       accent: '#65A30D'
     }
+  },
+  {
+    id: 'minimal-tech',
+    name: 'Minimal Tech',
+    description: 'Minimalista y premium estilo Apple. Ideal para electronica, smartphones y productos tech de alta gama.',
+    thumbnail: '/themes/minimal-tech.png',
+    category: 'tech',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2025-01-27'),
+    colors: {
+      primary: '#1d1d1f',
+      background: '#ffffff',
+      accent: '#0071e3'
+    }
   }
 ]
 

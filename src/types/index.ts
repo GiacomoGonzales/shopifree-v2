@@ -303,7 +303,7 @@ export interface Theme {
   name: string                  // "Minimal", "Bold", "Classic"
   description: string
   thumbnail: string             // Preview image
-  category: 'all' | 'retail' | 'restaurant' | 'services'
+  category: 'all' | 'retail' | 'restaurant' | 'services' | 'tech'
   isPremium: boolean
   isNew: boolean                // Para destacar en landing
   createdAt: Date
