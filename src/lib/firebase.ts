@@ -91,6 +91,13 @@ export const storeService = {
   },
 
   async create(storeId: string, data: Partial<Store>): Promise<void> {
+    // CRITICAL: Check if store already exists to prevent accidental overwrites
+    const existingStore = await this.get(storeId)
+    if (existingStore) {
+      console.warn('[storeService.create] Store already exists, skipping creation:', storeId)
+      throw new Error('STORE_ALREADY_EXISTS')
+    }
+
     await setDoc(doc(db, 'stores', storeId), {
       ...data,
       plan: data.plan || 'free', // Use provided plan or default to free

@@ -165,6 +165,17 @@ export default function Register() {
     setProgressMessage(0)
 
     try {
+      const storeId = firebaseUser.uid
+
+      // CRITICAL: Check if user already has a store (prevents overwrites on slow networks)
+      const existingStore = await storeService.get(storeId)
+      if (existingStore) {
+        console.warn('[Register] User already has a store, redirecting to dashboard')
+        await refreshStore()
+        navigate(localePath('/dashboard'))
+        return
+      }
+
       // Generate subdomain from store name
       const subdomain = storeName
         .toLowerCase()
@@ -176,8 +187,6 @@ export default function Register() {
 
       setGeneratedSubdomain(subdomain)
 
-      const storeId = firebaseUser.uid
-
       // Check if this is the admin user
       const userEmail = firebaseUser.email || email
       const isAdmin = userEmail === ADMIN_EMAIL
@@ -188,7 +197,7 @@ export default function Register() {
       animateProgress(ANIMATION_DURATION)
       const animationStart = Date.now()
 
-      // Create user in Firestore
+      // Create user in Firestore (uses setDoc, so it's idempotent)
       await userService.create(firebaseUser.uid, {
         id: firebaseUser.uid,
         email: userEmail,
@@ -197,6 +206,7 @@ export default function Register() {
       })
 
       // Create store in Firestore (admin gets Business plan)
+      // This will throw STORE_ALREADY_EXISTS if store exists (double protection)
       await storeService.create(storeId, {
         id: storeId,
         ownerId: firebaseUser.uid,
@@ -238,6 +248,15 @@ export default function Register() {
 
     } catch (err: unknown) {
       console.error('Error creating store:', err)
+
+      // Handle case where store was created between check and create (race condition)
+      if ((err as Error).message === 'STORE_ALREADY_EXISTS') {
+        console.warn('[Register] Store already exists (race condition), redirecting to dashboard')
+        await refreshStore()
+        navigate(localePath('/dashboard'))
+        return
+      }
+
       setError((err as Error).message || t('register.store.error'))
       setCreatingStore(false)
     }
