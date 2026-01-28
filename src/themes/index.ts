@@ -250,11 +250,26 @@ export const themes: Theme[] = [
     category: 'tech',
     isPremium: false,
     isNew: true,
-    createdAt: new Date('2025-01-27'),
+    createdAt: new Date('2026-01-27'),
     colors: {
       primary: '#1d1d1f',
       background: '#ffffff',
       accent: '#0071e3'
+    }
+  },
+  {
+    id: 'neon-cyber',
+    name: 'Neon Cyber',
+    description: 'Futurista y gaming con neon sobre negro. Ideal para gaming, accesorios RGB y gadgets tech.',
+    thumbnail: '/themes/neon-cyber.png',
+    category: 'tech',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-01-27'),
+    colors: {
+      primary: '#00f0ff',
+      background: '#0a0a0f',
+      accent: '#ff00ff'
     }
   }
 ]

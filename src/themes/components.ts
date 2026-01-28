@@ -18,6 +18,7 @@ import TaqueriaTheme from './taqueria/TaqueriaTheme'
 import SakuraTheme from './sakura/SakuraTheme'
 import TrattoriaTheme from './trattoria/TrattoriaTheme'
 import MinimalTechTheme from './minimal-tech/MinimalTechTheme'
+import NeonCyberTheme from './neon-cyber/NeonCyberTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -38,10 +39,11 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   sakura: SakuraTheme,
   trattoria: TrattoriaTheme,
   'minimal-tech': MinimalTechTheme,
+  'neon-cyber': NeonCyberTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme }
