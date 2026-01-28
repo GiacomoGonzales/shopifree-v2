@@ -83,9 +83,15 @@ export default function Branding() {
             .map(doc => ({ id: doc.id, ...doc.data() }) as Product)
             .filter(p => p.active !== false)
             .sort((a, b) => {
-              const dateA = a.createdAt?.toDate?.() || new Date(0)
-              const dateB = b.createdAt?.toDate?.() || new Date(0)
-              return dateB.getTime() - dateA.getTime()
+              const getTime = (date: unknown): number => {
+                if (!date) return 0
+                if (date instanceof Date) return date.getTime()
+                if (typeof date === 'object' && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
+                  return (date as { toDate: () => Date }).toDate().getTime()
+                }
+                return 0
+              }
+              return getTime(b.createdAt) - getTime(a.createdAt)
             })
 
           // Sort categories by order on client side
