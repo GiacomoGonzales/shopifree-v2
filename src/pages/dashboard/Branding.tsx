@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -72,28 +72,26 @@ export default function Branding() {
             setAnnouncement(storeData.announcement)
           }
 
-          // Fetch products and categories for preview
+          // Fetch products and categories for preview (simple queries to avoid index requirement)
           const [productsSnapshot, categoriesSnapshot] = await Promise.all([
-            getDocs(query(
-              collection(db, 'stores', storeWithId.id, 'products'),
-              where('active', '==', true),
-              orderBy('createdAt', 'desc')
-            )),
-            getDocs(query(
-              collection(db, 'stores', storeWithId.id, 'categories'),
-              orderBy('order', 'asc')
-            ))
+            getDocs(collection(db, 'stores', storeWithId.id, 'products')),
+            getDocs(collection(db, 'stores', storeWithId.id, 'categories'))
           ])
 
-          const productsData = productsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Product[]
+          // Filter active products and sort by createdAt on client side
+          const productsData = productsSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }) as Product)
+            .filter(p => p.active !== false)
+            .sort((a, b) => {
+              const dateA = a.createdAt?.toDate?.() || new Date(0)
+              const dateB = b.createdAt?.toDate?.() || new Date(0)
+              return dateB.getTime() - dateA.getTime()
+            })
 
-          const categoriesData = categoriesSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Category[]
+          // Sort categories by order on client side
+          const categoriesData = categoriesSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }) as Category)
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
 
           setProducts(productsData)
           setCategories(categoriesData)
