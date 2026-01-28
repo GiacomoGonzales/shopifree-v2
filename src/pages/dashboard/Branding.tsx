@@ -293,10 +293,6 @@ export default function Branding() {
     setSaving(true)
     try {
       await updateDoc(doc(db, 'stores', store.id), {
-        logo: logo || null,
-        heroImage: heroImage || null,
-        heroImageMobile: heroImageMobile || null,
-        themeId: selectedTheme,
         announcement,
         updatedAt: new Date()
       })
@@ -467,6 +463,15 @@ export default function Branding() {
                   </div>
                 </div>
               )}
+
+              {/* Save button for announcement */}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full mt-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+              >
+                {saving ? t('branding.saving') : t('branding.saveChanges')}
+              </button>
             </div>
           </div>
         </div>
@@ -802,17 +807,6 @@ export default function Branding() {
             )
           })}
         </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="mt-8 flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-        >
-          {saving ? t('branding.saving') : t('branding.saveChanges')}
-        </button>
       </div>
 
       {/* Image Crop Modal */}
