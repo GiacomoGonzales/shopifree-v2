@@ -688,10 +688,19 @@ export default function Branding() {
           products={products}
           categories={categories}
           onClose={() => setPreviewTheme(null)}
-          onSelect={() => {
-            setSelectedTheme(previewTheme)
-            setPreviewTheme(null)
-            showToast(t('branding.theme.selected'), 'success')
+          onSelect={async () => {
+            try {
+              await updateDoc(doc(db, 'stores', store.id), {
+                themeId: previewTheme,
+                updatedAt: new Date()
+              })
+              setSelectedTheme(previewTheme)
+              setPreviewTheme(null)
+              showToast(t('branding.theme.saved'), 'success')
+            } catch (error) {
+              console.error('Error saving theme:', error)
+              showToast(t('branding.toast.error'), 'error')
+            }
           }}
         />
       )}
@@ -706,11 +715,12 @@ interface ThemePreviewModalProps {
   products: Product[]
   categories: Category[]
   onClose: () => void
-  onSelect: () => void
+  onSelect: () => Promise<void>
 }
 
 function ThemePreviewModal({ themeId, store, products, categories, onClose, onSelect }: ThemePreviewModalProps) {
   const { t } = useTranslation('dashboard')
+  const [saving, setSaving] = useState(false)
   const ThemeComponent = getThemeComponent(themeId)
   const themeName = themes.find(th => th.id === themeId)?.name || themeId
 
@@ -721,6 +731,12 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
       document.body.style.overflow = 'unset'
     }
   }, [])
+
+  const handleSelect = async () => {
+    setSaving(true)
+    await onSelect()
+    setSaving(false)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn">
@@ -757,10 +773,14 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
 
           {/* Use theme button */}
           <button
-            onClick={onSelect}
-            className="px-4 py-2 bg-white text-gray-900 rounded-full hover:bg-gray-100 transition-all font-medium text-sm"
+            onClick={handleSelect}
+            disabled={saving}
+            className="px-4 py-2 bg-white text-gray-900 rounded-full hover:bg-gray-100 transition-all font-medium text-sm disabled:opacity-70 flex items-center gap-2"
           >
-            {t('branding.theme.useTheme')}
+            {saving && (
+              <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
+            )}
+            {saving ? t('branding.saving') : t('branding.theme.useTheme')}
           </button>
         </div>
       </div>
