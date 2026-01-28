@@ -7,12 +7,15 @@ import { formatPrice } from '../../../lib/currency'
 interface Props {
   items: CartItem[]
   totalPrice: number
+  shippingCost?: number
+  finalTotal?: number
   currency: string
   t: ThemeTranslations
   collapsible?: boolean
 }
 
-export default function OrderSummary({ items, totalPrice, currency, t, collapsible = true }: Props) {
+export default function OrderSummary({ items, totalPrice, shippingCost = 0, finalTotal, currency, t, collapsible = true }: Props) {
+  const displayTotal = finalTotal ?? totalPrice
   const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(!collapsible)
 
@@ -57,7 +60,7 @@ export default function OrderSummary({ items, totalPrice, currency, t, collapsib
         </div>
         <div className="flex items-center gap-2">
           <span className="font-semibold" style={{ color: theme.colors.text }}>
-            {formatPrice(totalPrice, currency)}
+            {formatPrice(displayTotal, currency)}
           </span>
           {collapsible && (
             <svg
@@ -162,10 +165,22 @@ export default function OrderSummary({ items, totalPrice, currency, t, collapsib
               <span style={{ color: theme.colors.textMuted }}>{t.subtotal}</span>
               <span style={{ color: theme.colors.text }}>{formatPrice(totalPrice, currency)}</span>
             </div>
+            {shippingCost > 0 && (
+              <div className="flex justify-between items-center mt-1">
+                <span style={{ color: theme.colors.textMuted }}>{t.shipping}</span>
+                <span style={{ color: theme.colors.text }}>{formatPrice(shippingCost, currency)}</span>
+              </div>
+            )}
+            {shippingCost === 0 && finalTotal !== undefined && (
+              <div className="flex justify-between items-center mt-1">
+                <span style={{ color: theme.colors.textMuted }}>{t.shipping}</span>
+                <span style={{ color: theme.colors.accent }}>{t.freeShipping}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center mt-2 pt-2 border-t" style={{ borderColor: theme.colors.border }}>
               <span className="font-semibold" style={{ color: theme.colors.text }}>{t.total}</span>
               <span className="font-bold text-lg" style={{ color: theme.colors.primary }}>
-                {formatPrice(totalPrice, currency)}
+                {formatPrice(displayTotal, currency)}
               </span>
             </div>
           </div>

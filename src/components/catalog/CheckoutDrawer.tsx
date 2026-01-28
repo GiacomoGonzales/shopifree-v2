@@ -38,6 +38,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     order,
     loading,
     error,
+    shippingCost,
+    finalTotal,
     goBack,
     goNext,
     updateData,
@@ -196,6 +198,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
               <OrderSummary
                 items={items}
                 totalPrice={totalPrice}
+                shippingCost={shippingCost}
+                finalTotal={finalTotal}
                 currency={store.currency}
                 t={t}
                 collapsible={true}

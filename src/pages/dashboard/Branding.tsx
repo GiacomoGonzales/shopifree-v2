@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
@@ -23,6 +23,10 @@ export default function Branding() {
   const [logo, setLogo] = useState('')
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+
+  // Logo crop modal
+  const [cropImage, setCropImage] = useState<string | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
 
   // Hero Image Desktop
   const [heroImage, setHeroImage] = useState('')
@@ -136,12 +140,26 @@ export default function Branding() {
     return data.secure_url
   }
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Create URL for preview
+    const imageUrl = URL.createObjectURL(file)
+    setCropFile(file)
+    setCropImage(imageUrl)
+
+    // Reset input so user can select same file again if needed
+    e.target.value = ''
+  }
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setCropImage(null)
     setUploadingLogo(true)
+
     try {
+      // Convert blob to file for upload
+      const file = new File([croppedBlob], cropFile?.name || 'logo.png', { type: 'image/png' })
       const url = await uploadImage(file, 'logos')
       setLogo(url)
     } catch (error) {
@@ -149,7 +167,16 @@ export default function Branding() {
       showToast(t('branding.toast.logoError'), 'error')
     } finally {
       setUploadingLogo(false)
+      setCropFile(null)
     }
+  }
+
+  const handleCropCancel = () => {
+    if (cropImage) {
+      URL.revokeObjectURL(cropImage)
+    }
+    setCropImage(null)
+    setCropFile(null)
   }
 
   const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,7 +278,7 @@ export default function Branding() {
                 ref={logoInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleLogoUpload}
+                onChange={handleLogoSelect}
                 className="hidden"
               />
               <div className="flex-1 min-w-0">
@@ -712,6 +739,15 @@ export default function Branding() {
         </button>
       </div>
 
+      {/* Logo Crop Modal */}
+      {cropImage && (
+        <LogoCropModal
+          imageSrc={cropImage}
+          onCrop={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
+
       {/* Theme Preview Modal */}
       {previewTheme && store && (
         <ThemePreviewModal
@@ -820,6 +856,276 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
               <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
             )}
             {saving ? t('branding.saving') : t('branding.theme.useTheme')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Logo Crop Modal Component
+interface LogoCropModalProps {
+  imageSrc: string
+  onCrop: (blob: Blob) => void
+  onCancel: () => void
+}
+
+function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
+  const { t } = useTranslation('dashboard')
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const [scale, setScale] = useState(1)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [imageLoaded, setImageLoaded] = useState(false)
+
+  // Crop area size (visible square)
+  const cropSize = 280
+
+  // Load image
+  useEffect(() => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      imageRef.current = img
+
+      // Calculate initial scale to fit image in crop area
+      const minDimension = Math.min(img.width, img.height)
+      const initialScale = cropSize / minDimension
+      setScale(initialScale)
+
+      // Center image
+      setPosition({
+        x: (cropSize - img.width * initialScale) / 2,
+        y: (cropSize - img.height * initialScale) / 2
+      })
+
+      setImageLoaded(true)
+    }
+    img.src = imageSrc
+  }, [imageSrc])
+
+  // Draw preview
+  useEffect(() => {
+    if (!canvasRef.current || !imageRef.current || !imageLoaded) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Clear canvas
+    ctx.fillStyle = '#f3f4f6'
+    ctx.fillRect(0, 0, cropSize, cropSize)
+
+    // Draw image
+    const img = imageRef.current
+    ctx.drawImage(
+      img,
+      position.x,
+      position.y,
+      img.width * scale,
+      img.height * scale
+    )
+  }, [scale, position, imageLoaded])
+
+  // Mouse handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+  }, [position])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    })
+  }, [isDragging, dragStart])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  // Touch handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setIsDragging(true)
+    setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y })
+  }, [position])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging) return
+    const touch = e.touches[0]
+    setPosition({
+      x: touch.clientX - dragStart.x,
+      y: touch.clientY - dragStart.y
+    })
+  }, [isDragging, dragStart])
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  // Zoom handlers
+  const handleZoomIn = () => setScale(s => Math.min(s * 1.2, 5))
+  const handleZoomOut = () => setScale(s => Math.max(s / 1.2, 0.1))
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+    if (e.deltaY < 0) {
+      setScale(s => Math.min(s * 1.1, 5))
+    } else {
+      setScale(s => Math.max(s / 1.1, 0.1))
+    }
+  }, [])
+
+  // Generate cropped image
+  const handleCrop = () => {
+    if (!imageRef.current) return
+
+    // Create output canvas at desired resolution (512x512 for good quality logo)
+    const outputSize = 512
+    const outputCanvas = document.createElement('canvas')
+    outputCanvas.width = outputSize
+    outputCanvas.height = outputSize
+    const ctx = outputCanvas.getContext('2d')
+    if (!ctx) return
+
+    // White background
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, outputSize, outputSize)
+
+    // Calculate scale factor from preview to output
+    const scaleFactor = outputSize / cropSize
+
+    // Draw image with same transform but scaled
+    const img = imageRef.current
+    ctx.drawImage(
+      img,
+      position.x * scaleFactor,
+      position.y * scaleFactor,
+      img.width * scale * scaleFactor,
+      img.height * scale * scaleFactor
+    )
+
+    // Convert to blob
+    outputCanvas.toBlob((blob) => {
+      if (blob) onCrop(blob)
+    }, 'image/png', 1)
+  }
+
+  // Prevent body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-[#1e3a5f]">
+            {t('branding.logo.cropTitle', 'Ajustar logo')}
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">
+            {t('branding.logo.cropDescription', 'Arrastra y usa el zoom para ajustar tu logo')}
+          </p>
+        </div>
+
+        {/* Crop area */}
+        <div className="p-6">
+          <div
+            ref={containerRef}
+            className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
+            style={{ width: cropSize, height: cropSize }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onWheel={handleWheel}
+          >
+            <canvas
+              ref={canvasRef}
+              width={cropSize}
+              height={cropSize}
+              className="cursor-move"
+            />
+
+            {/* Square overlay guide */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-0 border-2 border-[#2d6cb5] rounded-xl" />
+              {/* Corner markers */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-[#2d6cb5] rounded-tl-xl" />
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-[#2d6cb5] rounded-tr-xl" />
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-[#2d6cb5] rounded-bl-xl" />
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-[#2d6cb5] rounded-br-xl" />
+            </div>
+
+            {/* Loading indicator */}
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5]" />
+              </div>
+            )}
+          </div>
+
+          {/* Zoom controls */}
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <button
+              onClick={handleZoomOut}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              title={t('branding.logo.zoomOut', 'Alejar')}
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
+            </button>
+
+            <input
+              type="range"
+              min="0.1"
+              max="3"
+              step="0.01"
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
+              className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2d6cb5]"
+            />
+
+            <button
+              onClick={handleZoomIn}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              title={t('branding.logo.zoomIn', 'Acercar')}
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            {t('branding.logo.cancel', 'Cancelar')}
+          </button>
+          <button
+            onClick={handleCrop}
+            disabled={!imageLoaded}
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+          >
+            {t('branding.logo.apply', 'Aplicar')}
           </button>
         </div>
       </div>

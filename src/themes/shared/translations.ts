@@ -108,6 +108,8 @@ export interface ThemeTranslations {
   // Order summary
   orderSummary: string
   subtotal: string
+  shipping: string
+  freeShipping: string
 
   // Observations
   observations: string
@@ -235,6 +237,8 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Order summary
     orderSummary: 'Resumen del pedido',
     subtotal: 'Subtotal',
+    shipping: 'Envio',
+    freeShipping: 'Gratis',
 
     // Observations
     observations: 'Observaciones',
@@ -361,6 +365,8 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Order summary
     orderSummary: 'Order summary',
     subtotal: 'Subtotal',
+    shipping: 'Shipping',
+    freeShipping: 'Free',
 
     // Observations
     observations: 'Notes',
@@ -487,6 +493,8 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Order summary
     orderSummary: 'Resumo do pedido',
     subtotal: 'Subtotal',
+    shipping: 'Frete',
+    freeShipping: 'Gratis',
 
     // Observations
     observations: 'Observacoes',

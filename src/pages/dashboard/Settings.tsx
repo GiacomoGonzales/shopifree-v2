@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
-import type { Store, StoreLocation } from '../../types'
+import type { Store, StoreLocation, StoreShipping } from '../../types'
 import {
   type BusinessType,
   getAllBusinessTypes,
@@ -12,6 +12,18 @@ import {
   normalizeBusinessType,
 } from '../../hooks/useBusinessType'
 import BusinessTypeIcon from '../../components/ui/BusinessTypeIcon'
+
+// Get currency symbol for display
+const currencySymbols: Record<string, string> = {
+  PEN: 'S/',
+  USD: '$',
+  MXN: '$',
+  COP: '$',
+  ARS: '$',
+  CLP: '$',
+  BRL: 'R$',
+  EUR: '€'
+}
 
 export default function Settings() {
   const { t } = useTranslation('dashboard')
@@ -45,6 +57,13 @@ export default function Settings() {
   const [instagram, setInstagram] = useState('')
   const [facebook, setFacebook] = useState('')
   const [tiktok, setTiktok] = useState('')
+
+  // Shipping
+  const [shipping, setShipping] = useState<StoreShipping>({
+    enabled: false,
+    cost: 0,
+    freeAbove: undefined
+  })
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -81,6 +100,11 @@ export default function Settings() {
           setInstagram(storeData.instagram || '')
           setFacebook(storeData.facebook || '')
           setTiktok(storeData.tiktok || '')
+
+          // Shipping
+          if (storeData.shipping) {
+            setShipping(storeData.shipping)
+          }
         }
       } catch (error) {
         console.error('Error fetching store:', error)
@@ -112,6 +136,7 @@ export default function Settings() {
         instagram: instagram || null,
         facebook: facebook || null,
         tiktok: tiktok || null,
+        shipping,
         updatedAt: new Date()
       })
       showToast(t('settings.toast.saved'), 'success')
@@ -380,6 +405,89 @@ export default function Settings() {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Shipping */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.shipping.title')}</h2>
+
+            <div className="space-y-4">
+              {/* Enable shipping toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.enableLabel')}</p>
+                  <p className="text-sm text-gray-500">{t('settings.shipping.enableHint')}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShipping({ ...shipping, enabled: !shipping.enabled })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    shipping.enabled ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
+                      shipping.enabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Shipping cost */}
+              {shipping.enabled && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                      {t('settings.shipping.cost')}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                        {currencySymbols[currency] || '$'}
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={shipping.cost || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.]/g, '')
+                          setShipping({ ...shipping, cost: parseFloat(val) || 0 })
+                        }}
+                        placeholder="0.00"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.costHint')}</p>
+                  </div>
+
+                  {/* Free shipping above */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                      {t('settings.shipping.freeAbove')}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                        {currencySymbols[currency] || '$'}
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={shipping.freeAbove || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.]/g, '')
+                          setShipping({
+                            ...shipping,
+                            freeAbove: val ? parseFloat(val) : undefined
+                          })
+                        }}
+                        placeholder={t('settings.shipping.freeAbovePlaceholder')}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.freeAboveHint')}</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

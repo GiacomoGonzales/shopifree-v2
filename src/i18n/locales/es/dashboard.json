@@ -306,7 +306,13 @@
       "title": "Logo",
       "description": "Imagen cuadrada 200x200px en PNG con fondo transparente.",
       "upload": "Subir",
-      "delete": "Eliminar logo"
+      "delete": "Eliminar logo",
+      "cropTitle": "Ajustar logo",
+      "cropDescription": "Arrastra y usa el zoom para ajustar tu logo",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "cancel": "Cancelar",
+      "apply": "Aplicar"
     },
     "announcement": {
       "title": "Tira publicitaria",
@@ -428,6 +434,16 @@
         "US": "Estados Unidos",
         "ES": "España"
       }
+    },
+    "shipping": {
+      "title": "Costo de envío",
+      "enableLabel": "Cobrar envío a domicilio",
+      "enableHint": "Si desactivas, el envío será gratis",
+      "cost": "Costo de envío",
+      "costHint": "Monto fijo que se cobrará por delivery",
+      "freeAbove": "Envío gratis arriba de",
+      "freeAbovePlaceholder": "Opcional",
+      "freeAboveHint": "Deja vacío si no aplica"
     },
     "contact": {
       "title": "Contacto y redes sociales",

@@ -83,6 +83,9 @@ export interface Store {
   // === PAGOS ===
   payments?: StorePayments
 
+  // === ENVÍO ===
+  shipping?: StoreShipping
+
   // === PLAN & SUBSCRIPTION ===
   plan: 'free' | 'pro' | 'business'
   planExpiresAt?: Date
@@ -149,6 +152,12 @@ export interface StoreSubscription {
   currentPeriodStart: Date
   currentPeriodEnd: Date
   cancelAtPeriodEnd: boolean
+}
+
+export interface StoreShipping {
+  enabled: boolean              // Si el envío tiene costo
+  cost: number                  // Costo fijo de envío
+  freeAbove?: number            // Envío gratis arriba de este monto (opcional)
 }
 
 // ============================================
@@ -354,6 +363,7 @@ export interface Order {
 
   // Totales
   subtotal: number
+  shippingCost?: number         // Costo de envío
   total: number
 
   // Estado

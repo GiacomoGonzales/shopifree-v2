@@ -305,7 +305,13 @@
       "title": "Logo",
       "description": "Square image 200x200px in PNG with transparent background.",
       "upload": "Upload",
-      "delete": "Delete logo"
+      "delete": "Delete logo",
+      "cropTitle": "Adjust logo",
+      "cropDescription": "Drag and use zoom to adjust your logo",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "cancel": "Cancel",
+      "apply": "Apply"
     },
     "announcement": {
       "title": "Announcement bar",
@@ -427,6 +433,16 @@
         "US": "United States",
         "ES": "Spain"
       }
+    },
+    "shipping": {
+      "title": "Shipping cost",
+      "enableLabel": "Charge for home delivery",
+      "enableHint": "If disabled, shipping will be free",
+      "cost": "Shipping cost",
+      "costHint": "Fixed amount charged for delivery",
+      "freeAbove": "Free shipping above",
+      "freeAbovePlaceholder": "Optional",
+      "freeAboveHint": "Leave empty if not applicable"
     },
     "contact": {
       "title": "Contact and social media",

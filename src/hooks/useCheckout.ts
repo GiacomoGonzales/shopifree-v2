@@ -43,6 +43,31 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Calculate shipping cost based on store settings and delivery method
+  const calculateShippingCost = useCallback((): number => {
+    // If no delivery method selected or pickup, no shipping cost
+    if (!data.delivery?.method || data.delivery.method === 'pickup') {
+      return 0
+    }
+
+    // If shipping is not enabled, no cost
+    if (!store.shipping?.enabled) {
+      return 0
+    }
+
+    // Check for free shipping above threshold
+    if (store.shipping.freeAbove && totalPrice >= store.shipping.freeAbove) {
+      return 0
+    }
+
+    // Return the fixed shipping cost
+    return store.shipping.cost || 0
+  }, [data.delivery?.method, store.shipping, totalPrice])
+
+  // Get the current shipping cost
+  const shippingCost = calculateShippingCost()
+  const finalTotal = totalPrice + shippingCost
+
   const updateData = useCallback((updates: Partial<CheckoutData>) => {
     setData(prev => ({ ...prev, ...updates }))
   }, [])
@@ -128,6 +153,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       customer.email = data.customer.email
     }
 
+    // Calculate shipping for the order
+    const orderShippingCost = calculateShippingCost()
+    const orderTotal = totalPrice + orderShippingCost
+
     // Build order data without undefined values
     const orderData: Partial<Order> = {
       storeId: store.id,
@@ -135,7 +164,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       customer,
       deliveryMethod: data.delivery.method,
       subtotal: totalPrice,
-      total: totalPrice,
+      shippingCost: orderShippingCost > 0 ? orderShippingCost : undefined,
+      total: orderTotal,
       paymentMethod,
       paymentStatus: 'pending',
       status: 'pending'
@@ -170,7 +200,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       deliveryMethod: orderData.deliveryMethod,
       deliveryAddress: orderData.deliveryAddress,
       subtotal: totalPrice,
-      total: totalPrice,
+      shippingCost: orderShippingCost > 0 ? orderShippingCost : undefined,
+      total: orderTotal,
       status: 'pending',
       paymentMethod,
       paymentStatus: 'pending',
@@ -215,6 +246,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         homeDelivery: 'Home delivery',
         ref: 'Ref',
         items: getItemsLabel(),
+        subtotal: 'Subtotal',
+        shipping: 'Shipping',
+        freeShipping: 'Free',
         total: 'Total',
         notes: 'Notes'
       }
@@ -231,6 +265,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       homeDelivery: 'Delivery',
       ref: 'Ref',
       items: getItemsLabel(),
+      subtotal: 'Subtotal',
+      shipping: 'Envío',
+      freeShipping: 'Gratis',
       total: 'Total',
       notes: 'Notas'
     }
@@ -286,7 +323,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     })
     message += `\n`
 
-    // Total
+    // Totals
+    if (order.shippingCost && order.shippingCost > 0) {
+      message += `${labels.subtotal}: ${currencySymbol}${order.subtotal.toFixed(2)}\n`
+      message += `${labels.shipping}: ${currencySymbol}${order.shippingCost.toFixed(2)}\n`
+    }
     message += `*${labels.total}: ${currencySymbol}${order.total.toFixed(2)}*\n`
 
     // Notes if any
@@ -440,6 +481,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     whatsappUrl,
     loading,
     error,
+    shippingCost,
+    finalTotal,
     setStep: goToStep,
     goBack,
     goNext,
