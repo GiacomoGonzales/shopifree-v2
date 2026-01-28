@@ -222,7 +222,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
               <img
                 src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                 alt={store.name}
-                className="w-full aspect-[3/1] object-cover"
+                className="w-full aspect-[16/5] object-cover"
               />
             </div>
           </section>

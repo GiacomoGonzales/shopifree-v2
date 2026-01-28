@@ -206,7 +206,7 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
               <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${black} 0%, transparent 50%)` }} />
             </div>
             {/* Desktop Hero */}
-            <div className="hidden md:block relative aspect-[3/1] overflow-hidden">
+            <div className="hidden md:block relative aspect-[16/5] overflow-hidden">
               <img
                 src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                 alt={store.name}

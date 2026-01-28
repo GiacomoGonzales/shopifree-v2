@@ -260,7 +260,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 <img
                   src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                   alt=""
-                  className="w-full aspect-[21/9] object-cover"
+                  className="w-full aspect-[16/5] object-cover"
                 />
                 <div
                   className="absolute inset-0 pointer-events-none"

@@ -253,7 +253,7 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
               />
             </div>
             {/* Desktop Hero */}
-            <div className="hidden md:block relative aspect-[3/1] overflow-hidden">
+            <div className="hidden md:block relative aspect-[16/5] overflow-hidden">
               <img
                 src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                 alt={store.name}

@@ -203,7 +203,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
               />
             </div>
             {/* Desktop Hero */}
-            <div className="hidden md:block aspect-[3/1] overflow-hidden">
+            <div className="hidden md:block aspect-[16/5] overflow-hidden">
               <img
                 src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                 alt={store.name}

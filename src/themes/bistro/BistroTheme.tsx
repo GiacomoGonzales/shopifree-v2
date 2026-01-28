@@ -240,7 +240,7 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                 <img
                   src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
                   alt=""
-                  className="w-full aspect-[21/9] object-cover opacity-70"
+                  className="w-full aspect-[16/5] object-cover opacity-70"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20 pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-16 text-center">

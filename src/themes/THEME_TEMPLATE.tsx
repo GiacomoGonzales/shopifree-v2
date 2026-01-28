@@ -157,19 +157,25 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
       </header>
 
       {/* ===================== HERO ===================== */}
-      {store.heroImage && (
+      {/* Desktop: aspect-[16/5] = 1920x600px recommended
+          Mobile: max-h-[450px] with h-auto */}
+      {(store.heroImage || store.heroImageMobile) && (
         <section className="relative">
-          <div className="aspect-[21/9] md:aspect-[3/1]">
-            <picture>
-              {store.heroImageMobile && (
-                <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
-              )}
-              <img
-                src={store.heroImage}
-                alt={store.name}
-                className="w-full h-full object-cover"
-              />
-            </picture>
+          {/* Mobile Hero */}
+          <div className="md:hidden relative max-h-[450px] overflow-hidden">
+            <img
+              src={store.heroImageMobile || store.heroImage}
+              alt={store.name}
+              className="w-full h-auto max-h-[450px] object-cover"
+            />
+          </div>
+          {/* Desktop Hero */}
+          <div className="hidden md:block">
+            <img
+              src={store.heroImage || store.heroImageMobile}
+              alt={store.name}
+              className="w-full aspect-[16/5] object-cover"
+            />
           </div>
         </section>
       )}
