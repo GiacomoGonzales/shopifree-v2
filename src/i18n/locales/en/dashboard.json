@@ -344,6 +344,9 @@
         "retail": "Fashion & Retail",
         "restaurant": "Restaurants",
         "tech": "Technology",
+        "cosmetics": "Beauty",
+        "grocery": "Grocery",
+        "pets": "Pets",
         "general": "General"
       }
     }

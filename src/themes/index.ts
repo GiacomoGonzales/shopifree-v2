@@ -271,6 +271,51 @@ export const themes: Theme[] = [
       background: '#0a0a0f',
       accent: '#ff00ff'
     }
+  },
+  {
+    id: 'glam',
+    name: 'Glam',
+    description: 'Elegante y lujoso con dorados y tonos nude. Ideal para maquillaje, perfumeria y beauty premium.',
+    thumbnail: '/themes/glam.png',
+    category: 'cosmetics',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-01-27'),
+    colors: {
+      primary: '#C9A962',
+      background: '#FDF5F3',
+      accent: '#1A1A1A'
+    }
+  },
+  {
+    id: 'organic',
+    name: 'Organic',
+    description: 'Natural y fresco con tonos verdes. Ideal para tiendas organicas, productos naturales y alimentos saludables.',
+    thumbnail: '/themes/organic.png',
+    category: 'grocery',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-01-27'),
+    colors: {
+      primary: '#2D5A3D',
+      background: '#FDFBF7',
+      accent: '#4A7C59'
+    }
+  },
+  {
+    id: 'pawshop',
+    name: 'Pawshop',
+    description: 'Alegre y divertido con colores calidos. Ideal para pet shops, accesorios y productos para mascotas.',
+    thumbnail: '/themes/pawshop.png',
+    category: 'pets',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-01-27'),
+    colors: {
+      primary: '#F59E0B',
+      background: '#FFFBEB',
+      accent: '#38BDF8'
+    }
   }
 ]
 
