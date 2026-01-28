@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, getDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
+import { validateSubdomain, createSubdomain, deleteSubdomain } from '../../lib/subdomain'
 import type { Store, StoreLocation, StoreShipping } from '../../types'
 import {
   type BusinessType,
@@ -35,6 +36,10 @@ export default function Settings() {
 
   // Basic info
   const [name, setName] = useState('')
+  const [subdomain, setSubdomain] = useState('')
+  const [originalSubdomain, setOriginalSubdomain] = useState('')
+  const [subdomainError, setSubdomainError] = useState('')
+  const [savingSubdomain, setSavingSubdomain] = useState(false)
   const [whatsapp, setWhatsapp] = useState('')
   const [currency, setCurrency] = useState('PEN')
   const [language, setLanguage] = useState('es')
@@ -81,6 +86,8 @@ export default function Settings() {
 
           // Basic
           setName(storeData.name || '')
+          setSubdomain(storeData.subdomain || '')
+          setOriginalSubdomain(storeData.subdomain || '')
           setWhatsapp(storeData.whatsapp || '')
           setCurrency(storeData.currency || 'PEN')
           setLanguage(storeData.language || 'es')
@@ -148,6 +155,82 @@ export default function Settings() {
     }
   }
 
+  const handleSubdomainChange = (value: string) => {
+    // Normalize: lowercase, no spaces, only valid chars
+    const normalized = value
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+    setSubdomain(normalized)
+    setSubdomainError('')
+  }
+
+  const handleSubdomainSave = async () => {
+    if (!store || subdomain === originalSubdomain) return
+
+    // Validate format
+    const validation = validateSubdomain(subdomain)
+    if (validation !== true) {
+      setSubdomainError(validation)
+      return
+    }
+
+    setSavingSubdomain(true)
+    setSubdomainError('')
+
+    try {
+      // Check if subdomain is already taken in Firestore
+      const subdomainDoc = await getDoc(doc(db, 'subdomains', subdomain))
+      if (subdomainDoc.exists()) {
+        setSubdomainError(t('settings.subdomain.taken'))
+        setSavingSubdomain(false)
+        return
+      }
+
+      // 1. Create new subdomain in Vercel (non-blocking)
+      try {
+        await createSubdomain(subdomain)
+      } catch (vercelError) {
+        console.warn('[Settings] Error creating subdomain in Vercel:', vercelError)
+        // Continue anyway - subdomain might already exist or Vercel will handle it
+      }
+
+      // 2. Update store document with new subdomain
+      await updateDoc(doc(db, 'stores', store.id), {
+        subdomain,
+        updatedAt: new Date()
+      })
+
+      // 3. Create new subdomain document in Firestore
+      await setDoc(doc(db, 'subdomains', subdomain), {
+        storeId: store.id,
+        createdAt: new Date()
+      })
+
+      // 4. Delete old subdomain document from Firestore
+      if (originalSubdomain) {
+        await deleteDoc(doc(db, 'subdomains', originalSubdomain))
+      }
+
+      // 5. Delete old subdomain from Vercel (non-blocking)
+      if (originalSubdomain) {
+        deleteSubdomain(originalSubdomain).catch(err => {
+          console.warn('[Settings] Error deleting old subdomain from Vercel:', err)
+        })
+      }
+
+      setOriginalSubdomain(subdomain)
+      setStore({ ...store, subdomain })
+      showToast(t('settings.subdomain.saved'), 'success')
+
+    } catch (error) {
+      console.error('Error changing subdomain:', error)
+      showToast(t('settings.subdomain.error'), 'error')
+    } finally {
+      setSavingSubdomain(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -183,6 +266,60 @@ export default function Settings() {
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
+              </div>
+
+              {/* Subdomain */}
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                  {t('settings.subdomain.label')}
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={subdomain}
+                      onChange={(e) => handleSubdomainChange(e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all ${
+                        subdomainError ? 'border-red-300' : 'border-gray-200'
+                      }`}
+                      placeholder="mi-tienda"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                      .shopifree.app
+                    </span>
+                  </div>
+                  {subdomain !== originalSubdomain && (
+                    <button
+                      onClick={handleSubdomainSave}
+                      disabled={savingSubdomain || !subdomain}
+                      className="px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-medium disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {savingSubdomain ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        </span>
+                      ) : (
+                        t('settings.subdomain.change')
+                      )}
+                    </button>
+                  )}
+                </div>
+                {subdomainError && (
+                  <p className="text-sm text-red-500 mt-1">{subdomainError}</p>
+                )}
+                {!subdomainError && subdomain === originalSubdomain && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('settings.subdomain.hint')}
+                  </p>
+                )}
+                {!subdomainError && subdomain !== originalSubdomain && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    {t('settings.subdomain.warning')}
+                  </p>
+                )}
               </div>
 
               {/* Business Type Selection */}

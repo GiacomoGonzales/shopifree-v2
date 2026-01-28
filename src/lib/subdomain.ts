@@ -106,6 +106,48 @@ export async function createSubdomain(subdomain: string): Promise<boolean> {
 }
 
 /**
+ * Elimina un subdominio de Vercel
+ */
+export async function deleteSubdomain(subdomain: string): Promise<boolean> {
+  if (!VERCEL_TOKEN) {
+    console.error('[Subdomain] VERCEL_TOKEN no configurado')
+    if (import.meta.env.DEV) {
+      console.log('[Subdomain] Modo desarrollo: simulando eliminación de subdominio')
+      return true
+    }
+    return false
+  }
+
+  const domainName = `${subdomain}.shopifree.app`
+  console.log('[Subdomain] Eliminando:', domainName)
+
+  try {
+    const response = await fetch(
+      `https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains/${domainName}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${VERCEL_TOKEN}`
+        }
+      }
+    )
+
+    if (!response.ok && response.status !== 404) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('[Subdomain] Error eliminando:', errorData)
+      return false
+    }
+
+    console.log('[Subdomain] Eliminado exitosamente:', domainName)
+    return true
+
+  } catch (error) {
+    console.error('[Subdomain] Error eliminando:', error)
+    return false
+  }
+}
+
+/**
  * Verifica si un subdominio ya existe en Vercel
  */
 export async function checkSubdomainExists(subdomain: string): Promise<boolean> {

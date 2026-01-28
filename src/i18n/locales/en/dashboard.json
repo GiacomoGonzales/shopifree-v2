@@ -383,6 +383,15 @@
       "error": "Error saving settings",
       "comingSoon": "Coming soon"
     },
+    "subdomain": {
+      "label": "Catalog link",
+      "change": "Change",
+      "hint": "This is the link where your customers will see your catalog",
+      "warning": "Changing this link will make the old one stop working",
+      "taken": "This subdomain is already in use",
+      "saved": "Link updated successfully",
+      "error": "Error changing link"
+    },
     "basic": {
       "title": "Basic information",
       "storeName": "Store name",

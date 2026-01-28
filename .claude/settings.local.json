@@ -23,7 +23,8 @@
       "Bash(find:*)",
       "Bash(node generate-icons.mjs:*)",
       "Bash(del:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "WebFetch(domain:unsplash.com)"
     ]
   }
 }

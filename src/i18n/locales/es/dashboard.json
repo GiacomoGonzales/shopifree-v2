@@ -384,6 +384,15 @@
       "error": "Error al guardar la configuración",
       "comingSoon": "Funcionalidad próximamente"
     },
+    "subdomain": {
+      "label": "Link de tu catálogo",
+      "change": "Cambiar",
+      "hint": "Este es el link donde tus clientes verán tu catálogo",
+      "warning": "Al cambiar el link, el anterior dejará de funcionar",
+      "taken": "Este subdominio ya está en uso",
+      "saved": "Link actualizado correctamente",
+      "error": "Error al cambiar el link"
+    },
     "basic": {
       "title": "Información básica",
       "storeName": "Nombre de la tienda",
