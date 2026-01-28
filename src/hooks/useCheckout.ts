@@ -246,11 +246,15 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       customer,
       deliveryMethod: data.delivery.method,
       subtotal: totalPrice,
-      shippingCost: orderShippingCost > 0 ? orderShippingCost : undefined,
       total: orderTotal,
       paymentMethod,
       paymentStatus: 'pending',
       status: 'pending'
+    }
+
+    // Only add shippingCost if it's greater than 0 (Firestore doesn't accept undefined)
+    if (orderShippingCost > 0) {
+      orderData.shippingCost = orderShippingCost
     }
 
     // Only add delivery address for delivery method
