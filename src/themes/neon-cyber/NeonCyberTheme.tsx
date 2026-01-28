@@ -172,11 +172,11 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
         <header
           className={`sticky top-0 z-50 transition-all duration-300 ${
             scrolled
-              ? 'bg-[#0a0a0f]/90 backdrop-blur-xl'
-              : 'bg-transparent'
+              ? 'bg-[#0a0a0f]/95 backdrop-blur-xl'
+              : 'bg-[#0a0a0f]'
           }`}
           style={{
-            borderBottom: scrolled ? `1px solid ${cyan}30` : 'none'
+            borderBottom: `1px solid ${cyan}${scrolled ? '30' : '15'}`
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6">

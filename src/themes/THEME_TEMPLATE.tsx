@@ -124,7 +124,8 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
       )}
 
       {/* ===================== HEADER ===================== */}
-      <header className={`sticky top-0 z-40 transition-all ${scrolled ? 'bg-white/95 backdrop-blur shadow-sm' : 'bg-transparent'}`}>
+      {/* NOTE: Always use a solid background color, never transparent. Transparent headers look broken. */}
+      <header className={`sticky top-0 z-40 transition-all ${scrolled ? 'bg-white/95 backdrop-blur shadow-sm' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}

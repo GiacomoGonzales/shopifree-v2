@@ -160,9 +160,9 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
         <header
           className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'py-3' : 'py-5'}`}
           style={{
-            backgroundColor: scrolled ? `${black}f0` : 'transparent',
+            backgroundColor: scrolled ? `${black}f5` : black,
             backdropFilter: scrolled ? 'blur(20px)' : 'none',
-            borderBottom: scrolled ? `1px solid ${crimson}30` : '1px solid transparent'
+            borderBottom: `1px solid ${crimson}${scrolled ? '30' : '15'}`
           }}
         >
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">

@@ -159,9 +159,9 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
         <header
           className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'py-3' : 'py-5'}`}
           style={{
-            backgroundColor: scrolled ? `${charcoal}f8` : 'transparent',
+            backgroundColor: scrolled ? `${charcoal}f8` : charcoal,
             backdropFilter: scrolled ? 'blur(20px)' : 'none',
-            borderBottom: scrolled ? `1px solid ${copper}20` : '1px solid transparent'
+            borderBottom: `1px solid ${copper}${scrolled ? '20' : '10'}`
           }}
         >
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
