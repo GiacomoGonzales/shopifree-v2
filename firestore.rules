@@ -105,7 +105,10 @@ service cloud.firestore {
     match /subdomains/{subdomain} {
       allow read: if true;
       allow create: if isAuthenticated();
-      allow update, delete: if false; // Only backend
+      // Allow delete if user owns the store associated with this subdomain
+      allow delete: if isAuthenticated() &&
+        resource.data.storeId == request.auth.uid;
+      allow update: if false;
     }
 
     // Plans (read-only for everyone)
