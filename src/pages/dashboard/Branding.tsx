@@ -638,51 +638,37 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/50 animate-fadeIn">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
+    <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn">
+      {/* Floating header bar */}
+      <div className="absolute top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
           <div>
-            <h3 className="font-semibold text-[#1e3a5f]">{t('branding.theme.previewTitle')}</h3>
-            <p className="text-sm text-gray-500">{themeName}</p>
+            <p className="text-white font-medium text-sm">{t('branding.theme.previewTitle')}: <span className="text-[#38bdf8]">{themeName}</span></p>
           </div>
         </div>
         <button
           onClick={onSelect}
-          className="px-5 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold text-sm shadow-lg shadow-[#1e3a5f]/20"
+          className="px-4 py-2 bg-white text-[#1e3a5f] rounded-lg hover:bg-gray-100 transition-all font-semibold text-sm"
         >
           {t('branding.theme.useTheme')}
         </button>
       </div>
 
-      {/* Preview Content */}
-      <div className="flex-1 overflow-auto bg-gray-100">
-        <div className="max-w-[430px] mx-auto my-4 bg-white rounded-3xl shadow-2xl overflow-hidden border-[8px] border-gray-800">
-          {/* Phone notch */}
-          <div className="bg-gray-800 h-6 flex items-center justify-center">
-            <div className="w-20 h-4 bg-black rounded-full" />
-          </div>
-          {/* Theme content */}
-          <div className="h-[700px] overflow-auto">
-            <ThemeComponent
-              store={store}
-              products={products}
-              categories={categories}
-            />
-          </div>
-          {/* Phone bottom bar */}
-          <div className="bg-gray-800 h-4 flex items-center justify-center">
-            <div className="w-24 h-1 bg-gray-600 rounded-full" />
-          </div>
-        </div>
+      {/* Full screen theme preview */}
+      <div className="flex-1 overflow-auto pt-14">
+        <ThemeComponent
+          store={store}
+          products={products}
+          categories={categories}
+        />
       </div>
     </div>
   )
