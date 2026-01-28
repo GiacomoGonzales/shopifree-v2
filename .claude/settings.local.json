@@ -20,7 +20,10 @@
       "Bash(npx cap:*)",
       "Bash(git pull:*)",
       "WebFetch(domain:decants-alta-gracia.shopifree.app)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(node generate-icons.mjs:*)",
+      "Bash(del:*)",
+      "Bash(git fetch:*)"
     ]
   }
 }

@@ -336,7 +336,9 @@
       "uploadSquare": "Subir imagen 3:2",
       "delete": "Eliminar",
       "tip": "Tip:",
-      "tipText": "Si solo subes una, se usará en ambos dispositivos."
+      "tipText": "Si solo subes una, se usará en ambos dispositivos.",
+      "cropTitle": "Ajustar imagen de portada",
+      "cropDescription": "Arrastra y usa el zoom para ajustar tu imagen"
     },
     "theme": {
       "title": "Tema del catálogo",

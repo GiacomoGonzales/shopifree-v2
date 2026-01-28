@@ -24,9 +24,10 @@ export default function Branding() {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
-  // Logo crop modal
+  // Image crop modal (generic for logo and hero images)
   const [cropImage, setCropImage] = useState<string | null>(null)
   const [cropFile, setCropFile] = useState<File | null>(null)
+  const [cropType, setCropType] = useState<'logo' | 'heroDesktop' | 'heroMobile'>('logo')
 
   // Hero Image Desktop
   const [heroImage, setHeroImage] = useState('')
@@ -148,25 +149,72 @@ export default function Branding() {
     const imageUrl = URL.createObjectURL(file)
     setCropFile(file)
     setCropImage(imageUrl)
+    setCropType('logo')
 
     // Reset input so user can select same file again if needed
     e.target.value = ''
   }
 
+  const handleHeroSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const imageUrl = URL.createObjectURL(file)
+    setCropFile(file)
+    setCropImage(imageUrl)
+    setCropType('heroDesktop')
+    e.target.value = ''
+  }
+
+  const handleHeroMobileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const imageUrl = URL.createObjectURL(file)
+    setCropFile(file)
+    setCropImage(imageUrl)
+    setCropType('heroMobile')
+    e.target.value = ''
+  }
+
   const handleCropComplete = async (croppedBlob: Blob) => {
+    const currentCropType = cropType
     setCropImage(null)
-    setUploadingLogo(true)
+
+    // Set appropriate loading state
+    if (currentCropType === 'logo') {
+      setUploadingLogo(true)
+    } else if (currentCropType === 'heroDesktop') {
+      setUploadingHero(true)
+    } else {
+      setUploadingHeroMobile(true)
+    }
 
     try {
-      // Convert blob to file for upload
-      const file = new File([croppedBlob], cropFile?.name || 'logo.png', { type: 'image/png' })
-      const url = await uploadImage(file, 'logos')
-      setLogo(url)
+      const folder = currentCropType === 'logo' ? 'logos' : 'heroes'
+      const fileName = cropFile?.name || (currentCropType === 'logo' ? 'logo.png' : 'hero.jpg')
+      const file = new File([croppedBlob], fileName, { type: croppedBlob.type })
+      const url = await uploadImage(file, folder, currentCropType !== 'logo')
+
+      // Update appropriate state
+      if (currentCropType === 'logo') {
+        setLogo(url)
+      } else if (currentCropType === 'heroDesktop') {
+        setHeroImage(url)
+      } else {
+        setHeroImageMobile(url)
+      }
     } catch (error) {
-      console.error('Error uploading logo:', error)
-      showToast(t('branding.toast.logoError'), 'error')
+      console.error('Error uploading image:', error)
+      showToast(t(currentCropType === 'logo' ? 'branding.toast.logoError' : 'branding.toast.imageError'), 'error')
     } finally {
-      setUploadingLogo(false)
+      if (currentCropType === 'logo') {
+        setUploadingLogo(false)
+      } else if (currentCropType === 'heroDesktop') {
+        setUploadingHero(false)
+      } else {
+        setUploadingHeroMobile(false)
+      }
       setCropFile(null)
     }
   }
@@ -177,38 +225,6 @@ export default function Branding() {
     }
     setCropImage(null)
     setCropFile(null)
-  }
-
-  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploadingHero(true)
-    try {
-      const url = await uploadImage(file, 'heroes', true)
-      setHeroImage(url)
-    } catch (error) {
-      console.error('Error uploading hero:', error)
-      showToast(t('branding.toast.imageError'), 'error')
-    } finally {
-      setUploadingHero(false)
-    }
-  }
-
-  const handleHeroMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploadingHeroMobile(true)
-    try {
-      const url = await uploadImage(file, 'heroes', true)
-      setHeroImageMobile(url)
-    } catch (error) {
-      console.error('Error uploading hero mobile:', error)
-      showToast(t('branding.toast.imageError'), 'error')
-    } finally {
-      setUploadingHeroMobile(false)
-    }
   }
 
   const handleSave = async () => {
@@ -433,7 +449,7 @@ export default function Branding() {
                 ref={heroInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleHeroUpload}
+                onChange={handleHeroSelect}
                 className="hidden"
               />
               {heroImage && (
@@ -476,7 +492,7 @@ export default function Branding() {
                 ref={heroMobileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleHeroMobileUpload}
+                onChange={handleHeroMobileSelect}
                 className="hidden"
               />
               {heroImageMobile && (
@@ -739,12 +755,15 @@ export default function Branding() {
         </button>
       </div>
 
-      {/* Logo Crop Modal */}
+      {/* Image Crop Modal */}
       {cropImage && (
-        <LogoCropModal
+        <ImageCropModal
           imageSrc={cropImage}
           onCrop={handleCropComplete}
           onCancel={handleCropCancel}
+          aspectRatio={cropType === 'logo' ? 1 : cropType === 'heroDesktop' ? 16/5 : 3/2}
+          title={t(cropType === 'logo' ? 'branding.logo.cropTitle' : 'branding.hero.cropTitle')}
+          description={t(cropType === 'logo' ? 'branding.logo.cropDescription' : 'branding.hero.cropDescription')}
         />
       )}
 
@@ -863,14 +882,17 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
   )
 }
 
-// Logo Crop Modal Component
-interface LogoCropModalProps {
+// Image Crop Modal Component - supports different aspect ratios
+interface ImageCropModalProps {
   imageSrc: string
   onCrop: (blob: Blob) => void
   onCancel: () => void
+  aspectRatio: number // width/height ratio: 1 for square, 16/5 for desktop hero, 3/2 for mobile hero
+  title: string
+  description: string
 }
 
-function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
+function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, description }: ImageCropModalProps) {
   const { t } = useTranslation('dashboard')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -882,8 +904,22 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [imageLoaded, setImageLoaded] = useState(false)
 
-  // Crop area size (visible square)
-  const cropSize = 280
+  // Calculate crop dimensions based on aspect ratio
+  // Max width is 400px for wide images, height adjusts based on ratio
+  const maxWidth = aspectRatio >= 1 ? 400 : 280
+  const cropWidth = aspectRatio >= 1 ? maxWidth : Math.round(maxWidth * aspectRatio)
+  const cropHeight = aspectRatio >= 1 ? Math.round(maxWidth / aspectRatio) : maxWidth
+
+  // Output dimensions for different types
+  const getOutputDimensions = () => {
+    if (aspectRatio === 1) {
+      return { width: 512, height: 512 } // Logo
+    } else if (aspectRatio > 2) {
+      return { width: 1920, height: Math.round(1920 / aspectRatio) } // Desktop hero (16:5 = 3.2)
+    } else {
+      return { width: 1200, height: Math.round(1200 / aspectRatio) } // Mobile hero (3:2 = 1.5)
+    }
+  }
 
   // Load image
   useEffect(() => {
@@ -892,21 +928,22 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
     img.onload = () => {
       imageRef.current = img
 
-      // Calculate initial scale to fit image in crop area
-      const minDimension = Math.min(img.width, img.height)
-      const initialScale = cropSize / minDimension
+      // Calculate initial scale to cover crop area
+      const scaleX = cropWidth / img.width
+      const scaleY = cropHeight / img.height
+      const initialScale = Math.max(scaleX, scaleY)
       setScale(initialScale)
 
       // Center image
       setPosition({
-        x: (cropSize - img.width * initialScale) / 2,
-        y: (cropSize - img.height * initialScale) / 2
+        x: (cropWidth - img.width * initialScale) / 2,
+        y: (cropHeight - img.height * initialScale) / 2
       })
 
       setImageLoaded(true)
     }
     img.src = imageSrc
-  }, [imageSrc])
+  }, [imageSrc, cropWidth, cropHeight])
 
   // Draw preview
   useEffect(() => {
@@ -918,7 +955,7 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
 
     // Clear canvas
     ctx.fillStyle = '#f3f4f6'
-    ctx.fillRect(0, 0, cropSize, cropSize)
+    ctx.fillRect(0, 0, cropWidth, cropHeight)
 
     // Draw image
     const img = imageRef.current
@@ -929,7 +966,7 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
       img.width * scale,
       img.height * scale
     )
-  }, [scale, position, imageLoaded])
+  }, [scale, position, imageLoaded, cropWidth, cropHeight])
 
   // Mouse handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -986,35 +1023,37 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
   const handleCrop = () => {
     if (!imageRef.current) return
 
-    // Create output canvas at desired resolution (512x512 for good quality logo)
-    const outputSize = 512
+    const { width: outputWidth, height: outputHeight } = getOutputDimensions()
     const outputCanvas = document.createElement('canvas')
-    outputCanvas.width = outputSize
-    outputCanvas.height = outputSize
+    outputCanvas.width = outputWidth
+    outputCanvas.height = outputHeight
     const ctx = outputCanvas.getContext('2d')
     if (!ctx) return
 
-    // White background
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, outputSize, outputSize)
+    // White/transparent background
+    ctx.fillStyle = aspectRatio === 1 ? '#ffffff' : '#f3f4f6'
+    ctx.fillRect(0, 0, outputWidth, outputHeight)
 
     // Calculate scale factor from preview to output
-    const scaleFactor = outputSize / cropSize
+    const scaleFactorX = outputWidth / cropWidth
+    const scaleFactorY = outputHeight / cropHeight
 
     // Draw image with same transform but scaled
     const img = imageRef.current
     ctx.drawImage(
       img,
-      position.x * scaleFactor,
-      position.y * scaleFactor,
-      img.width * scale * scaleFactor,
-      img.height * scale * scaleFactor
+      position.x * scaleFactorX,
+      position.y * scaleFactorY,
+      img.width * scale * scaleFactorX,
+      img.height * scale * scaleFactorY
     )
 
-    // Convert to blob
+    // Convert to blob (use JPEG for hero images for smaller file size)
+    const format = aspectRatio === 1 ? 'image/png' : 'image/jpeg'
+    const quality = aspectRatio === 1 ? 1 : 0.9
     outputCanvas.toBlob((blob) => {
       if (blob) onCrop(blob)
-    }, 'image/png', 1)
+    }, format, quality)
   }
 
   // Prevent body scroll
@@ -1027,23 +1066,23 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-[#1e3a5f]">
-            {t('branding.logo.cropTitle', 'Ajustar logo')}
+            {title}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            {t('branding.logo.cropDescription', 'Arrastra y usa el zoom para ajustar tu logo')}
+            {description}
           </p>
         </div>
 
         {/* Crop area */}
-        <div className="p-6">
+        <div className="p-6 overflow-x-auto">
           <div
             ref={containerRef}
             className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
-            style={{ width: cropSize, height: cropSize }}
+            style={{ width: cropWidth, height: cropHeight }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -1055,12 +1094,12 @@ function LogoCropModal({ imageSrc, onCrop, onCancel }: LogoCropModalProps) {
           >
             <canvas
               ref={canvasRef}
-              width={cropSize}
-              height={cropSize}
+              width={cropWidth}
+              height={cropHeight}
               className="cursor-move"
             />
 
-            {/* Square overlay guide */}
+            {/* Overlay guide */}
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute inset-0 border-2 border-[#2d6cb5] rounded-xl" />
               {/* Corner markers */}

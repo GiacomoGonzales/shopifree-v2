@@ -335,7 +335,9 @@
       "uploadSquare": "Upload 3:2 image",
       "delete": "Delete",
       "tip": "Tip:",
-      "tipText": "If you only upload one, it will be used on both devices."
+      "tipText": "If you only upload one, it will be used on both devices.",
+      "cropTitle": "Adjust cover image",
+      "cropDescription": "Drag and use zoom to adjust your image"
     },
     "theme": {
       "title": "Catalog theme",
