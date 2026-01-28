@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useTheme } from './ThemeContext'
 import { useCheckout } from '../../hooks/useCheckout'
 import type { Store, Order } from '../../types'
@@ -9,7 +9,10 @@ import {
   DeliverySelector,
   PaymentSelector,
   OrderSummary,
-  OrderConfirmation
+  OrderConfirmation,
+  type CustomerFormRef,
+  type DeliverySelectorRef,
+  type PaymentSelectorRef
 } from './checkout'
 
 interface Props {
@@ -23,6 +26,11 @@ interface Props {
 export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOrderComplete }: Props) {
   const { theme } = useTheme()
   const t = getThemeTranslations(store.language)
+
+  // Form refs
+  const customerFormRef = useRef<CustomerFormRef>(null)
+  const deliverySelectorRef = useRef<DeliverySelectorRef>(null)
+  const paymentSelectorRef = useRef<PaymentSelectorRef>(null)
 
   const {
     step,
@@ -106,6 +114,21 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     }
   }, [processWhatsApp, processMercadoPago, processTransfer])
 
+  // Handle continue button click
+  const handleContinue = useCallback(() => {
+    switch (step) {
+      case 'customer':
+        customerFormRef.current?.submit()
+        break
+      case 'delivery':
+        deliverySelectorRef.current?.submit()
+        break
+      case 'payment':
+        paymentSelectorRef.current?.submit()
+        break
+    }
+  }, [step])
+
   // Step indicators
   const steps = ['customer', 'delivery', 'payment']
   const currentStepIndex = step === 'confirmation' ? 3 : steps.indexOf(step)
@@ -183,6 +206,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
           {/* Step content */}
           {step === 'customer' && (
             <CustomerForm
+              ref={customerFormRef}
               data={data.customer}
               onSubmit={handleCustomerSubmit}
               error={error}
@@ -192,10 +216,10 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
 
           {step === 'delivery' && (
             <DeliverySelector
+              ref={deliverySelectorRef}
               data={data.delivery}
               store={store}
               onSubmit={handleDeliverySubmit}
-              onBack={goBack}
               error={error}
               t={t}
             />
@@ -203,10 +227,9 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
 
           {step === 'payment' && (
             <PaymentSelector
+              ref={paymentSelectorRef}
               store={store}
-              loading={loading}
               onSubmit={handlePaymentSubmit}
-              onBack={goBack}
               error={error}
               t={t}
             />
@@ -221,6 +244,59 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             />
           )}
         </div>
+
+        {/* Fixed Footer with navigation buttons */}
+        {step !== 'confirmation' && (
+          <div
+            className="px-5 py-4 border-t"
+            style={{
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.surface
+            }}
+          >
+            <div className="flex gap-3">
+              {step !== 'customer' ? (
+                <button
+                  type="button"
+                  onClick={goBack}
+                  disabled={loading}
+                  className="flex-1 py-3.5 font-medium border transition-all disabled:opacity-50"
+                  style={{
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text,
+                    borderRadius: theme.radius.md
+                  }}
+                >
+                  {t.backBtn}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={loading}
+                className={`${step === 'customer' ? 'w-full' : 'flex-1'} py-3.5 font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
+                style={{
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.textInverted,
+                  borderRadius: theme.radius.md
+                }}
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  </>
+                ) : step === 'payment' ? (
+                  t.sendOrderBtn
+                ) : (
+                  t.continueBtn
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Animation styles */}

@@ -131,6 +131,14 @@ export default function StoreSEO({ store, products, categories }: StoreSEOProps)
 
   return (
     <Helmet>
+      {/* Favicon - use store logo as favicon */}
+      {store.logo && (
+        <>
+          <link rel="icon" type="image/png" href={store.logo} />
+          <link rel="apple-touch-icon" href={store.logo} />
+        </>
+      )}
+
       {/* Basic Meta Tags */}
       <title>{store.name} | Catálogo Online</title>
       <meta name="description" content={metaDescription} />

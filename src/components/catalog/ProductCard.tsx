@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
@@ -15,6 +16,21 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
   const { theme, currency, language } = useTheme()
   const { features } = useBusinessType()
 
+  // Preload gallery image on hover for faster modal opening
+  const handleMouseEnter = useCallback(() => {
+    if (product.image) {
+      const img = new Image()
+      img.src = optimizeImage(product.image, 'gallery')
+    }
+    // Also preload additional images if available
+    if (product.images?.length) {
+      product.images.forEach(imgUrl => {
+        const img = new Image()
+        img.src = optimizeImage(imgUrl, 'gallery')
+      })
+    }
+  }, [product.image, product.images])
+
   const hasDiscount = product.comparePrice && product.comparePrice > product.price
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.comparePrice!) * 100)
@@ -28,6 +44,7 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
     <article
       className="group cursor-pointer"
       onClick={() => onSelect(product)}
+      onMouseEnter={handleMouseEnter}
     >
       {/* Image */}
       <div

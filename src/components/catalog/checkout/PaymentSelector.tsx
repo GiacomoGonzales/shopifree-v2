@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useImperativeHandle, forwardRef } from 'react'
 import { useTheme } from '../ThemeContext'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
@@ -7,30 +7,32 @@ type PaymentMethod = 'whatsapp' | 'mercadopago' | 'transfer'
 
 interface Props {
   store: Store
-  loading: boolean
   onSubmit: (method: PaymentMethod) => void
-  onBack: () => void
   error?: string | null
   t: ThemeTranslations
 }
 
-export default function PaymentSelector({
+export interface PaymentSelectorRef {
+  submit: () => boolean
+}
+
+const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
   store,
-  loading,
   onSubmit,
-  onBack,
   error,
   t
-}: Props) {
+}, ref) => {
   const { theme } = useTheme()
   const [selected, setSelected] = useState<PaymentMethod>('whatsapp')
 
   const hasMercadoPago = store.payments?.mercadopago?.enabled
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(selected)
-  }
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      onSubmit(selected)
+      return true
+    }
+  }))
 
   const PaymentOption = ({
     value,
@@ -91,7 +93,7 @@ export default function PaymentSelector({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h3
         className="text-lg font-semibold"
         style={{ color: theme.colors.text }}
@@ -137,44 +139,8 @@ export default function PaymentSelector({
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-3 mt-4">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={loading}
-          className="flex-1 py-3.5 font-medium border transition-all disabled:opacity-50"
-          style={{
-            borderColor: theme.colors.border,
-            color: theme.colors.text,
-            borderRadius: theme.radius.md
-          }}
-        >
-          {t.backBtn}
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 py-3.5 font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-          style={{
-            backgroundColor: theme.colors.primary,
-            color: theme.colors.textInverted,
-            borderRadius: theme.radius.md
-          }}
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Procesando...
-            </>
-          ) : (
-            t.sendOrderBtn
-          )}
-        </button>
-      </div>
-    </form>
+    </div>
   )
-}
+})
+
+export default PaymentSelector

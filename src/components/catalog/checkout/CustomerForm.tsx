@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useImperativeHandle, forwardRef } from 'react'
 import { useTheme } from '../ThemeContext'
 import type { CustomerData } from '../../../hooks/useCheckout'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
@@ -10,17 +10,25 @@ interface Props {
   t: ThemeTranslations
 }
 
-export default function CustomerForm({ data, onSubmit, error, t }: Props) {
+export interface CustomerFormRef {
+  submit: () => boolean
+}
+
+const CustomerForm = forwardRef<CustomerFormRef, Props>(({ data, onSubmit, error, t }, ref) => {
   const { theme } = useTheme()
   const [name, setName] = useState(data?.name || '')
   const [phone, setPhone] = useState(data?.phone || '')
   const [email, setEmail] = useState(data?.email || '')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Pass data directly to parent
-    onSubmit({ name, phone, email: email || undefined })
-  }
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      if (!name.trim() || !phone.trim()) {
+        return false
+      }
+      onSubmit({ name, phone, email: email || undefined })
+      return true
+    }
+  }))
 
   const inputStyle = {
     backgroundColor: theme.colors.surface,
@@ -30,7 +38,7 @@ export default function CustomerForm({ data, onSubmit, error, t }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h3
         className="text-lg font-semibold"
         style={{ color: theme.colors.text }}
@@ -106,18 +114,8 @@ export default function CustomerForm({ data, onSubmit, error, t }: Props) {
         />
       </div>
 
-      {/* Continue button */}
-      <button
-        type="submit"
-        className="w-full py-3.5 font-medium transition-all mt-2"
-        style={{
-          backgroundColor: theme.colors.primary,
-          color: theme.colors.textInverted,
-          borderRadius: theme.radius.md
-        }}
-      >
-        {t.continueBtn}
-      </button>
-    </form>
+    </div>
   )
-}
+})
+
+export default CustomerForm

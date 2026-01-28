@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useImperativeHandle, forwardRef } from 'react'
 import { useTheme } from '../ThemeContext'
 import type { DeliveryData } from '../../../hooks/useCheckout'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
@@ -8,12 +8,15 @@ interface Props {
   data?: DeliveryData
   store: Store
   onSubmit: (data: DeliveryData) => void
-  onBack: () => void
   error?: string | null
   t: ThemeTranslations
 }
 
-export default function DeliverySelector({ data, store, onSubmit, onBack, error, t }: Props) {
+export interface DeliverySelectorRef {
+  submit: () => boolean
+}
+
+const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, onSubmit, error, t }, ref) => {
   const { theme } = useTheme()
   const [method, setMethod] = useState<'pickup' | 'delivery'>(data?.method || 'pickup')
   const [street, setStreet] = useState(data?.address?.street || '')
@@ -21,16 +24,20 @@ export default function DeliverySelector({ data, store, onSubmit, onBack, error,
   const [reference, setReference] = useState(data?.address?.reference || '')
   const [observations, setObservations] = useState(data?.observations || '')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Build delivery data and pass to parent
-    const deliveryData: DeliveryData = {
-      method,
-      address: method === 'delivery' ? { street, city, reference: reference || undefined } : undefined,
-      observations: observations || undefined
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      if (method === 'delivery' && (!street.trim() || !city.trim())) {
+        return false
+      }
+      const deliveryData: DeliveryData = {
+        method,
+        address: method === 'delivery' ? { street, city, reference: reference || undefined } : undefined,
+        observations: observations || undefined
+      }
+      onSubmit(deliveryData)
+      return true
     }
-    onSubmit(deliveryData)
-  }
+  }))
 
   const inputStyle = {
     backgroundColor: theme.colors.surface,
@@ -51,7 +58,7 @@ export default function DeliverySelector({ data, store, onSubmit, onBack, error,
     : null
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h3
         className="text-lg font-semibold"
         style={{ color: theme.colors.text }}
@@ -196,32 +203,8 @@ export default function DeliverySelector({ data, store, onSubmit, onBack, error,
         />
       </div>
 
-      {/* Navigation buttons */}
-      <div className="flex gap-3 mt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-1 py-3.5 font-medium border transition-all"
-          style={{
-            borderColor: theme.colors.border,
-            color: theme.colors.text,
-            borderRadius: theme.radius.md
-          }}
-        >
-          {t.backBtn}
-        </button>
-        <button
-          type="submit"
-          className="flex-1 py-3.5 font-medium transition-all"
-          style={{
-            backgroundColor: theme.colors.primary,
-            color: theme.colors.textInverted,
-            borderRadius: theme.radius.md
-          }}
-        >
-          {t.continueBtn}
-        </button>
-      </div>
-    </form>
+    </div>
   )
-}
+})
+
+export default DeliverySelector

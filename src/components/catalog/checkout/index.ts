@@ -4,3 +4,7 @@ export { default as PaymentSelector } from './PaymentSelector'
 export { default as OrderSummary } from './OrderSummary'
 export { default as OrderConfirmation } from './OrderConfirmation'
 export { default as BankTransferInfo } from './BankTransferInfo'
+
+export type { CustomerFormRef } from './CustomerForm'
+export type { DeliverySelectorRef } from './DeliverySelector'
+export type { PaymentSelectorRef } from './PaymentSelector'
