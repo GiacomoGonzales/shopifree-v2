@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import type { Store, Product, Category } from '../../types'
 
@@ -7,7 +8,34 @@ interface StoreSEOProps {
   categories: Category[]
 }
 
+// Update favicon dynamically by manipulating the DOM directly
+// This is more reliable than Helmet for favicons because it replaces existing links
+function updateFavicon(logoUrl: string) {
+  // Remove all existing favicon links
+  const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
+  existingFavicons.forEach(el => el.remove())
+
+  // Create new favicon link
+  const link = document.createElement('link')
+  link.rel = 'icon'
+  link.type = 'image/png'
+  link.href = logoUrl
+  document.head.appendChild(link)
+
+  // Also add apple-touch-icon
+  const appleLink = document.createElement('link')
+  appleLink.rel = 'apple-touch-icon'
+  appleLink.href = logoUrl
+  document.head.appendChild(appleLink)
+}
+
 export default function StoreSEO({ store, products, categories }: StoreSEOProps) {
+  // Update favicon when store logo changes
+  useEffect(() => {
+    if (store.logo) {
+      updateFavicon(store.logo)
+    }
+  }, [store.logo])
   // Build the store URL
   const storeUrl = store.customDomain
     ? `https://${store.customDomain}`
@@ -131,14 +159,6 @@ export default function StoreSEO({ store, products, categories }: StoreSEOProps)
 
   return (
     <Helmet>
-      {/* Favicon - use store logo as favicon */}
-      {store.logo && (
-        <>
-          <link rel="icon" type="image/png" href={store.logo} />
-          <link rel="apple-touch-icon" href={store.logo} />
-        </>
-      )}
-
       {/* Basic Meta Tags */}
       <title>{store.name} | Catálogo Online</title>
       <meta name="description" content={metaDescription} />
