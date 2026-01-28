@@ -637,36 +637,45 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn">
-      {/* Floating header bar */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div>
-            <p className="text-white font-medium text-sm">{t('branding.theme.previewTitle')}: <span className="text-[#38bdf8]">{themeName}</span></p>
-          </div>
-        </div>
-        <button
-          onClick={onSelect}
-          className="px-4 py-2 bg-white text-[#1e3a5f] rounded-lg hover:bg-gray-100 transition-all font-semibold text-sm"
-        >
-          {t('branding.theme.useTheme')}
-        </button>
-      </div>
-
       {/* Full screen theme preview */}
-      <div className="flex-1 overflow-auto pt-14">
+      <div className="flex-1 overflow-auto">
         <ThemeComponent
           store={store}
           products={products}
           categories={categories}
         />
+      </div>
+
+      {/* Floating bottom bar - subtle pill design */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex items-center gap-2 px-2 py-2 bg-black/70 backdrop-blur-md rounded-full shadow-2xl border border-white/10">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            title={t('branding.theme.close')}
+          >
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Theme name */}
+          <span className="text-white/80 text-sm px-2 hidden sm:block">
+            {themeName}
+          </span>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-white/20 hidden sm:block" />
+
+          {/* Use theme button */}
+          <button
+            onClick={onSelect}
+            className="px-4 py-2 bg-white text-gray-900 rounded-full hover:bg-gray-100 transition-all font-medium text-sm"
+          >
+            {t('branding.theme.useTheme')}
+          </button>
+        </div>
       </div>
     </div>
   )

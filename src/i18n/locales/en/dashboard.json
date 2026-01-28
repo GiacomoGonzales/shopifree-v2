@@ -336,7 +336,8 @@
       "preview": "Preview",
       "previewTitle": "Theme preview",
       "useTheme": "Use this theme",
-      "selected": "Theme selected"
+      "selected": "Theme selected",
+      "close": "Close"
     }
   },
   "settings": {

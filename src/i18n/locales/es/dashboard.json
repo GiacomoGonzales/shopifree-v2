@@ -337,7 +337,8 @@
       "preview": "Vista previa",
       "previewTitle": "Vista previa del tema",
       "useTheme": "Usar este tema",
-      "selected": "Tema seleccionado"
+      "selected": "Tema seleccionado",
+      "close": "Cerrar"
     }
   },
   "settings": {
