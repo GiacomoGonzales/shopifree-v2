@@ -11,22 +11,72 @@ interface StoreSEOProps {
 // Update favicon dynamically by manipulating the DOM directly
 // This is more reliable than Helmet for favicons because it replaces existing links
 function updateFavicon(logoUrl: string) {
-  // Remove all existing favicon links
-  const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
-  existingFavicons.forEach(el => el.remove())
+  // Load the image and create a rounded version using canvas
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
 
-  // Create new favicon link
-  const link = document.createElement('link')
-  link.rel = 'icon'
-  link.type = 'image/png'
-  link.href = logoUrl
-  document.head.appendChild(link)
+  img.onload = () => {
+    // Create canvas for rounded favicon
+    const size = 64 // Favicon size
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
 
-  // Also add apple-touch-icon
-  const appleLink = document.createElement('link')
-  appleLink.rel = 'apple-touch-icon'
-  appleLink.href = logoUrl
-  document.head.appendChild(appleLink)
+    if (ctx) {
+      // Draw rounded rectangle clip path
+      const radius = size * 0.2 // 20% corner radius
+      ctx.beginPath()
+      ctx.moveTo(radius, 0)
+      ctx.lineTo(size - radius, 0)
+      ctx.quadraticCurveTo(size, 0, size, radius)
+      ctx.lineTo(size, size - radius)
+      ctx.quadraticCurveTo(size, size, size - radius, size)
+      ctx.lineTo(radius, size)
+      ctx.quadraticCurveTo(0, size, 0, size - radius)
+      ctx.lineTo(0, radius)
+      ctx.quadraticCurveTo(0, 0, radius, 0)
+      ctx.closePath()
+      ctx.clip()
+
+      // Draw the image
+      ctx.drawImage(img, 0, 0, size, size)
+
+      // Convert to data URL
+      const roundedFaviconUrl = canvas.toDataURL('image/png')
+
+      // Remove all existing favicon links
+      const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
+      existingFavicons.forEach(el => el.remove())
+
+      // Create new favicon link with rounded image
+      const link = document.createElement('link')
+      link.rel = 'icon'
+      link.type = 'image/png'
+      link.href = roundedFaviconUrl
+      document.head.appendChild(link)
+
+      // Also add apple-touch-icon
+      const appleLink = document.createElement('link')
+      appleLink.rel = 'apple-touch-icon'
+      appleLink.href = roundedFaviconUrl
+      document.head.appendChild(appleLink)
+    }
+  }
+
+  img.onerror = () => {
+    // Fallback: use original URL if canvas fails
+    const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
+    existingFavicons.forEach(el => el.remove())
+
+    const link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/png'
+    link.href = logoUrl
+    document.head.appendChild(link)
+  }
+
+  img.src = logoUrl
 }
 
 export default function StoreSEO({ store, products, categories }: StoreSEOProps) {
