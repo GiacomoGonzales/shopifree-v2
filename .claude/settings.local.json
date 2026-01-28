@@ -24,7 +24,8 @@
       "Bash(node generate-icons.mjs:*)",
       "Bash(del:*)",
       "Bash(git fetch:*)",
-      "WebFetch(domain:unsplash.com)"
+      "WebFetch(domain:unsplash.com)",
+      "Bash(npx firebase deploy --only firestore:rules)"
     ]
   }
 }

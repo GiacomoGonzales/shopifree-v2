@@ -1,10 +1,81 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Store, Order, OrderItem } from '../types'
 import type { CartItem } from './useCart'
 import { orderService } from '../lib/firebase'
 import { createPreference, getInitPoint, cartToPreference } from '../lib/mercadopago'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'confirmation'
+
+// LocalStorage key for saved customer data (per store)
+const getCustomerStorageKey = (storeId: string) => `shopifree_customer_${storeId}`
+
+// Saved customer data structure
+interface SavedCustomerData {
+  customer?: {
+    name: string
+    phone: string
+    email?: string
+  }
+  delivery?: {
+    method: 'pickup' | 'delivery'
+    address?: {
+      street: string
+      city: string
+      reference?: string
+    }
+  }
+  savedAt: number
+}
+
+// Load saved customer data from localStorage
+const loadSavedCustomerData = (storeId: string): Partial<SavedCustomerData> | null => {
+  try {
+    const key = getCustomerStorageKey(storeId)
+    const saved = localStorage.getItem(key)
+    if (!saved) return null
+
+    const data = JSON.parse(saved) as SavedCustomerData
+
+    // Expire after 30 days
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000
+    if (Date.now() - data.savedAt > thirtyDays) {
+      localStorage.removeItem(key)
+      return null
+    }
+
+    return data
+  } catch {
+    return null
+  }
+}
+
+// Save customer data to localStorage
+const saveCustomerData = (storeId: string, customer: CustomerData, delivery: DeliveryData) => {
+  try {
+    const key = getCustomerStorageKey(storeId)
+    const data: SavedCustomerData = {
+      customer: {
+        name: customer.name,
+        phone: customer.phone,
+        ...(customer.email && { email: customer.email })
+      },
+      delivery: {
+        method: delivery.method,
+        ...(delivery.address && {
+          address: {
+            street: delivery.address.street,
+            city: delivery.address.city,
+            ...(delivery.address.reference && { reference: delivery.address.reference })
+          }
+        })
+      },
+      savedAt: Date.now()
+    }
+    localStorage.setItem(key, JSON.stringify(data))
+  } catch {
+    // Ignore localStorage errors
+  }
+}
 
 export interface CustomerData {
   name: string
@@ -42,6 +113,17 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Load saved customer data on mount
+  useEffect(() => {
+    const savedData = loadSavedCustomerData(store.id)
+    if (savedData) {
+      setData({
+        customer: savedData.customer,
+        delivery: savedData.delivery
+      })
+    }
+  }, [store.id])
 
   // Calculate shipping cost based on store settings and delivery method
   const calculateShippingCost = useCallback((): number => {
@@ -347,6 +429,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const createdOrder = await createOrder('whatsapp')
       setOrder(createdOrder)
 
+      // Save customer data for future orders
+      if (data.customer && data.delivery) {
+        saveCustomerData(store.id, data.customer, data.delivery)
+      }
+
       // Build WhatsApp URL with full order details
       const phone = store.whatsapp.replace(/\D/g, '')
       const message = encodeURIComponent(buildWhatsAppMessage(createdOrder))
@@ -366,7 +453,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     } finally {
       setLoading(false)
     }
-  }, [createOrder, store.whatsapp, onOrderComplete, buildWhatsAppMessage])
+  }, [createOrder, store.id, store.whatsapp, data.customer, data.delivery, onOrderComplete, buildWhatsAppMessage])
 
   // Process MercadoPago payment
   const processMercadoPago = useCallback(async () => {
@@ -381,6 +468,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     try {
       const createdOrder = await createOrder('mercadopago')
       setOrder(createdOrder)
+
+      // Save customer data for future orders
+      if (data.customer && data.delivery) {
+        saveCustomerData(store.id, data.customer, data.delivery)
+      }
 
       // Create MercadoPago preference
       const mpItems = items.map((item, index) => ({
@@ -424,7 +516,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       setError(err instanceof Error ? err.message : 'Error processing payment')
       setLoading(false)
     }
-  }, [store, items, data.customer, createOrder])
+  }, [store, items, data.customer, data.delivery, createOrder])
 
   // Process bank transfer
   const processTransfer = useCallback(async () => {
@@ -434,6 +526,12 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     try {
       const createdOrder = await createOrder('transfer')
       setOrder(createdOrder)
+
+      // Save customer data for future orders
+      if (data.customer && data.delivery) {
+        saveCustomerData(store.id, data.customer, data.delivery)
+      }
+
       setStep('confirmation')
       onOrderComplete?.(createdOrder)
     } catch (err) {
@@ -441,7 +539,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     } finally {
       setLoading(false)
     }
-  }, [createOrder, onOrderComplete])
+  }, [createOrder, store.id, data.customer, data.delivery, onOrderComplete])
 
   // Validate customer data
   const validateCustomer = useCallback((): boolean => {
