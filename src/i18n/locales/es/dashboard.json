@@ -333,7 +333,11 @@
     },
     "theme": {
       "title": "Tema del catálogo",
-      "description": "Elige el estilo visual de tu catálogo. Todos los temas son gratuitos."
+      "description": "Elige el estilo visual de tu catálogo. Todos los temas son gratuitos.",
+      "preview": "Vista previa",
+      "previewTitle": "Vista previa del tema",
+      "useTheme": "Usar este tema",
+      "selected": "Tema seleccionado"
     }
   },
   "settings": {

@@ -332,7 +332,11 @@
     },
     "theme": {
       "title": "Catalog theme",
-      "description": "Choose the visual style of your catalog. All themes are free."
+      "description": "Choose the visual style of your catalog. All themes are free.",
+      "preview": "Preview",
+      "previewTitle": "Theme preview",
+      "useTheme": "Use this theme",
+      "selected": "Theme selected"
     }
   },
   "settings": {

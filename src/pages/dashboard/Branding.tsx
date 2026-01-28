@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { themes } from '../../themes'
-import type { Store, StoreAnnouncement } from '../../types'
+import { getThemeComponent } from '../../themes/components'
+import type { Store, StoreAnnouncement, Product, Category } from '../../types'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -45,6 +46,11 @@ export default function Branding() {
     textColor: '#ffffff'
   })
 
+  // Theme Preview
+  const [previewTheme, setPreviewTheme] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+
   useEffect(() => {
     const fetchStore = async () => {
       if (!firebaseUser) return
@@ -65,6 +71,32 @@ export default function Branding() {
           if (storeData.announcement) {
             setAnnouncement(storeData.announcement)
           }
+
+          // Fetch products and categories for preview
+          const [productsSnapshot, categoriesSnapshot] = await Promise.all([
+            getDocs(query(
+              collection(db, 'stores', storeWithId.id, 'products'),
+              where('active', '==', true),
+              orderBy('createdAt', 'desc')
+            )),
+            getDocs(query(
+              collection(db, 'stores', storeWithId.id, 'categories'),
+              orderBy('order', 'asc')
+            ))
+          ])
+
+          const productsData = productsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Product[]
+
+          const categoriesData = categoriesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Category[]
+
+          setProducts(productsData)
+          setCategories(categoriesData)
         }
       } catch (error) {
         console.error('Error fetching store:', error)
@@ -444,80 +476,102 @@ export default function Branding() {
           {themes.map((theme) => {
             const isSelected = selectedTheme === theme.id
             return (
-              <button
+              <div
                 key={theme.id}
-                onClick={() => setSelectedTheme(theme.id)}
-                className={`relative rounded-2xl overflow-hidden border-2 transition-all text-left ${
+                className={`relative rounded-2xl overflow-hidden border-2 transition-all group ${
                   isSelected
                     ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
                     : 'border-gray-200 hover:border-[#38bdf8]/50'
                 }`}
               >
-                {/* Theme Preview */}
-                <div
-                  className="aspect-[3/4] p-3 flex flex-col"
-                  style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
+                {/* Theme Preview Card */}
+                <button
+                  onClick={() => setSelectedTheme(theme.id)}
+                  className="w-full text-left"
                 >
-                  {/* Mini header */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div
-                      className="w-6 h-2 rounded-full"
-                      style={{ backgroundColor: theme.colors?.primary || '#000' }}
-                    />
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: theme.colors?.accent || '#666' }}
-                    />
-                  </div>
-                  {/* Mini product grid */}
-                  <div className="flex-1 grid grid-cols-2 gap-1">
-                    {[1, 2, 3, 4].map((i) => (
+                  {/* Theme Preview */}
+                  <div
+                    className="aspect-[3/4] p-3 flex flex-col relative"
+                    style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
+                  >
+                    {/* Mini header */}
+                    <div className="flex items-center justify-between mb-2">
                       <div
-                        key={i}
-                        className="rounded aspect-square"
-                        style={{
-                          backgroundColor: theme.colors?.primary
-                            ? `${theme.colors.primary}15`
-                            : '#f3f4f6'
-                        }}
+                        className="w-6 h-2 rounded-full"
+                        style={{ backgroundColor: theme.colors?.primary || '#000' }}
                       />
-                    ))}
-                  </div>
-                  {/* Mini footer */}
-                  <div className="mt-2 flex items-center gap-1">
-                    <div
-                      className="flex-1 h-2 rounded-full"
-                      style={{ backgroundColor: theme.colors?.primary || '#000' }}
-                    />
-                    <div
-                      className="w-6 h-6 rounded-lg"
-                      style={{ backgroundColor: theme.colors?.accent || '#666' }}
-                    />
-                  </div>
-                </div>
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: theme.colors?.accent || '#666' }}
+                      />
+                    </div>
+                    {/* Mini product grid */}
+                    <div className="flex-1 grid grid-cols-2 gap-1">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className="rounded aspect-square"
+                          style={{
+                            backgroundColor: theme.colors?.primary
+                              ? `${theme.colors.primary}15`
+                              : '#f3f4f6'
+                          }}
+                        />
+                      ))}
+                    </div>
+                    {/* Mini footer */}
+                    <div className="mt-2 flex items-center gap-1">
+                      <div
+                        className="flex-1 h-2 rounded-full"
+                        style={{ backgroundColor: theme.colors?.primary || '#000' }}
+                      />
+                      <div
+                        className="w-6 h-6 rounded-lg"
+                        style={{ backgroundColor: theme.colors?.accent || '#666' }}
+                      />
+                    </div>
 
-                {/* Theme Info */}
-                <div className="p-3 bg-white border-t border-gray-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm text-[#1e3a5f]">{theme.name}</span>
-                    {theme.isNew && (
-                      <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full">
-                        NEW
+                    {/* Preview overlay on hover */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPreviewTheme(theme.id)
+                        }}
+                        className="px-4 py-2 bg-white text-[#1e3a5f] text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {t('branding.theme.preview')}
                       </span>
-                    )}
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 line-clamp-2">{theme.description}</p>
-                </div>
+
+                  {/* Theme Info */}
+                  <div className="p-3 bg-white border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-sm text-[#1e3a5f]">{theme.name}</span>
+                      {theme.isNew && (
+                        <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full">
+                          NEW
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-2">{theme.description}</p>
+                  </div>
+                </button>
 
                 {/* Selected indicator */}
                 {isSelected && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg">
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg z-10">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                 )}
-              </button>
+              </div>
             )
           })}
         </div>
@@ -532,6 +586,103 @@ export default function Branding() {
         >
           {saving ? t('branding.saving') : t('branding.saveChanges')}
         </button>
+      </div>
+
+      {/* Theme Preview Modal */}
+      {previewTheme && store && (
+        <ThemePreviewModal
+          themeId={previewTheme}
+          store={{
+            ...store,
+            logo,
+            heroImage,
+            heroImageMobile,
+            announcement,
+            themeId: previewTheme
+          }}
+          products={products}
+          categories={categories}
+          onClose={() => setPreviewTheme(null)}
+          onSelect={() => {
+            setSelectedTheme(previewTheme)
+            setPreviewTheme(null)
+            showToast(t('branding.theme.selected'), 'success')
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// Theme Preview Modal Component
+interface ThemePreviewModalProps {
+  themeId: string
+  store: Store
+  products: Product[]
+  categories: Category[]
+  onClose: () => void
+  onSelect: () => void
+}
+
+function ThemePreviewModal({ themeId, store, products, categories, onClose, onSelect }: ThemePreviewModalProps) {
+  const { t } = useTranslation('dashboard')
+  const ThemeComponent = getThemeComponent(themeId)
+  const themeName = themes.find(th => th.id === themeId)?.name || themeId
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/50 animate-fadeIn">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div>
+            <h3 className="font-semibold text-[#1e3a5f]">{t('branding.theme.previewTitle')}</h3>
+            <p className="text-sm text-gray-500">{themeName}</p>
+          </div>
+        </div>
+        <button
+          onClick={onSelect}
+          className="px-5 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold text-sm shadow-lg shadow-[#1e3a5f]/20"
+        >
+          {t('branding.theme.useTheme')}
+        </button>
+      </div>
+
+      {/* Preview Content */}
+      <div className="flex-1 overflow-auto bg-gray-100">
+        <div className="max-w-[430px] mx-auto my-4 bg-white rounded-3xl shadow-2xl overflow-hidden border-[8px] border-gray-800">
+          {/* Phone notch */}
+          <div className="bg-gray-800 h-6 flex items-center justify-center">
+            <div className="w-20 h-4 bg-black rounded-full" />
+          </div>
+          {/* Theme content */}
+          <div className="h-[700px] overflow-auto">
+            <ThemeComponent
+              store={store}
+              products={products}
+              categories={categories}
+            />
+          </div>
+          {/* Phone bottom bar */}
+          <div className="bg-gray-800 h-4 flex items-center justify-center">
+            <div className="w-24 h-1 bg-gray-600 rounded-full" />
+          </div>
+        </div>
       </div>
     </div>
   )
