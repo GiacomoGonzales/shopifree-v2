@@ -181,6 +181,8 @@ export default function Branding() {
     const currentCropType = cropType
     setCropImage(null)
 
+    if (!store) return
+
     // Set appropriate loading state
     if (currentCropType === 'logo') {
       setUploadingLogo(true)
@@ -196,7 +198,17 @@ export default function Branding() {
       const file = new File([croppedBlob], fileName, { type: croppedBlob.type })
       const url = await uploadImage(file, folder, currentCropType !== 'logo')
 
-      // Update appropriate state
+      // Update state and save to Firestore immediately
+      const fieldToUpdate = currentCropType === 'logo' ? 'logo'
+        : currentCropType === 'heroDesktop' ? 'heroImage'
+        : 'heroImageMobile'
+
+      await updateDoc(doc(db, 'stores', store.id), {
+        [fieldToUpdate]: url,
+        updatedAt: new Date()
+      })
+
+      // Update local state
       if (currentCropType === 'logo') {
         setLogo(url)
       } else if (currentCropType === 'heroDesktop') {
@@ -204,6 +216,8 @@ export default function Branding() {
       } else {
         setHeroImageMobile(url)
       }
+
+      showToast(t('branding.toast.saved'), 'success')
     } catch (error) {
       console.error('Error uploading image:', error)
       showToast(t(currentCropType === 'logo' ? 'branding.toast.logoError' : 'branding.toast.imageError'), 'error')
@@ -225,6 +239,52 @@ export default function Branding() {
     }
     setCropImage(null)
     setCropFile(null)
+  }
+
+  // Delete image handlers (auto-save)
+  const handleDeleteLogo = async () => {
+    if (!store) return
+    try {
+      await updateDoc(doc(db, 'stores', store.id), {
+        logo: null,
+        updatedAt: new Date()
+      })
+      setLogo('')
+      showToast(t('branding.toast.saved'), 'success')
+    } catch (error) {
+      console.error('Error deleting logo:', error)
+      showToast(t('branding.toast.error'), 'error')
+    }
+  }
+
+  const handleDeleteHeroDesktop = async () => {
+    if (!store) return
+    try {
+      await updateDoc(doc(db, 'stores', store.id), {
+        heroImage: null,
+        updatedAt: new Date()
+      })
+      setHeroImage('')
+      showToast(t('branding.toast.saved'), 'success')
+    } catch (error) {
+      console.error('Error deleting hero image:', error)
+      showToast(t('branding.toast.error'), 'error')
+    }
+  }
+
+  const handleDeleteHeroMobile = async () => {
+    if (!store) return
+    try {
+      await updateDoc(doc(db, 'stores', store.id), {
+        heroImageMobile: null,
+        updatedAt: new Date()
+      })
+      setHeroImageMobile('')
+      showToast(t('branding.toast.saved'), 'success')
+    } catch (error) {
+      console.error('Error deleting hero mobile image:', error)
+      showToast(t('branding.toast.error'), 'error')
+    }
   }
 
   const handleSave = async () => {
@@ -303,7 +363,7 @@ export default function Branding() {
                 </p>
                 {logo && (
                   <button
-                    onClick={() => setLogo('')}
+                    onClick={handleDeleteLogo}
                     className="text-sm text-red-600 hover:text-red-700 font-medium"
                   >
                     {t('branding.logo.delete')}
@@ -454,7 +514,7 @@ export default function Branding() {
               />
               {heroImage && (
                 <button
-                  onClick={() => setHeroImage('')}
+                  onClick={handleDeleteHeroDesktop}
                   className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
                   {t('branding.hero.delete')}
@@ -497,7 +557,7 @@ export default function Branding() {
               />
               {heroImageMobile && (
                 <button
-                  onClick={() => setHeroImageMobile('')}
+                  onClick={handleDeleteHeroMobile}
                   className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
                   {t('branding.hero.delete')}
