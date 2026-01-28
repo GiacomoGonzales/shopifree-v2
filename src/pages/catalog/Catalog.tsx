@@ -12,6 +12,52 @@ interface CatalogProps {
   customDomain?: string
 }
 
+// Modern loading component with store logo
+function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="text-center">
+        {/* Logo with animated ring */}
+        <div className="relative inline-flex items-center justify-center">
+          {/* Animated outer ring */}
+          <div className="absolute w-28 h-28 rounded-full border-4 border-gray-200"></div>
+          <div className="absolute w-28 h-28 rounded-full border-4 border-transparent border-t-gray-800 animate-spin"></div>
+
+          {/* Logo container */}
+          <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden animate-pulse">
+            {logo ? (
+              <img
+                src={logo}
+                alt={name || 'Cargando'}
+                className="w-16 h-16 object-contain"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl"></div>
+            )}
+          </div>
+        </div>
+
+        {/* Store name or loading text */}
+        <div className="mt-6">
+          {name ? (
+            <p className="text-lg font-semibold text-gray-800">{name}</p>
+          ) : (
+            <div className="h-5 w-32 bg-gray-200 rounded-full mx-auto animate-pulse"></div>
+          )}
+          <p className="mt-2 text-sm text-gray-500">Cargando catálogo...</p>
+        </div>
+
+        {/* Animated dots */}
+        <div className="flex justify-center gap-1 mt-4">
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Catalog({ subdomainStore, customDomain }: CatalogProps) {
   const { storeSlug } = useParams<{ storeSlug: string }>()
   // Use subdomain prop if provided, otherwise use URL param
@@ -19,7 +65,8 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loadingStore, setLoadingStore] = useState(true)
+  const [loadingProducts, setLoadingProducts] = useState(true)
   const trackedRef = useRef(false)
 
   // Analytics callbacks - must be before any conditional returns
@@ -45,21 +92,18 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
     }
   }, [store])
 
+  // First: Load store data (fast - shows logo quickly)
   useEffect(() => {
-    const fetchData = async () => {
-      // Need either a slug or custom domain to fetch store
+    const fetchStore = async () => {
       if (!slug && !customDomain) return
 
       try {
-        // Fetch store by subdomain OR custom domain
         const storesRef = collection(db, 'stores')
         let storeQuery
 
         if (customDomain) {
-          // Query by custom domain
           storeQuery = query(storesRef, where('customDomain', '==', customDomain))
         } else {
-          // Query by subdomain
           storeQuery = query(storesRef, where('subdomain', '==', slug))
         }
 
@@ -78,52 +122,61 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
               referrer: getReferrer()
             })
           }
-
-          // Fetch products from subcollection
-          const productsRef = collection(db, 'stores', storeId, 'products')
-          const productsQuery = query(
-            productsRef,
-            where('active', '==', true)
-          )
-          const productsSnapshot = await getDocs(productsQuery)
-          setProducts(productsSnapshot.docs.map(doc => ({
-            ...doc.data() as Product,
-            id: doc.id,
-            storeId
-          })))
-
-          // Fetch categories from subcollection
-          const categoriesRef = collection(db, 'stores', storeId, 'categories')
-          const categoriesSnapshot = await getDocs(categoriesRef)
-          setCategories(
-            categoriesSnapshot.docs
-              .map(doc => ({
-                ...doc.data() as Category,
-                id: doc.id,
-                storeId
-              }))
-              .sort((a, b) => (a.order || 0) - (b.order || 0))
-          )
         }
       } catch (error) {
-        console.error('Error fetching catalog:', error)
+        console.error('Error fetching store:', error)
       } finally {
-        setLoading(false)
+        setLoadingStore(false)
       }
     }
 
-    fetchData()
+    fetchStore()
   }, [slug, customDomain])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 border-t-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-500 text-sm">Cargando catalogo...</p>
-        </div>
-      </div>
-    )
+  // Second: Load products and categories (after store is loaded)
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!store) return
+
+      try {
+        // Fetch products from subcollection
+        const productsRef = collection(db, 'stores', store.id, 'products')
+        const productsQuery = query(
+          productsRef,
+          where('active', '==', true)
+        )
+        const productsSnapshot = await getDocs(productsQuery)
+        setProducts(productsSnapshot.docs.map(doc => ({
+          ...doc.data() as Product,
+          id: doc.id,
+          storeId: store.id
+        })))
+
+        // Fetch categories from subcollection
+        const categoriesRef = collection(db, 'stores', store.id, 'categories')
+        const categoriesSnapshot = await getDocs(categoriesRef)
+        setCategories(
+          categoriesSnapshot.docs
+            .map(doc => ({
+              ...doc.data() as Category,
+              id: doc.id,
+              storeId: store.id
+            }))
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+        )
+      } catch (error) {
+        console.error('Error fetching products:', error)
+      } finally {
+        setLoadingProducts(false)
+      }
+    }
+
+    fetchProducts()
+  }, [store])
+
+  // Show loader while loading store or products
+  if (loadingStore || loadingProducts) {
+    return <StoreLoader logo={store?.logo} name={store?.name} />
   }
 
   if (!store) {
