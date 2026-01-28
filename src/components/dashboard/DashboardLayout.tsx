@@ -181,12 +181,12 @@ export default function DashboardLayout() {
   const SidebarContent = () => (
     <>
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-4 py-4 space-y-0.5 overflow-y-auto">
         {navigation.map((item, index) => {
           // Render separator
           if (item === 'separator') {
             return (
-              <div key={`separator-${index}`} className="my-3 mx-3 border-t border-gray-100" />
+              <div key={`separator-${index}`} className="my-2 mx-3 border-t border-gray-100" />
             )
           }
 
@@ -195,7 +195,7 @@ export default function DashboardLayout() {
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                 isActive
                   ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md shadow-[#1e3a5f]/20'
                   : 'text-gray-600 hover:bg-[#f0f7ff] hover:text-[#1e3a5f]'
