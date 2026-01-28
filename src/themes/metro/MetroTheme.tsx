@@ -154,13 +154,12 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {store.logo ? (
+                {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" />
-                ) : (
-                  <h1 className="text-xl font-bold tracking-tight" style={{ color: dark }}>
-                    {store.name}
-                  </h1>
                 )}
+                <h1 className="text-lg font-bold tracking-tight" style={{ color: dark }}>
+                  {store.name}
+                </h1>
               </div>
 
               <div className="flex items-center gap-3">
@@ -193,19 +192,23 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
         </header>
 
         {/* Hero - Metro clean style */}
-        {store.heroImage && (
+        {(store.heroImage || store.heroImageMobile) && (
           <section className="relative bg-gray-50">
-            <div className="aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-              <picture>
-                {store.heroImageMobile && (
-                  <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
-                )}
-                <img
-                  src={optimizeImage(store.heroImage, 'hero')}
-                  alt={store.name}
-                  className="w-full h-full object-cover"
-                />
-              </picture>
+            {/* Mobile Hero */}
+            <div className="md:hidden">
+              <img
+                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                alt={store.name}
+                className="w-full h-auto max-h-[400px] object-cover"
+              />
+            </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block aspect-[3/1] overflow-hidden">
+              <img
+                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                alt={store.name}
+                className="w-full h-full object-cover"
+              />
             </div>
           </section>
         )}

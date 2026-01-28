@@ -193,18 +193,26 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
         </header>
 
         {/* Hero */}
-        {store.heroImage && (
+        {(store.heroImage || store.heroImageMobile) && (
           <section className="relative">
-            <div className="aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-              <picture>
-                {store.heroImageMobile && <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />}
-                <img
-                  src={optimizeImage(store.heroImage, 'hero')}
-                  alt={store.name}
-                  className="w-full h-full object-cover"
-                  style={{ filter: 'contrast(1.1)' }}
-                />
-              </picture>
+            {/* Mobile Hero */}
+            <div className="md:hidden relative">
+              <img
+                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                alt={store.name}
+                className="w-full h-auto max-h-[400px] object-cover"
+                style={{ filter: 'contrast(1.1)' }}
+              />
+              <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${black} 0%, transparent 50%)` }} />
+            </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block relative aspect-[3/1] overflow-hidden">
+              <img
+                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                alt={store.name}
+                className="w-full h-full object-cover"
+                style={{ filter: 'contrast(1.1)' }}
+              />
               <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${black} 0%, transparent 50%)` }} />
             </div>
           </section>

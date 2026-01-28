@@ -181,22 +181,21 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <div className="flex items-center">
-                {store.logo ? (
+              {/* Logo + Name */}
+              <div className="flex items-center gap-3">
+                {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" />
-                ) : (
-                  <h1
-                    className="text-xl font-bold tracking-wider uppercase"
-                    style={{
-                      color: cyan,
-                      fontFamily: "'Orbitron', system-ui, sans-serif",
-                      textShadow: `0 0 20px ${cyan}50`
-                    }}
-                  >
-                    {store.name}
-                  </h1>
                 )}
+                <h1
+                  className="text-lg font-bold tracking-wider uppercase"
+                  style={{
+                    color: cyan,
+                    fontFamily: "'Orbitron', system-ui, sans-serif",
+                    textShadow: `0 0 20px ${cyan}50`
+                  }}
+                >
+                  {store.name}
+                </h1>
               </div>
 
               {/* Right side actions */}
@@ -237,19 +236,29 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
         </header>
 
         {/* Hero - Full width with neon overlay */}
-        {store.heroImage && (
+        {(store.heroImage || store.heroImageMobile) && (
           <section className="relative">
-            <div className="aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-              <picture>
-                {store.heroImageMobile && (
-                  <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
-                )}
-                <img
-                  src={optimizeImage(store.heroImage, 'hero')}
-                  alt={store.name}
-                  className="w-full h-full object-cover"
-                />
-              </picture>
+            {/* Mobile Hero */}
+            <div className="md:hidden relative">
+              <img
+                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                alt={store.name}
+                className="w-full h-auto max-h-[400px] object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(135deg, ${cyan}20 0%, transparent 50%, ${magenta}20 100%)`
+                }}
+              />
+            </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block relative aspect-[3/1] overflow-hidden">
+              <img
+                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                alt={store.name}
+                className="w-full h-full object-cover"
+              />
               {/* Neon gradient overlay */}
               <div
                 className="absolute inset-0"

@@ -156,18 +156,17 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
         >
           <div className="max-w-6xl mx-auto px-6">
             <div className="flex items-center justify-between h-14">
-              {/* Logo */}
-              <div className="flex items-center">
-                {store.logo ? (
+              {/* Logo + Name */}
+              <div className="flex items-center gap-3">
+                {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-7 w-auto" />
-                ) : (
-                  <h1
-                    className="text-xl font-semibold tracking-tight"
-                    style={{ color: spaceGray }}
-                  >
-                    {store.name}
-                  </h1>
                 )}
+                <h1
+                  className="text-lg font-semibold tracking-tight"
+                  style={{ color: spaceGray }}
+                >
+                  {store.name}
+                </h1>
               </div>
 
               {/* Right side actions */}
@@ -208,19 +207,23 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
         </header>
 
         {/* Hero - Full width, clean */}
-        {store.heroImage && (
+        {(store.heroImage || store.heroImageMobile) && (
           <section className="relative bg-[#f5f5f7]">
-            <div className="aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-              <picture>
-                {store.heroImageMobile && (
-                  <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
-                )}
-                <img
-                  src={optimizeImage(store.heroImage, 'hero')}
-                  alt={store.name}
-                  className="w-full h-full object-cover"
-                />
-              </picture>
+            {/* Mobile Hero */}
+            <div className="md:hidden">
+              <img
+                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                alt={store.name}
+                className="w-full h-auto max-h-[400px] object-cover"
+              />
+            </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block">
+              <img
+                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                alt={store.name}
+                className="w-full aspect-[3/1] object-cover"
+              />
             </div>
           </section>
         )}
@@ -262,6 +265,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          stickyTop="top-14"
         />
 
         {/* Products */}

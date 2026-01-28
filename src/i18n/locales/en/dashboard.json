@@ -337,7 +337,14 @@
       "previewTitle": "Theme preview",
       "useTheme": "Use this theme",
       "selected": "Theme selected",
-      "close": "Close"
+      "close": "Close",
+      "categories": {
+        "all": "All",
+        "retail": "Fashion & Retail",
+        "restaurant": "Restaurants",
+        "tech": "Technology",
+        "general": "General"
+      }
     }
   },
   "settings": {

@@ -256,7 +256,7 @@ Los clientes pueden hacer zoom en fotos, ver detalles y contactarte directamente
     `
   },
   {
-    slug: 'mejores-plataformas-ecommerce-gratis-2026',
+    slug: 'mejores-plataformas-ecommerce-gratis-2025',
     title: 'Las 5 Mejores Plataformas de Ecommerce Gratis en 2025',
     description: 'Comparativa de las mejores plataformas para crear tu tienda online gratis. Descubre cual es la mejor opcion para tu negocio.',
     image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200',
@@ -387,7 +387,7 @@ Para emprendedores en Latinoamerica que quieren empezar rapido y sin costos, **S
     readTime: 12,
     tags: ['ecommerce', 'plataformas', 'comparativa', 'gratis', '2026'],
     relatedPosts: ['como-crear-tienda-online-gratis', 'tienda-virtual-vs-marketplace'],
-    content: \`
+    content: `
 El ecosistema de ecommerce sigue evolucionando. En 2026, elegir la plataforma correcta es mas importante que nunca para el exito de tu negocio online.
 
 ## Criterios de evaluacion 2026
@@ -514,7 +514,7 @@ Para emprendedores en Latinoamerica que quieren empezar rapido y sin costos, **S
 ---
 
 **Prueba Shopifree gratis** y unete a los miles de emprendedores que ya venden online sin complicaciones.
-    \`
+    `
   },
   {
     slug: 'como-emprender-negocio-online',

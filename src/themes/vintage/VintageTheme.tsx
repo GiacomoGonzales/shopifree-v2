@@ -157,13 +157,12 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-20">
               <div className="flex items-center gap-3">
-                {store.logo ? (
+                {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-10 w-auto" />
-                ) : (
-                  <h1 className="text-2xl tracking-wide" style={{ color: darkBrown }}>
-                    {store.name}
-                  </h1>
                 )}
+                <h1 className="text-xl tracking-wide" style={{ color: darkBrown }}>
+                  {store.name}
+                </h1>
               </div>
 
               <div className="flex items-center gap-4">
@@ -197,20 +196,25 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
         </header>
 
         {/* Hero - Vintage with sepia effect */}
-        {store.heroImage && (
+        {(store.heroImage || store.heroImageMobile) && (
           <section className="relative">
-            <div className="aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-              <picture>
-                {store.heroImageMobile && (
-                  <source media="(max-width: 768px)" srcSet={store.heroImageMobile} />
-                )}
-                <img
-                  src={optimizeImage(store.heroImage, 'hero')}
-                  alt={store.name}
-                  className="w-full h-full object-cover"
-                  style={{ filter: 'sepia(15%)' }}
-                />
-              </picture>
+            {/* Mobile Hero */}
+            <div className="md:hidden">
+              <img
+                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                alt={store.name}
+                className="w-full h-auto max-h-[400px] object-cover"
+                style={{ filter: 'sepia(15%)' }}
+              />
+            </div>
+            {/* Desktop Hero */}
+            <div className="hidden md:block aspect-[3/1] overflow-hidden">
+              <img
+                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                alt={store.name}
+                className="w-full h-full object-cover"
+                style={{ filter: 'sepia(15%)' }}
+              />
             </div>
             {/* Decorative border */}
             <div
