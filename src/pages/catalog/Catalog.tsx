@@ -17,22 +17,41 @@ function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
       <div className="text-center">
-        {/* Logo with animated ring */}
-        <div className="relative inline-flex items-center justify-center">
-          {/* Animated outer ring */}
-          <div className="absolute w-28 h-28 rounded-full border-4 border-gray-200"></div>
-          <div className="absolute w-28 h-28 rounded-full border-4 border-transparent border-t-gray-800 animate-spin"></div>
+        {/* Circular logo with animated spinner ring */}
+        <div className="relative inline-flex items-center justify-center w-32 h-32">
+          {/* Background ring */}
+          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
 
-          {/* Logo container */}
-          <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden animate-pulse">
+          {/* Animated spinner ring */}
+          <svg className="absolute inset-0 w-32 h-32 animate-spin" style={{ animationDuration: '1.5s' }}>
+            <circle
+              cx="64"
+              cy="64"
+              r="60"
+              fill="none"
+              stroke="url(#gradient)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray="120 280"
+            />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1e3a5f" />
+                <stop offset="100%" stopColor="#38bdf8" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Circular logo */}
+          <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden">
             {logo ? (
               <img
                 src={logo}
                 alt={name || 'Cargando'}
-                className="w-16 h-16 object-contain"
+                className="w-20 h-20 rounded-full object-cover"
               />
             ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl"></div>
+              <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full animate-pulse"></div>
             )}
           </div>
         </div>
@@ -48,7 +67,7 @@ function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
         </div>
 
         {/* Animated dots */}
-        <div className="flex justify-center gap-1 mt-4">
+        <div className="flex justify-center gap-1.5 mt-4">
           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
