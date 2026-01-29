@@ -12,9 +12,11 @@ interface Props {
   currency: string
   t: ThemeTranslations
   collapsible?: boolean
+  deliveryMethod?: 'pickup' | 'delivery'
+  shippingEnabled?: boolean
 }
 
-export default function OrderSummary({ items, totalPrice, shippingCost = 0, finalTotal, currency, t, collapsible = true }: Props) {
+export default function OrderSummary({ items, totalPrice, shippingCost = 0, finalTotal, currency, t, collapsible = true, deliveryMethod, shippingEnabled }: Props) {
   const displayTotal = finalTotal ?? totalPrice
   const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(!collapsible)
@@ -165,16 +167,13 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, fina
               <span style={{ color: theme.colors.textMuted }}>{t.subtotal}</span>
               <span style={{ color: theme.colors.text }}>{formatPrice(totalPrice, currency)}</span>
             </div>
-            {shippingCost > 0 && (
+            {/* Only show shipping line when delivery is selected */}
+            {deliveryMethod === 'delivery' && shippingEnabled && (
               <div className="flex justify-between items-center mt-1">
                 <span style={{ color: theme.colors.textMuted }}>{t.shipping}</span>
-                <span style={{ color: theme.colors.text }}>{formatPrice(shippingCost, currency)}</span>
-              </div>
-            )}
-            {shippingCost === 0 && finalTotal !== undefined && (
-              <div className="flex justify-between items-center mt-1">
-                <span style={{ color: theme.colors.textMuted }}>{t.shipping}</span>
-                <span style={{ color: theme.colors.accent }}>{t.freeShipping}</span>
+                <span style={{ color: shippingCost > 0 ? theme.colors.text : theme.colors.accent }}>
+                  {shippingCost > 0 ? formatPrice(shippingCost, currency) : t.freeShipping}
+                </span>
               </div>
             )}
             <div className="flex justify-between items-center mt-2 pt-2 border-t" style={{ borderColor: theme.colors.border }}>

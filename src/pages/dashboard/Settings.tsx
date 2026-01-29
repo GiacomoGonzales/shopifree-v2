@@ -143,7 +143,11 @@ export default function Settings() {
         instagram: instagram || null,
         facebook: facebook || null,
         tiktok: tiktok || null,
-        shipping,
+        shipping: {
+          enabled: shipping.enabled,
+          cost: shipping.cost || 0,
+          ...(shipping.freeAbove ? { freeAbove: shipping.freeAbove } : { freeAbove: null })
+        },
         updatedAt: new Date()
       })
       showToast(t('settings.toast.saved'), 'success')

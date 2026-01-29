@@ -203,6 +203,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                 currency={store.currency}
                 t={t}
                 collapsible={true}
+                deliveryMethod={data.delivery?.method}
+                shippingEnabled={store.shipping?.enabled}
               />
             </div>
           )}
