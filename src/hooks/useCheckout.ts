@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import type { Store, Order, OrderItem } from '../types'
 import type { CartItem } from './useCart'
 import { orderService } from '../lib/firebase'
@@ -108,22 +108,21 @@ interface UseCheckoutOptions {
 
 export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCheckoutOptions) {
   const [step, setStep] = useState<CheckoutStep>('customer')
-  const [data, setData] = useState<CheckoutData>({})
+  // Load saved customer data synchronously so it's available on first render
+  const [data, setData] = useState<CheckoutData>(() => {
+    const savedData = loadSavedCustomerData(store.id)
+    if (savedData) {
+      return {
+        customer: savedData.customer,
+        delivery: savedData.delivery
+      }
+    }
+    return {}
+  })
   const [order, setOrder] = useState<Order | null>(null)
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Load saved customer data on mount
-  useEffect(() => {
-    const savedData = loadSavedCustomerData(store.id)
-    if (savedData) {
-      setData({
-        customer: savedData.customer,
-        delivery: savedData.delivery
-      })
-    }
-  }, [store.id])
 
   // Calculate shipping cost based on store settings and delivery method
   const calculateShippingCost = useCallback((): number => {
