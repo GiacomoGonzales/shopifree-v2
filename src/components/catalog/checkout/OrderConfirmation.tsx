@@ -106,6 +106,7 @@ export default function OrderConfirmation({ order, whatsapp, onBackToStore, t }:
           {order.deliveryMethod === 'delivery' && order.deliveryAddress && (
             <span className="text-sm text-right" style={{ color: theme.colors.text }}>
               {order.deliveryAddress.street}
+              {order.deliveryAddress.state && `, ${order.deliveryAddress.state}`}
             </span>
           )}
         </div>

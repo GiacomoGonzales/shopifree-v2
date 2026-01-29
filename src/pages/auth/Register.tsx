@@ -6,6 +6,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { userService, storeService } from '../../lib/firebase'
 import { createSubdomain } from '../../lib/subdomain'
 import { BUSINESS_TYPES, type BusinessType } from '../../config/businessTypes'
+import { currencyByCountry } from '../../data/states'
 import LanguageSelector from '../../components/common/LanguageSelector'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
@@ -65,6 +66,7 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [storeName, setStoreName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [country, setCountry] = useState('PE')
   const [businessType, setBusinessType] = useState<BusinessType>('general')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -213,7 +215,8 @@ export default function Register() {
         name: storeName,
         subdomain,
         whatsapp,
-        currency: 'PEN',
+        currency: currencyByCountry[country] || 'USD',
+        location: { country },
         themeId: 'minimal',
         plan: isAdmin ? 'business' : 'free',
         businessType,
@@ -547,6 +550,28 @@ export default function Register() {
                   className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
                 <p className="mt-1 text-xs text-gray-500">{t('register.store.whatsappHint')}</p>
+              </div>
+
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                  {t('register.store.country')}
+                </label>
+                <select
+                  id="country"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+                >
+                  <option value="PE">{t('register.store.countries.PE')}</option>
+                  <option value="MX">{t('register.store.countries.MX')}</option>
+                  <option value="CO">{t('register.store.countries.CO')}</option>
+                  <option value="AR">{t('register.store.countries.AR')}</option>
+                  <option value="CL">{t('register.store.countries.CL')}</option>
+                  <option value="EC">{t('register.store.countries.EC')}</option>
+                  <option value="VE">{t('register.store.countries.VE')}</option>
+                  <option value="US">{t('register.store.countries.US')}</option>
+                  <option value="ES">{t('register.store.countries.ES')}</option>
+                </select>
               </div>
 
               <button

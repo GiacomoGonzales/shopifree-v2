@@ -770,6 +770,7 @@ export default function Orders() {
                       <span className="text-gray-500">{t('orders.address')}:</span>{' '}
                       <span className="font-medium">
                         {selectedOrder.deliveryAddress.street}, {selectedOrder.deliveryAddress.city}
+                        {selectedOrder.deliveryAddress.state && `, ${selectedOrder.deliveryAddress.state}`}
                         {selectedOrder.deliveryAddress.reference && ` (${selectedOrder.deliveryAddress.reference})`}
                       </span>
                     </p>

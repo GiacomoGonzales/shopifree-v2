@@ -158,6 +158,8 @@ export interface StoreShipping {
   enabled: boolean              // Si el envío tiene costo
   cost: number                  // Costo fijo de envío
   freeAbove?: number            // Envío gratis arriba de este monto (opcional)
+  pickupEnabled?: boolean       // Permitir retiro en tienda (default true)
+  deliveryEnabled?: boolean     // Permitir delivery a domicilio (default true)
 }
 
 // ============================================
@@ -356,6 +358,7 @@ export interface Order {
   // Delivery
   deliveryMethod?: 'pickup' | 'delivery'
   deliveryAddress?: {
+    state?: string              // Departamento/Estado/Provincia
     street: string
     city: string
     reference?: string

@@ -459,7 +459,12 @@
       }
     },
     "shipping": {
-      "title": "Shipping cost",
+      "title": "Delivery methods",
+      "pickupEnabled": "Allow store pickup",
+      "pickupHint": "Customers can pick up their order at your location",
+      "deliveryEnabled": "Allow home delivery",
+      "deliveryHint": "Customers can receive their order at their address",
+      "atLeastOneMethod": "You must have at least one delivery method active",
       "enableLabel": "Charge for home delivery",
       "enableHint": "If disabled, shipping will be free",
       "cost": "Shipping cost",

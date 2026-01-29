@@ -63,6 +63,7 @@ const saveCustomerData = (storeId: string, customer: CustomerData, delivery: Del
         method: delivery.method,
         ...(delivery.address && {
           address: {
+            ...(delivery.address.state && { state: delivery.address.state }),
             street: delivery.address.street,
             city: delivery.address.city,
             ...(delivery.address.reference && { reference: delivery.address.reference })
@@ -86,6 +87,7 @@ export interface CustomerData {
 export interface DeliveryData {
   method: 'pickup' | 'delivery'
   address?: {
+    state?: string
     street: string
     city: string
     reference?: string
@@ -258,9 +260,12 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     // Only add delivery address for delivery method
     if (data.delivery.method === 'delivery' && data.delivery.address) {
-      const address: { street: string; city: string; reference?: string } = {
+      const address: { state?: string; street: string; city: string; reference?: string } = {
         street: data.delivery.address.street,
         city: data.delivery.address.city
+      }
+      if (data.delivery.address.state) {
+        address.state = data.delivery.address.state
       }
       if (data.delivery.address.reference) {
         address.reference = data.delivery.address.reference
@@ -381,7 +386,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       message += `${labels.pickup}\n`
     } else if (order.deliveryMethod === 'delivery' && order.deliveryAddress) {
       message += `${labels.homeDelivery}\n`
-      message += `${order.deliveryAddress.street}, ${order.deliveryAddress.city}\n`
+      const addressParts = [order.deliveryAddress.street, order.deliveryAddress.city]
+      if (order.deliveryAddress.state) {
+        addressParts.push(order.deliveryAddress.state)
+      }
+      message += `${addressParts.join(', ')}\n`
       if (order.deliveryAddress.reference) {
         message += `${labels.ref}: ${order.deliveryAddress.reference}\n`
       }

@@ -67,7 +67,9 @@ export default function Settings() {
   const [shipping, setShipping] = useState<StoreShipping>({
     enabled: false,
     cost: 0,
-    freeAbove: undefined
+    freeAbove: undefined,
+    pickupEnabled: true,
+    deliveryEnabled: true
   })
 
   useEffect(() => {
@@ -146,7 +148,9 @@ export default function Settings() {
         shipping: {
           enabled: shipping.enabled,
           cost: shipping.cost || 0,
-          ...(shipping.freeAbove ? { freeAbove: shipping.freeAbove } : { freeAbove: null })
+          ...(shipping.freeAbove ? { freeAbove: shipping.freeAbove } : { freeAbove: null }),
+          pickupEnabled: shipping.pickupEnabled !== false,
+          deliveryEnabled: shipping.deliveryEnabled !== false
         },
         updatedAt: new Date()
       })
@@ -549,84 +553,145 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Shipping */}
+          {/* Shipping / Delivery Methods */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.shipping.title')}</h2>
 
             <div className="space-y-4">
-              {/* Enable shipping toggle */}
+              {/* Pickup toggle */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.enableLabel')}</p>
-                  <p className="text-sm text-gray-500">{t('settings.shipping.enableHint')}</p>
+                  <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.pickupEnabled')}</p>
+                  <p className="text-sm text-gray-500">{t('settings.shipping.pickupHint')}</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShipping({ ...shipping, enabled: !shipping.enabled })}
+                  onClick={() => {
+                    const newPickup = !(shipping.pickupEnabled !== false)
+                    if (!newPickup && shipping.deliveryEnabled === false) return
+                    setShipping({ ...shipping, pickupEnabled: newPickup })
+                  }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    shipping.enabled ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                    shipping.pickupEnabled !== false ? 'bg-[#38bdf8]' : 'bg-gray-200'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
-                      shipping.enabled ? 'translate-x-6' : 'translate-x-1'
+                      shipping.pickupEnabled !== false ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
               </div>
 
-              {/* Shipping cost */}
-              {shipping.enabled && (
+              {/* Delivery toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.deliveryEnabled')}</p>
+                  <p className="text-sm text-gray-500">{t('settings.shipping.deliveryHint')}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newDelivery = !(shipping.deliveryEnabled !== false)
+                    if (!newDelivery && shipping.pickupEnabled === false) return
+                    setShipping({ ...shipping, deliveryEnabled: newDelivery })
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    shipping.deliveryEnabled !== false ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
+                      shipping.deliveryEnabled !== false ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Validation message */}
+              {shipping.pickupEnabled === false && shipping.deliveryEnabled === false && (
+                <p className="text-sm text-red-500">{t('settings.shipping.atLeastOneMethod')}</p>
+              )}
+
+              {/* Shipping cost toggle - only relevant if delivery is enabled */}
+              {shipping.deliveryEnabled !== false && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      {t('settings.shipping.cost')}
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
-                        {currencySymbols[currency] || '$'}
-                      </span>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={shipping.cost || ''}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.]/g, '')
-                          setShipping({ ...shipping, cost: parseFloat(val) || 0 })
-                        }}
-                        placeholder="0.00"
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                      />
+                  <hr className="border-gray-100" />
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.enableLabel')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.shipping.enableHint')}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.costHint')}</p>
+                    <button
+                      type="button"
+                      onClick={() => setShipping({ ...shipping, enabled: !shipping.enabled })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        shipping.enabled ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
+                          shipping.enabled ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
 
-                  {/* Free shipping above */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      {t('settings.shipping.freeAbove')}
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
-                        {currencySymbols[currency] || '$'}
-                      </span>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={shipping.freeAbove || ''}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.]/g, '')
-                          setShipping({
-                            ...shipping,
-                            freeAbove: val ? parseFloat(val) : undefined
-                          })
-                        }}
-                        placeholder={t('settings.shipping.freeAbovePlaceholder')}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.freeAboveHint')}</p>
-                  </div>
+                  {/* Shipping cost */}
+                  {shipping.enabled && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                          {t('settings.shipping.cost')}
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                            {currencySymbols[currency] || '$'}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={shipping.cost || ''}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9.]/g, '')
+                              setShipping({ ...shipping, cost: parseFloat(val) || 0 })
+                            }}
+                            placeholder="0.00"
+                            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.costHint')}</p>
+                      </div>
+
+                      {/* Free shipping above */}
+                      <div>
+                        <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                          {t('settings.shipping.freeAbove')}
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                            {currencySymbols[currency] || '$'}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={shipping.freeAbove || ''}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9.]/g, '')
+                              setShipping({
+                                ...shipping,
+                                freeAbove: val ? parseFloat(val) : undefined
+                              })
+                            }}
+                            placeholder={t('settings.shipping.freeAbovePlaceholder')}
+                            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.freeAboveHint')}</p>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>

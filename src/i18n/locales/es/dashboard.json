@@ -460,7 +460,12 @@
       }
     },
     "shipping": {
-      "title": "Costo de envío",
+      "title": "Métodos de entrega",
+      "pickupEnabled": "Permitir retiro en tienda",
+      "pickupHint": "Los clientes pueden recoger su pedido en tu local",
+      "deliveryEnabled": "Permitir delivery a domicilio",
+      "deliveryHint": "Los clientes pueden recibir su pedido en su dirección",
+      "atLeastOneMethod": "Debes tener al menos un método de entrega activo",
       "enableLabel": "Cobrar envío a domicilio",
       "enableHint": "Si desactivas, el envío será gratis",
       "cost": "Costo de envío",
