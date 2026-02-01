@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, type JSX } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 
@@ -113,7 +114,7 @@ function CloseIcon() {
   )
 }
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
+const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 export default function DashboardLayout() {
   const { t } = useTranslation('dashboard')
@@ -139,7 +140,17 @@ export default function DashboardLayout() {
     { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
   ], [t, localePath])
 
-  const isAdmin = firebaseUser?.email === ADMIN_EMAIL
+  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+
+  // Set dark status bar text for dashboard (white/light background)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+        StatusBar.setStyle({ style: Style.Light })
+        StatusBar.setOverlaysWebView({ overlay: true })
+      })
+    }
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -182,6 +193,19 @@ export default function DashboardLayout() {
     <>
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-0.5 overflow-y-auto">
+        {isAdmin && (
+          <Link
+            to={localePath('/admin')}
+            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all mb-1 ${
+              location.pathname.startsWith(localePath('/admin'))
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20'
+                : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            Super Admin
+          </Link>
+        )}
         {navigation.map((item, index) => {
           // Render separator
           if (item === 'separator') {
@@ -269,13 +293,7 @@ export default function DashboardLayout() {
                 : user.firstName || user.email
               }
             </p>
-            {isAdmin ? (
-              <Link to={localePath('/admin')} className="text-xs text-gray-400 hover:text-[#2d6cb5] transition-colors">
-                Admin
-              </Link>
-            ) : user.firstName && (
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
-            )}
+            <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
           <button
             onClick={handleLogout}
@@ -293,18 +311,23 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-[#fafbfc]">
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-100 z-40 flex items-center justify-between px-4">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 -ml-2 text-gray-600 hover:text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
-        >
-          <MenuIcon />
-        </button>
-        <Link to={localePath('/dashboard')}>
-          <img src="/newlogo.png" alt="Shopifree" className="h-7" />
-        </Link>
-        <div className="w-10" /> {/* Spacer */}
+      {/* Mobile header - status bar area + header bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40">
+        {/* Status bar background - matches header seamlessly */}
+        <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
+        {/* Header bar */}
+        <div className="h-12 bg-white flex items-center justify-between px-4 border-b border-gray-100/80">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
+          >
+            <MenuIcon />
+          </button>
+          <Link to={localePath('/dashboard')}>
+            <img src="/newlogo.png" alt="Shopifree" className="h-6" />
+          </Link>
+          <div className="w-9" />
+        </div>
       </div>
 
       {/* Mobile sidebar overlay */}
@@ -322,8 +345,9 @@ export default function DashboardLayout() {
         }`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo + Close */}
-          <div className="flex items-center justify-between h-14 px-4 border-b border-gray-100">
+          {/* Safe area + Logo + Close */}
+          <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
+          <div className="flex items-center justify-between h-12 px-4 border-b border-gray-100/80">
             <Link to={localePath('/dashboard')} className="flex items-center gap-2">
               <img src="/newlogo.png" alt="Shopifree" className="h-7" />
             </Link>
@@ -354,7 +378,7 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:pl-64 pt-14 lg:pt-0">
+      <main className="lg:pl-64 lg:pt-0" style={{ paddingTop: 'calc(3rem + env(safe-area-inset-top))' }}>
         <div className="p-4 sm:p-6 lg:py-8 lg:px-8">
           <Outlet />
         </div>

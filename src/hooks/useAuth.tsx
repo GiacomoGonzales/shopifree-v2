@@ -6,8 +6,10 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInWithCredential
 } from 'firebase/auth'
+import { Capacitor } from '@capacitor/core'
 import { auth } from '../lib/firebase'
 import { userService, storeService } from '../lib/firebase'
 import type { User, Store } from '../types'
@@ -34,17 +36,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserData = async (fbUser: FirebaseUser) => {
     try {
+      console.log('loadUserData called for:', fbUser.uid, fbUser.email)
       // Load user data
       const userData = await userService.get(fbUser.uid)
+      console.log('userData loaded:', userData ? 'found' : 'null')
       setUser(userData)
 
       // Load store data
       const storeData = await storeService.getByOwner(fbUser.uid)
+      console.log('storeData loaded:', storeData ? 'found' : 'null')
       setStore(storeData)
     } catch (error) {
       console.error('Error loading user data:', error)
     }
   }
+
+  // Initialize Google Auth plugin on native platforms
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
+        GoogleAuth.initialize({
+          clientId: '610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true
+        })
+      })
+    }
+  }, [])
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
@@ -74,9 +92,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const loginWithGoogle = async (): Promise<FirebaseUser> => {
-    const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth, provider)
-    return result.user
+    if (Capacitor.isNativePlatform()) {
+      // Native iOS/Android: use Capacitor Google Auth plugin
+      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth')
+      const googleUser = await GoogleAuth.signIn()
+      console.log('Google Sign-In result keys:', Object.keys(googleUser))
+      const idToken = googleUser.authentication?.idToken || (googleUser as any).idToken
+      const accessToken = googleUser.authentication?.accessToken
+      if (!idToken) {
+        throw new Error('No idToken received from Google Sign-In')
+      }
+      console.log('Tokens found, signing into Firebase...')
+      // Use both idToken and accessToken to avoid nonce verification hang
+      const credential = GoogleAuthProvider.credential(idToken, accessToken)
+      console.log('Credential created, calling signInWithCredential...')
+      const result = await signInWithCredential(auth, credential)
+      console.log('Firebase sign-in success:', result.user.uid, result.user.email)
+      return result.user
+    } else {
+      // Web: use Firebase popup
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      return result.user
+    }
   }
 
   const logout = async () => {

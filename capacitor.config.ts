@@ -27,6 +27,12 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: 'body',
       resizeOnFullScreen: true
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com',
+      iosClientId: '610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true
     }
   },
   ios: {
