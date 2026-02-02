@@ -143,21 +143,29 @@ export default function DashboardLayout() {
 
   const isNative = Capacitor.isNativePlatform()
 
+  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+
   // Dynamic navigation with translations - flat structure with separators
-  const navigation: NavElement[] = useMemo(() => [
-    { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
-    { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
-    { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
-    { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
-    { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
-    'separator',
-    { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
-    { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
-    { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
-    { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
-    'separator',
-    { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
-  ], [t, localePath])
+  const navigation: NavElement[] = useMemo(() => {
+    const items: NavElement[] = [
+      { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
+      { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
+      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
+      { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
+      { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
+      'separator',
+      { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
+      { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
+      { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
+      { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
+      'separator',
+      { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
+    ]
+    if (isAdmin) {
+      items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
+    }
+    return items
+  }, [t, localePath, isAdmin])
 
   // Bottom tab bar items (first 4 primary + "More")
   const tabBarItems = useMemo(() => [
@@ -168,8 +176,6 @@ export default function DashboardLayout() {
   ], [t, localePath])
 
   // "More" sheet items - everything not in the tab bar
-  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
-
   const moreItems: NavItem[] = useMemo(() => {
     const items: NavItem[] = [
       { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
