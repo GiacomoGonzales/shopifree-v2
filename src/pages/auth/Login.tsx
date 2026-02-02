@@ -57,11 +57,11 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true)
+      setError('')
       await loginWithGoogle()
-      // useEffect will handle navigation based on store status
+      // Keep loading=true — useEffect will handle navigation when auth state updates
     } catch (err: unknown) {
       setError((err as Error).message || t('login.googleError'))
-    } finally {
       setLoading(false)
     }
   }
@@ -75,6 +75,16 @@ export default function Login() {
         <div className="absolute top-0 -right-40 w-[400px] h-[400px] bg-[#1e3a5f] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute -bottom-40 left-1/2 w-[400px] h-[400px] bg-[#2d6cb5] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
       </div>
+
+      {/* Loading overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#fafbfc]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin"></div>
+            <p className="text-sm text-[#1e3a5f] font-medium">{t('login.submitting')}</p>
+          </div>
+        </div>
+      )}
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center items-center gap-4 mb-2">
