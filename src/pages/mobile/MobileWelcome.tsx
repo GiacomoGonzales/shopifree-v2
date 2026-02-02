@@ -1,179 +1,172 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collection, getDocs } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { useLanguage } from '../../hooks/useLanguage'
-import { StatusBar, Style } from '@capacitor/status-bar'
+import { useAuth } from '../../hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
-
-interface DemoStore {
-  id: string
-  name: string
-  subdomain: string
-  theme: string
-  screenshot: string
-  color: string
-  order: number
-}
-
-const fallbackStores: DemoStore[] = [
-  { id: '1', name: 'Alien Store', subdomain: 'alienstore', theme: 'Urban', screenshot: '/demos/alienstore.jpg', color: '#CCFF00', order: 0 },
-  { id: '2', name: 'La Braseria del Abuelo', subdomain: 'la-braseria-del-abuelo', theme: 'Bistro', screenshot: '/demos/braseria.jpg', color: '#B87333', order: 1 },
-]
 
 export default function MobileWelcome() {
   const navigate = useNavigate()
   const { localePath } = useLanguage()
-  const [stores, setStores] = useState<DemoStore[]>(fallbackStores)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const { firebaseUser, store, loading } = useAuth()
+  const splashHidden = useRef(false)
+  const [fadeOut, setFadeOut] = useState(false)
+  const [transitionDone, setTransitionDone] = useState(false)
 
+  // Once auth is resolved, set the correct status bar, hide native splash, then fade out web logo
   useEffect(() => {
-    // Configure status bar for native
-    if (Capacitor.isNativePlatform()) {
-      StatusBar.setStyle({ style: Style.Dark })
-      StatusBar.setBackgroundColor({ color: '#0f172a' })
-    }
+    if (loading) return
+    if (splashHidden.current) return
 
-    // Fetch demo stores
-    const fetchStores = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, 'demoStores'))
-        if (!snapshot.empty) {
-          const fetched = snapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() } as DemoStore))
-            .filter(s => s.screenshot && s.subdomain)
-            .sort((a, b) => a.order - b.order)
-          if (fetched.length > 0) setStores(fetched)
-        }
-      } catch (e) {
-        console.error('Error fetching stores:', e)
+    const isNative = Capacitor.isNativePlatform()
+    if (!isNative) return
+
+    const setup = async () => {
+      const { StatusBar, Style } = await import('@capacitor/status-bar')
+      const { SplashScreen } = await import('@capacitor/splash-screen')
+
+      if (firebaseUser) {
+        // Going to dashboard - dark text status bar
+        StatusBar.setStyle({ style: Style.Light })
+        StatusBar.setOverlaysWebView({ overlay: false })
+        StatusBar.setBackgroundColor({ color: '#ffffff' })
+      } else {
+        // Staying on welcome - light text status bar
+        StatusBar.setStyle({ style: Style.Dark })
+        StatusBar.setOverlaysWebView({ overlay: false })
+        StatusBar.setBackgroundColor({ color: '#0a1628' })
+      }
+
+      await new Promise(r => setTimeout(r, 100))
+      splashHidden.current = true
+      // Hide native splash - web transition screen is identical underneath
+      SplashScreen.hide({ fadeOutDuration: 0 })
+
+      if (firebaseUser) {
+        // Start fade-out of the web logo screen
+        await new Promise(r => setTimeout(r, 200))
+        setFadeOut(true)
+        // Wait for fade animation to finish, then navigate
+        await new Promise(r => setTimeout(r, 400))
+        setTransitionDone(true)
       }
     }
-    fetchStores()
-  }, [])
 
-  // Handle scroll to update active index
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const scrollLeft = scrollRef.current.scrollLeft
-      const cardWidth = 200 + 16 // card width + gap
-      const newIndex = Math.round(scrollLeft / cardWidth)
-      setActiveIndex(Math.min(newIndex, stores.length - 1))
+    setup()
+  }, [loading, firebaseUser])
+
+  // Redirect authenticated users after transition completes
+  useEffect(() => {
+    if (!transitionDone) return
+    if (store) {
+      navigate(localePath('/dashboard'), { replace: true })
+    } else {
+      navigate(localePath('/register'), { replace: true })
     }
+  }, [transitionDone, store, navigate, localePath])
+
+  // Show transition screen: white bg with centered logo (matches splash exactly)
+  if (loading || (firebaseUser && !transitionDone)) {
+    return (
+      <div className="fixed inset-0 bg-white flex items-center justify-center">
+        <img
+          src="/apple-touch-icon.png"
+          alt=""
+          className={`w-16 h-16 transition-opacity duration-400 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}
+        />
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] flex flex-col">
-      {/* Safe area top padding */}
-      <div className="h-[env(safe-area-inset-top)]" />
-
-      {/* Header */}
-      <div className="flex-shrink-0 pt-8 pb-4 px-6 text-center">
-        <img
-          src="/newlogo.png"
-          alt="Shopifree"
-          className="h-10 mx-auto brightness-0 invert mb-4"
-        />
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Tu tienda online gratis
-        </h1>
-        <p className="text-slate-400 text-sm">
-          Crea tu catalogo digital en minutos y empieza a vender hoy
-        </p>
+    <div className="fixed inset-0 bg-[#0a1628] flex flex-col">
+      {/* Background collage */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Image grid - 3 columns, fills screen */}
+        <div className="absolute inset-0 grid grid-cols-3 gap-1 opacity-40">
+          <div className="flex flex-col gap-1">
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/alienstore.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/braseria.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/tecnomax.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 mt-8">
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/braseria.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/tecnomax.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/alienstore.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 -mt-4">
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/tecnomax.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/alienstore.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <img src="/demos/braseria.jpg" alt="" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
+        {/* Gradient overlay - dark at top and bottom, lighter in middle */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1628] via-[#0a1628]/60 to-[#0a1628]" />
       </div>
 
-      {/* Demo Stores Carousel */}
-      <div className="flex-1 flex flex-col justify-center py-6">
-        <p className="text-center text-xs text-slate-500 mb-4 uppercase tracking-wider">
-          Tiendas creadas con Shopifree
-        </p>
-
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex gap-4 overflow-x-auto px-6 pb-4 snap-x snap-mandatory scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {stores.map((store, index) => (
-            <a
-              key={store.id}
-              href={`https://${store.subdomain}.shopifree.app`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 snap-center"
-            >
-              <div
-                className={`w-[200px] rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${
-                  index === activeIndex ? 'scale-100 opacity-100' : 'scale-95 opacity-70'
-                }`}
-                style={{
-                  boxShadow: index === activeIndex ? `0 20px 60px -15px ${store.color}80` : undefined
-                }}
-              >
-                {/* Phone Frame */}
-                <div className="bg-gray-900 rounded-3xl p-1.5">
-                  <div className="bg-black rounded-[20px] overflow-hidden">
-                    {/* Notch */}
-                    <div className="h-6 bg-black flex items-center justify-center">
-                      <div className="w-16 h-4 bg-black rounded-full" />
-                    </div>
-                    {/* Screen */}
-                    <div className="aspect-[9/16] relative">
-                      <img
-                        src={store.screenshot}
-                        alt={store.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-
-        {/* Dots indicator */}
-        <div className="flex justify-center gap-1.5 mt-4">
-          {stores.map((_, index) => (
-            <div
-              key={index}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                index === activeIndex
-                  ? 'w-6 bg-[#38bdf8]'
-                  : 'w-1.5 bg-slate-600'
-              }`}
+      {/* Content - centered vertically */}
+      <div className="relative flex-1 flex flex-col justify-between px-6 py-10">
+        {/* Top section - Logo */}
+        <div className="flex-shrink-0 pt-4">
+          <div className="flex items-center justify-center gap-2.5">
+            <img
+              src="/newlogo.png"
+              alt="Shopifree"
+              className="h-8 brightness-0 invert"
             />
-          ))}
+          </div>
+        </div>
+
+        {/* Middle section - Hero text */}
+        <div className="flex-1 flex flex-col items-center justify-center -mt-8">
+          <h1 className="text-[2rem] leading-tight font-extrabold text-white text-center tracking-tight">
+            Crea tu tienda{'\n'}
+            <span className="text-[#38bdf8]">online gratis</span>
+          </h1>
+          <p className="text-slate-400 text-[15px] text-center mt-3 max-w-[280px] leading-relaxed">
+            Catalogo digital + ventas por WhatsApp.
+            Sin comisiones. En minutos.
+          </p>
+        </div>
+
+        {/* Bottom section - CTAs */}
+        <div className="flex-shrink-0 space-y-3 pb-2">
+          <button
+            onClick={() => navigate(localePath('/register'))}
+            className="w-full py-[14px] bg-[#38bdf8] text-[#0a1628] font-bold text-[15px] rounded-2xl active:scale-[0.98] transition-transform"
+          >
+            Empezar gratis
+          </button>
+
+          <button
+            onClick={() => navigate(localePath('/login'))}
+            className="w-full py-[14px] bg-white/10 text-white font-semibold text-[15px] rounded-2xl border border-white/15 active:bg-white/15 transition-colors backdrop-blur-sm"
+          >
+            Ya tengo cuenta
+          </button>
+
+          <p className="text-center text-[11px] text-slate-500 pt-1">
+            Sin tarjeta de credito. Gratis para siempre.
+          </p>
         </div>
       </div>
-
-      {/* CTA Section */}
-      <div className="flex-shrink-0 px-6 pb-8">
-        {/* Main CTA */}
-        <button
-          onClick={() => navigate(localePath('/register'))}
-          className="w-full py-4 bg-[#38bdf8] text-white font-semibold text-lg rounded-2xl shadow-lg shadow-[#38bdf8]/30 active:scale-[0.98] transition-transform"
-        >
-          Crear mi tienda gratis
-        </button>
-
-        {/* Secondary CTA */}
-        <button
-          onClick={() => navigate(localePath('/login'))}
-          className="w-full py-4 mt-3 bg-transparent text-slate-300 font-medium rounded-2xl border border-slate-700 active:bg-slate-800 transition-colors"
-        >
-          Ya tengo cuenta
-        </button>
-
-        {/* Terms */}
-        <p className="text-center text-xs text-slate-500 mt-4">
-          Al registrarte aceptas nuestros terminos y condiciones
-        </p>
-      </div>
-
-      {/* Safe area bottom padding */}
-      <div className="h-[env(safe-area-inset-bottom)]" />
     </div>
   )
 }

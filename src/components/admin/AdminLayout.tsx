@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
+const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 // Icons
 function DashboardIcon() {
@@ -72,7 +72,7 @@ export default function AdminLayout() {
 
   // Check admin access
   useEffect(() => {
-    if (!loading && (!firebaseUser || firebaseUser.email !== ADMIN_EMAIL)) {
+    if (!loading && (!firebaseUser || !ADMIN_EMAILS.includes(firebaseUser.email || ''))) {
       navigate(localePath('/'))
     }
   }, [firebaseUser, loading, navigate, localePath])
@@ -104,7 +104,7 @@ export default function AdminLayout() {
     )
   }
 
-  if (!firebaseUser || firebaseUser.email !== ADMIN_EMAIL) {
+  if (!firebaseUser || !ADMIN_EMAILS.includes(firebaseUser.email || '')) {
     return null
   }
 

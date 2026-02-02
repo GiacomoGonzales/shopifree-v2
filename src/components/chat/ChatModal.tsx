@@ -1,0 +1,231 @@
+import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '../../hooks/useAuth'
+import { chatService, type ChatMessage } from '../../lib/chatService'
+
+interface ChatModalProps {
+  open: boolean
+  onClose: () => void
+}
+
+export default function ChatModal({ open, onClose }: ChatModalProps) {
+  const { firebaseUser, store } = useAuth()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [chatId, setChatId] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Initialize chat and subscribe to messages
+  useEffect(() => {
+    if (!open || !store || !firebaseUser) return
+
+    let unsubMessages: (() => void) | null = null
+
+    const init = async () => {
+      const chat = await chatService.getOrCreateChat(
+        store.id,
+        store.name,
+        firebaseUser.uid,
+        firebaseUser.email || ''
+      )
+      setChatId(chat.id)
+
+      // Mark as read when opening
+      chatService.markAsRead(chat.id, 'user')
+
+      // Subscribe to messages
+      unsubMessages = chatService.subscribeToMessages(chat.id, (msgs) => {
+        setMessages(msgs)
+      })
+    }
+
+    init()
+
+    return () => {
+      if (unsubMessages) unsubMessages()
+    }
+  }, [open, store, firebaseUser])
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  // Mark as read when receiving new messages while chat is open
+  useEffect(() => {
+    if (open && chatId && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1]
+      if (lastMsg.senderType === 'admin') {
+        chatService.markAsRead(chatId, 'user')
+      }
+    }
+  }, [open, chatId, messages])
+
+  // Focus input when opened
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 300)
+    }
+  }, [open])
+
+  const handleSend = async () => {
+    if (!text.trim() || !chatId || !firebaseUser || sending) return
+
+    const msg = text.trim()
+    setText('')
+    setSending(true)
+
+    try {
+      await chatService.sendMessage(chatId, msg, firebaseUser.uid, 'user')
+    } catch (err) {
+      console.error('Error sending message:', err)
+      setText(msg) // Restore text on error
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatDateSeparator = (date: Date) => {
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) return 'Hoy'
+    if (date.toDateString() === yesterday.toDateString()) return 'Ayer'
+    return date.toLocaleDateString([], { day: 'numeric', month: 'short' })
+  }
+
+  // Group messages by date
+  const groupedMessages: { date: string; messages: ChatMessage[] }[] = []
+  messages.forEach((msg) => {
+    const dateStr = msg.createdAt.toDateString()
+    const last = groupedMessages[groupedMessages.length - 1]
+    if (last && last.date === dateStr) {
+      last.messages.push(msg)
+    } else {
+      groupedMessages.push({ date: dateStr, messages: [msg] })
+    }
+  })
+
+  return (
+    <>
+      {/* Backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-[60] transition-opacity"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Chat panel */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+          open ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        style={{ height: '75vh', maxHeight: '600px' }}
+      >
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Soporte Shopifree</p>
+              <p className="text-[11px] text-gray-500">Te responderemos lo antes posible</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center px-6">
+              <div className="w-14 h-14 rounded-full bg-[#007AFF]/10 flex items-center justify-center mb-3">
+                <svg className="w-7 h-7 text-[#007AFF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-800">Escríbenos tu consulta</p>
+              <p className="text-xs text-gray-500 mt-1">Estamos aquí para ayudarte</p>
+            </div>
+          )}
+
+          {groupedMessages.map((group) => (
+            <div key={group.date}>
+              {/* Date separator */}
+              <div className="flex items-center justify-center my-3">
+                <span className="text-[11px] text-gray-400 bg-gray-50 px-3 py-0.5 rounded-full">
+                  {formatDateSeparator(group.messages[0].createdAt)}
+                </span>
+              </div>
+
+              {group.messages.map((msg) => {
+                const isUser = msg.senderType === 'user'
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex mb-1.5 ${isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] px-3.5 py-2 rounded-2xl ${
+                        isUser
+                          ? 'bg-[#007AFF] text-white rounded-br-md'
+                          : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                      }`}
+                    >
+                      <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                      <p className={`text-[10px] mt-0.5 ${isUser ? 'text-white/60' : 'text-gray-400'} text-right`}>
+                        {formatTime(msg.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="flex-shrink-0 border-t border-gray-100 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!text.trim() || sending}
+              className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
+            >
+              <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

@@ -25,7 +25,11 @@
       "Bash(del:*)",
       "Bash(git fetch:*)",
       "WebFetch(domain:unsplash.com)",
-      "Bash(npx firebase deploy --only firestore:rules)"
+      "Bash(npx firebase deploy --only firestore:rules)",
+      "Bash(pod install)",
+      "Bash(test:*)",
+      "Bash(npx cap sync:*)",
+      "Bash(node -e \"\nconst fs = require(''fs'');\nconst content = fs.readFileSync(''/Users/valeryrutte/Desktop/Shopifree/shopifree-v2/dist/assets/index-lcQu4-aQ.js'', ''utf8'');\nconst matches = content.match(/admin[^\"\"]*shopifree[^\"\"]*|giiacomo[^\"\"]*gmail/gi);\nconsole.log(matches);\n\")"
     ]
   }
 }

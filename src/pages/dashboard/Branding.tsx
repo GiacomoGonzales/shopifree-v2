@@ -766,7 +766,7 @@ export default function Branding() {
                 >
                   {/* Theme Preview */}
                   <div
-                    className="aspect-[3/4] p-3 flex flex-col relative"
+                    className="aspect-square p-3 flex flex-col relative"
                     style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
                   >
                     {/* Mini header */}
@@ -781,7 +781,7 @@ export default function Branding() {
                       />
                     </div>
                     {/* Mini product grid */}
-                    <div className="flex-1 grid grid-cols-2 gap-1">
+                    <div className="grid grid-cols-2 gap-1">
                       {[1, 2, 3, 4].map((i) => (
                         <div
                           key={i}
@@ -895,7 +895,7 @@ export default function Branding() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2">{theme.description}</p>
+                    <p className="text-xs text-gray-500 truncate">{theme.description}</p>
                   </div>
                 </button>
 
