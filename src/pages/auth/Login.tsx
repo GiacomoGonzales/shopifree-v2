@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import LanguageSelector from '../../components/common/LanguageSelector'
@@ -14,6 +15,17 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login, loginWithGoogle, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Status bar for login page (light background = dark text)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+        StatusBar.setStyle({ style: Style.Light })
+        StatusBar.setOverlaysWebView({ overlay: false })
+        StatusBar.setBackgroundColor({ color: '#fafbfc' })
+      })
+    }
+  }, [])
 
   // Redirect authenticated users
   useEffect(() => {
@@ -134,7 +146,8 @@ export default function Login() {
 
             <button
               onClick={handleGoogleLogin}
-              className="mt-4 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
+              disabled={loading}
+              className="mt-4 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

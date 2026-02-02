@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
@@ -426,21 +427,23 @@ export default function ProductForm() {
             {isEditing ? t('productForm.editDescription') : t('productForm.newDescription')}
           </p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => navigate(localePath('/dashboard/products'))}
-            className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
-          >
-            {t('productForm.cancel')}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving || !name || !price}
-            className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-          >
-            {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
-          </button>
-        </div>
+        {!Capacitor.isNativePlatform() && (
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate(localePath('/dashboard/products'))}
+              className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+            >
+              {t('productForm.cancel')}
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving || !name || !price}
+              className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+            >
+              {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
+            </button>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -989,6 +992,25 @@ export default function ProductForm() {
           </div>
         </div>
       </form>
+
+      {/* Native: sticky bottom action bar */}
+      {Capacitor.isNativePlatform() && (
+        <div className="sticky bottom-0 -mx-4 mt-4 bg-white border-t border-gray-200/60 px-4 py-3 flex gap-3">
+          <button
+            onClick={() => navigate(localePath('/dashboard/products'))}
+            className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+          >
+            {t('productForm.cancel')}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || !name || !price}
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+          >
+            {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

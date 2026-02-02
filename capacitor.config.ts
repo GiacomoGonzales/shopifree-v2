@@ -4,6 +4,7 @@ const config: CapacitorConfig = {
   appId: 'app.shopifree.mobile',
   appName: 'Shopifree',
   webDir: 'dist',
+  backgroundColor: '#ffffff',
   server: {
     // For production, comment out the url line
     // url: 'http://192.168.1.X:5173', // For dev testing on device
@@ -12,9 +13,9 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
-      backgroundColor: '#0f172a',
+      launchShowDuration: 10000,
+      launchAutoHide: false,
+      backgroundColor: '#ffffff',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
       splashFullScreen: true,
@@ -22,10 +23,10 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'LIGHT',
-      backgroundColor: '#0f172a'
+      backgroundColor: '#ffffff'
     },
     Keyboard: {
-      resize: 'body',
+      resize: 'native',
       resizeOnFullScreen: true
     },
     GoogleAuth: {

@@ -7,7 +7,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Force white background on window and root view so safe areas match the tab bar
+        DispatchQueue.main.async {
+            self.window?.backgroundColor = .white
+            self.window?.rootViewController?.view.backgroundColor = .white
+        }
         return true
     }
 
