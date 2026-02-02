@@ -114,20 +114,22 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - only on mobile */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-[60] transition-opacity"
+          className="fixed inset-0 bg-black/40 z-[60] transition-opacity lg:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Chat panel */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
-          open ? 'translate-y-0' : 'translate-y-full'
-        }`}
-        style={{ height: '75vh', maxHeight: '600px' }}
+        className={`fixed z-[60] bg-white shadow-2xl flex flex-col transition-all duration-300 ease-out
+          bottom-0 left-0 right-0 rounded-t-2xl
+          lg:bottom-6 lg:right-6 lg:left-auto lg:w-[380px] lg:rounded-2xl
+          ${open ? 'translate-y-0 lg:scale-100 lg:opacity-100' : 'translate-y-full lg:translate-y-0 lg:scale-95 lg:opacity-0 lg:pointer-events-none'}
+        `}
+        style={{ height: '75vh', maxHeight: '520px' }}
       >
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100">

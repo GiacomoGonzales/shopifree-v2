@@ -100,7 +100,8 @@ function UserIcon({ active }: { active?: boolean }) {
 function ChatIcon({ active }: { active?: boolean }) {
   return (
     <svg className="w-5 h-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 1.8} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" />
+      {!active && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 10h.01M12 10h.01M15 10h.01" />}
     </svg>
   )
 }
