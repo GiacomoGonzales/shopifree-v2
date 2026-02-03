@@ -1,6 +1,7 @@
 import {
-  collection, doc, getDoc, setDoc, addDoc, updateDoc,
-  query, orderBy, onSnapshot, serverTimestamp,
+  collection, doc, getDoc, addDoc, updateDoc,
+  query, orderBy, where, onSnapshot, serverTimestamp, limit,
+  getDocs,
   type Unsubscribe
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -19,6 +20,7 @@ export interface Chat {
   storeName: string
   userId: string
   userEmail: string
+  status: 'active' | 'closed'
   lastMessage: string
   lastMessageAt: Date
   lastMessageBy: 'user' | 'admin'
@@ -27,27 +29,34 @@ export interface Chat {
   createdAt: Date
 }
 
-export const chatService = {
-  // Get or create a chat for a store
-  async getOrCreateChat(storeId: string, storeName: string, userId: string, userEmail: string): Promise<Chat> {
-    const chatRef = doc(db, 'chats', storeId)
-    const chatSnap = await getDoc(chatRef)
+function docToChat(docSnap: { id: string; data: () => Record<string, any> }): Chat {
+  const data = docSnap.data()
+  return {
+    id: docSnap.id,
+    storeId: data.storeId,
+    storeName: data.storeName,
+    userId: data.userId,
+    userEmail: data.userEmail,
+    status: data.status || 'active',
+    lastMessage: data.lastMessage || '',
+    lastMessageAt: data.lastMessageAt?.toDate?.() || new Date(),
+    lastMessageBy: data.lastMessageBy || 'user',
+    unreadByAdmin: data.unreadByAdmin || 0,
+    unreadByUser: data.unreadByUser || 0,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+  }
+}
 
-    if (chatSnap.exists()) {
-      const data = chatSnap.data()
-      return {
-        id: chatSnap.id,
-        storeId: data.storeId,
-        storeName: data.storeName,
-        userId: data.userId,
-        userEmail: data.userEmail,
-        lastMessage: data.lastMessage || '',
-        lastMessageAt: data.lastMessageAt?.toDate?.() || new Date(),
-        lastMessageBy: data.lastMessageBy || 'user',
-        unreadByAdmin: data.unreadByAdmin || 0,
-        unreadByUser: data.unreadByUser || 0,
-        createdAt: data.createdAt?.toDate?.() || new Date(),
-      }
+export const chatService = {
+  // Get active chat or create a new one for a store
+  async getOrCreateChat(storeId: string, storeName: string, userId: string, userEmail: string): Promise<Chat> {
+    // Look for an existing active chat for this store
+    const chatsRef = collection(db, 'chats')
+    const q = query(chatsRef, where('storeId', '==', storeId), where('status', '==', 'active'), limit(1))
+    const snapshot = await getDocs(q)
+
+    if (!snapshot.empty) {
+      return docToChat(snapshot.docs[0])
     }
 
     // Create new chat
@@ -56,6 +65,7 @@ export const chatService = {
       storeName,
       userId,
       userEmail,
+      status: 'active' as const,
       lastMessage: '',
       lastMessageAt: serverTimestamp(),
       lastMessageBy: 'user' as const,
@@ -63,14 +73,24 @@ export const chatService = {
       unreadByUser: 0,
       createdAt: serverTimestamp(),
     }
-    await setDoc(chatRef, chatData)
+    const docRef = await addDoc(chatsRef, chatData)
 
     return {
-      id: storeId,
+      id: docRef.id,
       ...chatData,
       lastMessageAt: new Date(),
       createdAt: new Date(),
     }
+  },
+
+  // Close a chat conversation
+  async closeChat(chatId: string) {
+    const chatRef = doc(db, 'chats', chatId)
+    await updateDoc(chatRef, {
+      status: 'closed',
+      unreadByAdmin: 0,
+      unreadByUser: 0,
+    })
   },
 
   // Send a message
@@ -92,13 +112,11 @@ export const chatService = {
     }
 
     if (senderType === 'user') {
-      // Increment unread for admin
       const chatSnap = await getDoc(chatRef)
       const current = chatSnap.data()?.unreadByAdmin || 0
       updateData.unreadByAdmin = current + 1
       updateData.unreadByUser = 0
     } else {
-      // Increment unread for user
       const chatSnap = await getDoc(chatRef)
       const current = chatSnap.data()?.unreadByUser || 0
       updateData.unreadByUser = current + 1
@@ -128,50 +146,37 @@ export const chatService = {
     })
   },
 
-  // Subscribe to all chats (for admin)
+  // Subscribe to active chats (for admin)
   subscribeToChats(callback: (chats: Chat[]) => void): Unsubscribe {
     const chatsRef = collection(db, 'chats')
-    const q = query(chatsRef, orderBy('lastMessageAt', 'desc'))
+    const q = query(chatsRef, where('status', '==', 'active'), orderBy('lastMessageAt', 'desc'))
 
     return onSnapshot(q, (snapshot) => {
       const chats: Chat[] = snapshot.docs
-        .filter(doc => doc.data().lastMessage) // Only show chats with messages
-        .map(doc => {
-          const data = doc.data()
-          return {
-            id: doc.id,
-            storeId: data.storeId,
-            storeName: data.storeName,
-            userId: data.userId,
-            userEmail: data.userEmail,
-            lastMessage: data.lastMessage || '',
-            lastMessageAt: data.lastMessageAt?.toDate?.() || new Date(),
-            lastMessageBy: data.lastMessageBy || 'user',
-            unreadByAdmin: data.unreadByAdmin || 0,
-            unreadByUser: data.unreadByUser || 0,
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-          }
-        })
+        .filter(doc => doc.data().lastMessage)
+        .map(doc => docToChat(doc))
       callback(chats)
     })
   },
 
-  // Subscribe to unread count for a specific chat (for user bubble badge)
-  subscribeToUnreadCount(chatId: string, callback: (count: number) => void): Unsubscribe {
-    const chatRef = doc(db, 'chats', chatId)
-    return onSnapshot(chatRef, (snap) => {
-      if (snap.exists()) {
-        callback(snap.data().unreadByUser || 0)
+  // Subscribe to unread count for a store's active chat (for user bubble badge)
+  subscribeToUnreadCount(storeId: string, callback: (count: number) => void): Unsubscribe {
+    const chatsRef = collection(db, 'chats')
+    const q = query(chatsRef, where('storeId', '==', storeId), where('status', '==', 'active'), limit(1))
+    return onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        callback(snapshot.docs[0].data().unreadByUser || 0)
       } else {
         callback(0)
       }
     })
   },
 
-  // Subscribe to total unread count across all chats (for admin badge)
+  // Subscribe to total unread count across active chats (for admin badge)
   subscribeToTotalUnread(callback: (count: number) => void): Unsubscribe {
     const chatsRef = collection(db, 'chats')
-    return onSnapshot(query(chatsRef), (snapshot) => {
+    const q = query(chatsRef, where('status', '==', 'active'))
+    return onSnapshot(q, (snapshot) => {
       let total = 0
       snapshot.docs.forEach(doc => {
         total += doc.data().unreadByAdmin || 0

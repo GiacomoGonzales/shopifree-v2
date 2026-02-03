@@ -134,5 +134,27 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Support chats (auto-generated IDs, userId field for ownership)
+    match /chats/{chatId} {
+      function isChatOwner() {
+        return isAuthenticated() && resource.data.userId == request.auth.uid;
+      }
+      function isChatCreator() {
+        return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      }
+
+      allow read: if isChatOwner() || isAdmin();
+      allow create: if isChatCreator();
+      allow update: if isChatOwner() || isAdmin();
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if get(/databases/$(database)/documents/chats/$(chatId)).data.userId == request.auth.uid || isAdmin();
+        allow create: if get(/databases/$(database)/documents/chats/$(chatId)).data.userId == request.auth.uid || isAdmin();
+        allow update, delete: if false;
+      }
+    }
   }
 }

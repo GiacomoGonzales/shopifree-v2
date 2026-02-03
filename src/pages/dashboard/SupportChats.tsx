@@ -9,6 +9,7 @@ export default function SupportChats() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const [closing, setClosing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -56,6 +57,20 @@ export default function SupportChats() {
     } finally {
       setSending(false)
       inputRef.current?.focus()
+    }
+  }
+
+  const handleCloseChat = async () => {
+    if (!selectedChat || closing) return
+    setClosing(true)
+    try {
+      await chatService.closeChat(selectedChat.id)
+      setSelectedChat(null)
+      setMessages([])
+    } catch (err) {
+      console.error('Error closing chat:', err)
+    } finally {
+      setClosing(false)
     }
   }
 
@@ -186,10 +201,17 @@ export default function SupportChats() {
                       {selectedChat.storeName[0]?.toUpperCase()}
                     </span>
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-semibold text-gray-900">{selectedChat.storeName}</p>
                     <p className="text-[11px] text-gray-500">{selectedChat.userEmail}</p>
                   </div>
+                  <button
+                    onClick={handleCloseChat}
+                    disabled={closing}
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {closing ? 'Cerrando...' : 'Cerrar chat'}
+                  </button>
                 </div>
 
                 {/* Messages */}

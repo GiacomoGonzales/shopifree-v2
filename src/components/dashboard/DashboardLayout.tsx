@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import ChatBubble from '../chat/ChatBubble'
+import { chatService } from '../../lib/chatService'
 
 // Tipos para la navegacion
 interface NavItem {
@@ -144,6 +145,14 @@ export default function DashboardLayout() {
   const isNative = Capacitor.isNativePlatform()
 
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const [totalUnread, setTotalUnread] = useState(0)
+
+  // Subscribe to total unread chat count for admin
+  useEffect(() => {
+    if (!isAdmin) return
+    const unsub = chatService.subscribeToTotalUnread(setTotalUnread)
+    return () => unsub()
+  }, [isAdmin])
 
   // Dynamic navigation with translations - flat structure with separators
   const navigation: NavElement[] = useMemo(() => {
@@ -279,6 +288,7 @@ export default function DashboardLayout() {
           }
 
           const isActive = isItemActive(item.href)
+          const isChatItem = item.href.includes('support-chats')
           return (
             <Link
               key={item.name}
@@ -290,7 +300,14 @@ export default function DashboardLayout() {
               }`}
             >
               <item.icon />
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {isChatItem && totalUnread > 0 && (
+                <span className={`min-w-[20px] h-5 px-1.5 text-[11px] font-bold rounded-full flex items-center justify-center ${
+                  isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
+                }`}>
+                  {totalUnread > 9 ? '9+' : totalUnread}
+                </span>
+              )}
             </Link>
           )
         })}
@@ -429,12 +446,13 @@ export default function DashboardLayout() {
           <div className="px-5 pb-4 grid grid-cols-3 gap-3">
             {moreItems.map((item) => {
               const isActive = isItemActive(item.href)
+              const isChatItem = item.href.includes('support-chats')
               return (
                 <Link
                   key={item.name}
                   to={item.href}
                   onClick={() => setMoreSheetOpen(false)}
-                  className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all ${
+                  className={`relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all ${
                     isActive
                       ? 'bg-[#1e3a5f] text-white'
                       : 'bg-gray-50 text-gray-600 active:bg-gray-100'
@@ -442,6 +460,11 @@ export default function DashboardLayout() {
                 >
                   <item.icon active={isActive} />
                   <span className="text-[11px] font-medium leading-tight text-center">{item.name}</span>
+                  {isChatItem && totalUnread > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {totalUnread > 9 ? '9+' : totalUnread}
+                    </span>
+                  )}
                 </Link>
               )
             })}
@@ -540,7 +563,7 @@ export default function DashboardLayout() {
             {/* More tab */}
             <button
               onClick={() => setMoreSheetOpen(true)}
-              className={`flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
+              className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
                 isMoreActive || moreSheetOpen ? 'text-[#007AFF]' : 'text-[#8e8e93]'
               }`}
             >
@@ -548,6 +571,11 @@ export default function DashboardLayout() {
               <span className={`text-[10px] leading-tight ${isMoreActive || moreSheetOpen ? 'font-semibold' : 'font-medium'}`}>
                 {t('nav.home') === 'Home' ? 'More' : 'Mas'}
               </span>
+              {isAdmin && totalUnread > 0 && (
+                <span className="absolute top-0 right-1/4 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {totalUnread > 9 ? '9+' : totalUnread}
+                </span>
+              )}
             </button>
           </div>
         </div>
