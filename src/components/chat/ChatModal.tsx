@@ -13,14 +13,16 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [chatId, setChatId] = useState<string | null>(null)
+  const [chatClosed, setChatClosed] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Initialize chat and subscribe to messages
+  // Initialize chat and subscribe to messages + chat status
   useEffect(() => {
     if (!open || !store || !firebaseUser) return
 
     let unsubMessages: (() => void) | null = null
+    let unsubChat: (() => void) | null = null
 
     const init = async () => {
       const chat = await chatService.getOrCreateChat(
@@ -30,9 +32,19 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
         firebaseUser.email || ''
       )
       setChatId(chat.id)
+      setChatClosed(chat.status === 'closed')
 
       // Mark as read when opening
-      chatService.markAsRead(chat.id, 'user')
+      if (chat.status === 'active') {
+        chatService.markAsRead(chat.id, 'user')
+      }
+
+      // Subscribe to chat status changes
+      unsubChat = chatService.subscribeToChat(chat.id, (updatedChat) => {
+        if (updatedChat && updatedChat.status === 'closed') {
+          setChatClosed(true)
+        }
+      })
 
       // Subscribe to messages
       unsubMessages = chatService.subscribeToMessages(chat.id, (msgs) => {
@@ -44,6 +56,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
     return () => {
       if (unsubMessages) unsubMessages()
+      if (unsubChat) unsubChat()
     }
   }, [open, store, firebaseUser])
 
@@ -69,13 +82,16 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
     }
   }, [open])
 
+  const handleNewChat = () => {
+    setChatId(null)
+    setMessages([])
+    setChatClosed(false)
+  }
+
   const quickQuestions = [
+    { icon: '📋', label: 'Conocer los planes', message: 'Hola, me gustaría conocer más sobre los planes disponibles en Shopifree.' },
     { icon: '🌐', label: 'Conectar dominio personalizado', message: 'Hola, necesito ayuda para conectar mi dominio personalizado a mi tienda.' },
     { icon: '💳', label: 'Configurar pasarela de pago', message: 'Hola, quisiera ayuda para configurar mi pasarela de pagos.' },
-    { icon: '📦', label: 'Configurar envíos', message: 'Hola, necesito ayuda para configurar los métodos de envío de mi tienda.' },
-    { icon: '🎓', label: 'Tutoriales y guías', message: 'Hola, me gustaría ver tutoriales o guías para aprender a usar Shopifree.' },
-    { icon: '🐛', label: 'Reportar un problema', message: 'Hola, quiero reportar un problema que estoy teniendo con mi tienda.' },
-    { icon: '💡', label: 'Sugerir una función', message: 'Hola, tengo una sugerencia de función para Shopifree.' },
   ]
 
   const handleSend = async (overrideText?: string) => {
@@ -134,11 +150,10 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
       {/* Chat panel */}
       <div
         className={`fixed z-[60] bg-white shadow-2xl flex flex-col transition-all duration-300 ease-out
-          bottom-0 left-0 right-0 rounded-t-2xl
-          lg:bottom-6 lg:right-6 lg:left-auto lg:w-[380px] lg:rounded-2xl
+          inset-0
+          lg:inset-auto lg:bottom-6 lg:right-6 lg:w-[380px] lg:h-[520px] lg:rounded-2xl
           ${open ? 'translate-y-0 lg:scale-100 lg:opacity-100' : 'translate-y-full lg:translate-y-0 lg:scale-95 lg:opacity-0 lg:pointer-events-none'}
         `}
-        style={{ height: '75vh', maxHeight: '520px' }}
       >
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -229,29 +244,43 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="flex-shrink-0 border-t border-gray-100 px-3 py-2">
-          <div className="flex items-center gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder="Escribe un mensaje..."
-              className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
-            />
+        {/* Input or closed state */}
+        {chatClosed ? (
+          <div className="flex-shrink-0 border-t border-gray-100 px-4 py-3">
+            <div className="text-center mb-2">
+              <p className="text-xs text-gray-500">Esta conversación ha finalizado</p>
+            </div>
             <button
-              onClick={() => handleSend()}
-              disabled={!text.trim() || sending}
-              className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
+              onClick={handleNewChat}
+              className="w-full py-2.5 px-4 bg-[#007AFF] text-white text-sm font-medium rounded-full hover:bg-[#0066DD] active:scale-[0.98] transition-all"
             >
-              <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-              </svg>
+              Iniciar nueva conversación
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="flex-shrink-0 border-t border-gray-100 px-3 py-2">
+            <div className="flex items-center gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                placeholder="Escribe un mensaje..."
+                className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-[16px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={!text.trim() || sending}
+                className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
+              >
+                <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

@@ -1,87 +1,86 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useAuth } from '../../hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
 
+const MIN_SPLASH_MS = 1800
+
 export default function MobileWelcome() {
   const navigate = useNavigate()
   const { localePath } = useLanguage()
   const { firebaseUser, store, loading } = useAuth()
-  const splashHidden = useRef(false)
-  const [fadeOut, setFadeOut] = useState(false)
-  const [transitionDone, setTransitionDone] = useState(false)
+  const [showContent, setShowContent] = useState(false)
+  const mountTime = useRef(Date.now())
+  const handled = useRef(false)
 
-  // Once auth is resolved, set the correct status bar, hide native splash, then fade out web logo
   useEffect(() => {
-    if (loading) return
-    if (splashHidden.current) return
-
-    const isNative = Capacitor.isNativePlatform()
-    if (!isNative) return
+    if (loading || handled.current) return
+    handled.current = true
 
     const setup = async () => {
-      const { StatusBar, Style } = await import('@capacitor/status-bar')
-      const { SplashScreen } = await import('@capacitor/splash-screen')
-
-      if (firebaseUser) {
-        // Going to dashboard - dark text status bar
-        StatusBar.setStyle({ style: Style.Light })
-        StatusBar.setOverlaysWebView({ overlay: false })
-        StatusBar.setBackgroundColor({ color: '#ffffff' })
-      } else {
-        // Staying on welcome - light text status bar
-        StatusBar.setStyle({ style: Style.Dark })
-        StatusBar.setOverlaysWebView({ overlay: false })
-        StatusBar.setBackgroundColor({ color: '#0a1628' })
+      // Wait minimum splash time
+      const elapsed = Date.now() - mountTime.current
+      const remaining = Math.max(0, MIN_SPLASH_MS - elapsed)
+      if (remaining > 0) {
+        await new Promise(r => setTimeout(r, remaining))
       }
 
-      await new Promise(r => setTimeout(r, 100))
-      splashHidden.current = true
-      // Hide native splash - web transition screen is identical underneath
-      SplashScreen.hide({ fadeOutDuration: 0 })
+      const isNative = Capacitor.isNativePlatform()
 
       if (firebaseUser) {
-        // Start fade-out of the web logo screen
-        await new Promise(r => setTimeout(r, 200))
-        setFadeOut(true)
-        // Wait for fade animation to finish, then navigate
-        await new Promise(r => setTimeout(r, 400))
-        setTransitionDone(true)
+        // Authenticated: hide splash over stable white div, then navigate
+        if (isNative) {
+          const { SplashScreen } = await import('@capacitor/splash-screen')
+          SplashScreen.hide({ fadeOutDuration: 300 })
+
+          // Wait for splash fade to complete over our stable white background
+          await new Promise(r => setTimeout(r, 350))
+
+          // Configure StatusBar after splash is fully gone
+          const { StatusBar, Style } = await import('@capacitor/status-bar')
+          StatusBar.setStyle({ style: Style.Light })
+          StatusBar.setOverlaysWebView({ overlay: true })
+        }
+
+        // Now navigate — splash is gone, user sees white then dashboard
+        if (store) {
+          navigate(localePath('/dashboard'), { replace: true })
+        } else {
+          navigate(localePath('/register'), { replace: true })
+        }
+      } else {
+        // Not authenticated: reveal welcome, then hide splash
+        setShowContent(true)
+
+        // Small delay so React renders the welcome screen before splash hides
+        await new Promise(r => setTimeout(r, 50))
+
+        if (isNative) {
+          const { SplashScreen } = await import('@capacitor/splash-screen')
+          SplashScreen.hide({ fadeOutDuration: 300 })
+
+          // Configure StatusBar after splash starts fading
+          const { StatusBar, Style } = await import('@capacitor/status-bar')
+          StatusBar.setStyle({ style: Style.Dark })
+          StatusBar.setOverlaysWebView({ overlay: true })
+        }
       }
     }
 
     setup()
-  }, [loading, firebaseUser])
+  }, [loading, firebaseUser, store, navigate, localePath])
 
-  // Redirect authenticated users after transition completes
-  useEffect(() => {
-    if (!transitionDone) return
-    if (store) {
-      navigate(localePath('/dashboard'), { replace: true })
-    } else {
-      navigate(localePath('/register'), { replace: true })
-    }
-  }, [transitionDone, store, navigate, localePath])
-
-  // Show transition screen: white bg with centered logo (matches splash exactly)
-  if (loading || (firebaseUser && !transitionDone)) {
-    return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
-        <img
-          src="/apple-touch-icon.png"
-          alt=""
-          className={`w-16 h-16 transition-opacity duration-400 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}
-        />
-      </div>
-    )
+  // While loading or waiting, render nothing (Capacitor splash covers everything)
+  if (!showContent) {
+    return <div className="fixed inset-0 bg-white" />
   }
 
+  // Welcome screen for unauthenticated users
   return (
     <div className="fixed inset-0 bg-[#0a1628] flex flex-col">
       {/* Background collage */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Image grid - 3 columns, fills screen */}
         <div className="absolute inset-0 grid grid-cols-3 gap-1 opacity-40">
           <div className="flex flex-col gap-1">
             <div className="flex-1 overflow-hidden">
@@ -117,13 +116,11 @@ export default function MobileWelcome() {
             </div>
           </div>
         </div>
-        {/* Gradient overlay - dark at top and bottom, lighter in middle */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a1628] via-[#0a1628]/60 to-[#0a1628]" />
       </div>
 
-      {/* Content - centered vertically */}
-      <div className="relative flex-1 flex flex-col justify-between px-6 py-10">
-        {/* Top section - Logo */}
+      {/* Content */}
+      <div className="relative flex-1 flex flex-col justify-between px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
         <div className="flex-shrink-0 pt-4">
           <div className="flex items-center justify-center gap-2.5">
             <img
@@ -134,7 +131,6 @@ export default function MobileWelcome() {
           </div>
         </div>
 
-        {/* Middle section - Hero text */}
         <div className="flex-1 flex flex-col items-center justify-center -mt-8">
           <h1 className="text-[2rem] leading-tight font-extrabold text-white text-center tracking-tight">
             Crea tu tienda{'\n'}
@@ -146,8 +142,7 @@ export default function MobileWelcome() {
           </p>
         </div>
 
-        {/* Bottom section - CTAs */}
-        <div className="flex-shrink-0 space-y-3 pb-2">
+        <div className="flex-shrink-0 space-y-3" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <button
             onClick={() => navigate(localePath('/register'))}
             className="w-full py-[14px] bg-[#38bdf8] text-[#0a1628] font-bold text-[15px] rounded-2xl active:scale-[0.98] transition-transform"

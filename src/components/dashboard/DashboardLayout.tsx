@@ -537,11 +537,11 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {/* Chat bubble - floating above tab bar */}
-        <ChatBubble />
+        {/* Chat bubble - floating above tab bar (hidden for admin) */}
+        {!isAdmin && <ChatBubble />}
 
         {/* Bottom tab bar - part of flex flow */}
-        <div className="flex-shrink-0 bg-white/80 backdrop-blur-lg border-t border-black/[0.08]">
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-lg border-t border-black/[0.08]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="flex items-stretch justify-around h-[52px]">
             {tabBarItems.map((item) => {
               const isActive = isItemActive(item.href)
@@ -661,8 +661,8 @@ export default function DashboardLayout() {
         </div>
       </main>
 
-      {/* Chat bubble for web layout */}
-      <ChatBubble />
+      {/* Chat bubble for web layout (hidden for admin) */}
+      {!isAdmin && <ChatBubble />}
     </div>
   )
 }

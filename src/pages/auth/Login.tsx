@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
-import LanguageSelector from '../../components/common/LanguageSelector'
 
 export default function Login() {
   const { t } = useTranslation('auth')
@@ -15,17 +13,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login, loginWithGoogle, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-
-  // Status bar for login page (light background = dark text)
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-        StatusBar.setStyle({ style: Style.Light })
-        StatusBar.setOverlaysWebView({ overlay: false })
-        StatusBar.setBackgroundColor({ color: '#fafbfc' })
-      })
-    }
-  }, [])
 
   // Redirect authenticated users
   useEffect(() => {
@@ -67,18 +54,10 @@ export default function Login() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[#fafbfc] relative overflow-hidden flex flex-col justify-center py-6 sm:py-12 sm:px-6 lg:px-8">
-      {/* Animated background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f08_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
-        <div className="absolute top-0 -left-40 w-[400px] h-[400px] bg-[#38bdf8] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-40 w-[400px] h-[400px] bg-[#1e3a5f] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-40 left-1/2 w-[400px] h-[400px] bg-[#2d6cb5] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
+    <div className="fixed inset-0 bg-white flex flex-col justify-center px-6 sm:px-6 lg:px-8 overflow-y-auto">
       {/* Loading overlay */}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#fafbfc]/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin"></div>
             <p className="text-sm text-[#1e3a5f] font-medium">{t('login.submitting')}</p>
@@ -86,27 +65,22 @@ export default function Login() {
         </div>
       )}
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center items-center gap-4 mb-2">
-          <Link to={localePath('/')}>
-            <img src="/newlogo.png" alt="Shopifree" className="h-12" />
-          </Link>
-          <LanguageSelector />
+          <img src="/newlogo.png" alt="Shopifree" className="h-10" />
         </div>
         <h2 className="mt-6 text-center text-2xl font-bold text-[#1e3a5f]">
           {t('login.title')}
         </h2>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white/80 backdrop-blur-sm py-8 px-4 shadow-xl shadow-[#1e3a5f]/5 sm:rounded-2xl sm:px-10 border border-white/50">
+        <div className="mt-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 {t('login.email')}
@@ -117,7 +91,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
               />
             </div>
 
@@ -131,14 +105,14 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-[#1e3a5f]/20 text-sm font-semibold text-white bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] hover:from-[#2d6cb5] hover:to-[#38bdf8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all duration-300"
+              className="w-full flex justify-center py-3 px-4 rounded-xl text-sm font-semibold text-white bg-[#1e3a5f] hover:bg-[#2d6cb5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all"
             >
               {loading ? t('login.submitting') : t('login.submit')}
             </button>
@@ -157,7 +131,7 @@ export default function Login() {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="mt-4 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all"
+              className="mt-4 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

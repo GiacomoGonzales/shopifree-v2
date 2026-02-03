@@ -16,10 +16,7 @@ const config: CapacitorConfig = {
       launchShowDuration: 10000,
       launchAutoHide: false,
       backgroundColor: '#ffffff',
-      androidScaleType: 'CENTER_CROP',
       showSpinner: false,
-      splashFullScreen: true,
-      splashImmersive: true
     },
     StatusBar: {
       style: 'LIGHT',
@@ -37,7 +34,7 @@ const config: CapacitorConfig = {
     }
   },
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'never',
     allowsLinkPreview: true,
     scrollEnabled: true
   },

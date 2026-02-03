@@ -52,7 +52,7 @@ export const chatService = {
   async getOrCreateChat(storeId: string, storeName: string, userId: string, userEmail: string): Promise<Chat> {
     // Look for an existing active chat for this store
     const chatsRef = collection(db, 'chats')
-    const q = query(chatsRef, where('storeId', '==', storeId), where('status', '==', 'active'), limit(1))
+    const q = query(chatsRef, where('storeId', '==', storeId), where('userId', '==', userId), where('status', '==', 'active'), limit(1))
     const snapshot = await getDocs(q)
 
     if (!snapshot.empty) {
@@ -126,6 +126,18 @@ export const chatService = {
     await updateDoc(chatRef, updateData)
   },
 
+  // Subscribe to a single chat document (to detect status changes)
+  subscribeToChat(chatId: string, callback: (chat: Chat | null) => void): Unsubscribe {
+    const chatRef = doc(db, 'chats', chatId)
+    return onSnapshot(chatRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null)
+        return
+      }
+      callback(docToChat(snapshot))
+    })
+  },
+
   // Subscribe to messages in real-time
   subscribeToMessages(chatId: string, callback: (messages: ChatMessage[]) => void): Unsubscribe {
     const messagesRef = collection(db, 'chats', chatId, 'messages')
@@ -160,9 +172,9 @@ export const chatService = {
   },
 
   // Subscribe to unread count for a store's active chat (for user bubble badge)
-  subscribeToUnreadCount(storeId: string, callback: (count: number) => void): Unsubscribe {
+  subscribeToUnreadCount(storeId: string, userId: string, callback: (count: number) => void): Unsubscribe {
     const chatsRef = collection(db, 'chats')
-    const q = query(chatsRef, where('storeId', '==', storeId), where('status', '==', 'active'), limit(1))
+    const q = query(chatsRef, where('storeId', '==', storeId), where('userId', '==', userId), where('status', '==', 'active'), limit(1))
     return onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
         callback(snapshot.docs[0].data().unreadByUser || 0)

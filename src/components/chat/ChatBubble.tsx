@@ -4,16 +4,16 @@ import { chatService } from '../../lib/chatService'
 import ChatModal from './ChatModal'
 
 export default function ChatBubble() {
-  const { store } = useAuth()
+  const { store, firebaseUser } = useAuth()
   const [open, setOpen] = useState(false)
   const [unread, setUnread] = useState(0)
 
   // Subscribe to unread count
   useEffect(() => {
-    if (!store) return
-    const unsub = chatService.subscribeToUnreadCount(store.id, setUnread)
+    if (!store || !firebaseUser) return
+    const unsub = chatService.subscribeToUnreadCount(store.id, firebaseUser.uid, setUnread)
     return () => unsub()
-  }, [store])
+  }, [store, firebaseUser])
 
   // Reset unread when opening
   useEffect(() => {
