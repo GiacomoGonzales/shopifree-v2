@@ -30,7 +30,9 @@
       "Bash(test:*)",
       "Bash(npx cap sync:*)",
       "WebFetch(domain:github.com)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(npm view:*)",
+      "Bash(python3:*)"
     ]
   }
 }

@@ -28,4 +28,50 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+
+  # Add privacy manifests to Google SDKs that are missing them (required by Apple ITMS-91061)
+  privacy_manifest_xml = <<-XML
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array/>
+  <key>NSPrivacyTracking</key>
+  <false/>
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>
+  XML
+
+  sdks_needing_manifest = ['GTMAppAuth', 'GTMSessionFetcher', 'GoogleSignIn']
+
+  installer.pods_project.targets.each do |target|
+    if sdks_needing_manifest.include?(target.name)
+      # Write privacy manifest to pod source directory
+      resource_dir = installer.sandbox.pod_dir(target.name).to_s
+      privacy_file = File.join(resource_dir, 'PrivacyInfo.xcprivacy')
+      File.write(privacy_file, privacy_manifest_xml) unless File.exist?(privacy_file)
+
+      # Add privacy manifest as a resource to the target's build phase
+      file_ref = installer.pods_project.new_file(privacy_file)
+      resources_phase = target.resources_build_phase
+      unless resources_phase.files_references.include?(file_ref)
+        resources_phase.add_file_reference(file_ref)
+        puts "Added PrivacyInfo.xcprivacy to #{target.name}"
+      end
+    end
+  end
 end
