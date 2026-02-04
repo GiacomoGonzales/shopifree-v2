@@ -43,6 +43,9 @@ import AdminPlans from './pages/admin/Plans'
 // Payment Pages
 import PaymentSuccess from './pages/payment/PaymentSuccess'
 
+// Legal Pages
+import Privacy from './pages/Privacy'
+
 // Subdomain catalog wrapper
 function SubdomainCatalog({ subdomain }: { subdomain: string }) {
   return <Catalog subdomainStore={subdomain} />
@@ -140,6 +143,9 @@ function AppRoutes() {
         <Route index element={Capacitor.isNativePlatform() ? <MobileWelcome /> : <Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+
+        {/* Legal routes */}
+        <Route path="privacy" element={<Privacy />} />
 
         {/* Blog routes */}
         <Route path="blog" element={<BlogList />} />

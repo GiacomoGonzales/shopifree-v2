@@ -388,7 +388,7 @@ export default function Landing() {
             <div className="flex gap-6">
               <Link to={localePath('/blog')} className="text-white/60 hover:text-[#38bdf8] transition text-sm">Blog</Link>
               <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.terms')}</a>
-              <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.privacy')}</a>
+              <Link to={localePath('/privacy')} className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.privacy')}</Link>
               <a href="#" className="text-white/60 hover:text-[#38bdf8] transition text-sm">{t('common:footer.contact')}</a>
             </div>
           </div>
