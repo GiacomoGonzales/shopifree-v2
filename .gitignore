@@ -25,6 +25,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Android keystore
+*.jks
+*.keystore
+
 # Capacitor - Android build artifacts
 android/app/build/
 android/.gradle/

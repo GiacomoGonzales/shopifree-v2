@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "610784604338",
+    "project_id": "shopifree-v2",
+    "storage_bucket": "shopifree-v2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610784604338:android:d66abc0f98ff39aece59ab",
+        "android_client_info": {
+          "package_name": "app.shopifree.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWKc1nRO5eH8emJybpt3bXL6QL6X0QR88"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "app.shopifree.mobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
