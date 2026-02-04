@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { chatService, type ChatMessage } from '../../lib/chatService'
 
@@ -88,8 +89,9 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
     setChatClosed(false)
   }
 
+  const isNative = Capacitor.isNativePlatform()
   const quickQuestions = [
-    { icon: '📋', label: 'Conocer los planes', message: 'Hola, me gustaría conocer más sobre los planes disponibles en Shopifree.' },
+    ...(!isNative ? [{ icon: '📋', label: 'Conocer los planes', message: 'Hola, me gustaría conocer más sobre los planes disponibles en Shopifree.' }] : []),
     { icon: '🌐', label: 'Conectar dominio personalizado', message: 'Hola, necesito ayuda para conectar mi dominio personalizado a mi tienda.' },
     { icon: '💳', label: 'Configurar pasarela de pago', message: 'Hola, quisiera ayuda para configurar mi pasarela de pagos.' },
   ]

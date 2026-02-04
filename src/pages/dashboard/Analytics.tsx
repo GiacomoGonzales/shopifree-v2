@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { analyticsService } from '../../lib/firebase'
@@ -140,6 +141,7 @@ export default function Analytics() {
   }, [deviceStats])
 
   // Check plan - Analytics is only for Pro and Business
+  // On iOS native, show message without upgrade button (Apple requires IAP)
   if (store?.plan === 'free' || !store?.plan) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
@@ -151,15 +153,17 @@ export default function Analytics() {
           </div>
           <h2 className="text-2xl font-bold text-[#1e3a5f] mb-3">{t('analytics.upgrade.title')}</h2>
           <p className="text-gray-600 mb-6">{t('analytics.upgrade.description')}</p>
-          <Link
-            to={localePath('/dashboard/plan')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-lg shadow-[#1e3a5f]/20"
-          >
-            {t('analytics.upgrade.button')}
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Link>
+          {!Capacitor.isNativePlatform() && (
+            <Link
+              to={localePath('/dashboard/plan')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-lg shadow-[#1e3a5f]/20"
+            >
+              {t('analytics.upgrade.button')}
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          )}
         </div>
       </div>
     )

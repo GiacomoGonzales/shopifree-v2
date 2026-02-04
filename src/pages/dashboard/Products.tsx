@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
@@ -578,12 +579,14 @@ export default function Products() {
               {limitMessage}
             </p>
             <div className="space-y-3">
-              <Link
-                to={localePath('/dashboard/plan')}
-                className="block w-full px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-center rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
-              >
-                {t('products.limit.upgrade', { price: PLAN_FEATURES.pro.price })}
-              </Link>
+              {!Capacitor.isNativePlatform() && (
+                <Link
+                  to={localePath('/dashboard/plan')}
+                  className="block w-full px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-center rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+                >
+                  {t('products.limit.upgrade', { price: PLAN_FEATURES.pro.price })}
+                </Link>
+              )}
               <button
                 onClick={() => setShowLimitModal(false)}
                 className="block w-full px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"

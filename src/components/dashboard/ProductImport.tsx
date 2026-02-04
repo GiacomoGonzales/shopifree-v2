@@ -1,5 +1,8 @@
 import { useState, useRef, useMemo } from 'react'
 import * as XLSX from 'xlsx'
+import { Capacitor } from '@capacitor/core'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
@@ -437,7 +440,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
       .replace(/^-|-$/g, '')
   }
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
     const columns = getTemplateColumns(businessType, 'es')
     const exampleRow = getExampleRow(businessType, 'es')
 
@@ -451,7 +454,26 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
     ws['!cols'] = columns.map(col => ({ wch: Math.max(15, col.length + 5) }))
 
     const fileName = `plantilla_productos_${businessType}_shopifree.xlsx`
-    XLSX.writeFile(wb, fileName)
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: wbout,
+          directory: Directory.Cache,
+        })
+        await Share.share({
+          title: fileName,
+          url: result.uri,
+        })
+      } catch (error) {
+        console.error('Error downloading template:', error)
+        showToast('Error al descargar la plantilla', 'error')
+      }
+    } else {
+      XLSX.writeFile(wb, fileName)
+    }
   }
 
   const processFile = (file: File) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
@@ -124,6 +125,16 @@ export default function Plan() {
 
   const currentPlan = store?.plan || 'free'
   const hasActiveSubscription = store?.subscription?.status === 'active'
+  const isNative = Capacitor.isNativePlatform()
+
+  // On iOS native, redirect to dashboard (Apple requires IAP, not available yet)
+  useEffect(() => {
+    if (isNative) {
+      navigate(localePath('/dashboard'), { replace: true })
+    }
+  }, [isNative, navigate, localePath])
+
+  if (isNative) return null
 
   return (
     <div>

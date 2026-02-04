@@ -32,7 +32,7 @@ export default function Landing() {
               <img src="/newlogo.png" alt="Shopifree" className="h-7 sm:h-9" />
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
-              <LanguageSelector className="hidden sm:flex" />
+              <LanguageSelector />
               <Link to={localePath('/blog')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base hidden sm:inline">
                 Blog
               </Link>

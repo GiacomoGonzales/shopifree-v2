@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
-import ChatBubble from '../chat/ChatBubble'
+import ChatModal from '../chat/ChatModal'
 import { chatService } from '../../lib/chatService'
 
 // Tipos para la navegacion
@@ -140,12 +140,13 @@ export default function DashboardLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [moreSheetOpen, setMoreSheetOpen] = useState(false)
 
   const isNative = Capacitor.isNativePlatform()
 
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
   const [totalUnread, setTotalUnread] = useState(0)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatUnread, setChatUnread] = useState(0)
 
   // Subscribe to total unread chat count for admin
   useEffect(() => {
@@ -153,6 +154,20 @@ export default function DashboardLayout() {
     const unsub = chatService.subscribeToTotalUnread(setTotalUnread)
     return () => unsub()
   }, [isAdmin])
+
+  // Subscribe to user's own chat unread count
+  useEffect(() => {
+    if (!store || !firebaseUser || isAdmin) return
+    const unsub = chatService.subscribeToUnreadCount(store.id, firebaseUser.uid, setChatUnread)
+    return () => unsub()
+  }, [store, firebaseUser, isAdmin])
+
+  // Mark as read when opening chat
+  useEffect(() => {
+    if (chatOpen && chatUnread > 0 && store) {
+      chatService.markAsRead(store.id, 'user')
+    }
+  }, [chatOpen, chatUnread, store])
 
   // Dynamic navigation with translations - flat structure with separators
   const navigation: NavElement[] = useMemo(() => {
@@ -177,23 +192,34 @@ export default function DashboardLayout() {
   }, [t, localePath, isAdmin])
 
   // Bottom tab bar items (first 4 primary + "More")
-  const tabBarItems = useMemo(() => [
-    { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
-    { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
-    { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
-    { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
-  ], [t, localePath])
+  const tabBarItems = useMemo(() => {
+    const items = [
+      { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
+      { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
+      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
+    ]
+    if (isAdmin) {
+      items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
+    } else {
+      items.push({ name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon })
+    }
+    return items
+  }, [t, localePath, isAdmin])
 
   // "More" sheet items - everything not in the tab bar
   const moreItems: NavItem[] = useMemo(() => {
     const items: NavItem[] = [
       { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
+    ]
+    if (isAdmin) {
+      items.push({ name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon })
+    }
+    items.push(
       { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
       { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
       { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
-      { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
-    ]
+    )
     if (isAdmin) {
       items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
     }
@@ -202,6 +228,8 @@ export default function DashboardLayout() {
 
   // Check if current route is in "More" section
   const isMoreActive = useMemo(() => {
+    const morePath = localePath('/dashboard/more')
+    if (location.pathname === morePath || location.pathname.startsWith(morePath + '/')) return true
     return moreItems.some(item => {
       if (item.href === localePath('/dashboard')) return false
       return location.pathname === item.href || location.pathname.startsWith(item.href + '/')
@@ -231,10 +259,9 @@ export default function DashboardLayout() {
     }
   }, [user, loading, navigate, localePath])
 
-  // Close sidebar/sheet on route change
+  // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false)
-    setMoreSheetOpen(false)
   }, [location.pathname])
 
   const handleLogout = async () => {
@@ -313,43 +340,45 @@ export default function DashboardLayout() {
         })}
       </nav>
 
-      {/* Plan badge */}
-      <div className="px-4 mb-4">
-        {store?.plan === 'free' || !store?.plan ? (
-          <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">{t('plan.free')}</span>
+      {/* Plan badge - hidden on native iOS app */}
+      {!Capacitor.isNativePlatform() && (
+        <div className="px-4 mb-4">
+          {store?.plan === 'free' || !store?.plan ? (
+            <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">{t('plan.free')}</span>
+              </div>
+              <p className="text-xs text-gray-600 mb-3">{t('plan.freeDescription')}</p>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
+              >
+                {t('plan.viewPlans')}
+              </Link>
             </div>
-            <p className="text-xs text-gray-600 mb-3">{t('plan.freeDescription')}</p>
-            <Link
-              to={localePath('/dashboard/plan')}
-              className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
-            >
-              {t('plan.viewPlans')}
-            </Link>
-          </div>
-        ) : store?.plan === 'pro' ? (
-          <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200/50 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">{t('plan.pro')}</span>
+          ) : store?.plan === 'pro' ? (
+            <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">{t('plan.pro')}</span>
+              </div>
+              <p className="text-xs text-gray-500">{t('plan.proDescription')}</p>
             </div>
-            <p className="text-xs text-gray-500">{t('plan.proDescription')}</p>
-          </div>
-        ) : (
-          <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-200/50 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">{t('plan.business')}</span>
+          ) : (
+            <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-200/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">{t('plan.business')}</span>
+              </div>
+              <p className="text-xs text-gray-500">{t('plan.businessDescription')}</p>
             </div>
-            <p className="text-xs text-gray-500">{t('plan.businessDescription')}</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* User section */}
       <div className="p-4 border-t border-gray-100">
@@ -398,8 +427,30 @@ export default function DashboardLayout() {
       <div className="fixed inset-0 flex flex-col bg-white">
         {/* Native header - compact bar (safe area handled by overlay:false) */}
         <div className="flex-shrink-0 bg-white border-b border-gray-200/60">
-          <div className="h-11 flex items-center justify-center px-4">
+          <div className="h-11 flex items-center justify-between px-4">
+            {!isAdmin && (
+              <button onClick={() => setChatOpen(true)} className="relative w-8 h-8 flex items-center justify-center">
+                <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
+                {chatUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {chatUnread > 9 ? '9+' : chatUnread}
+                  </span>
+                )}
+              </button>
+            )}
+            {isAdmin && <div className="w-8" />}
             <img src="/newlogo.png" alt="Shopifree" className="h-5" />
+            <Link to={localePath('/dashboard/account')} className="w-8 h-8 flex items-center justify-center">
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />
+              ) : (
+                <div className="w-7 h-7 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                  <span className="text-xs font-semibold text-white">
+                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </Link>
           </div>
         </div>
 
@@ -410,146 +461,20 @@ export default function DashboardLayout() {
           </div>
         </main>
 
-        {/* "More" bottom sheet overlay */}
-        {moreSheetOpen && (
-          <div
-            className="fixed inset-0 bg-black/40 z-50 transition-opacity"
-            onClick={() => setMoreSheetOpen(false)}
-          />
-        )}
-
-        {/* "More" bottom sheet */}
-        <div
-          className={`fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out ${
-            moreSheetOpen ? 'translate-y-0' : 'translate-y-full'
-          }`}
-        >
-          {/* Sheet handle */}
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="w-10 h-1 bg-gray-300 rounded-full" />
-          </div>
-
-          {/* Sheet header */}
-          <div className="px-5 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">{t('nav.home')}</h3>
-            <button
-              onClick={() => setMoreSheetOpen(false)}
-              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Sheet items - grid layout */}
-          <div className="px-5 pb-4 grid grid-cols-3 gap-3">
-            {moreItems.map((item) => {
-              const isActive = isItemActive(item.href)
-              const isChatItem = item.href.includes('support-chats')
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setMoreSheetOpen(false)}
-                  className={`relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all ${
-                    isActive
-                      ? 'bg-[#1e3a5f] text-white'
-                      : 'bg-gray-50 text-gray-600 active:bg-gray-100'
-                  }`}
-                >
-                  <item.icon active={isActive} />
-                  <span className="text-[11px] font-medium leading-tight text-center">{item.name}</span>
-                  {isChatItem && totalUnread > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {totalUnread > 9 ? '9+' : totalUnread}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Admin + Plan + User section */}
-          <div className="px-5 pb-3 space-y-3 border-t border-gray-100 pt-3">
-            {isAdmin && (
-              <Link
-                to={localePath('/admin')}
-                onClick={() => setMoreSheetOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-50 text-amber-700 active:bg-amber-100"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                <span className="text-sm font-medium">Super Admin</span>
-              </Link>
-            )}
-
-            {/* Plan badge inline */}
-            {(store?.plan === 'free' || !store?.plan) && (
-              <Link
-                to={localePath('/dashboard/plan')}
-                onClick={() => setMoreSheetOpen(false)}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#f0f7ff] to-white border border-[#38bdf8]/20"
-              >
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <div>
-                    <span className="text-sm font-medium text-[#1e3a5f]">{t('plan.viewPlans')}</span>
-                    <p className="text-[11px] text-gray-500">{t('plan.free')}</p>
-                  </div>
-                </div>
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            )}
-
-            {/* User row */}
-            <div className="flex items-center gap-3 px-3 py-2">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.firstName || user.email} className="w-9 h-9 rounded-full object-cover" />
-              ) : (
-                <div className="w-9 h-9 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-full flex items-center justify-center">
-                  <span className="text-sm font-semibold text-white">
-                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user.firstName && user.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : user.firstName || user.email
-                  }
-                </p>
-                <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="text-gray-400 active:text-red-500 p-2 rounded-lg"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Chat bubble - floating above tab bar (hidden for admin) */}
-        {!isAdmin && <ChatBubble />}
+        {/* Chat modal */}
+        {!isAdmin && <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />}
 
         {/* Bottom tab bar - part of flex flow */}
         <div className="flex-shrink-0 bg-white/80 backdrop-blur-lg border-t border-black/[0.08]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="flex items-stretch justify-around h-[52px]">
             {tabBarItems.map((item) => {
               const isActive = isItemActive(item.href)
+              const isChatTab = item.href.includes('support-chats')
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
+                  className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
                     isActive ? 'text-[#007AFF]' : 'text-[#8e8e93]'
                   }`}
                 >
@@ -557,18 +482,23 @@ export default function DashboardLayout() {
                   <span className={`text-[10px] leading-tight ${isActive ? 'font-semibold' : 'font-medium'}`}>
                     {item.name}
                   </span>
+                  {isChatTab && totalUnread > 0 && (
+                    <span className="absolute top-0 right-1/4 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {totalUnread > 9 ? '9+' : totalUnread}
+                    </span>
+                  )}
                 </Link>
               )
             })}
             {/* More tab */}
-            <button
-              onClick={() => setMoreSheetOpen(true)}
+            <Link
+              to={localePath('/dashboard/more')}
               className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
-                isMoreActive || moreSheetOpen ? 'text-[#007AFF]' : 'text-[#8e8e93]'
+                isMoreActive ? 'text-[#007AFF]' : 'text-[#8e8e93]'
               }`}
             >
-              <MoreIcon active={isMoreActive || moreSheetOpen} />
-              <span className={`text-[10px] leading-tight ${isMoreActive || moreSheetOpen ? 'font-semibold' : 'font-medium'}`}>
+              <MoreIcon active={isMoreActive} />
+              <span className={`text-[10px] leading-tight ${isMoreActive ? 'font-semibold' : 'font-medium'}`}>
                 {t('nav.home') === 'Home' ? 'More' : 'Mas'}
               </span>
               {isAdmin && totalUnread > 0 && (
@@ -576,7 +506,7 @@ export default function DashboardLayout() {
                   {totalUnread > 9 ? '9+' : totalUnread}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -603,7 +533,29 @@ export default function DashboardLayout() {
           <Link to={localePath('/dashboard')}>
             <img src="/newlogo.png" alt="Shopifree" className="h-6" />
           </Link>
-          <div className="w-9" />
+          <div className="flex items-center gap-2">
+            {!isAdmin && (
+              <button onClick={() => setChatOpen(true)} className="relative w-9 h-9 flex items-center justify-center">
+                <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
+                {chatUnread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {chatUnread > 9 ? '9+' : chatUnread}
+                  </span>
+                )}
+              </button>
+            )}
+            <Link to={localePath('/dashboard/account')} className="w-9 h-9 flex items-center justify-center">
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.firstName || user.email} className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                  <span className="text-xs font-semibold text-white">
+                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -661,8 +613,8 @@ export default function DashboardLayout() {
         </div>
       </main>
 
-      {/* Chat bubble for web layout (hidden for admin) */}
-      {!isAdmin && <ChatBubble />}
+      {/* Chat modal for web layout (hidden for admin) */}
+      {!isAdmin && <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />}
     </div>
   )
 }

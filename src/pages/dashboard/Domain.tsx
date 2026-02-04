@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -360,12 +361,14 @@ export default function Domain() {
                     <p className="text-sm text-gray-600 mb-3">
                       {t('domain.custom.upgradeMessage')}
                     </p>
-                    <button
-                      onClick={() => showToast(t('domain.toast.comingSoon'), 'info')}
-                      className="w-full px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
-                    >
-                      {t('domain.custom.viewPlans')}
-                    </button>
+                    {!Capacitor.isNativePlatform() && (
+                      <button
+                        onClick={() => showToast(t('domain.toast.comingSoon'), 'info')}
+                        className="w-full px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
+                      >
+                        {t('domain.custom.viewPlans')}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

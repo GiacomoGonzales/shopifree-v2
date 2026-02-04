@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -220,15 +221,17 @@ export default function Payments() {
                 <p className="text-sm text-white/90 mb-3">
                   {t('payments.mercadopago.businessOnly')}
                 </p>
-                <Link
-                  to={localePath('/dashboard/plan')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#1e3a5f] rounded-lg font-semibold text-sm hover:bg-[#38bdf8] hover:text-white transition-all"
-                >
-                  {t('payments.mercadopago.upgradeToBusiness')}
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
+                {!Capacitor.isNativePlatform() && (
+                  <Link
+                    to={localePath('/dashboard/plan')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#1e3a5f] rounded-lg font-semibold text-sm hover:bg-[#38bdf8] hover:text-white transition-all"
+                  >
+                    {t('payments.mercadopago.upgradeToBusiness')}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                )}
               </div>
             </div>
           )}

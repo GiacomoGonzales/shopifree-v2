@@ -61,6 +61,7 @@ const BusinessTypeIcon = ({ type }: { type: BusinessType }) => {
 export default function Register() {
   const { t, i18n } = useTranslation('auth')
   const { localePath } = useLanguage()
+
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -268,23 +269,14 @@ export default function Register() {
   // Show creation animation screen
   if (creatingStore) {
     return (
-      <div className="min-h-screen bg-[#fafbfc] relative overflow-hidden flex flex-col items-center justify-center px-4">
-        {/* Animated background */}
-        <div className="fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f08_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
-          <div className="absolute top-0 -left-40 w-[400px] h-[400px] bg-[#38bdf8] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-          <div className="absolute top-0 -right-40 w-[400px] h-[400px] bg-[#1e3a5f] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-40 left-1/2 w-[400px] h-[400px] bg-[#2d6cb5] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
-        </div>
-
-        <div className="w-full max-w-md">
+      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center px-6 overflow-y-auto">
+        <div className="w-full max-w-md mx-auto">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img src="/newlogo.png" alt="Shopifree" className="h-12" />
+            <img src="/newlogo.png" alt="Shopifree" className="h-10" />
           </div>
 
-          {/* Card */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl shadow-[#1e3a5f]/10 border border-white/50">
+          <div>
             {!creationComplete ? (
               <>
                 {/* Animated icon */}
@@ -381,54 +373,38 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] relative overflow-hidden flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Animated background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e3a5f08_1px,transparent_1px),linear-gradient(to_bottom,#1e3a5f08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
-        <div className="absolute top-0 -left-40 w-[400px] h-[400px] bg-[#38bdf8] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-40 w-[400px] h-[400px] bg-[#1e3a5f] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-40 left-1/2 w-[400px] h-[400px] bg-[#2d6cb5] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="fixed inset-0 bg-white flex flex-col justify-center px-6 overflow-y-auto">
+      <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center items-center gap-4 mb-2">
           <Link to={localePath('/')}>
-            <img src="/newlogo.png" alt="Shopifree" className="h-12" />
+            <img src="/newlogo.png" alt="Shopifree" className="h-10" />
           </Link>
           <LanguageSelector />
         </div>
-        <h2 className="mt-4 text-center text-2xl font-bold text-[#1e3a5f]">
+        <h2 className="mt-6 text-center text-2xl font-bold text-[#1e3a5f]">
           {getStepTitle()}
         </h2>
-        {/* Step indicator - 3 steps */}
+        {/* Step indicator */}
         <div className="mt-4 flex justify-center">
           <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-              step >= 1 ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white' : 'bg-gray-200 text-gray-500'
-            }`}>
-              1
-            </div>
+              step >= 1 ? 'bg-[#1e3a5f] text-white' : 'bg-gray-200 text-gray-500'
+            }`}>1</div>
             <div className={`w-8 h-1 rounded ${step >= 2 ? 'bg-[#38bdf8]' : 'bg-gray-200'}`}></div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-              step >= 2 ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white' : 'bg-gray-200 text-gray-500'
-            }`}>
-              2
-            </div>
+              step >= 2 ? 'bg-[#1e3a5f] text-white' : 'bg-gray-200 text-gray-500'
+            }`}>2</div>
             <div className={`w-8 h-1 rounded ${step >= 3 ? 'bg-[#38bdf8]' : 'bg-gray-200'}`}></div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-              step >= 3 ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white' : 'bg-gray-200 text-gray-500'
-            }`}>
-              3
-            </div>
+              step >= 3 ? 'bg-[#1e3a5f] text-white' : 'bg-gray-200 text-gray-500'
+            }`}>3</div>
           </div>
         </div>
         <p className="mt-2 text-center text-sm text-gray-600">
           {getStepDescription()}
         </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white/80 backdrop-blur-sm py-8 px-4 shadow-xl shadow-[#1e3a5f]/5 sm:rounded-2xl sm:px-10 border border-white/50">
+        <div className="mt-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
@@ -437,7 +413,7 @@ export default function Register() {
 
           {step === 1 && (
             <>
-              <form onSubmit={handleEmailSubmit} className="space-y-6">
+              <form onSubmit={handleEmailSubmit} className="space-y-5">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     {t('register.email')}
@@ -448,7 +424,7 @@ export default function Register() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                 </div>
 
@@ -463,7 +439,7 @@ export default function Register() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   />
                   <p className="mt-1 text-xs text-gray-500">{t('register.passwordHint')}</p>
                 </div>
@@ -471,7 +447,7 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-[#1e3a5f]/20 text-sm font-semibold text-white bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] hover:from-[#2d6cb5] hover:to-[#38bdf8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all duration-300"
+                  className="w-full flex justify-center py-3 px-4 rounded-xl text-sm font-semibold text-white bg-[#1e3a5f] hover:bg-[#2d6cb5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all"
                 >
                   {loading ? t('register.creating') : t('register.continue')}
                 </button>
@@ -490,7 +466,7 @@ export default function Register() {
                 <button
                   onClick={handleGoogleRegister}
                   disabled={loading}
-                  className="mt-4 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all"
+                  className="mt-4 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -512,16 +488,7 @@ export default function Register() {
           )}
 
           {step === 2 && (
-            <form onSubmit={handleStoreInfoSubmit} className="space-y-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl mx-auto mb-3 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <p className="text-gray-600 text-sm">{t('register.store.title')}</p>
-              </div>
-
+            <form onSubmit={handleStoreInfoSubmit} className="space-y-5">
               <div>
                 <label htmlFor="storeName" className="block text-sm font-medium text-gray-700">
                   {t('register.store.name')}
@@ -533,7 +500,7 @@ export default function Register() {
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder={t('register.store.namePlaceholder')}
-                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
               </div>
 
@@ -548,7 +515,7 @@ export default function Register() {
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   placeholder={t('register.store.whatsappPlaceholder')}
-                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                 />
                 <p className="mt-1 text-xs text-gray-500">{t('register.store.whatsappHint')}</p>
               </div>
@@ -561,7 +528,7 @@ export default function Register() {
                   id="country"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
                 >
                   <option value="PE">{t('register.store.countries.PE')}</option>
                   <option value="MX">{t('register.store.countries.MX')}</option>
@@ -578,7 +545,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-[#1e3a5f]/20 text-sm font-semibold text-white bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] hover:from-[#2d6cb5] hover:to-[#38bdf8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all duration-300"
+                className="w-full flex justify-center py-3 px-4 rounded-xl text-sm font-semibold text-white bg-[#1e3a5f] hover:bg-[#2d6cb5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all"
               >
                 {t('register.continue')}
               </button>
@@ -586,15 +553,8 @@ export default function Register() {
           )}
 
           {step === 3 && (
-            <div className="space-y-6">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl mx-auto mb-3 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </div>
-                <p className="text-gray-600 text-sm">{t('register.businessType.subtitle')}</p>
-              </div>
+            <div className="space-y-5">
+              <p className="text-center text-sm text-gray-600">{t('register.businessType.subtitle')}</p>
 
               {/* Business type grid */}
               <div className="grid grid-cols-2 gap-3">
@@ -641,7 +601,7 @@ export default function Register() {
                   type="button"
                   onClick={handleFinalSubmit}
                   disabled={loading}
-                  className="flex-1 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-[#1e3a5f]/20 text-sm font-semibold text-white bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] hover:from-[#2d6cb5] hover:to-[#38bdf8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all duration-300"
+                  className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-[#1e3a5f] hover:bg-[#2d6cb5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38bdf8] disabled:opacity-50 transition-all"
                 >
                   {t('register.store.submit')}
                 </button>

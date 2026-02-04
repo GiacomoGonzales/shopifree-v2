@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -320,12 +321,14 @@ export default function Account() {
                 <p className="text-sm text-gray-500">{t(`plan.${currentPlan}Description`)}</p>
               </div>
             </div>
-            <Link
-              to={localePath('/dashboard/plan')}
-              className="px-4 py-2 text-sm font-medium text-[#2d6cb5] hover:text-[#1e3a5f] hover:bg-[#f0f7ff] rounded-xl transition-all"
-            >
-              {t('subscription.changePlan')} →
-            </Link>
+            {!Capacitor.isNativePlatform() && (
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="px-4 py-2 text-sm font-medium text-[#2d6cb5] hover:text-[#1e3a5f] hover:bg-[#f0f7ff] rounded-xl transition-all"
+              >
+                {t('subscription.changePlan')} →
+              </Link>
+            )}
           </div>
 
           {/* Usage Stats */}
@@ -395,60 +398,62 @@ export default function Account() {
             </div>
           )}
 
-          {/* Plan Cards */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {plans.map((plan) => {
-                const info = PLAN_FEATURES[plan]
-                const isCurrentPlan = plan === currentPlan
-                const isUpgrade = plans.indexOf(plan) > plans.indexOf(currentPlan)
+          {/* Plan Cards - hidden on native iOS app */}
+          {!Capacitor.isNativePlatform() && (
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {plans.map((plan) => {
+                  const info = PLAN_FEATURES[plan]
+                  const isCurrentPlan = plan === currentPlan
+                  const isUpgrade = plans.indexOf(plan) > plans.indexOf(currentPlan)
 
-                return (
-                  <div
-                    key={plan}
-                    className={`relative rounded-xl border p-4 transition-all ${
-                      isCurrentPlan
-                        ? 'border-[#38bdf8] bg-[#f0f7ff]'
-                        : 'border-gray-100 hover:border-gray-200'
-                    }`}
-                  >
-                    {isCurrentPlan && (
-                      <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-[#38bdf8] text-white text-xs font-medium rounded-full">
-                        {t('subscription.currentPlan')}
-                      </span>
-                    )}
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-[#1e3a5f]">{info.name}</h4>
-                        <p className="text-sm text-gray-500">
-                          {info.price > 0 ? `$${info.price}/mes` : t('plan.badge.free')}
-                        </p>
-                      </div>
-                      {!isCurrentPlan && (
-                        isUpgrade ? (
-                          <Link
-                            to={localePath('/dashboard/plan')}
-                            className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
-                          >
-                            {t('plan.buttons.upgrade')}
-                          </Link>
-                        ) : (
-                          <button
-                            onClick={handleManageSubscription}
-                            disabled={portalLoading}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all disabled:opacity-50"
-                          >
-                            {t('subscription.downgrade')}
-                          </button>
-                        )
+                  return (
+                    <div
+                      key={plan}
+                      className={`relative rounded-xl border p-4 transition-all ${
+                        isCurrentPlan
+                          ? 'border-[#38bdf8] bg-[#f0f7ff]'
+                          : 'border-gray-100 hover:border-gray-200'
+                      }`}
+                    >
+                      {isCurrentPlan && (
+                        <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-[#38bdf8] text-white text-xs font-medium rounded-full">
+                          {t('subscription.currentPlan')}
+                        </span>
                       )}
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-[#1e3a5f]">{info.name}</h4>
+                          <p className="text-sm text-gray-500">
+                            {info.price > 0 ? `$${info.price}/mes` : t('plan.badge.free')}
+                          </p>
+                        </div>
+                        {!isCurrentPlan && (
+                          isUpgrade ? (
+                            <Link
+                              to={localePath('/dashboard/plan')}
+                              className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
+                            >
+                              {t('plan.buttons.upgrade')}
+                            </Link>
+                          ) : (
+                            <button
+                              onClick={handleManageSubscription}
+                              disabled={portalLoading}
+                              className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all disabled:opacity-50"
+                            >
+                              {t('subscription.downgrade')}
+                            </button>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Security & Danger Zone */}

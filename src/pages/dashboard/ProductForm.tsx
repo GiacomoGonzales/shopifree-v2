@@ -563,7 +563,7 @@ export default function ProductForm() {
               ) : (
                 <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-200">
                   <p className="text-sm text-gray-600">{t('productForm.photos.limitReached')}</p>
-                  {maxImages === 1 && (
+                  {maxImages === 1 && !Capacitor.isNativePlatform() && (
                     <a href={localePath('/dashboard/plan')} className="text-xs text-[#2d6cb5] hover:underline mt-1 inline-block">
                       {t('productForm.photos.upgradeForMore')}
                     </a>

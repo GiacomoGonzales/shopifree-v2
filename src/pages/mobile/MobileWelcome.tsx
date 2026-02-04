@@ -1,13 +1,16 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useAuth } from '../../hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
+import LanguageSelector from '../../components/common/LanguageSelector'
 
 const MIN_SPLASH_MS = 1800
 
 export default function MobileWelcome() {
   const navigate = useNavigate()
+  const { t } = useTranslation('landing')
   const { localePath } = useLanguage()
   const { firebaseUser, store, loading } = useAuth()
   const [showContent, setShowContent] = useState(false)
@@ -122,23 +125,23 @@ export default function MobileWelcome() {
       {/* Content */}
       <div className="relative flex-1 flex flex-col justify-between px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
         <div className="flex-shrink-0 pt-4">
-          <div className="flex items-center justify-center gap-2.5">
+          <div className="flex items-center justify-center gap-3">
             <img
               src="/newlogo.png"
               alt="Shopifree"
               className="h-8 brightness-0 invert"
             />
+            <LanguageSelector variant="dark" />
           </div>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center -mt-8">
           <h1 className="text-[2rem] leading-tight font-extrabold text-white text-center tracking-tight">
-            Crea tu tienda{'\n'}
-            <span className="text-[#38bdf8]">online gratis</span>
+            {t('mobile.title')}{'\n'}
+            <span className="text-[#38bdf8]">{t('mobile.titleHighlight')}</span>
           </h1>
           <p className="text-slate-400 text-[15px] text-center mt-3 max-w-[280px] leading-relaxed">
-            Catalogo digital + ventas por WhatsApp.
-            Sin comisiones. En minutos.
+            {t('mobile.subtitle')}
           </p>
         </div>
 
@@ -147,18 +150,18 @@ export default function MobileWelcome() {
             onClick={() => navigate(localePath('/register'))}
             className="w-full py-[14px] bg-[#38bdf8] text-[#0a1628] font-bold text-[15px] rounded-2xl active:scale-[0.98] transition-transform"
           >
-            Empezar gratis
+            {t('mobile.startFree')}
           </button>
 
           <button
             onClick={() => navigate(localePath('/login'))}
             className="w-full py-[14px] bg-white/10 text-white font-semibold text-[15px] rounded-2xl border border-white/15 active:bg-white/15 transition-colors backdrop-blur-sm"
           >
-            Ya tengo cuenta
+            {t('mobile.haveAccount')}
           </button>
 
           <p className="text-center text-[11px] text-slate-500 pt-1">
-            Sin tarjeta de credito. Gratis para siempre.
+            {t('mobile.noCreditCard')}
           </p>
         </div>
       </div>

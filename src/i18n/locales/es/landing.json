@@ -1,4 +1,12 @@
 {
+  "mobile": {
+    "title": "Crea tu tienda",
+    "titleHighlight": "online gratis",
+    "subtitle": "Catálogo digital + ventas por WhatsApp. Sin comisiones. En minutos.",
+    "startFree": "Empezar gratis",
+    "haveAccount": "Ya tengo cuenta",
+    "noCreditCard": "Sin tarjeta de crédito. Gratis para siempre."
+  },
   "hero": {
     "badge": "Más de 500 catálogos creados",
     "title": "Crea tu catálogo y vende por",

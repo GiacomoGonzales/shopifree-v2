@@ -26,6 +26,7 @@ import Analytics from './pages/dashboard/Analytics'
 import Orders from './pages/dashboard/Orders'
 import Customers from './pages/dashboard/Customers'
 import SupportChats from './pages/dashboard/SupportChats'
+import MoreMenu from './pages/dashboard/MoreMenu'
 import Catalog from './pages/catalog/Catalog'
 
 // Blog Pages
@@ -162,6 +163,7 @@ function AppRoutes() {
           <Route path="account" element={<Account />} />
           <Route path="plan" element={<Plan />} />
           <Route path="support-chats" element={<SupportChats />} />
+          <Route path="more" element={<MoreMenu />} />
           <Route path="subscription" element={<Navigate to="account" replace />} />
         </Route>
 

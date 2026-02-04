@@ -1,4 +1,12 @@
 {
+  "mobile": {
+    "title": "Create your store",
+    "titleHighlight": "online for free",
+    "subtitle": "Digital catalog + WhatsApp sales. No commissions. In minutes.",
+    "startFree": "Start for free",
+    "haveAccount": "I have an account",
+    "noCreditCard": "No credit card needed. Free forever."
+  },
   "hero": {
     "badge": "Over 500 catalogs created",
     "title": "Create your catalog and sell via",

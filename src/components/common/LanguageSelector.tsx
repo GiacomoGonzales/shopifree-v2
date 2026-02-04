@@ -4,9 +4,10 @@ import { useLanguage } from '../../hooks/useLanguage'
 
 interface LanguageSelectorProps {
   className?: string
+  variant?: 'light' | 'dark'
 }
 
-export default function LanguageSelector({ className = '' }: LanguageSelectorProps) {
+export default function LanguageSelector({ className = '', variant = 'light' }: LanguageSelectorProps) {
   const { lang } = useLanguage()
   const { i18n } = useTranslation()
   const navigate = useNavigate()
@@ -38,20 +39,20 @@ export default function LanguageSelector({ className = '' }: LanguageSelectorPro
         onClick={() => switchLanguage('es')}
         className={`px-1.5 py-0.5 rounded transition-all ${
           lang === 'es'
-            ? 'text-[#1e3a5f] font-semibold'
-            : 'text-gray-400 hover:text-gray-600'
+            ? variant === 'dark' ? 'text-white font-semibold' : 'text-[#1e3a5f] font-semibold'
+            : variant === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'
         }`}
         aria-label="Español"
       >
         ES
       </button>
-      <span className="text-gray-300">|</span>
+      <span className={variant === 'dark' ? 'text-slate-600' : 'text-gray-300'}>|</span>
       <button
         onClick={() => switchLanguage('en')}
         className={`px-1.5 py-0.5 rounded transition-all ${
           lang === 'en'
-            ? 'text-[#1e3a5f] font-semibold'
-            : 'text-gray-400 hover:text-gray-600'
+            ? variant === 'dark' ? 'text-white font-semibold' : 'text-[#1e3a5f] font-semibold'
+            : variant === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'
         }`}
         aria-label="English"
       >
