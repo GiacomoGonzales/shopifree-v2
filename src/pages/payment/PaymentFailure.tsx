@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getThemeTranslations } from '../../themes/shared/translations'
 
 interface PendingOrder {
@@ -8,19 +9,29 @@ interface PendingOrder {
   language?: string
 }
 
+function recoverOrderData(searchParams: URLSearchParams): PendingOrder | null {
+  try {
+    const stored = localStorage.getItem('pendingOrder')
+    if (stored) return JSON.parse(stored)
+  } catch { /* ignore */ }
+
+  const orderId = searchParams.get('orderId')
+  const storeId = searchParams.get('storeId')
+  const orderNumber = searchParams.get('orderNumber')
+  if (orderId && storeId) {
+    return { orderId, storeId, orderNumber: orderNumber || '' }
+  }
+  return null
+}
+
 export default function PaymentFailure() {
-  const [pendingOrder] = useState<PendingOrder | null>(() => {
-    try {
-      const data = sessionStorage.getItem('pendingOrder')
-      return data ? JSON.parse(data) : null
-    } catch {
-      return null
-    }
-  })
+  const [searchParams] = useSearchParams()
+  const [pendingOrder] = useState<PendingOrder | null>(() => recoverOrderData(searchParams))
 
   const t = getThemeTranslations(pendingOrder?.language)
 
   const handleBackToStore = () => {
+    // Don't clear localStorage - user might retry
     window.history.go(-2)
   }
 
@@ -53,14 +64,12 @@ export default function PaymentFailure() {
         )}
 
         {/* Actions */}
-        <div className="space-y-3">
-          <button
-            onClick={handleBackToStore}
-            className="w-full px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            {t.backToStore}
-          </button>
-        </div>
+        <button
+          onClick={handleBackToStore}
+          className="w-full px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          {t.backToStore}
+        </button>
       </div>
     </div>
   )

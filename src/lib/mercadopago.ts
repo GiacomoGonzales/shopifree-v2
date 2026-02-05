@@ -67,6 +67,7 @@ export function cartToPreference(
 export async function createPreference(
   storeId: string,
   orderId: string,
+  orderNumber: string,
   preference: MercadoPagoPreference
 ): Promise<CreatePreferenceResult> {
   const response = await fetch('/api/create-mp-preference', {
@@ -75,6 +76,7 @@ export async function createPreference(
     body: JSON.stringify({
       storeId,
       orderId,
+      orderNumber,
       items: preference.items,
       payer: preference.payer,
       external_reference: preference.external_reference || orderId,

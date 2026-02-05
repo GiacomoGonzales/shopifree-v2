@@ -11,44 +11,53 @@ interface PendingOrder {
   language?: string
 }
 
+function recoverOrderData(searchParams: URLSearchParams): PendingOrder | null {
+  try {
+    const stored = localStorage.getItem('pendingOrder')
+    if (stored) return JSON.parse(stored)
+  } catch { /* ignore */ }
+
+  const orderId = searchParams.get('orderId')
+  const storeId = searchParams.get('storeId')
+  const orderNumber = searchParams.get('orderNumber')
+  if (orderId && storeId) {
+    return { orderId, storeId, orderNumber: orderNumber || '' }
+  }
+  return null
+}
+
 export default function PaymentPending() {
   const [searchParams] = useSearchParams()
-  const [orderNumber, setOrderNumber] = useState<string | null>(null)
-  const [language, setLanguage] = useState<string>('es')
+  const [orderData] = useState<PendingOrder | null>(() => recoverOrderData(searchParams))
+  const [language, setLanguage] = useState<string>(orderData?.language || 'es')
 
   useEffect(() => {
     const processPayment = async () => {
+      if (!orderData) return
+
+      setLanguage(orderData.language || 'es')
+
       try {
-        const pendingOrderData = sessionStorage.getItem('pendingOrder')
-        if (!pendingOrderData) return
-
-        const pendingOrder: PendingOrder = JSON.parse(pendingOrderData)
-        setOrderNumber(pendingOrder.orderNumber)
-        setLanguage(pendingOrder.language || 'es')
-
-        // Store the payment ID if available
         const paymentId = searchParams.get('payment_id')
         if (paymentId) {
-          const orderRef = doc(db, 'stores', pendingOrder.storeId, 'orders', pendingOrder.orderId)
+          const orderRef = doc(db, 'stores', orderData.storeId, 'orders', orderData.orderId)
           await updateDoc(orderRef, {
             paymentId,
             updatedAt: new Date()
           })
         }
-
-        // Don't clear pendingOrder - user might come back
       } catch (error) {
         console.error('Error processing pending payment:', error)
       }
     }
 
     processPayment()
-  }, [searchParams])
+  }, [searchParams, orderData])
 
   const t = getThemeTranslations(language)
 
   const handleBackToStore = () => {
-    sessionStorage.removeItem('pendingOrder')
+    localStorage.removeItem('pendingOrder')
     window.history.go(-2)
   }
 
@@ -71,11 +80,11 @@ export default function PaymentPending() {
         </p>
 
         {/* Order number */}
-        {orderNumber && (
+        {orderData?.orderNumber && (
           <div className="bg-gray-100 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-500 mb-1">{t.orderNumber}</p>
             <p className="text-2xl font-bold text-gray-900 tracking-wider">
-              {orderNumber}
+              {orderData.orderNumber}
             </p>
           </div>
         )}

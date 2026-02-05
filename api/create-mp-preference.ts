@@ -32,6 +32,7 @@ interface PreferenceItem {
 interface RequestBody {
   storeId: string
   orderId: string
+  orderNumber: string
   items: PreferenceItem[]
   payer?: {
     name?: string
@@ -57,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { storeId, orderId, items, payer, external_reference, origin } = req.body as RequestBody
+    const { storeId, orderId, orderNumber, items, payer, external_reference, origin } = req.body as RequestBody
 
     if (!storeId || !orderId || !items?.length) {
       return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, items' })
@@ -92,14 +93,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : process.env.APP_URL || baseOrigin
     const notificationUrl = `${webhookBase}/api/mp-webhook?storeId=${storeId}`
 
+    // Encode order info in back_urls as fallback (localStorage may be lost on mobile redirects)
+    const orderParams = `orderId=${encodeURIComponent(orderId)}&storeId=${encodeURIComponent(storeId)}&orderNumber=${encodeURIComponent(orderNumber || '')}`
+
     // Create preference payload
     const payload = {
       items,
       payer: payer || undefined,
       back_urls: {
-        success: `${baseOrigin}/payment/success`,
-        failure: `${baseOrigin}/payment/failure`,
-        pending: `${baseOrigin}/payment/pending`
+        success: `${baseOrigin}/payment/success?${orderParams}`,
+        failure: `${baseOrigin}/payment/failure?${orderParams}`,
+        pending: `${baseOrigin}/payment/pending?${orderParams}`
       },
       auto_return: 'approved',
       external_reference: external_reference || orderId,

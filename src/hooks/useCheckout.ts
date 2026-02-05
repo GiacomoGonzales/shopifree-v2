@@ -506,14 +506,26 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       }
 
       // Call server-side API route (credentials never exposed to frontend)
-      const result = await createPreference(store.id, createdOrder.id, preference)
+      const result = await createPreference(store.id, createdOrder.id, createdOrder.orderNumber, preference)
 
-      // Store order info in sessionStorage for return
-      sessionStorage.setItem('pendingOrder', JSON.stringify({
+      // Store full order info in localStorage for payment return page
+      // (sessionStorage is lost on mobile redirects, localStorage persists)
+      localStorage.setItem('pendingOrder', JSON.stringify({
         orderId: createdOrder.id,
         storeId: store.id,
         orderNumber: createdOrder.orderNumber,
-        language: store.language || 'es'
+        language: store.language || 'es',
+        storeName: store.name,
+        storeWhatsapp: store.whatsapp,
+        currency: store.currency || 'USD',
+        customer: data.customer,
+        deliveryMethod: data.delivery?.method,
+        deliveryAddress: data.delivery?.address,
+        observations: data.delivery?.observations,
+        items: createdOrder.items,
+        subtotal: createdOrder.subtotal,
+        shippingCost: createdOrder.shippingCost || 0,
+        total: createdOrder.total
       }))
 
       // Redirect to MercadoPago
