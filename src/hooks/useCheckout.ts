@@ -3,6 +3,7 @@ import type { Store, Order, OrderItem } from '../types'
 import type { CartItem } from './useCart'
 import { orderService } from '../lib/firebase'
 import { createPreference, cartToPreference } from '../lib/mercadopago'
+import { resolveShippingCost } from '../lib/shipping'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'confirmation'
 
@@ -126,26 +127,15 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Calculate shipping cost based on store settings and delivery method
+  // Calculate shipping cost based on store settings, delivery method, and zone
   const calculateShippingCost = useCallback((): number => {
     // If no delivery method selected or pickup, no shipping cost
     if (!data.delivery?.method || data.delivery.method === 'pickup') {
       return 0
     }
 
-    // If shipping is not enabled, no cost
-    if (!store.shipping?.enabled) {
-      return 0
-    }
-
-    // Check for free shipping above threshold
-    if (store.shipping.freeAbove && totalPrice >= store.shipping.freeAbove) {
-      return 0
-    }
-
-    // Return the fixed shipping cost
-    return store.shipping.cost || 0
-  }, [data.delivery?.method, store.shipping, totalPrice])
+    return resolveShippingCost(store, totalPrice, data.delivery?.address?.state)
+  }, [data.delivery?.method, data.delivery?.address?.state, store, totalPrice])
 
   // Get the current shipping cost
   const shippingCost = calculateShippingCost()

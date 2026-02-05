@@ -116,6 +116,9 @@ export interface ThemeTranslations {
   observations: string
   observationsPlaceholder: string
 
+  // Shipping zones
+  zoneNotAvailable: string
+
   // Payment return pages
   paymentSuccess: string
   paymentSuccessMessage: string
@@ -258,6 +261,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     observations: 'Observaciones',
     observationsPlaceholder: 'Alguna indicacion especial para tu pedido?',
 
+    // Shipping zones
+    zoneNotAvailable: 'No realizamos envios a esta zona',
+
     // Payment return pages
     paymentSuccess: 'Pago completado!',
     paymentSuccessMessage: 'Tu pago ha sido procesado exitosamente.',
@@ -399,6 +405,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     observations: 'Notes',
     observationsPlaceholder: 'Any special instructions for your order?',
 
+    // Shipping zones
+    zoneNotAvailable: 'We do not ship to this area',
+
     // Payment return pages
     paymentSuccess: 'Payment completed!',
     paymentSuccessMessage: 'Your payment has been processed successfully.',
@@ -539,6 +548,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Observations
     observations: 'Observacoes',
     observationsPlaceholder: 'Alguma instrucao especial para seu pedido?',
+
+    // Shipping zones
+    zoneNotAvailable: 'Nao realizamos envios para esta regiao',
 
     // Payment return pages
     paymentSuccess: 'Pagamento concluido!',

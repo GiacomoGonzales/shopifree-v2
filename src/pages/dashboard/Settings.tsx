@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { validateSubdomain, createSubdomain, deleteSubdomain } from '../../lib/subdomain'
 import type { Store, StoreLocation, StoreShipping } from '../../types'
+import { statesByCountry, stateLabel } from '../../data/states'
 import {
   type BusinessType,
   getAllBusinessTypes,
@@ -150,7 +151,13 @@ export default function Settings() {
           cost: shipping.cost || 0,
           ...(shipping.freeAbove ? { freeAbove: shipping.freeAbove } : { freeAbove: null }),
           pickupEnabled: shipping.pickupEnabled !== false,
-          deliveryEnabled: shipping.deliveryEnabled !== false
+          deliveryEnabled: shipping.deliveryEnabled !== false,
+          coverageMode: shipping.coverageMode || 'nationwide',
+          ...(shipping.coverageMode === 'zones' && shipping.allowedZones?.length
+            ? { allowedZones: shipping.allowedZones }
+            : { allowedZones: null }),
+          ...(shipping.localCost != null ? { localCost: shipping.localCost } : { localCost: null }),
+          ...(shipping.nationalCost != null ? { nationalCost: shipping.nationalCost } : { nationalCost: null }),
         },
         updatedAt: new Date()
       })
@@ -529,13 +536,26 @@ export default function Settings() {
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.location.state')}
                   </label>
-                  <input
-                    type="text"
-                    value={location.state || ''}
-                    onChange={(e) => setLocation({ ...location, state: e.target.value })}
-                    placeholder={t('settings.location.statePlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                  />
+                  {(statesByCountry[location.country] || []).length > 0 ? (
+                    <select
+                      value={location.state || ''}
+                      onChange={(e) => setLocation({ ...location, state: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    >
+                      <option value="">{(stateLabel[location.country]?.es || t('settings.location.state')) + '...'}</option>
+                      {(statesByCountry[location.country] || []).map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={location.state || ''}
+                      onChange={(e) => setLocation({ ...location, state: e.target.value })}
+                      placeholder={t('settings.location.statePlaceholder')}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
@@ -690,6 +710,161 @@ export default function Settings() {
                         </div>
                         <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.freeAboveHint')}</p>
                       </div>
+
+                      <hr className="border-gray-100" />
+
+                      {/* Coverage mode selector */}
+                      <div>
+                        <label className="block text-sm font-medium text-[#1e3a5f] mb-2">
+                          {t('settings.shipping.coverageMode', 'Cobertura de envio')}
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(['nationwide', 'zones', 'local'] as const).map((mode) => {
+                            const labels = {
+                              nationwide: t('settings.shipping.coverageNationwide', 'Nacional'),
+                              zones: t('settings.shipping.coverageZones', 'Zonas'),
+                              local: t('settings.shipping.coverageLocal', 'Local')
+                            }
+                            const hints = {
+                              nationwide: t('settings.shipping.coverageNationwideHint', 'Todo el pais'),
+                              zones: t('settings.shipping.coverageZonesHint', 'Solo algunas zonas'),
+                              local: t('settings.shipping.coverageLocalHint', 'Solo tu ciudad')
+                            }
+                            const isSelected = (shipping.coverageMode || 'nationwide') === mode
+                            return (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setShipping({ ...shipping, coverageMode: mode })}
+                                className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
+                                  isSelected
+                                    ? 'border-[#38bdf8] bg-[#f0f7ff]'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <span className={`text-sm font-medium ${isSelected ? 'text-[#1e3a5f]' : 'text-gray-600'}`}>
+                                  {labels[mode]}
+                                </span>
+                                <span className={`text-xs ${isSelected ? 'text-[#1e3a5f]/70' : 'text-gray-400'}`}>
+                                  {hints[mode]}
+                                </span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Zone selector - only for 'zones' mode */}
+                      {(shipping.coverageMode === 'zones') && (statesByCountry[location.country] || []).length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-[#1e3a5f]">
+                              {t('settings.shipping.selectZones', 'Zonas de envio')}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const allStates = statesByCountry[location.country] || []
+                                const allSelected = (shipping.allowedZones || []).length === allStates.length
+                                setShipping({
+                                  ...shipping,
+                                  allowedZones: allSelected ? [] : [...allStates]
+                                })
+                              }}
+                              className="text-xs text-[#38bdf8] hover:text-[#1e3a5f] font-medium"
+                            >
+                              {(shipping.allowedZones || []).length === (statesByCountry[location.country] || []).length
+                                ? t('settings.shipping.deselectAll', 'Deseleccionar todos')
+                                : t('settings.shipping.selectAll', 'Seleccionar todos')
+                              }
+                            </button>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-3 space-y-1">
+                            {(statesByCountry[location.country] || []).map((state) => {
+                              const isChecked = (shipping.allowedZones || []).includes(state)
+                              return (
+                                <label key={state} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-gray-50 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      const current = shipping.allowedZones || []
+                                      const updated = isChecked
+                                        ? current.filter((z) => z !== state)
+                                        : [...current, state]
+                                      setShipping({ ...shipping, allowedZones: updated })
+                                    }}
+                                    className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                  />
+                                  <span className="text-sm text-gray-700">{state}</span>
+                                  {state === location.state && (
+                                    <span className="text-xs text-[#38bdf8] font-medium ml-auto">
+                                      {t('settings.shipping.yourZone', 'Tu zona')}
+                                    </span>
+                                  )}
+                                </label>
+                              )
+                            })}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {(shipping.allowedZones || []).length} {t('settings.shipping.zonesSelected', 'zonas seleccionadas')}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Differentiated costs - only for 'zones' mode */}
+                      {(shipping.coverageMode === 'zones') && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                              {t('settings.shipping.localCost', 'Costo envio local')}
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                                {currencySymbols[currency] || '$'}
+                              </span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={shipping.localCost ?? ''}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/[^0-9.]/g, '')
+                                  setShipping({ ...shipping, localCost: val ? parseFloat(val) : undefined })
+                                }}
+                                placeholder="0.00"
+                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {t('settings.shipping.localCostHint', 'Envios dentro de tu zona')}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                              {t('settings.shipping.nationalCost', 'Costo envio nacional')}
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                                {currencySymbols[currency] || '$'}
+                              </span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={shipping.nationalCost ?? ''}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/[^0-9.]/g, '')
+                                  setShipping({ ...shipping, nationalCost: val ? parseFloat(val) : undefined })
+                                }}
+                                placeholder="0.00"
+                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {t('settings.shipping.nationalCostHint', 'Envios a otras zonas')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </>

@@ -160,6 +160,11 @@ export interface StoreShipping {
   freeAbove?: number            // Envío gratis arriba de este monto (opcional)
   pickupEnabled?: boolean       // Permitir retiro en tienda (default true)
   deliveryEnabled?: boolean     // Permitir delivery a domicilio (default true)
+  // Zonas de envío - Fase 1
+  coverageMode?: 'nationwide' | 'zones' | 'local'  // default: 'nationwide'
+  allowedZones?: string[]       // lista de departamentos/estados permitidos (modo zones)
+  localCost?: number            // costo envío local (misma zona que la tienda)
+  nationalCost?: number         // costo envío nacional (otras zonas)
 }
 
 // ============================================

@@ -5,6 +5,7 @@ import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 import { formatPrice } from '../../../lib/currency'
 import { statesByCountry, stateLabel } from '../../../data/states'
+import { resolveShippingCost, isZoneAllowed } from '../../../lib/shipping'
 
 interface Props {
   data?: DeliveryData
@@ -45,30 +46,35 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
 
   // Get states for the store's country
   const countryCode = store.location?.country || 'PE'
-  const states = statesByCountry[countryCode] || []
+  const allStates = statesByCountry[countryCode] || []
   const storeLang = (store.language?.substring(0, 2) || 'es') as 'es' | 'en' | 'pt'
   const stateFieldLabel = stateLabel[countryCode]?.[storeLang] || stateLabel[countryCode]?.es || 'Estado'
 
-  // Calculate shipping cost for display
-  const getShippingCost = (): number => {
-    if (!store.shipping?.enabled) return 0
-    if (store.shipping.freeAbove && subtotal >= store.shipping.freeAbove) return 0
-    return store.shipping.cost || 0
-  }
+  // Filter states based on coverage mode
+  const coverageMode = store.shipping?.coverageMode || 'nationwide'
+  const states = coverageMode === 'zones'
+    ? allStates.filter((s) => (store.shipping?.allowedZones || []).includes(s))
+    : allStates
+  const showStateSelect = coverageMode !== 'local' && states.length > 0
 
-  const shippingCost = getShippingCost()
+  // Calculate shipping cost dynamically based on selected zone
+  const shippingCost = resolveShippingCost(store, subtotal, addressState || undefined)
   const isFreeShipping = store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
 
   useImperativeHandle(ref, () => ({
     submit: () => {
       if (method === 'delivery') {
-        if (states.length > 0 && !addressState) return false
+        if (showStateSelect && !addressState) return false
         if (!street.trim() || !city.trim()) return false
       }
+      // For local mode, auto-set the store's state
+      const resolvedState = coverageMode === 'local'
+        ? store.location?.state || undefined
+        : addressState || undefined
       const deliveryData: DeliveryData = {
         method,
         address: method === 'delivery' ? {
-          state: addressState || undefined,
+          state: resolvedState,
           street,
           city,
           reference: reference || undefined
@@ -271,7 +277,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           </h4>
 
           {/* State/Department select */}
-          {states.length > 0 && (
+          {showStateSelect && (
             <select
               value={addressState}
               onChange={(e) => setAddressState(e.target.value)}
