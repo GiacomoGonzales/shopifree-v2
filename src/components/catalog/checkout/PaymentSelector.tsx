@@ -38,12 +38,14 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
     value,
     icon,
     title,
-    description
+    description,
+    customIconStyle
   }: {
     value: PaymentMethod
     icon: React.ReactNode
     title: string
     description: string
+    customIconStyle?: string
   }) => {
     const isSelected = selected === value
 
@@ -73,8 +75,8 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
 
         {/* Icon */}
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${theme.colors.primary}10` }}
+          className={`w-10 h-10 flex items-center justify-center flex-shrink-0 ${customIconStyle || 'rounded-full'}`}
+          style={customIconStyle ? undefined : { backgroundColor: `${theme.colors.primary}10` }}
         >
           {icon}
         </div>
@@ -128,10 +130,11 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
           <PaymentOption
             value="mercadopago"
             icon={
-              <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-8 h-8 object-contain" />
+              <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-full h-full object-cover" />
             }
             title={t.payViaMercadoPago}
             description={t.mercadopagoPaymentDesc}
+            customIconStyle="rounded-xl overflow-hidden shadow-sm"
           />
         )}
       </div>
