@@ -86,7 +86,14 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingStore, setLoadingStore] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
+  const [minTimePassed, setMinTimePassed] = useState(false)
   const trackedRef = useRef(false)
+
+  // Minimum loader display time so the store logo/branding is visible
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimePassed(true), 1200)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Analytics callbacks - must be before any conditional returns
   const handleWhatsAppClick = useCallback(() => {
@@ -193,8 +200,8 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
     fetchProducts()
   }, [store])
 
-  // Show loader while loading store or products
-  if (loadingStore || loadingProducts) {
+  // Show loader while loading store/products or minimum display time hasn't passed
+  if (loadingStore || loadingProducts || !minTimePassed) {
     return <StoreLoader logo={store?.logo} name={store?.name} />
   }
 

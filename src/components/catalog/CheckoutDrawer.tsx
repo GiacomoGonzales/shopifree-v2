@@ -98,6 +98,11 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     goNext()
   }, [updateData, goNext])
 
+  // Update delivery method in real-time so OrderSummary reflects shipping cost
+  const handleDeliveryMethodChange = useCallback((method: 'pickup' | 'delivery') => {
+    updateData({ delivery: { ...data.delivery, method } })
+  }, [updateData, data.delivery])
+
   const handleBackToStore = useCallback(() => {
     onClose()
   }, [onClose])
@@ -227,6 +232,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
               store={store}
               subtotal={totalPrice}
               onSubmit={handleDeliverySubmit}
+              onMethodChange={handleDeliveryMethodChange}
               error={error}
               t={t}
             />

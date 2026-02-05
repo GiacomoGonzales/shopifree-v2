@@ -11,6 +11,7 @@ interface Props {
   store: Store
   subtotal: number
   onSubmit: (data: DeliveryData) => void
+  onMethodChange?: (method: 'pickup' | 'delivery') => void
   error?: string | null
   t: ThemeTranslations
 }
@@ -19,7 +20,7 @@ export interface DeliverySelectorRef {
   submit: () => boolean
 }
 
-const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, error, t }, ref) => {
+const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, onMethodChange, error, t }, ref) => {
   const { theme } = useTheme()
 
   const pickupEnabled = store.shipping?.pickupEnabled !== false
@@ -112,7 +113,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           {/* Pickup option */}
           <button
             type="button"
-            onClick={() => setMethod('pickup')}
+            onClick={() => { setMethod('pickup'); onMethodChange?.('pickup') }}
             className="flex items-start gap-3 p-4 border-2 transition-all text-left"
             style={optionStyle(method === 'pickup')}
           >
@@ -148,7 +149,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           {/* Delivery option */}
           <button
             type="button"
-            onClick={() => setMethod('delivery')}
+            onClick={() => { setMethod('delivery'); onMethodChange?.('delivery') }}
             className="flex items-start gap-3 p-4 border-2 transition-all text-left"
             style={optionStyle(method === 'delivery')}
           >
