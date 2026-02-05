@@ -42,6 +42,8 @@ import AdminPlans from './pages/admin/Plans'
 
 // Payment Pages
 import PaymentSuccess from './pages/payment/PaymentSuccess'
+import PaymentFailure from './pages/payment/PaymentFailure'
+import PaymentPending from './pages/payment/PaymentPending'
 
 // Legal Pages
 import Privacy from './pages/Privacy'
@@ -104,8 +106,8 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failure" element={<PaymentSuccess />} />
-        <Route path="/payment/pending" element={<PaymentSuccess />} />
+        <Route path="/payment/failure" element={<PaymentFailure />} />
+        <Route path="/payment/pending" element={<PaymentPending />} />
         <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
       </Routes>
     )
@@ -116,8 +118,8 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failure" element={<PaymentSuccess />} />
-        <Route path="/payment/pending" element={<PaymentSuccess />} />
+        <Route path="/payment/failure" element={<PaymentFailure />} />
+        <Route path="/payment/pending" element={<PaymentPending />} />
         <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
       </Routes>
     )
@@ -131,8 +133,8 @@ function AppRoutes() {
 
       {/* Payment return pages (no language prefix - used by MercadoPago) */}
       <Route path="/payment/success" element={<PaymentSuccess />} />
-      <Route path="/payment/failure" element={<PaymentSuccess />} />
-      <Route path="/payment/pending" element={<PaymentSuccess />} />
+      <Route path="/payment/failure" element={<PaymentFailure />} />
+      <Route path="/payment/pending" element={<PaymentPending />} />
 
       {/* Public catalog (no language prefix) */}
       <Route path="/c/:storeSlug" element={<Catalog />} />

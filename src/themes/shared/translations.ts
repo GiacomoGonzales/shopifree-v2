@@ -116,6 +116,18 @@ export interface ThemeTranslations {
   observations: string
   observationsPlaceholder: string
 
+  // Payment return pages
+  paymentSuccess: string
+  paymentSuccessMessage: string
+  paymentSuccessInfo: string
+  paymentFailure: string
+  paymentFailureMessage: string
+  paymentRetry: string
+  paymentPending: string
+  paymentPendingMessage: string
+  paymentPendingInfo: string
+  paymentProcessing: string
+
   // WhatsApp message parts
   waGreeting: string
   waOrderNumber: string
@@ -246,6 +258,18 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     observations: 'Observaciones',
     observationsPlaceholder: 'Alguna indicacion especial para tu pedido?',
 
+    // Payment return pages
+    paymentSuccess: 'Pago completado!',
+    paymentSuccessMessage: 'Tu pago ha sido procesado exitosamente.',
+    paymentSuccessInfo: 'El vendedor se pondra en contacto contigo para coordinar la entrega.',
+    paymentFailure: 'El pago no se pudo completar',
+    paymentFailureMessage: 'Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.',
+    paymentRetry: 'Reintentar pago',
+    paymentPending: 'Pago en proceso',
+    paymentPendingMessage: 'Tu pago esta siendo procesado. Te notificaremos cuando se confirme.',
+    paymentPendingInfo: 'Esto puede tomar unos minutos. No es necesario que hagas nada mas.',
+    paymentProcessing: 'Procesando pago...',
+
     // WhatsApp message parts
     waGreeting: 'Hola! Acabo de realizar un pedido',
     waOrderNumber: 'Pedido',
@@ -375,6 +399,18 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     observations: 'Notes',
     observationsPlaceholder: 'Any special instructions for your order?',
 
+    // Payment return pages
+    paymentSuccess: 'Payment completed!',
+    paymentSuccessMessage: 'Your payment has been processed successfully.',
+    paymentSuccessInfo: 'The seller will contact you to coordinate delivery.',
+    paymentFailure: 'Payment could not be completed',
+    paymentFailureMessage: 'There was a problem processing your payment. Please try again.',
+    paymentRetry: 'Retry payment',
+    paymentPending: 'Payment in progress',
+    paymentPendingMessage: 'Your payment is being processed. We will notify you when confirmed.',
+    paymentPendingInfo: 'This may take a few minutes. No further action is needed.',
+    paymentProcessing: 'Processing payment...',
+
     // WhatsApp message parts
     waGreeting: 'Hi! I just placed an order',
     waOrderNumber: 'Order',
@@ -503,6 +539,18 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Observations
     observations: 'Observacoes',
     observationsPlaceholder: 'Alguma instrucao especial para seu pedido?',
+
+    // Payment return pages
+    paymentSuccess: 'Pagamento concluido!',
+    paymentSuccessMessage: 'Seu pagamento foi processado com sucesso.',
+    paymentSuccessInfo: 'O vendedor entrara em contato para coordenar a entrega.',
+    paymentFailure: 'O pagamento nao foi concluido',
+    paymentFailureMessage: 'Houve um problema ao processar seu pagamento. Por favor, tente novamente.',
+    paymentRetry: 'Tentar novamente',
+    paymentPending: 'Pagamento em processamento',
+    paymentPendingMessage: 'Seu pagamento esta sendo processado. Notificaremos quando for confirmado.',
+    paymentPendingInfo: 'Isso pode levar alguns minutos. Nenhuma acao adicional e necessaria.',
+    paymentProcessing: 'Processando pagamento...',
 
     // WhatsApp message parts
     waGreeting: 'Ola! Acabei de fazer um pedido',

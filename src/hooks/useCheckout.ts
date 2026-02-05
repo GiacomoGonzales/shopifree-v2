@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import type { Store, Order, OrderItem } from '../types'
 import type { CartItem } from './useCart'
 import { orderService } from '../lib/firebase'
-import { createPreference, getInitPoint, cartToPreference } from '../lib/mercadopago'
+import { createPreference, cartToPreference } from '../lib/mercadopago'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'confirmation'
 
@@ -486,7 +486,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         saveCustomerData(store.id, data.customer, data.delivery)
       }
 
-      // Create MercadoPago preference
+      // Build MP preference items from cart
       const mpItems = items.map((item, index) => ({
         id: item.product.id || `item-${index}`,
         name: item.product.name,
@@ -505,25 +505,19 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         }
       }
 
-      const mpConfig = {
-        enabled: true,
-        publicKey: store.payments.mercadopago.publicKey || '',
-        accessToken: store.payments.mercadopago.accessToken || '',
-        environment: store.payments.mercadopago.sandbox ? 'sandbox' as const : 'production' as const
-      }
-
-      const result = await createPreference(preference, mpConfig)
-      const initPoint = getInitPoint(result, mpConfig.environment)
+      // Call server-side API route (credentials never exposed to frontend)
+      const result = await createPreference(store.id, createdOrder.id, preference)
 
       // Store order info in sessionStorage for return
       sessionStorage.setItem('pendingOrder', JSON.stringify({
         orderId: createdOrder.id,
         storeId: store.id,
-        orderNumber: createdOrder.orderNumber
+        orderNumber: createdOrder.orderNumber,
+        language: store.language || 'es'
       }))
 
       // Redirect to MercadoPago
-      window.location.href = initPoint
+      window.location.href = result.init_point
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error processing payment')
       setLoading(false)

@@ -2,22 +2,24 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { getThemeTranslations } from '../../themes/shared/translations'
 
 interface PendingOrder {
   orderId: string
   storeId: string
   orderNumber: string
+  language?: string
 }
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
+  const [language, setLanguage] = useState<string>('es')
 
   useEffect(() => {
     const processPayment = async () => {
       try {
-        // Get stored order info
         const pendingOrderData = sessionStorage.getItem('pendingOrder')
         if (!pendingOrderData) {
           setStatus('error')
@@ -26,13 +28,14 @@ export default function PaymentSuccess() {
 
         const pendingOrder: PendingOrder = JSON.parse(pendingOrderData)
         setOrderNumber(pendingOrder.orderNumber)
+        setLanguage(pendingOrder.language || 'es')
 
         // Get payment info from URL
         const paymentId = searchParams.get('payment_id')
         const paymentStatus = searchParams.get('status')
 
         if (paymentStatus === 'approved' && paymentId) {
-          // Update order in Firestore
+          // Update order in Firestore (backup - webhook should also do this)
           const orderRef = doc(db, 'stores', pendingOrder.storeId, 'orders', pendingOrder.orderId)
           await updateDoc(orderRef, {
             paymentStatus: 'paid',
@@ -55,8 +58,9 @@ export default function PaymentSuccess() {
     processPayment()
   }, [searchParams])
 
+  const t = getThemeTranslations(language)
+
   const handleBackToStore = () => {
-    // Navigate back (reload the page to get fresh store context)
     window.history.go(-2)
   }
 
@@ -68,7 +72,7 @@ export default function PaymentSuccess() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p className="mt-4 text-gray-600">Procesando pago...</p>
+          <p className="mt-4 text-gray-600">{t.paymentProcessing}</p>
         </div>
       </div>
     )
@@ -83,15 +87,13 @@ export default function PaymentSuccess() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error al procesar el pago</h1>
-          <p className="text-gray-600 mb-6">
-            Hubo un problema al procesar tu pago. Por favor, intenta nuevamente o contacta a la tienda.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.paymentFailure}</h1>
+          <p className="text-gray-600 mb-6">{t.paymentFailureMessage}</p>
           <button
             onClick={handleBackToStore}
             className="px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
           >
-            Volver a la tienda
+            {t.backToStore}
           </button>
         </div>
       </div>
@@ -110,16 +112,16 @@ export default function PaymentSuccess() {
 
         {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Pago completado!
+          {t.paymentSuccess}
         </h1>
         <p className="text-gray-600 mb-6">
-          Tu pago ha sido procesado exitosamente.
+          {t.paymentSuccessMessage}
         </p>
 
         {/* Order number */}
         {orderNumber && (
           <div className="bg-gray-100 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-500 mb-1">Numero de pedido</p>
+            <p className="text-sm text-gray-500 mb-1">{t.orderNumber}</p>
             <p className="text-2xl font-bold text-gray-900 tracking-wider">
               {orderNumber}
             </p>
@@ -128,7 +130,7 @@ export default function PaymentSuccess() {
 
         {/* Info */}
         <p className="text-sm text-gray-500 mb-6">
-          Hemos enviado la confirmacion a tu email. El vendedor se pondra en contacto contigo para coordinar la entrega.
+          {t.paymentSuccessInfo}
         </p>
 
         {/* Back button */}
@@ -136,7 +138,7 @@ export default function PaymentSuccess() {
           onClick={handleBackToStore}
           className="w-full px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
         >
-          Volver a la tienda
+          {t.backToStore}
         </button>
       </div>
     </div>
