@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { getThemeTranslations } from '../../themes/shared/translations'
 
@@ -68,69 +68,37 @@ export default function PaymentSuccess() {
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    const processPayment = async () => {
-      try {
-        const data = recoverOrderData(searchParams)
-        if (!data) {
-          setStatus('error')
-          return
-        }
-
-        setOrderData(data)
-
-        // Get payment info from URL (MercadoPago adds these)
-        const paymentId = searchParams.get('payment_id')
-        const paymentStatus = searchParams.get('status')
-
-        if (paymentStatus === 'approved' && paymentId) {
-          // Update order in Firestore
-          const orderRef = doc(db, 'stores', data.storeId, 'orders', data.orderId)
-          await updateDoc(orderRef, {
-            paymentStatus: 'paid',
-            paymentId,
-            status: 'confirmed',
-            updatedAt: new Date()
-          })
-        }
-
-        // If we don't have WhatsApp info, try to fetch store data
-        let storeWhatsapp = data.storeWhatsapp
-        let storeCurrency = data.currency
-        let storeLanguage = data.language
-        if (!storeWhatsapp) {
-          try {
-            const storeDoc = await getDoc(doc(db, 'stores', data.storeId))
-            if (storeDoc.exists()) {
-              const storeData = storeDoc.data()
-              storeWhatsapp = storeData.whatsapp
-              storeCurrency = storeData.currency || 'USD'
-              storeLanguage = storeData.language || 'es'
-              setOrderData(prev => prev ? { ...prev, storeWhatsapp, currency: storeCurrency, language: storeLanguage } : prev)
-            }
-          } catch { /* non-critical */ }
-        }
-
-        // Build WhatsApp URL
-        if (storeWhatsapp && data.orderNumber) {
-          const url = buildWhatsAppUrl(storeWhatsapp, {
-            ...data,
-            currency: storeCurrency,
-            language: storeLanguage
-          })
-          setWhatsappUrl(url)
-        }
-
-        // Clean up localStorage
-        localStorage.removeItem('pendingOrder')
-
-        setStatus('success')
-      } catch (error) {
-        console.error('Error processing payment:', error)
-        setStatus('error')
-      }
+    const data = recoverOrderData(searchParams)
+    if (!data) {
+      setStatus('error')
+      return
     }
 
-    processPayment()
+    setOrderData(data)
+
+    // Build WhatsApp URL immediately from localStorage data (no async needed)
+    if (data.storeWhatsapp && data.orderNumber) {
+      setWhatsappUrl(buildWhatsAppUrl(data.storeWhatsapp, data))
+    }
+
+    // Show success immediately - don't block on Firestore
+    setStatus('success')
+
+    // Clean up localStorage
+    localStorage.removeItem('pendingOrder')
+
+    // Fire-and-forget: update order in Firestore (webhook also does this as backup)
+    const paymentId = searchParams.get('payment_id')
+    const paymentStatus = searchParams.get('status')
+    if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
+      const orderRef = doc(db, 'stores', data.storeId, 'orders', data.orderId)
+      updateDoc(orderRef, {
+        paymentStatus: 'paid',
+        paymentId,
+        status: 'confirmed',
+        updatedAt: new Date()
+      }).catch(err => console.warn('Firestore update failed (webhook will handle it):', err))
+    }
   }, [searchParams])
 
   const t = getThemeTranslations(orderData?.language)
