@@ -5,7 +5,7 @@ import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 import { formatPrice } from '../../../lib/currency'
 import { statesByCountry, stateLabel } from '../../../data/states'
-import { resolveShippingCost, isZoneAllowed } from '../../../lib/shipping'
+import { resolveShippingCost } from '../../../lib/shipping'
 
 interface Props {
   data?: DeliveryData
