@@ -327,46 +327,6 @@ export default function DashboardLayout() {
         })}
       </nav>
 
-      {/* Plan badge - hidden on native iOS app */}
-      {!Capacitor.isNativePlatform() && (
-        <div className="px-4 mb-4">
-          {store?.plan === 'free' || !store?.plan ? (
-            <div className="bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-[#2d6cb5] uppercase tracking-wide">{t('plan.free')}</span>
-              </div>
-              <p className="text-xs text-gray-600 mb-3">{t('plan.freeDescription')}</p>
-              <Link
-                to={localePath('/dashboard/plan')}
-                className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
-              >
-                {t('plan.viewPlans')}
-              </Link>
-            </div>
-          ) : store?.plan === 'pro' ? (
-            <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200/50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">{t('plan.pro')}</span>
-              </div>
-              <p className="text-xs text-gray-500">{t('plan.proDescription')}</p>
-            </div>
-          ) : (
-            <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-200/50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">{t('plan.business')}</span>
-              </div>
-              <p className="text-xs text-gray-500">{t('plan.businessDescription')}</p>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* User section */}
       <div className="p-4 border-t border-gray-100">
         <div className="flex items-center gap-3">
@@ -402,6 +362,28 @@ export default function DashboardLayout() {
             </svg>
           </button>
         </div>
+        {/* Plan indicator - compact pill below user info */}
+        {!Capacitor.isNativePlatform() && (
+          <Link
+            to={localePath('/dashboard/plan')}
+            className={`mt-2.5 ml-12 flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all hover:opacity-80 ${
+              store?.plan === 'business'
+                ? 'bg-purple-50 text-purple-600'
+                : store?.plan === 'pro'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'bg-gray-100 text-gray-500'
+            }`}
+          >
+            {store?.plan === 'business' ? (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+            ) : store?.plan === 'pro' ? (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+            ) : (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+            )}
+            {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
+          </Link>
+        )}
       </div>
     </>
   )
