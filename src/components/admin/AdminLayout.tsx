@@ -98,8 +98,8 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#38bdf8]"></div>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-rose-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500"></div>
       </div>
     )
   }
@@ -120,8 +120,8 @@ export default function AdminLayout() {
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-[#38bdf8] text-[#0f172a] shadow-md shadow-[#38bdf8]/20'
-                  : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                  ? 'bg-gradient-to-r from-violet-500/15 to-indigo-500/15 text-violet-700 font-semibold'
+                  : 'text-gray-500 hover:bg-white/50 hover:text-gray-700'
               }`}
             >
               <item.icon />
@@ -133,16 +133,16 @@ export default function AdminLayout() {
 
       {/* Admin Badge */}
       <div className="px-4 mb-4">
-        <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4">
+        <div className="bg-white/40 backdrop-blur border border-white/60 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
+            <span className="px-2.5 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs rounded-full font-semibold">
               ADMIN
             </span>
           </div>
-          <p className="text-xs text-slate-400 mb-3">Panel de administracion</p>
+          <p className="text-xs text-gray-400 mb-3">Panel de administracion</p>
           <Link
             to={localePath('/dashboard')}
-            className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-slate-600 text-white hover:bg-slate-500 transition-all"
+            className="block w-full text-center text-xs font-semibold py-2 rounded-lg bg-white/60 text-gray-700 hover:bg-white/80 transition-all border border-white/80"
           >
             Ir al Dashboard
           </Link>
@@ -150,22 +150,22 @@ export default function AdminLayout() {
       </div>
 
       {/* User section */}
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-white/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
+          <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-violet-500/20">
             <span className="text-sm font-semibold text-white">
               {firebaseUser.email?.[0].toUpperCase()}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-medium text-gray-700 truncate">
               {firebaseUser.email}
             </p>
-            <p className="text-xs text-red-400 font-medium">Super Admin</p>
+            <p className="text-xs text-violet-600 font-medium">Super Admin</p>
           </div>
           <button
             onClick={handleLogout}
-            className="text-slate-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-700"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-lg hover:bg-violet-50"
             title="Cerrar sesion"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,82 +178,92 @@ export default function AdminLayout() {
   )
 
   return (
-    <div className="min-h-screen bg-[#0f172a]">
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#1e293b] border-b border-slate-700 z-40 flex items-center justify-between px-4">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
-        >
-          <MenuIcon />
-        </button>
-        <div className="flex items-center gap-2">
-          <img src="/newlogo.png" alt="Shopifree" className="h-7 brightness-0 invert" />
-          <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
-            Admin
-          </span>
-        </div>
-        <div className="w-10" />
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-rose-50 relative">
+      {/* Decorative blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full blur-3xl opacity-30" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-indigo-200 rounded-full blur-3xl opacity-20" />
+        <div className="absolute -bottom-40 right-1/3 w-80 h-80 bg-rose-200 rounded-full blur-3xl opacity-25" />
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/70 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar - Mobile */}
-      <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-[#1e293b] border-r border-slate-700 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo + Close */}
-          <div className="flex items-center justify-between h-14 px-4 border-b border-slate-700">
-            <div className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-7 brightness-0 invert" />
-              <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
-                Admin
-              </span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 -mr-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
-            >
-              <CloseIcon />
-            </button>
+      {/* Content over blobs */}
+      <div className="relative z-10">
+        {/* Mobile header */}
+        <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/60 backdrop-blur-2xl border-b border-white/50 shadow-sm z-40 flex items-center justify-between px-4">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 hover:bg-white/50 rounded-lg transition-all"
+          >
+            <MenuIcon />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+            <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs rounded-full font-semibold">
+              Admin
+            </span>
           </div>
-
-          <SidebarContent />
+          <div className="w-10" />
         </div>
-      </aside>
 
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-[#1e293b] border-r border-slate-700">
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center h-16 px-6 border-b border-slate-700">
-            <div className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-8 brightness-0 invert" />
-              <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-semibold">
-                Admin
-              </span>
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar - Mobile */}
+        <aside
+          className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-white/70 backdrop-blur-2xl border-r border-white/50 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex flex-col h-full">
+            {/* Logo + Close */}
+            <div className="flex items-center justify-between h-14 px-4 border-b border-white/50">
+              <div className="flex items-center gap-2">
+                <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+                <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs rounded-full font-semibold">
+                  Admin
+                </span>
+              </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-lg transition-all"
+              >
+                <CloseIcon />
+              </button>
             </div>
+
+            <SidebarContent />
           </div>
+        </aside>
 
-          <SidebarContent />
-        </div>
-      </aside>
+        {/* Sidebar - Desktop */}
+        <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white/70 backdrop-blur-2xl border-r border-white/50 shadow-xl">
+          <div className="flex flex-col h-full">
+            {/* Logo */}
+            <div className="flex items-center h-16 px-6 border-b border-white/50">
+              <div className="flex items-center gap-2">
+                <img src="/newlogo.png" alt="Shopifree" className="h-8" />
+                <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs rounded-full font-semibold">
+                  Admin
+                </span>
+              </div>
+            </div>
 
-      {/* Main content */}
-      <main className="lg:pl-64 pt-14 lg:pt-0">
-        <div className="p-4 sm:p-6 lg:py-8 lg:px-8">
-          <Outlet />
-        </div>
-      </main>
+            <SidebarContent />
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="lg:pl-64 pt-14 lg:pt-0">
+          <div className="p-4 sm:p-6 lg:py-8 lg:px-8">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
