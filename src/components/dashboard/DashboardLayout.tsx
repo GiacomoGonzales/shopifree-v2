@@ -293,19 +293,6 @@ export default function DashboardLayout() {
     <>
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-0.5 overflow-y-auto">
-        {isAdmin && (
-          <Link
-            to={localePath('/admin')}
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all mb-1 ${
-              location.pathname.startsWith(localePath('/admin'))
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20'
-                : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            Super Admin
-          </Link>
-        )}
         {navigation.map((item, index) => {
           // Render separator
           if (item === 'separator') {
@@ -530,9 +517,19 @@ export default function DashboardLayout() {
           >
             <MenuIcon />
           </button>
-          <Link to={localePath('/dashboard')}>
-            <img src="/newlogo.png" alt="Shopifree" className="h-6" />
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link to={localePath('/dashboard')}>
+              <img src="/newlogo.png" alt="Shopifree" className="h-6" />
+            </Link>
+            {isAdmin && (
+              <Link
+                to={localePath('/admin')}
+                className="px-1.5 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[10px] rounded-full font-semibold"
+              >
+                Admin
+              </Link>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {!isAdmin && (
               <button onClick={() => setChatOpen(true)} className="relative w-9 h-9 flex items-center justify-center">
@@ -577,9 +574,20 @@ export default function DashboardLayout() {
           {/* Safe area + Logo + Close */}
           <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
           <div className="flex items-center justify-between h-12 px-4 border-b border-gray-100/80">
-            <Link to={localePath('/dashboard')} className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-7" />
-            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link to={localePath('/dashboard')} className="flex items-center gap-2">
+                <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+              </Link>
+              {isAdmin && (
+                <Link
+                  to={localePath('/admin')}
+                  className="p-1.5 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
+                  title="Super Admin"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                </Link>
+              )}
+            </div>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 -mr-2 text-gray-600 hover:text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
@@ -596,10 +604,19 @@ export default function DashboardLayout() {
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 shadow-sm">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center h-16 px-6 border-b border-gray-100">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-100">
             <Link to={localePath('/dashboard')} className="flex items-center gap-2">
               <img src="/newlogo.png" alt="Shopifree" className="h-8" />
             </Link>
+            {isAdmin && (
+              <Link
+                to={localePath('/admin')}
+                className="p-1.5 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
+                title="Super Admin"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+              </Link>
+            )}
           </div>
 
           <SidebarContent />
