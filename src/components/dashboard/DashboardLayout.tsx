@@ -362,28 +362,6 @@ export default function DashboardLayout() {
             </svg>
           </button>
         </div>
-        {/* Plan indicator - compact pill below user info */}
-        {!Capacitor.isNativePlatform() && (
-          <Link
-            to={localePath('/dashboard/plan')}
-            className={`mt-2.5 ml-12 flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all hover:opacity-80 ${
-              store?.plan === 'business'
-                ? 'bg-purple-50 text-purple-600'
-                : store?.plan === 'pro'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'bg-gray-100 text-gray-500'
-            }`}
-          >
-            {store?.plan === 'business' ? (
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-            ) : store?.plan === 'pro' ? (
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-            ) : (
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-            )}
-            {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
-          </Link>
-        )}
       </div>
     </>
   )
@@ -408,7 +386,28 @@ export default function DashboardLayout() {
               </button>
             )}
             {isAdmin && <div className="w-8" />}
-            <img src="/newlogo.png" alt="Shopifree" className="h-5" />
+            <div className="flex flex-col items-center gap-0.5">
+              <img src="/newlogo.png" alt="Shopifree" className="h-5" />
+              <Link
+                to={localePath('/dashboard/plan')}
+                className={`flex items-center gap-0.5 px-1.5 py-0 rounded-full text-[9px] font-semibold transition-all ${
+                  store?.plan === 'business'
+                    ? 'bg-purple-50 text-purple-600'
+                    : store?.plan === 'pro'
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {store?.plan === 'business' ? (
+                  <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ) : store?.plan === 'pro' ? (
+                  <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                ) : (
+                  <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                )}
+                {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
+              </Link>
+            </div>
             <Link to={localePath('/dashboard/account')} className="w-8 h-8 flex items-center justify-center">
               {user.avatar ? (
                 <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />
@@ -503,6 +502,25 @@ export default function DashboardLayout() {
             <Link to={localePath('/dashboard')}>
               <img src="/newlogo.png" alt="Shopifree" className="h-6" />
             </Link>
+            <Link
+              to={localePath('/dashboard/plan')}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-all hover:opacity-80 ${
+                store?.plan === 'business'
+                  ? 'bg-purple-50 text-purple-600'
+                  : store?.plan === 'pro'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {store?.plan === 'business' ? (
+                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              ) : store?.plan === 'pro' ? (
+                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              ) : (
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              )}
+              {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
+            </Link>
             {isAdmin && (
               <Link
                 to={localePath('/admin')}
@@ -557,16 +575,35 @@ export default function DashboardLayout() {
           <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
           <div className="flex items-center justify-between h-12 px-4 border-b border-gray-100/80">
             <div className="flex items-center gap-1.5">
-              <Link to={localePath('/dashboard')} className="flex items-center gap-2">
+              <Link to={localePath('/dashboard')} className="flex items-center">
                 <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+              </Link>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all hover:opacity-80 ${
+                  store?.plan === 'business'
+                    ? 'bg-purple-50 text-purple-600'
+                    : store?.plan === 'pro'
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {store?.plan === 'business' ? (
+                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ) : store?.plan === 'pro' ? (
+                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                ) : (
+                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                )}
+                {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
               </Link>
               {isAdmin && (
                 <Link
                   to={localePath('/admin')}
-                  className="p-1.5 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
+                  className="p-1 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
                   title="Super Admin"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                 </Link>
               )}
             </div>
@@ -587,9 +624,30 @@ export default function DashboardLayout() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-100">
-            <Link to={localePath('/dashboard')} className="flex items-center gap-2">
-              <img src="/newlogo.png" alt="Shopifree" className="h-8" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to={localePath('/dashboard')} className="flex items-center">
+                <img src="/newlogo.png" alt="Shopifree" className="h-8" />
+              </Link>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all hover:opacity-80 ${
+                  store?.plan === 'business'
+                    ? 'bg-purple-50 text-purple-600'
+                    : store?.plan === 'pro'
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {store?.plan === 'business' ? (
+                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ) : store?.plan === 'pro' ? (
+                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                ) : (
+                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                )}
+                {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
+              </Link>
+            </div>
             {isAdmin && (
               <Link
                 to={localePath('/admin')}
