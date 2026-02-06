@@ -166,9 +166,10 @@ export default function AdminStores() {
         </select>
       </div>
 
-      {/* Stores Table */}
+      {/* Stores Table / Cards */}
       <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-lg shadow-black/5 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-white/50 border-b border-white/60">
@@ -274,6 +275,98 @@ export default function AdminStores() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y divide-white/60">
+          {filteredStores.map((store) => (
+            <div key={store.id} className="p-4 hover:bg-white/40 transition-colors">
+              {/* Row 1: Logo + Name + Plan badge */}
+              <div className="flex items-center gap-3">
+                {store.logo ? (
+                  <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover ring-1 ring-black/5" />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-violet-600 font-bold">{store.name.charAt(0)}</span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-gray-900 truncate">{store.name}</p>
+                    <span className={`px-2.5 py-0.5 text-[11px] rounded-full font-medium capitalize flex-shrink-0 ${
+                      store.plan === 'free' ? 'bg-gray-100/80 text-gray-600' :
+                      store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' :
+                      'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                    }`}>
+                      {store.plan}
+                    </span>
+                  </div>
+                  <a
+                    href={`https://${store.subdomain}.shopifree.app`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-violet-600 hover:text-violet-700 text-xs font-medium"
+                  >
+                    {store.subdomain}.shopifree.app
+                  </a>
+                </div>
+              </div>
+
+              {/* Row 2: Subscription + Date + Action */}
+              <div className="flex items-center justify-between mt-3 pl-[52px]">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {store.subscription ? (
+                    <>
+                      <span className={`px-2 py-0.5 text-[11px] rounded-full font-medium ${
+                        store.subscription.status === 'active' ? 'bg-green-100/80 text-green-700' :
+                        store.subscription.status === 'trialing' ? 'bg-blue-100/80 text-blue-700' :
+                        store.subscription.status === 'past_due' ? 'bg-yellow-100/80 text-yellow-700' :
+                        'bg-red-100/80 text-red-700'
+                      }`}>
+                        {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
+                      </span>
+                      <button
+                        onClick={() => handleSyncSubscription(store.id)}
+                        disabled={syncingStore === store.id}
+                        className="p-0.5 text-gray-400 hover:text-violet-600 rounded transition-all disabled:opacity-50"
+                        title="Sincronizar con Stripe"
+                      >
+                        {syncingStore === store.id ? (
+                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-gray-400 text-xs">Sin suscripcion</span>
+                  )}
+                  <span className="text-gray-300">·</span>
+                  <span className="text-xs text-gray-400">
+                    {store.createdAt
+                      ? (store.createdAt as any).toDate
+                        ? (store.createdAt as any).toDate().toLocaleDateString()
+                        : store.createdAt instanceof Date
+                          ? store.createdAt.toLocaleDateString()
+                          : new Date(store.createdAt).toLocaleDateString()
+                      : '-'
+                    }
+                  </span>
+                </div>
+                <button
+                  onClick={() => setEditingStore(store)}
+                  className="px-2.5 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all flex-shrink-0"
+                >
+                  Editar
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {filteredStores.length === 0 && (

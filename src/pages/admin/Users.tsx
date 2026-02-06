@@ -110,9 +110,10 @@ export default function AdminUsers() {
         </svg>
       </div>
 
-      {/* Users Table */}
+      {/* Users Table / Cards */}
       <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-lg shadow-black/5 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-white/50 border-b border-white/60">
@@ -214,6 +215,85 @@ export default function AdminUsers() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y divide-white/60">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="p-4 hover:bg-white/40 transition-colors">
+              {/* Row 1: Avatar + Name + Role badge */}
+              <div className="flex items-center gap-3">
+                {user.avatar ? (
+                  <img src={user.avatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-violet-600 font-bold">
+                      {user.firstName ? user.firstName.charAt(0) : user.email.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-gray-900 truncate">
+                      {user.firstName && user.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : 'Sin nombre'
+                      }
+                    </p>
+                    <span className={`px-2.5 py-0.5 text-[11px] rounded-full font-medium flex-shrink-0 ${
+                      isUserAdmin(user)
+                        ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                        : 'bg-gray-100/80 text-gray-600'
+                    }`}>
+                      {isUserAdmin(user) ? 'admin' : 'user'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.email}
+                    {user.email === ADMIN_EMAIL && (
+                      <span className="ml-1 text-violet-600 font-medium">(Super Admin)</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Row 2: Date + Action */}
+              <div className="flex items-center justify-between mt-2.5 pl-[52px]">
+                <span className="text-xs text-gray-400">
+                  {user.createdAt
+                    ? (user.createdAt as any).toDate
+                      ? (user.createdAt as any).toDate().toLocaleDateString()
+                      : user.createdAt instanceof Date
+                        ? user.createdAt.toLocaleDateString()
+                        : new Date(user.createdAt).toLocaleDateString()
+                    : '-'
+                  }
+                </span>
+                <button
+                  onClick={() => handleToggleRole(user.id, user.role)}
+                  disabled={updatingRole === user.id}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all ${
+                    isUserAdmin(user)
+                      ? 'text-gray-500 hover:bg-white/50 hover:text-gray-700'
+                      : 'text-violet-600 hover:bg-violet-50'
+                  }`}
+                >
+                  {updatingRole === user.id ? (
+                    <span className="flex items-center gap-1">
+                      <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </span>
+                  ) : isUserAdmin(user) ? (
+                    'Quitar admin'
+                  ) : (
+                    'Hacer admin'
+                  )}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {filteredUsers.length === 0 && (
