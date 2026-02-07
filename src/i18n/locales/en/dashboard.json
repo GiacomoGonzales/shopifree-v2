@@ -47,20 +47,57 @@
     "noData": "No data",
     "conversionRate": "Conversion rate",
     "dateRange": {
+      "today": "Today",
+      "yesterday": "Yesterday",
       "7days": "Last 7 days",
-      "30days": "Last 30 days"
+      "30days": "Last 30 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "90days": "Last 90 days",
+      "custom": "Custom",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply"
     },
     "summary": {
       "totalVisits": "Total visits",
       "productViews": "Product views",
       "cartAdds": "Added to cart",
-      "whatsappClicks": "WhatsApp clicks"
+      "whatsappClicks": "WhatsApp clicks",
+      "totalRevenue": "Revenue",
+      "totalOrders": "Orders",
+      "avgOrderValue": "Avg. order"
+    },
+    "trends": {
+      "vsLastPeriod": "vs last period",
+      "noChange": "No change",
+      "newData": "New"
     },
     "charts": {
       "dailyVisits": "Daily visits",
-      "topProducts": "Top products",
+      "dailyRevenue": "Daily revenue",
+      "topProducts": "Top viewed products",
+      "topSelling": "Top selling products",
+      "trafficSources": "Traffic sources",
       "conversionFunnel": "Conversion funnel",
-      "deviceDistribution": "By device"
+      "deviceDistribution": "By device",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "visits": "Visits"
+    },
+    "referrers": {
+      "direct": "Direct",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "google": "Google",
+      "tiktok": "TikTok",
+      "other": "Other"
+    },
+    "topSelling": {
+      "product": "Product",
+      "quantitySold": "Sold",
+      "revenue": "Revenue"
     },
     "upgrade": {
       "title": "Advanced Analytics",
@@ -111,6 +148,7 @@
     "delivery": "Delivery",
     "address": "Address",
     "items": "Products",
+    "paidOnline": "Paid online",
     "paymentMethod": "Payment method",
     "close": "Close",
     "searchPlaceholder": "Search by order #, name or phone...",
@@ -693,7 +731,16 @@
     "security": {
       "title": "Security",
       "subtitle": "Manage your password",
-      "changePassword": "Change password"
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "passwordChanged": "Password changed successfully",
+      "wrongPassword": "Current password is incorrect",
+      "passwordMismatch": "Passwords don't match",
+      "passwordTooShort": "Minimum 6 characters",
+      "googleAccount": "You signed in with Google. Password is managed from your Google account.",
+      "changing": "Changing..."
     },
     "danger": {
       "deleteCatalog": "Delete catalog",

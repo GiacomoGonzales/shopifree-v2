@@ -182,64 +182,112 @@ export default function AdminPlans() {
         {activeSubscriptions.length === 0 ? (
           <p className="text-gray-400 text-center py-8">No hay suscripciones activas todavia</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/60">
-                  <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Tienda</th>
-                  <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Plan</th>
-                  <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Stripe ID</th>
-                  <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Proximo cobro</th>
-                  <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeSubscriptions.map((store) => (
-                  <tr key={store.id} className="border-b border-white/60 hover:bg-white/40 transition-colors">
-                    <td className="py-3">
-                      <div className="flex items-center gap-2">
-                        {store.logo ? (
-                          <img src={store.logo} alt="" className="w-8 h-8 rounded-lg object-cover ring-1 ring-black/5" />
-                        ) : (
-                          <div className="w-8 h-8 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center text-xs font-bold text-violet-600">
-                            {store.name.charAt(0)}
-                          </div>
-                        )}
-                        <span className="font-medium text-gray-900">{store.name}</span>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/60">
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Tienda</th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Plan</th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Stripe ID</th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Proximo cobro</th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeSubscriptions.map((store) => (
+                    <tr key={store.id} className="border-b border-white/60 hover:bg-white/40 transition-colors">
+                      <td className="py-3">
+                        <div className="flex items-center gap-2">
+                          {store.logo ? (
+                            <img src={store.logo} alt="" className="w-8 h-8 rounded-lg object-cover ring-1 ring-black/5" />
+                          ) : (
+                            <div className="w-8 h-8 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center text-xs font-bold text-violet-600">
+                              {store.name.charAt(0)}
+                            </div>
+                          )}
+                          <span className="font-medium text-gray-900">{store.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <span className={`px-2.5 py-1 text-xs rounded-full font-medium capitalize ${
+                          store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                        }`}>
+                          {store.plan}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <code className="text-xs bg-white/50 text-gray-600 px-2 py-1 rounded border border-white/80">
+                          {store.subscription?.stripeSubscriptionId?.slice(0, 20)}...
+                        </code>
+                      </td>
+                      <td className="py-3 text-sm text-gray-500">
+                        {store.subscription?.currentPeriodEnd
+                          ? new Date(store.subscription.currentPeriodEnd).toLocaleDateString()
+                          : '-'
+                        }
+                      </td>
+                      <td className="py-3">
+                        <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
+                          store.subscription?.cancelAtPeriodEnd
+                            ? 'bg-yellow-100/80 text-yellow-700'
+                            : 'bg-green-100/80 text-green-700'
+                        }`}>
+                          {store.subscription?.cancelAtPeriodEnd ? 'Cancela pronto' : 'Activa'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-white/60">
+              {activeSubscriptions.map((store) => (
+                <div key={store.id} className="p-4 hover:bg-white/40 transition-colors">
+                  <div className="flex items-center gap-3">
+                    {store.logo ? (
+                      <img src={store.logo} alt="" className="w-10 h-10 rounded-lg object-cover ring-1 ring-black/5 flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center text-sm font-bold text-violet-600 flex-shrink-0">
+                        {store.name.charAt(0)}
                       </div>
-                    </td>
-                    <td className="py-3">
-                      <span className={`px-2.5 py-1 text-xs rounded-full font-medium capitalize ${
-                        store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                      }`}>
-                        {store.plan}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <code className="text-xs bg-white/50 text-gray-600 px-2 py-1 rounded border border-white/80">
-                        {store.subscription?.stripeSubscriptionId?.slice(0, 20)}...
-                      </code>
-                    </td>
-                    <td className="py-3 text-sm text-gray-500">
-                      {store.subscription?.currentPeriodEnd
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-gray-900 truncate">{store.name}</p>
+                        <span className={`px-2.5 py-0.5 text-[11px] rounded-full font-medium capitalize flex-shrink-0 ${
+                          store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                        }`}>
+                          {store.plan}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                        {store.subscription?.stripeSubscriptionId || '-'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2.5 pl-[52px]">
+                    <span className="text-xs text-gray-400">
+                      Cobro: {store.subscription?.currentPeriodEnd
                         ? new Date(store.subscription.currentPeriodEnd).toLocaleDateString()
                         : '-'
                       }
-                    </td>
-                    <td className="py-3">
-                      <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
-                        store.subscription?.cancelAtPeriodEnd
-                          ? 'bg-yellow-100/80 text-yellow-700'
-                          : 'bg-green-100/80 text-green-700'
-                      }`}>
-                        {store.subscription?.cancelAtPeriodEnd ? 'Cancela pronto' : 'Activa'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                    <span className={`px-2.5 py-0.5 text-[11px] rounded-full font-medium ${
+                      store.subscription?.cancelAtPeriodEnd
+                        ? 'bg-yellow-100/80 text-yellow-700'
+                        : 'bg-green-100/80 text-green-700'
+                    }`}>
+                      {store.subscription?.cancelAtPeriodEnd ? 'Cancela pronto' : 'Activa'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

@@ -665,7 +665,7 @@ export default function DashboardLayout() {
 
       {/* Main content */}
       <main className="lg:pl-64 lg:pt-0" style={{ paddingTop: 'calc(3rem + env(safe-area-inset-top))' }}>
-        <div className="p-4 sm:p-6 lg:py-8 lg:px-8">
+        <div className="p-4 sm:p-6 lg:pt-4 lg:pb-8 lg:px-8">
           <Outlet />
         </div>
       </main>

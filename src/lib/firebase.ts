@@ -3,7 +3,7 @@ import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/aut
 import { Capacitor } from '@capacitor/core'
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import type { User, Store, Product, Category, Order, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats } from '../types'
+import type { User, Store, Product, Category, Order, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -566,7 +566,146 @@ export const analyticsService = {
       console.error('Error getting device stats:', error)
       return { mobile: 0, desktop: 0 }
     }
+  },
+
+  async getFullAnalytics(storeId: string, startDate: Date, endDate: Date): Promise<{
+    summary: AnalyticsSummary
+    dailyStats: DailyStats[]
+    topProducts: TopProduct[]
+    deviceStats: DeviceStats
+    referrerStats: ReferrerStats[]
+  }> {
+    try {
+      const q = query(
+        this.getCollection(storeId),
+        where('timestamp', '>=', startDate),
+        where('timestamp', '<=', endDate)
+      )
+      const snapshot = await getDocs(q)
+
+      const summary: AnalyticsSummary = { pageViews: 0, productViews: 0, cartAdds: 0, whatsappClicks: 0 }
+      const dailyMap: Record<string, DailyStats> = {}
+      const productCounts: Record<string, { views: number; name: string }> = {}
+      const deviceStats: DeviceStats = { mobile: 0, desktop: 0 }
+      const referrerMap: Record<string, number> = {}
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data()
+        const timestamp = data.timestamp instanceof Timestamp ? data.timestamp.toDate() : new Date(data.timestamp)
+        const dateKey = timestamp.toISOString().split('T')[0]
+
+        // Summary
+        switch (data.type) {
+          case 'page_view': summary.pageViews++; break
+          case 'product_view': summary.productViews++; break
+          case 'cart_add': summary.cartAdds++; break
+          case 'whatsapp_click': summary.whatsappClicks++; break
+        }
+
+        // Daily stats
+        if (!dailyMap[dateKey]) {
+          dailyMap[dateKey] = { date: dateKey, pageViews: 0, productViews: 0, cartAdds: 0, whatsappClicks: 0 }
+        }
+        switch (data.type) {
+          case 'page_view': dailyMap[dateKey].pageViews++; break
+          case 'product_view': dailyMap[dateKey].productViews++; break
+          case 'cart_add': dailyMap[dateKey].cartAdds++; break
+          case 'whatsapp_click': dailyMap[dateKey].whatsappClicks++; break
+        }
+
+        // Top products
+        if (data.type === 'product_view' && data.productId) {
+          if (!productCounts[data.productId]) {
+            productCounts[data.productId] = { views: 0, name: data.metadata?.productName || 'Unknown' }
+          }
+          productCounts[data.productId].views++
+          if (data.metadata?.productName) productCounts[data.productId].name = data.metadata.productName
+        }
+
+        // Device stats
+        if (data.type === 'page_view') {
+          const deviceType = data.metadata?.deviceType || 'desktop'
+          if (deviceType === 'mobile') deviceStats.mobile++
+          else deviceStats.desktop++
+        }
+
+        // Referrer stats
+        if (data.type === 'page_view') {
+          const referrer = data.metadata?.referrer || 'direct'
+          const source = categorizeReferrer(referrer)
+          referrerMap[source] = (referrerMap[source] || 0) + 1
+        }
+      })
+
+      // Fill missing dates
+      const dailyStats: DailyStats[] = []
+      const current = new Date(startDate)
+      while (current <= endDate) {
+        const dateKey = current.toISOString().split('T')[0]
+        dailyStats.push(dailyMap[dateKey] || { date: dateKey, pageViews: 0, productViews: 0, cartAdds: 0, whatsappClicks: 0 })
+        current.setDate(current.getDate() + 1)
+      }
+
+      const topProducts = Object.entries(productCounts)
+        .map(([productId, { views, name }]) => ({ productId, productName: name, views }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 5)
+
+      const referrerStats = Object.entries(referrerMap)
+        .map(([source, count]) => ({ source, count }))
+        .sort((a, b) => b.count - a.count)
+
+      return { summary, dailyStats, topProducts, deviceStats, referrerStats }
+    } catch (error) {
+      console.error('Error getting full analytics:', error)
+      return {
+        summary: { pageViews: 0, productViews: 0, cartAdds: 0, whatsappClicks: 0 },
+        dailyStats: [],
+        topProducts: [],
+        deviceStats: { mobile: 0, desktop: 0 },
+        referrerStats: []
+      }
+    }
+  },
+
+  async getOrdersByDateRange(storeId: string, startDate: Date, endDate: Date): Promise<Order[]> {
+    try {
+      const q = query(
+        collection(db, 'stores', storeId, 'orders'),
+        where('createdAt', '>=', startDate),
+        where('createdAt', '<=', endDate)
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, storeId, ...convertTimestamps(doc.data()) }) as Order)
+        .filter(order => order.status !== 'cancelled')
+    } catch (error) {
+      console.error('Error getting orders by date range:', error)
+      return []
+    }
+  },
+
+  async getRevenueMetrics(storeId: string, startDate: Date, endDate: Date): Promise<RevenueMetrics> {
+    const orders = await this.getOrdersByDateRange(storeId, startDate, endDate)
+    const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
+    const totalOrders = orders.length
+    return {
+      totalRevenue,
+      totalOrders,
+      averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0
+    }
   }
+}
+
+function categorizeReferrer(referrer: string): string {
+  if (!referrer || referrer === 'direct') return 'direct'
+  const r = referrer.toLowerCase()
+  if (r.includes('whatsapp') || r.includes('wa.me')) return 'whatsapp'
+  if (r.includes('instagram')) return 'instagram'
+  if (r.includes('facebook') || r.includes('fb.com')) return 'facebook'
+  if (r.includes('google')) return 'google'
+  if (r.includes('tiktok')) return 'tiktok'
+  return 'other'
 }
 
 export default app

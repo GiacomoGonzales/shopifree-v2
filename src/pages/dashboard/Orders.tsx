@@ -561,9 +561,14 @@ export default function Orders() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-[#2d6cb5]">
-                        {currencySymbol}{order.total?.toFixed(2) || '0.00'}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-[#2d6cb5]">
+                          {currencySymbol}{order.total?.toFixed(2) || '0.00'}
+                        </span>
+                        {order.paymentMethod === 'mercadopago' && (
+                          <img src="/mercadopago-logo.webp" alt="MP" className="w-4 h-4 rounded-sm object-cover" />
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
@@ -608,9 +613,14 @@ export default function Orders() {
                     <p className="text-sm font-medium text-gray-900">{order.customer?.name || '-'}</p>
                     <p className="text-xs text-gray-500">{formatShortDate(order.createdAt)}</p>
                   </div>
-                  <span className="font-bold text-[#2d6cb5]">
-                    {currencySymbol}{order.total?.toFixed(2) || '0.00'}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-[#2d6cb5]">
+                      {currencySymbol}{order.total?.toFixed(2) || '0.00'}
+                    </span>
+                    {order.paymentMethod === 'mercadopago' && (
+                      <img src="/mercadopago-logo.webp" alt="MP" className="w-4 h-4 rounded-sm object-cover" />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -799,9 +809,14 @@ export default function Orders() {
               {/* Total */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <span className="text-lg font-semibold text-gray-900">{t('orders.total')}</span>
-                <span className="text-xl font-bold text-[#1e3a5f]">
-                  {currencySymbol}{selectedOrder.total?.toFixed(2) || '0.00'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-[#1e3a5f]">
+                    {currencySymbol}{selectedOrder.total?.toFixed(2) || '0.00'}
+                  </span>
+                  {selectedOrder.paymentMethod === 'mercadopago' && (
+                    <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-5 h-5 rounded-sm object-cover" />
+                  )}
+                </div>
               </div>
 
               {/* Payment info */}

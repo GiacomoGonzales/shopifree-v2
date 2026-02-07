@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore'
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -29,6 +30,15 @@ export default function Account() {
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
   const [avatar, setAvatar] = useState('')
+
+  // Password change
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
+
+  const isGoogleUser = firebaseUser?.providerData?.some(p => p.providerId === 'google.com') && !firebaseUser?.providerData?.some(p => p.providerId === 'password')
 
   // Usage stats
   const [productCount, setProductCount] = useState(0)
@@ -133,6 +143,39 @@ export default function Account() {
       showToast(t('account.toast.error'), 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!firebaseUser) return
+
+    if (newPassword.length < 6) {
+      showToast(t('account.security.passwordTooShort'), 'error')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      showToast(t('account.security.passwordMismatch'), 'error')
+      return
+    }
+
+    setChangingPassword(true)
+    try {
+      const credential = EmailAuthProvider.credential(firebaseUser.email!, currentPassword)
+      await reauthenticateWithCredential(firebaseUser, credential)
+      await updatePassword(firebaseUser, newPassword)
+      showToast(t('account.security.passwordChanged'), 'success')
+      setShowPasswordForm(false)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        showToast(t('account.security.wrongPassword'), 'error')
+      } else {
+        showToast(t('account.toast.error'), 'error')
+      }
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -460,17 +503,75 @@ export default function Account() {
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             {/* Change Password */}
-            <div className="flex-1 flex items-center justify-between sm:border-r sm:border-gray-100 sm:pr-6">
-              <div>
-                <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
-                <p className="text-sm text-gray-500">{t('account.security.subtitle')}</p>
-              </div>
-              <button
-                onClick={() => showToast(t('account.toast.comingSoon'), 'info')}
-                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
-              >
-                {t('common.edit')}
-              </button>
+            <div className="flex-1 sm:border-r sm:border-gray-100 sm:pr-6">
+              {isGoogleUser ? (
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
+                    <p className="text-sm text-gray-500">{t('account.security.googleAccount')}</p>
+                  </div>
+                </div>
+              ) : !showPasswordForm ? (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
+                    <p className="text-sm text-gray-500">{t('account.security.subtitle')}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPasswordForm(true)}
+                    className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                  >
+                    {t('common.edit')}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <h3 className="font-medium text-[#1e3a5f] mb-3">{t('account.security.changePassword')}</h3>
+                  <div className="space-y-3">
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder={t('account.security.currentPassword')}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                    />
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder={t('account.security.newPassword')}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                    />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder={t('account.security.confirmPassword')}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+                        className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+                      >
+                        {changingPassword ? t('account.security.changing') : t('common.save')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowPasswordForm(false)
+                          setCurrentPassword('')
+                          setNewPassword('')
+                          setConfirmPassword('')
+                        }}
+                        className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Cancel Subscription */}

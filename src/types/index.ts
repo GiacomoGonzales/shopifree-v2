@@ -481,3 +481,34 @@ export interface DeviceStats {
   mobile: number
   desktop: number
 }
+
+export interface RevenueMetrics {
+  totalRevenue: number
+  totalOrders: number
+  averageOrderValue: number
+}
+
+export interface DailyRevenue {
+  date: string  // YYYY-MM-DD
+  revenue: number
+  orders: number
+}
+
+export interface TopSellingProduct {
+  productId: string
+  productName: string
+  quantitySold: number
+  revenue: number
+}
+
+export interface ReferrerStats {
+  source: string  // 'direct' | 'whatsapp' | 'instagram' | etc.
+  count: number
+}
+
+export interface TrendComparison {
+  current: number
+  previous: number
+  percentChange: number
+  direction: 'up' | 'down' | 'flat'
+}

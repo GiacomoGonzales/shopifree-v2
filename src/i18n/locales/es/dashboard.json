@@ -47,20 +47,57 @@
     "noData": "Sin datos",
     "conversionRate": "Tasa de conversion",
     "dateRange": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
       "7days": "Ultimos 7 dias",
-      "30days": "Ultimos 30 dias"
+      "30days": "Ultimos 30 dias",
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes pasado",
+      "90days": "Ultimos 90 dias",
+      "custom": "Personalizado",
+      "from": "Desde",
+      "to": "Hasta",
+      "apply": "Aplicar"
     },
     "summary": {
       "totalVisits": "Visitas totales",
       "productViews": "Vistas de productos",
       "cartAdds": "Agregados al carrito",
-      "whatsappClicks": "Clicks en WhatsApp"
+      "whatsappClicks": "Clicks en WhatsApp",
+      "totalRevenue": "Ingresos",
+      "totalOrders": "Pedidos",
+      "avgOrderValue": "Ticket promedio"
+    },
+    "trends": {
+      "vsLastPeriod": "vs periodo anterior",
+      "noChange": "Sin cambio",
+      "newData": "Nuevo"
     },
     "charts": {
       "dailyVisits": "Visitas diarias",
+      "dailyRevenue": "Ingresos diarios",
       "topProducts": "Productos mas vistos",
+      "topSelling": "Productos mas vendidos",
+      "trafficSources": "Fuentes de trafico",
       "conversionFunnel": "Embudo de conversion",
-      "deviceDistribution": "Por dispositivo"
+      "deviceDistribution": "Por dispositivo",
+      "revenue": "Ingresos",
+      "orders": "Pedidos",
+      "visits": "Visitas"
+    },
+    "referrers": {
+      "direct": "Directo",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "google": "Google",
+      "tiktok": "TikTok",
+      "other": "Otros"
+    },
+    "topSelling": {
+      "product": "Producto",
+      "quantitySold": "Vendidos",
+      "revenue": "Ingresos"
     },
     "upgrade": {
       "title": "Estadísticas Avanzadas",
@@ -116,6 +153,7 @@
     "delivery": "Delivery",
     "address": "Dirección",
     "items": "Productos",
+    "paidOnline": "Pagado online",
     "paymentMethod": "Método de pago",
     "contactWhatsApp": "Contactar por WhatsApp",
     "close": "Cerrar",
@@ -694,7 +732,16 @@
     "security": {
       "title": "Seguridad",
       "subtitle": "Gestiona tu contraseña",
-      "changePassword": "Cambiar contraseña"
+      "changePassword": "Cambiar contraseña",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "passwordChanged": "Contraseña actualizada correctamente",
+      "wrongPassword": "Contraseña actual incorrecta",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "Mínimo 6 caracteres",
+      "googleAccount": "Iniciaste sesión con Google. La contraseña se gestiona desde tu cuenta de Google.",
+      "changing": "Cambiando..."
     },
     "danger": {
       "deleteCatalog": "Eliminar catálogo",

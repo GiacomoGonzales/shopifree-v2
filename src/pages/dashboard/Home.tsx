@@ -216,12 +216,21 @@ export default function DashboardHome() {
           <h2 className="text-lg font-semibold text-[#1e3a5f]">
             {t('home.recentProducts', { defaultValue: 'Productos recientes' })}
           </h2>
-          <Link
-            to={localePath('/dashboard/products/new')}
-            className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
-          >
-            {t('home.addProduct')}
-          </Link>
+          {products.length > 0 ? (
+            <Link
+              to={localePath('/dashboard/products')}
+              className="text-sm font-medium text-[#2d6cb5] hover:text-[#1e3a5f] transition-colors"
+            >
+              {t('home.viewAll', { defaultValue: 'Ver todos' })}
+            </Link>
+          ) : (
+            <Link
+              to={localePath('/dashboard/products/new')}
+              className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
+            >
+              {t('home.addFirstProduct', { defaultValue: 'Crear mi primer producto' })}
+            </Link>
+          )}
         </div>
 
         {products.length === 0 ? (
@@ -245,7 +254,8 @@ export default function DashboardHome() {
             </Link>
           </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="-mx-4 sm:-mx-6 lg:mx-0 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-3 px-4 sm:px-6 lg:px-0">
             {products.slice(0, 5).map((product) => (
               <Link
                 key={product.id}
@@ -291,6 +301,7 @@ export default function DashboardHome() {
               <span className="text-xs text-gray-500 mt-0.5">{products.length} {t('home.products').toLowerCase()}</span>
             </Link>
           </div>
+          </div>
         )}
       </div>
 
@@ -307,7 +318,8 @@ export default function DashboardHome() {
             {t('home.viewAll')}
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="-mx-4 sm:-mx-6 lg:mx-0 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-3 px-4 sm:px-6 lg:px-0">
           {recommendedThemes.map((theme) => (
             <button
               key={theme.id}
@@ -361,6 +373,7 @@ export default function DashboardHome() {
               </div>
             </button>
           ))}
+        </div>
         </div>
       </div>
 
