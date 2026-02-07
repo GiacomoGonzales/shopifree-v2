@@ -661,9 +661,17 @@
         "name": "PayPal",
         "description": "Popular in USA and Europe"
       },
-      "yape": {
-        "name": "Yape / Plin",
-        "description": "Digital wallets Peru"
+      "nequi": {
+        "name": "Nequi / Daviplata",
+        "description": "Digital wallets Colombia"
+      },
+      "pix": {
+        "name": "Pix",
+        "description": "Instant transfer Brazil"
+      },
+      "oxxo": {
+        "name": "OXXO Pay",
+        "description": "Cash payments Mexico"
       },
       "transfer": {
         "name": "Bank Transfer",

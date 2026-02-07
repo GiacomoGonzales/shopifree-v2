@@ -653,7 +653,7 @@
       "upgradeToBusiness": "Actualizar a Business"
     },
     "comingSoon": {
-      "title": "Próximamente",
+      "title": "Proximamente",
       "stripe": {
         "name": "Stripe",
         "description": "Pagos internacionales, +135 monedas"
@@ -662,13 +662,21 @@
         "name": "PayPal",
         "description": "Popular en USA y Europa"
       },
-      "yape": {
-        "name": "Yape / Plin",
-        "description": "Billeteras digitales Perú"
+      "nequi": {
+        "name": "Nequi / Daviplata",
+        "description": "Billeteras digitales Colombia"
+      },
+      "pix": {
+        "name": "Pix",
+        "description": "Transferencia instantanea Brasil"
+      },
+      "oxxo": {
+        "name": "OXXO Pay",
+        "description": "Pagos en efectivo Mexico"
       },
       "transfer": {
-        "name": "Transferencia",
-        "description": "Depósito directo a tu cuenta"
+        "name": "Transferencia bancaria",
+        "description": "Deposito directo a tu cuenta"
       }
     }
   },

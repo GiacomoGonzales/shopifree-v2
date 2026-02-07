@@ -242,70 +242,45 @@ export default function Payments() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('payments.comingSoon.title')}</h3>
 
-            <div className="space-y-4">
-              {/* Stripe */}
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl opacity-60">
-                <div className="w-10 h-10 bg-[#635bff] rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="space-y-3">
+              {/* Lock icon reusable */}
+              {[
+                { name: t('payments.comingSoon.stripe.name'), desc: t('payments.comingSoon.stripe.description'), color: '#635bff', icon: (
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
                   </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.stripe.name')}</h4>
-                  <p className="text-xs text-gray-500">{t('payments.comingSoon.stripe.description')}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-
-              {/* PayPal */}
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl opacity-60">
-                <div className="w-10 h-10 bg-[#003087] rounded-xl flex items-center justify-center flex-shrink-0">
+                )},
+                { name: t('payments.comingSoon.paypal.name'), desc: t('payments.comingSoon.paypal.description'), color: '#003087', icon: (
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.397 4.403-1.01 6.914-5.44 6.914h-2.19c-.524 0-.968.382-1.05.9l-1.63 10.342a.534.534 0 0 0 .527.618h3.065c.458 0 .85-.336.922-.788l.038-.194.73-4.622.047-.254c.072-.452.464-.788.922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.489-4.641z"/>
                   </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.paypal.name')}</h4>
-                  <p className="text-xs text-gray-500">{t('payments.comingSoon.paypal.description')}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-
-              {/* Yape/Plin */}
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl opacity-60">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#6B21A8] to-[#9333EA] rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.yape.name')}</h4>
-                  <p className="text-xs text-gray-500">{t('payments.comingSoon.yape.description')}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-
-              {/* Transferencia Bancaria */}
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl opacity-60">
-                <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl flex items-center justify-center flex-shrink-0">
+                )},
+                { name: t('payments.comingSoon.nequi.name'), desc: t('payments.comingSoon.nequi.description'), color: '#E6007E' },
+                { name: t('payments.comingSoon.pix.name'), desc: t('payments.comingSoon.pix.description'), color: '#32BCAD' },
+                { name: t('payments.comingSoon.oxxo.name'), desc: t('payments.comingSoon.oxxo.description'), color: '#CC0000' },
+                { name: t('payments.comingSoon.transfer.name'), desc: t('payments.comingSoon.transfer.description'), color: '#374151', icon: (
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                   </svg>
+                )},
+              ].map((item) => (
+                <div key={item.name} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl opacity-60">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.color }}>
+                    {item.icon || (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-[#1e3a5f]">{item.name}</h4>
+                    <p className="text-xs text-gray-500">{item.desc}</p>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#1e3a5f]">{t('payments.comingSoon.transfer.name')}</h4>
-                  <p className="text-xs text-gray-500">{t('payments.comingSoon.transfer.description')}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
+              ))}
             </div>
           </div>
         </div>
