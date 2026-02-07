@@ -563,7 +563,7 @@ export default function Register() {
               <p className="text-center text-sm text-gray-600">{t('register.businessType.subtitle')}</p>
 
               {/* Business type grid */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {(Object.keys(BUSINESS_TYPES) as BusinessType[]).map((type) => {
                   const config = BUSINESS_TYPES[type]
                   const labels = config.labels[currentLang] || config.labels.es
@@ -574,13 +574,13 @@ export default function Register() {
                       key={type}
                       type="button"
                       onClick={() => setBusinessType(type)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
                         isSelected
                           ? 'border-[#38bdf8] bg-[#f0f7ff] ring-2 ring-[#38bdf8]/20'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-1.5 ${
                         isSelected
                           ? 'bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] text-white'
                           : 'bg-gray-100 text-gray-500'
