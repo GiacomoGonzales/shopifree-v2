@@ -116,6 +116,13 @@ export interface ThemeTranslations {
   observations: string
   observationsPlaceholder: string
 
+  // Brick payment
+  payWithCard: string
+  paymentRejected: string
+  paymentRejectedMessage: string
+  redirectingToPayment: string
+  paymentApproved: string
+
   // Shipping zones
   zoneNotAvailable: string
 
@@ -261,6 +268,13 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     observations: 'Observaciones',
     observationsPlaceholder: 'Alguna indicacion especial para tu pedido?',
 
+    // Brick payment
+    payWithCard: 'Pagar con tarjeta',
+    paymentRejected: 'Pago rechazado',
+    paymentRejectedMessage: 'Tu pago fue rechazado. Por favor intenta con otra tarjeta.',
+    redirectingToPayment: 'Redirigiendo al pago...',
+    paymentApproved: 'Tu pago fue aprobado exitosamente',
+
     // Shipping zones
     zoneNotAvailable: 'No realizamos envios a esta zona',
 
@@ -405,6 +419,13 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     observations: 'Notes',
     observationsPlaceholder: 'Any special instructions for your order?',
 
+    // Brick payment
+    payWithCard: 'Pay with card',
+    paymentRejected: 'Payment rejected',
+    paymentRejectedMessage: 'Your payment was rejected. Please try a different card.',
+    redirectingToPayment: 'Redirecting to payment...',
+    paymentApproved: 'Your payment was approved successfully',
+
     // Shipping zones
     zoneNotAvailable: 'We do not ship to this area',
 
@@ -548,6 +569,13 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Observations
     observations: 'Observacoes',
     observationsPlaceholder: 'Alguma instrucao especial para seu pedido?',
+
+    // Brick payment
+    payWithCard: 'Pagar com cartao',
+    paymentRejected: 'Pagamento recusado',
+    paymentRejectedMessage: 'Seu pagamento foi recusado. Por favor tente com outro cartao.',
+    redirectingToPayment: 'Redirecionando para o pagamento...',
+    paymentApproved: 'Seu pagamento foi aprovado com sucesso',
 
     // Shipping zones
     zoneNotAvailable: 'Nao realizamos envios para esta regiao',

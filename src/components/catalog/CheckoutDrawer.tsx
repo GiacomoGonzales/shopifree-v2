@@ -10,6 +10,7 @@ import {
   PaymentSelector,
   OrderSummary,
   OrderConfirmation,
+  MercadoPagoBrick,
   type CustomerFormRef,
   type DeliverySelectorRef,
   type PaymentSelectorRef
@@ -40,12 +41,15 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     error,
     shippingCost,
     finalTotal,
+    brickMode,
     goBack,
     goNext,
     updateData,
     processWhatsApp,
     processMercadoPago,
-    processTransfer
+    processTransfer,
+    processBrickPayment,
+    fallbackToCheckoutPro
   } = useCheckout({
     store,
     items,
@@ -137,8 +141,12 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
   }, [step])
 
   // Step indicators
-  const steps = ['customer', 'delivery', 'payment']
-  const currentStepIndex = step === 'confirmation' ? 3 : steps.indexOf(step)
+  const progressSteps = brickMode
+    ? ['customer', 'delivery', 'payment', 'brick']
+    : ['customer', 'delivery', 'payment']
+  const currentStepIndex = step === 'confirmation'
+    ? progressSteps.length
+    : progressSteps.indexOf(step)
 
   return (
     <>
@@ -179,7 +187,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
         {step !== 'confirmation' && (
           <div className="px-5 py-3 border-b" style={{ borderColor: theme.colors.border }}>
             <div className="flex items-center gap-2">
-              {steps.map((s, i) => (
+              {progressSteps.map((s, i) => (
                 <div key={s} className="flex items-center flex-1">
                   <div
                     className="w-full h-1 rounded-full transition-all"
@@ -248,6 +256,17 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             />
           )}
 
+          {step === 'brick' && (
+            <MercadoPagoBrick
+              store={store}
+              amount={finalTotal}
+              onSubmit={processBrickPayment}
+              onFallbackToRedirect={fallbackToCheckoutPro}
+              onError={(msg) => { /* error is shown by brick itself */ void msg }}
+              t={t}
+            />
+          )}
+
           {step === 'confirmation' && order && (
             <OrderConfirmation
               order={order}
@@ -273,7 +292,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                   type="button"
                   onClick={goBack}
                   disabled={loading}
-                  className="flex-1 py-3.5 font-medium border transition-all disabled:opacity-50"
+                  className={`${step === 'brick' ? 'w-full' : 'flex-1'} py-3.5 font-medium border transition-all disabled:opacity-50`}
                   style={{
                     borderColor: theme.colors.border,
                     color: theme.colors.text,
@@ -283,30 +302,33 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                   {t.backBtn}
                 </button>
               ) : null}
-              <button
-                type="button"
-                onClick={handleContinue}
-                disabled={loading}
-                className={`${step === 'customer' ? 'w-full' : 'flex-1'} py-3.5 font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
-                style={{
-                  backgroundColor: theme.colors.primary,
-                  color: theme.colors.textInverted,
-                  borderRadius: theme.radius.md
-                }}
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  </>
-                ) : step === 'payment' ? (
-                  t.sendOrderBtn
-                ) : (
-                  t.continueBtn
-                )}
-              </button>
+              {/* Hide continue button on brick step - the Brick has its own Pay button */}
+              {step !== 'brick' && (
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={loading}
+                  className={`${step === 'customer' ? 'w-full' : 'flex-1'} py-3.5 font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    color: theme.colors.textInverted,
+                    borderRadius: theme.radius.md
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </>
+                  ) : step === 'payment' ? (
+                    t.sendOrderBtn
+                  ) : (
+                    t.continueBtn
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}

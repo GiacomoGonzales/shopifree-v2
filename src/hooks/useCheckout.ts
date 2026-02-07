@@ -2,10 +2,10 @@ import { useState, useCallback } from 'react'
 import type { Store, Order, OrderItem } from '../types'
 import type { CartItem } from './useCart'
 import { orderService } from '../lib/firebase'
-import { createPreference, cartToPreference } from '../lib/mercadopago'
+import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 
-export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'confirmation'
+export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'confirmation'
 
 // LocalStorage key for saved customer data (per store)
 const getCustomerStorageKey = (storeId: string) => `shopifree_customer_${storeId}`
@@ -158,6 +158,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         break
       case 'payment':
         setStep('delivery')
+        break
+      case 'brick':
+        setStep('payment')
         break
       case 'confirmation':
         // Can't go back from confirmation
@@ -457,7 +460,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     }
   }, [createOrder, store.id, store.whatsapp, data.customer, data.delivery, onOrderComplete, buildWhatsAppMessage])
 
-  // Process MercadoPago payment
+  // Whether we're in brick mode (inline card form vs redirect)
+  const brickMode = step === 'brick'
+
+  // Process MercadoPago payment - now routes to Brick when publicKey exists
   const processMercadoPago = useCallback(async () => {
     if (!store.payments?.mercadopago?.enabled) {
       setError('MercadoPago no esta habilitado')
@@ -476,6 +482,29 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         saveCustomerData(store.id, data.customer, data.delivery)
       }
 
+      // If store has publicKey, show the Brick inline
+      if (store.payments.mercadopago.publicKey) {
+        setLoading(false)
+        setStep('brick')
+        return
+      }
+
+      // Otherwise, fallback to Checkout Pro redirect
+      await redirectToCheckoutPro(createdOrder)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error processing payment')
+      setLoading(false)
+    }
+  }, [store, items, data.customer, data.delivery, createOrder])
+
+  // Redirect to Checkout Pro (used as fallback)
+  const redirectToCheckoutPro = useCallback(async (existingOrder?: Order) => {
+    const orderToUse = existingOrder || order
+    if (!orderToUse) return
+
+    try {
+      setLoading(true)
+
       // Build MP preference items from cart
       const mpItems = items.map((item, index) => ({
         id: item.product.id || `item-${index}`,
@@ -484,7 +513,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         quantity: item.quantity
       }))
 
-      const preference = cartToPreference(mpItems, store.currency, createdOrder.id)
+      const preference = cartToPreference(mpItems, store.currency, orderToUse.id)
 
       // Add customer info if available
       if (data.customer) {
@@ -495,15 +524,14 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         }
       }
 
-      // Call server-side API route (credentials never exposed to frontend)
-      const result = await createPreference(store.id, createdOrder.id, createdOrder.orderNumber, preference)
+      // Call server-side API route
+      const result = await createPreference(store.id, orderToUse.id, orderToUse.orderNumber, preference)
 
       // Store full order info in localStorage for payment return page
-      // (sessionStorage is lost on mobile redirects, localStorage persists)
       localStorage.setItem('pendingOrder', JSON.stringify({
-        orderId: createdOrder.id,
+        orderId: orderToUse.id,
         storeId: store.id,
-        orderNumber: createdOrder.orderNumber,
+        orderNumber: orderToUse.orderNumber,
         language: store.language || 'es',
         storeName: store.name,
         storeWhatsapp: store.whatsapp,
@@ -512,10 +540,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         deliveryMethod: data.delivery?.method,
         deliveryAddress: data.delivery?.address,
         observations: data.delivery?.observations,
-        items: createdOrder.items,
-        subtotal: createdOrder.subtotal,
-        shippingCost: createdOrder.shippingCost || 0,
-        total: createdOrder.total
+        items: orderToUse.items,
+        subtotal: orderToUse.subtotal,
+        shippingCost: orderToUse.shippingCost || 0,
+        total: orderToUse.total
       }))
 
       // Redirect to MercadoPago
@@ -524,7 +552,43 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       setError(err instanceof Error ? err.message : 'Error processing payment')
       setLoading(false)
     }
-  }, [store, items, data.customer, data.delivery, createOrder])
+  }, [order, store, items, data.customer, data.delivery])
+
+  // Fallback from Brick to Checkout Pro redirect
+  const fallbackToCheckoutPro = useCallback(() => {
+    redirectToCheckoutPro()
+  }, [redirectToCheckoutPro])
+
+  // Process payment from the Brick form data
+  const processBrickPayment = useCallback(async (formData: Record<string, unknown>) => {
+    if (!order) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const result = await processPayment(store.id, order.id, formData)
+
+      if (result.status === 'approved') {
+        const paidOrder = { ...order, paymentStatus: 'paid' as const, status: 'confirmed' as const, paymentId: String(result.payment_id) }
+        setOrder(paidOrder)
+        setStep('confirmation')
+        onOrderComplete?.(paidOrder)
+      } else if (result.status === 'in_process' || result.status === 'pending') {
+        const pendingOrder = { ...order, paymentId: String(result.payment_id) }
+        setOrder(pendingOrder)
+        setStep('confirmation')
+        onOrderComplete?.(pendingOrder)
+      } else {
+        // rejected
+        setError('paymentRejected')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error processing payment')
+    } finally {
+      setLoading(false)
+    }
+  }, [order, store.id, onOrderComplete])
 
   // Process bank transfer
   const processTransfer = useCallback(async () => {
@@ -589,6 +653,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     error,
     shippingCost,
     finalTotal,
+    brickMode,
     setStep: goToStep,
     goBack,
     goNext,
@@ -597,6 +662,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     validateDelivery,
     processWhatsApp,
     processMercadoPago,
-    processTransfer
+    processTransfer,
+    processBrickPayment,
+    fallbackToCheckoutPro
   }
 }

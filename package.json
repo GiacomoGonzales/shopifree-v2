@@ -28,6 +28,7 @@
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
+    "@mercadopago/sdk-react": "^1.0.7",
     "@stripe/stripe-js": "^8.6.0",
     "@tailwindcss/typography": "^0.5.19",
     "@vercel/edge": "^1.2.2",

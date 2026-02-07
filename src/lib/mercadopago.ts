@@ -91,3 +91,36 @@ export async function createPreference(
 
   return response.json()
 }
+
+/**
+ * Result from processing a card payment via Brick
+ */
+export interface ProcessPaymentResult {
+  status: 'approved' | 'rejected' | 'in_process' | 'pending'
+  status_detail: string
+  payment_id: string
+}
+
+/**
+ * Process a card payment from the Payment Brick
+ * Sends tokenized form data to the server for processing
+ */
+export async function processPayment(
+  storeId: string,
+  orderId: string,
+  formData: Record<string, unknown>
+): Promise<ProcessPaymentResult> {
+  const response = await fetch('/api/process-mp-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ storeId, orderId, formData })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || `Error ${response.status}`)
+  }
+
+  return data
+}

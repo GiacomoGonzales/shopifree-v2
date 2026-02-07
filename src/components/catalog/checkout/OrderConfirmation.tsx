@@ -45,12 +45,14 @@ export default function OrderConfirmation({ order, whatsapp, onBackToStore, t }:
           className="text-2xl font-bold mb-2"
           style={{ color: theme.colors.text }}
         >
-          {t.orderPlaced}
+          {order.paymentStatus === 'paid' ? t.paymentSuccess : t.orderPlaced}
         </h2>
         <p style={{ color: theme.colors.textMuted }}>
-          {order.paymentMethod === 'whatsapp'
-            ? t.orderProcessing
-            : t.orderPending}
+          {order.paymentStatus === 'paid'
+            ? t.paymentApproved
+            : order.paymentMethod === 'whatsapp'
+              ? t.orderProcessing
+              : t.orderPending}
         </p>
       </div>
 
