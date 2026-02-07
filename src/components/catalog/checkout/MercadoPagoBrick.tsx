@@ -96,6 +96,7 @@ export default function MercadoPagoBrick({ store, amount, onSubmit, onFallbackTo
             paymentMethods: {
               creditCard: 'all',
               debitCard: 'all',
+              mercadoPago: 'all',
             },
             visual: {
               style: {
