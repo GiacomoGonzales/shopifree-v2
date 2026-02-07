@@ -471,7 +471,15 @@
         "ARS": "$ - Argentine Peso",
         "CLP": "$ - Chilean Peso",
         "BRL": "R$ - Brazilian Real",
-        "EUR": "€ - Euro"
+        "EUR": "€ - Euro",
+        "BOB": "Bs - Boliviano",
+        "PYG": "₲ - Guarani",
+        "UYU": "$U - Uruguayan Peso",
+        "GTQ": "Q - Quetzal",
+        "HNL": "L - Lempira",
+        "NIO": "C$ - Cordoba",
+        "CRC": "₡ - Colon",
+        "DOP": "RD$ - Dominican Peso"
       }
     },
     "about": {

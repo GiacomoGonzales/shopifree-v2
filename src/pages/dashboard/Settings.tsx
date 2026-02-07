@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { validateSubdomain, createSubdomain, deleteSubdomain } from '../../lib/subdomain'
 import type { Store, StoreLocation, StoreShipping } from '../../types'
-import { statesByCountry, stateLabel, phoneCodeByCountry } from '../../data/states'
+import { statesByCountry, stateLabel, phoneCodeByCountry, countries } from '../../data/states'
 import {
   type BusinessType,
   getAllBusinessTypes,
@@ -24,7 +24,15 @@ const currencySymbols: Record<string, string> = {
   ARS: '$',
   CLP: '$',
   BRL: 'R$',
-  EUR: '€'
+  EUR: '€',
+  BOB: 'Bs',
+  PYG: '₲',
+  UYU: '$U',
+  GTQ: 'Q',
+  HNL: 'L',
+  NIO: 'C$',
+  CRC: '₡',
+  DOP: 'RD$'
 }
 
 export default function Settings() {
@@ -406,6 +414,14 @@ export default function Settings() {
                     <option value="CLP">{t('settings.basic.currencies.CLP')}</option>
                     <option value="BRL">{t('settings.basic.currencies.BRL')}</option>
                     <option value="EUR">{t('settings.basic.currencies.EUR')}</option>
+                    <option value="BOB">{t('settings.basic.currencies.BOB')}</option>
+                    <option value="PYG">{t('settings.basic.currencies.PYG')}</option>
+                    <option value="UYU">{t('settings.basic.currencies.UYU')}</option>
+                    <option value="GTQ">{t('settings.basic.currencies.GTQ')}</option>
+                    <option value="HNL">{t('settings.basic.currencies.HNL')}</option>
+                    <option value="NIO">{t('settings.basic.currencies.NIO')}</option>
+                    <option value="CRC">{t('settings.basic.currencies.CRC')}</option>
+                    <option value="DOP">{t('settings.basic.currencies.DOP')}</option>
                   </select>
                 </div>
               </div>
@@ -522,15 +538,11 @@ export default function Settings() {
                     onChange={(e) => setLocation({ ...location, country: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   >
-                    <option value="PE">{t('settings.location.countries.PE')}</option>
-                    <option value="MX">{t('settings.location.countries.MX')}</option>
-                    <option value="CO">{t('settings.location.countries.CO')}</option>
-                    <option value="AR">{t('settings.location.countries.AR')}</option>
-                    <option value="CL">{t('settings.location.countries.CL')}</option>
-                    <option value="EC">{t('settings.location.countries.EC')}</option>
-                    <option value="VE">{t('settings.location.countries.VE')}</option>
-                    <option value="US">{t('settings.location.countries.US')}</option>
-                    <option value="ES">{t('settings.location.countries.ES')}</option>
+                    {countries.map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {language === 'en' ? c.name.en : c.name.es}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -899,8 +911,9 @@ export default function Settings() {
                     WhatsApp
                   </label>
                   <div className="flex gap-2">
-                    <div className="w-20 flex items-center justify-center px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600 font-medium shrink-0">
-                      {phoneCodeByCountry[location.country] || '+51'}
+                    <div className="flex items-center gap-1.5 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium shrink-0">
+                      <span>{countries.find(c => c.code === location.country)?.flag}</span>
+                      <span>{phoneCodeByCountry[location.country] || '+51'}</span>
                     </div>
                     <input
                       type="tel"

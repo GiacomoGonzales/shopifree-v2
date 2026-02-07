@@ -466,13 +466,21 @@
       },
       "currencies": {
         "PEN": "S/ - Sol Peruano",
-        "USD": "$ - Dólar Americano",
+        "USD": "$ - Dolar Americano",
         "MXN": "$ - Peso Mexicano",
         "COP": "$ - Peso Colombiano",
         "ARS": "$ - Peso Argentino",
         "CLP": "$ - Peso Chileno",
-        "BRL": "R$ - Real Brasileño",
-        "EUR": "€ - Euro"
+        "BRL": "R$ - Real Brasileno",
+        "EUR": "€ - Euro",
+        "BOB": "Bs - Boliviano",
+        "PYG": "₲ - Guarani",
+        "UYU": "$U - Peso Uruguayo",
+        "GTQ": "Q - Quetzal",
+        "HNL": "L - Lempira",
+        "NIO": "C$ - Cordoba",
+        "CRC": "₡ - Colon",
+        "DOP": "RD$ - Peso Dominicano"
       }
     },
     "about": {

@@ -6,7 +6,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { userService, storeService } from '../../lib/firebase'
 import { createSubdomain } from '../../lib/subdomain'
 import { BUSINESS_TYPES, type BusinessType } from '../../config/businessTypes'
-import { currencyByCountry, phoneCodeByCountry } from '../../data/states'
+import { countries, currencyByCountry, phoneCodeByCountry } from '../../data/states'
 import LanguageSelector from '../../components/common/LanguageSelector'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
@@ -509,12 +509,31 @@ export default function Register() {
               </div>
 
               <div>
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                  {t('register.store.country')}
+                </label>
+                <select
+                  id="country"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+                >
+                  {countries.map(c => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {currentLang === 'en' ? c.name.en : c.name.es}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700">
                   WhatsApp
                 </label>
                 <div className="mt-1 flex gap-2">
-                  <div className="w-20 flex items-center justify-center px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600 font-medium text-[16px] shrink-0">
-                    {phoneCodeByCountry[country] || '+1'}
+                  <div className="flex items-center gap-1.5 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium text-[16px] shrink-0">
+                    <span>{countries.find(c => c.code === country)?.flag}</span>
+                    <span>{phoneCodeByCountry[country] || '+1'}</span>
                   </div>
                   <input
                     id="whatsapp"
@@ -527,28 +546,6 @@ export default function Register() {
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">{t('register.store.whatsappHint')}</p>
-              </div>
-
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-                  {t('register.store.country')}
-                </label>
-                <select
-                  id="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
-                >
-                  <option value="PE">{t('register.store.countries.PE')}</option>
-                  <option value="MX">{t('register.store.countries.MX')}</option>
-                  <option value="CO">{t('register.store.countries.CO')}</option>
-                  <option value="AR">{t('register.store.countries.AR')}</option>
-                  <option value="CL">{t('register.store.countries.CL')}</option>
-                  <option value="EC">{t('register.store.countries.EC')}</option>
-                  <option value="VE">{t('register.store.countries.VE')}</option>
-                  <option value="US">{t('register.store.countries.US')}</option>
-                  <option value="ES">{t('register.store.countries.ES')}</option>
-                </select>
               </div>
 
               <button

@@ -76,35 +76,56 @@ export const statesByCountry: Record<string, string[]> = {
   ]
 }
 
-// Phone country codes
-export const phoneCodeByCountry: Record<string, string> = {
-  PE: '+51',
-  MX: '+52',
-  CO: '+57',
-  AR: '+54',
-  CL: '+56',
-  EC: '+593',
-  VE: '+58',
-  US: '+1',
-  ES: '+34',
-  BR: '+55',
-  UY: '+598'
+// Centralized country config: flag, phone code, currency, name
+export interface CountryConfig {
+  code: string
+  flag: string
+  phoneCode: string
+  currency: string
+  name: { es: string; en: string }
 }
 
-// Default currency per country
-export const currencyByCountry: Record<string, string> = {
-  PE: 'PEN',
-  MX: 'MXN',
-  CO: 'COP',
-  AR: 'ARS',
-  CL: 'CLP',
-  EC: 'USD',
-  VE: 'USD',
-  US: 'USD',
-  ES: 'EUR'
-}
+export const countries: CountryConfig[] = [
+  // South America
+  { code: 'PE', flag: '\u{1F1F5}\u{1F1EA}', phoneCode: '+51',  currency: 'PEN', name: { es: 'Peru', en: 'Peru' } },
+  { code: 'CO', flag: '\u{1F1E8}\u{1F1F4}', phoneCode: '+57',  currency: 'COP', name: { es: 'Colombia', en: 'Colombia' } },
+  { code: 'AR', flag: '\u{1F1E6}\u{1F1F7}', phoneCode: '+54',  currency: 'ARS', name: { es: 'Argentina', en: 'Argentina' } },
+  { code: 'CL', flag: '\u{1F1E8}\u{1F1F1}', phoneCode: '+56',  currency: 'CLP', name: { es: 'Chile', en: 'Chile' } },
+  { code: 'EC', flag: '\u{1F1EA}\u{1F1E8}', phoneCode: '+593', currency: 'USD', name: { es: 'Ecuador', en: 'Ecuador' } },
+  { code: 'BO', flag: '\u{1F1E7}\u{1F1F4}', phoneCode: '+591', currency: 'BOB', name: { es: 'Bolivia', en: 'Bolivia' } },
+  { code: 'PY', flag: '\u{1F1F5}\u{1F1FE}', phoneCode: '+595', currency: 'PYG', name: { es: 'Paraguay', en: 'Paraguay' } },
+  { code: 'UY', flag: '\u{1F1FA}\u{1F1FE}', phoneCode: '+598', currency: 'UYU', name: { es: 'Uruguay', en: 'Uruguay' } },
+  { code: 'VE', flag: '\u{1F1FB}\u{1F1EA}', phoneCode: '+58',  currency: 'USD', name: { es: 'Venezuela', en: 'Venezuela' } },
+  { code: 'BR', flag: '\u{1F1E7}\u{1F1F7}', phoneCode: '+55',  currency: 'BRL', name: { es: 'Brasil', en: 'Brazil' } },
+  // Mexico
+  { code: 'MX', flag: '\u{1F1F2}\u{1F1FD}', phoneCode: '+52',  currency: 'MXN', name: { es: 'Mexico', en: 'Mexico' } },
+  // Central America & Caribbean
+  { code: 'GT', flag: '\u{1F1EC}\u{1F1F9}', phoneCode: '+502', currency: 'GTQ', name: { es: 'Guatemala', en: 'Guatemala' } },
+  { code: 'HN', flag: '\u{1F1ED}\u{1F1F3}', phoneCode: '+504', currency: 'HNL', name: { es: 'Honduras', en: 'Honduras' } },
+  { code: 'SV', flag: '\u{1F1F8}\u{1F1FB}', phoneCode: '+503', currency: 'USD', name: { es: 'El Salvador', en: 'El Salvador' } },
+  { code: 'NI', flag: '\u{1F1F3}\u{1F1EE}', phoneCode: '+505', currency: 'NIO', name: { es: 'Nicaragua', en: 'Nicaragua' } },
+  { code: 'CR', flag: '\u{1F1E8}\u{1F1F7}', phoneCode: '+506', currency: 'CRC', name: { es: 'Costa Rica', en: 'Costa Rica' } },
+  { code: 'PA', flag: '\u{1F1F5}\u{1F1E6}', phoneCode: '+507', currency: 'USD', name: { es: 'Panama', en: 'Panama' } },
+  { code: 'DO', flag: '\u{1F1E9}\u{1F1F4}', phoneCode: '+1',   currency: 'DOP', name: { es: 'Rep. Dominicana', en: 'Dominican Rep.' } },
+  // Other
+  { code: 'US', flag: '\u{1F1FA}\u{1F1F8}', phoneCode: '+1',   currency: 'USD', name: { es: 'Estados Unidos', en: 'United States' } },
+  { code: 'ES', flag: '\u{1F1EA}\u{1F1F8}', phoneCode: '+34',  currency: 'EUR', name: { es: 'Espana', en: 'Spain' } },
+]
 
-// Label for the state field per country (in Spanish)
+// Helper lookups derived from the centralized config
+export const phoneCodeByCountry: Record<string, string> = Object.fromEntries(
+  countries.map(c => [c.code, c.phoneCode])
+)
+
+export const currencyByCountry: Record<string, string> = Object.fromEntries(
+  countries.map(c => [c.code, c.currency])
+)
+
+export const flagByCountry: Record<string, string> = Object.fromEntries(
+  countries.map(c => [c.code, c.flag])
+)
+
+// Label for the state field per country
 export const stateLabel: Record<string, { es: string; en: string; pt: string }> = {
   PE: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
   MX: { es: 'Estado', en: 'State', pt: 'Estado' },
@@ -112,7 +133,18 @@ export const stateLabel: Record<string, { es: string; en: string; pt: string }> 
   AR: { es: 'Provincia', en: 'Province', pt: 'Província' },
   CL: { es: 'Región', en: 'Region', pt: 'Região' },
   EC: { es: 'Provincia', en: 'Province', pt: 'Província' },
+  BO: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
+  PY: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
+  UY: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
   VE: { es: 'Estado', en: 'State', pt: 'Estado' },
+  BR: { es: 'Estado', en: 'State', pt: 'Estado' },
+  GT: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
+  HN: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
+  SV: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
+  NI: { es: 'Departamento', en: 'Department', pt: 'Departamento' },
+  CR: { es: 'Provincia', en: 'Province', pt: 'Província' },
+  PA: { es: 'Provincia', en: 'Province', pt: 'Província' },
+  DO: { es: 'Provincia', en: 'Province', pt: 'Província' },
   US: { es: 'Estado', en: 'State', pt: 'Estado' },
   ES: { es: 'Comunidad', en: 'Community', pt: 'Comunidade' }
 }
