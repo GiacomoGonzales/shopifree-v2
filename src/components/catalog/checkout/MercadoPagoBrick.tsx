@@ -13,12 +13,22 @@ interface Props {
   t: ThemeTranslations
 }
 
-// Map store language to MP locale
-function getMpLocale(lang?: string): 'es-AR' | 'es-MX' | 'es-PE' | 'es-CO' | 'es-CL' | 'es-UY' | 'pt-BR' | 'en-US' {
-  switch (lang) {
-    case 'pt': return 'pt-BR'
-    case 'en': return 'en-US'
-    default: return 'es-AR'
+// Map store country to MP locale, fallback to language
+function getMpLocale(country?: string, lang?: string): 'es-AR' | 'es-MX' | 'es-PE' | 'es-CO' | 'es-CL' | 'es-UY' | 'pt-BR' | 'en-US' {
+  switch (country?.toUpperCase()) {
+    case 'AR': return 'es-AR'
+    case 'MX': return 'es-MX'
+    case 'PE': return 'es-PE'
+    case 'CO': return 'es-CO'
+    case 'CL': return 'es-CL'
+    case 'UY': return 'es-UY'
+    case 'BR': return 'pt-BR'
+    case 'US': return 'en-US'
+    default:
+      // Fallback to language if no country
+      if (lang === 'pt') return 'pt-BR'
+      if (lang === 'en') return 'en-US'
+      return 'es-AR'
   }
 }
 
@@ -39,7 +49,7 @@ export default function MercadoPagoBrick({ store, amount, onSubmit, onFallbackTo
     }
 
     try {
-      initMercadoPago(publicKey, { locale: getMpLocale(store.language) })
+      initMercadoPago(publicKey, { locale: getMpLocale(store.location?.country, store.language) })
       setSdkInitialized(true)
     } catch {
       onFallbackToRedirect()
