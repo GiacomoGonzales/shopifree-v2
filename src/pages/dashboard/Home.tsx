@@ -118,6 +118,7 @@ export default function DashboardHome() {
   }
 
   return (
+    <>
     <div className="space-y-8">
       {/* Header */}
       <div>
@@ -255,7 +256,7 @@ export default function DashboardHome() {
           </div>
         ) : (
           <div className="-mx-4 sm:-mx-6 lg:mx-0 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex gap-3 px-4 sm:px-6 lg:px-0">
+          <div className="flex gap-3 px-4 sm:px-6 lg:px-0 after:content-[''] after:flex-shrink-0 after:w-1">
             {products.slice(0, 5).map((product) => (
               <Link
                 key={product.id}
@@ -319,7 +320,7 @@ export default function DashboardHome() {
           </Link>
         </div>
         <div className="-mx-4 sm:-mx-6 lg:mx-0 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="flex gap-3 px-4 sm:px-6 lg:px-0">
+        <div className="flex gap-3 px-4 sm:px-6 lg:px-0 after:content-[''] after:flex-shrink-0 after:w-1">
           {recommendedThemes.map((theme) => (
             <button
               key={theme.id}
@@ -377,9 +378,30 @@ export default function DashboardHome() {
         </div>
       </div>
 
+      {/* Upgrade banner - hidden on native iOS app (Apple requires IAP) */}
+      {!Capacitor.isNativePlatform() && (
+        <div className="bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] rounded-2xl p-4 sm:p-6 text-white shadow-xl shadow-[#1e3a5f]/20">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-lg">{t('home.upgradeTitle')}</h3>
+              <p className="text-white/80 mt-1 text-sm sm:text-base">
+                {t('home.upgradeDesc')}
+              </p>
+            </div>
+            <Link
+              to={localePath('/dashboard/plan')}
+              className="px-6 py-3 bg-white text-[#1e3a5f] rounded-xl hover:bg-white/90 transition font-semibold shadow-lg text-center sm:flex-shrink-0"
+            >
+              {t('home.viewPlans')}
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+
       {/* Theme Preview Modal */}
       {previewTheme && store && (
-        <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
           <div className="flex-1 overflow-auto">
             {(() => {
               const ThemeComponent = getThemeComponent(previewTheme)
@@ -433,26 +455,6 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {/* Upgrade banner - hidden on native iOS app (Apple requires IAP) */}
-      {!Capacitor.isNativePlatform() && (
-        <div className="bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] rounded-2xl p-4 sm:p-6 text-white shadow-xl shadow-[#1e3a5f]/20">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h3 className="font-bold text-lg">{t('home.upgradeTitle')}</h3>
-              <p className="text-white/80 mt-1 text-sm sm:text-base">
-                {t('home.upgradeDesc')}
-              </p>
-            </div>
-            <Link
-              to={localePath('/dashboard/plan')}
-              className="px-6 py-3 bg-white text-[#1e3a5f] rounded-xl hover:bg-white/90 transition font-semibold shadow-lg text-center sm:flex-shrink-0"
-            >
-              {t('home.viewPlans')}
-            </Link>
-          </div>
-        </div>
-      )}
-
       {/* QR Code Modal */}
       {showQR && (
         <div
@@ -499,6 +501,6 @@ export default function DashboardHome() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

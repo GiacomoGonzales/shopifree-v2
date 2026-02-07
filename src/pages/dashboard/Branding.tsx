@@ -1109,7 +1109,7 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn bg-white">
       {/* Full screen theme preview */}
       <div className="flex-1 overflow-auto">
         <ThemeComponent
