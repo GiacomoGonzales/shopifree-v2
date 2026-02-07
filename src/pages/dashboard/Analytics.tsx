@@ -163,7 +163,6 @@ export default function Analytics() {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([])
   const [deviceStats, setDeviceStats] = useState<DeviceStats | null>(null)
   const [referrerStats, setReferrerStats] = useState<ReferrerStats[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
   const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetrics>({ totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 })
   const [dailyRevenue, setDailyRevenue] = useState<DailyRevenue[]>([])
   const [topSelling, setTopSelling] = useState<TopSellingProduct[]>([])
@@ -197,7 +196,6 @@ export default function Analytics() {
         setReferrerStats(fullAnalytics.referrerStats)
         setPrevSummary(prevStats)
 
-        setOrders(currentOrders)
         const revenue = {
           totalRevenue: currentOrders.reduce((sum, o) => sum + (o.total || 0), 0),
           totalOrders: currentOrders.length,
@@ -463,7 +461,7 @@ export default function Analytics() {
             <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
             <Tooltip
               labelFormatter={(label) => formatDateLabel(String(label))}
-              formatter={(value: number) => chartTab === 'revenue' ? `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : value}
+              formatter={(value: number | undefined) => { if (value == null) return ''; return chartTab === 'revenue' ? `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : value }}
               contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
             />
             {chartTab === 'visits' ? (
@@ -520,7 +518,8 @@ export default function Analytics() {
                 />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number, name: string) => {
+                  formatter={(value: number | undefined, name: string) => {
+                    if (value == null) return ''
                     if (name === 'revenue') return `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
                     return value
                   }}
