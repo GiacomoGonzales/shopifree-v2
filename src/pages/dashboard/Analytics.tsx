@@ -461,7 +461,7 @@ export default function Analytics() {
             <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
             <Tooltip
               labelFormatter={(label) => formatDateLabel(String(label))}
-              formatter={(value: number | undefined) => { if (value == null) return ''; return chartTab === 'revenue' ? `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : value }}
+              formatter={((value: number) => chartTab === 'revenue' ? `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : value) as never}
               contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
             />
             {chartTab === 'visits' ? (
@@ -518,11 +518,10 @@ export default function Analytics() {
                 />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number | undefined, name: string) => {
-                    if (value == null) return ''
+                  formatter={((value: number, name: string) => {
                     if (name === 'revenue') return `${currencySymbol}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
                     return value
-                  }}
+                  }) as never}
                 />
                 <Bar dataKey="quantitySold" name={t('analytics.topSelling.quantitySold')} fill="#10b981" radius={[0, 4, 4, 0]} />
               </BarChart>
