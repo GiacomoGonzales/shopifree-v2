@@ -5,6 +5,7 @@ export { default as OrderSummary } from './OrderSummary'
 export { default as OrderConfirmation } from './OrderConfirmation'
 export { default as BankTransferInfo } from './BankTransferInfo'
 export { default as MercadoPagoBrick } from './MercadoPagoBrick'
+export { default as StripeElement } from './StripeElement'
 
 export type { CustomerFormRef } from './CustomerForm'
 export type { DeliverySelectorRef } from './DeliverySelector'

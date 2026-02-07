@@ -11,6 +11,7 @@ import {
   OrderSummary,
   OrderConfirmation,
   MercadoPagoBrick,
+  StripeElement,
   type CustomerFormRef,
   type DeliverySelectorRef,
   type PaymentSelectorRef
@@ -42,11 +43,14 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     shippingCost,
     finalTotal,
     brickMode,
+    stripeMode,
     goBack,
     goNext,
     updateData,
     processWhatsApp,
     processMercadoPago,
+    processStripe,
+    processStripePaymentComplete,
     processTransfer,
     processBrickPayment,
     fallbackToCheckoutPro
@@ -111,7 +115,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     onClose()
   }, [onClose])
 
-  const handlePaymentSubmit = useCallback((method: 'whatsapp' | 'mercadopago' | 'transfer') => {
+  const handlePaymentSubmit = useCallback((method: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer') => {
     switch (method) {
       case 'whatsapp':
         processWhatsApp()
@@ -119,11 +123,14 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
       case 'mercadopago':
         processMercadoPago()
         break
+      case 'stripe':
+        processStripe()
+        break
       case 'transfer':
         processTransfer()
         break
     }
-  }, [processWhatsApp, processMercadoPago, processTransfer])
+  }, [processWhatsApp, processMercadoPago, processStripe, processTransfer])
 
   // Handle continue button click
   const handleContinue = useCallback(() => {
@@ -143,6 +150,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
   // Step indicators
   const progressSteps = brickMode
     ? ['customer', 'delivery', 'payment', 'brick']
+    : stripeMode
+    ? ['customer', 'delivery', 'payment', 'stripe']
     : ['customer', 'delivery', 'payment']
   const currentStepIndex = step === 'confirmation'
     ? progressSteps.length
@@ -267,6 +276,18 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             />
           )}
 
+          {step === 'stripe' && order && (
+            <StripeElement
+              store={store}
+              orderId={order.id}
+              amount={finalTotal}
+              currency={store.currency || 'USD'}
+              onPaymentComplete={processStripePaymentComplete}
+              onError={(msg) => { void msg }}
+              t={t}
+            />
+          )}
+
           {step === 'confirmation' && order && (
             <OrderConfirmation
               order={order}
@@ -292,7 +313,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                   type="button"
                   onClick={goBack}
                   disabled={loading}
-                  className={`${step === 'brick' ? 'w-full' : 'flex-1'} py-3.5 font-medium border transition-all disabled:opacity-50`}
+                  className={`${step === 'brick' || step === 'stripe' ? 'w-full' : 'flex-1'} py-3.5 font-medium border transition-all disabled:opacity-50`}
                   style={{
                     borderColor: theme.colors.border,
                     color: theme.colors.text,
@@ -302,8 +323,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                   {t.backBtn}
                 </button>
               ) : null}
-              {/* Hide continue button on brick step - the Brick has its own Pay button */}
-              {step !== 'brick' && (
+              {/* Hide continue button on brick/stripe step - they have their own Pay button */}
+              {step !== 'brick' && step !== 'stripe' && (
                 <button
                   type="button"
                   onClick={handleContinue}

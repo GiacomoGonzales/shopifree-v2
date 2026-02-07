@@ -78,9 +78,11 @@ export interface ThemeTranslations {
   selectPayment: string
   payViaWhatsApp: string
   payViaMercadoPago: string
+  payViaStripe: string
   payViaTransfer: string
   whatsappPaymentDesc: string
   mercadopagoPaymentDesc: string
+  stripePaymentDesc: string
   transferPaymentDesc: string
 
   // Order confirmation
@@ -230,9 +232,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     selectPayment: 'Metodo de pago',
     payViaWhatsApp: 'Coordinar por WhatsApp',
     payViaMercadoPago: 'Pagar con MercadoPago',
+    payViaStripe: 'Pagar con Stripe',
     payViaTransfer: 'Transferencia bancaria',
     whatsappPaymentDesc: 'Te contactaremos para coordinar',
     mercadopagoPaymentDesc: 'Pago seguro con tarjeta o efectivo',
+    stripePaymentDesc: 'Pago seguro con tarjeta',
     transferPaymentDesc: 'Transferencia a cuenta bancaria',
 
     // Order confirmation
@@ -381,9 +385,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     selectPayment: 'Payment method',
     payViaWhatsApp: 'Coordinate via WhatsApp',
     payViaMercadoPago: 'Pay with MercadoPago',
+    payViaStripe: 'Pay with Stripe',
     payViaTransfer: 'Bank transfer',
     whatsappPaymentDesc: 'We will contact you to coordinate',
     mercadopagoPaymentDesc: 'Secure payment with card or cash',
+    stripePaymentDesc: 'Secure card payment',
     transferPaymentDesc: 'Transfer to bank account',
 
     // Order confirmation
@@ -532,9 +538,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     selectPayment: 'Forma de pagamento',
     payViaWhatsApp: 'Combinar pelo WhatsApp',
     payViaMercadoPago: 'Pagar com MercadoPago',
+    payViaStripe: 'Pagar com Stripe',
     payViaTransfer: 'Transferencia bancaria',
     whatsappPaymentDesc: 'Entraremos em contato para combinar',
     mercadopagoPaymentDesc: 'Pagamento seguro com cartao ou dinheiro',
+    stripePaymentDesc: 'Pagamento seguro com cartao',
     transferPaymentDesc: 'Transferencia para conta bancaria',
 
     // Order confirmation

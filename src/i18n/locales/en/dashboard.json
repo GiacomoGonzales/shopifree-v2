@@ -651,12 +651,20 @@
       "businessOnly": "Payment gateway is exclusively available on the Business plan. Accept card payments and more.",
       "upgradeToBusiness": "Upgrade to Business"
     },
+    "stripe": {
+      "description": "International card payments. Spain, USA and +135 countries.",
+      "important": "Important:",
+      "needAccount": "You need a Stripe account.",
+      "getCredentials": "Get credentials",
+      "publishableKey": "Publishable Key",
+      "secretKey": "Secret Key",
+      "testMode": "Test Mode",
+      "testModeDescription": "Test without charging real money",
+      "businessOnly": "Payment gateway is exclusively available on the Business plan. Accept international card payments.",
+      "upgradeToBusiness": "Upgrade to Business"
+    },
     "comingSoon": {
       "title": "Coming Soon",
-      "stripe": {
-        "name": "Stripe",
-        "description": "International payments, +135 currencies"
-      },
       "paypal": {
         "name": "PayPal",
         "description": "Popular in USA and Europe"

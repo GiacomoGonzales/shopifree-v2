@@ -5,7 +5,7 @@ import { orderService } from '../lib/firebase'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 
-export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'confirmation'
+export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'stripe' | 'confirmation'
 
 // LocalStorage key for saved customer data (per store)
 const getCustomerStorageKey = (storeId: string) => `shopifree_customer_${storeId}`
@@ -99,7 +99,7 @@ export interface DeliveryData {
 export interface CheckoutData {
   customer?: CustomerData
   delivery?: DeliveryData
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'transfer'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'
 }
 
 interface UseCheckoutOptions {
@@ -162,6 +162,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       case 'brick':
         setStep('payment')
         break
+      case 'stripe':
+        setStep('payment')
+        break
       case 'confirmation':
         // Can't go back from confirmation
         break
@@ -215,7 +218,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   }, [items])
 
   // Create order in Firestore
-  const createOrder = useCallback(async (paymentMethod: 'whatsapp' | 'mercadopago' | 'transfer'): Promise<Order> => {
+  const createOrder = useCallback(async (paymentMethod: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'): Promise<Order> => {
     if (!data.customer || !data.delivery) {
       throw new Error('Missing customer or delivery data')
     }
@@ -590,6 +593,55 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     }
   }, [order, store.id, onOrderComplete])
 
+  // Whether we're in stripe mode (inline payment element)
+  const stripeMode = step === 'stripe'
+
+  // Process Stripe payment - creates order then shows Payment Element
+  const processStripe = useCallback(async () => {
+    if (!store.payments?.stripe?.enabled) {
+      setError('Stripe is not enabled')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const createdOrder = await createOrder('stripe')
+      setOrder(createdOrder)
+
+      // Save customer data for future orders
+      if (data.customer && data.delivery) {
+        saveCustomerData(store.id, data.customer, data.delivery)
+      }
+
+      setLoading(false)
+      setStep('stripe')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error processing payment')
+      setLoading(false)
+    }
+  }, [store, data.customer, data.delivery, createOrder])
+
+  // Handle Stripe payment completion from StripeElement
+  const processStripePaymentComplete = useCallback((result: { status: string; paymentId: string }) => {
+    if (!order) return
+
+    if (result.status === 'succeeded') {
+      const paidOrder = { ...order, paymentStatus: 'paid' as const, status: 'confirmed' as const, paymentId: result.paymentId }
+      setOrder(paidOrder)
+      setStep('confirmation')
+      onOrderComplete?.(paidOrder)
+    } else if (result.status === 'processing') {
+      const pendingOrder = { ...order, paymentId: result.paymentId }
+      setOrder(pendingOrder)
+      setStep('confirmation')
+      onOrderComplete?.(pendingOrder)
+    } else {
+      setError('paymentRejected')
+    }
+  }, [order, onOrderComplete])
+
   // Process bank transfer
   const processTransfer = useCallback(async () => {
     setLoading(true)
@@ -654,6 +706,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     shippingCost,
     finalTotal,
     brickMode,
+    stripeMode,
     setStep: goToStep,
     goBack,
     goNext,
@@ -662,6 +715,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     validateDelivery,
     processWhatsApp,
     processMercadoPago,
+    processStripe,
+    processStripePaymentComplete,
     processTransfer,
     processBrickPayment,
     fallbackToCheckoutPro

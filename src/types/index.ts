@@ -141,7 +141,12 @@ export interface StorePayments {
     accessToken?: string        // encrypted
     sandbox: boolean
   }
-  // Estructura lista para agregar más pasarelas
+  stripe?: {
+    enabled: boolean
+    publishableKey?: string
+    secretKey?: string
+    testMode: boolean
+  }
 }
 
 export interface StoreSubscription {
@@ -378,7 +383,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 
   // Pago
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'transfer' | 'cash'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer' | 'cash'
   paymentStatus?: 'pending' | 'paid' | 'refunded'
   paymentId?: string            // ID de MercadoPago
 

@@ -652,12 +652,20 @@
       "businessOnly": "La pasarela de pago está disponible exclusivamente en el plan Business. Acepta pagos con tarjeta y más.",
       "upgradeToBusiness": "Actualizar a Business"
     },
+    "stripe": {
+      "description": "Pagos internacionales con tarjeta. España, USA y +135 países.",
+      "important": "Importante:",
+      "needAccount": "Necesitas cuenta de Stripe.",
+      "getCredentials": "Obtener credenciales",
+      "publishableKey": "Publishable Key",
+      "secretKey": "Secret Key",
+      "testMode": "Modo Test",
+      "testModeDescription": "Prueba sin cobrar dinero real",
+      "businessOnly": "La pasarela de pago está disponible exclusivamente en el plan Business. Acepta pagos con tarjeta internacionalmente.",
+      "upgradeToBusiness": "Actualizar a Business"
+    },
     "comingSoon": {
       "title": "Proximamente",
-      "stripe": {
-        "name": "Stripe",
-        "description": "Pagos internacionales, +135 monedas"
-      },
       "paypal": {
         "name": "PayPal",
         "description": "Popular en USA y Europa"

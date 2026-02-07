@@ -24,6 +24,12 @@ export default function Payments() {
   const [mpAccessToken, setMpAccessToken] = useState('')
   const [mpSandbox, setMpSandbox] = useState(true)
 
+  // Stripe settings
+  const [stripeEnabled, setStripeEnabled] = useState(false)
+  const [stripePublishableKey, setStripePublishableKey] = useState('')
+  const [stripeSecretKey, setStripeSecretKey] = useState('')
+  const [stripeTestMode, setStripeTestMode] = useState(true)
+
   useEffect(() => {
     const fetchStore = async () => {
       if (!firebaseUser) return
@@ -42,6 +48,13 @@ export default function Payments() {
             setMpPublicKey(storeData.payments.mercadopago.publicKey || '')
             setMpAccessToken(storeData.payments.mercadopago.accessToken || '')
             setMpSandbox(storeData.payments.mercadopago.sandbox ?? true)
+          }
+
+          if (storeData.payments?.stripe) {
+            setStripeEnabled(storeData.payments.stripe.enabled || false)
+            setStripePublishableKey(storeData.payments.stripe.publishableKey || '')
+            setStripeSecretKey(storeData.payments.stripe.secretKey || '')
+            setStripeTestMode(storeData.payments.stripe.testMode ?? true)
           }
         }
       } catch (error) {
@@ -66,6 +79,12 @@ export default function Payments() {
             publicKey: mpPublicKey || null,
             accessToken: mpAccessToken || null,
             sandbox: mpSandbox
+          },
+          stripe: {
+            enabled: stripeEnabled,
+            publishableKey: stripePublishableKey || null,
+            secretKey: stripeSecretKey || null,
+            testMode: stripeTestMode
           }
         },
         updatedAt: new Date()
@@ -235,6 +254,118 @@ export default function Payments() {
               </div>
             </div>
           )}
+
+          {/* Stripe - Business plan only */}
+          {store?.plan === 'business' ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#635bff]/20 flex-shrink-0" style={{ backgroundColor: '#635bff' }}>
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-[#1e3a5f]">Stripe</h2>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={stripeEnabled}
+                        onChange={(e) => setStripeEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {t('payments.stripe.description')}
+                  </p>
+                </div>
+              </div>
+
+              {stripeEnabled && (
+                <div className="space-y-4 pt-4 mt-4 border-t border-gray-100">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p className="text-xs text-amber-800">
+                      <strong>{t('payments.stripe.important')}</strong> {t('payments.stripe.needAccount')} <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">{t('payments.stripe.getCredentials')}</a>
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.stripe.publishableKey')}</label>
+                      <input
+                        type="text"
+                        value={stripePublishableKey}
+                        onChange={(e) => setStripePublishableKey(e.target.value)}
+                        placeholder="pk_test_xxxxxxxxxxxxxxxx"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('payments.stripe.secretKey')}</label>
+                      <input
+                        type="password"
+                        value={stripeSecretKey}
+                        onChange={(e) => setStripeSecretKey(e.target.value)}
+                        placeholder="sk_test_xxxxxxxxxxxxxxxx"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={stripeTestMode}
+                        onChange={(e) => setStripeTestMode(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                    <div>
+                      <span className="text-sm font-medium text-[#1e3a5f]">{t('payments.stripe.testMode')}</span>
+                      <p className="text-xs text-gray-500">{t('payments.stripe.testModeDescription')}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-[#635bff] to-[#7a73ff] rounded-2xl p-6 shadow-sm text-white">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white/20">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold">Stripe</h2>
+                  <p className="text-sm text-white/80 mt-1">
+                    {t('payments.stripe.description')}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-4 bg-white/10 rounded-xl">
+                <p className="text-sm text-white/90 mb-3">
+                  {t('payments.stripe.businessOnly')}
+                </p>
+                {!Capacitor.isNativePlatform() && (
+                  <Link
+                    to={localePath('/dashboard/plan')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#635bff] rounded-lg font-semibold text-sm hover:bg-[#f0eeff] transition-all"
+                  >
+                    {t('payments.stripe.upgradeToBusiness')}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Coming Soon */}
@@ -243,13 +374,7 @@ export default function Payments() {
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('payments.comingSoon.title')}</h3>
 
             <div className="space-y-3">
-              {/* Lock icon reusable */}
               {[
-                { name: t('payments.comingSoon.stripe.name'), desc: t('payments.comingSoon.stripe.description'), color: '#635bff', icon: (
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
-                  </svg>
-                )},
                 { name: t('payments.comingSoon.paypal.name'), desc: t('payments.comingSoon.paypal.description'), color: '#003087', icon: (
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.397 4.403-1.01 6.914-5.44 6.914h-2.19c-.524 0-.968.382-1.05.9l-1.63 10.342a.534.534 0 0 0 .527.618h3.065c.458 0 .85-.336.922-.788l.038-.194.73-4.622.047-.254c.072-.452.464-.788.922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.489-4.641z"/>
