@@ -662,17 +662,17 @@
         "name": "PayPal",
         "description": "Popular en USA y Europa"
       },
-      "nequi": {
-        "name": "Nequi / Daviplata",
-        "description": "Billeteras digitales Colombia"
+      "wompi": {
+        "name": "Wompi",
+        "description": "Pasarela de pagos Colombia y Centroamérica"
       },
-      "pix": {
-        "name": "Pix",
-        "description": "Transferencia instantanea Brasil"
+      "culqi": {
+        "name": "Culqi",
+        "description": "Pasarela de pagos Perú"
       },
-      "oxxo": {
-        "name": "OXXO Pay",
-        "description": "Pagos en efectivo Mexico"
+      "conekta": {
+        "name": "Conekta",
+        "description": "Pasarela de pagos México"
       },
       "transfer": {
         "name": "Transferencia bancaria",

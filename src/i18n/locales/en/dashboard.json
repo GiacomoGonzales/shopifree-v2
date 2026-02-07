@@ -661,17 +661,17 @@
         "name": "PayPal",
         "description": "Popular in USA and Europe"
       },
-      "nequi": {
-        "name": "Nequi / Daviplata",
-        "description": "Digital wallets Colombia"
+      "wompi": {
+        "name": "Wompi",
+        "description": "Payment gateway Colombia & Central America"
       },
-      "pix": {
-        "name": "Pix",
-        "description": "Instant transfer Brazil"
+      "culqi": {
+        "name": "Culqi",
+        "description": "Payment gateway Peru"
       },
-      "oxxo": {
-        "name": "OXXO Pay",
-        "description": "Cash payments Mexico"
+      "conekta": {
+        "name": "Conekta",
+        "description": "Payment gateway Mexico"
       },
       "transfer": {
         "name": "Bank Transfer",
