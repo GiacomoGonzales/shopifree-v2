@@ -6,7 +6,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { userService, storeService } from '../../lib/firebase'
 import { createSubdomain } from '../../lib/subdomain'
 import { BUSINESS_TYPES, type BusinessType } from '../../config/businessTypes'
-import { currencyByCountry } from '../../data/states'
+import { currencyByCountry, phoneCodeByCountry } from '../../data/states'
 import LanguageSelector from '../../components/common/LanguageSelector'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@shopifree.app'
@@ -210,12 +210,16 @@ export default function Register() {
 
       // Create store in Firestore (admin gets Business plan)
       // This will throw STORE_ALREADY_EXISTS if store exists (double protection)
+      // Combine country code + local number for WhatsApp
+      const phoneCode = phoneCodeByCountry[country] || '+1'
+      const fullWhatsapp = `${phoneCode}${whatsapp}`
+
       await storeService.create(storeId, {
         id: storeId,
         ownerId: firebaseUser.uid,
         name: storeName,
         subdomain,
-        whatsapp,
+        whatsapp: fullWhatsapp,
         currency: currencyByCountry[country] || 'USD',
         location: { country },
         themeId: 'minimal',
@@ -506,17 +510,22 @@ export default function Register() {
 
               <div>
                 <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700">
-                  {t('register.store.whatsapp')}
+                  WhatsApp
                 </label>
-                <input
-                  id="whatsapp"
-                  type="tel"
-                  required
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder={t('register.store.whatsappPlaceholder')}
-                  className="mt-1 block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                />
+                <div className="mt-1 flex gap-2">
+                  <div className="w-20 flex items-center justify-center px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600 font-medium text-[16px] shrink-0">
+                    {phoneCodeByCountry[country] || '+1'}
+                  </div>
+                  <input
+                    id="whatsapp"
+                    type="tel"
+                    required
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d]/g, ''))}
+                    placeholder="999888777"
+                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl text-[16px] focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  />
+                </div>
                 <p className="mt-1 text-xs text-gray-500">{t('register.store.whatsappHint')}</p>
               </div>
 

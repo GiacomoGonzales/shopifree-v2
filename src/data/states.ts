@@ -76,6 +76,21 @@ export const statesByCountry: Record<string, string[]> = {
   ]
 }
 
+// Phone country codes
+export const phoneCodeByCountry: Record<string, string> = {
+  PE: '+51',
+  MX: '+52',
+  CO: '+57',
+  AR: '+54',
+  CL: '+56',
+  EC: '+593',
+  VE: '+58',
+  US: '+1',
+  ES: '+34',
+  BR: '+55',
+  UY: '+598'
+}
+
 // Default currency per country
 export const currencyByCountry: Record<string, string> = {
   PE: 'PEN',
