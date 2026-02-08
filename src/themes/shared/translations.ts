@@ -62,6 +62,7 @@ export interface ThemeTranslations {
   continueBtn: string
   backBtn: string
   sendOrderBtn: string
+  goToPaymentBtn: string
 
   // Delivery
   howToReceive: string
@@ -216,6 +217,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     continueBtn: 'Continuar',
     backBtn: 'Atras',
     sendOrderBtn: 'Enviar pedido',
+    goToPaymentBtn: 'Ir al pago',
 
     // Delivery
     howToReceive: 'Como quieres recibir tu pedido?',
@@ -369,6 +371,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     continueBtn: 'Continue',
     backBtn: 'Back',
     sendOrderBtn: 'Send order',
+    goToPaymentBtn: 'Go to payment',
 
     // Delivery
     howToReceive: 'How do you want to receive your order?',
@@ -522,6 +525,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     continueBtn: 'Continuar',
     backBtn: 'Voltar',
     sendOrderBtn: 'Enviar pedido',
+    goToPaymentBtn: 'Ir para pagamento',
 
     // Delivery
     howToReceive: 'Como deseja receber seu pedido?',

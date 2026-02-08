@@ -8,6 +8,7 @@ type PaymentMethod = 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'
 interface Props {
   store: Store
   onSubmit: (method: PaymentMethod) => void
+  onSelectionChange?: (method: PaymentMethod) => void
   error?: string | null
   t: ThemeTranslations
 }
@@ -19,6 +20,7 @@ export interface PaymentSelectorRef {
 const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
   store,
   onSubmit,
+  onSelectionChange,
   error,
   t
 }, ref) => {
@@ -53,7 +55,7 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
     return (
       <button
         type="button"
-        onClick={() => setSelected(value)}
+        onClick={() => { setSelected(value); onSelectionChange?.(value) }}
         className="flex items-center gap-4 p-4 border-2 transition-all text-left w-full"
         style={{
           backgroundColor: isSelected ? `${theme.colors.primary}10` : theme.colors.surface,

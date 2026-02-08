@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { useTheme } from './ThemeContext'
 import { useCheckout } from '../../hooks/useCheckout'
 import type { Store, Order } from '../../types'
@@ -28,6 +28,9 @@ interface Props {
 export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOrderComplete }: Props) {
   const { theme } = useTheme()
   const t = getThemeTranslations(store.language)
+
+  // Track selected payment method for dynamic button text
+  const [selectedPayment, setSelectedPayment] = useState<'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'>('whatsapp')
 
   // Form refs
   const customerFormRef = useRef<CustomerFormRef>(null)
@@ -260,6 +263,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
               ref={paymentSelectorRef}
               store={store}
               onSubmit={handlePaymentSubmit}
+              onSelectionChange={setSelectedPayment}
               error={error}
               t={t}
             />
@@ -344,7 +348,9 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                       </svg>
                     </>
                   ) : step === 'payment' ? (
-                    t.sendOrderBtn
+                    selectedPayment === 'mercadopago' || selectedPayment === 'stripe'
+                      ? t.goToPaymentBtn
+                      : t.sendOrderBtn
                   ) : (
                     t.continueBtn
                   )}
