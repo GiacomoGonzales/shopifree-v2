@@ -607,8 +607,8 @@ export default function Settings() {
 
             <div className="space-y-4">
               {/* Pickup toggle */}
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
                   <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.pickupEnabled')}</p>
                   <p className="text-sm text-gray-500">{t('settings.shipping.pickupHint')}</p>
                 </div>
@@ -619,7 +619,7 @@ export default function Settings() {
                     if (!newPickup && shipping.deliveryEnabled === false) return
                     setShipping({ ...shipping, pickupEnabled: newPickup })
                   }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     shipping.pickupEnabled !== false ? 'bg-[#38bdf8]' : 'bg-gray-200'
                   }`}
                 >
@@ -632,8 +632,8 @@ export default function Settings() {
               </div>
 
               {/* Delivery toggle */}
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
                   <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.deliveryEnabled')}</p>
                   <p className="text-sm text-gray-500">{t('settings.shipping.deliveryHint')}</p>
                 </div>
@@ -644,7 +644,7 @@ export default function Settings() {
                     if (!newDelivery && shipping.pickupEnabled === false) return
                     setShipping({ ...shipping, deliveryEnabled: newDelivery })
                   }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     shipping.deliveryEnabled !== false ? 'bg-[#38bdf8]' : 'bg-gray-200'
                   }`}
                 >
@@ -666,15 +666,15 @@ export default function Settings() {
                 <>
                   <hr className="border-gray-100" />
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
                       <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.enableLabel')}</p>
                       <p className="text-sm text-gray-500">{t('settings.shipping.enableHint')}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShipping({ ...shipping, enabled: !shipping.enabled })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         shipping.enabled ? 'bg-[#38bdf8]' : 'bg-gray-200'
                       }`}
                     >
