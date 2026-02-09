@@ -109,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         updateData.paymentStatus = 'paid'
         updateData.status = 'confirmed'
       } else if (paymentStatus === 'rejected' || paymentStatus === 'cancelled') {
-        updateData.paymentStatus = 'pending'
+        updateData.paymentStatus = 'failed'
         // Don't change order status - let the store owner decide
       }
       // For 'pending', 'in_process', etc. - don't update, keep as is

@@ -384,7 +384,7 @@ export interface Order {
 
   // Pago
   paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer' | 'cash'
-  paymentStatus?: 'pending' | 'paid' | 'refunded'
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded'
   paymentId?: string            // ID de MercadoPago
 
   // Notas

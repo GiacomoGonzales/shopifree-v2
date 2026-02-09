@@ -79,10 +79,12 @@ export default function Orders() {
   }, [store, showToast, t])
 
   // Orders with online payment (MercadoPago/Stripe) that were never paid are abandoned carts
-  // Abandoned cart = online payment that was never paid AND order still pending
+  // Abandoned cart = online payment with no payment attempt AND order still pending
+  // Note: failed payments are NOT abandoned carts - they're real attempts that failed
   const isAbandonedCart = (order: Order) =>
     (order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') &&
     order.paymentStatus !== 'paid' &&
+    order.paymentStatus !== 'failed' &&
     order.status === 'pending'
 
   // Real orders = exclude abandoned carts
@@ -248,6 +250,12 @@ export default function Orders() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
       </svg>
     )
+  }
+
+  const getPaymentBadge = (paymentStatus?: string) => {
+    if (paymentStatus === 'paid') return { bg: 'bg-green-50 text-green-700', dot: 'bg-green-500', label: lang === 'es' ? 'Pagado' : 'Paid' }
+    if (paymentStatus === 'failed') return { bg: 'bg-red-50 text-red-700', dot: 'bg-red-500', label: lang === 'es' ? 'Pago fallido' : 'Payment failed' }
+    return { bg: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500', label: lang === 'es' ? 'Pago pendiente' : 'Payment pending' }
   }
 
   const activeFiltersCount = [
@@ -581,10 +589,21 @@ export default function Orders() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[order.status as OrderStatus]?.dot || 'bg-gray-500'}`}></span>
-                        {STATUS_LABELS[order.status as OrderStatus]?.[lang] || order.status}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[order.status as OrderStatus]?.dot || 'bg-gray-500'}`}></span>
+                          {STATUS_LABELS[order.status as OrderStatus]?.[lang] || order.status}
+                        </span>
+                        {(order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') && (() => {
+                          const badge = getPaymentBadge(order.paymentStatus)
+                          return (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium w-fit ${badge.bg}`}>
+                              <span className={`w-1 h-1 rounded-full ${badge.dot}`}></span>
+                              {badge.label}
+                            </span>
+                          )
+                        })()}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {formatDate(order.createdAt)}
@@ -613,10 +632,21 @@ export default function Orders() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-[#1e3a5f]">{order.orderNumber}</span>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[order.status as OrderStatus]?.dot || 'bg-gray-500'}`}></span>
-                    {STATUS_LABELS[order.status as OrderStatus]?.[lang] || order.status}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {(order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') && (() => {
+                      const badge = getPaymentBadge(order.paymentStatus)
+                      return (
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${badge.bg}`}>
+                          <span className={`w-1 h-1 rounded-full ${badge.dot}`}></span>
+                          {badge.label}
+                        </span>
+                      )
+                    })()}
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[order.status as OrderStatus]?.dot || 'bg-gray-500'}`}></span>
+                      {STATUS_LABELS[order.status as OrderStatus]?.[lang] || order.status}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -830,10 +860,22 @@ export default function Orders() {
               </div>
 
               {/* Payment info */}
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <p className="text-sm text-gray-500">
                   {t('orders.paymentMethod')}: <span className="font-medium capitalize">{selectedOrder.paymentMethod}</span>
                 </p>
+                {(selectedOrder.paymentMethod === 'mercadopago' || selectedOrder.paymentMethod === 'stripe') && (() => {
+                  const badge = getPaymentBadge(selectedOrder.paymentStatus)
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">{lang === 'es' ? 'Estado del pago' : 'Payment status'}:</span>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.bg}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
+                        {badge.label}
+                      </span>
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* WhatsApp button */}

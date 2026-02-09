@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '../../lib/firebase'
 import { getThemeTranslations } from '../../themes/shared/translations'
 
 interface PendingOrder {
@@ -28,6 +30,26 @@ function recoverOrderData(searchParams: URLSearchParams): PendingOrder | null {
 export default function PaymentFailure() {
   const [searchParams] = useSearchParams()
   const [pendingOrder] = useState<PendingOrder | null>(() => recoverOrderData(searchParams))
+  const markedRef = useRef(false)
+
+  // Mark the order as payment failed (fallback in case webhook doesn't arrive)
+  useEffect(() => {
+    if (!pendingOrder || markedRef.current) return
+    markedRef.current = true
+
+    const markFailed = async () => {
+      try {
+        const orderRef = doc(db, 'stores', pendingOrder.storeId, 'orders', pendingOrder.orderId)
+        await updateDoc(orderRef, {
+          paymentStatus: 'failed',
+          updatedAt: new Date()
+        })
+      } catch (error) {
+        console.error('Error marking order as failed:', error)
+      }
+    }
+    markFailed()
+  }, [pendingOrder])
 
   const t = getThemeTranslations(pendingOrder?.language)
 
