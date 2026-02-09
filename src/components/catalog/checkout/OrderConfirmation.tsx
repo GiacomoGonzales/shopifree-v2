@@ -30,14 +30,15 @@ export default function OrderConfirmation({ order, whatsapp, storeName, currency
     const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
     const time = order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString()
 
-    const itemsHtml = order.items.map(item =>
-      `<tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:left">${item.name}${item.variant ? ` - ${item.variant}` : ''}</td>
+    const itemsHtml = order.items.map(item => {
+      const variations = item.selectedVariations?.map(v => v.value).join(', ')
+      return `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:left">${item.productName}${variations ? ` - ${variations}` : ''}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">${currencySymbol}${item.price.toFixed(2)}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</td>
       </tr>`
-    ).join('')
+    }).join('')
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t.orderNumber} ${order.orderNumber}</title>
 <style>body{font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1e293b}
