@@ -78,24 +78,32 @@ export default function Orders() {
     fetchOrders()
   }, [store, showToast, t])
 
-  // Calculate stats
+  // Orders with online payment (MercadoPago/Stripe) that were never paid are abandoned carts
+  const isAbandonedCart = (order: Order) =>
+    (order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') &&
+    order.paymentStatus !== 'paid'
+
+  // Real orders = exclude abandoned carts
+  const realOrders = useMemo(() => orders.filter(o => !isAbandonedCart(o)), [orders])
+
+  // Calculate stats (only real orders)
   const stats = useMemo(() => {
-    const totalOrders = orders.length
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
+    const totalOrders = realOrders.length
+    const totalRevenue = realOrders.reduce((sum, o) => sum + (o.total || 0), 0)
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-    const pendingOrders = orders.filter(o => o.status === 'pending').length
-    const todayOrders = orders.filter(o => {
+    const pendingOrders = realOrders.filter(o => o.status === 'pending').length
+    const todayOrders = realOrders.filter(o => {
       const orderDate = new Date(o.createdAt)
       const today = new Date()
       return orderDate.toDateString() === today.toDateString()
     }).length
 
     return { totalOrders, totalRevenue, avgOrderValue, pendingOrders, todayOrders }
-  }, [orders])
+  }, [realOrders])
 
-  // Filter orders
+  // Filter orders (abandoned carts hidden by default)
   const filteredOrders = useMemo(() => {
-    let result = [...orders]
+    let result = [...realOrders]
 
     // Search filter
     if (searchQuery.trim()) {
@@ -158,7 +166,7 @@ export default function Orders() {
     })
 
     return result
-  }, [orders, searchQuery, filterStatus, dateFilter, paymentFilter, sortField, sortOrder])
+  }, [realOrders, searchQuery, filterStatus, dateFilter, paymentFilter, sortField, sortOrder])
 
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)
@@ -260,7 +268,7 @@ export default function Orders() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">{t('orders.title')}</h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
-            {orders.length} {orders.length === 1 ? t('orders.order') : t('orders.orders')}
+            {realOrders.length} {realOrders.length === 1 ? t('orders.order') : t('orders.orders')}
           </p>
         </div>
       </div>
@@ -449,11 +457,11 @@ export default function Orders() {
         >
           {t('orders.all')}
           <span className={`px-1.5 py-0.5 rounded-md text-xs ${filterStatus === 'all' ? 'bg-white/20' : 'bg-gray-100'}`}>
-            {orders.length}
+            {realOrders.length}
           </span>
         </button>
         {(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'] as OrderStatus[]).map(status => {
-          const count = orders.filter(o => o.status === status).length
+          const count = realOrders.filter(o => o.status === status).length
           if (count === 0 && filterStatus !== status) return null
           return (
             <button
@@ -478,7 +486,7 @@ export default function Orders() {
       {/* Results info */}
       {(searchQuery || filterStatus !== 'all' || activeFiltersCount > 0) && (
         <p className="text-sm text-gray-500">
-          {t('orders.showingResults', { count: filteredOrders.length, total: orders.length })}
+          {t('orders.showingResults', { count: filteredOrders.length, total: realOrders.length })}
         </p>
       )}
 
