@@ -8,7 +8,7 @@ import LanguageSelector from '../components/common/LanguageSelector'
 export default function Landing() {
   const { t } = useTranslation(['landing', 'common'])
   const { localePath } = useLanguage()
-  const { firebaseUser, store } = useAuth()
+  const { firebaseUser, store, loading: authLoading } = useAuth()
 
   // If authenticated, go straight to dashboard (or register if no store yet)
   const authTarget = firebaseUser ? (store ? localePath('/dashboard') : localePath('/register')) : localePath('/login')
@@ -41,9 +41,11 @@ export default function Landing() {
               <Link to={localePath('/blog')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base hidden sm:inline">
                 Blog
               </Link>
-              <Link to={authTarget} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
-                {firebaseUser ? t('common:nav.dashboard', 'Mi panel') : t('common:nav.login')}
-              </Link>
+              {!authLoading && (
+                <Link to={authTarget} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
+                  {firebaseUser ? t('common:nav.dashboard', 'Mi panel') : t('common:nav.login')}
+                </Link>
+              )}
               <Link
                 to={localePath('/register')}
                 className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:shadow-lg hover:shadow-[#38bdf8]/25 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
