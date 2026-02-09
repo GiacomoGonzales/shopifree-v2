@@ -136,7 +136,7 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
               <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-full h-full object-cover" />
             }
             title={t.payViaMercadoPago}
-            description={t.mercadopagoPaymentDesc}
+            description={store.location?.country?.toUpperCase() === 'PE' ? t.mercadopagoPaymentDescPE : t.mercadopagoPaymentDesc}
             customIconStyle="rounded-xl overflow-hidden shadow-sm"
           />
         )}

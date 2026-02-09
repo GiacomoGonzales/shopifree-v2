@@ -83,6 +83,7 @@ export interface ThemeTranslations {
   payViaTransfer: string
   whatsappPaymentDesc: string
   mercadopagoPaymentDesc: string
+  mercadopagoPaymentDescPE: string
   stripePaymentDesc: string
   transferPaymentDesc: string
 
@@ -241,6 +242,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     payViaTransfer: 'Transferencia bancaria',
     whatsappPaymentDesc: 'Te contactaremos para coordinar',
     mercadopagoPaymentDesc: 'Pago seguro con tarjeta o efectivo',
+    mercadopagoPaymentDescPE: 'Pago seguro con tarjeta, efectivo o Yape',
     stripePaymentDesc: 'Pago seguro con tarjeta',
     transferPaymentDesc: 'Transferencia a cuenta bancaria',
 
@@ -398,6 +400,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     payViaTransfer: 'Bank transfer',
     whatsappPaymentDesc: 'We will contact you to coordinate',
     mercadopagoPaymentDesc: 'Secure payment with card or cash',
+    mercadopagoPaymentDescPE: 'Secure payment with card, cash or Yape',
     stripePaymentDesc: 'Secure card payment',
     transferPaymentDesc: 'Transfer to bank account',
 
@@ -555,6 +558,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     payViaTransfer: 'Transferencia bancaria',
     whatsappPaymentDesc: 'Entraremos em contato para combinar',
     mercadopagoPaymentDesc: 'Pagamento seguro com cartao ou dinheiro',
+    mercadopagoPaymentDescPE: 'Pagamento seguro com cartao, dinheiro ou Yape',
     stripePaymentDesc: 'Pagamento seguro com cartao',
     transferPaymentDesc: 'Transferencia para conta bancaria',
 
