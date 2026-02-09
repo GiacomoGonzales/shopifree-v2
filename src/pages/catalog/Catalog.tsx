@@ -5,6 +5,7 @@ import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import StoreSEO from '../../components/seo/StoreSEO'
 import { getDeviceType, getReferrer } from '../../utils/deviceDetection'
+import { optimizeImage } from '../../utils/cloudinary'
 import type { Store, Product, Category } from '../../types'
 
 interface CatalogProps {
@@ -12,66 +13,56 @@ interface CatalogProps {
   customDomain?: string
 }
 
-// Modern loading component with store logo
-function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-      <div className="text-center">
-        {/* Circular logo with animated spinner ring */}
-        <div className="relative inline-flex items-center justify-center w-32 h-32">
-          {/* Background ring */}
-          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+// Cache helpers - store logo/name in localStorage for instant display on repeat visits
+function getCachedBranding(key: string): { logo?: string; name?: string } | null {
+  try {
+    const cached = localStorage.getItem(`store_branding_${key}`)
+    return cached ? JSON.parse(cached) : null
+  } catch { return null }
+}
 
-          {/* Animated spinner ring */}
-          <svg className="absolute inset-0 w-32 h-32 animate-spin" style={{ animationDuration: '1.5s' }}>
+function setCachedBranding(key: string, logo?: string, name?: string) {
+  try {
+    localStorage.setItem(`store_branding_${key}`, JSON.stringify({ logo, name }))
+  } catch { /* ignore */ }
+}
+
+// Clean loading spinner with optional store logo
+function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
+  const tinyLogo = logo ? optimizeImage(logo, 'thumbnail') : undefined
+
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="relative inline-flex items-center justify-center w-24 h-24">
+          {/* Spinner ring */}
+          <svg className="absolute inset-0 w-24 h-24 animate-spin" style={{ animationDuration: '1.2s' }}>
             <circle
-              cx="64"
-              cy="64"
-              r="60"
-              fill="none"
-              stroke="url(#gradient)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeDasharray="120 280"
+              cx="48" cy="48" r="44"
+              fill="none" stroke="#e5e7eb" strokeWidth="3"
             />
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#1e3a5f" />
-                <stop offset="100%" stopColor="#38bdf8" />
-              </linearGradient>
-            </defs>
+            <circle
+              cx="48" cy="48" r="44"
+              fill="none" stroke="#111827" strokeWidth="3"
+              strokeLinecap="round" strokeDasharray="80 200"
+            />
           </svg>
 
-          {/* Circular logo */}
-          <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden">
-            {logo ? (
-              <img
-                src={logo}
-                alt={name || 'Cargando'}
-                className="w-20 h-20 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full animate-pulse"></div>
-            )}
-          </div>
-        </div>
-
-        {/* Store name or loading text */}
-        <div className="mt-6">
-          {name ? (
-            <p className="text-lg font-semibold text-gray-800">{name}</p>
+          {/* Logo or simple icon */}
+          {tinyLogo ? (
+            <img
+              src={tinyLogo}
+              alt=""
+              className="w-14 h-14 rounded-full object-cover"
+            />
           ) : (
-            <div className="h-5 w-32 bg-gray-200 rounded-full mx-auto animate-pulse"></div>
+            <div className="w-14 h-14 rounded-full bg-gray-100" />
           )}
-          <p className="mt-2 text-sm text-gray-500">Cargando catálogo...</p>
         </div>
 
-        {/* Animated dots */}
-        <div className="flex justify-center gap-1.5 mt-4">
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
+        {name && (
+          <p className="mt-5 text-sm font-medium text-gray-800">{name}</p>
+        )}
       </div>
     </div>
   )
@@ -81,19 +72,14 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   const { storeSlug } = useParams<{ storeSlug: string }>()
   // Use subdomain prop if provided, otherwise use URL param
   const slug = subdomainStore || storeSlug
+  const cacheKey = customDomain || slug || ''
+  const cached = useRef(getCachedBranding(cacheKey)).current
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingStore, setLoadingStore] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
-  const [minTimePassed, setMinTimePassed] = useState(false)
   const trackedRef = useRef(false)
-
-  // Minimum loader display time so the store logo/branding is visible
-  useEffect(() => {
-    const timer = setTimeout(() => setMinTimePassed(true), 1200)
-    return () => clearTimeout(timer)
-  }, [])
 
   // Analytics callbacks - must be before any conditional returns
   const handleWhatsAppClick = useCallback(() => {
@@ -139,6 +125,7 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
           const storeData = storeSnapshot.docs[0].data() as Store
           const storeId = storeSnapshot.docs[0].id
           setStore({ ...storeData, id: storeId })
+          setCachedBranding(cacheKey, storeData.logo, storeData.name)
 
           // Track page view (only once per session)
           if (!trackedRef.current) {
@@ -165,22 +152,21 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
       if (!store) return
 
       try {
-        // Fetch products from subcollection
+        // Fetch products and categories in parallel
         const productsRef = collection(db, 'stores', store.id, 'products')
-        const productsQuery = query(
-          productsRef,
-          where('active', '==', true)
-        )
-        const productsSnapshot = await getDocs(productsQuery)
+        const productsQuery = query(productsRef, where('active', '==', true))
+        const categoriesRef = collection(db, 'stores', store.id, 'categories')
+
+        const [productsSnapshot, categoriesSnapshot] = await Promise.all([
+          getDocs(productsQuery),
+          getDocs(categoriesRef)
+        ])
+
         setProducts(productsSnapshot.docs.map(doc => ({
           ...doc.data() as Product,
           id: doc.id,
           storeId: store.id
         })))
-
-        // Fetch categories from subcollection
-        const categoriesRef = collection(db, 'stores', store.id, 'categories')
-        const categoriesSnapshot = await getDocs(categoriesRef)
         setCategories(
           categoriesSnapshot.docs
             .map(doc => ({
@@ -200,9 +186,9 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
     fetchProducts()
   }, [store])
 
-  // Show loader while loading store/products or minimum display time hasn't passed
-  if (loadingStore || loadingProducts || !minTimePassed) {
-    return <StoreLoader logo={store?.logo} name={store?.name} />
+  // Show loader while loading - use cached branding for instant logo on repeat visits
+  if (loadingStore || loadingProducts) {
+    return <StoreLoader logo={store?.logo || cached?.logo} name={store?.name || cached?.name} />
   }
 
   if (!store) {
