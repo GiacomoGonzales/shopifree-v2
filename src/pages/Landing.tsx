@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../hooks/useLanguage'
+import { useAuth } from '../hooks/useAuth'
 import DemoStoresCarousel from '../components/landing/DemoStoresCarousel'
 import LanguageSelector from '../components/common/LanguageSelector'
 
 export default function Landing() {
   const { t } = useTranslation(['landing', 'common'])
   const { localePath } = useLanguage()
+  const { firebaseUser, store } = useAuth()
+
+  // If authenticated, go straight to dashboard (or register if no store yet)
+  const authTarget = firebaseUser ? (store ? localePath('/dashboard') : localePath('/register')) : localePath('/login')
   return (
     <div className="min-h-screen relative">
       {/* Animated background gradient mesh */}
@@ -36,8 +41,8 @@ export default function Landing() {
               <Link to={localePath('/blog')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base hidden sm:inline">
                 Blog
               </Link>
-              <Link to={localePath('/login')} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
-                {t('common:nav.login')}
+              <Link to={authTarget} className="text-[#1e3a5f] hover:text-[#38bdf8] font-medium transition text-sm sm:text-base">
+                {firebaseUser ? t('common:nav.dashboard', 'Mi panel') : t('common:nav.login')}
               </Link>
               <Link
                 to={localePath('/register')}
