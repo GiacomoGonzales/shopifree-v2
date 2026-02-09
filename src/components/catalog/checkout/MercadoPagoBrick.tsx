@@ -7,6 +7,7 @@ import type { ThemeTranslations } from '../../../themes/shared/translations'
 interface Props {
   store: Store
   amount: number
+  preferenceId?: string | null
   onSubmit: (formData: Record<string, unknown>) => Promise<void>
   onFallbackToRedirect: () => void
   onError: (msg: string) => void
@@ -32,7 +33,7 @@ function getMpLocale(country?: string, lang?: string): 'es-AR' | 'es-MX' | 'es-P
   }
 }
 
-export default function MercadoPagoBrick({ store, amount, onSubmit, onFallbackToRedirect, onError, t }: Props) {
+export default function MercadoPagoBrick({ store, amount, preferenceId, onSubmit, onFallbackToRedirect, onError, t }: Props) {
   const { theme } = useTheme()
   const [ready, setReady] = useState(false)
   const [sdkInitialized, setSdkInitialized] = useState(false)
@@ -101,15 +102,15 @@ export default function MercadoPagoBrick({ store, amount, onSubmit, onFallbackTo
 
       <div style={{ display: ready ? 'block' : 'none' }}>
         <Payment
-          initialization={{ amount }}
+          initialization={{
+            amount,
+            ...(preferenceId ? { preferenceId } : {})
+          }}
           customization={{
             paymentMethods: {
               creditCard: 'all',
               debitCard: 'all',
-              mercadoPago: 'all',
-              ticket: 'all',
-              bankTransfer: 'all',
-              atm: 'all',
+              ...(preferenceId ? { mercadoPago: 'all' as const } : {}),
             },
             visual: {
               style: {

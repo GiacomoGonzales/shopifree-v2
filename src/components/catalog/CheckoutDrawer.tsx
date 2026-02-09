@@ -41,6 +41,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     step,
     data,
     order,
+    preferenceId,
     loading,
     error,
     shippingCost,
@@ -273,6 +274,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <MercadoPagoBrick
               store={store}
               amount={finalTotal}
+              preferenceId={preferenceId}
               onSubmit={processBrickPayment}
               onFallbackToRedirect={fallbackToCheckoutPro}
               onError={(msg) => { /* error is shown by brick itself */ void msg }}

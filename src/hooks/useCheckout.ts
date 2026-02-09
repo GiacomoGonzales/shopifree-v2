@@ -124,6 +124,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   })
   const [order, setOrder] = useState<Order | null>(null)
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
+  const [preferenceId, setPreferenceId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -485,8 +486,25 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         saveCustomerData(store.id, data.customer, data.delivery)
       }
 
-      // If store has publicKey, show the Brick inline
+      // If store has publicKey, create preference and show the Brick inline
       if (store.payments.mercadopago.publicKey) {
+        // Create preference for Brick (needed for mercadoPago wallet payments)
+        const mpItems = items.map((item, index) => ({
+          id: item.product.id || `item-${index}`,
+          name: item.product.name,
+          price: item.itemPrice,
+          quantity: item.quantity
+        }))
+        const preference = cartToPreference(mpItems, store.currency, createdOrder.id)
+        if (data.customer) {
+          preference.payer = {
+            name: data.customer.name,
+            email: data.customer.email,
+            phone: { number: data.customer.phone }
+          }
+        }
+        const result = await createPreference(store.id, createdOrder.id, createdOrder.orderNumber, preference)
+        setPreferenceId(result.preference_id)
         setLoading(false)
         setStep('brick')
         return
@@ -701,6 +719,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     data,
     order,
     whatsappUrl,
+    preferenceId,
     loading,
     error,
     shippingCost,
