@@ -50,7 +50,7 @@ th{padding:8px 12px;border-bottom:2px solid #334155;text-align:left;font-size:13
 <div class="header"><h1>${storeName || t.orderNumber}</h1>
 <p style="color:#64748b;margin:4px 0">${t.orderNumber}: <strong>${order.orderNumber}</strong></p>
 <p style="color:#64748b;margin:4px 0">${date} - ${time}</p></div>
-${order.customerName ? `<p style="font-size:14px;color:#64748b"><strong>${t.waCustomer}:</strong> ${order.customerName}</p>` : ''}
+${order.customer?.name ? `<p style="font-size:14px;color:#64748b"><strong>${t.waCustomer}:</strong> ${order.customer.name}</p>` : ''}
 <table><thead><tr>
 <th style="text-align:left">Producto</th><th style="text-align:center">${t.waQuantity}</th>
 <th style="text-align:right">${t.waUnitPrice}</th><th style="text-align:right">${t.waSubtotal}</th>
