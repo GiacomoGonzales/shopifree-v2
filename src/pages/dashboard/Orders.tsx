@@ -79,9 +79,11 @@ export default function Orders() {
   }, [store, showToast, t])
 
   // Orders with online payment (MercadoPago/Stripe) that were never paid are abandoned carts
+  // Abandoned cart = online payment that was never paid AND order still pending
   const isAbandonedCart = (order: Order) =>
     (order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') &&
-    order.paymentStatus !== 'paid'
+    order.paymentStatus !== 'paid' &&
+    order.status === 'pending'
 
   // Real orders = exclude abandoned carts
   const realOrders = useMemo(() => orders.filter(o => !isAbandonedCart(o)), [orders])
