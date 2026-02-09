@@ -16,13 +16,12 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
   const { theme, currency, language } = useTheme()
   const { features } = useBusinessType()
 
-  // Preload gallery image on hover for faster modal opening
-  const handleMouseEnter = useCallback(() => {
+  // Preload gallery image on hover/touch for faster modal opening
+  const preloadGalleryImages = useCallback(() => {
     if (product.image) {
       const img = new Image()
       img.src = optimizeImage(product.image, 'gallery')
     }
-    // Also preload additional images if available
     if (product.images?.length) {
       product.images.forEach(imgUrl => {
         const img = new Image()
@@ -44,7 +43,8 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
     <article
       className="group cursor-pointer"
       onClick={() => onSelect(product)}
-      onMouseEnter={handleMouseEnter}
+      onMouseEnter={preloadGalleryImages}
+      onTouchStart={preloadGalleryImages}
     >
       {/* Image */}
       <div

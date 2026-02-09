@@ -100,6 +100,16 @@ export default function MercadoPagoBrick({ store, amount, preferenceId, onSubmit
         </div>
       )}
 
+      {/* Country-specific hint above the Brick */}
+      {ready && store.location?.country?.toUpperCase() === 'PE' && (
+        <p className="text-sm mb-3 flex items-center gap-2" style={{ color: theme.colors.textMuted }}>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Paga con Yape, tarjeta u otros medios a traves de Mercado Pago
+        </p>
+      )}
+
       <div style={{ display: ready ? 'block' : 'none' }}>
         <Payment
           initialization={{

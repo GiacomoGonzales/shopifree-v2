@@ -28,7 +28,7 @@ export default function CartDrawer({
     <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose}>
       <div
         className="absolute inset-0 backdrop-blur-sm"
-        style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+        style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       />
 
       <div
@@ -102,7 +102,7 @@ export default function CartDrawer({
                   >
                     {item.product.image ? (
                       <img
-                        src={optimizeImage(item.product.image, 'thumbnail')}
+                        src={optimizeImage(item.product.image, 'card')}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                       />

@@ -113,7 +113,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose}>
       <div
         className="absolute inset-0 backdrop-blur-sm"
-        style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+        style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       />
 
       <div
