@@ -24,9 +24,7 @@ function getDb(): Firestore {
 }
 
 function getStripe(): Stripe {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2023-10-16'
-  })
+  return new Stripe(process.env.STRIPE_SECRET_KEY!)
 }
 
 function getPlanFromPrice(priceId: string): string {
@@ -81,8 +79,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
-        if (invoice.subscription) {
-          const subscription = await getStripe().subscriptions.retrieve(invoice.subscription as string)
+        const invoiceSubId = invoice.parent?.subscription_details?.subscription
+        if (invoiceSubId) {
+          const subscription = await getStripe().subscriptions.retrieve(invoiceSubId as string)
           await handleSubscriptionUpdate(subscription)
         }
         break
@@ -117,15 +116,16 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0]?.price.id
   const plan = getPlanFromPrice(priceId)
 
+  const item = subscription.items.data[0]
   console.log(`Updating store ${storeId} with plan ${plan}, priceId: ${priceId}`)
-  console.log(`Subscription data: period_end=${subscription.current_period_end}, period_start=${subscription.current_period_start}`)
+  console.log(`Subscription data: period_end=${item?.current_period_end}, period_start=${item?.current_period_start}`)
 
-  // Safely convert timestamps
-  const periodEnd = subscription.current_period_end
-    ? new Date(Number(subscription.current_period_end) * 1000)
+  // Safely convert timestamps (moved to item level in Stripe API 2025+)
+  const periodEnd = item?.current_period_end
+    ? new Date(Number(item.current_period_end) * 1000)
     : null
-  const periodStart = subscription.current_period_start
-    ? new Date(Number(subscription.current_period_start) * 1000)
+  const periodStart = item?.current_period_start
+    ? new Date(Number(item.current_period_start) * 1000)
     : null
 
   await getDb().collection('stores').doc(storeId).set({
