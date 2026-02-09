@@ -298,6 +298,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <OrderConfirmation
               order={order}
               whatsapp={store.whatsapp}
+              storeName={store.name}
+              currency={store.currency}
               onBackToStore={handleBackToStore}
               t={t}
             />

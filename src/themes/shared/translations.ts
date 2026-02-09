@@ -94,6 +94,9 @@ export interface ThemeTranslations {
   whatsappCTA: string
   backToStore: string
 
+  // Receipt
+  downloadReceipt: string
+
   // Bank transfer
   bankTransferInfo: string
   bankName: string
@@ -249,6 +252,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     whatsappCTA: 'Haz clic para enviar tu pedido por WhatsApp',
     backToStore: 'Volver a la tienda',
 
+    // Receipt
+    downloadReceipt: 'Descargar recibo',
+
     // Bank transfer
     bankTransferInfo: 'Datos para transferencia',
     bankName: 'Banco',
@@ -403,6 +409,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     whatsappCTA: 'Click to send your order via WhatsApp',
     backToStore: 'Back to store',
 
+    // Receipt
+    downloadReceipt: 'Download receipt',
+
     // Bank transfer
     bankTransferInfo: 'Bank transfer details',
     bankName: 'Bank',
@@ -556,6 +565,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     orderProcessing: 'Estamos processando seu pedido',
     whatsappCTA: 'Clique para enviar seu pedido pelo WhatsApp',
     backToStore: 'Voltar para a loja',
+
+    // Receipt
+    downloadReceipt: 'Baixar recibo',
 
     // Bank transfer
     bankTransferInfo: 'Dados para transferencia',
