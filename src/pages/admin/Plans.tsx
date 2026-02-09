@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { PLAN_FEATURES } from '../../lib/stripe'
@@ -7,6 +7,10 @@ import type { Store } from '../../types'
 export default function AdminPlans() {
   const [stores, setStores] = useState<(Store & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
+  type SortField = 'name' | 'plan' | 'nextBilling' | 'status'
+  type SortOrder = 'asc' | 'desc'
+  const [sortField, setSortField] = useState<SortField>('name')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
   useEffect(() => {
     fetchStores()
@@ -29,7 +33,67 @@ export default function AdminPlans() {
   }
 
   // Calculate stats
-  const activeSubscriptions = stores.filter(s => s.subscription?.status === 'active')
+  const activeSubscriptions = useMemo(() => {
+    const result = stores.filter(s => s.subscription?.status === 'active')
+
+    result.sort((a, b) => {
+      let comparison = 0
+      switch (sortField) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'plan': {
+          const planOrder: Record<string, number> = { pro: 0, business: 1 }
+          comparison = (planOrder[a.plan || 'pro'] || 0) - (planOrder[b.plan || 'pro'] || 0)
+          break
+        }
+        case 'nextBilling': {
+          const dateA = a.subscription?.currentPeriodEnd ? new Date(a.subscription.currentPeriodEnd).getTime() : 0
+          const dateB = b.subscription?.currentPeriodEnd ? new Date(b.subscription.currentPeriodEnd).getTime() : 0
+          comparison = dateA - dateB
+          break
+        }
+        case 'status': {
+          const statusA = a.subscription?.cancelAtPeriodEnd ? 1 : 0
+          const statusB = b.subscription?.cancelAtPeriodEnd ? 1 : 0
+          comparison = statusA - statusB
+          break
+        }
+      }
+      return sortOrder === 'desc' ? -comparison : comparison
+    })
+
+    return result
+  }, [stores, sortField, sortOrder])
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      )
+    }
+    return sortOrder === 'desc' ? (
+      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    ) : (
+      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    )
+  }
+
   const proSubscriptions = activeSubscriptions.filter(s => s.plan === 'pro')
   const businessSubscriptions = activeSubscriptions.filter(s => s.plan === 'business')
 
@@ -188,11 +252,31 @@ export default function AdminPlans() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/60">
-                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Tienda</th>
-                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Plan</th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
+                      <div className="flex items-center gap-1">
+                        Tienda
+                        <SortIcon field="name" />
+                      </div>
+                    </th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('plan')}>
+                      <div className="flex items-center gap-1">
+                        Plan
+                        <SortIcon field="plan" />
+                      </div>
+                    </th>
                     <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Stripe ID</th>
-                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Proximo cobro</th>
-                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado</th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('nextBilling')}>
+                      <div className="flex items-center gap-1">
+                        Proximo cobro
+                        <SortIcon field="nextBilling" />
+                      </div>
+                    </th>
+                    <th className="text-left py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('status')}>
+                      <div className="flex items-center gap-1">
+                        Estado
+                        <SortIcon field="status" />
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

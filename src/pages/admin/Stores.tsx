@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
@@ -26,6 +26,11 @@ export default function AdminStores() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterPlan, setFilterPlan] = useState<string>('all')
 
+  type SortField = 'name' | 'subdomain' | 'plan' | 'createdAt'
+  type SortOrder = 'asc' | 'desc'
+  const [sortField, setSortField] = useState<SortField>('createdAt')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+
   useEffect(() => {
     fetchStores()
   }, [])
@@ -37,15 +42,6 @@ export default function AdminStores() {
         id: doc.id,
         ...doc.data()
       })) as (Store & { id: string })[]
-
-      // Sort by creation date
-      const toDate = (d: any) => {
-        if (!d) return new Date(0)
-        if (d.toDate) return d.toDate()
-        if (d instanceof Date) return d
-        return new Date(d)
-      }
-      storesData.sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
 
       setStores(storesData)
     } catch (error) {
@@ -114,12 +110,72 @@ export default function AdminStores() {
     }
   }
 
-  const filteredStores = stores.filter(store => {
-    const matchesSearch = store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         store.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesPlan = filterPlan === 'all' || store.plan === filterPlan
-    return matchesSearch && matchesPlan
-  })
+  const filteredStores = useMemo(() => {
+    const toDate = (d: any) => {
+      if (!d) return new Date(0)
+      if (d.toDate) return d.toDate()
+      if (d instanceof Date) return d
+      return new Date(d)
+    }
+
+    let result = stores.filter(store => {
+      const matchesSearch = store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           store.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesPlan = filterPlan === 'all' || store.plan === filterPlan
+      return matchesSearch && matchesPlan
+    })
+
+    result.sort((a, b) => {
+      let comparison = 0
+      switch (sortField) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'subdomain':
+          comparison = a.subdomain.localeCompare(b.subdomain)
+          break
+        case 'plan': {
+          const planOrder: Record<string, number> = { free: 0, pro: 1, business: 2 }
+          comparison = (planOrder[a.plan || 'free'] || 0) - (planOrder[b.plan || 'free'] || 0)
+          break
+        }
+        case 'createdAt':
+          comparison = toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime()
+          break
+      }
+      return sortOrder === 'desc' ? -comparison : comparison
+    })
+
+    return result
+  }, [stores, searchTerm, filterPlan, sortField, sortOrder])
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      )
+    }
+    return sortOrder === 'desc' ? (
+      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    ) : (
+      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    )
+  }
 
   if (loading) {
     return (
@@ -173,11 +229,31 @@ export default function AdminStores() {
           <table className="w-full">
             <thead>
               <tr className="bg-white/50 border-b border-white/60">
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Tienda</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Subdominio</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Plan</th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
+                  <div className="flex items-center gap-1">
+                    Tienda
+                    <SortIcon field="name" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('subdomain')}>
+                  <div className="flex items-center gap-1">
+                    Subdominio
+                    <SortIcon field="subdomain" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('plan')}>
+                  <div className="flex items-center gap-1">
+                    Plan
+                    <SortIcon field="plan" />
+                  </div>
+                </th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado Suscripcion</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Creada</th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
+                  <div className="flex items-center gap-1">
+                    Creada
+                    <SortIcon field="createdAt" />
+                  </div>
+                </th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Acciones</th>
               </tr>
             </thead>

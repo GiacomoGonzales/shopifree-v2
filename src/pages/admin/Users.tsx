@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
@@ -13,6 +13,12 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('')
   const [updatingRole, setUpdatingRole] = useState<string | null>(null)
 
+  type SortField = 'name' | 'email' | 'role' | 'createdAt'
+  type SortOrder = 'asc' | 'desc'
+
+  const [sortField, setSortField] = useState<SortField>('createdAt')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+
   useEffect(() => {
     fetchUsers()
   }, [])
@@ -24,15 +30,6 @@ export default function AdminUsers() {
         id: doc.id,
         ...doc.data()
       })) as (User & { id: string })[]
-
-      // Sort by creation date
-      const toDate = (d: any) => {
-        if (!d) return new Date(0)
-        if (d.toDate) return d.toDate()
-        if (d instanceof Date) return d
-        return new Date(d)
-      }
-      usersData.sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
 
       setUsers(usersData)
     } catch (error) {
@@ -66,11 +63,72 @@ export default function AdminUsers() {
     }
   }
 
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.firstName && user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.lastName && user.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+  const filteredUsers = useMemo(() => {
+    const toDate = (d: any) => {
+      if (!d) return new Date(0)
+      if (d.toDate) return d.toDate()
+      if (d instanceof Date) return d
+      return new Date(d)
+    }
+
+    let result = users.filter(user =>
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.firstName && user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.lastName && user.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+
+    result.sort((a, b) => {
+      let comparison = 0
+      switch (sortField) {
+        case 'name': {
+          const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email
+          const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim() || b.email
+          comparison = nameA.localeCompare(nameB)
+          break
+        }
+        case 'email':
+          comparison = a.email.localeCompare(b.email)
+          break
+        case 'role':
+          comparison = (a.role || 'user').localeCompare(b.role || 'user')
+          break
+        case 'createdAt':
+          comparison = toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime()
+          break
+      }
+      return sortOrder === 'desc' ? -comparison : comparison
+    })
+
+    return result
+  }, [users, searchTerm, sortField, sortOrder])
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      )
+    }
+    return sortOrder === 'desc' ? (
+      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    ) : (
+      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    )
+  }
 
   // Check if user is admin by email or role
   const isUserAdmin = (user: User) => {
@@ -117,11 +175,31 @@ export default function AdminUsers() {
           <table className="w-full">
             <thead>
               <tr className="bg-white/50 border-b border-white/60">
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Usuario</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Email</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Rol</th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
+                  <div className="flex items-center gap-1">
+                    Usuario
+                    <SortIcon field="name" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('email')}>
+                  <div className="flex items-center gap-1">
+                    Email
+                    <SortIcon field="email" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('role')}>
+                  <div className="flex items-center gap-1">
+                    Rol
+                    <SortIcon field="role" />
+                  </div>
+                </th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Stripe ID</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Registrado</th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
+                  <div className="flex items-center gap-1">
+                    Registrado
+                    <SortIcon field="createdAt" />
+                  </div>
+                </th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Acciones</th>
               </tr>
             </thead>
