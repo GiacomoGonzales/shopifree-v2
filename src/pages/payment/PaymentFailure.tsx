@@ -7,6 +7,7 @@ interface PendingOrder {
   storeId: string
   orderNumber: string
   language?: string
+  storeSubdomain?: string
 }
 
 function recoverOrderData(searchParams: URLSearchParams): PendingOrder | null {
@@ -32,7 +33,11 @@ export default function PaymentFailure() {
 
   const handleBackToStore = () => {
     // Don't clear localStorage - user might retry
-    window.history.go(-2)
+    if (pendingOrder?.storeSubdomain) {
+      window.location.href = `https://${pendingOrder.storeSubdomain}.shopifree.app`
+    } else {
+      window.location.href = '/'
+    }
   }
 
   return (

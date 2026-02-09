@@ -505,6 +505,27 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         }
         const result = await createPreference(store.id, createdOrder.id, createdOrder.orderNumber, preference)
         setPreferenceId(result.preference_id)
+
+        // Save pendingOrder for MP Wallet redirect (wallet redirects away from site)
+        localStorage.setItem('pendingOrder', JSON.stringify({
+          orderId: createdOrder.id,
+          storeId: store.id,
+          orderNumber: createdOrder.orderNumber,
+          language: store.language || 'es',
+          storeName: store.name,
+          storeWhatsapp: store.whatsapp,
+          storeSubdomain: store.subdomain,
+          currency: store.currency || 'USD',
+          customer: data.customer,
+          deliveryMethod: data.delivery?.method,
+          deliveryAddress: data.delivery?.address,
+          observations: data.delivery?.observations,
+          items: createdOrder.items,
+          subtotal: createdOrder.subtotal,
+          shippingCost: createdOrder.shippingCost || 0,
+          total: createdOrder.total
+        }))
+
         setLoading(false)
         setStep('brick')
         return
@@ -556,6 +577,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         language: store.language || 'es',
         storeName: store.name,
         storeWhatsapp: store.whatsapp,
+        storeSubdomain: store.subdomain,
         currency: store.currency || 'USD',
         customer: data.customer,
         deliveryMethod: data.delivery?.method,
