@@ -130,6 +130,10 @@ export interface ThemeTranslations {
   redirectingToPayment: string
   paymentApproved: string
 
+  // Search
+  searchProducts: string
+  searchNoResults: string
+
   // Shipping zones
   zoneNotAvailable: string
 
@@ -289,6 +293,10 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     redirectingToPayment: 'Redirigiendo al pago...',
     paymentApproved: 'Tu pago fue aprobado exitosamente',
 
+    // Search
+    searchProducts: 'Buscar productos...',
+    searchNoResults: 'No se encontraron productos',
+
     // Shipping zones
     zoneNotAvailable: 'No realizamos envios a esta zona',
 
@@ -447,6 +455,10 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     redirectingToPayment: 'Redirecting to payment...',
     paymentApproved: 'Your payment was approved successfully',
 
+    // Search
+    searchProducts: 'Search products...',
+    searchNoResults: 'No products found',
+
     // Shipping zones
     zoneNotAvailable: 'We do not ship to this area',
 
@@ -604,6 +616,10 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     paymentRejectedMessage: 'Seu pagamento foi recusado. Por favor tente com outro cartao.',
     redirectingToPayment: 'Redirecionando para o pagamento...',
     paymentApproved: 'Seu pagamento foi aprovado com sucesso',
+
+    // Search
+    searchProducts: 'Buscar produtos...',
+    searchNoResults: 'Nenhum produto encontrado',
 
     // Shipping zones
     zoneNotAvailable: 'Nao realizamos envios para esta regiao',

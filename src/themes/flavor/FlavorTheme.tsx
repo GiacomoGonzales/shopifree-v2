@@ -273,6 +273,8 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          products={products}
+          onSelectProduct={handleSelectProduct}
         />
 
         {/* Products */}

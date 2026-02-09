@@ -263,6 +263,8 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          products={products}
+          onSelectProduct={handleSelectProduct}
         />
 
         {/* Products */}

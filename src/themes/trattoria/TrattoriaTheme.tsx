@@ -356,6 +356,8 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          products={products}
+          onSelectProduct={handleSelectProduct}
         />
 
         {/* Products */}

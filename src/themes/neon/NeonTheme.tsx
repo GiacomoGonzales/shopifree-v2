@@ -83,6 +83,7 @@ interface Props {
 export default function NeonTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -251,6 +252,8 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          products={products}
+          onSelectProduct={handleSelectProduct}
         />
 
         {/* Products */}

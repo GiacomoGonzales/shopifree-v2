@@ -333,6 +333,8 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          products={products}
+          onSelectProduct={handleSelectProduct}
         />
 
         {/* Products */}
