@@ -17,16 +17,33 @@ export default function SearchModal({ products, onSelectProduct, onClose }: Sear
   const [searchTerm, setSearchTerm] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Autofocus
+  // Body scroll lock (iOS-safe: fixes the body so fixed overlays work after scroll)
   useEffect(() => {
-    inputRef.current?.focus()
+    const scrollY = window.scrollY
+    const { body } = document
+    const originalStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    }
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.width = '100%'
+    body.style.overflow = 'hidden'
+    return () => {
+      body.style.position = originalStyles.position
+      body.style.top = originalStyles.top
+      body.style.width = originalStyles.width
+      body.style.overflow = originalStyles.overflow
+      window.scrollTo(0, scrollY)
+    }
   }, [])
 
-  // Body scroll lock
+  // Autofocus (slight delay so iOS renders the modal first)
   useEffect(() => {
-    const original = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = original }
+    const timer = setTimeout(() => inputRef.current?.focus(), 50)
+    return () => clearTimeout(timer)
   }, [])
 
   // Close on Escape
