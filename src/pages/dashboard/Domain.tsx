@@ -63,10 +63,11 @@ export default function Domain() {
 
     setSaving(true)
     try {
-      const response = await fetch(`${API_URL}/add-domain`, {
+      const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'add',
           storeId: store.id,
           domain: cleanDomain
         })
@@ -101,10 +102,11 @@ export default function Domain() {
 
     setSaving(true)
     try {
-      const response = await fetch(`${API_URL}/remove-domain`, {
+      const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'remove',
           storeId: store.id,
           domain: store.customDomain
         })
@@ -138,10 +140,11 @@ export default function Domain() {
 
     setVerifying(true)
     try {
-      const response = await fetch(`${API_URL}/verify-domain`, {
+      const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'verify',
           storeId: store.id,
           domain: store.customDomain
         })
