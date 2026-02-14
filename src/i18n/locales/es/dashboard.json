@@ -416,6 +416,16 @@
         "pets": "Mascotas",
         "general": "General"
       }
+    },
+    "effects": {
+      "title": "Efectos visuales",
+      "subtitle": "Agrega animaciones y efectos premium a tu catálogo.",
+      "scrollReveal": "Animación al scroll",
+      "scrollRevealDesc": "Los productos aparecen con una animación al hacer scroll.",
+      "imageSwap": "Cambio de imagen al hover",
+      "imageSwapDesc": "Muestra la segunda imagen del producto al pasar el mouse.",
+      "upgradeMessage": "Mejora tu plan para activar los efectos visuales.",
+      "viewPlans": "Ver planes"
     }
   },
   "settings": {

@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
@@ -48,6 +48,8 @@ export interface ThemeConfig {
     buttonHover: string       // Hover effect on buttons
     headerBlur: boolean       // Use backdrop blur on header
     darkMode: boolean         // Is this a dark theme
+    scrollReveal?: boolean    // Animate products on scroll into viewport
+    imageSwapOnHover?: boolean // Show second image on card hover
   }
 }
 
@@ -77,9 +79,23 @@ interface ThemeProviderProps {
 export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   const language = store.language || 'es'
 
+  // Merge store-level effect overrides into theme
+  const mergedTheme = useMemo(() => {
+    const s = store.themeSettings
+    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined) return theme
+    return {
+      ...theme,
+      effects: {
+        ...theme.effects,
+        ...(s?.scrollReveal !== undefined && { scrollReveal: s.scrollReveal }),
+        ...(s?.imageSwapOnHover !== undefined && { imageSwapOnHover: s.imageSwapOnHover }),
+      }
+    }
+  }, [theme, store.themeSettings])
+
   return (
     <ThemeContext.Provider value={{
-      theme,
+      theme: mergedTheme,
       store,
       currency: store.currency || 'USD',
       language

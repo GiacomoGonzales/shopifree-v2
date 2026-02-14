@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
+import { useLanguage } from '../../hooks/useLanguage'
 import { PLAN_FEATURES } from '../../lib/stripe'
 import type { Store } from '../../types'
 
@@ -18,6 +20,7 @@ const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
 
 export default function AdminStores() {
   const { showToast } = useToast()
+  const { localePath } = useLanguage()
   const [stores, setStores] = useState<(Store & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [editingStore, setEditingStore] = useState<(Store & { id: string }) | null>(null)
@@ -340,12 +343,20 @@ export default function AdminStores() {
                     }
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => setEditingStore(store)}
-                      className="px-3 py-1.5 text-sm font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
-                    >
-                      Editar plan
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={localePath('/admin/stores/' + store.id)}
+                        className="px-3 py-1.5 text-sm font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                      >
+                        Ver detalle
+                      </Link>
+                      <button
+                        onClick={() => setEditingStore(store)}
+                        className="px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-all"
+                      >
+                        Editar plan
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -434,12 +445,20 @@ export default function AdminStores() {
                     }
                   </span>
                 </div>
-                <button
-                  onClick={() => setEditingStore(store)}
-                  className="px-2.5 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all flex-shrink-0"
-                >
-                  Editar
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    to={localePath('/admin/stores/' + store.id)}
+                    className="px-2.5 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                  >
+                    Detalle
+                  </Link>
+                  <button
+                    onClick={() => setEditingStore(store)}
+                    className="px-2.5 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-all"
+                  >
+                    Editar
+                  </button>
+                </div>
               </div>
             </div>
           ))}

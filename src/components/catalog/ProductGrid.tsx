@@ -2,6 +2,7 @@ import type { Product } from '../../types'
 import ProductCard from './ProductCard'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { ScrollRevealItem } from './ScrollRevealItem'
 
 interface ProductGridProps {
   products: Product[]
@@ -50,15 +51,18 @@ export default function ProductGrid({
 
   const gridClass = `grid grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-4 md:gap-8`
 
+  const scrollReveal = theme.effects.scrollReveal ?? false
+
   return (
     <div className={gridClass}>
-      {products.map(product => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          onSelect={onSelectProduct}
-          onQuickAdd={onQuickAdd}
-        />
+      {products.map((product, index) => (
+        <ScrollRevealItem key={product.id} enabled={scrollReveal} index={index}>
+          <ProductCard
+            product={product}
+            onSelect={onSelectProduct}
+            onQuickAdd={onQuickAdd}
+          />
+        </ScrollRevealItem>
       ))}
     </div>
   )

@@ -415,6 +415,16 @@
         "pets": "Pets",
         "general": "General"
       }
+    },
+    "effects": {
+      "title": "Visual effects",
+      "subtitle": "Add premium animations and effects to your catalog.",
+      "scrollReveal": "Scroll animation",
+      "scrollRevealDesc": "Products appear with an animation when scrolling.",
+      "imageSwap": "Image swap on hover",
+      "imageSwapDesc": "Shows the second product image when hovering with the mouse.",
+      "upgradeMessage": "Upgrade your plan to enable visual effects.",
+      "viewPlans": "View plans"
     }
   },
   "settings": {

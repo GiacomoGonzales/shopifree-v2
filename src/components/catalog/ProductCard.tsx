@@ -55,12 +55,29 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
         }}
       >
         {product.image ? (
-          <img
-            src={optimizeImage(product.image, 'card')}
-            alt={product.name}
-            className={`w-full h-full object-cover transition-transform duration-700 ease-out group-hover:${theme.effects.cardHover}`}
-            loading="lazy"
-          />
+          theme.effects.imageSwapOnHover && product.images?.[0] ? (
+            <>
+              <img
+                src={optimizeImage(product.image, 'card')}
+                alt={product.name}
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-out group-hover:opacity-0 group-hover:${theme.effects.cardHover}`}
+                loading="lazy"
+              />
+              <img
+                src={optimizeImage(product.images[0], 'card')}
+                alt={`${product.name} - 2`}
+                className={`absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:${theme.effects.cardHover}`}
+                loading="lazy"
+              />
+            </>
+          ) : (
+            <img
+              src={optimizeImage(product.image, 'card')}
+              alt={product.name}
+              className={`w-full h-full object-cover transition-transform duration-700 ease-out group-hover:${theme.effects.cardHover}`}
+              loading="lazy"
+            />
+          )
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg

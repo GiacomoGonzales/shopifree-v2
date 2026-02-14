@@ -78,6 +78,8 @@ export interface Store {
     primaryColor?: string
     secondaryColor?: string
     fontFamily?: string
+    scrollReveal?: boolean
+    imageSwapOnHover?: boolean
   }
 
   // === PAGOS ===

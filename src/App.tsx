@@ -37,6 +37,7 @@ import BlogPost from './pages/blog/BlogPost'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminStores from './pages/admin/Stores'
+import AdminStoreDetail from './pages/admin/StoreDetail'
 import AdminUsers from './pages/admin/Users'
 import AdminPlans from './pages/admin/Plans'
 
@@ -179,6 +180,7 @@ function AppRoutes() {
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="stores" element={<AdminStores />} />
+          <Route path="stores/:storeId" element={<AdminStoreDetail />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="plans" element={<AdminPlans />} />
         </Route>

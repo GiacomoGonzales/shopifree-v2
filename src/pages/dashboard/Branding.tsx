@@ -913,6 +913,110 @@ export default function Branding() {
         </div>
       </div>
 
+      {/* Visual Effects - Premium */}
+      {store && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mt-6">
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.effects.title')}</h2>
+            {store.plan === 'free' && (
+              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                PRO
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 mb-6">{t('branding.effects.subtitle')}</p>
+
+          <div className="space-y-4">
+            {/* Scroll Reveal */}
+            <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+              <div className="flex-1 mr-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={store.themeSettings?.scrollReveal || false}
+                  disabled={store.plan === 'free'}
+                  onChange={async (e) => {
+                    const newValue = e.target.checked
+                    try {
+                      await updateDoc(doc(db, 'stores', store.id), {
+                        'themeSettings.scrollReveal': newValue,
+                        updatedAt: new Date()
+                      })
+                      setStore({ ...store, themeSettings: { ...store.themeSettings, scrollReveal: newValue } })
+                      showToast(t('branding.toast.saved'), 'success')
+                    } catch {
+                      showToast(t('branding.toast.error'), 'error')
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                  store.plan === 'free'
+                    ? 'bg-gray-200 cursor-not-allowed'
+                    : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                }`}></div>
+              </label>
+            </div>
+
+            {/* Image Swap on Hover */}
+            <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+              <div className="flex-1 mr-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={store.themeSettings?.imageSwapOnHover || false}
+                  disabled={store.plan === 'free'}
+                  onChange={async (e) => {
+                    const newValue = e.target.checked
+                    try {
+                      await updateDoc(doc(db, 'stores', store.id), {
+                        'themeSettings.imageSwapOnHover': newValue,
+                        updatedAt: new Date()
+                      })
+                      setStore({ ...store, themeSettings: { ...store.themeSettings, imageSwapOnHover: newValue } })
+                      showToast(t('branding.toast.saved'), 'success')
+                    } catch {
+                      showToast(t('branding.toast.error'), 'error')
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                  store.plan === 'free'
+                    ? 'bg-gray-200 cursor-not-allowed'
+                    : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                }`}></div>
+              </label>
+            </div>
+
+            {/* Upgrade prompt for free plan */}
+            {store.plan === 'free' && (
+              <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
+                <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p className="text-sm text-[#1e3a5f]">
+                  {t('branding.effects.upgradeMessage')}{' '}
+                  <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                    {t('branding.effects.viewPlans')}
+                  </a>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Image Crop Modal */}
       {cropImage && (
         <ImageCropModal
