@@ -298,6 +298,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

@@ -366,6 +366,7 @@ export default function LibreriaTheme({ store, products, categories, onWhatsAppC
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

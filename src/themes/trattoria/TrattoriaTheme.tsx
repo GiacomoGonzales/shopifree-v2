@@ -366,6 +366,7 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

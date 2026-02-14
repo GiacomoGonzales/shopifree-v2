@@ -271,6 +271,7 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
               products={filteredProducts}
               onSelectProduct={handleSelectProduct}
               onQuickAdd={handleAddToCart}
+            categories={categories}
             />
           </div>
         </main>

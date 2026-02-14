@@ -230,6 +230,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

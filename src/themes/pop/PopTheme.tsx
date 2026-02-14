@@ -237,6 +237,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

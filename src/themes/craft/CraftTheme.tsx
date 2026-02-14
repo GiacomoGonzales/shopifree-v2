@@ -284,6 +284,7 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

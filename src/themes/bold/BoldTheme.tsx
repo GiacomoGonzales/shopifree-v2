@@ -271,6 +271,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

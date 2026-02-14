@@ -368,6 +368,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

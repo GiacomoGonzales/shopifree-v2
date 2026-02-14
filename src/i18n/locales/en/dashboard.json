@@ -416,6 +416,22 @@
         "general": "General"
       }
     },
+    "layout": {
+      "title": "Catalog layout",
+      "subtitle": "Choose how products are displayed in your store.",
+      "grid": "Grid",
+      "gridDesc": "Classic columns",
+      "masonry": "Masonry",
+      "masonryDesc": "Pinterest-style",
+      "magazine": "Magazine",
+      "magazineDesc": "Featured product",
+      "carousel": "Carousel",
+      "carouselDesc": "Horizontal scroll",
+      "list": "List",
+      "listDesc": "Horizontal cards",
+      "upgradeMessage": "Upgrade your plan for more layouts.",
+      "viewPlans": "View plans"
+    },
     "effects": {
       "title": "Visual effects",
       "subtitle": "Add premium animations and effects to your catalog.",

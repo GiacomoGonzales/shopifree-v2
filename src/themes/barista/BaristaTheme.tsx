@@ -367,6 +367,7 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

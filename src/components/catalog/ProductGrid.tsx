@@ -1,13 +1,18 @@
-import type { Product } from '../../types'
+import type { Product, Category } from '../../types'
 import ProductCard from './ProductCard'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { ScrollRevealItem } from './ScrollRevealItem'
+import MasonryLayout from './layouts/MasonryLayout'
+import MagazineLayout from './layouts/MagazineLayout'
+import CarouselLayout from './layouts/CarouselLayout'
+import ListLayout from './layouts/ListLayout'
 
 interface ProductGridProps {
   products: Product[]
   onSelectProduct: (product: Product) => void
   onQuickAdd: (product: Product) => void
+  categories?: Category[]
   columns?: {
     sm: number
     md: number
@@ -19,6 +24,7 @@ export default function ProductGrid({
   products,
   onSelectProduct,
   onQuickAdd,
+  categories,
   columns = { sm: 2, md: 3, lg: 4 }
 }: ProductGridProps) {
   const { theme, language } = useTheme()
@@ -49,9 +55,24 @@ export default function ProductGrid({
     )
   }
 
-  const gridClass = `grid grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-4 md:gap-8`
-
   const scrollReveal = theme.effects.scrollReveal ?? false
+  const layout = theme.effects.productLayout ?? 'grid'
+
+  if (layout === 'masonry') {
+    return <MasonryLayout products={products} onSelectProduct={onSelectProduct} onQuickAdd={onQuickAdd} scrollReveal={scrollReveal} />
+  }
+  if (layout === 'magazine') {
+    return <MagazineLayout products={products} onSelectProduct={onSelectProduct} onQuickAdd={onQuickAdd} scrollReveal={scrollReveal} />
+  }
+  if (layout === 'carousel') {
+    return <CarouselLayout products={products} onSelectProduct={onSelectProduct} onQuickAdd={onQuickAdd} categories={categories} />
+  }
+  if (layout === 'list') {
+    return <ListLayout products={products} onSelectProduct={onSelectProduct} onQuickAdd={onQuickAdd} scrollReveal={scrollReveal} />
+  }
+
+  // Default grid layout
+  const gridClass = `grid grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-4 md:gap-8`
 
   return (
     <div className={gridClass}>

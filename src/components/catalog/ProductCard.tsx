@@ -6,13 +6,16 @@ import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import { PrepTimeDisplay, DurationDisplay, AvailabilityBadge } from './business-type'
 
+export type ProductCardVariant = 'default' | 'masonry' | 'horizontal' | 'featured'
+
 interface ProductCardProps {
   product: Product
   onSelect: (product: Product) => void
   onQuickAdd: (product: Product) => void
+  variant?: ProductCardVariant
 }
 
-export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCardProps) {
+export default function ProductCard({ product, onSelect, onQuickAdd, variant = 'default' }: ProductCardProps) {
   const { theme, currency, language } = useTheme()
   const { features } = useBusinessType()
 
@@ -39,6 +42,85 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
   const requiresSelection = (features.showModifiers && product.modifierGroups?.length) ||
                             (features.showVariants && product.variations?.length)
 
+  // Horizontal variant: image left, info right
+  if (variant === 'horizontal') {
+    return (
+      <article
+        className="group cursor-pointer flex gap-4"
+        onClick={() => onSelect(product)}
+        onMouseEnter={preloadGalleryImages}
+        onTouchStart={preloadGalleryImages}
+        style={{
+          backgroundColor: theme.colors.surface,
+          borderRadius: theme.radius.lg,
+          boxShadow: theme.shadows.sm,
+        }}
+      >
+        {/* Image */}
+        <div
+          className="relative w-[140px] sm:w-[180px] flex-shrink-0 overflow-hidden"
+          style={{
+            borderRadius: theme.radius.lg,
+            backgroundColor: theme.colors.surfaceHover,
+          }}
+        >
+          {product.image ? (
+            <img
+              src={optimizeImage(product.image, 'card')}
+              alt={product.name}
+              className={`w-full h-full object-cover aspect-square transition-transform duration-700 ease-out group-hover:${theme.effects.cardHover}`}
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full aspect-square flex items-center justify-center">
+              <svg className="w-10 h-10" style={{ color: theme.colors.border }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          )}
+          {hasDiscount && (
+            <div
+              className="absolute top-2 left-2 px-2 py-0.5 text-xs font-semibold backdrop-blur-sm shadow-sm"
+              style={{
+                backgroundColor: theme.colors.badge,
+                color: theme.colors.badgeText,
+                borderRadius: theme.radius.full,
+              }}
+            >
+              -{discountPercent}%
+            </div>
+          )}
+        </div>
+        {/* Info */}
+        <div className="flex-1 py-3 pr-3 flex flex-col justify-center min-w-0">
+          <h3 className="font-medium line-clamp-2 leading-snug mb-1" style={{ color: theme.colors.text }}>
+            {product.name}
+          </h3>
+          {product.shortDescription && (
+            <p className="text-sm line-clamp-2 mb-2" style={{ color: theme.colors.textMuted }}>
+              {product.shortDescription}
+            </p>
+          )}
+          <div className="flex items-baseline gap-2">
+            <span className="font-semibold" style={{ color: theme.colors.text }}>
+              {formatPrice(product.price, currency)}
+            </span>
+            {hasDiscount && (
+              <span className="text-sm line-through" style={{ color: theme.colors.textMuted }}>
+                {formatPrice(product.comparePrice!, currency)}
+              </span>
+            )}
+          </div>
+          {features.showPrepTime && product.prepTime && (
+            <div className="mt-1.5"><PrepTimeDisplay prepTime={product.prepTime} language={language} /></div>
+          )}
+        </div>
+      </article>
+    )
+  }
+
+  const aspectClass = variant === 'masonry' ? '' : variant === 'featured' ? 'aspect-[3/4]' : 'aspect-[4/5]'
+
   return (
     <article
       className="group cursor-pointer"
@@ -48,14 +130,21 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
     >
       {/* Image */}
       <div
-        className="relative aspect-[4/5] mb-4 overflow-hidden"
+        className={`relative ${aspectClass} mb-4 overflow-hidden`}
         style={{
           borderRadius: theme.radius.lg,
           backgroundColor: theme.colors.surfaceHover
         }}
       >
         {product.image ? (
-          theme.effects.imageSwapOnHover && product.images?.[0] ? (
+          variant === 'masonry' ? (
+            <img
+              src={optimizeImage(product.image, 'card')}
+              alt={product.name}
+              className={`w-full object-cover transition-transform duration-700 ease-out group-hover:${theme.effects.cardHover}`}
+              loading="lazy"
+            />
+          ) : theme.effects.imageSwapOnHover && product.images?.[0] ? (
             <>
               <img
                 src={optimizeImage(product.image, 'card')}
@@ -79,7 +168,7 @@ export default function ProductCard({ product, onSelect, onQuickAdd }: ProductCa
             />
           )
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className={`w-full ${variant === 'masonry' ? 'aspect-[4/5]' : 'h-full'} flex items-center justify-center`}>
             <svg
               className="w-12 h-12"
               style={{ color: theme.colors.border }}

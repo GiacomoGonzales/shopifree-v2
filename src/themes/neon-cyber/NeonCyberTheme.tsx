@@ -338,6 +338,7 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
               products={filteredProducts}
               onSelectProduct={handleSelectProduct}
               onQuickAdd={handleAddToCart}
+            categories={categories}
             />
           </div>
         </main>

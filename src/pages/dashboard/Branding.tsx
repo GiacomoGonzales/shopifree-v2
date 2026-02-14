@@ -913,6 +913,128 @@ export default function Branding() {
         </div>
       </div>
 
+      {/* Catalog Layout Selector */}
+      {store && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mt-6">
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.layout.title')}</h2>
+            {store.plan === 'free' && (
+              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                PRO
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 mb-6">{t('branding.layout.subtitle')}</p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {([
+              { id: 'grid' as const, icon: (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              )},
+              { id: 'masonry' as const, icon: (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <rect x="3" y="3" width="7" height="10" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="14" y="3" width="7" height="6" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="3" y="16" width="7" height="5" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="14" y="12" width="7" height="9" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )},
+              { id: 'magazine' as const, icon: (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <rect x="3" y="3" width="11" height="11" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="17" y="3" width="4" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="17" y="11" width="4" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="3" y="17" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="10" y="17" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="17" y="19" width="4" height="2" rx="0.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )},
+              { id: 'carousel' as const, icon: (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <rect x="2" y="6" width="6" height="12" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="9" y="4" width="6" height="16" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="16" y="6" width="6" height="12" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )},
+              { id: 'list' as const, icon: (
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <rect x="3" y="4" width="7" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="13" y1="5" x2="21" y2="5" strokeLinecap="round" />
+                  <line x1="13" y1="8" x2="18" y2="8" strokeLinecap="round" />
+                  <rect x="3" y="12" width="7" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="13" y1="13" x2="21" y2="13" strokeLinecap="round" />
+                  <line x1="13" y1="16" x2="18" y2="16" strokeLinecap="round" />
+                </svg>
+              )},
+            ] as const).map((layout) => {
+              const isSelected = (store.themeSettings?.productLayout || 'grid') === layout.id
+              const isPremium = layout.id !== 'grid'
+              const isDisabled = isPremium && store.plan === 'free'
+
+              return (
+                <button
+                  key={layout.id}
+                  onClick={async () => {
+                    if (isDisabled) return
+                    try {
+                      await updateDoc(doc(db, 'stores', store.id), {
+                        'themeSettings.productLayout': layout.id,
+                        updatedAt: new Date()
+                      })
+                      setStore({ ...store, themeSettings: { ...store.themeSettings, productLayout: layout.id } })
+                      showToast(t('branding.toast.saved'), 'success')
+                    } catch {
+                      showToast(t('branding.toast.error'), 'error')
+                    }
+                  }}
+                  className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                    isSelected
+                      ? 'border-[#2d6cb5] bg-[#f0f7ff]'
+                      : isDisabled
+                        ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                        : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                  }`}
+                >
+                  <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                    {layout.icon}
+                  </div>
+                  <div className="font-medium text-sm text-[#1e3a5f]">
+                    {t(`branding.layout.${layout.id}`)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {t(`branding.layout.${layout.id}Desc`)}
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Upgrade prompt for free plan */}
+          {store.plan === 'free' && (
+            <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
+              <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <p className="text-sm text-[#1e3a5f]">
+                {t('branding.layout.upgradeMessage')}{' '}
+                <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                  {t('branding.layout.viewPlans')}
+                </a>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Visual Effects - Premium */}
       {store && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mt-6">

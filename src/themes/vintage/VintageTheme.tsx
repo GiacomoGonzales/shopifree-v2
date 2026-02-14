@@ -274,6 +274,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
               products={filteredProducts}
               onSelectProduct={handleSelectProduct}
               onQuickAdd={handleAddToCart}
+            categories={categories}
             />
           </div>
         </main>

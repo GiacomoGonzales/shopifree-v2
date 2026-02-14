@@ -278,6 +278,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
               products={filteredProducts}
               onSelectProduct={handleSelectProduct}
               onQuickAdd={handleAddToCart}
+            categories={categories}
             />
           </div>
         </main>

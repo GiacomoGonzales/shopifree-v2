@@ -359,6 +359,7 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

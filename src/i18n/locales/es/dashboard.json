@@ -417,6 +417,22 @@
         "general": "General"
       }
     },
+    "layout": {
+      "title": "Diseño del catálogo",
+      "subtitle": "Elige cómo se muestran los productos en tu tienda.",
+      "grid": "Cuadrícula",
+      "gridDesc": "Clásico en columnas",
+      "masonry": "Masonry",
+      "masonryDesc": "Estilo Pinterest",
+      "magazine": "Magazine",
+      "magazineDesc": "Producto destacado",
+      "carousel": "Carrusel",
+      "carouselDesc": "Scroll horizontal",
+      "list": "Lista",
+      "listDesc": "Tarjetas horizontales",
+      "upgradeMessage": "Mejora tu plan para acceder a más diseños.",
+      "viewPlans": "Ver planes"
+    },
     "effects": {
       "title": "Efectos visuales",
       "subtitle": "Agrega animaciones y efectos premium a tu catálogo.",

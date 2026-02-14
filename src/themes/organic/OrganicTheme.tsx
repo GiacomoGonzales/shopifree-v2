@@ -349,6 +349,7 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 

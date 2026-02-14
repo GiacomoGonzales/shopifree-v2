@@ -80,6 +80,7 @@ export interface Store {
     fontFamily?: string
     scrollReveal?: boolean
     imageSwapOnHover?: boolean
+    productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
   }
 
   // === PAGOS ===

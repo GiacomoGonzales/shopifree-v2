@@ -369,6 +369,7 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}
             onQuickAdd={handleAddToCart}
+            categories={categories}
           />
         </main>
 
