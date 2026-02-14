@@ -557,8 +557,8 @@ export default function StoreDetail() {
           />
           <ConfigItem
             label="Retiro en tienda"
-            value={store.shipping?.pickup?.enabled ? 'Si' : 'No'}
-            ok={!!store.shipping?.pickup?.enabled}
+            value={store.shipping?.pickupEnabled ? 'Si' : 'No'}
+            ok={!!store.shipping?.pickupEnabled}
           />
           <ConfigItem
             label="Dominio personalizado"

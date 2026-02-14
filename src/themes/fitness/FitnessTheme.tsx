@@ -33,7 +33,6 @@ const darkGray = '#1A1A1A'
 const red = '#EF4444'
 const redHover = '#DC2626'
 const white = '#FFFFFF'
-const lightGray = '#F5F5F5'
 const mutedGray = '#9CA3AF'
 
 // Fitness theme configuration

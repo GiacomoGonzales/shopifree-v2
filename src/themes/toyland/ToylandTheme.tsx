@@ -29,16 +29,16 @@ import '../shared/animations.css'
 
 // Toyland colors
 const yellow = '#FDE047'
-const warmYellow = '#FACC15'
+// reserved: warmYellow '#FACC15'
 const turquoise = '#06B6D4'
 const deepTurquoise = '#0891B2'
 const coral = '#FB7185'
-const deepCoral = '#F43F5E'
+// reserved: deepCoral '#F43F5E'
 const lavender = '#A78BFA'
 const white = '#FFFFFF'
 const softWhite = '#FEFCE8'
 const darkText = '#1E1B4B'
-const mutedText = '#6366F1'
+// reserved: mutedText '#6366F1'
 
 // Toyland theme configuration
 const toylandTheme: ThemeConfig = {
