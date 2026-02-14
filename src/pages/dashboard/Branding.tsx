@@ -6,7 +6,10 @@ import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { themes } from '../../themes'
 import { getThemeComponent } from '../../themes/components'
-import type { Store, StoreAnnouncement, Product, Category } from '../../types'
+import type { Store, StoreAnnouncement, StoreTrustBadges, Product, Category } from '../../types'
+import '../../themes/shared/animations.css'
+import { getTrustBadgeText, ALL_BADGE_IDS } from '../../themes/shared/trustBadgeDefaults'
+import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -113,6 +116,13 @@ export default function Branding() {
     textColor: '#ffffff'
   })
 
+  // Trust Badges
+  const [trustBadges, setTrustBadges] = useState<StoreTrustBadges>({
+    enabled: false,
+    badges: ALL_BADGE_IDS.map(id => ({ id, enabled: true })),
+  })
+  const [savingTrust, setSavingTrust] = useState(false)
+
   // Theme Preview
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
@@ -144,6 +154,9 @@ export default function Branding() {
           setSelectedTheme(storeData.themeId || 'minimal')
           if (storeData.announcement) {
             setAnnouncement(storeData.announcement)
+          }
+          if (storeData.trustBadges) {
+            setTrustBadges(storeData.trustBadges)
           }
 
           // Fetch products and categories for preview (simple queries to avoid index requirement)
@@ -390,6 +403,24 @@ export default function Branding() {
       showToast(t('branding.toast.error'), 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleSaveTrustBadges = async () => {
+    if (!store) return
+
+    setSavingTrust(true)
+    try {
+      await updateDoc(doc(db, 'stores', store.id), {
+        trustBadges,
+        updatedAt: new Date()
+      })
+      showToast(t('branding.toast.saved'), 'success')
+    } catch (error) {
+      console.error('Error saving trust badges:', error)
+      showToast(t('branding.toast.error'), 'error')
+    } finally {
+      setSavingTrust(false)
     }
   }
 
@@ -1018,18 +1049,60 @@ export default function Branding() {
                 </div>
               </div>
 
+              {/* Marquee mode toggle */}
+              <div className={`flex items-center justify-between p-4 rounded-xl border ${store?.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                <div className="flex-1 mr-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-[#1e3a5f]">{t('branding.announcement.marquee')}</span>
+                    {store?.plan === 'free' && (
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={announcement.mode === 'marquee'}
+                    disabled={store?.plan === 'free'}
+                    onChange={(e) => setAnnouncement({ ...announcement, mode: e.target.checked ? 'marquee' : 'static' })}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                    store?.plan === 'free'
+                      ? 'bg-gray-200 cursor-not-allowed'
+                      : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                  }`}></div>
+                </label>
+              </div>
+
               {/* Preview */}
               {announcement.enabled && announcement.text && (
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-2">{t('branding.announcement.preview')}</label>
                   <div
-                    className="py-2.5 px-4 text-center text-sm font-medium rounded-lg"
+                    className="py-2.5 px-4 text-sm font-medium rounded-lg overflow-hidden"
                     style={{
                       backgroundColor: announcement.backgroundColor,
                       color: announcement.textColor
                     }}
                   >
-                    {announcement.text}
+                    {announcement.mode === 'marquee' && store?.plan !== 'free' ? (
+                      <div className="overflow-hidden">
+                        <div className="animate-marquee">
+                          {[0, 1, 2].map((i) => (
+                            <span key={i} className="inline-flex items-center gap-8 px-4">
+                              <span>{announcement.text}</span>
+                              <span style={{ opacity: 0.4 }}>&#x2022;</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center">{announcement.text}</div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1043,6 +1116,123 @@ export default function Branding() {
                 {saving ? t('branding.saving') : t('branding.saveChanges')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trust Badges */}
+      {store && (
+        <div className="mt-6">
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            {/* Header with toggle */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.trustBadges.title')}</h2>
+                {store.plan === 'free' && (
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                    PRO
+                  </span>
+                )}
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={trustBadges.enabled}
+                  disabled={store.plan === 'free'}
+                  onChange={(e) => setTrustBadges({ ...trustBadges, enabled: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                  store.plan === 'free'
+                    ? 'bg-gray-200 cursor-not-allowed'
+                    : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                }`}></div>
+              </label>
+            </div>
+            <p className="text-sm text-gray-500 mb-5">
+              {t('branding.trustBadges.description')}
+            </p>
+
+            {/* Badge cards grid - tap to toggle, icon-first */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {(ALL_BADGE_IDS as readonly TrustBadgeId[]).map((badgeId) => {
+                const badge = trustBadges.badges.find(b => b.id === badgeId)
+                return (
+                  <TrustBadgeCard
+                    key={badgeId}
+                    badgeId={badgeId}
+                    badge={badge}
+                    isDisabled={store.plan === 'free'}
+                    language={store.language || 'es'}
+                    onToggle={() => {
+                      const updated = trustBadges.badges.map(b =>
+                        b.id === badgeId ? { ...b, enabled: !b.enabled } : b
+                      )
+                      if (!badge) {
+                        updated.push({ id: badgeId, enabled: true })
+                      }
+                      setTrustBadges({ ...trustBadges, badges: updated })
+                    }}
+                    onTextChange={(text) => {
+                      const updated = trustBadges.badges.map(b =>
+                        b.id === badgeId ? { ...b, text: text || undefined } : b
+                      )
+                      if (!badge) {
+                        updated.push({ id: badgeId, enabled: true, text: text || undefined })
+                      }
+                      setTrustBadges({ ...trustBadges, badges: updated })
+                    }}
+                  />
+                )
+              })}
+            </div>
+
+            {/* Live preview strip */}
+            {trustBadges.enabled && store.plan !== 'free' && trustBadges.badges.some(b => b.enabled) && (
+              <div className="mt-5">
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.trustBadges.preview')}</div>
+                <div className="py-3.5 px-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-100 overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center justify-center gap-5 md:gap-8 min-w-max">
+                    {trustBadges.badges.filter(b => b.enabled).map((badge) => (
+                      <div key={badge.id} className="flex items-center gap-2.5 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#1e3a5f]/10 flex items-center justify-center text-[#2d6cb5]">
+                          <TrustBadgeIcon id={badge.id} />
+                        </div>
+                        <span className="text-xs font-semibold text-[#1e3a5f] whitespace-nowrap">
+                          {badge.text || getTrustBadgeText(badge.id, store.language || 'es')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Upgrade prompt for free plan */}
+            {store.plan === 'free' && (
+              <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-5">
+                <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p className="text-sm text-[#1e3a5f]">
+                  {t('branding.trustBadges.upgradeMessage')}{' '}
+                  <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                    {t('branding.trustBadges.viewPlans')}
+                  </a>
+                </p>
+              </div>
+            )}
+
+            {/* Save */}
+            {store.plan !== 'free' && (
+              <button
+                onClick={handleSaveTrustBadges}
+                disabled={savingTrust}
+                className="w-full mt-5 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+              >
+                {savingTrust ? t('branding.saving') : t('branding.saveChanges')}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -1069,6 +1259,7 @@ export default function Branding() {
             heroImage,
             heroImageMobile,
             announcement,
+            trustBadges,
             themeId: previewTheme
           }}
           products={products}
@@ -1300,6 +1491,96 @@ interface ImageCropModalProps {
   aspectRatio: number // width/height ratio: 1 for square, 16/5 for desktop hero, 3/2 for mobile hero
   title: string
   description: string
+}
+
+// Small icon component for trust badge preview in dashboard
+function TrustBadgeIcon({ id }: { id: TrustBadgeId }) {
+  const icons: Record<TrustBadgeId, JSX.Element> = {
+    shipping: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>,
+    secure: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
+    returns: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" /></svg>,
+    quality: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>,
+    support: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" /></svg>,
+    freeShipping: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>,
+  }
+  return icons[id] || null
+}
+
+function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onTextChange }: {
+  badgeId: TrustBadgeId
+  badge: { id: TrustBadgeId; enabled: boolean; text?: string } | undefined
+  isDisabled: boolean
+  language: string
+  onToggle: () => void
+  onTextChange: (text: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const isEnabled = badge?.enabled ?? true
+
+  return (
+    <div
+      className={`relative rounded-2xl border-2 p-4 transition-all duration-200 ${
+        isDisabled
+          ? 'bg-gray-50 border-gray-100 opacity-50 cursor-not-allowed'
+          : isEnabled
+            ? 'bg-[#f0f7ff] border-[#2d6cb5]/30 shadow-sm'
+            : 'bg-white border-gray-200 hover:border-gray-300 cursor-pointer'
+      }`}
+      onClick={() => {
+        if (isDisabled || editing) return
+        onToggle()
+      }}
+    >
+      {/* Selected check */}
+      {isEnabled && !isDisabled && (
+        <div className="absolute top-2.5 right-2.5 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+
+      {/* Icon */}
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${
+        isEnabled && !isDisabled
+          ? 'bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] text-white'
+          : 'bg-gray-100 text-gray-400'
+      }`}>
+        <TrustBadgeIcon id={badgeId} />
+      </div>
+
+      {/* Label / editable text */}
+      {editing && isEnabled && !isDisabled ? (
+        <input
+          autoFocus
+          type="text"
+          value={badge?.text || ''}
+          placeholder={getTrustBadgeText(badgeId, language)}
+          onClick={(e) => e.stopPropagation()}
+          onBlur={() => setEditing(false)}
+          onKeyDown={(e) => { if (e.key === 'Enter') setEditing(false) }}
+          onChange={(e) => onTextChange(e.target.value)}
+          className="w-full text-sm font-medium text-[#1e3a5f] bg-white/80 border border-[#38bdf8]/30 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/40"
+        />
+      ) : (
+        <div className="flex items-center gap-1.5 min-h-[28px]">
+          <span className={`text-sm font-medium leading-tight ${isEnabled && !isDisabled ? 'text-[#1e3a5f]' : 'text-gray-500'}`}>
+            {badge?.text || getTrustBadgeText(badgeId, language)}
+          </span>
+          {isEnabled && !isDisabled && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setEditing(true) }}
+              className="p-0.5 text-[#38bdf8] hover:text-[#2d6cb5] transition-colors flex-shrink-0"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, description }: ImageCropModalProps) {

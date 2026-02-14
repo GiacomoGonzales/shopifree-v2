@@ -11,7 +11,9 @@ import {
   CategoryNav,
   WhatsAppButton,
   StoreFooter,
-  CheckoutDrawer
+  CheckoutDrawer,
+  AnnouncementBar,
+  TrustBar
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -82,9 +84,6 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [announcementDismissed, setAnnouncementDismissed] = useState(false)
-
-  const showAnnouncement = store.announcement?.enabled && store.announcement?.text && !announcementDismissed
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -112,37 +111,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
     <ThemeProvider theme={freshTheme} store={store}>
       <div className="min-h-screen bg-[#ecfdf5]">
         {/* Announcement */}
-        {showAnnouncement && (
-          <div
-            className="relative py-2.5 px-4 text-center text-sm animate-fadeIn"
-            style={{
-              backgroundColor: store.announcement?.backgroundColor || '#059669',
-              color: store.announcement?.textColor || '#ffffff'
-            }}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
-              {store.announcement?.link ? (
-                <a href={store.announcement.link} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                  {store.announcement.text}
-                </a>
-              ) : (
-                <span>{store.announcement?.text}</span>
-              )}
-            </div>
-            <button
-              onClick={() => setAnnouncementDismissed(true)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 opacity-60 hover:opacity-100 transition-opacity"
-              aria-label="Cerrar"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <AnnouncementBar />
 
         {/* Header */}
         <header className={`sticky top-0 z-50 transition-all duration-500 ${
@@ -282,6 +251,9 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
             </div>
           </div>
         </div>
+
+
+        <TrustBar />
 
         {/* Categories */}
         <CategoryNav

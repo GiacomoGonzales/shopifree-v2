@@ -23,7 +23,9 @@ import {
   CategoryNav,
   WhatsAppButton,
   StoreFooter,
-  CheckoutDrawer
+  CheckoutDrawer,
+  AnnouncementBar,
+  TrustBar
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -86,9 +88,6 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [announcementDismissed, setAnnouncementDismissed] = useState(false)
-
-  const showAnnouncement = store.announcement?.enabled && store.announcement?.text && !announcementDismissed
 
   // Apple-style colors
   const spaceGray = '#1d1d1f'
@@ -120,32 +119,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
     <ThemeProvider theme={minimalTechTheme} store={store}>
       <div className="min-h-screen bg-white" style={{ fontFamily: minimalTechTheme.fonts.body }}>
         {/* Announcement - subtle top bar */}
-        {showAnnouncement && (
-          <div
-            className="relative py-2.5 px-4 text-center text-sm animate-fadeIn"
-            style={{
-              backgroundColor: store.announcement?.backgroundColor || '#f5f5f7',
-              color: store.announcement?.textColor || spaceGray
-            }}
-          >
-            {store.announcement?.link ? (
-              <a href={store.announcement.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                {store.announcement.text}
-                <span className="ml-1 text-blue-600">&rarr;</span>
-              </a>
-            ) : (
-              <span>{store.announcement?.text}</span>
-            )}
-            <button
-              onClick={() => setAnnouncementDismissed(true)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <AnnouncementBar />
 
         {/* Header - Apple-style clean navigation */}
         <header
@@ -260,6 +234,9 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
             )}
           </div>
         </section>
+
+
+        <TrustBar />
 
         {/* Categories - Pill style */}
         <CategoryNav

@@ -22,7 +22,9 @@ import {
   CategoryNav,
   WhatsAppButton,
   StoreFooter,
-  CheckoutDrawer
+  CheckoutDrawer,
+  AnnouncementBar,
+  TrustBar
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -93,9 +95,6 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [announcementDismissed, setAnnouncementDismissed] = useState(false)
-
-  const showAnnouncement = store.announcement?.enabled && store.announcement?.text && !announcementDismissed
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -137,31 +136,9 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
         `}</style>
 
         {/* Announcement */}
-        {showAnnouncement && (
-          <div
-            className="relative py-3 px-4 text-center text-sm font-medium font-ember-body animate-fadeIn"
-            style={{
-              backgroundColor: store.announcement?.backgroundColor || amber,
-              color: store.announcement?.textColor || dark
-            }}
-          >
-            {store.announcement?.link ? (
-              <a href={store.announcement.link} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                {store.announcement.text}
-              </a>
-            ) : (
-              <span>{store.announcement?.text}</span>
-            )}
-            <button
-              onClick={() => setAnnouncementDismissed(true)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 opacity-70 hover:opacity-100 transition-opacity"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <AnnouncementBar />
+
+
 
         {/* Header */}
         <header
@@ -304,6 +281,9 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
             </div>
           )}
         </section>
+
+
+        <TrustBar />
 
         {/* Categories */}
         <CategoryNav

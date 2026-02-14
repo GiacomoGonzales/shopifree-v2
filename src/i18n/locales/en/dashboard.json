@@ -366,7 +366,16 @@
       "linkPlaceholder": "https://...",
       "backgroundColor": "Background color",
       "textColor": "Text color",
-      "preview": "Preview"
+      "preview": "Preview",
+      "marquee": "Marquee mode",
+      "marqueeDesc": "Text scrolls in a continuous loop."
+    },
+    "trustBadges": {
+      "title": "Trust badges",
+      "description": "Show trust icons between the hero and products.",
+      "preview": "Preview",
+      "upgradeMessage": "Upgrade your plan to enable trust badges.",
+      "viewPlans": "View plans"
     },
     "hero": {
       "title": "Cover images",

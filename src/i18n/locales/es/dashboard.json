@@ -367,7 +367,16 @@
       "linkPlaceholder": "https://...",
       "backgroundColor": "Color de fondo",
       "textColor": "Color de texto",
-      "preview": "Vista previa"
+      "preview": "Vista previa",
+      "marquee": "Modo marquee",
+      "marqueeDesc": "El texto se desplaza en loop continuo."
+    },
+    "trustBadges": {
+      "title": "Insignias de confianza",
+      "description": "Muestra iconos de confianza entre el hero y los productos.",
+      "preview": "Vista previa",
+      "upgradeMessage": "Mejora tu plan para activar las insignias de confianza.",
+      "viewPlans": "Ver planes"
     },
     "hero": {
       "title": "Imágenes de portada",

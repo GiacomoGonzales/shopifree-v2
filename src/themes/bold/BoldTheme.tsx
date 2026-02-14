@@ -11,7 +11,9 @@ import {
   CategoryNav,
   WhatsAppButton,
   StoreFooter,
-  CheckoutDrawer
+  CheckoutDrawer,
+  AnnouncementBar,
+  TrustBar
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -83,10 +85,8 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [announcementVisible, setAnnouncementVisible] = useState(true)
 
   const accent = store.themeSettings?.primaryColor || '#FBBF24'
-  const showAnnouncement = store.announcement?.enabled && store.announcement?.text && announcementVisible
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -127,47 +127,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
     <ThemeProvider theme={dynamicTheme} store={store}>
       <div className="min-h-screen bg-black text-white">
         {/* Announcement Bar */}
-        {showAnnouncement && (
-          <div
-            className="relative overflow-hidden"
-            style={{ backgroundColor: store.announcement?.backgroundColor || accent }}
-          >
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px)`,
-              }} />
-            </div>
-            <div className="relative flex items-center justify-center py-3 px-12">
-              {store.announcement?.link ? (
-                <a
-                  href={store.announcement.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-black uppercase tracking-widest hover:underline"
-                  style={{ color: store.announcement?.textColor || '#000000' }}
-                >
-                  {store.announcement.text} →
-                </a>
-              ) : (
-                <span
-                  className="text-sm font-black uppercase tracking-widest"
-                  style={{ color: store.announcement?.textColor || '#000000' }}
-                >
-                  {store.announcement?.text}
-                </span>
-              )}
-              <button
-                onClick={() => setAnnouncementVisible(false)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
-                style={{ color: store.announcement?.textColor || '#000000' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                  <path strokeLinecap="square" strokeLinejoin="miter" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
+        <AnnouncementBar />
 
         {/* Header */}
         <header className={`sticky top-0 z-50 transition-all duration-200 ${
@@ -255,6 +215,9 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
             </div>
           </section>
         )}
+
+
+        <TrustBar />
 
         {/* Categories */}
         <CategoryNav

@@ -51,6 +51,9 @@ export interface Store {
   // === TIRA PUBLICITARIA ===
   announcement?: StoreAnnouncement
 
+  // === TRUST BADGES ===
+  trustBadges?: StoreTrustBadges
+
   // === CONTACTO ===
   whatsapp: string
   email?: string
@@ -111,6 +114,18 @@ export interface StoreAnnouncement {
   link?: string                 // URL opcional
   backgroundColor?: string      // hex color
   textColor?: string
+  mode?: 'static' | 'marquee'  // Pro/Business only
+}
+
+export interface TrustBadgeItem {
+  id: 'shipping' | 'secure' | 'returns' | 'quality' | 'support' | 'freeShipping'
+  enabled: boolean
+  text?: string                 // Custom text override
+}
+
+export interface StoreTrustBadges {
+  enabled: boolean
+  badges: TrustBadgeItem[]
 }
 
 export interface DomainVerification {
