@@ -28,6 +28,13 @@ import ToylandTheme from './toyland/ToylandTheme'
 import BloomTheme from './bloom/BloomTheme'
 import DecoTheme from './deco/DecoTheme'
 import LibreriaTheme from './libreria/LibreriaTheme'
+import SlateTheme from './slate/SlateTheme'
+import EmberTheme from './ember/EmberTheme'
+import CircuitTheme from './circuit/CircuitTheme'
+import AuraTheme from './aura/AuraTheme'
+import BlushTheme from './blush/BlushTheme'
+import HarvestTheme from './harvest/HarvestTheme'
+import FurryTheme from './furry/FurryTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -58,10 +65,17 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   bloom: BloomTheme,
   deco: DecoTheme,
   libreria: LibreriaTheme,
+  slate: SlateTheme,
+  ember: EmberTheme,
+  circuit: CircuitTheme,
+  aura: AuraTheme,
+  blush: BlushTheme,
+  harvest: HarvestTheme,
+  furry: FurryTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme }

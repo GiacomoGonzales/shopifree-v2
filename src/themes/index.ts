@@ -406,6 +406,111 @@ export const themes: Theme[] = [
       background: '#F5F0E8',
       accent: '#8B2232'
     }
+  },
+  {
+    id: 'slate',
+    name: 'Slate',
+    description: 'Profesional y corporativo con tonos neutros. Perfecto para cualquier tipo de negocio o servicio.',
+    thumbnail: '/themes/slate.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#475569',
+      background: '#FFFFFF',
+      accent: '#3B82F6'
+    }
+  },
+  {
+    id: 'ember',
+    name: 'Ember',
+    description: 'Oscuro y calido con acentos ambar. Para marcas premium con estetica sofisticada.',
+    thumbnail: '/themes/ember.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#F97316',
+      background: '#1C1210',
+      accent: '#FBBF24'
+    }
+  },
+  {
+    id: 'circuit',
+    name: 'Circuit',
+    description: 'Dark navy futurista con azul electrico. Ideal para electronica, componentes y gadgets tech.',
+    thumbnail: '/themes/circuit.png',
+    category: 'tech',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#3B82F6',
+      background: '#0F172A',
+      accent: '#06B6D4'
+    }
+  },
+  {
+    id: 'aura',
+    name: 'Aura',
+    description: 'Suave y delicado con tonos lavanda. Ideal para skincare, aromaterapia y cosmeticos naturales.',
+    thumbnail: '/themes/aura.png',
+    category: 'cosmetics',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#8B5CF6',
+      background: '#FAF5FF',
+      accent: '#6D28D9'
+    }
+  },
+  {
+    id: 'blush',
+    name: 'Blush',
+    description: 'Rosa coral femenino y fresco. Ideal para maquillaje, accesorios beauty y nail art.',
+    thumbnail: '/themes/blush.png',
+    category: 'cosmetics',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#E11D48',
+      background: '#FFF1F2',
+      accent: '#FB7185'
+    }
+  },
+  {
+    id: 'harvest',
+    name: 'Harvest',
+    description: 'Rustico y organico con tonos terracota. Ideal para mercados locales, panaderia artesanal y productos del campo.',
+    thumbnail: '/themes/harvest.png',
+    category: 'grocery',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#C2410C',
+      background: '#FFFBEB',
+      accent: '#65A30D'
+    }
+  },
+  {
+    id: 'furry',
+    name: 'Furry',
+    description: 'Jugueton y vibrante con teal y rosa. Ideal para veterinarias, grooming y accesorios de mascotas.',
+    thumbnail: '/themes/furry.png',
+    category: 'pets',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-14'),
+    colors: {
+      primary: '#0D9488',
+      background: '#F0FDFA',
+      accent: '#EC4899'
+    }
   }
 ]
 
