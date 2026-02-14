@@ -119,7 +119,7 @@ export default function Branding() {
   const [categories, setCategories] = useState<Category[]>([])
 
   // Theme category filter
-  const [themeCategoryFilter, setThemeCategoryFilter] = useState<string>('all')
+  const themeCarouselRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Cover selection
   const [showCoverSelector, setShowCoverSelector] = useState(false)
@@ -409,8 +409,143 @@ export default function Branding() {
         <p className="text-gray-600 mt-1">{t('branding.subtitle')}</p>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* Theme Selector - Carousel by Category */}
+      <div className="bg-white rounded-2xl border border-gray-100 py-6 shadow-sm">
+        <div className="px-4 md:px-6">
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">{t('branding.theme.title')}</h2>
+          <p className="text-sm text-gray-600 mb-5">
+            {t('branding.theme.description')}
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {([
+            { key: 'all', label: t('branding.theme.categories.general'), desc: t('branding.theme.categoryDesc.general'), categories: ['all'] },
+            { key: 'retail', label: t('branding.theme.categories.retail'), desc: t('branding.theme.categoryDesc.retail'), categories: ['retail'] },
+            { key: 'restaurant', label: t('branding.theme.categories.restaurant'), desc: t('branding.theme.categoryDesc.restaurant'), categories: ['restaurant'] },
+            { key: 'specialized', label: t('branding.theme.categories.specialized') || 'Especializado', desc: t('branding.theme.categoryDesc.specialized'), categories: ['tech', 'cosmetics', 'grocery', 'pets'] },
+          ] as const).map((group) => {
+            const groupThemes = themes.filter(th => (group.categories as readonly string[]).includes(th.category))
+            if (groupThemes.length === 0) return null
+            const scrollKey = group.key
+            return (
+              <div key={group.key}>
+                <div className="flex items-center justify-between mb-2 px-4 md:px-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#1e3a5f]">{group.label}</h3>
+                    <p className="text-xs text-gray-400">{group.desc}</p>
+                  </div>
+                  <div className="hidden md:flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        const el = themeCarouselRefs.current[scrollKey]
+                        if (el) el.scrollBy({ left: -240, behavior: 'smooth' })
+                      }}
+                      className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    >
+                      <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const el = themeCarouselRefs.current[scrollKey]
+                        if (el) el.scrollBy({ left: 240, behavior: 'smooth' })
+                      }}
+                      className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    >
+                      <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  ref={(el) => { themeCarouselRefs.current[scrollKey] = el }}
+                  className="carousel-container flex gap-3 pb-2 scroll-pl-4 md:scroll-pl-6"
+                >
+                  {groupThemes.map((theme, themeIndex) => {
+                    const isSelected = selectedTheme === theme.id
+                    const isFirst = themeIndex === 0
+                    const isLast = themeIndex === groupThemes.length - 1
+                    return (
+                      <div
+                        key={theme.id}
+                        className={`carousel-item w-[120px] sm:w-[150px] md:w-[160px] flex-shrink-0 relative rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all group ${isFirst ? 'ml-4 md:ml-6' : ''} ${isLast ? 'mr-4 md:mr-6' : ''} ${
+                          isSelected
+                            ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
+                            : 'border-gray-200 hover:border-[#38bdf8]/50'
+                        }`}
+                      >
+                        <button
+                          onClick={() => setSelectedTheme(theme.id)}
+                          className="w-full text-left"
+                        >
+                          {/* Mini Preview */}
+                          <div
+                            className="aspect-square p-2 sm:p-3 flex flex-col relative"
+                            style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="w-6 h-2 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
+                              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.colors?.accent || '#666' }} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-1">
+                              {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="rounded aspect-square" style={{ backgroundColor: theme.colors?.primary ? `${theme.colors.primary}15` : '#f3f4f6' }} />
+                              ))}
+                            </div>
+                            <div className="mt-2 flex items-center gap-1">
+                              <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
+                              <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: theme.colors?.accent || '#666' }} />
+                            </div>
+                            {/* Preview overlay */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span
+                                onClick={(e) => { e.stopPropagation(); setPreviewTheme(theme.id) }}
+                                className="px-3 py-1.5 bg-white text-[#1e3a5f] text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                {t('branding.theme.preview')}
+                              </span>
+                            </div>
+                          </div>
+                          {/* Theme Name */}
+                          <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-white border-t border-gray-100">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-xs sm:text-sm text-[#1e3a5f] truncate">{theme.name}</span>
+                              {theme.isNew && (
+                                <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full flex-shrink-0 ml-1">
+                                  NEW
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] sm:text-[11px] text-gray-500 truncate mt-0.5 hidden sm:block">{theme.description}</p>
+                          </div>
+                        </button>
+                        {/* Selected indicator */}
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg z-10">
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Brand & Catalog */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Left Column */}
         <div className="space-y-6">
           {/* Logo */}
@@ -457,111 +592,127 @@ export default function Branding() {
             </div>
           </div>
 
-          {/* Announcement Bar */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.announcement.title')}</h2>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={announcement.enabled}
-                  onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
-              </label>
-            </div>
+          {/* Catalog Layout Selector */}
+          {store && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.layout.title')}</h2>
+                {store.plan === 'free' && (
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 mb-6">{t('branding.layout.subtitle')}</p>
 
-            <p className="text-sm text-gray-600 mb-4">
-              {t('branding.announcement.description')}
-            </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {([
+                  { id: 'grid' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    </svg>
+                  )},
+                  { id: 'masonry' as const, icon: (
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <rect x="3" y="3" width="7" height="10" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="14" y="3" width="7" height="6" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="3" y="16" width="7" height="5" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="14" y="12" width="7" height="9" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )},
+                  { id: 'magazine' as const, icon: (
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <rect x="3" y="3" width="11" height="11" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="17" y="3" width="4" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="17" y="11" width="4" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="3" y="17" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="10" y="17" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="17" y="19" width="4" height="2" rx="0.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )},
+                  { id: 'carousel' as const, icon: (
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <rect x="2" y="6" width="6" height="12" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="9" y="4" width="6" height="16" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="16" y="6" width="6" height="12" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )},
+                  { id: 'list' as const, icon: (
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <rect x="3" y="4" width="7" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="13" y1="5" x2="21" y2="5" strokeLinecap="round" />
+                      <line x1="13" y1="8" x2="18" y2="8" strokeLinecap="round" />
+                      <rect x="3" y="12" width="7" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="13" y1="13" x2="21" y2="13" strokeLinecap="round" />
+                      <line x1="13" y1="16" x2="18" y2="16" strokeLinecap="round" />
+                    </svg>
+                  )},
+                ] as const).map((layout) => {
+                  const isSelected = (store.themeSettings?.productLayout || 'grid') === layout.id
+                  const isPremium = layout.id !== 'grid'
+                  const isDisabled = isPremium && store.plan === 'free'
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
-                <input
-                  type="text"
-                  value={announcement.text}
-                  onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
-                  placeholder={t('branding.announcement.messagePlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                />
+                  return (
+                    <button
+                      key={layout.id}
+                      onClick={async () => {
+                        if (isDisabled) return
+                        try {
+                          await updateDoc(doc(db, 'stores', store.id), {
+                            'themeSettings.productLayout': layout.id,
+                            updatedAt: new Date()
+                          })
+                          setStore({ ...store, themeSettings: { ...store.themeSettings, productLayout: layout.id } })
+                          showToast(t('branding.toast.saved'), 'success')
+                        } catch {
+                          showToast(t('branding.toast.error'), 'error')
+                        }
+                      }}
+                      className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? 'border-[#2d6cb5] bg-[#f0f7ff]'
+                          : isDisabled
+                            ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                      }`}
+                    >
+                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                        {layout.icon}
+                      </div>
+                      <div className="font-medium text-sm text-[#1e3a5f]">
+                        {t(`branding.layout.${layout.id}`)}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {t(`branding.layout.${layout.id}Desc`)}
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.link')}</label>
-                <input
-                  type="url"
-                  value={announcement.link || ''}
-                  onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
-                  placeholder={t('branding.announcement.linkPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.backgroundColor')}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={announcement.backgroundColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
-                    />
-                    <input
-                      type="text"
-                      value={announcement.backgroundColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.textColor')}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={announcement.textColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
-                    />
-                    <input
-                      type="text"
-                      value={announcement.textColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Preview */}
-              {announcement.enabled && announcement.text && (
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-2">{t('branding.announcement.preview')}</label>
-                  <div
-                    className="py-2.5 px-4 text-center text-sm font-medium rounded-lg"
-                    style={{
-                      backgroundColor: announcement.backgroundColor,
-                      color: announcement.textColor
-                    }}
-                  >
-                    {announcement.text}
-                  </div>
+              {/* Upgrade prompt for free plan */}
+              {store.plan === 'free' && (
+                <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
+                  <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <p className="text-sm text-[#1e3a5f]">
+                    {t('branding.layout.upgradeMessage')}{' '}
+                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                      {t('branding.layout.viewPlans')}
+                    </a>
+                  </p>
                 </div>
               )}
-
-              {/* Save button for announcement */}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full mt-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-              >
-                {saving ? t('branding.saving') : t('branding.saveChanges')}
-              </button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Right Column - Hero Images */}
@@ -684,457 +835,214 @@ export default function Branding() {
         </div>
       </div>
 
-      {/* Theme Selector - Full Width */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">{t('branding.theme.title')}</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          {t('branding.theme.description')}
-        </p>
+      {store && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* Visual Effects - Premium */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.effects.title')}</h2>
+              {store.plan === 'free' && (
+                <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                  PRO
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-600 mb-6">{t('branding.effects.subtitle')}</p>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {[
-            { id: 'all', label: t('branding.theme.categories.all'), icon: (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            )},
-            { id: 'retail', label: t('branding.theme.categories.retail'), icon: (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            )},
-            { id: 'restaurant', label: t('branding.theme.categories.restaurant'), icon: (
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v20M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )},
-            { id: 'tech', label: t('branding.theme.categories.tech'), icon: (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            )},
-            { id: 'cosmetics', label: t('branding.theme.categories.cosmetics'), icon: (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-              </svg>
-            )},
-            { id: 'grocery', label: t('branding.theme.categories.grocery'), icon: (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-              </svg>
-            )},
-            { id: 'pets', label: t('branding.theme.categories.pets'), icon: (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0-4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m4 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m-8 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m4 8c-2.5 0-4.5 1.5-4.5 3.5 0 1.1.9 2 2 2h5c1.1 0 2-.9 2-2 0-2-2-3.5-4.5-3.5"/>
-              </svg>
-            )}
-          ].map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setThemeCategoryFilter(cat.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                themeCategoryFilter === cat.id
-                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat.icon}
-              <span>{cat.label}</span>
-            </button>
-          ))}
-        </div>
+            <div className="space-y-4">
+              {/* Scroll Reveal */}
+              <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                <div className="flex-1 mr-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={store.themeSettings?.scrollReveal || false}
+                    disabled={store.plan === 'free'}
+                    onChange={async (e) => {
+                      const newValue = e.target.checked
+                      try {
+                        await updateDoc(doc(db, 'stores', store.id), {
+                          'themeSettings.scrollReveal': newValue,
+                          updatedAt: new Date()
+                        })
+                        setStore({ ...store, themeSettings: { ...store.themeSettings, scrollReveal: newValue } })
+                        showToast(t('branding.toast.saved'), 'success')
+                      } catch {
+                        showToast(t('branding.toast.error'), 'error')
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                    store.plan === 'free'
+                      ? 'bg-gray-200 cursor-not-allowed'
+                      : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                  }`}></div>
+                </label>
+              </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {themes
-            .filter((theme) => themeCategoryFilter === 'all' || theme.category === themeCategoryFilter || theme.category === 'all')
-            .map((theme) => {
-            const isSelected = selectedTheme === theme.id
-            return (
-              <div
-                key={theme.id}
-                className={`relative rounded-2xl overflow-hidden border-2 transition-all group ${
-                  isSelected
-                    ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
-                    : 'border-gray-200 hover:border-[#38bdf8]/50'
-                }`}
-              >
-                {/* Theme Preview Card */}
-                <button
-                  onClick={() => setSelectedTheme(theme.id)}
-                  className="w-full text-left"
-                >
-                  {/* Theme Preview */}
+              {/* Image Swap on Hover */}
+              <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                <div className="flex-1 mr-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={store.themeSettings?.imageSwapOnHover || false}
+                    disabled={store.plan === 'free'}
+                    onChange={async (e) => {
+                      const newValue = e.target.checked
+                      try {
+                        await updateDoc(doc(db, 'stores', store.id), {
+                          'themeSettings.imageSwapOnHover': newValue,
+                          updatedAt: new Date()
+                        })
+                        setStore({ ...store, themeSettings: { ...store.themeSettings, imageSwapOnHover: newValue } })
+                        showToast(t('branding.toast.saved'), 'success')
+                      } catch {
+                        showToast(t('branding.toast.error'), 'error')
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                    store.plan === 'free'
+                      ? 'bg-gray-200 cursor-not-allowed'
+                      : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                  }`}></div>
+                </label>
+              </div>
+
+              {/* Upgrade prompt for free plan */}
+              {store.plan === 'free' && (
+                <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
+                  <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <p className="text-sm text-[#1e3a5f]">
+                    {t('branding.effects.upgradeMessage')}{' '}
+                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                      {t('branding.effects.viewPlans')}
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Announcement Bar */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.announcement.title')}</h2>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={announcement.enabled}
+                  onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+              </label>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              {t('branding.announcement.description')}
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
+                <input
+                  type="text"
+                  value={announcement.text}
+                  onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
+                  placeholder={t('branding.announcement.messagePlaceholder')}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.link')}</label>
+                <input
+                  type="url"
+                  value={announcement.link || ''}
+                  onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
+                  placeholder={t('branding.announcement.linkPlaceholder')}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.backgroundColor')}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={announcement.backgroundColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
+                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={announcement.backgroundColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
+                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.textColor')}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={announcement.textColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
+                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={announcement.textColor}
+                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
+                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview */}
+              {announcement.enabled && announcement.text && (
+                <div>
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-2">{t('branding.announcement.preview')}</label>
                   <div
-                    className="aspect-square p-3 flex flex-col relative"
-                    style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
+                    className="py-2.5 px-4 text-center text-sm font-medium rounded-lg"
+                    style={{
+                      backgroundColor: announcement.backgroundColor,
+                      color: announcement.textColor
+                    }}
                   >
-                    {/* Mini header */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div
-                        className="w-6 h-2 rounded-full"
-                        style={{ backgroundColor: theme.colors?.primary || '#000' }}
-                      />
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: theme.colors?.accent || '#666' }}
-                      />
-                    </div>
-                    {/* Mini product grid */}
-                    <div className="grid grid-cols-2 gap-1">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          key={i}
-                          className="rounded aspect-square"
-                          style={{
-                            backgroundColor: theme.colors?.primary
-                              ? `${theme.colors.primary}15`
-                              : '#f3f4f6'
-                          }}
-                        />
-                      ))}
-                    </div>
-                    {/* Mini footer */}
-                    <div className="mt-2 flex items-center gap-1">
-                      <div
-                        className="flex-1 h-2 rounded-full"
-                        style={{ backgroundColor: theme.colors?.primary || '#000' }}
-                      />
-                      <div
-                        className="w-6 h-6 rounded-lg"
-                        style={{ backgroundColor: theme.colors?.accent || '#666' }}
-                      />
-                    </div>
-
-                    {/* Preview overlay on hover */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setPreviewTheme(theme.id)
-                        }}
-                        className="px-4 py-2 bg-white text-[#1e3a5f] text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        {t('branding.theme.preview')}
-                      </span>
-                    </div>
+                    {announcement.text}
                   </div>
-
-                  {/* Theme Info */}
-                  <div className="p-3 bg-white border-t border-gray-100">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-sm text-[#1e3a5f]">{theme.name}</span>
-                      <div className="flex items-center gap-1">
-                        {theme.isNew && (
-                          <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full">
-                            NEW
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {/* Category Badge */}
-                    <div className="flex items-center gap-1 mb-1">
-                      {theme.category === 'restaurant' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1e3a5f]/10 text-[#1e3a5f] text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v20M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          {t('branding.theme.categories.restaurant')}
-                        </span>
-                      )}
-                      {theme.category === 'tech' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1e3a5f]/10 text-[#1e3a5f] text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          {t('branding.theme.categories.tech')}
-                        </span>
-                      )}
-                      {theme.category === 'retail' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1e3a5f]/10 text-[#1e3a5f] text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                          {t('branding.theme.categories.retail')}
-                        </span>
-                      )}
-                      {theme.category === 'all' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                          </svg>
-                          {t('branding.theme.categories.general')}
-                        </span>
-                      )}
-                      {theme.category === 'cosmetics' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1e3a5f]/10 text-[#1e3a5f] text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-                          </svg>
-                          {t('branding.theme.categories.cosmetics')}
-                        </span>
-                      )}
-                      {theme.category === 'grocery' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1e3a5f]/10 text-[#1e3a5f] text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                          </svg>
-                          {t('branding.theme.categories.grocery')}
-                        </span>
-                      )}
-                      {theme.category === 'pets' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1e3a5f]/10 text-[#1e3a5f] text-[10px] font-medium rounded">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0-4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m4 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m-8 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m4 8c-2.5 0-4.5 1.5-4.5 3.5 0 1.1.9 2 2 2h5c1.1 0 2-.9 2-2 0-2-2-3.5-4.5-3.5"/>
-                          </svg>
-                          {t('branding.theme.categories.pets')}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 truncate">{theme.description}</p>
-                  </div>
-                </button>
-
-                {/* Selected indicator */}
-                {isSelected && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg z-10">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Catalog Layout Selector */}
-      {store && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mt-6">
-          <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.layout.title')}</h2>
-            {store.plan === 'free' && (
-              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
-                PRO
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-gray-600 mb-6">{t('branding.layout.subtitle')}</p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {([
-              { id: 'grid' as const, icon: (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                </svg>
-              )},
-              { id: 'masonry' as const, icon: (
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <rect x="3" y="3" width="7" height="10" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="14" y="3" width="7" height="6" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="3" y="16" width="7" height="5" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="14" y="12" width="7" height="9" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )},
-              { id: 'magazine' as const, icon: (
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <rect x="3" y="3" width="11" height="11" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="17" y="3" width="4" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="17" y="11" width="4" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="3" y="17" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="10" y="17" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="17" y="19" width="4" height="2" rx="0.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )},
-              { id: 'carousel' as const, icon: (
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <rect x="2" y="6" width="6" height="12" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="9" y="4" width="6" height="16" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="16" y="6" width="6" height="12" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )},
-              { id: 'list' as const, icon: (
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <rect x="3" y="4" width="7" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  <line x1="13" y1="5" x2="21" y2="5" strokeLinecap="round" />
-                  <line x1="13" y1="8" x2="18" y2="8" strokeLinecap="round" />
-                  <rect x="3" y="12" width="7" height="5" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  <line x1="13" y1="13" x2="21" y2="13" strokeLinecap="round" />
-                  <line x1="13" y1="16" x2="18" y2="16" strokeLinecap="round" />
-                </svg>
-              )},
-            ] as const).map((layout) => {
-              const isSelected = (store.themeSettings?.productLayout || 'grid') === layout.id
-              const isPremium = layout.id !== 'grid'
-              const isDisabled = isPremium && store.plan === 'free'
-
-              return (
-                <button
-                  key={layout.id}
-                  onClick={async () => {
-                    if (isDisabled) return
-                    try {
-                      await updateDoc(doc(db, 'stores', store.id), {
-                        'themeSettings.productLayout': layout.id,
-                        updatedAt: new Date()
-                      })
-                      setStore({ ...store, themeSettings: { ...store.themeSettings, productLayout: layout.id } })
-                      showToast(t('branding.toast.saved'), 'success')
-                    } catch {
-                      showToast(t('branding.toast.error'), 'error')
-                    }
-                  }}
-                  className={`relative p-4 rounded-xl border-2 transition-all text-left ${
-                    isSelected
-                      ? 'border-[#2d6cb5] bg-[#f0f7ff]'
-                      : isDisabled
-                        ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
-                        : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
-                  }`}
-                >
-                  <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
-                    {layout.icon}
-                  </div>
-                  <div className="font-medium text-sm text-[#1e3a5f]">
-                    {t(`branding.layout.${layout.id}`)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    {t(`branding.layout.${layout.id}Desc`)}
-                  </div>
-                  {isSelected && (
-                    <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Upgrade prompt for free plan */}
-          {store.plan === 'free' && (
-            <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
-              <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <p className="text-sm text-[#1e3a5f]">
-                {t('branding.layout.upgradeMessage')}{' '}
-                <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
-                  {t('branding.layout.viewPlans')}
-                </a>
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Visual Effects - Premium */}
-      {store && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mt-6">
-          <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.effects.title')}</h2>
-            {store.plan === 'free' && (
-              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
-                PRO
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-gray-600 mb-6">{t('branding.effects.subtitle')}</p>
-
-          <div className="space-y-4">
-            {/* Scroll Reveal */}
-            <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
-              <div className="flex-1 mr-4">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={store.themeSettings?.scrollReveal || false}
-                  disabled={store.plan === 'free'}
-                  onChange={async (e) => {
-                    const newValue = e.target.checked
-                    try {
-                      await updateDoc(doc(db, 'stores', store.id), {
-                        'themeSettings.scrollReveal': newValue,
-                        updatedAt: new Date()
-                      })
-                      setStore({ ...store, themeSettings: { ...store.themeSettings, scrollReveal: newValue } })
-                      showToast(t('branding.toast.saved'), 'success')
-                    } catch {
-                      showToast(t('branding.toast.error'), 'error')
-                    }
-                  }}
-                  className="sr-only peer"
-                />
-                <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                  store.plan === 'free'
-                    ? 'bg-gray-200 cursor-not-allowed'
-                    : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                }`}></div>
-              </label>
-            </div>
+              )}
 
-            {/* Image Swap on Hover */}
-            <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
-              <div className="flex-1 mr-4">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
-                </div>
-                <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={store.themeSettings?.imageSwapOnHover || false}
-                  disabled={store.plan === 'free'}
-                  onChange={async (e) => {
-                    const newValue = e.target.checked
-                    try {
-                      await updateDoc(doc(db, 'stores', store.id), {
-                        'themeSettings.imageSwapOnHover': newValue,
-                        updatedAt: new Date()
-                      })
-                      setStore({ ...store, themeSettings: { ...store.themeSettings, imageSwapOnHover: newValue } })
-                      showToast(t('branding.toast.saved'), 'success')
-                    } catch {
-                      showToast(t('branding.toast.error'), 'error')
-                    }
-                  }}
-                  className="sr-only peer"
-                />
-                <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                  store.plan === 'free'
-                    ? 'bg-gray-200 cursor-not-allowed'
-                    : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                }`}></div>
-              </label>
+              {/* Save button for announcement */}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full mt-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+              >
+                {saving ? t('branding.saving') : t('branding.saveChanges')}
+              </button>
             </div>
-
-            {/* Upgrade prompt for free plan */}
-            {store.plan === 'free' && (
-              <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
-                <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <p className="text-sm text-[#1e3a5f]">
-                  {t('branding.effects.upgradeMessage')}{' '}
-                  <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
-                    {t('branding.effects.viewPlans')}
-                  </a>
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}

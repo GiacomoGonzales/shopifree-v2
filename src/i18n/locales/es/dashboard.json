@@ -414,7 +414,14 @@
         "cosmetics": "Belleza",
         "grocery": "Alimentos",
         "pets": "Mascotas",
-        "general": "General"
+        "general": "Para todos",
+        "specialized": "Especializado"
+      },
+      "categoryDesc": {
+        "general": "Funcionan para cualquier tipo de negocio",
+        "retail": "Moda, accesorios, muebles y tiendas en general",
+        "restaurant": "Restaurantes, cafeterias, delivery y food trucks",
+        "specialized": "Tecnologia, belleza, alimentos y mascotas"
       }
     },
     "layout": {
