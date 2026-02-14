@@ -118,7 +118,7 @@ export interface StoreAnnouncement {
 }
 
 export interface TrustBadgeItem {
-  id: 'shipping' | 'secure' | 'returns' | 'quality' | 'support' | 'freeShipping'
+  id: 'shipping' | 'secure' | 'returns' | 'quality' | 'support' | 'freeShipping' | 'natural' | 'madeWithLove'
   enabled: boolean
   text?: string                 // Custom text override
 }
