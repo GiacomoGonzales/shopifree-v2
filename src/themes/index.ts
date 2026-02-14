@@ -316,6 +316,51 @@ export const themes: Theme[] = [
       background: '#FFFBEB',
       accent: '#38BDF8'
     }
+  },
+  {
+    id: 'fitness',
+    name: 'Fitness',
+    description: 'Agresivo y motivacional con negro y rojo. Ideal para gimnasios, suplementos y ropa deportiva.',
+    thumbnail: '/themes/fitness.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-13'),
+    colors: {
+      primary: '#EF4444',
+      background: '#111111',
+      accent: '#FFFFFF'
+    }
+  },
+  {
+    id: 'barista',
+    name: 'Barista',
+    description: 'Calido y acogedor con tonos cafe. Ideal para cafeterias, panaderias y chocolaterias.',
+    thumbnail: '/themes/barista.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-13'),
+    colors: {
+      primary: '#6F4E37',
+      background: '#FFF8F0',
+      accent: '#C2956B'
+    }
+  },
+  {
+    id: 'toyland',
+    name: 'Toyland',
+    description: 'Divertido y colorido con colores primarios. Ideal para jugueterias, ropa de bebe y articulos infantiles.',
+    thumbnail: '/themes/toyland.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-13'),
+    colors: {
+      primary: '#06B6D4',
+      background: '#FEFCE8',
+      accent: '#FB7185'
+    }
   }
 ]
 
