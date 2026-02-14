@@ -361,6 +361,51 @@ export const themes: Theme[] = [
       background: '#FEFCE8',
       accent: '#FB7185'
     }
+  },
+  {
+    id: 'bloom',
+    name: 'Bloom',
+    description: 'Delicado y romantico con tonos rosados y verde salvia. Ideal para florerias, regalerias y eventos.',
+    thumbnail: '/themes/bloom.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-13'),
+    colors: {
+      primary: '#6B8F71',
+      background: '#FFFBFC',
+      accent: '#F9A8B8'
+    }
+  },
+  {
+    id: 'deco',
+    name: 'Deco',
+    description: 'Escandinavo y calido con tonos tierra. Ideal para mueblerias, decoracion e interiorismo.',
+    thumbnail: '/themes/deco.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-13'),
+    colors: {
+      primary: '#6B7B3A',
+      background: '#FAF8F5',
+      accent: '#CC7755'
+    }
+  },
+  {
+    id: 'libreria',
+    name: 'Libreria',
+    description: 'Clasico y literario con estilo editorial. Ideal para librerias, papelerias y editoriales.',
+    thumbnail: '/themes/libreria.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-13'),
+    colors: {
+      primary: '#1E3A5F',
+      background: '#F5F0E8',
+      accent: '#8B2232'
+    }
   }
 ]
 

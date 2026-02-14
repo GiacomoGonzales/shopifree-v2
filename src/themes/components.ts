@@ -25,6 +25,9 @@ import PawshopTheme from './pawshop/PawshopTheme'
 import FitnessTheme from './fitness/FitnessTheme'
 import BaristaTheme from './barista/BaristaTheme'
 import ToylandTheme from './toyland/ToylandTheme'
+import BloomTheme from './bloom/BloomTheme'
+import DecoTheme from './deco/DecoTheme'
+import LibreriaTheme from './libreria/LibreriaTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -52,10 +55,13 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   fitness: FitnessTheme,
   barista: BaristaTheme,
   toyland: ToylandTheme,
+  bloom: BloomTheme,
+  deco: DecoTheme,
+  libreria: LibreriaTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme }
