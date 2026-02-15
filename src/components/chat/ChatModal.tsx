@@ -13,6 +13,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const [aiTyping, setAiTyping] = useState(false)
   const [chatId, setChatId] = useState<string | null>(null)
   const [chatClosed, setChatClosed] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -61,16 +62,16 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
     }
   }, [open, store, firebaseUser])
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages or typing indicator
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, aiTyping])
 
   // Mark as read when receiving new messages while chat is open
   useEffect(() => {
     if (open && chatId && messages.length > 0) {
       const lastMsg = messages[messages.length - 1]
-      if (lastMsg.senderType === 'admin') {
+      if (lastMsg.senderType === 'admin' || lastMsg.senderType === 'assistant') {
         chatService.markAsRead(chatId, 'user')
       }
     }
@@ -98,16 +99,25 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
   const handleSend = async (overrideText?: string) => {
     const msgText = overrideText || text.trim()
-    if (!msgText || !chatId || !firebaseUser || sending) return
+    if (!msgText || !chatId || !firebaseUser || !store || sending) return
 
     if (!overrideText) setText('')
     setSending(true)
 
     try {
       await chatService.sendMessage(chatId, msgText, firebaseUser.uid, 'user')
+      // Request AI response
+      setAiTyping(true)
+      try {
+        await chatService.requestAIResponse(chatId, store.id, msgText, firebaseUser.uid)
+      } catch (aiErr) {
+        console.error('Error getting AI response:', aiErr)
+      } finally {
+        setAiTyping(false)
+      }
     } catch (err) {
       console.error('Error sending message:', err)
-      if (!overrideText) setText(msgText) // Restore text on error
+      if (!overrideText) setText(msgText)
     } finally {
       setSending(false)
     }
@@ -167,7 +177,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">Soporte Shopifree</p>
-              <p className="text-[11px] text-gray-500">Te responderemos lo antes posible</p>
+              <p className="text-[11px] text-gray-500">Asistente IA + soporte humano</p>
             </div>
           </div>
           <button
@@ -221,18 +231,29 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
               {group.messages.map((msg) => {
                 const isUser = msg.senderType === 'user'
+                const isAssistant = msg.senderType === 'assistant'
                 return (
                   <div
                     key={msg.id}
                     className={`flex mb-1.5 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
+                    {isAssistant && (
+                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center mr-1.5 mt-1 flex-shrink-0">
+                        <span className="text-[10px]">✨</span>
+                      </div>
+                    )}
                     <div
                       className={`max-w-[80%] px-3.5 py-2 rounded-2xl ${
                         isUser
                           ? 'bg-[#007AFF] text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                          : isAssistant
+                            ? 'bg-purple-50 text-gray-900 rounded-bl-md border border-purple-100'
+                            : 'bg-gray-100 text-gray-900 rounded-bl-md'
                       }`}
                     >
+                      {isAssistant && (
+                        <p className="text-[10px] font-semibold text-purple-500 mb-0.5">IA Shopifree</p>
+                      )}
                       <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                       <p className={`text-[10px] mt-0.5 ${isUser ? 'text-white/60' : 'text-gray-400'} text-right`}>
                         {formatTime(msg.createdAt)}
@@ -243,6 +264,21 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
               })}
             </div>
           ))}
+          {aiTyping && (
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-[10px]">✨</span>
+              </div>
+              <div className="bg-purple-50 border border-purple-100 rounded-2xl rounded-bl-md px-3.5 py-2.5">
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="text-[11px] text-purple-400 ml-1">IA escribiendo...</span>
+                </div>
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 

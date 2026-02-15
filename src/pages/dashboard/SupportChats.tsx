@@ -13,9 +13,16 @@ export default function SupportChats() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Subscribe to all chats
+  // Subscribe to all chats (escalated first)
   useEffect(() => {
-    const unsub = chatService.subscribeToChats(setChats)
+    const unsub = chatService.subscribeToChats((allChats) => {
+      const sorted = [...allChats].sort((a, b) => {
+        if (a.escalated && !b.escalated) return -1
+        if (!a.escalated && b.escalated) return 1
+        return 0
+      })
+      setChats(sorted)
+    })
     return () => unsub()
   }, [])
 
@@ -51,6 +58,9 @@ export default function SupportChats() {
 
     try {
       await chatService.sendMessage(selectedChat.id, msg, firebaseUser.uid, 'admin')
+      if (selectedChat.escalated) {
+        await chatService.clearEscalation(selectedChat.id)
+      }
     } catch (err) {
       console.error('Error sending message:', err)
       setText(msg)
@@ -166,13 +176,21 @@ export default function SupportChats() {
                       <div className="flex items-center justify-between mt-0.5">
                         <p className="text-xs text-gray-500 truncate">
                           {chat.lastMessageBy === 'admin' && <span className="text-gray-400">Tú: </span>}
+                          {chat.lastMessageBy === 'assistant' && <span className="text-purple-400">IA: </span>}
                           {chat.lastMessage}
                         </p>
-                        {chat.unreadByAdmin > 0 && (
-                          <span className="ml-2 min-w-[20px] h-5 px-1.5 bg-[#007AFF] text-white text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
-                            {chat.unreadByAdmin}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          {chat.escalated && (
+                            <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-semibold rounded-full">
+                              Escalado
+                            </span>
+                          )}
+                          {chat.unreadByAdmin > 0 && (
+                            <span className="min-w-[20px] h-5 px-1.5 bg-[#007AFF] text-white text-[11px] font-bold rounded-full flex items-center justify-center">
+                              {chat.unreadByAdmin}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5">{chat.userEmail}</p>
                     </div>
@@ -227,18 +245,29 @@ export default function SupportChats() {
 
                         {group.messages.map((msg) => {
                           const isAdmin = msg.senderType === 'admin'
+                          const isAssistant = msg.senderType === 'assistant'
                           return (
                             <div
                               key={msg.id}
                               className={`flex mb-1.5 ${isAdmin ? 'justify-end' : 'justify-start'}`}
                             >
+                              {isAssistant && (
+                                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center mr-1.5 mt-1 flex-shrink-0">
+                                  <span className="text-[10px]">✨</span>
+                                </div>
+                              )}
                               <div
                                 className={`max-w-[70%] px-3.5 py-2 rounded-2xl shadow-sm ${
                                   isAdmin
                                     ? 'bg-[#007AFF] text-white rounded-br-md'
-                                    : 'bg-white text-gray-900 rounded-bl-md'
+                                    : isAssistant
+                                      ? 'bg-purple-50 text-gray-900 rounded-bl-md border border-purple-100'
+                                      : 'bg-white text-gray-900 rounded-bl-md'
                                 }`}
                               >
+                                {isAssistant && (
+                                  <p className="text-[10px] font-semibold text-purple-500 mb-0.5">IA Shopifree</p>
+                                )}
                                 <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                                 <p className={`text-[10px] mt-0.5 ${isAdmin ? 'text-white/60' : 'text-gray-400'} text-right`}>
                                   {formatTime(msg.createdAt)}

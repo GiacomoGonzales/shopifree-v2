@@ -44,3 +44,5 @@ ios/App/build/
 ios/App/*.xcworkspace/xcuserdata/
 ios/App/*.xcodeproj/xcuserdata/
 ios/DerivedData/
+
+.vercel

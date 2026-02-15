@@ -10,7 +10,7 @@ export interface ChatMessage {
   id: string
   text: string
   senderId: string
-  senderType: 'user' | 'admin'
+  senderType: 'user' | 'admin' | 'assistant'
   createdAt: Date
 }
 
@@ -23,9 +23,10 @@ export interface Chat {
   status: 'active' | 'closed'
   lastMessage: string
   lastMessageAt: Date
-  lastMessageBy: 'user' | 'admin'
+  lastMessageBy: 'user' | 'admin' | 'assistant'
   unreadByAdmin: number
   unreadByUser: number
+  escalated: boolean
   createdAt: Date
 }
 
@@ -43,6 +44,7 @@ function docToChat(docSnap: { id: string; data: () => Record<string, any> }): Ch
     lastMessageBy: data.lastMessageBy || 'user',
     unreadByAdmin: data.unreadByAdmin || 0,
     unreadByUser: data.unreadByUser || 0,
+    escalated: data.escalated || false,
     createdAt: data.createdAt?.toDate?.() || new Date(),
   }
 }
@@ -78,6 +80,7 @@ export const chatService = {
     return {
       id: docRef.id,
       ...chatData,
+      escalated: false,
       lastMessageAt: new Date(),
       createdAt: new Date(),
     }
@@ -205,5 +208,25 @@ export const chatService = {
     } else {
       await updateDoc(chatRef, { unreadByAdmin: 0 })
     }
+  },
+
+  // Request AI response for a user message
+  async requestAIResponse(chatId: string, storeId: string, userMessage: string, userId: string): Promise<{ escalated: boolean; skipped?: boolean }> {
+    const res = await fetch('/api/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId, storeId, userMessage, userId }),
+    })
+    if (!res.ok) {
+      console.error('[chatService] AI response error:', res.status)
+      return { escalated: false }
+    }
+    return res.json()
+  },
+
+  // Clear escalation flag (when admin responds)
+  async clearEscalation(chatId: string) {
+    const chatRef = doc(db, 'chats', chatId)
+    await updateDoc(chatRef, { escalated: false })
   },
 }
