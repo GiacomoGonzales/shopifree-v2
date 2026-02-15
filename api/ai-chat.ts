@@ -357,14 +357,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     for (const doc of historySnap.docs) {
       const data = doc.data()
       const role = data.senderType === 'user' ? 'user' as const : 'assistant' as const
-      const content = data.text || ''
+      const textContent = data.text || ''
+      const imageUrl = data.imageUrl as string | undefined
 
-      // Consolidate consecutive messages of the same role
+      // Build content blocks for this message
+      const contentBlocks: Anthropic.ContentBlockParam[] = []
+      if (imageUrl && role === 'user') {
+        contentBlocks.push({
+          type: 'image',
+          source: { type: 'url', url: imageUrl },
+        })
+      }
+      if (textContent && textContent !== 'Imagen') {
+        contentBlocks.push({ type: 'text', text: textContent })
+      }
+      // If only an image with no real text, add a description
+      if (contentBlocks.length > 0 && !contentBlocks.some(b => b.type === 'text')) {
+        contentBlocks.push({ type: 'text', text: '(El usuario envió una imagen)' })
+      }
+
+      if (contentBlocks.length === 0) continue
+
+      // Consolidate consecutive messages of the same role (text only)
       const last = history[history.length - 1]
-      if (last && last.role === role) {
-        last.content = (last.content as string) + '\n' + content
+      if (last && last.role === role && !imageUrl && typeof last.content === 'string') {
+        last.content = last.content + '\n' + textContent
+      } else if (contentBlocks.length === 1 && contentBlocks[0].type === 'text') {
+        history.push({ role, content: (contentBlocks[0] as Anthropic.TextBlockParam).text })
       } else {
-        history.push({ role, content })
+        history.push({ role, content: contentBlocks })
       }
     }
 
