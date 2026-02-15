@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, type JSX } from 'react'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'

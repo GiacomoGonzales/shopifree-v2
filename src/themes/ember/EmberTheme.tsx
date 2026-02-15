@@ -38,8 +38,6 @@ const dark = '#1C1210'
 const darkSurface = '#2A1F1A'
 const darkSurfaceHover = '#362920'
 const warmGray = '#A8957E'
-const white = '#FFFFFF'
-
 // Ember theme configuration - warm dark premium
 const emberTheme: ThemeConfig = {
   colors: {

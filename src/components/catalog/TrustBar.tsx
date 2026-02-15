@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import { useTheme } from './ThemeContext'
 import { getTrustBadgeText } from '../../themes/shared/trustBadgeDefaults'
 import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
