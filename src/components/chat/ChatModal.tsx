@@ -172,8 +172,8 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
           <div className="flex items-center gap-3">
             <img src="/sofia-support.png" alt="Sofía" className="w-9 h-9 rounded-full object-cover" />
             <div>
-              <p className="text-sm font-semibold text-gray-900">Sofía - Soporte Shopifree</p>
-              <p className="text-[11px] text-gray-500">Asistente IA + soporte humano</p>
+              <p className="text-sm font-semibold text-gray-900">Sofía</p>
+              <p className="text-[11px] text-green-500">En línea</p>
             </div>
           </div>
           <button
@@ -241,7 +241,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
                       }`}
                     >
                       {isAssistant && (
-                        <p className="text-[10px] font-semibold text-purple-500 mb-0.5">IA Shopifree</p>
+                        <p className="text-[10px] font-semibold text-purple-500 mb-0.5">Sofía</p>
                       )}
                       <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                       <p className={`text-[10px] mt-0.5 ${isUser ? 'text-white/60' : 'text-gray-400'} text-right`}>
@@ -261,7 +261,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
                   <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  <span className="text-[11px] text-purple-400 ml-1">IA escribiendo...</span>
+                  <span className="text-[11px] text-purple-400 ml-1">Sofía escribiendo...</span>
                 </div>
               </div>
             </div>

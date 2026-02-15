@@ -176,7 +176,7 @@ export default function SupportChats() {
                       <div className="flex items-center justify-between mt-0.5">
                         <p className="text-xs text-gray-500 truncate">
                           {chat.lastMessageBy === 'admin' && <span className="text-gray-400">Tú: </span>}
-                          {chat.lastMessageBy === 'assistant' && <span className="text-purple-400">IA: </span>}
+                          {chat.lastMessageBy === 'assistant' && <span className="text-purple-400">Sofía: </span>}
                           {chat.lastMessage}
                         </p>
                         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
@@ -266,7 +266,7 @@ export default function SupportChats() {
                                 }`}
                               >
                                 {isAssistant && (
-                                  <p className="text-[10px] font-semibold text-purple-500 mb-0.5">IA Shopifree</p>
+                                  <p className="text-[10px] font-semibold text-purple-500 mb-0.5">Sofía (IA)</p>
                                 )}
                                 <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                                 <p className={`text-[10px] mt-0.5 ${isAdmin ? 'text-white/60' : 'text-gray-400'} text-right`}>
