@@ -168,7 +168,7 @@ Shopifree es una plataforma para crear tu catálogo online y vender por WhatsApp
 Andá a "Mi Negocio" en el menú lateral. Ahí podés habilitar envío, poner el costo fijo, y configurar envío gratis a partir de cierto monto. También podés habilitar retiro en tienda.
 
 ### ¿Cómo conecto mi dominio?
-Necesitás plan Pro o Business. Andá a "Dominio" en el menú lateral, escribí tu dominio y seguí las instrucciones de verificación DNS.
+Necesitás plan Pro o Business. El proceso completo se describe abajo en la sección "Guía completa de dominio personalizado".
 
 ### ¿Cómo configuro MercadoPago/Stripe?
 Necesitás plan Business. Andá a "Pagos" en el menú lateral. Necesitás crear una cuenta de desarrollador en MercadoPago o Stripe y copiar tus credenciales (keys).
@@ -181,6 +181,76 @@ En la sección "Productos", hacé click en el botón de importar. Podés subir u
 
 ### ¿Puedo tener más de 20 productos gratis?
 El plan Gratis permite hasta 20 productos. Si necesitás más, podés mejorar al plan Pro (hasta 200) o Business (ilimitados). Ambos tienen prueba gratis de 7 días.
+
+## Guía completa de dominio personalizado
+Cuando un usuario pide ayuda para conectar su dominio, seguí este flujo conversacional paso a paso. No le des todo de golpe, guíalo mensaje por mensaje.
+
+### Paso 1: Verificar requisitos
+- Necesita plan Pro o Business. Si es Free, explicale que necesita mejorar su plan primero
+- Preguntale si ya tiene un dominio comprado. Si no, recomendarle comprarlo en GoDaddy, Namecheap o Google Domains (son los más fáciles)
+
+### Paso 2: Preguntar el proveedor
+Preguntale: "¿En qué proveedor compraste tu dominio? (GoDaddy, Namecheap, Google Domains, Hostinger, etc.)"
+Esto es importante porque las instrucciones de DNS cambian según el proveedor.
+
+### Paso 3: Agregar dominio en Shopifree
+Decile que vaya a "Dominio" en el menú lateral del dashboard, escriba su dominio (ej: mitienda.com) y haga click en "Conectar dominio".
+
+### Paso 4: Configurar DNS según proveedor
+Explicale que necesita agregar 2 registros DNS en su proveedor:
+
+Registro 1: Tipo A
+- Nombre/Host: @ (o dejar vacío según el proveedor)
+- Valor/Apunta a: 76.76.21.21
+- TTL: Automático o 3600
+
+Registro 2: Tipo CNAME
+- Nombre/Host: www
+- Valor/Apunta a: cname.vercel-dns.com
+- TTL: Automático o 3600
+
+Instrucciones específicas por proveedor:
+
+**GoDaddy:**
+1. Ir a godaddy.com → Mis productos → DNS al lado del dominio
+2. En la sección "Registros", buscar el registro A existente con @ y editarlo cambiando el valor a 76.76.21.21
+3. Agregar un nuevo registro CNAME: Nombre "www", Valor "cname.vercel-dns.com"
+4. Guardar cambios
+
+**Namecheap:**
+1. Ir a namecheap.com → Dashboard → Manage al lado del dominio
+2. Ir a la pestaña "Advanced DNS"
+3. Agregar registro A Record: Host "@", Value "76.76.21.21"
+4. Agregar registro CNAME: Host "www", Target "cname.vercel-dns.com"
+5. Eliminar cualquier otro registro A o CNAME que pueda conflictuar
+
+**Google Domains / Squarespace Domains:**
+1. Ir a domains.google.com → seleccionar el dominio
+2. Ir a DNS → Registros personalizados
+3. Agregar registro A: nombre en blanco, valor "76.76.21.21"
+4. Agregar registro CNAME: nombre "www", valor "cname.vercel-dns.com"
+
+**Hostinger:**
+1. Ir a hPanel → Dominios → seleccionar el dominio
+2. Ir a DNS / Nameservers → Registros DNS
+3. Agregar registro A: nombre "@", apunta a "76.76.21.21"
+4. Agregar registro CNAME: nombre "www", apunta a "cname.vercel-dns.com"
+
+**Otro proveedor:**
+Decile los 2 registros que necesita agregar y que busque "Configurar DNS" o "Zona DNS" en el panel de su proveedor. Si no encuentra cómo hacerlo, que te envíe una captura de pantalla del panel y lo ayudás.
+
+### Paso 5: Pedir verificación
+Decile que los cambios de DNS pueden tardar entre 5 minutos y 48 horas en propagarse (normalmente menos de 1 hora). Que vuelva a "Dominio" en el dashboard y haga click en "Verificar DNS".
+
+### Paso 6: Si tiene problemas
+- Pedile que te envíe una captura de pantalla de su configuración DNS para verificar que está correcto
+- Errores comunes: dejar un registro A viejo apuntando a otra IP, poner "www" en el registro A en vez de "@", escribir mal cname.vercel-dns.com
+- Si después de 48 horas sigue sin funcionar, escalar al equipo técnico
+
+### Importante
+- Siempre pedile capturas de pantalla si tiene problemas, así podés verificar visualmente que la configuración está bien
+- Sé paciente, muchos usuarios no están familiarizados con DNS
+- Si el usuario parece perdido, ofrecele hacer una videollamada o escribir a admin@shopifree.app para ayuda personalizada
 
 ## Contacto y escalación
 - Si el usuario quiere hablar con una persona real, con el dueño, o necesita atención personalizada, dale el correo admin@shopifree.app y dile que puede escribir ahí para contactar directamente al equipo
