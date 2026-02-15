@@ -5,6 +5,26 @@ import { chatService, type Chat, type ChatMessage } from '../../lib/chatService'
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
+function linkifyText(text: string, isAdmin: boolean) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const parts = text.split(urlRegex)
+  return parts.map((part, i) =>
+    urlRegex.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`underline ${isAdmin ? 'text-white' : 'text-[#007AFF]'}`}
+      >
+        {part.replace(/https?:\/\//, '').replace(/\/$/, '')}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  )
+}
+
 export default function SupportChats() {
   const { firebaseUser } = useAuth()
   const [chats, setChats] = useState<Chat[]>([])
@@ -323,7 +343,7 @@ export default function SupportChats() {
                                   />
                                 )}
                                 {msg.text && msg.text !== 'Imagen' && (
-                                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{linkifyText(msg.text, isAdmin)}</p>
                                 )}
                                 <p className={`text-[10px] mt-0.5 ${isAdmin ? 'text-white/60' : 'text-gray-400'} text-right`}>
                                   {formatTime(msg.createdAt)}

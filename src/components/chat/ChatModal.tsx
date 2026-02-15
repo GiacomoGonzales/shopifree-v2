@@ -6,6 +6,26 @@ import { chatService, type ChatMessage } from '../../lib/chatService'
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
+function linkifyText(text: string, isUser: boolean) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const parts = text.split(urlRegex)
+  return parts.map((part, i) =>
+    urlRegex.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`underline ${isUser ? 'text-white' : 'text-[#007AFF]'}`}
+      >
+        {part.replace(/https?:\/\//, '').replace(/\/$/, '')}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  )
+}
+
 interface ChatModalProps {
   open: boolean
   onClose: () => void
@@ -300,7 +320,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
                         />
                       )}
                       {msg.text && msg.text !== 'Imagen' && (
-                        <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                        <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{linkifyText(msg.text, isUser)}</p>
                       )}
                       <p className={`text-[10px] mt-0.5 ${isUser ? 'text-white/60' : 'text-gray-400'} text-right`}>
                         {formatTime(msg.createdAt)}
