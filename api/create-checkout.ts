@@ -97,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         plan
       },
       subscription_data: {
+        trial_period_days: 7,
         metadata: {
           storeId,
           userId,

@@ -86,6 +86,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? new Date(Number(item.current_period_start) * 1000)
       : null
 
+    const trialEnd = subscription.trial_end
+      ? new Date(Number(subscription.trial_end) * 1000)
+      : null
+
     // Update store in Firebase
     await getDb().collection('stores').doc(storeId).set({
       plan,
@@ -97,7 +101,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: subscription.status,
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false
+        cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+        ...(trialEnd && { trialEnd })
       },
       updatedAt: new Date()
     }, { merge: true })

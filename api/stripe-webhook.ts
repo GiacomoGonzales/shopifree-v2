@@ -128,6 +128,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     ? new Date(Number(item.current_period_start) * 1000)
     : null
 
+  const trialEnd = subscription.trial_end
+    ? new Date(Number(subscription.trial_end) * 1000)
+    : null
+
   await getDb().collection('stores').doc(storeId).set({
     plan,
     planExpiresAt: periodEnd,
@@ -138,7 +142,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       status: subscription.status,
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false
+      cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+      ...(trialEnd && { trialEnd })
     },
     updatedAt: new Date()
   }, { merge: true })

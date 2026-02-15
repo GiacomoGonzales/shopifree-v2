@@ -124,8 +124,17 @@ export default function Plan() {
   }
 
   const currentPlan = store?.plan || 'free'
-  const hasActiveSubscription = store?.subscription?.status === 'active'
+  const hasActiveSubscription = store?.subscription?.status === 'active' || store?.subscription?.status === 'trialing'
+  const isTrialing = store?.subscription?.status === 'trialing'
   const isNative = Capacitor.isNativePlatform()
+
+  // Calculate trial days remaining
+  const trialDaysLeft = (() => {
+    if (!isTrialing || !store?.subscription?.trialEnd) return 0
+    const now = new Date()
+    const trialEnd = new Date(store.subscription.trialEnd)
+    return Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+  })()
 
   // On iOS native, redirect to dashboard (Apple requires IAP, not available yet)
   useEffect(() => {
@@ -189,6 +198,22 @@ export default function Plan() {
                 </p>
               </div>
             </div>
+
+            {isTrialing && store?.subscription?.trialEnd && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
+                    {t('plan.trial.badge')}
+                  </span>
+                  <span className="text-sm font-medium text-amber-700">
+                    {t('plan.trial.daysLeft', { days: trialDaysLeft })}
+                  </span>
+                </div>
+                <p className="text-xs text-amber-600">
+                  {t('plan.trial.endsAt', { date: new Date(store.subscription.trialEnd).toLocaleDateString() })}
+                </p>
+              </div>
+            )}
 
             {store?.subscription?.cancelAtPeriodEnd && (
               <div className="p-3 bg-red-50 rounded-xl mb-4">
@@ -276,6 +301,11 @@ export default function Plan() {
                         {t('plan.billing.savings', { amount: ((plan.price * 12) - plan.priceYearly).toFixed(0) })}
                       </p>
                     )}
+                    {price > 0 && currentPlan === 'free' && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {t('plan.trial.subtitle')} ${price}{selectedBilling === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}
+                      </p>
+                    )}
                   </div>
 
                   <ul className="space-y-2 mb-4">
@@ -309,6 +339,8 @@ export default function Plan() {
                       t('plan.buttons.current')
                     ) : planId === 'free' ? (
                       t('plan.buttons.free')
+                    ) : currentPlan === 'free' ? (
+                      t('plan.trial.startTrial')
                     ) : (
                       t('plan.buttons.upgrade')
                     )}

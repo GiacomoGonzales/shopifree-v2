@@ -647,6 +647,13 @@
       "perYear": "/año",
       "savings": "Ahorras ${{amount}}/año"
     },
+    "trial": {
+      "badge": "En prueba",
+      "daysLeft": "{{days}} días restantes",
+      "endsAt": "La prueba termina el {{date}}",
+      "startTrial": "Probar 7 días gratis",
+      "subtitle": "7 días gratis, luego"
+    },
     "buttons": {
       "current": "Plan actual",
       "free": "Gratuito",
@@ -678,7 +685,7 @@
       },
       "trial": {
         "question": "¿Hay periodo de prueba?",
-        "answer": "El plan gratuito no tiene límite de tiempo. Puedes usarlo el tiempo que quieras antes de decidir mejorar."
+        "answer": "Sí, todos los planes de pago incluyen 7 días de prueba gratis. Solo necesitas una tarjeta, y si no te convence puedes cancelar antes de que termine."
       }
     },
     "toast": {

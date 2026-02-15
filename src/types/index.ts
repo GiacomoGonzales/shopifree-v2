@@ -193,6 +193,7 @@ export interface StoreSubscription {
   currentPeriodStart: Date
   currentPeriodEnd: Date
   cancelAtPeriodEnd: boolean
+  trialEnd?: Date               // End date of the trial period (if trialing)
 }
 
 export interface StoreShipping {

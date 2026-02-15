@@ -646,6 +646,13 @@
       "perYear": "/yr",
       "savings": "Save ${{amount}}/yr"
     },
+    "trial": {
+      "badge": "On trial",
+      "daysLeft": "{{days}} days left",
+      "endsAt": "Trial ends on {{date}}",
+      "startTrial": "Try 7 days free",
+      "subtitle": "7 days free, then"
+    },
     "buttons": {
       "current": "Current plan",
       "free": "Free",
@@ -677,7 +684,7 @@
       },
       "trial": {
         "question": "Is there a free trial?",
-        "answer": "The free plan has no time limit. You can use it as long as you want before deciding to upgrade."
+        "answer": "Yes, all paid plans include a 7-day free trial. You just need a card, and if it's not for you, you can cancel before it ends."
       }
     },
     "toast": {
