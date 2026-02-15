@@ -16,10 +16,10 @@ export async function createPaymentIntent(
   amount: number,
   currency: string
 ): Promise<{ clientSecret: string; paymentIntentId: string }> {
-  const res = await fetch('/api/create-stripe-intent', {
+  const res = await fetch('/api/stripe-payment', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ storeId, orderId, amount, currency })
+    body: JSON.stringify({ action: 'create-intent', storeId, orderId, amount, currency })
   })
 
   if (!res.ok) {
@@ -35,10 +35,10 @@ export async function confirmStripePayment(
   orderId: string,
   paymentIntentId: string
 ): Promise<{ status: string; paymentId: string }> {
-  const res = await fetch('/api/confirm-stripe-payment', {
+  const res = await fetch('/api/stripe-payment', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ storeId, orderId, paymentIntentId })
+    body: JSON.stringify({ action: 'confirm-payment', storeId, orderId, paymentIntentId })
   })
 
   if (!res.ok) {
