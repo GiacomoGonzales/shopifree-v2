@@ -4,7 +4,8 @@ import type { DeliveryData } from '../../../hooks/useCheckout'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 import { formatPrice } from '../../../lib/currency'
-import { statesByCountry, stateLabel } from '../../../data/states'
+import { statesByCountry, stateLabel, cityLabel } from '../../../data/states'
+import { citiesByState } from '../../../data/cities'
 import { resolveShippingCost } from '../../../lib/shipping'
 
 interface Props {
@@ -57,6 +58,10 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
     : allStates
   const showStateSelect = coverageMode !== 'local' && states.length > 0
 
+  // Cities for selected state
+  const availableCities = citiesByState[countryCode]?.[addressState]
+  const cityFieldLabel = cityLabel[countryCode]?.[storeLang] || cityLabel[countryCode]?.es || t.city
+
   // Calculate shipping cost dynamically based on selected zone
   const shippingCost = resolveShippingCost(store, subtotal, addressState || undefined)
   const isFreeShipping = store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
@@ -65,7 +70,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
     submit: () => {
       if (method === 'delivery') {
         if (showStateSelect && !addressState) return false
-        if (!street.trim() || !city.trim()) return false
+        if (!street.trim() || !city.trim() || city === '__other__') return false
       }
       // For local mode, auto-set the store's state
       const resolvedState = coverageMode === 'local'
@@ -280,7 +285,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           {showStateSelect && (
             <select
               value={addressState}
-              onChange={(e) => setAddressState(e.target.value)}
+              onChange={(e) => { setAddressState(e.target.value); setCity('') }}
               className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
               style={{
                 ...inputStyle,
@@ -311,18 +316,50 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
             <p className="text-sm text-red-500 -mt-2">{t.addressRequired}</p>
           )}
 
-          <input
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
-            style={{
-              ...inputStyle,
-              boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
-            }}
-            placeholder={t.city}
-            required
-          />
+          {availableCities ? (
+            <>
+              <select
+                value={availableCities.includes(city) ? city : (city && city !== '__other__' ? '__other__' : (city === '__other__' ? '__other__' : ''))}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+                style={{
+                  ...inputStyle,
+                  boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
+                }}
+                required
+              >
+                <option value="">{cityFieldLabel}...</option>
+                {availableCities.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+                <option value="__other__">{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outra...' : 'Otra...'}</option>
+              </select>
+              {(city === '__other__' || (city && !availableCities.includes(city))) && (
+                <input
+                  type="text"
+                  value={city === '__other__' ? '' : city}
+                  onChange={(e) => setCity(e.target.value || '__other__')}
+                  className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+                  style={inputStyle}
+                  placeholder={cityFieldLabel + '...'}
+                  required
+                />
+              )}
+            </>
+          ) : (
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+              style={{
+                ...inputStyle,
+                boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
+              }}
+              placeholder={t.city}
+              required
+            />
+          )}
           {error === 'cityRequired' && (
             <p className="text-sm text-red-500 -mt-2">{t.cityRequired}</p>
           )}

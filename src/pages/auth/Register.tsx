@@ -520,7 +520,7 @@ export default function Register() {
                 >
                   {countries.map(c => (
                     <option key={c.code} value={c.code}>
-                      {c.flag} {currentLang === 'en' ? c.name.en : c.name.es}
+                      {c.code} - {currentLang === 'en' ? c.name.en : c.name.es}
                     </option>
                   ))}
                 </select>
@@ -532,7 +532,7 @@ export default function Register() {
                 </label>
                 <div className="mt-1 flex gap-2">
                   <div className="flex items-center gap-1.5 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium text-[16px] shrink-0">
-                    <span>{countries.find(c => c.code === country)?.flag}</span>
+                    <img src={`https://flagcdn.com/w20/${country.toLowerCase()}.png`} alt={country} className="w-5 h-auto" />
                     <span>{phoneCodeByCountry[country] || '+1'}</span>
                   </div>
                   <input

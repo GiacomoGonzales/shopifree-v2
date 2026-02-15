@@ -6,6 +6,7 @@ import { useToast } from '../../components/ui/Toast'
 import { useLanguage } from '../../hooks/useLanguage'
 import { PLAN_FEATURES } from '../../lib/stripe'
 import type { Store } from '../../types'
+import { countries } from '../../data/states'
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: 'Activa',
@@ -244,6 +245,7 @@ export default function AdminStores() {
                     <SortIcon field="subdomain" />
                   </div>
                 </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">País</th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('plan')}>
                   <div className="flex items-center gap-1">
                     Plan
@@ -287,6 +289,17 @@ export default function AdminStores() {
                     >
                       {store.subdomain}.shopifree.app
                     </a>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {(() => {
+                      const c = countries.find(c => c.code === store.location?.country)
+                      return c ? (
+                        <span className="flex items-center gap-1.5">
+                          <img src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.png`} alt={c.code} className="w-5 h-auto rounded-sm" />
+                          {c.name.es}
+                        </span>
+                      ) : <span className="text-gray-400">-</span>
+                    })()}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 text-xs rounded-full font-medium capitalize ${
@@ -388,14 +401,20 @@ export default function AdminStores() {
                       {store.plan}
                     </span>
                   </div>
-                  <a
-                    href={`https://${store.subdomain}.shopifree.app`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-violet-600 hover:text-violet-700 text-xs font-medium"
-                  >
-                    {store.subdomain}.shopifree.app
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`https://${store.subdomain}.shopifree.app`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-violet-600 hover:text-violet-700 text-xs font-medium"
+                    >
+                      {store.subdomain}.shopifree.app
+                    </a>
+                    {(() => {
+                      const c = countries.find(c => c.code === store.location?.country)
+                      return c ? <img src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.png`} alt={c.code} className="w-4 h-auto rounded-sm" /> : null
+                    })()}
+                  </div>
                 </div>
               </div>
 

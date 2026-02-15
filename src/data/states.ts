@@ -148,3 +148,11 @@ export const stateLabel: Record<string, { es: string; en: string; pt: string }> 
   US: { es: 'Estado', en: 'State', pt: 'Estado' },
   ES: { es: 'Comunidad', en: 'Community', pt: 'Comunidade' }
 }
+
+// Label for the city field per country
+export const cityLabel: Record<string, { es: string; en: string; pt: string }> = {
+  PE: { es: 'Provincia', en: 'Province', pt: 'Província' },
+  MX: { es: 'Municipio', en: 'Municipality', pt: 'Município' },
+  CO: { es: 'Municipio', en: 'Municipality', pt: 'Município' },
+  AR: { es: 'Ciudad', en: 'City', pt: 'Cidade' },
+}

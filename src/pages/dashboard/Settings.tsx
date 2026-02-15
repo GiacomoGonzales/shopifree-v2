@@ -6,7 +6,8 @@ import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { validateSubdomain, createSubdomain, deleteSubdomain } from '../../lib/subdomain'
 import type { Store, StoreLocation, StoreShipping } from '../../types'
-import { statesByCountry, stateLabel, phoneCodeByCountry, countries } from '../../data/states'
+import { statesByCountry, stateLabel, cityLabel, phoneCodeByCountry, countries } from '../../data/states'
+import { citiesByState } from '../../data/cities'
 import {
   type BusinessType,
   getAllBusinessTypes,
@@ -165,7 +166,7 @@ export default function Settings() {
           slogan: slogan || null,
           description: description || null
         },
-        location,
+        location: { ...location, city: location.city === '__other__' ? '' : location.city },
         email: email || null,
         instagram: instagram || null,
         facebook: facebook || null,
@@ -535,31 +536,16 @@ export default function Settings() {
                   </label>
                   <select
                     value={location.country}
-                    onChange={(e) => setLocation({ ...location, country: e.target.value })}
+                    onChange={(e) => setLocation({ ...location, country: e.target.value, state: '', city: '' })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   >
                     {countries.map(c => (
                       <option key={c.code} value={c.code}>
-                        {c.flag} {language === 'en' ? c.name.en : c.name.es}
+                        {c.code} - {language === 'en' ? c.name.en : c.name.es}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    {t('settings.location.city')}
-                  </label>
-                  <input
-                    type="text"
-                    value={location.city || ''}
-                    onChange={(e) => setLocation({ ...location, city: e.target.value })}
-                    placeholder={t('settings.location.cityPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.location.state')}
@@ -567,7 +553,7 @@ export default function Settings() {
                   {(statesByCountry[location.country] || []).length > 0 ? (
                     <select
                       value={location.state || ''}
-                      onChange={(e) => setLocation({ ...location, state: e.target.value })}
+                      onChange={(e) => setLocation({ ...location, state: e.target.value, city: '' })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                     >
                       <option value="">{(stateLabel[location.country]?.es || t('settings.location.state')) + '...'}</option>
@@ -585,6 +571,59 @@ export default function Settings() {
                     />
                   )}
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(() => {
+                  const cities = citiesByState[location.country]?.[location.state || '']
+                  const langKey = (language === 'en' ? 'en' : language === 'pt' ? 'pt' : 'es') as 'es' | 'en' | 'pt'
+                  const cityFieldLabel = cityLabel[location.country]?.[langKey] || t('settings.location.city')
+                  return (
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {cityFieldLabel}
+                      </label>
+                      {cities ? (
+                        <>
+                          <select
+                            value={cities.includes(location.city || '') || location.city === '__other__' ? (location.city || '') : (location.city ? '__other__' : '')}
+                            onChange={(e) => {
+                              if (e.target.value === '__other__') {
+                                setLocation({ ...location, city: '__other__' })
+                              } else {
+                                setLocation({ ...location, city: e.target.value })
+                              }
+                            }}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                          >
+                            <option value="">{cityFieldLabel}...</option>
+                            {cities.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                            <option value="__other__">{language === 'en' ? 'Other...' : language === 'pt' ? 'Outra...' : 'Otra...'}</option>
+                          </select>
+                          {(location.city === '__other__' || (location.city && !cities.includes(location.city) && location.city !== '')) && (
+                            <input
+                              type="text"
+                              value={location.city === '__other__' ? '' : (location.city || '')}
+                              onChange={(e) => setLocation({ ...location, city: e.target.value || '__other__' })}
+                              placeholder={cityFieldLabel + '...'}
+                              className="w-full mt-2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <input
+                          type="text"
+                          value={location.city || ''}
+                          onChange={(e) => setLocation({ ...location, city: e.target.value })}
+                          placeholder={t('settings.location.cityPlaceholder')}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                        />
+                      )}
+                    </div>
+                  )
+                })()}
                 <div>
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
                     {t('settings.location.address')}
@@ -912,7 +951,7 @@ export default function Settings() {
                   </label>
                   <div className="flex gap-2">
                     <div className="flex items-center gap-1.5 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium shrink-0">
-                      <span>{countries.find(c => c.code === location.country)?.flag}</span>
+                      <img src={`https://flagcdn.com/w20/${location.country.toLowerCase()}.png`} alt={location.country} className="w-5 h-auto" />
                       <span>{phoneCodeByCountry[location.country] || '+51'}</span>
                     </div>
                     <input
