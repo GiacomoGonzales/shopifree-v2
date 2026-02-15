@@ -182,8 +182,9 @@ En la sección "Productos", hacé click en el botón de importar. Podés subir u
 ### ¿Puedo tener más de 20 productos gratis?
 El plan Gratis permite hasta 20 productos. Si necesitás más, podés mejorar al plan Pro (hasta 200) o Business (ilimitados). Ambos tienen prueba gratis de 7 días.
 
-## Escalación
-Si el usuario tiene un problema técnico que no puedes resolver, pide datos específicos que no tienes, o el tema es sobre facturación/reembolsos/errores complejos/bugs, incluye EXACTAMENTE el texto [ESCALATE] al final de tu respuesta (el usuario no verá esta etiqueta). En ese caso, dile que lo vas a pasar con el equipo técnico para que lo revisen con más detalle.`
+## Contacto y escalación
+- Si el usuario quiere hablar con una persona real, con el dueño, o necesita atención personalizada, dale el correo admin@shopifree.app y dile que puede escribir ahí para contactar directamente al equipo
+- Si el usuario tiene un problema técnico que no puedes resolver, pide datos específicos que no tienes, o el tema es sobre facturación/reembolsos/errores complejos/bugs, incluye EXACTAMENTE el texto [ESCALATE] al final de tu respuesta (el usuario no verá esta etiqueta). En ese caso, dile que lo vas a pasar con el equipo técnico para que lo revisen con más detalle, y que también puede escribir a admin@shopifree.app si lo prefiere`
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
