@@ -40,6 +40,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
   const [chatId, setChatId] = useState<string | null>(null)
   const [chatClosed, setChatClosed] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -124,11 +125,9 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
     { label: 'Configurar pasarela de pago', message: 'Hola, quisiera ayuda para configurar mi pasarela de pagos.' },
   ]
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !chatId || !firebaseUser) return
+  const uploadImage = async (file: File) => {
+    if (!chatId || !firebaseUser) return
 
-    // Preview
     const previewUrl = URL.createObjectURL(file)
     setImagePreview(previewUrl)
     setUploading(true)
@@ -154,6 +153,43 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) uploadImage(file)
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (file) uploadImage(file)
+        return
+      }
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      uploadImage(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
   }
 
   const cancelImage = () => {
@@ -230,12 +266,25 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
       {/* Chat panel */}
       <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onPaste={handlePaste}
         className={`fixed z-[60] bg-white shadow-2xl flex flex-col transition-all duration-300 ease-out
           inset-0
           lg:inset-auto lg:bottom-6 lg:right-6 lg:w-[380px] lg:h-[520px] lg:rounded-2xl
           ${open ? 'translate-y-0 lg:scale-100 lg:opacity-100' : 'translate-y-full lg:translate-y-0 lg:scale-95 lg:opacity-0 lg:pointer-events-none'}
+          ${dragging ? 'ring-2 ring-[#007AFF] ring-inset' : ''}
         `}
       >
+        {/* Drop overlay */}
+        {dragging && (
+          <div className="absolute inset-0 bg-[#007AFF]/10 z-10 flex items-center justify-center rounded-2xl pointer-events-none">
+            <div className="bg-white px-4 py-2 rounded-xl shadow-lg text-sm font-medium text-[#007AFF]">
+              Soltar imagen aquí
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-3">

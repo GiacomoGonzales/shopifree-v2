@@ -34,6 +34,7 @@ export default function SupportChats() {
   const [sending, setSending] = useState(false)
   const [closing, setClosing] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -76,10 +77,7 @@ export default function SupportChats() {
     }
   }, [selectedChat, messages])
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const uploadImage = async (file: File) => {
     const previewUrl = URL.createObjectURL(file)
     setImagePreview(previewUrl)
     setUploading(true)
@@ -105,6 +103,43 @@ export default function SupportChats() {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) uploadImage(file)
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (file) uploadImage(file)
+        return
+      }
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      uploadImage(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
   }
 
   const cancelImage = () => {
@@ -267,7 +302,21 @@ export default function SupportChats() {
           </div>
 
           {/* Conversation */}
-          <div className={`flex-1 flex flex-col bg-[#f8f9fa] ${showingConversation ? 'flex' : 'hidden lg:flex'}`}>
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onPaste={handlePaste}
+            className={`flex-1 flex flex-col bg-[#f8f9fa] relative ${showingConversation ? 'flex' : 'hidden lg:flex'} ${dragging ? 'ring-2 ring-[#007AFF] ring-inset' : ''}`}
+          >
+            {/* Drop overlay */}
+            {dragging && (
+              <div className="absolute inset-0 bg-[#007AFF]/10 z-10 flex items-center justify-center pointer-events-none">
+                <div className="bg-white px-4 py-2 rounded-xl shadow-lg text-sm font-medium text-[#007AFF]">
+                  Soltar imagen aquí
+                </div>
+              </div>
+            )}
             {selectedChat ? (
               <>
                 {/* Conversation header */}
