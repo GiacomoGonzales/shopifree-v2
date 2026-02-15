@@ -65,6 +65,7 @@ export default function DemoStoresCarousel() {
   // Handle touch events for swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
+    touchEndX.current = e.touches[0].clientX
     setIsAutoPlaying(false)
   }
 
@@ -113,7 +114,7 @@ export default function DemoStoresCarousel() {
       {/* Carousel container */}
       <div
         ref={carouselRef}
-        className="relative flex items-center justify-center min-h-[500px] md:min-h-[600px] touch-pan-y"
+        className="relative flex items-center justify-center min-h-[500px] md:min-h-[600px] touch-manipulation"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
