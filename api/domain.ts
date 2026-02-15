@@ -252,7 +252,22 @@ async function handleRemove(_req: VercelRequest, res: VercelResponse, storeId: s
       return res.status(500).json({ error: 'Server configuration error' })
     }
 
-    // Remove main domain
+    // Remove www redirect FIRST (must be removed before main domain)
+    try {
+      await fetch(
+        `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/www.${domain}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`
+          }
+        }
+      )
+    } catch (wwwError) {
+      console.error('Error removing www subdomain:', wwwError)
+    }
+
+    // Then remove main domain
     const vercelResponse = await fetch(
       `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/${domain}`,
       {
@@ -269,21 +284,6 @@ async function handleRemove(_req: VercelRequest, res: VercelResponse, storeId: s
       return res.status(400).json({
         error: vercelData.error?.message || 'Error al eliminar dominio de Vercel'
       })
-    }
-
-    // Also remove www subdomain
-    try {
-      await fetch(
-        `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/www.${domain}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${vercelToken}`
-          }
-        }
-      )
-    } catch (wwwError) {
-      console.error('Error removing www subdomain:', wwwError)
     }
 
     await db.collection('stores').doc(storeId).update({
