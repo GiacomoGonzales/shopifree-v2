@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { chatService, type Chat, type ChatMessage } from '../../lib/chatService'
 
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+
 export default function SupportChats() {
   const { firebaseUser } = useAuth()
   const [chats, setChats] = useState<Chat[]>([])
@@ -10,8 +13,12 @@ export default function SupportChats() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [closing, setClosing] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Subscribe to all chats (escalated first)
   useEffect(() => {
@@ -49,15 +56,54 @@ export default function SupportChats() {
     }
   }, [selectedChat, messages])
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const previewUrl = URL.createObjectURL(file)
+    setImagePreview(previewUrl)
+    setUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      formData.append('folder', 'chat')
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: formData }
+      )
+      const data = await res.json()
+      if (data.secure_url) {
+        setPendingImageUrl(data.secure_url)
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err)
+      setImagePreview(null)
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const cancelImage = () => {
+    setImagePreview(null)
+    setPendingImageUrl(null)
+  }
+
   const handleSend = async () => {
-    if (!text.trim() || !selectedChat || !firebaseUser || sending) return
+    const imageUrl = pendingImageUrl
+    if ((!text.trim() && !imageUrl) || !selectedChat || !firebaseUser || sending) return
 
     const msg = text.trim()
     setText('')
+    setImagePreview(null)
+    setPendingImageUrl(null)
     setSending(true)
 
     try {
-      await chatService.sendMessage(selectedChat.id, msg, firebaseUser.uid, 'admin')
+      await chatService.sendMessage(selectedChat.id, msg || (imageUrl ? 'Imagen' : ''), firebaseUser.uid, 'admin', imageUrl || undefined)
       if (selectedChat.escalated) {
         await chatService.clearEscalation(selectedChat.id)
       }
@@ -268,7 +314,17 @@ export default function SupportChats() {
                                 {isAssistant && (
                                   <p className="text-[10px] font-semibold text-purple-500 mb-0.5">Sofía (IA)</p>
                                 )}
-                                <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                {msg.imageUrl && (
+                                  <img
+                                    src={msg.imageUrl}
+                                    alt="Imagen"
+                                    className="rounded-lg max-w-full max-h-48 mb-1 cursor-pointer"
+                                    onClick={() => window.open(msg.imageUrl, '_blank')}
+                                  />
+                                )}
+                                {msg.text && msg.text !== 'Imagen' && (
+                                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                )}
                                 <p className={`text-[10px] mt-0.5 ${isAdmin ? 'text-white/60' : 'text-gray-400'} text-right`}>
                                   {formatTime(msg.createdAt)}
                                 </p>
@@ -284,25 +340,62 @@ export default function SupportChats() {
 
                 {/* Input */}
                 <div className="border-t border-gray-100 px-3 py-2 bg-white">
-                  <div className="max-w-2xl mx-auto flex items-center gap-2">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                      placeholder="Responder..."
-                      className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-[16px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
-                    />
-                    <button
-                      onClick={handleSend}
-                      disabled={!text.trim() || sending}
-                      className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
-                    >
-                      <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                      </svg>
-                    </button>
+                  <div className="max-w-2xl mx-auto">
+                    {/* Image preview */}
+                    {imagePreview && (
+                      <div className="relative inline-block mb-2">
+                        <img src={imagePreview} alt="Preview" className="h-16 rounded-lg object-cover" />
+                        {uploading && (
+                          <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {!uploading && (
+                          <button
+                            onClick={cancelImage}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading || sending}
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-[#007AFF] hover:bg-gray-100 transition-colors disabled:opacity-40"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                        placeholder="Responder..."
+                        className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-[16px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
+                      />
+                      <button
+                        onClick={handleSend}
+                        disabled={(!text.trim() && !pendingImageUrl) || sending || uploading}
+                        className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
+                      >
+                        <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>

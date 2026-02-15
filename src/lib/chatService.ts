@@ -9,6 +9,7 @@ import { db } from './firebase'
 export interface ChatMessage {
   id: string
   text: string
+  imageUrl?: string
   senderId: string
   senderType: 'user' | 'admin' | 'assistant'
   createdAt: Date
@@ -97,14 +98,16 @@ export const chatService = {
   },
 
   // Send a message
-  async sendMessage(chatId: string, text: string, senderId: string, senderType: 'user' | 'admin') {
+  async sendMessage(chatId: string, text: string, senderId: string, senderType: 'user' | 'admin', imageUrl?: string) {
     const messagesRef = collection(db, 'chats', chatId, 'messages')
-    await addDoc(messagesRef, {
+    const msgData: Record<string, unknown> = {
       text,
       senderId,
       senderType,
       createdAt: serverTimestamp(),
-    })
+    }
+    if (imageUrl) msgData.imageUrl = imageUrl
+    await addDoc(messagesRef, msgData)
 
     // Update chat metadata
     const chatRef = doc(db, 'chats', chatId)
@@ -152,6 +155,7 @@ export const chatService = {
         return {
           id: doc.id,
           text: data.text,
+          imageUrl: data.imageUrl,
           senderId: data.senderId,
           senderType: data.senderType,
           createdAt: data.createdAt?.toDate?.() || new Date(),
