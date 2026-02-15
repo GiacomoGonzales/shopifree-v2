@@ -99,9 +99,9 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
   const isNative = Capacitor.isNativePlatform()
   const quickQuestions = [
-    ...(!isNative ? [{ icon: '📋', label: 'Conocer los planes', message: 'Hola, me gustaría conocer más sobre los planes disponibles en Shopifree.' }] : []),
-    { icon: '🌐', label: 'Conectar dominio personalizado', message: 'Hola, necesito ayuda para conectar mi dominio personalizado a mi tienda.' },
-    { icon: '💳', label: 'Configurar pasarela de pago', message: 'Hola, quisiera ayuda para configurar mi pasarela de pagos.' },
+    ...(!isNative ? [{ label: 'Conocer los planes', message: 'Hola, me gustaría conocer más sobre los planes disponibles en Shopifree.' }] : []),
+    { label: 'Conectar dominio personalizado', message: 'Hola, necesito ayuda para conectar mi dominio personalizado a mi tienda.' },
+    { label: 'Configurar pasarela de pago', message: 'Hola, quisiera ayuda para configurar mi pasarela de pagos.' },
   ]
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,9 +250,8 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
                     key={q.label}
                     onClick={() => handleSend(q.message)}
                     disabled={sending}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 bg-white border border-gray-100 rounded-xl text-left hover:bg-[#007AFF]/5 hover:border-[#007AFF]/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-100 rounded-xl text-left hover:bg-[#007AFF]/5 hover:border-[#007AFF]/20 active:scale-[0.98] transition-all disabled:opacity-50"
                   >
-                    <span className="text-lg flex-shrink-0">{q.icon}</span>
                     <span className="text-[13px] text-gray-700 font-medium">{q.label}</span>
                   </button>
                 ))}
