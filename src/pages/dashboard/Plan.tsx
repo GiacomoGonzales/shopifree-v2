@@ -244,16 +244,20 @@ export default function Plan() {
             <p className="text-sm text-gray-600 mb-4">
               {t('plan.support.description')}
             </p>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <svg className="h-4" viewBox="0 0 60 25" fill="currentColor">
-                <path d="M59.64 14.28c0-4.67-2.27-8.35-6.6-8.35-4.35 0-6.99 3.68-6.99 8.31 0 5.48 3.11 8.24 7.58 8.24 2.18 0 3.83-.49 5.08-1.18v-3.64c-1.25.62-2.69 1.01-4.51 1.01-1.78 0-3.37-.62-3.57-2.78h8.99c0-.24.02-1.18.02-1.61zm-9.09-1.73c0-2.06 1.27-2.92 2.43-2.92 1.13 0 2.32.86 2.32 2.92h-4.75z"/>
-                <path d="M40.94 5.93c-1.8 0-2.95.84-3.6 1.43l-.24-1.14h-4.04v21.08l4.59-.97v-5.12c.66.48 1.64 1.16 3.26 1.16 3.29 0 6.29-2.64 6.29-8.46-.01-5.34-3.06-8.98-6.26-8.98zm-1.1 13.81c-1.09 0-1.73-.39-2.17-.87v-6.9c.48-.53 1.14-.91 2.17-.91 1.66 0 2.8 1.85 2.8 4.33 0 2.54-1.12 4.35-2.8 4.35z"/>
-                <path d="M27.56 4.47l4.6-.98V0l-4.6.97v3.5zM32.16 6.15h-4.6v16.05h4.6V6.15z"/>
-                <path d="M22.48 7.4l-.29-1.25h-3.97v16.05h4.59v-10.9c1.09-1.41 2.92-1.16 3.5-.96V6.15c-.6-.22-2.79-.63-3.83 1.25z"/>
-                <path d="M13.28 2.45l-4.48.95-.02 14.7c0 2.72 2.04 4.72 4.77 4.72 1.51 0 2.62-.28 3.23-.6v-3.72c-.59.24-3.5 1.08-3.5-1.64V9.87h3.5V6.15h-3.5V2.45z"/>
-                <path d="M4.67 10.2c0-.72.59-1 1.57-1 1.4 0 3.17.42 4.57 1.18V6.28c-1.53-.61-3.04-.84-4.57-.84C2.49 5.44 0 7.36 0 10.56c0 4.94 6.8 4.15 6.8 6.28 0 .85-.74 1.13-1.77 1.13-1.53 0-3.49-.63-5.03-1.48v4.15c1.71.74 3.45 1.05 5.03 1.05 3.87 0 6.54-1.91 6.54-5.15-.02-5.33-6.9-4.38-6.9-6.34z"/>
+            <a
+              href="mailto:admin@shopifree.app"
+              className="flex items-center gap-2 text-sm text-[#2d6cb5] hover:text-[#1e3a5f] font-medium transition-colors mb-4"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              {t('plan.support.stripe')}
+              admin@shopifree.app
+            </a>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              {t('plan.support.stripe')} <img src="/stripe-logo.png" alt="Stripe" className="h-4 inline-block" />
             </div>
           </div>
         </div>

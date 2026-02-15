@@ -666,8 +666,8 @@
     },
     "support": {
       "title": "¿Necesitas ayuda?",
-      "description": "Contáctanos por WhatsApp para resolver cualquier duda sobre los planes.",
-      "stripe": "Pagos seguros con Stripe"
+      "description": "Escríbenos para resolver cualquier duda sobre los planes.",
+      "stripe": "Pagos seguros con"
     },
     "faq": {
       "title": "Preguntas frecuentes",
