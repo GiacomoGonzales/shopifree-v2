@@ -170,13 +170,9 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-            </div>
+            <img src="/sofia-support.png" alt="Sofía" className="w-9 h-9 rounded-full object-cover" />
             <div>
-              <p className="text-sm font-semibold text-gray-900">Soporte Shopifree</p>
+              <p className="text-sm font-semibold text-gray-900">Sofía - Soporte Shopifree</p>
               <p className="text-[11px] text-gray-500">Asistente IA + soporte humano</p>
             </div>
           </div>
@@ -195,12 +191,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
           {messages.length === 0 && (
             <div className="flex flex-col h-full px-1">
               <div className="text-center mt-4 mb-5">
-                <div className="w-14 h-14 rounded-full bg-[#007AFF]/10 flex items-center justify-center mb-3 mx-auto">
-                  <svg className="w-7 h-7 text-[#007AFF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h.01M12 10h.01M15 10h.01" />
-                  </svg>
-                </div>
+                <img src="/sofia-support.png" alt="Sofía" className="w-14 h-14 rounded-full object-cover mb-3 mx-auto" />
                 <p className="text-sm font-medium text-gray-800">¿En qué te podemos ayudar?</p>
                 <p className="text-xs text-gray-500 mt-1">Selecciona un tema o escríbenos</p>
               </div>
@@ -238,9 +229,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
                     className={`flex mb-1.5 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     {isAssistant && (
-                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center mr-1.5 mt-1 flex-shrink-0">
-                        <span className="text-[10px]">✨</span>
-                      </div>
+                      <img src="/sofia-support.png" alt="Sofía" className="w-6 h-6 rounded-full object-cover mr-1.5 mt-1 flex-shrink-0" />
                     )}
                     <div
                       className={`max-w-[80%] px-3.5 py-2 rounded-2xl ${
@@ -266,9 +255,7 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
           ))}
           {aiTyping && (
             <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-[10px]">✨</span>
-              </div>
+              <img src="/sofia-support.png" alt="Sofía" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
               <div className="bg-purple-50 border border-purple-100 rounded-2xl rounded-bl-md px-3.5 py-2.5">
                 <div className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
