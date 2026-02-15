@@ -32,7 +32,7 @@ interface ProductDrawerProps {
 }
 
 export default function ProductDrawer({ product, onClose, onAddToCart }: ProductDrawerProps) {
-  const { theme, currency, language } = useTheme()
+  const { theme, currency, language, store } = useTheme()
   const { features } = useBusinessType()
   const t = getThemeTranslations(language)
 
@@ -204,8 +204,8 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                   />
                 )}
 
-                {/* Craft: Limited Stock */}
-                {features.showLimitedStock && product.availableQuantity !== undefined && (
+                {/* Limited Stock */}
+                {(features.showLimitedStock || store.plan !== 'free') && product.availableQuantity !== undefined && (
                   <AvailabilityBadge quantity={product.availableQuantity} language={language} />
                 )}
               </div>

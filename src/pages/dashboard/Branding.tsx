@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { themes } from '../../themes'
 import { getThemeComponent } from '../../themes/components'
-import type { Store, StoreAnnouncement, StoreTrustBadges, Product, Category } from '../../types'
+import type { Store, StoreAnnouncement, StoreTrustBadges, StoreFlashSale, StoreSocialProof, Product, Category } from '../../types'
 import '../../themes/shared/animations.css'
 import { getTrustBadgeText, ALL_BADGE_IDS } from '../../themes/shared/trustBadgeDefaults'
 import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
@@ -82,7 +82,6 @@ export default function Branding() {
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
   // Logo
   const [logo, setLogo] = useState('')
@@ -121,7 +120,22 @@ export default function Branding() {
     enabled: false,
     badges: ALL_BADGE_IDS.map(id => ({ id, enabled: true })),
   })
-  const [savingTrust, setSavingTrust] = useState(false)
+  // Flash Sale
+  const [flashSale, setFlashSale] = useState<StoreFlashSale>({
+    enabled: false,
+    endDate: '',
+    text: '',
+    backgroundColor: '#dc2626',
+    textColor: '#ffffff'
+  })
+
+  // Social Proof
+  const [socialProof, setSocialProof] = useState<StoreSocialProof>({
+    enabled: false
+  })
+
+  // Unified saving for conversion features
+  const [savingConversion, setSavingConversion] = useState(false)
 
   // Theme Preview
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
@@ -157,6 +171,12 @@ export default function Branding() {
           }
           if (storeData.trustBadges) {
             setTrustBadges(storeData.trustBadges)
+          }
+          if (storeData.flashSale) {
+            setFlashSale(storeData.flashSale)
+          }
+          if (storeData.socialProof) {
+            setSocialProof(storeData.socialProof)
           }
 
           // Fetch products and categories for preview (simple queries to avoid index requirement)
@@ -388,39 +408,24 @@ export default function Branding() {
     }
   }
 
-  const handleSave = async () => {
+  const handleSaveConversion = async () => {
     if (!store) return
 
-    setSaving(true)
+    setSavingConversion(true)
     try {
       await updateDoc(doc(db, 'stores', store.id), {
         announcement,
-        updatedAt: new Date()
-      })
-      showToast(t('branding.toast.saved'), 'success')
-    } catch (error) {
-      console.error('Error saving:', error)
-      showToast(t('branding.toast.error'), 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleSaveTrustBadges = async () => {
-    if (!store) return
-
-    setSavingTrust(true)
-    try {
-      await updateDoc(doc(db, 'stores', store.id), {
         trustBadges,
+        flashSale,
+        socialProof,
         updatedAt: new Date()
       })
       showToast(t('branding.toast.saved'), 'success')
     } catch (error) {
-      console.error('Error saving trust badges:', error)
+      console.error('Error saving conversion features:', error)
       showToast(t('branding.toast.error'), 'error')
     } finally {
-      setSavingTrust(false)
+      setSavingConversion(false)
     }
   }
 
@@ -575,55 +580,56 @@ export default function Branding() {
         </div>
       </div>
 
-      {/* Brand & Catalog */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* Logo */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('branding.logo.title')}</h2>
-            <div className="flex items-start gap-4">
-              <div
-                onClick={() => logoInputRef.current?.click()}
-                className="w-24 h-24 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
-              >
-                {uploadingLogo ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2d6cb5]"></div>
-                ) : logo ? (
-                  <img src={logo} alt="Logo" className="w-full h-full object-contain p-2" />
-                ) : (
-                  <div className="text-center p-2">
-                    <svg className="w-6 h-6 text-[#38bdf8] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span className="text-[10px] text-gray-500">{t('branding.logo.upload')}</span>
-                  </div>
-                )}
-              </div>
-              <input
-                ref={logoInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleLogoSelect}
-                className="hidden"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-600 mb-2">
-                  {t('branding.logo.description')}
-                </p>
-                {logo && (
-                  <button
-                    onClick={handleDeleteLogo}
-                    className="text-sm text-red-600 hover:text-red-700 font-medium"
-                  >
-                    {t('branding.logo.delete')}
-                  </button>
-                )}
-              </div>
+      {/* Logo */}
+      <div className="mt-6">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('branding.logo.title')}</h2>
+          <div className="flex items-start gap-4">
+            <div
+              onClick={() => logoInputRef.current?.click()}
+              className="w-24 h-24 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
+            >
+              {uploadingLogo ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2d6cb5]"></div>
+              ) : logo ? (
+                <img src={logo} alt="Logo" className="w-full h-full object-contain p-2" />
+              ) : (
+                <div className="text-center p-2">
+                  <svg className="w-6 h-6 text-[#38bdf8] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="text-[10px] text-gray-500">{t('branding.logo.upload')}</span>
+                </div>
+              )}
+            </div>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoSelect}
+              className="hidden"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-600 mb-2">
+                {t('branding.logo.description')}
+              </p>
+              {logo && (
+                <button
+                  onClick={handleDeleteLogo}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                >
+                  {t('branding.logo.delete')}
+                </button>
+              )}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Catalog Layout Selector */}
+      {/* Catalog Layout + Visual Effects | Hero Images */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* Left Column: Layout + Effects in one card */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
           {store && (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-2">
@@ -744,6 +750,106 @@ export default function Branding() {
               )}
             </div>
           )}
+
+          {/* Visual Effects */}
+          {store && (
+            <div className="border-t border-gray-100 pt-6 mt-6">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-medium text-[#1e3a5f]">{t('branding.effects.title')}</h3>
+                {store.plan === 'free' && (
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 mb-4">{t('branding.effects.subtitle')}</p>
+
+              <div className="space-y-3">
+                {/* Scroll Reveal */}
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                  <div className="flex-1 mr-4">
+                    <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
+                    <p className="text-xs text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={store.themeSettings?.scrollReveal || false}
+                      disabled={store.plan === 'free'}
+                      onChange={async (e) => {
+                        const newValue = e.target.checked
+                        try {
+                          await updateDoc(doc(db, 'stores', store.id), {
+                            'themeSettings.scrollReveal': newValue,
+                            updatedAt: new Date()
+                          })
+                          setStore({ ...store, themeSettings: { ...store.themeSettings, scrollReveal: newValue } })
+                          showToast(t('branding.toast.saved'), 'success')
+                        } catch {
+                          showToast(t('branding.toast.error'), 'error')
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                      store.plan === 'free'
+                        ? 'bg-gray-200 cursor-not-allowed'
+                        : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                    }`}></div>
+                  </label>
+                </div>
+
+                {/* Image Swap on Hover */}
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                  <div className="flex-1 mr-4">
+                    <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
+                    <p className="text-xs text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={store.themeSettings?.imageSwapOnHover || false}
+                      disabled={store.plan === 'free'}
+                      onChange={async (e) => {
+                        const newValue = e.target.checked
+                        try {
+                          await updateDoc(doc(db, 'stores', store.id), {
+                            'themeSettings.imageSwapOnHover': newValue,
+                            updatedAt: new Date()
+                          })
+                          setStore({ ...store, themeSettings: { ...store.themeSettings, imageSwapOnHover: newValue } })
+                          showToast(t('branding.toast.saved'), 'success')
+                        } catch {
+                          showToast(t('branding.toast.error'), 'error')
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                      store.plan === 'free'
+                        ? 'bg-gray-200 cursor-not-allowed'
+                        : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                    }`}></div>
+                  </label>
+                </div>
+
+                {/* Upgrade prompt for free plan */}
+                {store.plan === 'free' && (
+                  <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
+                    <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <p className="text-sm text-[#1e3a5f]">
+                      {t('branding.effects.upgradeMessage')}{' '}
+                      <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                        {t('branding.effects.viewPlans')}
+                      </a>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Hero Images */}
@@ -841,397 +947,412 @@ export default function Branding() {
             </div>
           </div>
 
-          {/* Gallery option */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-sm text-gray-600 mb-3">
-              {t('branding.hero.orChooseStock')}
+          {/* Gallery + Tip */}
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
+            <p className="text-xs text-gray-400">
+              <span className="font-medium">{t('branding.hero.tip')}</span> {t('branding.hero.tipText')}
             </p>
             <button
               onClick={() => setShowCoverSelector(true)}
-              className="w-full px-4 py-3 border-2 border-dashed border-[#38bdf8]/40 rounded-xl text-[#2d6cb5] font-medium hover:border-[#38bdf8] hover:bg-[#f0f7ff] transition-all flex items-center justify-center gap-2"
+              className="text-xs text-[#2d6cb5] font-semibold hover:underline whitespace-nowrap flex-shrink-0"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
               {t('branding.hero.browseGallery')}
             </button>
-          </div>
-
-          {/* Tip */}
-          <div className="mt-6 p-3 bg-[#f0f7ff] rounded-xl">
-            <p className="text-xs text-[#1e3a5f]">
-              <span className="font-medium">{t('branding.hero.tip')}</span> {t('branding.hero.tipText')}
-            </p>
           </div>
         </div>
       </div>
 
+      {/* Conversion Features - Single unified card */}
       {store && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Visual Effects - Premium */}
+        <div className="mt-6">
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.effects.title')}</h2>
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.conversion.title')}</h2>
               {store.plan === 'free' && (
                 <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
                   PRO
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600 mb-6">{t('branding.effects.subtitle')}</p>
+            <p className="text-sm text-gray-600 mb-6">{t('branding.conversion.description')}</p>
 
-            <div className="space-y-4">
-              {/* Scroll Reveal */}
-              <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
-                <div className="flex-1 mr-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={store.themeSettings?.scrollReveal || false}
-                    disabled={store.plan === 'free'}
-                    onChange={async (e) => {
-                      const newValue = e.target.checked
-                      try {
-                        await updateDoc(doc(db, 'stores', store.id), {
-                          'themeSettings.scrollReveal': newValue,
-                          updatedAt: new Date()
-                        })
-                        setStore({ ...store, themeSettings: { ...store.themeSettings, scrollReveal: newValue } })
-                        showToast(t('branding.toast.saved'), 'success')
-                      } catch {
-                        showToast(t('branding.toast.error'), 'error')
-                      }
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                    store.plan === 'free'
-                      ? 'bg-gray-200 cursor-not-allowed'
-                      : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                  }`}></div>
-                </label>
-              </div>
-
-              {/* Image Swap on Hover */}
-              <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
-                <div className="flex-1 mr-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={store.themeSettings?.imageSwapOnHover || false}
-                    disabled={store.plan === 'free'}
-                    onChange={async (e) => {
-                      const newValue = e.target.checked
-                      try {
-                        await updateDoc(doc(db, 'stores', store.id), {
-                          'themeSettings.imageSwapOnHover': newValue,
-                          updatedAt: new Date()
-                        })
-                        setStore({ ...store, themeSettings: { ...store.themeSettings, imageSwapOnHover: newValue } })
-                        showToast(t('branding.toast.saved'), 'success')
-                      } catch {
-                        showToast(t('branding.toast.error'), 'error')
-                      }
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                    store.plan === 'free'
-                      ? 'bg-gray-200 cursor-not-allowed'
-                      : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                  }`}></div>
-                </label>
-              </div>
-
-              {/* Upgrade prompt for free plan */}
-              {store.plan === 'free' && (
-                <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
-                  <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <p className="text-sm text-[#1e3a5f]">
-                    {t('branding.effects.upgradeMessage')}{' '}
-                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
-                      {t('branding.effects.viewPlans')}
-                    </a>
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Announcement Bar */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.announcement.title')}</h2>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={announcement.enabled}
-                  onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
-              </label>
-            </div>
-
-            <p className="text-sm text-gray-600 mb-4">
-              {t('branding.announcement.description')}
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
-                <input
-                  type="text"
-                  value={announcement.text}
-                  onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
-                  placeholder={t('branding.announcement.messagePlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.link')}</label>
-                <input
-                  type="url"
-                  value={announcement.link || ''}
-                  onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
-                  placeholder={t('branding.announcement.linkPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            {/* Two-column grid for sections */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left column: Announcement + Flash Sale */}
+              <div className="space-y-0">
+                {/* Section 1: Announcement Bar */}
                 <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.backgroundColor')}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={announcement.backgroundColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
-                    />
-                    <input
-                      type="text"
-                      value={announcement.backgroundColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                    />
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-[#1e3a5f]">{t('branding.announcement.title')}</h3>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={announcement.enabled}
+                        onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                    </label>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.textColor')}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={announcement.textColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                      className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
-                    />
-                    <input
-                      type="text"
-                      value={announcement.textColor}
-                      onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                      className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
+                  <p className="text-sm text-gray-500 mb-4">{t('branding.announcement.description')}</p>
 
-              {/* Marquee mode toggle */}
-              <div className={`flex items-center justify-between p-4 rounded-xl border ${store?.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
-                <div className="flex-1 mr-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[#1e3a5f]">{t('branding.announcement.marquee')}</span>
-                    {store?.plan === 'free' && (
-                      <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
-                        PRO
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={announcement.mode === 'marquee'}
-                    disabled={store?.plan === 'free'}
-                    onChange={(e) => setAnnouncement({ ...announcement, mode: e.target.checked ? 'marquee' : 'static' })}
-                    className="sr-only peer"
-                  />
-                  <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                    store?.plan === 'free'
-                      ? 'bg-gray-200 cursor-not-allowed'
-                      : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                  }`}></div>
-                </label>
-              </div>
+                  {announcement.enabled && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
+                        <input
+                          type="text"
+                          value={announcement.text}
+                          onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
+                          placeholder={t('branding.announcement.messagePlaceholder')}
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.link')}</label>
+                        <input
+                          type="url"
+                          value={announcement.link || ''}
+                          onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
+                          placeholder={t('branding.announcement.linkPlaceholder')}
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                        />
+                      </div>
 
-              {/* Preview */}
-              {announcement.enabled && announcement.text && (
-                <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-2">{t('branding.announcement.preview')}</label>
-                  <div
-                    className="py-2.5 px-4 text-sm font-medium rounded-lg overflow-hidden"
-                    style={{
-                      backgroundColor: announcement.backgroundColor,
-                      color: announcement.textColor
-                    }}
-                  >
-                    {announcement.mode === 'marquee' && store?.plan !== 'free' ? (
-                      <div className="overflow-hidden">
-                        <div className="animate-marquee">
-                          {[0, 1, 2].map((i) => (
-                            <span key={i} className="inline-flex items-center gap-8 px-4">
-                              <span>{announcement.text}</span>
-                              <span style={{ opacity: 0.4 }}>&#x2022;</span>
-                            </span>
-                          ))}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.backgroundColor')}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={announcement.backgroundColor}
+                              onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
+                              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                            />
+                            <input
+                              type="text"
+                              value={announcement.backgroundColor}
+                              onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
+                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.textColor')}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={announcement.textColor}
+                              onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
+                              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                            />
+                            <input
+                              type="text"
+                              value={announcement.textColor}
+                              onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
+                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            />
+                          </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="text-center">{announcement.text}</div>
-                    )}
-                  </div>
-                </div>
-              )}
 
-              {/* Save button for announcement */}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full mt-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-              >
-                {saving ? t('branding.saving') : t('branding.saveChanges')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Trust Badges */}
-      {store && (
-        <div className="mt-6">
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            {/* Header with toggle */}
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.trustBadges.title')}</h2>
-                {store.plan === 'free' && (
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
-                    PRO
-                  </span>
-                )}
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={trustBadges.enabled}
-                  disabled={store.plan === 'free'}
-                  onChange={(e) => setTrustBadges({ ...trustBadges, enabled: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                  store.plan === 'free'
-                    ? 'bg-gray-200 cursor-not-allowed'
-                    : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                }`}></div>
-              </label>
-            </div>
-            <p className="text-sm text-gray-500 mb-5">
-              {t('branding.trustBadges.description')}
-            </p>
-
-            {/* Badge cards grid - tap to toggle, icon-first */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {(ALL_BADGE_IDS as readonly TrustBadgeId[]).map((badgeId) => {
-                const badge = trustBadges.badges.find(b => b.id === badgeId)
-                return (
-                  <TrustBadgeCard
-                    key={badgeId}
-                    badgeId={badgeId}
-                    badge={badge}
-                    isDisabled={store.plan === 'free'}
-                    language={store.language || 'es'}
-                    onToggle={() => {
-                      const updated = trustBadges.badges.map(b =>
-                        b.id === badgeId ? { ...b, enabled: !b.enabled } : b
-                      )
-                      if (!badge) {
-                        updated.push({ id: badgeId, enabled: true })
-                      }
-                      setTrustBadges({ ...trustBadges, badges: updated })
-                    }}
-                    onTextChange={(text) => {
-                      const updated = trustBadges.badges.map(b =>
-                        b.id === badgeId ? { ...b, text: text || undefined } : b
-                      )
-                      if (!badge) {
-                        updated.push({ id: badgeId, enabled: true, text: text || undefined })
-                      }
-                      setTrustBadges({ ...trustBadges, badges: updated })
-                    }}
-                  />
-                )
-              })}
-            </div>
-
-            {/* Live preview strip */}
-            {trustBadges.enabled && store.plan !== 'free' && trustBadges.badges.some(b => b.enabled) && (
-              <div className="mt-5">
-                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.trustBadges.preview')}</div>
-                <div className="py-3.5 px-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-100 overflow-x-auto scrollbar-hide">
-                  <div className="flex items-center justify-center gap-5 md:gap-8 min-w-max">
-                    {trustBadges.badges.filter(b => b.enabled).map((badge) => (
-                      <div key={badge.id} className="flex items-center gap-2.5 flex-shrink-0">
-                        <div className="w-8 h-8 rounded-lg bg-[#1e3a5f]/10 flex items-center justify-center text-[#2d6cb5]">
-                          <TrustBadgeIcon id={badge.id} />
+                      {/* Marquee mode toggle */}
+                      <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                        <div className="flex-1 mr-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-[#1e3a5f]">{t('branding.announcement.marquee')}</span>
+                            {store.plan === 'free' && (
+                              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                                PRO
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
                         </div>
-                        <span className="text-xs font-semibold text-[#1e3a5f] whitespace-nowrap">
-                          {badge.text || getTrustBadgeText(badge.id, store.language || 'es')}
-                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={announcement.mode === 'marquee'}
+                            disabled={store.plan === 'free'}
+                            onChange={(e) => setAnnouncement({ ...announcement, mode: e.target.checked ? 'marquee' : 'static' })}
+                            className="sr-only peer"
+                          />
+                          <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                            store.plan === 'free'
+                              ? 'bg-gray-200 cursor-not-allowed'
+                              : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                          }`}></div>
+                        </label>
                       </div>
-                    ))}
+
+                      {/* Preview */}
+                      {announcement.text && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.announcement.preview')}</div>
+                          <div
+                            className="py-2.5 px-4 text-sm font-medium rounded-lg overflow-hidden"
+                            style={{
+                              backgroundColor: announcement.backgroundColor,
+                              color: announcement.textColor
+                            }}
+                          >
+                            {announcement.mode === 'marquee' && store.plan !== 'free' ? (
+                              <div className="overflow-hidden">
+                                <div className="animate-marquee">
+                                  {[0, 1, 2].map((i) => (
+                                    <span key={i} className="inline-flex items-center gap-8 px-4">
+                                      <span>{announcement.text}</span>
+                                      <span style={{ opacity: 0.4 }}>&#x2022;</span>
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center">{announcement.text}</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 3: Flash Sale */}
+                <div className="border-t border-gray-100 pt-5 mt-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-[#1e3a5f]">{t('branding.flashSale.title')}</h3>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={flashSale.enabled}
+                        disabled={store.plan === 'free'}
+                        onChange={(e) => setFlashSale({ ...flashSale, enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                        store.plan === 'free'
+                          ? 'bg-gray-200 cursor-not-allowed'
+                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                      }`}></div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4">{t('branding.flashSale.description')}</p>
+
+                  {flashSale.enabled && store.plan !== 'free' && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.endDate')}</label>
+                        <input
+                          type="datetime-local"
+                          value={flashSale.endDate ? flashSale.endDate.slice(0, 16) : ''}
+                          onChange={(e) => setFlashSale({ ...flashSale, endDate: new Date(e.target.value).toISOString() })}
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.customText')}</label>
+                        <input
+                          type="text"
+                          value={flashSale.text || ''}
+                          onChange={(e) => setFlashSale({ ...flashSale, text: e.target.value })}
+                          placeholder={t('branding.flashSale.customTextPlaceholder')}
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.bgColor')}</label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="color"
+                              value={flashSale.backgroundColor || '#dc2626'}
+                              onChange={(e) => setFlashSale({ ...flashSale, backgroundColor: e.target.value })}
+                              className="w-10 h-10 rounded-lg cursor-pointer border-0"
+                            />
+                            <input
+                              type="text"
+                              value={flashSale.backgroundColor || '#dc2626'}
+                              onChange={(e) => setFlashSale({ ...flashSale, backgroundColor: e.target.value })}
+                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.textColor')}</label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="color"
+                              value={flashSale.textColor || '#ffffff'}
+                              onChange={(e) => setFlashSale({ ...flashSale, textColor: e.target.value })}
+                              className="w-10 h-10 rounded-lg cursor-pointer border-0"
+                            />
+                            <input
+                              type="text"
+                              value={flashSale.textColor || '#ffffff'}
+                              onChange={(e) => setFlashSale({ ...flashSale, textColor: e.target.value })}
+                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Live preview */}
+                      {flashSale.endDate && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.flashSale.preview')}</div>
+                          <div
+                            className="py-2.5 px-4 rounded-xl text-center text-sm font-semibold"
+                            style={{
+                              backgroundColor: flashSale.backgroundColor || '#dc2626',
+                              color: flashSale.textColor || '#ffffff'
+                            }}
+                          >
+                            {flashSale.text || 'Flash Sale!'} {new Date(flashSale.endDate) > new Date() ? '\u23F1' : ''}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right column: Trust Badges + Social Proof */}
+              <div className="space-y-0">
+                {/* Section 2: Trust Badges */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-[#1e3a5f]">{t('branding.trustBadges.title')}</h3>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={trustBadges.enabled}
+                        disabled={store.plan === 'free'}
+                        onChange={(e) => setTrustBadges({ ...trustBadges, enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                        store.plan === 'free'
+                          ? 'bg-gray-200 cursor-not-allowed'
+                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                      }`}></div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4">{t('branding.trustBadges.description')}</p>
+
+                  {trustBadges.enabled && store.plan !== 'free' && (
+                    <>
+                      {/* Badge cards grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {(ALL_BADGE_IDS as readonly TrustBadgeId[]).map((badgeId) => {
+                          const badge = trustBadges.badges.find(b => b.id === badgeId)
+                          return (
+                            <TrustBadgeCard
+                              key={badgeId}
+                              badgeId={badgeId}
+                              badge={badge}
+                              isDisabled={false}
+                              language={store.language || 'es'}
+                              onToggle={() => {
+                                const updated = trustBadges.badges.map(b =>
+                                  b.id === badgeId ? { ...b, enabled: !b.enabled } : b
+                                )
+                                if (!badge) {
+                                  updated.push({ id: badgeId, enabled: true })
+                                }
+                                setTrustBadges({ ...trustBadges, badges: updated })
+                              }}
+                              onTextChange={(text) => {
+                                const updated = trustBadges.badges.map(b =>
+                                  b.id === badgeId ? { ...b, text: text || undefined } : b
+                                )
+                                if (!badge) {
+                                  updated.push({ id: badgeId, enabled: true, text: text || undefined })
+                                }
+                                setTrustBadges({ ...trustBadges, badges: updated })
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+
+                      {/* Live preview strip */}
+                      {trustBadges.badges.some(b => b.enabled) && (
+                        <div className="mt-4">
+                          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.trustBadges.preview')}</div>
+                          <div className="py-3.5 px-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-100 overflow-x-auto scrollbar-hide">
+                            <div className="flex items-center justify-center gap-5 md:gap-8 min-w-max">
+                              {trustBadges.badges.filter(b => b.enabled).map((badge) => (
+                                <div key={badge.id} className="flex items-center gap-2.5 flex-shrink-0">
+                                  <div className="w-8 h-8 rounded-lg bg-[#1e3a5f]/10 flex items-center justify-center text-[#2d6cb5]">
+                                    <TrustBadgeIcon id={badge.id} />
+                                  </div>
+                                  <span className="text-xs font-semibold text-[#1e3a5f] whitespace-nowrap">
+                                    {badge.text || getTrustBadgeText(badge.id, store.language || 'es')}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Section 4: Social Proof */}
+                <div className="border-t border-gray-100 pt-5 mt-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-[#1e3a5f]">{t('branding.socialProof.title')}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{t('branding.socialProof.description')}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
+                      <input
+                        type="checkbox"
+                        checked={socialProof.enabled}
+                        disabled={store.plan === 'free'}
+                        onChange={(e) => setSocialProof({ ...socialProof, enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                        store.plan === 'free'
+                          ? 'bg-gray-200 cursor-not-allowed'
+                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                      }`}></div>
+                    </label>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Upgrade prompt for free plan */}
+            {/* Upgrade prompt (free only) */}
             {store.plan === 'free' && (
-              <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-5">
+              <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-6">
                 <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <p className="text-sm text-[#1e3a5f]">
-                  {t('branding.trustBadges.upgradeMessage')}{' '}
+                  {t('branding.effects.upgradeMessage')}{' '}
                   <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
-                    {t('branding.trustBadges.viewPlans')}
+                    {t('branding.effects.viewPlans')}
                   </a>
                 </p>
               </div>
             )}
 
-            {/* Save */}
+            {/* Save button - right aligned */}
             {store.plan !== 'free' && (
-              <button
-                onClick={handleSaveTrustBadges}
-                disabled={savingTrust}
-                className="w-full mt-5 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
-              >
-                {savingTrust ? t('branding.saving') : t('branding.saveChanges')}
-              </button>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleSaveConversion}
+                  disabled={savingConversion}
+                  className="px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+                >
+                  {savingConversion ? t('branding.saving') : t('branding.saveChanges')}
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -22,7 +22,7 @@ export default function AnnouncementBar() {
 
   return (
     <div
-      className="relative py-3 px-4 text-sm animate-fadeIn overflow-hidden"
+      className="relative py-3 text-sm animate-fadeIn overflow-hidden"
       style={{ backgroundColor: bgColor, color: textColor }}
     >
       {mode === 'marquee' ? (
@@ -43,7 +43,7 @@ export default function AnnouncementBar() {
           </div>
         </div>
       ) : (
-        <div className="text-center">{textContent}</div>
+        <div className="text-center px-10">{textContent}</div>
       )}
       <button
         onClick={() => setDismissed(true)}

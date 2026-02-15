@@ -117,15 +117,15 @@ function CarouselRow({ title, products, onSelectProduct, onQuickAdd, theme }: Ca
           {title}
         </h3>
       )}
-      <div className="relative group/carousel">
+      <div className="relative group/carousel -mx-4 md:mx-0">
         <div
           ref={containerRef}
-          className="flex gap-4 md:gap-6 overflow-x-auto carousel-container pb-2"
+          className="flex gap-4 md:gap-6 overflow-x-auto carousel-container pb-2 scroll-pl-4 md:scroll-pl-0"
         >
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div
               key={product.id}
-              className="carousel-item w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[calc(25%-12px)]"
+              className={`carousel-item w-[calc(50vw-24px)] md:w-[calc(33.33%-11px)] lg:w-[calc(25%-12px)]${index === 0 ? ' ml-4 md:ml-0' : ''}${index === products.length - 1 ? ' mr-4 md:mr-0' : ''}`}
             >
               <ProductCard
                 product={product}

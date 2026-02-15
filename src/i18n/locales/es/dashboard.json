@@ -358,6 +358,10 @@
       "cancel": "Cancelar",
       "apply": "Aplicar"
     },
+    "conversion": {
+      "title": "Funciones de conversion",
+      "description": "Activa herramientas para aumentar tus ventas."
+    },
     "announcement": {
       "title": "Tira publicitaria",
       "description": "Barra promocional en la parte superior de tu catálogo.",
@@ -376,6 +380,24 @@
       "description": "Muestra iconos de confianza entre el hero y los productos.",
       "preview": "Vista previa",
       "upgradeMessage": "Mejora tu plan para activar las insignias de confianza.",
+      "viewPlans": "Ver planes"
+    },
+    "flashSale": {
+      "title": "Oferta Flash",
+      "description": "Muestra un banner con cuenta regresiva para ofertas por tiempo limitado.",
+      "endDate": "Fecha de fin",
+      "customText": "Texto personalizado",
+      "customTextPlaceholder": "Ej: Oferta Flash!",
+      "bgColor": "Color de fondo",
+      "textColor": "Color de texto",
+      "preview": "Vista previa",
+      "upgradeMessage": "Mejora tu plan para activar ofertas flash.",
+      "viewPlans": "Ver planes"
+    },
+    "socialProof": {
+      "title": "Prueba social",
+      "description": "Muestra notificaciones de compras recientes para generar confianza.",
+      "upgradeMessage": "Mejora tu plan para activar prueba social.",
       "viewPlans": "Ver planes"
     },
     "hero": {

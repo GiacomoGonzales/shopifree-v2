@@ -25,7 +25,9 @@ import {
   StoreFooter,
   CheckoutDrawer,
   AnnouncementBar,
-  TrustBar
+  TrustBar,
+  FlashSaleBar,
+  SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -237,6 +239,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
 
 
         <TrustBar />
+        <FlashSaleBar />
 
         {/* Categories - Pill style */}
         <CategoryNav
@@ -264,6 +267,9 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
         <StoreFooter onWhatsAppClick={onWhatsAppClick} />
 
         {/* WhatsApp Float */}
+        <SocialProofToast />
+
+
         <WhatsAppButton
           whatsapp={store.whatsapp || ''}
           storeName={store.name}

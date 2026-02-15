@@ -3,6 +3,7 @@ import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import FreeShippingProgress from './FreeShippingProgress'
 
 interface CartDrawerProps {
   items: CartItem[]
@@ -211,6 +212,7 @@ export default function CartDrawer({
               backgroundColor: theme.colors.surfaceHover
             }}
           >
+            <FreeShippingProgress subtotal={totalPrice} />
             <div className="flex justify-between items-center mb-4">
               <span style={{ color: theme.colors.textMuted }}>{t.total}</span>
               <span className="text-2xl font-semibold" style={{ color: theme.colors.text }}>

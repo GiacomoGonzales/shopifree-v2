@@ -42,7 +42,7 @@ export default function AvailabilityBadge({
 
   return (
     <div
-      className="inline-flex items-center gap-1.5 px-2.5 py-1"
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1${isVeryLow ? ' animate-urgencyPulse' : ''}`}
       style={{
         backgroundColor: theme.effects.darkMode
           ? (isVeryLow ? 'rgba(220, 38, 38, 0.2)' : 'rgba(217, 119, 6, 0.2)')

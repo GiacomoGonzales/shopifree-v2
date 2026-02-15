@@ -13,7 +13,9 @@ import {
   StoreFooter,
   CheckoutDrawer,
   AnnouncementBar,
-  TrustBar
+  TrustBar,
+  FlashSaleBar,
+  SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -218,6 +220,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
 
 
         <TrustBar />
+        <FlashSaleBar />
 
         {/* Categories */}
         <CategoryNav
@@ -242,6 +245,9 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
         <StoreFooter onWhatsAppClick={onWhatsAppClick} />
 
         {/* WhatsApp Float */}
+        <SocialProofToast />
+
+
         <WhatsAppButton
           whatsapp={store.whatsapp || ''}
           storeName={store.name}

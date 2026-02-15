@@ -357,6 +357,10 @@
       "cancel": "Cancel",
       "apply": "Apply"
     },
+    "conversion": {
+      "title": "Conversion features",
+      "description": "Enable tools to boost your sales."
+    },
     "announcement": {
       "title": "Announcement bar",
       "description": "Promotional bar at the top of your catalog.",
@@ -375,6 +379,24 @@
       "description": "Show trust icons between the hero and products.",
       "preview": "Preview",
       "upgradeMessage": "Upgrade your plan to enable trust badges.",
+      "viewPlans": "View plans"
+    },
+    "flashSale": {
+      "title": "Flash Sale",
+      "description": "Show a banner with a countdown timer for limited-time offers.",
+      "endDate": "End date",
+      "customText": "Custom text",
+      "customTextPlaceholder": "E.g: Flash Sale!",
+      "bgColor": "Background color",
+      "textColor": "Text color",
+      "preview": "Preview",
+      "upgradeMessage": "Upgrade your plan to enable flash sales.",
+      "viewPlans": "View plans"
+    },
+    "socialProof": {
+      "title": "Social proof",
+      "description": "Show recent purchase notifications to build trust.",
+      "upgradeMessage": "Upgrade your plan to enable social proof.",
       "viewPlans": "View plans"
     },
     "hero": {

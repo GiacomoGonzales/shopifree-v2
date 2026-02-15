@@ -54,6 +54,12 @@ export interface Store {
   // === TRUST BADGES ===
   trustBadges?: StoreTrustBadges
 
+  // === FLASH SALE ===
+  flashSale?: StoreFlashSale
+
+  // === SOCIAL PROOF ===
+  socialProof?: StoreSocialProof
+
   // === CONTACTO ===
   whatsapp: string
   email?: string
@@ -126,6 +132,18 @@ export interface TrustBadgeItem {
 export interface StoreTrustBadges {
   enabled: boolean
   badges: TrustBadgeItem[]
+}
+
+export interface StoreFlashSale {
+  enabled: boolean
+  endDate: string           // ISO 8601 string
+  text?: string             // "Oferta Flash! Termina en:"
+  backgroundColor?: string
+  textColor?: string
+}
+
+export interface StoreSocialProof {
+  enabled: boolean
 }
 
 export interface DomainVerification {

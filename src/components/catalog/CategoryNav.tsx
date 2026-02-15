@@ -70,7 +70,8 @@ export default function CategoryNav({
         }}
       >
         <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <div className="flex md:justify-center gap-1 py-3 overflow-x-auto scrollbar-hide">
+          <div className="flex md:justify-center gap-1 py-3 overflow-x-auto scrollbar-hide -mx-4 md:mx-0">
+            <div className="w-3 flex-shrink-0 md:hidden" aria-hidden="true" />
             {/* Search icon button */}
             {hasSearch && (
               <button
@@ -118,6 +119,7 @@ export default function CategoryNav({
                 ))}
               </>
             )}
+            <div className="w-3 flex-shrink-0 md:hidden" aria-hidden="true" />
           </div>
         </div>
       </nav>

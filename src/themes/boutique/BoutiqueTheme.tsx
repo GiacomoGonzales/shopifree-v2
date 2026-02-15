@@ -14,7 +14,9 @@ import {
   StoreFooter,
   CheckoutDrawer,
   AnnouncementBar,
-  TrustBar
+  TrustBar,
+  FlashSaleBar,
+  SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -200,6 +202,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
 
 
         <TrustBar />
+        <FlashSaleBar />
 
         {/* Categories - Using shared component */}
         <CategoryNav
@@ -224,6 +227,9 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
         <StoreFooter onWhatsAppClick={onWhatsAppClick} />
 
         {/* WhatsApp Float - Using shared component */}
+        <SocialProofToast />
+
+
         <WhatsAppButton
           whatsapp={store.whatsapp || ''}
           storeName={store.name}

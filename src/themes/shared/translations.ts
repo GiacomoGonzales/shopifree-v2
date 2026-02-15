@@ -149,6 +149,20 @@ export interface ThemeTranslations {
   paymentPendingInfo: string
   paymentProcessing: string
 
+  // Flash sale
+  flashSaleEndsIn: string
+  flashSaleExpired: string
+
+  // Free shipping progress
+  freeShippingProgress: string
+  freeShippingUnlocked: string
+
+  // Social proof
+  socialProofBought: string
+  socialProofFrom: string
+  socialProofMinutes: string
+  socialProofHours: string
+
   // WhatsApp message parts
   waGreeting: string
   waOrderNumber: string
@@ -312,6 +326,20 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     paymentPendingInfo: 'Esto puede tomar unos minutos. No es necesario que hagas nada mas.',
     paymentProcessing: 'Procesando pago...',
 
+    // Flash sale
+    flashSaleEndsIn: 'Termina en:',
+    flashSaleExpired: 'Oferta finalizada',
+
+    // Free shipping progress
+    freeShippingProgress: 'Te faltan {{amount}} para envio gratis!',
+    freeShippingUnlocked: 'Tienes envio gratis!',
+
+    // Social proof
+    socialProofBought: 'compro',
+    socialProofFrom: 'de',
+    socialProofMinutes: 'min',
+    socialProofHours: 'h',
+
     // WhatsApp message parts
     waGreeting: 'Hola! Acabo de realizar un pedido',
     waOrderNumber: 'Pedido',
@@ -474,6 +502,20 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     paymentPendingInfo: 'This may take a few minutes. No further action is needed.',
     paymentProcessing: 'Processing payment...',
 
+    // Flash sale
+    flashSaleEndsIn: 'Ends in:',
+    flashSaleExpired: 'Sale ended',
+
+    // Free shipping progress
+    freeShippingProgress: 'Add {{amount}} more for free shipping!',
+    freeShippingUnlocked: 'You have free shipping!',
+
+    // Social proof
+    socialProofBought: 'bought',
+    socialProofFrom: 'from',
+    socialProofMinutes: 'min',
+    socialProofHours: 'h',
+
     // WhatsApp message parts
     waGreeting: 'Hi! I just placed an order',
     waOrderNumber: 'Order',
@@ -635,6 +677,20 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     paymentPendingMessage: 'Seu pagamento esta sendo processado. Notificaremos quando for confirmado.',
     paymentPendingInfo: 'Isso pode levar alguns minutos. Nenhuma acao adicional e necessaria.',
     paymentProcessing: 'Processando pagamento...',
+
+    // Flash sale
+    flashSaleEndsIn: 'Termina em:',
+    flashSaleExpired: 'Oferta encerrada',
+
+    // Free shipping progress
+    freeShippingProgress: 'Faltam {{amount}} para frete gratis!',
+    freeShippingUnlocked: 'Voce tem frete gratis!',
+
+    // Social proof
+    socialProofBought: 'comprou',
+    socialProofFrom: 'de',
+    socialProofMinutes: 'min',
+    socialProofHours: 'h',
 
     // WhatsApp message parts
     waGreeting: 'Ola! Acabei de fazer um pedido',

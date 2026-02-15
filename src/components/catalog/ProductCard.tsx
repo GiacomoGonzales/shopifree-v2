@@ -16,7 +16,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onSelect, onQuickAdd, variant = 'default' }: ProductCardProps) {
-  const { theme, currency, language } = useTheme()
+  const { theme, currency, language, store } = useTheme()
   const { features } = useBusinessType()
 
   // Preload gallery image on hover/touch for faster modal opening
@@ -209,7 +209,7 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
         </div>
 
         {/* Bottom Left Badge - Limited Stock */}
-        {features.showLimitedStock && product.availableQuantity !== undefined && product.availableQuantity <= 10 && (
+        {(features.showLimitedStock || store.plan !== 'free') && product.availableQuantity !== undefined && product.availableQuantity <= 10 && (
           <div className="absolute bottom-3 left-3">
             <AvailabilityBadge quantity={product.availableQuantity} language={language} />
           </div>
