@@ -28,61 +28,32 @@ type EmailTemplate = { subject: string; html: string; text: string }
 
 function getWelcomeEmail(storeName: string, subdomain: string, lang: string): EmailTemplate {
   const isEn = lang === 'en'
+  const text = isEn
+    ? `Hi!\n\n${storeName} is online and ready to receive orders.\n\nHere are your next steps:\n\n1. Add your first products — just a photo, name, and price.\n2. Share your store link: https://${subdomain}.shopifree.app\n3. Your customers will order from the catalog and you'll receive it on WhatsApp.\n\nYour account includes a 14-day Pro trial with all features.\n\nGo to your dashboard:\nhttps://shopifree.app/dashboard\n\nIf you have any questions, just reply to this email.\n\n— Shopifree`
+    : `Hola!\n\n${storeName} ya esta online y lista para recibir pedidos.\n\nEstos son tus siguientes pasos:\n\n1. Agrega tus primeros productos — solo foto, nombre y precio.\n2. Comparte el link de tu tienda: https://${subdomain}.shopifree.app\n3. Tus clientes piden desde el catalogo y te llega al WhatsApp.\n\nTu cuenta incluye 14 dias de prueba Pro con todas las funciones.\n\nIr a tu panel:\nhttps://shopifree.app/dashboard\n\nSi tenes alguna duda, responde este email.\n\n— Shopifree`
   return {
     subject: isEn
       ? `${storeName} is live — next steps`
       : `${storeName} ya esta online — siguientes pasos`,
-    text: isEn
-      ? `${storeName} is online and ready to receive orders.\n\n1. Add products — Photo, name, and price. That's it.\n2. Share your link — ${subdomain}.shopifree.app\n3. Receive orders on WhatsApp — Customers order from the catalog, you receive it on WhatsApp.\n\nYour account includes a 14-day Pro trial.\n\nGo to your dashboard: https://shopifree.app/dashboard\n\n—\nShopifree · Online catalogs via WhatsApp`
-      : `${storeName} esta online y lista para recibir pedidos.\n\n1. Agrega productos — Foto, nombre y precio. Nada mas.\n2. Comparte tu link — ${subdomain}.shopifree.app\n3. Recibe pedidos por WhatsApp — Tus clientes piden desde el catalogo, te llega al WhatsApp.\n\nTu cuenta incluye 14 dias de prueba Pro.\n\nIr al panel: https://shopifree.app/dashboard\n\n—\nShopifree · Catalogos online por WhatsApp`,
+    text,
     html: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<div style="max-width:480px;margin:0 auto;padding:40px 16px">
-  <div style="margin-bottom:24px">
-    <img src="https://shopifree.app/newlogo.png" alt="Shopifree" height="22" style="height:22px;opacity:0.7">
-  </div>
-  <div style="background:white;border-radius:4px;padding:32px;border:1px solid #e4e4e7">
-    <h1 style="color:#18181b;font-size:20px;font-weight:600;margin:0 0 8px">${isEn ? 'Your store is ready' : 'Tu tienda esta lista'}</h1>
-    <p style="color:#71717a;font-size:14px;line-height:1.6;margin:0 0 24px">
-      ${isEn
-        ? `<strong style="color:#18181b">${storeName}</strong> is online and ready to receive orders.`
-        : `<strong style="color:#18181b">${storeName}</strong> esta online y lista para recibir pedidos.`}
-    </p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-      <tr>
-        <td style="padding:14px 16px;background:#fafafa;border:1px solid #e4e4e7;border-bottom:none">
-          <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#18181b">1. ${isEn ? 'Add products' : 'Agrega productos'}</p>
-          <p style="margin:0;font-size:12px;color:#71717a">${isEn ? 'Photo, name, and price. That\'s it.' : 'Foto, nombre y precio. Nada mas.'}</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:14px 16px;background:#fafafa;border:1px solid #e4e4e7;border-bottom:none">
-          <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#18181b">2. ${isEn ? 'Share your link' : 'Comparte tu link'}</p>
-          <p style="margin:0;font-size:12px;color:#71717a"><a href="https://${subdomain}.shopifree.app" style="color:#2563eb;text-decoration:none">${subdomain}.shopifree.app</a></p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:14px 16px;background:#fafafa;border:1px solid #e4e4e7">
-          <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#18181b">3. ${isEn ? 'Receive orders on WhatsApp' : 'Recibe pedidos por WhatsApp'}</p>
-          <p style="margin:0;font-size:12px;color:#71717a">${isEn ? 'Customers order from the catalog, you receive it on WhatsApp.' : 'Tus clientes piden desde el catalogo, te llega al WhatsApp.'}</p>
-        </td>
-      </tr>
-    </table>
-    <p style="color:#71717a;font-size:13px;margin:0 0 20px">
-      ${isEn
-        ? 'Your account includes a 14-day Pro trial.'
-        : 'Tu cuenta incluye 14 dias de prueba Pro.'}
-    </p>
-    <a href="https://shopifree.app/dashboard" style="display:block;background:#18181b;color:white;text-align:center;padding:12px;border-radius:4px;text-decoration:none;font-weight:500;font-size:14px">
-      ${isEn ? 'Go to dashboard' : 'Ir al panel'}
-    </a>
-  </div>
-  <p style="color:#a1a1aa;font-size:11px;margin-top:20px">
-    Shopifree · ${isEn ? 'Online catalogs via WhatsApp' : 'Catalogos online por WhatsApp'}
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#333;line-height:1.6">
+<div style="max-width:480px;margin:0 auto;padding:32px 16px">
+  <p>${isEn ? 'Hi!' : 'Hola!'}</p>
+  <p><strong>${storeName}</strong> ${isEn ? 'is online and ready to receive orders.' : 'ya esta online y lista para recibir pedidos.'}</p>
+  <p>${isEn ? 'Here are your next steps:' : 'Estos son tus siguientes pasos:'}</p>
+  <p>
+    <strong>1.</strong> ${isEn ? 'Add your first products' : 'Agrega tus primeros productos'} — ${isEn ? 'just a photo, name, and price.' : 'solo foto, nombre y precio.'}<br>
+    <strong>2.</strong> ${isEn ? 'Share your store link:' : 'Comparte el link de tu tienda:'} <a href="https://${subdomain}.shopifree.app" style="color:#2563eb">${subdomain}.shopifree.app</a><br>
+    <strong>3.</strong> ${isEn ? 'Your customers will order from the catalog and you\'ll receive it on WhatsApp.' : 'Tus clientes piden desde el catalogo y te llega al WhatsApp.'}
   </p>
+  <p>${isEn ? 'Your account includes a 14-day Pro trial with all features.' : 'Tu cuenta incluye 14 dias de prueba Pro con todas las funciones.'}</p>
+  <p><a href="https://shopifree.app/dashboard" style="color:#2563eb">${isEn ? 'Go to your dashboard' : 'Ir a tu panel'}</a></p>
+  <p>${isEn ? 'If you have any questions, just reply to this email.' : 'Si tenes alguna duda, responde este email.'}</p>
+  <p style="color:#999;margin-top:32px;font-size:12px">— Shopifree</p>
 </div>
 </body>
 </html>`
@@ -91,63 +62,38 @@ function getWelcomeEmail(storeName: string, subdomain: string, lang: string): Em
 
 function getReminderHtml(storeName: string, daysLeft: number, lang: string): EmailTemplate {
   const isEn = lang === 'en'
+  const text = isEn
+    ? `Hi,\n\nYour Pro trial for ${storeName} ends in ${daysLeft} days.\n\nAfter that, your store switches to the free plan and you'll lose access to:\n\n- Card payments\n- Discount coupons\n- Custom domain\n- Products go from 200 to 10\n- Photos per product go from 5 to 1\n\nYou can keep everything for $4.99/month:\nhttps://shopifree.app/dashboard/plan\n\nIf you have questions, reply to this email.\n\n— Shopifree`
+    : `Hola,\n\nLa prueba Pro de ${storeName} termina en ${daysLeft} dias.\n\nDespues, tu tienda pasa al plan gratuito y perdes acceso a:\n\n- Cobro con tarjeta\n- Cupones de descuento\n- Dominio propio\n- Productos pasan de 200 a 10\n- Fotos por producto pasan de 5 a 1\n\nPodes mantener todo por $4.99/mes:\nhttps://shopifree.app/dashboard/plan\n\nSi tenes dudas, responde este email.\n\n— Shopifree`
   return {
     subject: isEn
       ? `${daysLeft} days left on your Pro trial`
-      : `Te quedan ${daysLeft} dias de Pro gratis`,
-    text: isEn
-      ? `The Pro trial for ${storeName} ends in ${daysLeft} days. After that, your store switches to the free plan.\n\nWhat changes:\n- Card payments: Disabled\n- Discount coupons: Disabled\n- Custom domain: Disabled\n- Products: 200 → 10\n- Photos per product: 5 → 1\n\nKeep everything for $4.99/month: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Online catalogs via WhatsApp`
-      : `La prueba Pro de ${storeName} termina en ${daysLeft} dias. Despues, tu tienda pasa al plan gratuito.\n\nQue cambia:\n- Cobro con tarjeta: Se desactiva\n- Cupones de descuento: Se desactiva\n- Dominio propio: Se desactiva\n- Productos: 200 → 10\n- Fotos por producto: 5 → 1\n\nMantene todo por $4.99/mes: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Catalogos online por WhatsApp`,
+      : `Te quedan ${daysLeft} dias de Pro`,
+    text,
     html: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<div style="max-width:480px;margin:0 auto;padding:40px 16px">
-  <div style="margin-bottom:24px">
-    <img src="https://shopifree.app/newlogo.png" alt="Shopifree" height="22" style="height:22px;opacity:0.7">
-  </div>
-  <div style="background:white;border-radius:4px;padding:32px;border:1px solid #e4e4e7">
-    <h1 style="color:#18181b;font-size:20px;font-weight:600;margin:0 0 8px">${isEn ? `${daysLeft} days left on Pro` : `${daysLeft} dias restantes de Pro`}</h1>
-    <p style="color:#71717a;font-size:14px;line-height:1.6;margin:0 0 24px">
-      ${isEn
-        ? `The Pro trial for <strong style="color:#18181b">${storeName}</strong> ends soon. After that, your store switches to the free plan.`
-        : `La prueba Pro de <strong style="color:#18181b">${storeName}</strong> termina pronto. Despues, tu tienda pasa al plan gratuito.`}
-    </p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Card payments' : 'Cobro con tarjeta'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#dc2626;text-align:right">${isEn ? 'Disabled' : 'Se desactiva'}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Discount coupons' : 'Cupones de descuento'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#dc2626;text-align:right">${isEn ? 'Disabled' : 'Se desactiva'}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Custom domain' : 'Dominio propio'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#dc2626;text-align:right">${isEn ? 'Disabled' : 'Se desactiva'}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Products' : 'Productos'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#dc2626;text-align:right">200 → 10</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;font-size:13px;color:#71717a">${isEn ? 'Photos per product' : 'Fotos por producto'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-left:none;font-size:13px;color:#dc2626;text-align:right">5 → 1</td>
-      </tr>
-    </table>
-    <p style="color:#71717a;font-size:13px;margin:0 0 20px">
-      ${isEn
-        ? 'Keep everything for <strong style="color:#18181b">$4.99/month</strong>.'
-        : 'Mantene todo por <strong style="color:#18181b">$4.99/mes</strong>.'}
-    </p>
-    <a href="https://shopifree.app/dashboard/plan" style="display:block;background:#18181b;color:white;text-align:center;padding:12px;border-radius:4px;text-decoration:none;font-weight:500;font-size:14px">
-      ${isEn ? 'Upgrade to Pro' : 'Pasarme a Pro'}
-    </a>
-  </div>
-  <p style="color:#a1a1aa;font-size:11px;margin-top:20px">
-    Shopifree · ${isEn ? 'Online catalogs via WhatsApp' : 'Catalogos online por WhatsApp'}
-  </p>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#333;line-height:1.6">
+<div style="max-width:480px;margin:0 auto;padding:32px 16px">
+  <p>${isEn ? 'Hi,' : 'Hola,'}</p>
+  <p>${isEn
+    ? `Your Pro trial for <strong>${storeName}</strong> ends in ${daysLeft} days.`
+    : `La prueba Pro de <strong>${storeName}</strong> termina en ${daysLeft} dias.`}</p>
+  <p>${isEn ? 'After that, your store switches to the free plan and you\'ll lose access to:' : 'Despues, tu tienda pasa al plan gratuito y perdes acceso a:'}</p>
+  <ul style="padding-left:20px">
+    <li>${isEn ? 'Card payments' : 'Cobro con tarjeta'}</li>
+    <li>${isEn ? 'Discount coupons' : 'Cupones de descuento'}</li>
+    <li>${isEn ? 'Custom domain' : 'Dominio propio'}</li>
+    <li>${isEn ? 'Products go from 200 to 10' : 'Productos pasan de 200 a 10'}</li>
+    <li>${isEn ? 'Photos per product go from 5 to 1' : 'Fotos por producto pasan de 5 a 1'}</li>
+  </ul>
+  <p>${isEn
+    ? `You can keep everything for $4.99/month.`
+    : `Podes mantener todo por $4.99/mes.`}</p>
+  <p><a href="https://shopifree.app/dashboard/plan" style="color:#2563eb">${isEn ? 'See plans' : 'Ver planes'}</a></p>
+  <p>${isEn ? 'If you have questions, reply to this email.' : 'Si tenes dudas, responde este email.'}</p>
+  <p style="color:#999;margin-top:32px;font-size:12px">— Shopifree</p>
 </div>
 </body>
 </html>`
@@ -156,73 +102,38 @@ function getReminderHtml(storeName: string, daysLeft: number, lang: string): Ema
 
 function getExpiredHtml(storeName: string, lang: string): EmailTemplate {
   const isEn = lang === 'en'
+  const text = isEn
+    ? `Hi,\n\nThe Pro trial for ${storeName} has ended. Your store is now on the free plan.\n\nYour store is still online, but these features are now limited:\n\n- Products: 10 (was 200)\n- Photos per product: 1 (was 5)\n- Card payments: disabled\n- Coupons: disabled\n- Custom domain: disabled\n\nYou can upgrade anytime for $4.99/month:\nhttps://shopifree.app/dashboard/plan\n\nReply to this email if you need help.\n\n— Shopifree`
+    : `Hola,\n\nLa prueba Pro de ${storeName} termino. Tu tienda ahora esta en el plan gratuito.\n\nTu tienda sigue online, pero estas funciones estan limitadas:\n\n- Productos: 10 (eran 200)\n- Fotos por producto: 1 (eran 5)\n- Cobro con tarjeta: desactivado\n- Cupones: desactivado\n- Dominio propio: desactivado\n\nPodes mejorar tu plan en cualquier momento por $4.99/mes:\nhttps://shopifree.app/dashboard/plan\n\nResponde este email si necesitas ayuda.\n\n— Shopifree`
   return {
     subject: isEn
       ? `Your Pro trial ended`
       : `Tu periodo Pro termino`,
-    text: isEn
-      ? `${storeName} is now on the free plan. Your store is still online.\n\n         Free    Pro\nProducts   10     200\nPhotos      1       5\nPayments    —     Yes\nCoupons     —     Yes\nDomain      —     Yes\n\nUpgrade anytime for $4.99/month: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Online catalogs via WhatsApp`
-      : `${storeName} ahora esta en el plan gratuito. Tu tienda sigue online.\n\n            Gratis   Pro\nProductos     10     200\nFotos          1       5\nTarjeta        —      Si\nCupones        —      Si\nDominio        —      Si\n\nMejora tu plan por $4.99/mes: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Catalogos online por WhatsApp`,
+    text,
     html: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<div style="max-width:480px;margin:0 auto;padding:40px 16px">
-  <div style="margin-bottom:24px">
-    <img src="https://shopifree.app/newlogo.png" alt="Shopifree" height="22" style="height:22px;opacity:0.7">
-  </div>
-  <div style="background:white;border-radius:4px;padding:32px;border:1px solid #e4e4e7">
-    <h1 style="color:#18181b;font-size:20px;font-weight:600;margin:0 0 8px">${isEn ? 'Your Pro trial has ended' : 'Tu periodo Pro termino'}</h1>
-    <p style="color:#71717a;font-size:14px;line-height:1.6;margin:0 0 24px">
-      ${isEn
-        ? `<strong style="color:#18181b">${storeName}</strong> is now on the free plan. Your store is still online.`
-        : `<strong style="color:#18181b">${storeName}</strong> ahora esta en el plan gratuito. Tu tienda sigue online.`}
-    </p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:12px;color:#a1a1aa;font-weight:600;text-transform:uppercase;letter-spacing:0.5px"></td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:12px;color:#a1a1aa;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;text-align:right">${isEn ? 'Free' : 'Gratis'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:12px;color:#18181b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;text-align:right">Pro</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Products' : 'Productos'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#71717a;text-align:right">10</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#18181b;font-weight:500;text-align:right">200</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Photos' : 'Fotos'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#71717a;text-align:right">1</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#18181b;font-weight:500;text-align:right">5</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Card payments' : 'Cobro con tarjeta'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#71717a;text-align:right">—</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#18181b;font-weight:500;text-align:right">${isEn ? 'Yes' : 'Si'}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;font-size:13px;color:#71717a">${isEn ? 'Coupons' : 'Cupones'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#71717a;text-align:right">—</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-bottom:none;border-left:none;font-size:13px;color:#18181b;font-weight:500;text-align:right">${isEn ? 'Yes' : 'Si'}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;font-size:13px;color:#71717a">${isEn ? 'Custom domain' : 'Dominio propio'}</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-left:none;font-size:13px;color:#71717a;text-align:right">—</td>
-        <td style="padding:10px 16px;border:1px solid #e4e4e7;border-left:none;font-size:13px;color:#18181b;font-weight:500;text-align:right">${isEn ? 'Yes' : 'Si'}</td>
-      </tr>
-    </table>
-    <p style="color:#71717a;font-size:13px;margin:0 0 20px">
-      ${isEn
-        ? 'Upgrade anytime for <strong style="color:#18181b">$4.99/month</strong>.'
-        : 'Mejora tu plan por <strong style="color:#18181b">$4.99/mes</strong>.'}
-    </p>
-    <a href="https://shopifree.app/dashboard/plan" style="display:block;background:#18181b;color:white;text-align:center;padding:12px;border-radius:4px;text-decoration:none;font-weight:500;font-size:14px">
-      ${isEn ? 'Upgrade to Pro' : 'Pasarme a Pro'}
-    </a>
-  </div>
-  <p style="color:#a1a1aa;font-size:11px;margin-top:20px">
-    Shopifree · ${isEn ? 'Online catalogs via WhatsApp' : 'Catalogos online por WhatsApp'}
-  </p>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#333;line-height:1.6">
+<div style="max-width:480px;margin:0 auto;padding:32px 16px">
+  <p>${isEn ? 'Hi,' : 'Hola,'}</p>
+  <p>${isEn
+    ? `The Pro trial for <strong>${storeName}</strong> has ended. Your store is now on the free plan.`
+    : `La prueba Pro de <strong>${storeName}</strong> termino. Tu tienda ahora esta en el plan gratuito.`}</p>
+  <p>${isEn ? 'Your store is still online, but these features are now limited:' : 'Tu tienda sigue online, pero estas funciones estan limitadas:'}</p>
+  <ul style="padding-left:20px">
+    <li>${isEn ? 'Products: 10 (was 200)' : 'Productos: 10 (eran 200)'}</li>
+    <li>${isEn ? 'Photos per product: 1 (was 5)' : 'Fotos por producto: 1 (eran 5)'}</li>
+    <li>${isEn ? 'Card payments: disabled' : 'Cobro con tarjeta: desactivado'}</li>
+    <li>${isEn ? 'Coupons: disabled' : 'Cupones: desactivado'}</li>
+    <li>${isEn ? 'Custom domain: disabled' : 'Dominio propio: desactivado'}</li>
+  </ul>
+  <p>${isEn
+    ? `You can upgrade anytime for $4.99/month.`
+    : `Podes mejorar tu plan en cualquier momento por $4.99/mes.`}</p>
+  <p><a href="https://shopifree.app/dashboard/plan" style="color:#2563eb">${isEn ? 'See plans' : 'Ver planes'}</a></p>
+  <p>${isEn ? 'Reply to this email if you need help.' : 'Responde este email si necesitas ayuda.'}</p>
+  <p style="color:#999;margin-top:32px;font-size:12px">— Shopifree</p>
 </div>
 </body>
 </html>`
@@ -241,7 +152,7 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(200).json({ ok: true, skipped: true })
 
   const resend = new Resend(apiKey)
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Shopifree <noreply@shopifree.app>'
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Giacomo de Shopifree <hola@shopifree.app>'
   const firestore = getDb()
   const now = new Date()
   let remindersSent = 0
@@ -370,7 +281,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Send
     const resend = new Resend(apiKey)
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Shopifree <noreply@shopifree.app>'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Giacomo de Shopifree <hola@shopifree.app>'
     const { error } = await resend.emails.send({
       from: fromEmail,
       to: email,
