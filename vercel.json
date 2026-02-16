@@ -15,7 +15,7 @@
   ],
   "crons": [
     {
-      "path": "/api/cron-trial-emails",
+      "path": "/api/send-email",
       "schedule": "0 14 * * *"
     }
   ]

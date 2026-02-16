@@ -38,6 +38,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  const { action } = req.body
+
+  // ── Portal session ──────────────────────────────────────────────
+  if (action === 'portal') {
+    try {
+      const { userId } = req.body
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing userId' })
+      }
+
+      const userDoc = await db.collection('users').doc(userId).get()
+      const userData = userDoc.data()
+
+      if (!userData?.stripeCustomerId) {
+        return res.status(400).json({ error: 'No subscription found' })
+      }
+
+      const origin = req.headers.origin || 'https://shopifree.app'
+
+      const session = await stripe.billingPortal.sessions.create({
+        customer: userData.stripeCustomerId,
+        return_url: `${origin}/dashboard/plan`
+      })
+
+      return res.status(200).json({ url: session.url })
+    } catch (error) {
+      console.error('Error creating portal session:', error)
+      return res.status(500).json({ error: 'Failed to create portal session' })
+    }
+  }
+
+  // ── Checkout session (default) ──────────────────────────────────
   try {
     const { storeId, plan, billing, userId, email } = req.body
 

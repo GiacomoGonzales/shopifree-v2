@@ -186,11 +186,11 @@ export default function Account() {
     try {
       const apiBase = import.meta.env.DEV ? 'https://shopifree.app' : ''
       const response = await fetch(
-        `${apiBase}/api/create-portal`,
+        `${apiBase}/api/create-checkout`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: firebaseUser.uid })
+          body: JSON.stringify({ action: 'portal', userId: firebaseUser.uid })
         }
       )
 
