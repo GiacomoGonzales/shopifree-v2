@@ -72,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── Checkout session (default) ──────────────────────────────────
   try {
-    const { storeId, plan, billing, userId, email } = req.body
+    const { storeId, plan, billing, userId, email, applyDiscount } = req.body
 
     if (!storeId || !plan || !billing || !userId || !email) {
       return res.status(400).json({ error: 'Missing required parameters' })
@@ -111,6 +111,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Get origin for redirect URLs
     const origin = req.headers.origin || 'https://shopifree.app'
 
+    // Handle 50% first month discount (only for monthly billing)
+    const useDiscount = applyDiscount && billing === 'monthly'
+    let couponId: string | undefined
+
+    if (useDiscount) {
+      try {
+        // Try to retrieve existing coupon
+        const existing = await stripe.coupons.retrieve('FIRST_MONTH_50')
+        couponId = existing.id
+      } catch {
+        // Coupon doesn't exist, create it
+        const coupon = await stripe.coupons.create({
+          id: 'FIRST_MONTH_50',
+          percent_off: 50,
+          duration: 'once',
+          name: '50% Off First Month'
+        })
+        couponId = coupon.id
+      }
+    }
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -129,14 +150,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         userId,
         plan
       },
-      subscription_data: {
-        trial_period_days: 7,
-        metadata: {
-          storeId,
-          userId,
-          plan
-        }
-      }
+      ...(couponId
+        ? {
+            discounts: [{ coupon: couponId }],
+            subscription_data: {
+              metadata: { storeId, userId, plan }
+            }
+          }
+        : {
+            subscription_data: {
+              trial_period_days: 7,
+              metadata: { storeId, userId, plan }
+            }
+          }
+      )
     })
 
     return res.status(200).json({ sessionId: session.id, url: session.url })

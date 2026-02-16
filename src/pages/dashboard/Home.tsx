@@ -8,7 +8,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
-import { productService, analyticsService, categoryService } from '../../lib/firebase'
+import { productService, analyticsService, categoryService, orderService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
 import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 import { themes } from '../../themes'
@@ -29,12 +29,22 @@ export default function DashboardHome() {
   const [savingTheme, setSavingTheme] = useState(false)
   const [onboardingDismissed, setOnboardingDismissed] = useState(false)
   const [linkShared, setLinkShared] = useState(false)
+  const [hasOrders, setHasOrders] = useState(false)
+  const [dismissedMilestones, setDismissedMilestones] = useState<string[]>([])
 
   // Load persisted onboarding state
   useEffect(() => {
     if (store) {
       setOnboardingDismissed(!!store.onboardingDismissed)
       setLinkShared(localStorage.getItem(`linkShared_${store.id}`) === 'true')
+      // Load dismissed milestones
+      const dismissed: string[] = []
+      for (const m of ['first_order', 'products_5', 'whatsapp']) {
+        if (localStorage.getItem(`milestone_${m}_${store.id}`) === 'dismissed') {
+          dismissed.push(m)
+        }
+      }
+      setDismissedMilestones(dismissed)
     }
   }, [store])
 
@@ -65,19 +75,52 @@ export default function DashboardHome() {
   // Get recommended themes (exclude current, show mix of new and popular)
   const recommendedThemes = themes.filter(th => th.id !== store?.themeId).slice(0, 6)
 
+  // Milestone logic for free plan users
+  const activeMilestone = (() => {
+    if (store?.plan !== 'free') return null
+    const milestones = [
+      { id: 'first_order', active: hasOrders },
+      { id: 'products_5', active: products.length >= 5 },
+      { id: 'whatsapp', active: analytics.whatsappClicks > 0 },
+    ]
+    return milestones.find(m => m.active && !dismissedMilestones.includes(m.id)) || null
+  })()
+
+  const dismissMilestone = useCallback((milestoneId: string) => {
+    if (!store) return
+    localStorage.setItem(`milestone_${milestoneId}_${store.id}`, 'dismissed')
+    setDismissedMilestones(prev => [...prev, milestoneId])
+  }, [store])
+
   useEffect(() => {
     const fetchData = async () => {
       if (!store) return
 
       try {
-        const [productsData, analyticsData, categoriesData] = await Promise.all([
+        const promises: Promise<unknown>[] = [
           productService.getAll(store.id),
           analyticsService.getWeeklyStats(store.id),
           categoryService.getAll(store.id)
-        ])
-        setProducts(productsData)
-        setAnalytics(analyticsData)
-        setCategories(categoriesData)
+        ]
+        // Fetch orders only for free plan (for milestone detection)
+        if (store.plan === 'free') {
+          promises.push(orderService.getAll(store.id, 5))
+        }
+        const [productsData, analyticsData, categoriesData, ordersData] = await Promise.all(promises)
+        setProducts(productsData as Product[])
+        setAnalytics(analyticsData as { pageViews: number; whatsappClicks: number })
+        setCategories(categoriesData as Category[])
+        if (ordersData) {
+          const orders = ordersData as { paymentMethod?: string; paymentStatus?: string; status?: string }[]
+          // Filter out abandoned carts (same logic as Orders.tsx)
+          const realOrders = orders.filter(o =>
+            !((o.paymentMethod === 'mercadopago' || o.paymentMethod === 'stripe') &&
+              o.paymentStatus !== 'paid' &&
+              o.paymentStatus !== 'failed' &&
+              o.status === 'pending')
+          )
+          setHasOrders(realOrders.length > 0)
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -181,13 +224,16 @@ export default function DashboardHome() {
                   </span>
                 </div>
                 <p className="text-sm text-amber-700 mt-0.5">{t('home.trial.description')}</p>
+                {trialDaysLeft <= 5 && (
+                  <p className="text-sm font-semibold text-green-700 mt-1">{t('home.trial.discountOffer')}</p>
+                )}
               </div>
             </div>
             <Link
               to={localePath('/dashboard/plan')}
               className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-semibold text-sm shadow-lg shadow-amber-500/20 text-center flex-shrink-0"
             >
-              {t('home.trial.subscribe')}
+              {trialDaysLeft <= 5 ? t('plan.discount.getDiscount') : t('home.trial.subscribe')}
             </Link>
           </div>
           {/* Progress bar */}
@@ -367,6 +413,69 @@ export default function DashboardHome() {
           <p className="text-gray-600 text-[11px] sm:text-sm mt-0.5 sm:mt-1">{t('home.whatsappClicks')}</p>
         </div>
       </div>
+
+      {/* Milestone Banner - contextual upgrade nudge for free users */}
+      {activeMilestone && !Capacitor.isNativePlatform() && (() => {
+        const milestoneKeys: Record<string, { icon: JSX.Element; gradient: string }> = {
+          first_order: {
+            icon: (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ),
+            gradient: 'from-green-50 to-emerald-50 border-green-200'
+          },
+          products_5: {
+            icon: (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            ),
+            gradient: 'from-blue-50 to-indigo-50 border-blue-200'
+          },
+          whatsapp: {
+            icon: (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            ),
+            gradient: 'from-emerald-50 to-green-50 border-emerald-200'
+          }
+        }
+        const tKey = activeMilestone.id === 'first_order' ? 'firstOrder' : activeMilestone.id === 'products_5' ? 'products5' : 'whatsapp'
+        const style = milestoneKeys[activeMilestone.id]
+        const iconGradient = activeMilestone.id === 'first_order' ? 'from-green-500 to-emerald-600' : activeMilestone.id === 'products_5' ? 'from-blue-500 to-indigo-600' : 'from-emerald-500 to-green-600'
+
+        return (
+          <div className={`rounded-2xl p-4 sm:p-5 border shadow-sm bg-gradient-to-r ${style.gradient}`}>
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 bg-gradient-to-br ${iconGradient} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                {style.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-[#1e3a5f]">{t(`home.milestone.${tKey}.title`)}</h3>
+                  <button
+                    onClick={() => dismissMilestone(activeMilestone.id)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-0.5">{t(`home.milestone.${tKey}.description`)}</p>
+                <Link
+                  to={localePath('/dashboard/plan')}
+                  className={`inline-block mt-3 px-4 py-2 bg-gradient-to-r ${iconGradient} text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-md`}
+                >
+                  {t(`home.milestone.${tKey}.cta`)}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Plan Usage Card - only for free plan */}
       {store?.plan === 'free' && !Capacitor.isNativePlatform() && (() => {

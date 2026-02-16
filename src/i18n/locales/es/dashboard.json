@@ -55,7 +55,26 @@
       "lastDay": "Último día",
       "description": "Estás disfrutando de todas las funciones Pro gratis. Suscríbete antes de que termine para no perder acceso.",
       "subscribe": "Suscribirme al Pro",
-      "expired": "Tu prueba Pro terminó"
+      "expired": "Tu prueba Pro terminó",
+      "discountOffer": "Suscribite ahora y obtene 50% off en tu primer mes"
+    },
+    "milestone": {
+      "firstOrder": {
+        "title": "Tu primer pedido llego!",
+        "description": "Los clientes confian en tu tienda. Pasa a Pro para seguir creciendo.",
+        "cta": "Desbloquear Pro"
+      },
+      "products5": {
+        "title": "Tu tienda esta creciendo!",
+        "description": "Ya tenes 5 productos. Con Pro podes agregar hasta 200 y mucho mas.",
+        "cta": "Crecer con Pro"
+      },
+      "whatsapp": {
+        "title": "Tus clientes estan interesados!",
+        "description": "Ya recibiste consultas por WhatsApp. Pasa a Pro para convertir mas ventas.",
+        "cta": "Vender mas con Pro"
+      },
+      "dismiss": "Ahora no"
     },
     "onboarding": {
       "title": "Configura tu tienda",
@@ -727,6 +746,14 @@
         "question": "¿Hay periodo de prueba?",
         "answer": "Sí, todos los planes de pago incluyen 7 días de prueba gratis. Solo necesitas una tarjeta, y si no te convence puedes cancelar antes de que termine."
       }
+    },
+    "discount": {
+      "badge": "50% OFF",
+      "firstMonth": "primer mes",
+      "originalPrice": "${{price}}",
+      "discountedPrice": "${{price}}",
+      "getDiscount": "Obtener 50% off",
+      "appliedNote": "50% de descuento en tu primer mes"
     },
     "toast": {
       "success": "¡Suscripción activada exitosamente!",

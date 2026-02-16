@@ -55,7 +55,26 @@
       "lastDay": "Last day",
       "description": "You're enjoying all Pro features for free. Subscribe before it ends to keep access.",
       "subscribe": "Subscribe to Pro",
-      "expired": "Your Pro trial has ended"
+      "expired": "Your Pro trial has ended",
+      "discountOffer": "Subscribe now and get 50% off your first month"
+    },
+    "milestone": {
+      "firstOrder": {
+        "title": "Your first order arrived!",
+        "description": "Customers trust your store. Upgrade to Pro to keep growing.",
+        "cta": "Unlock Pro"
+      },
+      "products5": {
+        "title": "Your store is growing!",
+        "description": "You already have 5 products. With Pro you can add up to 200 and much more.",
+        "cta": "Grow with Pro"
+      },
+      "whatsapp": {
+        "title": "Your customers are interested!",
+        "description": "You've received WhatsApp inquiries. Upgrade to Pro to convert more sales.",
+        "cta": "Sell more with Pro"
+      },
+      "dismiss": "Not now"
     },
     "onboarding": {
       "title": "Set up your store",
@@ -726,6 +745,14 @@
         "question": "Is there a free trial?",
         "answer": "Yes, all paid plans include a 7-day free trial. You just need a card, and if it's not for you, you can cancel before it ends."
       }
+    },
+    "discount": {
+      "badge": "50% OFF",
+      "firstMonth": "first month",
+      "originalPrice": "${{price}}",
+      "discountedPrice": "${{price}}",
+      "getDiscount": "Get 50% off",
+      "appliedNote": "50% off your first month"
     },
     "toast": {
       "success": "Subscription activated successfully!",

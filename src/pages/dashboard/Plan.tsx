@@ -69,7 +69,8 @@ export default function Plan() {
             plan: planId,
             billing: selectedBilling,
             userId: firebaseUser.uid,
-            email: firebaseUser.email
+            email: firebaseUser.email,
+            ...(showDiscount && { applyDiscount: true })
           })
         }
       )
@@ -135,6 +136,16 @@ export default function Plan() {
     const trialEnd = new Date(store.subscription.trialEnd)
     return Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
   })()
+
+  // 50% discount qualification: trialing with <=5 days left, OR free plan with expired trial
+  const qualifiesForDiscount = (() => {
+    if (isTrialing && trialDaysLeft <= 5) return true
+    // Free plan user who had a trial (trialEndsAt exists) and is no longer trialing
+    if (currentPlan === 'free' && store?.trialEndsAt && !isTrialing) return true
+    return false
+  })()
+  // Only apply discount to monthly billing
+  const showDiscount = qualifiesForDiscount && selectedBilling === 'monthly'
 
   // On iOS native, redirect to dashboard (Apple requires IAP, not available yet)
   useEffect(() => {
@@ -270,6 +281,8 @@ export default function Plan() {
               const isCurrentPlan = planId === currentPlan
               const price = selectedBilling === 'yearly' ? plan.priceYearly : plan.price
               const isProcessing = processingPlan === planId
+              const hasDiscount = showDiscount && price > 0
+              const discountedPrice = hasDiscount ? Math.round(price * 0.5) : price
 
               return (
                 <div
@@ -289,10 +302,23 @@ export default function Plan() {
                   )}
 
                   <div className="text-center mb-4">
-                    <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
+                    <div className="flex items-center justify-center gap-2">
+                      <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
+                      {hasDiscount && (
+                        <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                          {t('plan.discount.badge')}
+                        </span>
+                      )}
+                    </div>
                     <div className="mt-3">
                       {price === 0 ? (
                         <span className="text-3xl font-bold text-[#1e3a5f]">{t('plan.badge.free')}</span>
+                      ) : hasDiscount ? (
+                        <>
+                          <span className="text-lg text-gray-400 line-through mr-1">${price}</span>
+                          <span className="text-3xl font-bold text-green-600">${discountedPrice}</span>
+                          <span className="text-gray-500 text-sm">{t('plan.billing.perMonth')}</span>
+                        </>
                       ) : (
                         <>
                           <span className="text-3xl font-bold text-[#1e3a5f]">${price}</span>
@@ -300,12 +326,17 @@ export default function Plan() {
                         </>
                       )}
                     </div>
-                    {selectedBilling === 'yearly' && price > 0 && (
+                    {hasDiscount && (
+                      <p className="text-xs text-green-600 font-medium mt-1">
+                        {t('plan.discount.appliedNote')}
+                      </p>
+                    )}
+                    {!hasDiscount && selectedBilling === 'yearly' && price > 0 && (
                       <p className="text-xs text-green-600 mt-1">
                         {t('plan.billing.savings', { amount: ((plan.price * 12) - plan.priceYearly).toFixed(0) })}
                       </p>
                     )}
-                    {price > 0 && currentPlan === 'free' && (
+                    {!hasDiscount && price > 0 && currentPlan === 'free' && (
                       <p className="text-xs text-gray-500 mt-1">
                         {t('plan.trial.subtitle')} ${price}{selectedBilling === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}
                       </p>
@@ -343,6 +374,8 @@ export default function Plan() {
                       t('plan.buttons.current')
                     ) : planId === 'free' ? (
                       t('plan.buttons.free')
+                    ) : hasDiscount ? (
+                      t('plan.discount.getDiscount')
                     ) : currentPlan === 'free' ? (
                       t('plan.trial.startTrial')
                     ) : (
