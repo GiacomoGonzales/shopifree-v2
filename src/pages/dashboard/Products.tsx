@@ -310,6 +310,33 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Near-limit warning banner */}
+      {plan === 'free' && !Capacitor.isNativePlatform() && remainingProducts !== 'unlimited' && remainingProducts > 0 && remainingProducts <= 3 && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-400/20">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900">
+                {t('products.nearLimit.title', { remaining: remainingProducts })}
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                {t('products.nearLimit.description')}
+              </p>
+            </div>
+            <Link
+              to={localePath('/dashboard/plan')}
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all text-xs font-semibold shadow-lg shadow-amber-500/20 flex-shrink-0"
+            >
+              {t('products.nearLimit.upgrade')}
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Categories tabs */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">

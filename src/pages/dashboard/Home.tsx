@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, analyticsService, categoryService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
+import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 import { themes } from '../../themes'
 import { getThemeComponent } from '../../themes/components'
 import type { Product, Category } from '../../types'
@@ -366,6 +367,90 @@ export default function DashboardHome() {
           <p className="text-gray-600 text-[11px] sm:text-sm mt-0.5 sm:mt-1">{t('home.whatsappClicks')}</p>
         </div>
       </div>
+
+      {/* Plan Usage Card - only for free plan */}
+      {store?.plan === 'free' && !Capacitor.isNativePlatform() && (() => {
+        const plan = (store.plan || 'free') as PlanType
+        const limits = PLAN_FEATURES[plan].limits
+        const productPct = limits.products === -1 ? 0 : Math.round((products.length / limits.products) * 100)
+        const categoryPct = limits.categories === -1 ? 0 : Math.round((categories.length / limits.categories) * 100)
+        const isNearLimit = productPct >= 70 || categoryPct >= 70
+
+        return (
+          <div className={`rounded-2xl p-4 sm:p-5 border shadow-sm ${isNearLimit ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200' : 'bg-white border-gray-100'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isNearLimit ? 'bg-gradient-to-br from-orange-400 to-amber-500' : 'bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5]'}`}>
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1e3a5f]">{t('home.planUsage.title')}</h3>
+                  <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
+                    {PLAN_FEATURES[plan].name}
+                  </span>
+                </div>
+              </div>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="text-xs font-semibold text-[#2d6cb5] hover:text-[#1e3a5f] transition-colors"
+              >
+                {t('home.planUsage.upgrade')}
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {/* Products usage */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-gray-600">{t('home.products')}</span>
+                  <span className={`font-semibold ${productPct >= 80 ? 'text-orange-600' : 'text-[#1e3a5f]'}`}>
+                    {products.length}/{limits.products}
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${productPct >= 80 ? 'bg-gradient-to-r from-orange-400 to-red-500' : productPct >= 50 ? 'bg-gradient-to-r from-amber-400 to-orange-400' : 'bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5]'}`}
+                    style={{ width: `${Math.min(100, productPct)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Categories usage */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-gray-600">{t('home.planUsage.categories')}</span>
+                  <span className={`font-semibold ${categoryPct >= 80 ? 'text-orange-600' : 'text-[#1e3a5f]'}`}>
+                    {categories.length}/{limits.categories}
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${categoryPct >= 80 ? 'bg-gradient-to-r from-orange-400 to-red-500' : categoryPct >= 50 ? 'bg-gradient-to-r from-amber-400 to-orange-400' : 'bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5]'}`}
+                    style={{ width: `${Math.min(100, categoryPct)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Images info */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">{t('home.planUsage.images')}</span>
+                <span className="font-semibold text-[#1e3a5f]">{limits.imagesPerProduct} {t('home.planUsage.perProduct')}</span>
+              </div>
+            </div>
+
+            {isNearLimit && (
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="mt-4 w-full block text-center px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
+              >
+                {t('home.planUsage.unlockMore')}
+              </Link>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Recent Products */}
       <div>

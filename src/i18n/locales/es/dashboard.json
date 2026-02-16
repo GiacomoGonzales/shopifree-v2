@@ -38,6 +38,14 @@
     "preview": "Vista previa",
     "useTheme": "Usar tema",
     "saving": "Guardando...",
+    "planUsage": {
+      "title": "Uso de tu plan",
+      "categories": "Categorías",
+      "images": "Fotos por producto",
+      "perProduct": "por producto",
+      "upgrade": "Mejorar plan",
+      "unlockMore": "Desbloquear más con Pro"
+    },
     "upgradeTitle": "¿Quieres más funciones?",
     "upgradeDesc": "Productos ilimitados, múltiples fotos, categorías, cupones y más",
     "viewPlans": "Ver planes",
@@ -277,6 +285,11 @@
       "description": "Agrega tu primer producto para empezar a vender",
       "descriptionFiltered": "Agrega productos o cambia de categoría"
     },
+    "nearLimit": {
+      "title": "Te quedan {{remaining}} productos disponibles",
+      "description": "Pasa a Pro para vender hasta 200 productos y hacer crecer tu negocio",
+      "upgrade": "Ver Pro"
+    },
     "limit": {
       "title": "Límite alcanzado",
       "products": "Has alcanzado el límite de productos",
@@ -311,7 +324,9 @@
       "addMore": "Agregar más fotos",
       "selectMultiple": "Puedes seleccionar varias a la vez",
       "limitReached": "Límite de imágenes alcanzado",
-      "upgradeForMore": "Actualiza a Pro para subir hasta 5 imágenes",
+      "wantMore": "¿Quieres agregar más fotos?",
+      "proImages": "Con Pro puedes subir hasta 5 fotos por producto y mostrar tu producto desde todos los ángulos",
+      "upgradeForMore": "Pasar a Pro",
       "limitError": "Límite de {{count}} imagen alcanzado. Actualiza a Pro para más.",
       "limitErrorPlural": "Límite de {{count}} imágenes alcanzado. Actualiza a Pro para más.",
       "partialUpload": "Solo se subieron {{uploaded}} de {{total}} imágenes (límite del plan)",
