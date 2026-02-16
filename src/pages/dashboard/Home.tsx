@@ -17,7 +17,7 @@ import type { Product, Category } from '../../types'
 export default function DashboardHome() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
-  const { store, refreshStore } = useAuth()
+  const { store } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
