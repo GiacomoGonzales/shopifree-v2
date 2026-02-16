@@ -1063,15 +1063,10 @@ export default function Branding() {
                       </div>
 
                       {/* Marquee mode toggle */}
-                      <div className={`flex items-center justify-between p-4 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-gray-200">
                         <div className="flex-1 mr-4">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-[#1e3a5f]">{t('branding.announcement.marquee')}</span>
-                            {store.plan === 'free' && (
-                              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
-                                PRO
-                              </span>
-                            )}
                           </div>
                           <p className="text-sm text-gray-500 mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
                         </div>
@@ -1079,15 +1074,10 @@ export default function Branding() {
                           <input
                             type="checkbox"
                             checked={announcement.mode === 'marquee'}
-                            disabled={store.plan === 'free'}
                             onChange={(e) => setAnnouncement({ ...announcement, mode: e.target.checked ? 'marquee' : 'static' })}
                             className="sr-only peer"
                           />
-                          <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                            store.plan === 'free'
-                              ? 'bg-gray-200 cursor-not-allowed'
-                              : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                          }`}></div>
+                          <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                         </label>
                       </div>
 
@@ -1102,7 +1092,7 @@ export default function Branding() {
                               color: announcement.textColor
                             }}
                           >
-                            {announcement.mode === 'marquee' && store.plan !== 'free' ? (
+                            {announcement.mode === 'marquee' ? (
                               <div className="overflow-hidden">
                                 <div className="animate-marquee">
                                   {[0, 1, 2].map((i) => (
