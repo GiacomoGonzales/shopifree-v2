@@ -21,6 +21,7 @@ import Branding from './pages/dashboard/Branding'
 import Account from './pages/dashboard/Account'
 import Domain from './pages/dashboard/Domain'
 import Payments from './pages/dashboard/Payments'
+import Coupons from './pages/dashboard/Coupons'
 import Plan from './pages/dashboard/Plan'
 import Analytics from './pages/dashboard/Analytics'
 import Orders from './pages/dashboard/Orders'
@@ -168,6 +169,7 @@ function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="domain" element={<Domain />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="coupons" element={<Coupons />} />
           {/* Account & Plan */}
           <Route path="account" element={<Account />} />
           <Route path="plan" element={<Plan />} />

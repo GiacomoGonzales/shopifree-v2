@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
@@ -17,7 +17,7 @@ import type { Product, Category } from '../../types'
 export default function DashboardHome() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
-  const { store } = useAuth()
+  const { store, refreshStore } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,6 +26,40 @@ export default function DashboardHome() {
   const [analytics, setAnalytics] = useState({ pageViews: 0, whatsappClicks: 0 })
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
   const [savingTheme, setSavingTheme] = useState(false)
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false)
+  const [linkShared, setLinkShared] = useState(false)
+
+  // Load persisted onboarding state
+  useEffect(() => {
+    if (store) {
+      setOnboardingDismissed(!!store.onboardingDismissed)
+      setLinkShared(localStorage.getItem(`linkShared_${store.id}`) === 'true')
+    }
+  }, [store])
+
+  // Trial days calculation
+  const trialDaysLeft = (() => {
+    if (!store?.trialEndsAt || store.subscription) return -1
+    const trialEnd = store.trialEndsAt instanceof Date
+      ? store.trialEndsAt
+      : new Date(store.trialEndsAt)
+    return Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+  })()
+  const isOnTrial = trialDaysLeft >= 0 && store?.plan === 'pro'
+
+  // Dismiss onboarding
+  const dismissOnboarding = useCallback(async () => {
+    if (!store) return
+    setOnboardingDismissed(true)
+    await updateDoc(doc(db, 'stores', store.id), { onboardingDismissed: true, updatedAt: new Date() })
+  }, [store])
+
+  // Mark link as shared
+  const markLinkShared = useCallback(() => {
+    if (!store) return
+    setLinkShared(true)
+    localStorage.setItem(`linkShared_${store.id}`, 'true')
+  }, [store])
 
   // Get recommended themes (exclude current, show mix of new and popular)
   const recommendedThemes = themes.filter(th => th.id !== store?.themeId).slice(0, 6)
@@ -127,6 +161,128 @@ export default function DashboardHome() {
           {t('home.welcomeStore', { store: store?.name || 'Store' })}
         </p>
       </div>
+
+      {/* Trial Banner */}
+      {isOnTrial && !Capacitor.isNativePlatform() && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-400/20">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-amber-900">{t('home.trial.title')}</h3>
+                  <span className="px-2 py-0.5 bg-amber-200 text-amber-800 text-xs font-bold rounded-full">
+                    {trialDaysLeft === 0 ? t('home.trial.lastDay') : t('home.trial.daysLeft', { days: trialDaysLeft })}
+                  </span>
+                </div>
+                <p className="text-sm text-amber-700 mt-0.5">{t('home.trial.description')}</p>
+              </div>
+            </div>
+            <Link
+              to={localePath('/dashboard/plan')}
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-semibold text-sm shadow-lg shadow-amber-500/20 text-center flex-shrink-0"
+            >
+              {t('home.trial.subscribe')}
+            </Link>
+          </div>
+          {/* Progress bar */}
+          <div className="mt-3 h-1.5 bg-amber-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all"
+              style={{ width: `${Math.max(5, ((14 - trialDaysLeft) / 14) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding Checklist */}
+      {!onboardingDismissed && store && (() => {
+        const steps = [
+          { key: 'addProduct', done: products.length > 0, link: '/dashboard/products/new' },
+          { key: 'uploadLogo', done: !!store.logo, link: '/dashboard/branding' },
+          { key: 'chooseTheme', done: !!store.themeId && store.themeId !== 'minimal', link: '/dashboard/branding' },
+          { key: 'shareStore', done: linkShared, link: null },
+          { key: 'setupPayments', done: !!store.payments?.mercadopago?.enabled || !!store.payments?.stripe?.enabled, link: '/dashboard/payments' },
+        ]
+        const completed = steps.filter(s => s.done).length
+        const allDone = completed === steps.length
+
+        if (allDone) return null
+
+        return (
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-semibold text-[#1e3a5f]">{t('home.onboarding.title')}</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {t('home.onboarding.progress', { completed, total: steps.length })}
+                </p>
+              </div>
+              <button
+                onClick={dismissOnboarding}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {t('home.onboarding.dismiss')}
+              </button>
+            </div>
+            {/* Progress bar */}
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
+              <div
+                className="h-full bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] rounded-full transition-all duration-500"
+                style={{ width: `${(completed / steps.length) * 100}%` }}
+              />
+            </div>
+            {/* Steps */}
+            <div className="space-y-2">
+              {steps.map((step) => (
+                <div key={step.key} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${step.done ? 'bg-green-50' : 'bg-gray-50 hover:bg-[#f0f7ff]'}`}>
+                  {step.done ? (
+                    <div className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="w-7 h-7 border-2 border-gray-300 rounded-full flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${step.done ? 'text-green-700 line-through' : 'text-[#1e3a5f]'}`}>
+                      {t(`home.onboarding.${step.key}`)}
+                    </p>
+                    {!step.done && (
+                      <p className="text-xs text-gray-500">{t(`home.onboarding.${step.key}Desc`)}</p>
+                    )}
+                  </div>
+                  {!step.done && (
+                    step.link ? (
+                      <Link
+                        to={localePath(step.link)}
+                        className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all flex-shrink-0"
+                      >
+                        {t('home.onboarding.go')}
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          copyLink()
+                          markLinkShared()
+                        }}
+                        className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all flex-shrink-0"
+                      >
+                        {t('home.copyLink')}
+                      </button>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Quick share */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
@@ -378,8 +534,8 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* Upgrade banner - hidden on native iOS app (Apple requires IAP) */}
-      {!Capacitor.isNativePlatform() && (
+      {/* Upgrade banner - hidden on native iOS, on trial, or on paid plans */}
+      {!Capacitor.isNativePlatform() && !isOnTrial && store?.plan === 'free' && (
         <div className="bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] rounded-2xl p-4 sm:p-6 text-white shadow-xl shadow-[#1e3a5f]/20">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

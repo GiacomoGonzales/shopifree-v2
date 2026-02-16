@@ -989,15 +989,20 @@ export default function Branding() {
                       <input
                         type="checkbox"
                         checked={announcement.enabled}
+                        disabled={store.plan === 'free'}
                         onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                        store.plan === 'free'
+                          ? 'bg-gray-200 cursor-not-allowed'
+                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                      }`}></div>
                     </label>
                   </div>
                   <p className="text-sm text-gray-500 mb-4">{t('branding.announcement.description')}</p>
 
-                  {announcement.enabled && (
+                  {announcement.enabled && store.plan !== 'free' && (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>

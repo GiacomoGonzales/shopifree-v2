@@ -101,6 +101,9 @@ export interface Store {
   // === PLAN & SUBSCRIPTION ===
   plan: 'free' | 'pro' | 'business'
   planExpiresAt?: Date
+  trialEndsAt?: Date              // Free Pro trial (no card required)
+  onboardingDismissed?: boolean   // User dismissed onboarding checklist
+  emailsSent?: string[]           // Track which email sequences have been sent ('welcome', 'trial-reminder', 'trial-expired')
   subscription?: StoreSubscription
 
   // === TIPO DE NEGOCIO ===
@@ -414,6 +417,12 @@ export interface Order {
   // Totales
   subtotal: number
   shippingCost?: number         // Costo de envío
+  discount?: {
+    code: string
+    type: 'percentage' | 'fixed'
+    value: number               // Percentage or fixed amount
+    amount: number              // Actual amount discounted
+  }
   total: number
 
   // Estado
@@ -451,6 +460,23 @@ export interface OrderItem {
     }[]
   }[]
   itemTotal: number
+}
+
+// ============================================
+// COUPON TYPES
+// ============================================
+export interface Coupon {
+  id: string
+  storeId: string
+  code: string                    // e.g. "VERANO20"
+  discountType: 'percentage' | 'fixed'
+  discountValue: number           // 20 = 20% or $20
+  minOrderAmount?: number         // Minimum subtotal to apply
+  maxUses?: number                // null = unlimited
+  currentUses: number
+  active: boolean
+  expiresAt?: Date
+  createdAt: Date
 }
 
 // ============================================

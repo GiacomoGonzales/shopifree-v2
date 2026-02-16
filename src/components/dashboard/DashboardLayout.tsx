@@ -82,6 +82,14 @@ function GlobeIcon({ active }: { active?: boolean }) {
   )
 }
 
+function TagIcon({ active }: { active?: boolean }) {
+  return (
+    <svg className="w-5 h-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+    </svg>
+  )
+}
+
 function CreditCardIcon({ active }: { active?: boolean }) {
   return (
     <svg className="w-5 h-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
@@ -181,6 +189,7 @@ export default function DashboardLayout() {
       { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
       { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
       { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
+      { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
       'separator',
       { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
@@ -218,6 +227,7 @@ export default function DashboardLayout() {
       { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
       { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
       { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
+      { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
     )
     if (isAdmin) {

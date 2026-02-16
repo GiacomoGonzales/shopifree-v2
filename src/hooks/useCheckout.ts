@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
-import type { Store, Order, OrderItem } from '../types'
+import type { Store, Order, OrderItem, Coupon } from '../types'
 import type { CartItem } from './useCart'
-import { orderService } from '../lib/firebase'
+import { orderService, couponService } from '../lib/firebase'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 
@@ -128,6 +128,42 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Coupon state
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const [couponLoading, setCouponLoading] = useState(false)
+
+  // Calculate discount amount
+  const discountAmount = appliedCoupon
+    ? appliedCoupon.discountType === 'percentage'
+      ? Math.round(totalPrice * appliedCoupon.discountValue) / 100
+      : Math.min(appliedCoupon.discountValue, totalPrice)
+    : 0
+
+  // Apply a coupon code
+  const applyCoupon = useCallback(async (code: string) => {
+    setCouponError(null)
+    setCouponLoading(true)
+    try {
+      const result = await couponService.validateCode(store.id, code, totalPrice)
+      if (result.valid && result.coupon) {
+        setAppliedCoupon(result.coupon)
+      } else {
+        setCouponError(result.error || 'couponInvalid')
+      }
+    } catch {
+      setCouponError('couponInvalid')
+    } finally {
+      setCouponLoading(false)
+    }
+  }, [store.id, totalPrice])
+
+  // Remove applied coupon
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null)
+    setCouponError(null)
+  }, [])
+
   // Calculate shipping cost based on store settings, delivery method, and zone
   const calculateShippingCost = useCallback((): number => {
     // If no delivery method selected or pickup, no shipping cost
@@ -140,7 +176,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
   // Get the current shipping cost
   const shippingCost = calculateShippingCost()
-  const finalTotal = totalPrice + shippingCost
+  const finalTotal = totalPrice - discountAmount + shippingCost
 
   const updateData = useCallback((updates: Partial<CheckoutData>) => {
     setData(prev => ({ ...prev, ...updates }))
@@ -235,7 +271,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     // Calculate shipping for the order
     const orderShippingCost = calculateShippingCost()
-    const orderTotal = totalPrice + orderShippingCost
+    const orderTotal = totalPrice - discountAmount + orderShippingCost
 
     // Build order data without undefined values
     const orderData: Partial<Order> = {
@@ -253,6 +289,16 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     // Only add shippingCost if it's greater than 0 (Firestore doesn't accept undefined)
     if (orderShippingCost > 0) {
       orderData.shippingCost = orderShippingCost
+    }
+
+    // Add discount if coupon applied
+    if (appliedCoupon && discountAmount > 0) {
+      orderData.discount = {
+        code: appliedCoupon.code,
+        type: appliedCoupon.discountType,
+        value: appliedCoupon.discountValue,
+        amount: discountAmount
+      }
     }
 
     // Only add delivery address for delivery method
@@ -277,6 +323,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
+    // Increment coupon uses after successful order creation
+    if (appliedCoupon) {
+      couponService.incrementUses(store.id, appliedCoupon.id).catch(() => {})
+    }
+
     // Build the order object from the data we have (no need to fetch)
     const createdOrder: Order = {
       id: orderId,
@@ -288,6 +339,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       deliveryAddress: orderData.deliveryAddress,
       subtotal: totalPrice,
       shippingCost: orderShippingCost > 0 ? orderShippingCost : undefined,
+      discount: orderData.discount,
       total: orderTotal,
       status: 'pending',
       paymentMethod,
@@ -298,7 +350,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     }
 
     return createdOrder
-  }, [store.id, data, totalPrice, createOrderItems])
+  }, [store.id, data, totalPrice, discountAmount, appliedCoupon, createOrderItems])
 
   // WhatsApp message translations
   const getMessageLabels = useCallback(() => {
@@ -334,6 +386,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         ref: 'Ref',
         items: getItemsLabel(),
         subtotal: 'Subtotal',
+        discount: 'Discount',
         shipping: 'Shipping',
         freeShipping: 'Free',
         total: 'Total',
@@ -353,6 +406,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       ref: 'Ref',
       items: getItemsLabel(),
       subtotal: 'Subtotal',
+      discount: 'Descuento',
       shipping: 'Envío',
       freeShipping: 'Gratis',
       total: 'Total',
@@ -415,9 +469,16 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     message += `\n`
 
     // Totals
-    if (order.shippingCost && order.shippingCost > 0) {
+    const hasDiscount = order.discount && order.discount.amount > 0
+    const hasShipping = order.shippingCost && order.shippingCost > 0
+    if (hasDiscount || hasShipping) {
       message += `${labels.subtotal}: ${currencySymbol}${order.subtotal.toFixed(2)}\n`
-      message += `${labels.shipping}: ${currencySymbol}${order.shippingCost.toFixed(2)}\n`
+      if (hasDiscount) {
+        message += `${labels.discount} (${order.discount!.code}): -${currencySymbol}${order.discount!.amount.toFixed(2)}\n`
+      }
+      if (hasShipping) {
+        message += `${labels.shipping}: ${currencySymbol}${order.shippingCost!.toFixed(2)}\n`
+      }
     }
     message += `*${labels.total}: ${currencySymbol}${order.total.toFixed(2)}*\n`
 
@@ -746,6 +807,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     error,
     shippingCost,
     finalTotal,
+    discountAmount,
+    appliedCoupon,
+    couponError,
+    couponLoading,
     brickMode,
     stripeMode,
     setStep: goToStep,
@@ -754,6 +819,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     updateData,
     validateCustomer,
     validateDelivery,
+    applyCoupon,
+    removeCoupon,
     processWhatsApp,
     processMercadoPago,
     processStripe,

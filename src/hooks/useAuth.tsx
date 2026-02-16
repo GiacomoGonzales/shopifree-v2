@@ -10,7 +10,8 @@ import {
   signInWithCredential
 } from 'firebase/auth'
 import { Capacitor } from '@capacitor/core'
-import { auth } from '../lib/firebase'
+import { auth, db } from '../lib/firebase'
+import { doc, updateDoc } from 'firebase/firestore'
 import { userService, storeService } from '../lib/firebase'
 import type { User, Store } from '../types'
 
@@ -43,8 +44,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
 
       // Load store data
-      const storeData = await storeService.getByOwner(fbUser.uid)
+      let storeData = await storeService.getByOwner(fbUser.uid)
       console.log('storeData loaded:', storeData ? 'found' : 'null')
+
+      // Check if free Pro trial has expired (no Stripe subscription)
+      if (storeData && storeData.trialEndsAt && !storeData.subscription) {
+        const trialEnd = storeData.trialEndsAt instanceof Date
+          ? storeData.trialEndsAt
+          : new Date(storeData.trialEndsAt)
+        if (trialEnd.getTime() < Date.now() && storeData.plan === 'pro') {
+          console.log('Free Pro trial expired, downgrading to free')
+          await updateDoc(doc(db, 'stores', storeData.id), {
+            plan: 'free',
+            updatedAt: new Date()
+          })
+          storeData = { ...storeData, plan: 'free' }
+        }
+      }
+
       setStore(storeData)
     } catch (error) {
       console.error('Error loading user data:', error)

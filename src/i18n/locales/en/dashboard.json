@@ -9,6 +9,7 @@
     "myBusiness": "My Business",
     "domain": "Domain",
     "payments": "Payments",
+    "coupons": "Coupons",
     "myAccount": "My Account",
     "plan": "Plan",
     "logout": "Logout"
@@ -39,7 +40,31 @@
     "saving": "Saving...",
     "upgradeTitle": "Want more features?",
     "upgradeDesc": "Unlimited products, multiple photos, categories, coupons and more",
-    "viewPlans": "View plans"
+    "viewPlans": "View plans",
+    "trial": {
+      "title": "Free Pro trial",
+      "daysLeft": "{{days}} days left",
+      "lastDay": "Last day",
+      "description": "You're enjoying all Pro features for free. Subscribe before it ends to keep access.",
+      "subscribe": "Subscribe to Pro",
+      "expired": "Your Pro trial has ended"
+    },
+    "onboarding": {
+      "title": "Set up your store",
+      "progress": "{{completed}} of {{total}} completed",
+      "dismiss": "Dismiss",
+      "go": "Go",
+      "addProduct": "Add your first product",
+      "addProductDesc": "Products are the foundation of your catalog",
+      "uploadLogo": "Upload your logo",
+      "uploadLogoDesc": "Give your brand an identity",
+      "chooseTheme": "Choose a theme",
+      "chooseThemeDesc": "Customize the look of your store",
+      "shareStore": "Share your store",
+      "shareStoreDesc": "Send the link to your first customers",
+      "setupPayments": "Set up online payments",
+      "setupPaymentsDesc": "Accept card payments"
+    }
   },
   "analytics": {
     "title": "Analytics",
@@ -719,8 +744,8 @@
       "accessToken": "Access Token",
       "sandbox": "Sandbox Mode",
       "sandboxDescription": "Test without charging real money",
-      "businessOnly": "Payment gateway is exclusively available on the Business plan. Accept card payments and more.",
-      "upgradeToBusiness": "Upgrade to Business"
+      "proOnly": "Payment gateway is available from the Pro plan. Accept card payments and more.",
+      "upgradeToPro": "Upgrade to Pro"
     },
     "stripe": {
       "description": "International card payments. Spain, USA and +135 countries.",
@@ -731,8 +756,8 @@
       "secretKey": "Secret Key",
       "testMode": "Test Mode",
       "testModeDescription": "Test without charging real money",
-      "businessOnly": "Payment gateway is exclusively available on the Business plan. Accept international card payments.",
-      "upgradeToBusiness": "Upgrade to Business"
+      "proOnly": "Payment gateway is available from the Pro plan. Accept international card payments.",
+      "upgradeToPro": "Upgrade to Pro"
     },
     "comingSoon": {
       "title": "Coming Soon",
@@ -756,6 +781,45 @@
         "name": "Bank Transfer",
         "description": "Direct deposit to your account"
       }
+    }
+  },
+  "coupons": {
+    "title": "Discount Coupons",
+    "subtitle": "Create coupons to attract and retain customers",
+    "create": "Create coupon",
+    "new": "New coupon",
+    "edit": "Edit coupon",
+    "active": "Active",
+    "expired": "Expired",
+    "min": "Min.",
+    "uses": "uses",
+    "form": {
+      "code": "Coupon code",
+      "discount": "Discount",
+      "minOrder": "Minimum order",
+      "maxUses": "Max uses",
+      "expires": "Expiration date",
+      "optional": "Optional",
+      "unlimited": "Unlimited",
+      "saving": "Saving...",
+      "save": "Create coupon",
+      "update": "Save changes",
+      "cancel": "Cancel"
+    },
+    "empty": {
+      "title": "No coupons yet",
+      "description": "Create your first discount coupon to boost your sales"
+    },
+    "toast": {
+      "created": "Coupon created",
+      "updated": "Coupon updated",
+      "deleted": "Coupon deleted",
+      "error": "Error saving"
+    },
+    "proRequired": {
+      "title": "Discount coupons",
+      "description": "Create percentage or fixed amount coupons to attract more customers and increase your sales.",
+      "upgrade": "Upgrade to Pro"
     }
   },
   "domain": {

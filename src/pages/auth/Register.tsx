@@ -208,11 +208,15 @@ export default function Register() {
         role: isAdmin ? 'admin' : 'user',
       })
 
-      // Create store in Firestore (admin gets Business plan)
+      // Create store in Firestore (admin gets Business plan, others get Pro trial)
       // This will throw STORE_ALREADY_EXISTS if store exists (double protection)
       // Combine country code + local number for WhatsApp
       const phoneCode = phoneCodeByCountry[country] || '+1'
       const fullWhatsapp = `${phoneCode}${whatsapp}`
+
+      // 14-day free Pro trial for new users (no credit card required)
+      const trialEndsAt = new Date()
+      trialEndsAt.setDate(trialEndsAt.getDate() + 14)
 
       await storeService.create(storeId, {
         id: storeId,
@@ -223,7 +227,8 @@ export default function Register() {
         currency: currencyByCountry[country] || 'USD',
         location: { country },
         themeId: 'minimal',
-        plan: isAdmin ? 'business' : 'free',
+        plan: isAdmin ? 'business' : 'pro',
+        ...(!isAdmin && { trialEndsAt }),
         businessType,
       })
 
@@ -234,6 +239,20 @@ export default function Register() {
       } catch (subdomainError) {
         console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
       }
+
+      // Send welcome email (non-blocking, fire-and-forget)
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'welcome',
+          email: userEmail,
+          storeName,
+          subdomain,
+          storeId,
+          lang: currentLang
+        })
+      }).catch(() => {})
 
       // Refresh store data in context
       await refreshStore()

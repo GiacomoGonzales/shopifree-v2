@@ -147,8 +147,8 @@ export default function Payments() {
             </div>
           </div>
 
-          {/* MercadoPago - Business plan only */}
-          {store?.plan === 'business' ? (
+          {/* MercadoPago - Pro & Business plans */}
+          {store?.plan === 'pro' || store?.plan === 'business' ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0 overflow-hidden">
@@ -238,14 +238,14 @@ export default function Payments() {
               </div>
               <div className="mt-4 p-4 bg-white/10 rounded-xl">
                 <p className="text-sm text-white/90 mb-3">
-                  {t('payments.mercadopago.businessOnly')}
+                  {t('payments.mercadopago.proOnly')}
                 </p>
                 {!Capacitor.isNativePlatform() && (
                   <Link
                     to={localePath('/dashboard/plan')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#1e3a5f] rounded-lg font-semibold text-sm hover:bg-[#38bdf8] hover:text-white transition-all"
                   >
-                    {t('payments.mercadopago.upgradeToBusiness')}
+                    {t('payments.mercadopago.upgradeToPro')}
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
@@ -255,8 +255,8 @@ export default function Payments() {
             </div>
           )}
 
-          {/* Stripe - Business plan only */}
-          {store?.plan === 'business' ? (
+          {/* Stripe - Pro & Business plans */}
+          {store?.plan === 'pro' || store?.plan === 'business' ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#635bff]/20 flex-shrink-0" style={{ backgroundColor: '#635bff' }}>
@@ -350,14 +350,14 @@ export default function Payments() {
               </div>
               <div className="mt-4 p-4 bg-white/10 rounded-xl">
                 <p className="text-sm text-white/90 mb-3">
-                  {t('payments.stripe.businessOnly')}
+                  {t('payments.stripe.proOnly')}
                 </p>
                 {!Capacitor.isNativePlatform() && (
                   <Link
                     to={localePath('/dashboard/plan')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#635bff] rounded-lg font-semibold text-sm hover:bg-[#f0eeff] transition-all"
                   >
-                    {t('payments.stripe.upgradeToBusiness')}
+                    {t('payments.stripe.upgradeToPro')}
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>

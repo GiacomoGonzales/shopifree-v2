@@ -46,11 +46,17 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     error,
     shippingCost,
     finalTotal,
+    discountAmount,
+    appliedCoupon,
+    couponError,
+    couponLoading,
     brickMode,
     stripeMode,
     goBack,
     goNext,
     updateData,
+    applyCoupon,
+    removeCoupon,
     processWhatsApp,
     processMercadoPago,
     processStripe,
@@ -225,12 +231,18 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                 items={items}
                 totalPrice={totalPrice}
                 shippingCost={shippingCost}
+                discountAmount={discountAmount}
                 finalTotal={finalTotal}
                 currency={store.currency}
                 t={t}
                 collapsible={true}
                 deliveryMethod={data.delivery?.method}
                 shippingEnabled={store.shipping?.enabled}
+                appliedCoupon={appliedCoupon}
+                couponError={couponError}
+                couponLoading={couponLoading}
+                onApplyCoupon={(store.plan === 'pro' || store.plan === 'business') ? applyCoupon : undefined}
+                onRemoveCoupon={removeCoupon}
               />
             </div>
           )}

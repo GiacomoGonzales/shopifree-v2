@@ -9,6 +9,7 @@
     "myBusiness": "Mi Negocio",
     "domain": "Dominio",
     "payments": "Pagos",
+    "coupons": "Cupones",
     "myAccount": "Mi Cuenta",
     "plan": "Plan",
     "logout": "Cerrar sesión"
@@ -39,7 +40,31 @@
     "saving": "Guardando...",
     "upgradeTitle": "¿Quieres más funciones?",
     "upgradeDesc": "Productos ilimitados, múltiples fotos, categorías, cupones y más",
-    "viewPlans": "Ver planes"
+    "viewPlans": "Ver planes",
+    "trial": {
+      "title": "Prueba Pro gratuita",
+      "daysLeft": "{{days}} días restantes",
+      "lastDay": "Último día",
+      "description": "Estás disfrutando de todas las funciones Pro gratis. Suscríbete antes de que termine para no perder acceso.",
+      "subscribe": "Suscribirme al Pro",
+      "expired": "Tu prueba Pro terminó"
+    },
+    "onboarding": {
+      "title": "Configura tu tienda",
+      "progress": "{{completed}} de {{total}} completados",
+      "dismiss": "Ocultar",
+      "go": "Ir",
+      "addProduct": "Agrega tu primer producto",
+      "addProductDesc": "Los productos son la base de tu catálogo",
+      "uploadLogo": "Sube tu logo",
+      "uploadLogoDesc": "Dale identidad a tu marca",
+      "chooseTheme": "Elige un tema",
+      "chooseThemeDesc": "Personaliza el look de tu tienda",
+      "shareStore": "Comparte tu tienda",
+      "shareStoreDesc": "Envía el link a tus primeros clientes",
+      "setupPayments": "Configura pagos online",
+      "setupPaymentsDesc": "Acepta pagos con tarjeta"
+    }
   },
   "analytics": {
     "title": "Estadisticas",
@@ -720,8 +745,8 @@
       "accessToken": "Access Token",
       "sandbox": "Modo Sandbox",
       "sandboxDescription": "Prueba sin cobrar dinero real",
-      "businessOnly": "La pasarela de pago está disponible exclusivamente en el plan Business. Acepta pagos con tarjeta y más.",
-      "upgradeToBusiness": "Actualizar a Business"
+      "proOnly": "La pasarela de pago está disponible desde el plan Pro. Acepta pagos con tarjeta y más.",
+      "upgradeToPro": "Actualizar a Pro"
     },
     "stripe": {
       "description": "Pagos internacionales con tarjeta. España, USA y +135 países.",
@@ -732,8 +757,8 @@
       "secretKey": "Secret Key",
       "testMode": "Modo Test",
       "testModeDescription": "Prueba sin cobrar dinero real",
-      "businessOnly": "La pasarela de pago está disponible exclusivamente en el plan Business. Acepta pagos con tarjeta internacionalmente.",
-      "upgradeToBusiness": "Actualizar a Business"
+      "proOnly": "La pasarela de pago está disponible desde el plan Pro. Acepta pagos con tarjeta internacionalmente.",
+      "upgradeToPro": "Actualizar a Pro"
     },
     "comingSoon": {
       "title": "Proximamente",
@@ -757,6 +782,45 @@
         "name": "Transferencia bancaria",
         "description": "Deposito directo a tu cuenta"
       }
+    }
+  },
+  "coupons": {
+    "title": "Cupones de Descuento",
+    "subtitle": "Crea cupones para atraer y fidelizar clientes",
+    "create": "Crear cupón",
+    "new": "Nuevo cupón",
+    "edit": "Editar cupón",
+    "active": "Activo",
+    "expired": "Expirado",
+    "min": "Mín.",
+    "uses": "usos",
+    "form": {
+      "code": "Código del cupón",
+      "discount": "Descuento",
+      "minOrder": "Pedido mínimo",
+      "maxUses": "Usos máximos",
+      "expires": "Fecha de expiración",
+      "optional": "Opcional",
+      "unlimited": "Ilimitado",
+      "saving": "Guardando...",
+      "save": "Crear cupón",
+      "update": "Guardar cambios",
+      "cancel": "Cancelar"
+    },
+    "empty": {
+      "title": "No tienes cupones",
+      "description": "Crea tu primer cupón de descuento para impulsar tus ventas"
+    },
+    "toast": {
+      "created": "Cupón creado",
+      "updated": "Cupón actualizado",
+      "deleted": "Cupón eliminado",
+      "error": "Error al guardar"
+    },
+    "proRequired": {
+      "title": "Cupones de descuento",
+      "description": "Crea cupones con porcentaje o monto fijo para atraer más clientes y aumentar tus ventas.",
+      "upgrade": "Actualizar a Pro"
     }
   },
   "domain": {

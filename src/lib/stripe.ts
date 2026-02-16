@@ -31,15 +31,15 @@ export const PLAN_FEATURES = {
     price: 0,
     priceYearly: 0,
     features: [
-      'Hasta 20 productos',
-      'Pedidos por WhatsApp',
-      'Link compartible',
-      'Codigo QR de tu catalogo',
+      'Vende hasta 10 productos',
+      'Recibe pedidos por WhatsApp',
+      'Tu propio link de tienda',
+      'Codigo QR para compartir',
       '1 foto por producto',
       'Hasta 3 categorias'
     ],
     limits: {
-      products: 20,
+      products: 10,
       imagesPerProduct: 1,
       categories: 3
     }
@@ -49,11 +49,12 @@ export const PLAN_FEATURES = {
     price: 4.99,
     priceYearly: 49.99,
     features: [
-      'Hasta 200 productos',
-      'Dominio personalizado',
-      'Multiples fotos por producto',
-      'Categorias ilimitadas',
-      'Estadisticas avanzadas'
+      'Vende hasta 200 productos',
+      'Cobra online con tarjeta',
+      'Cupones de descuento',
+      'Tu propio dominio .com',
+      '5 fotos por producto',
+      'Conoce a tus clientes'
     ],
     limits: {
       products: 200,
@@ -67,9 +68,8 @@ export const PLAN_FEATURES = {
     priceYearly: 99.99,
     features: [
       'Todo lo de Pro',
-      'Productos ilimitados',
-      'Pasarela de pago',
-      'Sin marca Shopifree',
+      'Productos sin limite',
+      'Tu marca, sin Shopifree',
       'Soporte prioritario'
     ],
     limits: {

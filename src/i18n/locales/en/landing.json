@@ -79,10 +79,10 @@
     "free": {
       "name": "Free",
       "features": {
-        "products": "Up to 20 products",
-        "whatsappOrders": "Orders via WhatsApp",
-        "shareableLink": "Shareable link",
-        "qrCode": "QR Code for your catalog",
+        "products": "Sell up to 10 products",
+        "whatsappOrders": "Receive orders via WhatsApp",
+        "shareableLink": "Your own store link",
+        "qrCode": "QR Code to share",
         "onePhoto": "1 photo per product",
         "threeCategories": "Up to 3 categories"
       }
@@ -90,11 +90,12 @@
     "pro": {
       "name": "Pro",
       "features": {
-        "products": "Up to 200 products",
-        "customDomain": "Custom domain",
-        "multiplePhotos": "Multiple photos per product",
-        "unlimitedCategories": "Unlimited categories",
-        "advancedStats": "Advanced statistics"
+        "products": "Sell up to 200 products",
+        "paymentGateway": "Accept card payments online",
+        "coupons": "Discount coupons",
+        "customDomain": "Your own .com domain",
+        "multiplePhotos": "5 photos per product",
+        "advancedStats": "Know your customers"
       }
     },
     "business": {
@@ -102,8 +103,7 @@
       "features": {
         "everythingPro": "Everything from Pro",
         "unlimitedProducts": "Unlimited products",
-        "paymentGateway": "Payment gateway",
-        "noBranding": "No Shopifree branding",
+        "noBranding": "Your brand, no Shopifree",
         "prioritySupport": "Priority support"
       }
     }
@@ -111,6 +111,28 @@
   "demoStores": {
     "title": "Stores created with Shopifree",
     "subtitle": "See real examples of what you can create"
+  },
+  "testimonials": {
+    "title": "What our users say",
+    "subtitle": "Real entrepreneurs already selling with Shopifree",
+    "1": {
+      "quote": "I used to spend hours putting together price lists to send on WhatsApp. Now I just share my link and orders come in on their own. In the first week I already had 15 orders.",
+      "name": "Carolina M.",
+      "role": "Artisan bakery",
+      "location": "Lima, Peru"
+    },
+    "2": {
+      "quote": "The best part is I could start for free and when I saw it was working, I upgraded to Pro to accept card payments. My sales went up 40% because customers didn't have to do bank transfers anymore.",
+      "name": "Miguel R.",
+      "role": "Clothing store",
+      "location": "Mexico City, Mexico"
+    },
+    "3": {
+      "quote": "I know nothing about technology and in 5 minutes I already had my catalog online. My clients share it with each other and I get orders from people I don't even know. It's incredible.",
+      "name": "Valentina S.",
+      "role": "Natural cosmetics",
+      "location": "Bogota, Colombia"
+    }
   },
   "cta": {
     "title": "Ready to start selling?",

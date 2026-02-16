@@ -163,6 +163,16 @@ export interface ThemeTranslations {
   socialProofMinutes: string
   socialProofHours: string
 
+  // Coupons
+  couponCode: string
+  couponApply: string
+  couponApplied: string
+  couponInvalid: string
+  couponExpired: string
+  couponMinAmount: string
+  couponRemove: string
+  discount: string
+
   // WhatsApp message parts
   waGreeting: string
   waOrderNumber: string
@@ -340,6 +350,16 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     socialProofMinutes: 'min',
     socialProofHours: 'h',
 
+    // Coupons
+    couponCode: 'Codigo de descuento',
+    couponApply: 'Aplicar',
+    couponApplied: 'Cupon aplicado',
+    couponInvalid: 'Cupon invalido',
+    couponExpired: 'Cupon expirado',
+    couponMinAmount: 'Pedido minimo no alcanzado',
+    couponRemove: 'Quitar',
+    discount: 'Descuento',
+
     // WhatsApp message parts
     waGreeting: 'Hola! Acabo de realizar un pedido',
     waOrderNumber: 'Pedido',
@@ -516,6 +536,16 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     socialProofMinutes: 'min',
     socialProofHours: 'h',
 
+    // Coupons
+    couponCode: 'Discount code',
+    couponApply: 'Apply',
+    couponApplied: 'Coupon applied',
+    couponInvalid: 'Invalid coupon',
+    couponExpired: 'Coupon expired',
+    couponMinAmount: 'Minimum order not reached',
+    couponRemove: 'Remove',
+    discount: 'Discount',
+
     // WhatsApp message parts
     waGreeting: 'Hi! I just placed an order',
     waOrderNumber: 'Order',
@@ -691,6 +721,16 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     socialProofFrom: 'de',
     socialProofMinutes: 'min',
     socialProofHours: 'h',
+
+    // Coupons
+    couponCode: 'Codigo de desconto',
+    couponApply: 'Aplicar',
+    couponApplied: 'Cupom aplicado',
+    couponInvalid: 'Cupom invalido',
+    couponExpired: 'Cupom expirado',
+    couponMinAmount: 'Pedido minimo nao alcancado',
+    couponRemove: 'Remover',
+    discount: 'Desconto',
 
     // WhatsApp message parts
     waGreeting: 'Ola! Acabei de fazer um pedido',

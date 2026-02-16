@@ -3,7 +3,7 @@ import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/aut
 import { Capacitor } from '@capacitor/core'
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import type { User, Store, Product, Category, Order, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
+import type { User, Store, Product, Category, Order, Coupon, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -317,6 +317,87 @@ export const orderService = {
       status,
       updatedAt: new Date()
     })
+  }
+}
+
+// ============================================
+// COUPON SERVICES (Subcollection)
+// ============================================
+
+export const couponService = {
+  getCollection(storeId: string) {
+    return collection(db, 'stores', storeId, 'coupons')
+  },
+
+  async getAll(storeId: string): Promise<Coupon[]> {
+    const q = query(this.getCollection(storeId), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(d => ({
+      id: d.id,
+      storeId,
+      ...convertTimestamps(d.data())
+    })) as Coupon[]
+  },
+
+  async create(storeId: string, data: Partial<Coupon>): Promise<string> {
+    const docRef = await addDoc(this.getCollection(storeId), {
+      ...data,
+      storeId,
+      code: (data.code || '').toUpperCase().trim(),
+      currentUses: 0,
+      active: true,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  async update(storeId: string, couponId: string, data: Partial<Coupon>): Promise<void> {
+    await updateDoc(doc(db, 'stores', storeId, 'coupons', couponId), { ...data })
+  },
+
+  async delete(storeId: string, couponId: string): Promise<void> {
+    await deleteDoc(doc(db, 'stores', storeId, 'coupons', couponId))
+  },
+
+  async validateCode(storeId: string, code: string, subtotal: number): Promise<{ valid: boolean; coupon?: Coupon; error?: string }> {
+    const upperCode = code.toUpperCase().trim()
+    const q = query(this.getCollection(storeId), where('code', '==', upperCode), where('active', '==', true))
+    const snapshot = await getDocs(q)
+
+    if (snapshot.empty) {
+      return { valid: false, error: 'invalid' }
+    }
+
+    const coupon = { id: snapshot.docs[0].id, storeId, ...convertTimestamps(snapshot.docs[0].data()) } as Coupon
+
+    // Check expiration
+    if (coupon.expiresAt) {
+      const expires = coupon.expiresAt instanceof Date ? coupon.expiresAt : new Date(coupon.expiresAt)
+      if (expires.getTime() < Date.now()) {
+        return { valid: false, error: 'expired' }
+      }
+    }
+
+    // Check max uses
+    if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+      return { valid: false, error: 'maxUses' }
+    }
+
+    // Check minimum order amount
+    if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) {
+      return { valid: false, error: 'minAmount' }
+    }
+
+    return { valid: true, coupon }
+  },
+
+  async incrementUses(storeId: string, couponId: string): Promise<void> {
+    const docRef = doc(db, 'stores', storeId, 'coupons', couponId)
+    const snap = await getDoc(docRef)
+    if (snap.exists()) {
+      const current = snap.data().currentUses || 0
+      await updateDoc(docRef, { currentUses: current + 1 })
+    }
   }
 }
 

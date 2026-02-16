@@ -79,10 +79,10 @@
     "free": {
       "name": "Gratis",
       "features": {
-        "products": "Hasta 20 productos",
-        "whatsappOrders": "Pedidos por WhatsApp",
-        "shareableLink": "Link compartible",
-        "qrCode": "Código QR de tu catálogo",
+        "products": "Vende hasta 10 productos",
+        "whatsappOrders": "Recibe pedidos por WhatsApp",
+        "shareableLink": "Tu propio link de tienda",
+        "qrCode": "Código QR para compartir",
         "onePhoto": "1 foto por producto",
         "threeCategories": "Hasta 3 categorías"
       }
@@ -90,20 +90,20 @@
     "pro": {
       "name": "Pro",
       "features": {
-        "products": "Hasta 200 productos",
-        "customDomain": "Dominio personalizado",
-        "multiplePhotos": "Múltiples fotos por producto",
-        "unlimitedCategories": "Categorías ilimitadas",
-        "advancedStats": "Estadísticas avanzadas"
+        "products": "Vende hasta 200 productos",
+        "paymentGateway": "Cobra online con tarjeta",
+        "coupons": "Cupones de descuento",
+        "customDomain": "Tu propio dominio .com",
+        "multiplePhotos": "5 fotos por producto",
+        "advancedStats": "Conoce a tus clientes"
       }
     },
     "business": {
       "name": "Business",
       "features": {
         "everythingPro": "Todo lo de Pro",
-        "unlimitedProducts": "Productos ilimitados",
-        "paymentGateway": "Pasarela de pago",
-        "noBranding": "Sin marca Shopifree",
+        "unlimitedProducts": "Productos sin límite",
+        "noBranding": "Tu marca, sin Shopifree",
         "prioritySupport": "Soporte prioritario"
       }
     }
@@ -111,6 +111,28 @@
   "demoStores": {
     "title": "Tiendas creadas con Shopifree",
     "subtitle": "Mira ejemplos reales de lo que puedes crear"
+  },
+  "testimonials": {
+    "title": "Lo que dicen nuestros usuarios",
+    "subtitle": "Emprendedores reales que ya venden con Shopifree",
+    "1": {
+      "quote": "Antes tardaba horas armando listas de precios para enviar por WhatsApp. Ahora solo comparto mi link y los pedidos llegan solos. En la primera semana ya tenía 15 pedidos.",
+      "name": "Carolina M.",
+      "role": "Pastelería artesanal",
+      "location": "Lima, Perú"
+    },
+    "2": {
+      "quote": "Lo mejor es que pude empezar gratis y cuando vi que funcionaba, me pasé a Pro para cobrar con tarjeta. Mis ventas subieron un 40% porque los clientes ya no tenían que hacer transferencias.",
+      "name": "Miguel R.",
+      "role": "Tienda de ropa",
+      "location": "CDMX, México"
+    },
+    "3": {
+      "quote": "Yo no sé nada de tecnología y en 5 minutos ya tenía mi catálogo online. Mis clientas lo comparten entre ellas y me llegan pedidos de gente que ni conozco. Es increíble.",
+      "name": "Valentina S.",
+      "role": "Cosméticos naturales",
+      "location": "Bogotá, Colombia"
+    }
   },
   "cta": {
     "title": "¿Listo para empezar a vender?",

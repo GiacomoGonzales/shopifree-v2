@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTheme } from '../ThemeContext'
 import type { CartItem } from '../../../hooks/useCart'
+import type { Coupon } from '../../../types'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import { formatPrice } from '../../../lib/currency'
 
@@ -8,18 +9,25 @@ interface Props {
   items: CartItem[]
   totalPrice: number
   shippingCost?: number
+  discountAmount?: number
   finalTotal?: number
   currency: string
   t: ThemeTranslations
   collapsible?: boolean
   deliveryMethod?: 'pickup' | 'delivery'
   shippingEnabled?: boolean
+  appliedCoupon?: Coupon | null
+  couponError?: string | null
+  couponLoading?: boolean
+  onApplyCoupon?: (code: string) => void
+  onRemoveCoupon?: () => void
 }
 
-export default function OrderSummary({ items, totalPrice, shippingCost = 0, finalTotal, currency, t, collapsible = true, deliveryMethod, shippingEnabled }: Props) {
+export default function OrderSummary({ items, totalPrice, shippingCost = 0, discountAmount = 0, finalTotal, currency, t, collapsible = true, deliveryMethod, shippingEnabled, appliedCoupon, couponError, couponLoading, onApplyCoupon, onRemoveCoupon }: Props) {
   const displayTotal = finalTotal ?? totalPrice
   const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(!collapsible)
+  const [couponCode, setCouponCode] = useState('')
 
   return (
     <div
@@ -155,6 +163,71 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, fina
             </div>
           ))}
 
+          {/* Coupon input */}
+          {onApplyCoupon && (
+            <div className="p-4 border-t" style={{ borderColor: theme.colors.border }}>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ backgroundColor: `${theme.colors.accent}15` }}>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.colors.accent }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-sm font-medium" style={{ color: theme.colors.accent }}>
+                      {t.couponApplied}: <strong>{appliedCoupon.code}</strong>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { onRemoveCoupon?.(); setCouponCode('') }}
+                    className="text-xs underline"
+                    style={{ color: theme.colors.textMuted }}
+                  >
+                    {t.couponRemove}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder={t.couponCode}
+                      className="flex-1 px-3 py-2 text-sm border outline-none"
+                      style={{
+                        borderColor: couponError ? '#ef4444' : theme.colors.border,
+                        borderRadius: theme.radius.sm,
+                        color: theme.colors.text,
+                        backgroundColor: theme.colors.background
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => couponCode.trim() && onApplyCoupon(couponCode.trim())}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-3 py-2 text-sm font-medium transition-opacity disabled:opacity-50"
+                      style={{
+                        backgroundColor: theme.colors.primary,
+                        color: theme.colors.textInverted,
+                        borderRadius: theme.radius.sm
+                      }}
+                    >
+                      {couponLoading ? '...' : t.couponApply}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-xs mt-1" style={{ color: '#ef4444' }}>
+                      {couponError === 'couponInvalid' ? t.couponInvalid
+                        : couponError === 'couponExpired' ? t.couponExpired
+                        : couponError === 'couponMinAmount' ? t.couponMinAmount
+                        : t.couponInvalid}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Totals */}
           <div
             className="p-4 border-t"
@@ -167,6 +240,13 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, fina
               <span style={{ color: theme.colors.textMuted }}>{t.subtotal}</span>
               <span style={{ color: theme.colors.text }}>{formatPrice(totalPrice, currency)}</span>
             </div>
+            {/* Discount line */}
+            {discountAmount > 0 && appliedCoupon && (
+              <div className="flex justify-between items-center mt-1">
+                <span style={{ color: theme.colors.accent }}>{t.discount} ({appliedCoupon.code})</span>
+                <span style={{ color: theme.colors.accent }}>-{formatPrice(discountAmount, currency)}</span>
+              </div>
+            )}
             {/* Only show shipping line when delivery is selected */}
             {deliveryMethod === 'delivery' && shippingEnabled && (
               <div className="flex justify-between items-center mt-1">
