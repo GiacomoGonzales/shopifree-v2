@@ -24,12 +24,17 @@ function getDb(): Firestore {
 
 // ── Email templates ──────────────────────────────────────────────────
 
-function getWelcomeEmail(storeName: string, subdomain: string, lang: string) {
+type EmailTemplate = { subject: string; html: string; text: string }
+
+function getWelcomeEmail(storeName: string, subdomain: string, lang: string): EmailTemplate {
   const isEn = lang === 'en'
   return {
     subject: isEn
       ? `${storeName} is live — next steps`
       : `${storeName} ya esta online — siguientes pasos`,
+    text: isEn
+      ? `${storeName} is online and ready to receive orders.\n\n1. Add products — Photo, name, and price. That's it.\n2. Share your link — ${subdomain}.shopifree.app\n3. Receive orders on WhatsApp — Customers order from the catalog, you receive it on WhatsApp.\n\nYour account includes a 14-day Pro trial.\n\nGo to your dashboard: https://shopifree.app/dashboard\n\n—\nShopifree · Online catalogs via WhatsApp`
+      : `${storeName} esta online y lista para recibir pedidos.\n\n1. Agrega productos — Foto, nombre y precio. Nada mas.\n2. Comparte tu link — ${subdomain}.shopifree.app\n3. Recibe pedidos por WhatsApp — Tus clientes piden desde el catalogo, te llega al WhatsApp.\n\nTu cuenta incluye 14 dias de prueba Pro.\n\nIr al panel: https://shopifree.app/dashboard\n\n—\nShopifree · Catalogos online por WhatsApp`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -66,11 +71,11 @@ function getWelcomeEmail(storeName: string, subdomain: string, lang: string) {
         </td>
       </tr>
     </table>
-    <div style="background:#18181b;border-radius:4px;padding:16px 20px;margin-bottom:24px">
-      <p style="margin:0 0 2px;font-size:11px;color:#a1a1aa;text-transform:uppercase;letter-spacing:0.5px">${isEn ? 'Included' : 'Incluido'}</p>
-      <p style="margin:0;font-size:15px;color:white;font-weight:600">${isEn ? '14-day Pro trial' : '14 dias de prueba Pro'}</p>
-      <p style="margin:4px 0 0;font-size:12px;color:#a1a1aa">${isEn ? 'Card payments, coupons, custom domain, and more.' : 'Cobro con tarjeta, cupones, dominio propio y mas.'}</p>
-    </div>
+    <p style="color:#71717a;font-size:13px;margin:0 0 20px">
+      ${isEn
+        ? 'Your account includes a 14-day Pro trial.'
+        : 'Tu cuenta incluye 14 dias de prueba Pro.'}
+    </p>
     <a href="https://shopifree.app/dashboard" style="display:block;background:#18181b;color:white;text-align:center;padding:12px;border-radius:4px;text-decoration:none;font-weight:500;font-size:14px">
       ${isEn ? 'Go to dashboard' : 'Ir al panel'}
     </a>
@@ -84,12 +89,15 @@ function getWelcomeEmail(storeName: string, subdomain: string, lang: string) {
   }
 }
 
-function getReminderHtml(storeName: string, daysLeft: number, lang: string) {
+function getReminderHtml(storeName: string, daysLeft: number, lang: string): EmailTemplate {
   const isEn = lang === 'en'
   return {
     subject: isEn
       ? `${daysLeft} days left on your Pro trial`
       : `Te quedan ${daysLeft} dias de Pro gratis`,
+    text: isEn
+      ? `The Pro trial for ${storeName} ends in ${daysLeft} days. After that, your store switches to the free plan.\n\nWhat changes:\n- Card payments: Disabled\n- Discount coupons: Disabled\n- Custom domain: Disabled\n- Products: 200 → 10\n- Photos per product: 5 → 1\n\nKeep everything for $4.99/month: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Online catalogs via WhatsApp`
+      : `La prueba Pro de ${storeName} termina en ${daysLeft} dias. Despues, tu tienda pasa al plan gratuito.\n\nQue cambia:\n- Cobro con tarjeta: Se desactiva\n- Cupones de descuento: Se desactiva\n- Dominio propio: Se desactiva\n- Productos: 200 → 10\n- Fotos por producto: 5 → 1\n\nMantene todo por $4.99/mes: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Catalogos online por WhatsApp`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -146,12 +154,15 @@ function getReminderHtml(storeName: string, daysLeft: number, lang: string) {
   }
 }
 
-function getExpiredHtml(storeName: string, lang: string) {
+function getExpiredHtml(storeName: string, lang: string): EmailTemplate {
   const isEn = lang === 'en'
   return {
     subject: isEn
       ? `Your Pro trial ended`
       : `Tu periodo Pro termino`,
+    text: isEn
+      ? `${storeName} is now on the free plan. Your store is still online.\n\n         Free    Pro\nProducts   10     200\nPhotos      1       5\nPayments    —     Yes\nCoupons     —     Yes\nDomain      —     Yes\n\nUpgrade anytime for $4.99/month: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Online catalogs via WhatsApp`
+      : `${storeName} ahora esta en el plan gratuito. Tu tienda sigue online.\n\n            Gratis   Pro\nProductos     10     200\nFotos          1       5\nTarjeta        —      Si\nCupones        —      Si\nDominio        —      Si\n\nMejora tu plan por $4.99/mes: https://shopifree.app/dashboard/plan\n\n—\nShopifree · Catalogos online por WhatsApp`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -261,7 +272,7 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
     const email = getReminderHtml(store.name, daysLeft, store.language || 'es')
 
     try {
-      await resend.emails.send({ from: fromEmail, to: user.email, subject: email.subject, html: email.html })
+      await resend.emails.send({ from: fromEmail, to: user.email, subject: email.subject, html: email.html, text: email.text, headers: { 'List-Unsubscribe': '<mailto:unsubscribe@shopifree.app>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
       await firestore.doc(`stores/${doc.id}`).update({ emailsSent: FieldValue.arrayUnion('trial-reminder') })
       remindersSent++
     } catch (err) {
@@ -289,7 +300,7 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
     const email = getExpiredHtml(store.name, store.language || 'es')
 
     try {
-      await resend.emails.send({ from: fromEmail, to: user.email, subject: email.subject, html: email.html })
+      await resend.emails.send({ from: fromEmail, to: user.email, subject: email.subject, html: email.html, text: email.text, headers: { 'List-Unsubscribe': '<mailto:unsubscribe@shopifree.app>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
       await firestore.doc(`stores/${doc.id}`).update({ emailsSent: FieldValue.arrayUnion('trial-expired') })
       expiredSent++
     } catch (err) {
@@ -342,7 +353,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Build email
-    let emailContent: { subject: string; html: string }
+    let emailContent: EmailTemplate
     switch (type) {
       case 'welcome':
         emailContent = getWelcomeEmail(storeName || 'Tu tienda', subdomain || '', lang)
@@ -359,11 +370,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Send
     const resend = new Resend(apiKey)
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Shopifree <noreply@shopifree.app>'
     const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Shopifree <noreply@shopifree.app>',
+      from: fromEmail,
       to: email,
       subject: emailContent.subject,
-      html: emailContent.html
+      html: emailContent.html,
+      text: emailContent.text,
+      headers: {
+        'List-Unsubscribe': '<mailto:unsubscribe@shopifree.app>',
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+      }
     })
 
     if (error) {
