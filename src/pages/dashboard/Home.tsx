@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
@@ -416,7 +416,7 @@ export default function DashboardHome() {
 
       {/* Milestone Banner - contextual upgrade nudge for free users */}
       {activeMilestone && !Capacitor.isNativePlatform() && (() => {
-        const milestoneKeys: Record<string, { icon: JSX.Element; gradient: string }> = {
+        const milestoneKeys: Record<string, { icon: ReactNode; gradient: string }> = {
           first_order: {
             icon: (
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
