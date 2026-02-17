@@ -288,8 +288,8 @@ export default function Domain() {
                                   </div>
                                 ))
                               ) : (
-                                <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
-                                    <span colSpan={3} className="col-span-3 text-blue-600 italic">Haz clic en "Verificar DNS" para obtener los registros actualizados</span>
+                                <div className="col-span-3 text-blue-600 italic">
+                                    Haz clic en "Verificar DNS" para obtener los registros actualizados
                                   </div>
                               )}
                             </div>
