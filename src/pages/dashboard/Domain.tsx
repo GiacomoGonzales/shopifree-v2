@@ -24,10 +24,10 @@ export default function Domain() {
   const fetchDnsRecords = async (domain: string) => {
     setLoadingDns(true)
     try {
-      const response = await fetch(`${API_URL}/dns-records`, {
+      const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain })
+        body: JSON.stringify({ action: 'dns-records', domain })
       })
       const data = await response.json()
       if (response.ok && data.dnsRecords && data.dnsRecords.length > 0) {

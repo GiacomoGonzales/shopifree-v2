@@ -34,6 +34,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { action, storeId, domain } = req.body
 
+  // dns-records action only needs domain, not storeId
+  if (action === 'dns-records') {
+    if (!domain) return res.status(400).json({ error: 'Missing domain' })
+    return handleDnsRecords(res, domain)
+  }
+
   if (!action || !storeId || !domain) {
     return res.status(400).json({ error: 'Missing required parameters: action, storeId, domain' })
   }
@@ -441,5 +447,41 @@ async function handleVerify(_req: VercelRequest, res: VercelResponse, storeId: s
   } catch (error) {
     console.error('Error verifying domain:', error)
     return res.status(500).json({ error: 'Failed to verify domain' })
+  }
+}
+
+async function handleDnsRecords(res: VercelResponse, domain: string) {
+  const vercelToken = process.env.VERCEL_TOKEN
+  if (!vercelToken) {
+    return res.status(500).json({ error: 'Missing VERCEL_TOKEN' })
+  }
+
+  try {
+    const configResponse = await fetch(
+      `https://api.vercel.com/v6/domains/${domain}/config`,
+      { headers: { 'Authorization': `Bearer ${vercelToken}` } }
+    )
+
+    if (!configResponse.ok) {
+      return res.status(400).json({ error: 'Failed to fetch domain config from Vercel' })
+    }
+
+    const configData = await configResponse.json()
+    const dnsRecords: Array<{type: string, name: string, value: string}> = []
+
+    const ip = configData.recommendedIPv4?.find((r: { rank: number }) => r.rank === 1)?.value?.[0]
+    if (ip) {
+      dnsRecords.push({ type: 'A', name: '@', value: ip })
+    }
+
+    const cname = configData.recommendedCNAME?.find((r: { rank: number }) => r.rank === 1)?.value?.replace(/\.$/, '')
+    if (cname) {
+      dnsRecords.push({ type: 'CNAME', name: 'www', value: cname })
+    }
+
+    return res.status(200).json({ dnsRecords, apiVersion: API_VERSION })
+  } catch (error) {
+    console.error('Error fetching DNS records:', error)
+    return res.status(500).json({ error: 'Failed to fetch DNS records' })
   }
 }
