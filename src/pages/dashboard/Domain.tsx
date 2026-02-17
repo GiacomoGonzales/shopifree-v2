@@ -21,10 +21,24 @@ export default function Domain() {
   const [dnsRecords, setDnsRecords] = useState<Array<{type: string, name: string, value: string}>>([])
   const [loadingDns, setLoadingDns] = useState(false)
 
+  const parseDnsFromVercel = (configData: Record<string, unknown>) => {
+    const records: Array<{type: string, name: string, value: string}> = []
+    const ipArr = configData.recommendedIPv4 as Array<{ rank: number; value: string[] }> | undefined
+    const cnameArr = configData.recommendedCNAME as Array<{ rank: number; value: string }> | undefined
+
+    const ip = ipArr?.find(r => r.rank === 1)?.value?.[0]
+    if (ip) records.push({ type: 'A', name: '@', value: ip })
+
+    const cname = cnameArr?.find(r => r.rank === 1)?.value?.replace(/\.$/, '')
+    if (cname) records.push({ type: 'CNAME', name: 'www', value: cname })
+
+    return records
+  }
+
   const fetchDnsRecords = async (domain: string) => {
     setLoadingDns(true)
     try {
-      // Call Vercel config API directly from browser - no serverless middleman
+      // Try direct Vercel API first
       const vercelToken = import.meta.env.VITE_VERCEL_TOKEN
       const response = await fetch(
         `https://api.vercel.com/v6/domains/${domain}/config`,
@@ -32,15 +46,26 @@ export default function Domain() {
       )
       if (response.ok) {
         const configData = await response.json()
-        const records: Array<{type: string, name: string, value: string}> = []
+        const records = parseDnsFromVercel(configData)
+        if (records.length > 0) {
+          setDnsRecords(records)
+          return
+        }
+      }
+    } catch {
+      // CORS or network error - try serverless fallback
+    }
 
-        const ip = configData.recommendedIPv4?.find((r: { rank: number }) => r.rank === 1)?.value?.[0]
-        if (ip) records.push({ type: 'A', name: '@', value: ip })
-
-        const cname = configData.recommendedCNAME?.find((r: { rank: number }) => r.rank === 1)?.value?.replace(/\.$/, '')
-        if (cname) records.push({ type: 'CNAME', name: 'www', value: cname })
-
-        if (records.length > 0) setDnsRecords(records)
+    // Fallback: use our API endpoint
+    try {
+      const response = await fetch(`${API_URL}/domain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'dns-records', domain })
+      })
+      const data = await response.json()
+      if (response.ok && data.dnsRecords?.length > 0) {
+        setDnsRecords(data.dnsRecords)
       }
     } catch (err) {
       console.error('Error fetching DNS records:', err)
@@ -308,9 +333,22 @@ export default function Domain() {
 
                         {!isVerified && (
                           <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                            <p className="text-sm text-blue-800 font-medium mb-2">
-                              Configura tu DNS para activar el dominio:
-                            </p>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm text-blue-800 font-medium">
+                                Configura tu DNS para activar el dominio:
+                              </p>
+                              {!loadingDns && (
+                                <button
+                                  onClick={() => store.customDomain && fetchDnsRecords(store.customDomain)}
+                                  className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors"
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                  </svg>
+                                  Actualizar
+                                </button>
+                              )}
+                            </div>
                             {loadingDns ? (
                               <div className="flex items-center gap-2 py-4 justify-center">
                                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
@@ -345,9 +383,20 @@ export default function Domain() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-red-600 py-2">
-                                No se pudieron obtener los registros DNS. Haz clic en "Verificar DNS" para reintentar.
-                              </p>
+                              <div className="flex flex-col items-center gap-2 py-3">
+                                <p className="text-sm text-gray-600">
+                                  No se pudieron obtener los registros DNS.
+                                </p>
+                                <button
+                                  onClick={() => store.customDomain && fetchDnsRecords(store.customDomain)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                  </svg>
+                                  Reintentar
+                                </button>
+                              </div>
                             )}
                             <p className="text-xs text-blue-600 mt-2">
                               Los cambios de DNS pueden tardar hasta 48 horas en propagarse.
