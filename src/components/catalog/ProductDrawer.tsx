@@ -5,6 +5,8 @@ import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import ProductGallery from '../../themes/shared/ProductGallery'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import ProductReels from './ProductReels'
+import { getCatalogProducts } from './catalogProducts'
 import {
   ModifierSelector,
   VariantSelector,
@@ -36,33 +38,27 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
   const { features } = useBusinessType()
   const t = getThemeTranslations(language)
 
-  // Selection states
+  // All hooks must be called before any conditional returns (Rules of Hooks)
+  const [drawerProduct, setDrawerProduct] = useState<Product | null>(null)
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
   const [selectedModifiers, setSelectedModifiers] = useState<SelectedModifier[]>([])
   const [modifiersExtra, setModifiersExtra] = useState(0)
   const [customNote, setCustomNote] = useState('')
 
-  const hasDiscount = product.comparePrice && product.comparePrice > product.price
-  const discountPercent = hasDiscount
-    ? Math.round((1 - product.price / product.comparePrice!) * 100)
-    : 0
+  const activeProduct = drawerProduct || product
 
-  // Calculate total price including modifiers
   const totalPrice = useMemo(() => {
-    return product.price + modifiersExtra
-  }, [product.price, modifiersExtra])
+    return activeProduct.price + modifiersExtra
+  }, [activeProduct.price, modifiersExtra])
 
-  // Handle modifier changes
   const handleModifiersChange = useCallback((selected: SelectedModifier[], extra: number) => {
     setSelectedModifiers(selected)
     setModifiersExtra(extra)
   }, [])
 
-  // Check if all required selections are made
   const canAddToCart = useMemo(() => {
-    // Check required modifiers
-    if (features.showModifiers && product.modifierGroups?.length) {
-      for (const group of product.modifierGroups) {
+    if (features.showModifiers && activeProduct.modifierGroups?.length) {
+      for (const group of activeProduct.modifierGroups) {
         if (group.required) {
           const selection = selectedModifiers.find(s => s.groupId === group.id)
           if (!selection || selection.options.length < group.minSelect) {
@@ -71,18 +67,43 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
         }
       }
     }
-
-    // Check required variants (at least one option selected per variation)
-    if (features.showVariants && product.variations?.length) {
-      for (const variation of product.variations) {
+    if (features.showVariants && activeProduct.variations?.length) {
+      for (const variation of activeProduct.variations) {
         if (!selectedVariants[variation.name]) {
           return false
         }
       }
     }
-
     return true
-  }, [features, product, selectedModifiers, selectedVariants])
+  }, [features, activeProduct, selectedModifiers, selectedVariants])
+
+  // Reels mode delegation (after all hooks)
+  const isReelsMode = theme.effects.productViewMode === 'reels' && getCatalogProducts().length > 0
+
+  if (isReelsMode && !drawerProduct) {
+    return (
+      <ProductReels
+        initialProduct={product}
+        onClose={onClose}
+        onAddToCart={onAddToCart}
+        onOpenDrawer={(p) => setDrawerProduct(p)}
+      />
+    )
+  }
+
+  // Drawer logic
+  const handleCloseDrawer = () => {
+    if (drawerProduct) {
+      setDrawerProduct(null)
+    } else {
+      onClose()
+    }
+  }
+
+  const hasDiscount = activeProduct.comparePrice && activeProduct.comparePrice > activeProduct.price
+  const discountPercent = hasDiscount
+    ? Math.round((1 - activeProduct.price / activeProduct.comparePrice!) * 100)
+    : 0
 
   const handleAddToCart = () => {
     const extras: CartItemExtras = {
@@ -101,16 +122,15 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
       extras.customNote = customNote.trim()
     }
 
-    onAddToCart(product, extras)
-    onClose()
+    onAddToCart(activeProduct, extras)
+    handleCloseDrawer()
   }
 
-  // Determine if we need selection before adding
-  const requiresSelection = (features.showModifiers && (product.modifierGroups?.length ?? 0) > 0) ||
-                            (features.showVariants && (product.variations?.length ?? 0) > 0)
+  const requiresSelection = (features.showModifiers && (activeProduct.modifierGroups?.length ?? 0) > 0) ||
+                            (features.showVariants && (activeProduct.variations?.length ?? 0) > 0)
 
   return (
-    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={handleCloseDrawer}>
       <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
@@ -123,7 +143,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleCloseDrawer}
           className="absolute top-4 right-4 z-10 w-10 h-10 backdrop-blur flex items-center justify-center transition-colors"
           style={{
             backgroundColor: theme.effects.darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)',
@@ -148,8 +168,8 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
           {/* Image Gallery */}
           <div className="relative">
             <ProductGallery
-              images={product.images?.length ? product.images : (product.image ? [product.image] : [])}
-              productName={product.name}
+              images={activeProduct.images?.length ? activeProduct.images : (activeProduct.image ? [activeProduct.image] : [])}
+              productName={activeProduct.name}
               variant={theme.effects.darkMode ? 'dark' : 'light'}
             />
 
@@ -175,47 +195,47 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                 className="text-2xl font-semibold mb-2"
                 style={{ color: theme.colors.text }}
               >
-                {product.name}
+                {activeProduct.name}
               </h2>
 
               {/* Badges row */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {/* Food: Prep Time */}
-                {features.showPrepTime && product.prepTime && (
-                  <PrepTimeDisplay prepTime={product.prepTime} language={language} />
+                {features.showPrepTime && activeProduct.prepTime && (
+                  <PrepTimeDisplay prepTime={activeProduct.prepTime} language={language} />
                 )}
 
                 {/* Beauty: Duration */}
-                {features.showServiceDuration && product.duration && (
-                  <DurationDisplay duration={product.duration} language={language} />
+                {features.showServiceDuration && activeProduct.duration && (
+                  <DurationDisplay duration={activeProduct.duration} language={language} />
                 )}
 
                 {/* Tech: Warranty */}
-                {features.showWarranty && product.warranty && (
-                  <WarrantyBadge warranty={product.warranty} language={language} />
+                {features.showWarranty && activeProduct.warranty && (
+                  <WarrantyBadge warranty={activeProduct.warranty} language={language} />
                 )}
 
                 {/* Pets: Pet Type */}
-                {features.showPetType && product.petType && (
+                {features.showPetType && activeProduct.petType && (
                   <PetTypeBadge
-                    petType={product.petType}
-                    petAge={product.petAge}
+                    petType={activeProduct.petType}
+                    petAge={activeProduct.petAge}
                     language={language}
                   />
                 )}
 
                 {/* Limited Stock */}
-                {(features.showLimitedStock || store.plan !== 'free') && product.availableQuantity !== undefined && (
-                  <AvailabilityBadge quantity={product.availableQuantity} language={language} />
+                {(features.showLimitedStock || store.plan !== 'free') && activeProduct.availableQuantity !== undefined && (
+                  <AvailabilityBadge quantity={activeProduct.availableQuantity} language={language} />
                 )}
               </div>
 
-              {product.description && (
+              {activeProduct.description && (
                 <p
                   className="leading-relaxed"
                   style={{ color: theme.colors.textMuted }}
                 >
-                  {product.description}
+                  {activeProduct.description}
                 </p>
               )}
             </div>
@@ -233,43 +253,43 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                   className="text-xl line-through"
                   style={{ color: theme.colors.textMuted }}
                 >
-                  {formatPrice(hasDiscount ? product.comparePrice! : product.price, currency)}
+                  {formatPrice(hasDiscount ? activeProduct.comparePrice! : activeProduct.price, currency)}
                 </span>
               )}
             </div>
 
             {/* Fashion/Pets: Variants */}
-            {features.showVariants && product.variations && product.variations.length > 0 && (
+            {features.showVariants && activeProduct.variations && activeProduct.variations.length > 0 && (
               <VariantSelector
-                variations={product.variations}
+                variations={activeProduct.variations}
                 selected={selectedVariants}
                 onChange={setSelectedVariants}
               />
             )}
 
             {/* Food: Modifiers */}
-            {features.showModifiers && product.modifierGroups && product.modifierGroups.length > 0 && (
+            {features.showModifiers && activeProduct.modifierGroups && activeProduct.modifierGroups.length > 0 && (
               <ModifierSelector
-                modifierGroups={product.modifierGroups}
+                modifierGroups={activeProduct.modifierGroups}
                 onChange={handleModifiersChange}
                 language={language}
               />
             )}
 
             {/* Tech: Specs */}
-            {features.showSpecs && product.specs && product.specs.length > 0 && (
+            {features.showSpecs && activeProduct.specs && activeProduct.specs.length > 0 && (
               <SpecsDisplay
-                specs={product.specs}
-                model={product.model}
+                specs={activeProduct.specs}
+                model={activeProduct.model}
                 language={language}
               />
             )}
 
             {/* Craft: Custom Order */}
-            {features.showCustomOrder && product.customizable && (
+            {features.showCustomOrder && activeProduct.customizable && (
               <CustomOrderInput
                 value={customNote}
-                instructions={product.customizationInstructions}
+                instructions={activeProduct.customizationInstructions}
                 onChange={setCustomNote}
                 language={language}
               />

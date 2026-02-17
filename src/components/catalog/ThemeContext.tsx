@@ -52,6 +52,7 @@ export interface ThemeConfig {
     imageSwapOnHover?: boolean // Show second image on card hover
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
     paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
+    productViewMode?: 'drawer' | 'reels'
   }
 }
 
@@ -84,7 +85,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   // Merge store-level effect overrides into theme
   const mergedTheme = useMemo(() => {
     const s = store.themeSettings
-    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined && s?.paginationType === undefined) return theme
+    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined && s?.paginationType === undefined && s?.productViewMode === undefined) return theme
     return {
       ...theme,
       effects: {
@@ -93,6 +94,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(s?.imageSwapOnHover !== undefined && { imageSwapOnHover: s.imageSwapOnHover }),
         ...(s?.productLayout !== undefined && { productLayout: s.productLayout }),
         ...(s?.paginationType !== undefined && { paginationType: s.paginationType }),
+        ...(s?.productViewMode !== undefined && { productViewMode: s.productViewMode }),
       }
     }
   }, [theme, store.themeSettings])

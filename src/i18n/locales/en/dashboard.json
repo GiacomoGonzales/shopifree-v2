@@ -543,6 +543,16 @@
       "upgradeMessage": "Upgrade your plan for more pagination options.",
       "viewPlans": "View plans"
     },
+    "viewMode": {
+      "title": "Product view",
+      "subtitle": "Choose how product details are shown when tapped.",
+      "drawer": "Classic view",
+      "drawerDesc": "Product opens in a side panel",
+      "reels": "Reels view",
+      "reelsDesc": "Fullscreen stories-like experience",
+      "upgradeMessage": "Upgrade your plan to access Reels view.",
+      "viewPlans": "View plans"
+    },
     "effects": {
       "title": "Visual effects",
       "subtitle": "Add premium animations and effects to your catalog.",

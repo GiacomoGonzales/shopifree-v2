@@ -856,6 +856,97 @@ export default function Branding() {
             </div>
           )}
 
+          {/* Product View Mode */}
+          {store && (
+            <div className="border-t border-gray-100 pt-6 mt-6">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-medium text-[#1e3a5f]">{t('branding.viewMode.title')}</h3>
+                {store.plan === 'free' && (
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 mb-6">{t('branding.viewMode.subtitle')}</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { id: 'drawer' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6z" />
+                    </svg>
+                  ), labelKey: 'drawer', descKey: 'drawerDesc', premium: false },
+                  { id: 'reels' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12h7.5M12 8.25v7.5" />
+                    </svg>
+                  ), labelKey: 'reels', descKey: 'reelsDesc', premium: true },
+                ] as const).map((option) => {
+                  const isSelected = (store.themeSettings?.productViewMode || 'drawer') === option.id
+                  const isDisabled = option.premium && store.plan === 'free'
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={async () => {
+                        if (isDisabled) return
+                        try {
+                          await updateDoc(doc(db, 'stores', store.id), {
+                            'themeSettings.productViewMode': option.id,
+                            updatedAt: new Date()
+                          })
+                          setStore({ ...store, themeSettings: { ...store.themeSettings, productViewMode: option.id } })
+                          showToast(t('branding.toast.saved'), 'success')
+                        } catch {
+                          showToast(t('branding.toast.error'), 'error')
+                        }
+                      }}
+                      className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? 'border-[#2d6cb5] bg-[#f0f7ff]'
+                          : isDisabled
+                            ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                      }`}
+                    >
+                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                        {option.icon}
+                      </div>
+                      <div className="font-medium text-sm text-[#1e3a5f]">
+                        {t(`branding.viewMode.${option.labelKey}`)}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {t(`branding.viewMode.${option.descKey}`)}
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {store.plan === 'free' && (
+                <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
+                  <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <p className="text-sm text-[#1e3a5f]">
+                    {t('branding.viewMode.upgradeMessage')}{' '}
+                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                      {t('branding.viewMode.viewPlans')}
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Visual Effects */}
           {store && (
             <div className="border-t border-gray-100 pt-6 mt-6">

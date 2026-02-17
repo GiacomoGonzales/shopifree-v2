@@ -91,6 +91,7 @@ export interface Store {
     imageSwapOnHover?: boolean
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
     paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
+    productViewMode?: 'drawer' | 'reels'
   }
 
   // === PAGOS ===

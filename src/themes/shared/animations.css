@@ -131,6 +131,15 @@
   animation: urgencyPulse 2s ease-in-out infinite;
 }
 
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.35s ease-out;
+}
+
 /* Slide in from left (social proof toast) */
 @keyframes slideInLeft {
   from { transform: translateX(-100%); opacity: 0; }

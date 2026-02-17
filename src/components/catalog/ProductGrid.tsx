@@ -8,6 +8,7 @@ import MagazineLayout from './layouts/MagazineLayout'
 import CarouselLayout from './layouts/CarouselLayout'
 import ListLayout from './layouts/ListLayout'
 import { usePagination } from '../../hooks/usePagination'
+import { setCatalogProducts } from './catalogProducts'
 
 interface ProductGridProps {
   products: Product[]
@@ -31,6 +32,8 @@ export default function ProductGrid({
   const { theme, language } = useTheme()
   const t = getThemeTranslations(language)
   const paginationType = theme.effects.paginationType ?? 'none'
+
+  setCatalogProducts(products)
 
   const {
     displayedItems,

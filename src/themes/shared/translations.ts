@@ -173,6 +173,11 @@ export interface ThemeTranslations {
   couponRemove: string
   discount: string
 
+  // Reels view
+  viewDetails: string
+  addedToCart: string
+  productCounter: string
+
   // Pagination
   loadMore: string
   showingProducts: string
@@ -366,6 +371,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     couponRemove: 'Quitar',
     discount: 'Descuento',
 
+    // Reels view
+    viewDetails: 'Ver detalles',
+    addedToCart: 'Agregado!',
+    productCounter: '{{current}} de {{total}}',
+
     // Pagination
     loadMore: 'Ver mas productos',
     showingProducts: 'Mostrando {{shown}} de {{total}} productos',
@@ -558,6 +568,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     couponRemove: 'Remove',
     discount: 'Discount',
 
+    // Reels view
+    viewDetails: 'View details',
+    addedToCart: 'Added!',
+    productCounter: '{{current}} of {{total}}',
+
     // Pagination
     loadMore: 'Load more products',
     showingProducts: 'Showing {{shown}} of {{total}} products',
@@ -749,6 +764,11 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     couponMinAmount: 'Pedido minimo nao alcancado',
     couponRemove: 'Remover',
     discount: 'Desconto',
+
+    // Reels view
+    viewDetails: 'Ver detalhes',
+    addedToCart: 'Adicionado!',
+    productCounter: '{{current}} de {{total}}',
 
     // Pagination
     loadMore: 'Ver mais produtos',

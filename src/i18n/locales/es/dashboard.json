@@ -544,6 +544,16 @@
       "upgradeMessage": "Mejora tu plan para acceder a más opciones de paginación.",
       "viewPlans": "Ver planes"
     },
+    "viewMode": {
+      "title": "Vista de producto",
+      "subtitle": "Elige como se muestra el detalle del producto al tocarlo.",
+      "drawer": "Vista clasica",
+      "drawerDesc": "El producto se abre en un panel lateral",
+      "reels": "Vista Reels",
+      "reelsDesc": "Experiencia fullscreen tipo stories",
+      "upgradeMessage": "Mejora tu plan para acceder a la vista Reels.",
+      "viewPlans": "Ver planes"
+    },
     "effects": {
       "title": "Efectos visuales",
       "subtitle": "Agrega animaciones y efectos premium a tu catálogo.",
