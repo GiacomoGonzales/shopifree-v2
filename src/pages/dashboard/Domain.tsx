@@ -24,14 +24,23 @@ export default function Domain() {
   const fetchDnsRecords = async (domain: string) => {
     setLoadingDns(true)
     try {
-      const response = await fetch(`${API_URL}/domain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'dns-records', domain })
-      })
-      const data = await response.json()
-      if (response.ok && data.dnsRecords && data.dnsRecords.length > 0) {
-        setDnsRecords(data.dnsRecords)
+      // Call Vercel config API directly from browser - no serverless middleman
+      const vercelToken = import.meta.env.VITE_VERCEL_TOKEN
+      const response = await fetch(
+        `https://api.vercel.com/v6/domains/${domain}/config`,
+        { headers: { 'Authorization': `Bearer ${vercelToken}` } }
+      )
+      if (response.ok) {
+        const configData = await response.json()
+        const records: Array<{type: string, name: string, value: string}> = []
+
+        const ip = configData.recommendedIPv4?.find((r: { rank: number }) => r.rank === 1)?.value?.[0]
+        if (ip) records.push({ type: 'A', name: '@', value: ip })
+
+        const cname = configData.recommendedCNAME?.find((r: { rank: number }) => r.rank === 1)?.value?.replace(/\.$/, '')
+        if (cname) records.push({ type: 'CNAME', name: 'www', value: cname })
+
+        if (records.length > 0) setDnsRecords(records)
       }
     } catch (err) {
       console.error('Error fetching DNS records:', err)
