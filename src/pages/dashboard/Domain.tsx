@@ -18,6 +18,34 @@ export default function Domain() {
   const [saving, setSaving] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [customDomain, setCustomDomain] = useState('')
+  const [dnsRecords, setDnsRecords] = useState<Array<{type: string, name: string, value: string}>>([])
+  const [loadingDns, setLoadingDns] = useState(false)
+
+  const fetchDnsRecords = async (storeId: string, domain: string) => {
+    setLoadingDns(true)
+    try {
+      const response = await fetch(`${API_URL}/domain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', storeId, domain })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        if (data.dnsRecords && data.dnsRecords.length > 0) {
+          setDnsRecords(data.dnsRecords)
+        }
+        setStore(prev => prev ? {
+          ...prev,
+          domainStatus: data.status,
+          domainVerification: data.verification,
+        } : null)
+      }
+    } catch (err) {
+      console.error('Error fetching DNS records from Vercel:', err)
+    } finally {
+      setLoadingDns(false)
+    }
+  }
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -34,30 +62,9 @@ export default function Domain() {
           setStore(storeWithId)
           setCustomDomain(storeData.customDomain || '')
 
-          // Auto-refresh DNS records from Vercel if domain is pending
+          // Always fetch fresh DNS records from Vercel if domain exists and is not verified
           if (storeData.customDomain && storeData.domainStatus !== 'verified') {
-            try {
-              const response = await fetch(`${API_URL}/domain`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  action: 'verify',
-                  storeId: storeSnapshot.docs[0].id,
-                  domain: storeData.customDomain
-                })
-              })
-              const data = await response.json()
-              if (response.ok && data.dnsRecords) {
-                setStore(prev => prev ? {
-                  ...prev,
-                  domainStatus: data.status,
-                  domainVerification: data.verification,
-                  domainDnsRecords: data.dnsRecords
-                } : null)
-              }
-            } catch (err) {
-              console.error('Error auto-refreshing DNS records:', err)
-            }
+            fetchDnsRecords(storeSnapshot.docs[0].id, storeData.customDomain)
           }
         }
       } catch (error) {
@@ -112,8 +119,13 @@ export default function Domain() {
         customDomain: cleanDomain,
         domainStatus: 'pending_verification',
         domainVerification: data.verification,
-        domainDnsRecords: data.dnsRecords
       })
+      if (data.dnsRecords && data.dnsRecords.length > 0) {
+        setDnsRecords(data.dnsRecords)
+      } else {
+        // API add may not return fresh records, fetch them
+        fetchDnsRecords(store.id, cleanDomain)
+      }
       showToast('Dominio agregado correctamente', 'success')
     } catch (error) {
       console.error('Error saving domain:', error)
@@ -187,8 +199,10 @@ export default function Domain() {
         ...store,
         domainStatus: data.status,
         domainVerification: data.verification,
-        domainDnsRecords: data.dnsRecords || store.domainDnsRecords
       })
+      if (data.dnsRecords && data.dnsRecords.length > 0) {
+        setDnsRecords(data.dnsRecords)
+      }
 
       if (data.verified) {
         showToast('¡Dominio verificado correctamente!', 'success')
@@ -299,26 +313,31 @@ export default function Domain() {
                             <p className="text-sm text-blue-800 font-medium mb-2">
                               Configura tu DNS para activar el dominio:
                             </p>
-                            <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-blue-100 overflow-x-auto">
-                              <div className="grid grid-cols-3 gap-2 text-blue-700 min-w-[300px]">
-                                <span className="font-semibold">Tipo</span>
-                                <span className="font-semibold">Nombre</span>
-                                <span className="font-semibold">Valor</span>
+                            {loadingDns ? (
+                              <div className="flex items-center gap-2 py-4 justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                <span className="text-sm text-blue-600">Obteniendo registros DNS de Vercel...</span>
                               </div>
-                              {store.domainDnsRecords && store.domainDnsRecords.length > 0 ? (
-                                store.domainDnsRecords.map((record, index) => (
+                            ) : dnsRecords.length > 0 ? (
+                              <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-blue-100 overflow-x-auto">
+                                <div className="grid grid-cols-3 gap-2 text-blue-700 min-w-[300px]">
+                                  <span className="font-semibold">Tipo</span>
+                                  <span className="font-semibold">Nombre</span>
+                                  <span className="font-semibold">Valor</span>
+                                </div>
+                                {dnsRecords.map((record, index) => (
                                   <div key={index} className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
                                     <span>{record.type}</span>
                                     <span>{record.name}</span>
                                     <span className="break-all">{record.value}</span>
                                   </div>
-                                ))
-                              ) : (
-                                <div className="col-span-3 text-blue-600 italic">
-                                    Haz clic en "Verificar DNS" para obtener los registros actualizados
-                                  </div>
-                              )}
-                            </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-red-600 py-2">
+                                No se pudieron obtener los registros DNS. Haz clic en "Verificar DNS" para reintentar.
+                              </p>
+                            )}
                             <p className="text-xs text-blue-600 mt-2">
                               Los cambios de DNS pueden tardar hasta 48 horas en propagarse.
                             </p>
