@@ -209,10 +209,7 @@ async function handleAdd(_req: VercelRequest, res: VercelResponse, storeId: stri
     }
 
     if (dnsRecords.length === 0) {
-      dnsRecords = [
-        { type: 'A', name: '@', value: '76.76.21.93' },
-        { type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' }
-      ]
+      console.error('Could not retrieve DNS records from Vercel for domain:', cleanDomain)
     }
 
     // Update store with domain info
@@ -394,22 +391,18 @@ async function handleVerify(_req: VercelRequest, res: VercelResponse, storeId: s
     // Use new recommendedIPv4 field (rank 1 = best), fallback to legacy aValues
     const recommendedIp = configData?.recommendedIPv4?.find((r: { rank: number }) => r.rank === 1)?.value?.[0]
     const legacyIp = configData?.aValues?.[0]
-    const aRecordValue = recommendedIp || legacyIp || '76.76.21.93'
-    dnsRecords.push({
-      type: 'A',
-      name: '@',
-      value: aRecordValue
-    })
+    const ipValue = recommendedIp || legacyIp
+    if (ipValue) {
+      dnsRecords.push({ type: 'A', name: '@', value: ipValue })
+    }
 
     // Use new recommendedCNAME field (rank 1 = best), fallback to legacy cnameTarget
     const recommendedCname = configData?.recommendedCNAME?.find((r: { rank: number }) => r.rank === 1)?.value?.replace(/\.$/, '')
     const legacyCname = configData?.cnameTarget
-    const cnameValue = recommendedCname || legacyCname || 'cname.vercel-dns.com'
-    dnsRecords.push({
-      type: 'CNAME',
-      name: 'www',
-      value: cnameValue
-    })
+    const cnameValue = recommendedCname || legacyCname
+    if (cnameValue) {
+      dnsRecords.push({ type: 'CNAME', name: 'www', value: cnameValue })
+    }
 
     if (domainData.verification && domainData.verification.length > 0) {
       domainData.verification.forEach((v: { type: string; domain: string; value: string }) => {
