@@ -39,25 +39,25 @@ export default function Domain() {
     setLoadingDns(true)
     try {
       // Try direct Vercel API first
-      const vercelToken = import.meta.env.VITE_VERCEL_TOKEN
-      const response = await fetch(
-        `https://api.vercel.com/v6/domains/${domain}/config`,
-        { headers: { 'Authorization': `Bearer ${vercelToken}` } }
-      )
-      if (response.ok) {
-        const configData = await response.json()
-        const records = parseDnsFromVercel(configData)
-        if (records.length > 0) {
-          setDnsRecords(records)
-          return
+      try {
+        const vercelToken = import.meta.env.VITE_VERCEL_TOKEN
+        const response = await fetch(
+          `https://api.vercel.com/v6/domains/${domain}/config`,
+          { headers: { 'Authorization': `Bearer ${vercelToken}` } }
+        )
+        if (response.ok) {
+          const configData = await response.json()
+          const records = parseDnsFromVercel(configData)
+          if (records.length > 0) {
+            setDnsRecords(records)
+            return
+          }
         }
+      } catch {
+        // CORS or network error - try serverless fallback
       }
-    } catch {
-      // CORS or network error - try serverless fallback
-    }
 
-    // Fallback: use our API endpoint
-    try {
+      // Fallback: use our API endpoint
       const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
