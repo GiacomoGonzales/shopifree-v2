@@ -860,6 +860,16 @@
       "deleted": "Coupon deleted",
       "error": "Error saving"
     },
+    "stats": {
+      "active": "Active",
+      "totalUses": "Total uses",
+      "totalDiscounted": "Total discounted"
+    },
+    "copied": "Copied!",
+    "expires": "Expires: {{date}}",
+    "noExpiry": "No expiration",
+    "share": "Share",
+    "shareMessage": "Use code {{code}} and get {{discount}} off at {{url}}",
     "proRequired": {
       "title": "Discount coupons",
       "description": "Create percentage or fixed amount coupons to attract more customers and increase your sales.",

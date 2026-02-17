@@ -861,6 +861,16 @@
       "deleted": "Cupón eliminado",
       "error": "Error al guardar"
     },
+    "stats": {
+      "active": "Activos",
+      "totalUses": "Usos totales",
+      "totalDiscounted": "Descuento otorgado"
+    },
+    "copied": "¡Copiado!",
+    "expires": "Vence: {{date}}",
+    "noExpiry": "Sin vencimiento",
+    "share": "Compartir",
+    "shareMessage": "Usa el codigo {{code}} y obtene {{discount}} de descuento en {{url}}",
     "proRequired": {
       "title": "Cupones de descuento",
       "description": "Crea cupones con porcentaje o monto fijo para atraer más clientes y aumentar tus ventas.",
