@@ -33,6 +33,32 @@ export default function Domain() {
           const storeWithId = { ...storeData, id: storeSnapshot.docs[0].id }
           setStore(storeWithId)
           setCustomDomain(storeData.customDomain || '')
+
+          // Auto-refresh DNS records from Vercel if domain is pending
+          if (storeData.customDomain && storeData.domainStatus !== 'verified') {
+            try {
+              const response = await fetch(`${API_URL}/domain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'verify',
+                  storeId: storeSnapshot.docs[0].id,
+                  domain: storeData.customDomain
+                })
+              })
+              const data = await response.json()
+              if (response.ok && data.dnsRecords) {
+                setStore(prev => prev ? {
+                  ...prev,
+                  domainStatus: data.status,
+                  domainVerification: data.verification,
+                  domainDnsRecords: data.dnsRecords
+                } : null)
+              }
+            } catch (err) {
+              console.error('Error auto-refreshing DNS records:', err)
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching store:', error)
