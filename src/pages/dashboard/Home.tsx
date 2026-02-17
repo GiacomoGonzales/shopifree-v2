@@ -208,22 +208,22 @@ export default function DashboardHome() {
 
       {/* Trial Banner */}
       {isOnTrial && !Capacitor.isNativePlatform() && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm">
+        <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-4 sm:p-5 border border-purple-200 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-400/20">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-amber-900">{t('home.trial.title')}</h3>
-                  <span className="px-2 py-0.5 bg-amber-200 text-amber-800 text-xs font-bold rounded-full">
+                  <h3 className="font-semibold text-purple-900">{t('home.trial.title')}</h3>
+                  <span className="px-2 py-0.5 bg-purple-200 text-purple-800 text-xs font-bold rounded-full">
                     {trialDaysLeft === 0 ? t('home.trial.lastDay') : t('home.trial.daysLeft', { days: trialDaysLeft })}
                   </span>
                 </div>
-                <p className="text-sm text-amber-700 mt-0.5">{t('home.trial.description')}</p>
+                <p className="text-sm text-purple-700 mt-0.5">{t('home.trial.description')}</p>
                 {trialDaysLeft <= 5 && (
                   <p className="text-sm font-semibold text-green-700 mt-1">{t('home.trial.discountOffer')}</p>
                 )}
@@ -231,15 +231,15 @@ export default function DashboardHome() {
             </div>
             <Link
               to={localePath('/dashboard/plan')}
-              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-semibold text-sm shadow-lg shadow-amber-500/20 text-center flex-shrink-0"
+              className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-xl hover:from-purple-600 hover:to-violet-700 transition-all font-semibold text-sm shadow-lg shadow-purple-500/20 text-center flex-shrink-0"
             >
               {trialDaysLeft <= 5 ? t('plan.discount.getDiscount') : t('home.trial.subscribe')}
             </Link>
           </div>
           {/* Progress bar */}
-          <div className="mt-3 h-1.5 bg-amber-200 rounded-full overflow-hidden">
+          <div className="mt-3 h-1.5 bg-purple-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all"
+              className="h-full bg-gradient-to-r from-purple-400 to-violet-500 rounded-full transition-all"
               style={{ width: `${Math.max(5, ((14 - trialDaysLeft) / 14) * 100)}%` }}
             />
           </div>
