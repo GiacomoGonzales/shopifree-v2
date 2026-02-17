@@ -775,7 +775,9 @@
     },
     "whatsapp": {
       "active": "Active",
-      "description": "Customers place orders via WhatsApp. Always available."
+      "description": "Customers place orders via WhatsApp. Always available.",
+      "toggleDesc": "Let customers place orders via WhatsApp.",
+      "onlyMethod": "Enable MercadoPago or Stripe to be able to disable WhatsApp."
     },
     "mercadopago": {
       "description": "Cards, cash and more. Peru, Mexico, Argentina, Colombia, Chile, Brazil.",

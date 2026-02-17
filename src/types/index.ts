@@ -174,6 +174,9 @@ export interface StoreLocation {
 }
 
 export interface StorePayments {
+  whatsapp?: {
+    enabled: boolean
+  }
   mercadopago?: {
     enabled: boolean
     publicKey?: string

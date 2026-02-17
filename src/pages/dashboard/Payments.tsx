@@ -24,6 +24,9 @@ export default function Payments() {
   const [mpAccessToken, setMpAccessToken] = useState('')
   const [mpSandbox, setMpSandbox] = useState(true)
 
+  // WhatsApp settings
+  const [whatsappEnabled, setWhatsappEnabled] = useState(true)
+
   // Stripe settings
   const [stripeEnabled, setStripeEnabled] = useState(false)
   const [stripePublishableKey, setStripePublishableKey] = useState('')
@@ -42,6 +45,8 @@ export default function Payments() {
         if (!storeSnapshot.empty) {
           const storeData = storeSnapshot.docs[0].data() as Store
           setStore({ ...storeData, id: storeSnapshot.docs[0].id })
+
+          setWhatsappEnabled(storeData.payments?.whatsapp?.enabled ?? true)
 
           if (storeData.payments?.mercadopago) {
             setMpEnabled(storeData.payments.mercadopago.enabled || false)
@@ -74,6 +79,9 @@ export default function Payments() {
     try {
       await updateDoc(doc(db, 'stores', store.id), {
         payments: {
+          whatsapp: {
+            enabled: whatsappEnabled
+          },
           mercadopago: {
             enabled: mpEnabled,
             publicKey: mpPublicKey || null,
@@ -136,13 +144,33 @@ export default function Payments() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-[#1e3a5f]">WhatsApp</h2>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{t('payments.whatsapp.active')}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-[#1e3a5f]">WhatsApp</h2>
+                    {whatsappEnabled && (
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{t('payments.whatsapp.active')}</span>
+                    )}
+                  </div>
+                  {(mpEnabled || stripeEnabled) && (
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={whatsappEnabled}
+                        onChange={(e) => setWhatsappEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
-                  {t('payments.whatsapp.description')}
+                  {(mpEnabled || stripeEnabled) ? t('payments.whatsapp.toggleDesc') : t('payments.whatsapp.description')}
                 </p>
+                {!(mpEnabled || stripeEnabled) && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    {t('payments.whatsapp.onlyMethod')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
