@@ -288,18 +288,9 @@ export default function Domain() {
                                   </div>
                                 ))
                               ) : (
-                                <>
-                                  <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
-                                    <span>A</span>
-                                    <span>@</span>
-                                    <span>76.76.21.21</span>
+                                <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                    <span colSpan={3} className="col-span-3 text-blue-600 italic">Haz clic en "Verificar DNS" para obtener los registros actualizados</span>
                                   </div>
-                                  <div className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
-                                    <span>CNAME</span>
-                                    <span>www</span>
-                                    <span className="break-all">cname.vercel-dns.com</span>
-                                  </div>
-                                </>
                               )}
                             </div>
                             <p className="text-xs text-blue-600 mt-2">
@@ -401,7 +392,7 @@ export default function Domain() {
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">3</span>
               <div>
                 <p className="font-medium text-[#1e3a5f]">Configura el DNS</p>
-                <p className="text-xs text-gray-500 mt-0.5">Agrega un registro A apuntando a <code className="bg-gray-100 px-1 rounded">76.76.21.21</code> y un CNAME para www</p>
+                <p className="text-xs text-gray-500 mt-0.5">Agrega los registros DNS que aparecen en la tabla (se obtienen automáticamente de Vercel)</p>
               </div>
             </li>
             <li className="flex gap-3">

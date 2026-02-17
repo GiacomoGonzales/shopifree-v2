@@ -202,7 +202,7 @@ async function handleAdd(_req: VercelRequest, res: VercelResponse, storeId: stri
 
     if (dnsRecords.length === 0) {
       dnsRecords = [
-        { type: 'A', name: '@', value: '76.76.21.21' },
+        { type: 'A', name: '@', value: '76.76.21.93' },
         { type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' }
       ]
     }
@@ -383,7 +383,7 @@ async function handleVerify(_req: VercelRequest, res: VercelResponse, storeId: s
 
     const dnsRecords: Array<{type: string, name: string, value: string}> = []
 
-    const aRecordValue = configData?.aValues?.[0] || '76.76.21.21'
+    const aRecordValue = configData?.aValues?.[0] || '76.76.21.93'
     dnsRecords.push({
       type: 'A',
       name: '@',
