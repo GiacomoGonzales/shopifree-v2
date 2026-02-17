@@ -21,27 +21,20 @@ export default function Domain() {
   const [dnsRecords, setDnsRecords] = useState<Array<{type: string, name: string, value: string}>>([])
   const [loadingDns, setLoadingDns] = useState(false)
 
-  const fetchDnsRecords = async (storeId: string, domain: string) => {
+  const fetchDnsRecords = async (domain: string) => {
     setLoadingDns(true)
     try {
-      const response = await fetch(`${API_URL}/domain`, {
+      const response = await fetch(`${API_URL}/dns-records`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify', storeId, domain })
+        body: JSON.stringify({ domain })
       })
       const data = await response.json()
-      if (response.ok) {
-        if (data.dnsRecords && data.dnsRecords.length > 0) {
-          setDnsRecords(data.dnsRecords)
-        }
-        setStore(prev => prev ? {
-          ...prev,
-          domainStatus: data.status,
-          domainVerification: data.verification,
-        } : null)
+      if (response.ok && data.dnsRecords && data.dnsRecords.length > 0) {
+        setDnsRecords(data.dnsRecords)
       }
     } catch (err) {
-      console.error('Error fetching DNS records from Vercel:', err)
+      console.error('Error fetching DNS records:', err)
     } finally {
       setLoadingDns(false)
     }
@@ -64,7 +57,7 @@ export default function Domain() {
 
           // Always fetch fresh DNS records from Vercel if domain exists and is not verified
           if (storeData.customDomain && storeData.domainStatus !== 'verified') {
-            fetchDnsRecords(storeSnapshot.docs[0].id, storeData.customDomain)
+            fetchDnsRecords(storeData.customDomain)
           }
         }
       } catch (error) {
@@ -120,12 +113,8 @@ export default function Domain() {
         domainStatus: 'pending_verification',
         domainVerification: data.verification,
       })
-      if (data.dnsRecords && data.dnsRecords.length > 0) {
-        setDnsRecords(data.dnsRecords)
-      } else {
-        // API add may not return fresh records, fetch them
-        fetchDnsRecords(store.id, cleanDomain)
-      }
+      // Fetch fresh DNS records from Vercel
+      fetchDnsRecords(cleanDomain)
       showToast('Dominio agregado correctamente', 'success')
     } catch (error) {
       console.error('Error saving domain:', error)
