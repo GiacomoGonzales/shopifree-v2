@@ -112,7 +112,7 @@ export default function ProductGrid({
       {layoutContent}
 
       {/* Showing count */}
-      {paginationType !== 'none' && totalItems > 0 && (
+      {totalItems > 0 && (
         <p className="text-center text-sm mt-4" style={{ color: theme.colors.textMuted }}>
           {t.showingProducts.replace('{{shown}}', String(displayedItems.length)).replace('{{total}}', String(totalItems))}
         </p>
