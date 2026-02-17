@@ -318,16 +318,29 @@ export default function Domain() {
                               </div>
                             ) : dnsRecords.length > 0 ? (
                               <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-blue-100 overflow-x-auto">
-                                <div className="grid grid-cols-3 gap-2 text-blue-700 min-w-[300px]">
+                                <div className="grid grid-cols-[60px_60px_1fr_36px] gap-2 text-blue-700 min-w-[300px]">
                                   <span className="font-semibold">Tipo</span>
                                   <span className="font-semibold">Nombre</span>
                                   <span className="font-semibold">Valor</span>
+                                  <span></span>
                                 </div>
                                 {dnsRecords.map((record, index) => (
-                                  <div key={index} className="grid grid-cols-3 gap-2 text-blue-900 min-w-[300px]">
+                                  <div key={index} className="grid grid-cols-[60px_60px_1fr_36px] gap-2 text-blue-900 min-w-[300px] items-center">
                                     <span>{record.type}</span>
                                     <span>{record.name}</span>
                                     <span className="break-all">{record.value}</span>
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(record.value)
+                                        showToast('Copiado', 'success')
+                                      }}
+                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                      title="Copiar valor"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
                                   </div>
                                 ))}
                               </div>
