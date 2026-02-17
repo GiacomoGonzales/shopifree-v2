@@ -15,6 +15,9 @@ if (!getApps().length) {
 
 const db = getFirestore()
 
+// API version - forces Vercel to rebuild this function
+const API_VERSION = '2026-02-17-v2'
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -430,6 +433,7 @@ async function handleVerify(_req: VercelRequest, res: VercelResponse, storeId: s
       verification: domainData.verification,
       dnsRecords: dnsRecords,
       configData: configData,
+      apiVersion: API_VERSION,
       message: isDnsConfigured
         ? 'Dominio verificado correctamente - DNS configurado'
         : 'Pendiente de configuración DNS'
