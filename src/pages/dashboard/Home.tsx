@@ -217,9 +217,9 @@ export default function DashboardHome() {
                 </svg>
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <h3 className="font-semibold text-purple-900">{t('home.trial.title')}</h3>
-                  <span className="px-2 py-0.5 bg-purple-200 text-purple-800 text-xs font-bold rounded-full">
+                  <span className="px-2 py-0.5 bg-purple-200 text-purple-800 text-xs font-bold rounded-full whitespace-nowrap">
                     {trialDaysLeft === 0 ? t('home.trial.lastDay') : t('home.trial.daysLeft', { days: trialDaysLeft })}
                   </span>
                 </div>
