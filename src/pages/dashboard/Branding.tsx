@@ -751,6 +751,111 @@ export default function Branding() {
             </div>
           )}
 
+          {/* Product Pagination */}
+          {store && (
+            <div className="border-t border-gray-100 pt-6 mt-6">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-medium text-[#1e3a5f]">{t('branding.pagination.title')}</h3>
+                {store.plan === 'free' && (
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 mb-6">{t('branding.pagination.subtitle')}</p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {([
+                  { id: 'none' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    </svg>
+                  )},
+                  { id: 'load-more' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l6.75-6.75M12 19.5l-6.75-6.75" />
+                    </svg>
+                  )},
+                  { id: 'infinite-scroll' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0 4.14-3.36 7.5-7.5 7.5S4.5 16.14 4.5 12 7.86 4.5 12 4.5s7.5 3.36 7.5 7.5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2.5 2.5" />
+                    </svg>
+                  )},
+                  { id: 'classic' as const, icon: (
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                    </svg>
+                  )},
+                ] as const).map((option) => {
+                  const isSelected = (store.themeSettings?.paginationType || 'none') === option.id
+                  const isPremium = option.id !== 'none'
+                  const isDisabled = isPremium && store.plan === 'free'
+                  const labelKey = option.id === 'load-more' ? 'loadMore' : option.id === 'infinite-scroll' ? 'infiniteScroll' : option.id
+                  const descKey = option.id === 'load-more' ? 'loadMoreDesc' : option.id === 'infinite-scroll' ? 'infiniteScrollDesc' : `${option.id}Desc`
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={async () => {
+                        if (isDisabled) return
+                        try {
+                          await updateDoc(doc(db, 'stores', store.id), {
+                            'themeSettings.paginationType': option.id,
+                            updatedAt: new Date()
+                          })
+                          setStore({ ...store, themeSettings: { ...store.themeSettings, paginationType: option.id } })
+                          showToast(t('branding.toast.saved'), 'success')
+                        } catch {
+                          showToast(t('branding.toast.error'), 'error')
+                        }
+                      }}
+                      className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? 'border-[#2d6cb5] bg-[#f0f7ff]'
+                          : isDisabled
+                            ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                      }`}
+                    >
+                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                        {option.icon}
+                      </div>
+                      <div className="font-medium text-sm text-[#1e3a5f]">
+                        {t(`branding.pagination.${labelKey}`)}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {t(`branding.pagination.${descKey}`)}
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Upgrade prompt for free plan */}
+              {store.plan === 'free' && (
+                <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
+                  <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <p className="text-sm text-[#1e3a5f]">
+                    {t('branding.pagination.upgradeMessage')}{' '}
+                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                      {t('branding.pagination.viewPlans')}
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Visual Effects */}
           {store && (
             <div className="border-t border-gray-100 pt-6 mt-6">

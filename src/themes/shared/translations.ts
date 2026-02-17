@@ -173,6 +173,12 @@ export interface ThemeTranslations {
   couponRemove: string
   discount: string
 
+  // Pagination
+  loadMore: string
+  showingProducts: string
+  previousPage: string
+  nextPage: string
+
   // WhatsApp message parts
   waGreeting: string
   waOrderNumber: string
@@ -360,6 +366,12 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     couponRemove: 'Quitar',
     discount: 'Descuento',
 
+    // Pagination
+    loadMore: 'Ver mas productos',
+    showingProducts: 'Mostrando {{shown}} de {{total}} productos',
+    previousPage: 'Anterior',
+    nextPage: 'Siguiente',
+
     // WhatsApp message parts
     waGreeting: 'Hola! Acabo de realizar un pedido',
     waOrderNumber: 'Pedido',
@@ -546,6 +558,12 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     couponRemove: 'Remove',
     discount: 'Discount',
 
+    // Pagination
+    loadMore: 'Load more products',
+    showingProducts: 'Showing {{shown}} of {{total}} products',
+    previousPage: 'Previous',
+    nextPage: 'Next',
+
     // WhatsApp message parts
     waGreeting: 'Hi! I just placed an order',
     waOrderNumber: 'Order',
@@ -731,6 +749,12 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     couponMinAmount: 'Pedido minimo nao alcancado',
     couponRemove: 'Remover',
     discount: 'Desconto',
+
+    // Pagination
+    loadMore: 'Ver mais produtos',
+    showingProducts: 'Mostrando {{shown}} de {{total}} produtos',
+    previousPage: 'Anterior',
+    nextPage: 'Proximo',
 
     // WhatsApp message parts
     waGreeting: 'Ola! Acabei de fazer um pedido',

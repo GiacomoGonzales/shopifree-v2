@@ -530,6 +530,20 @@
       "upgradeMessage": "Mejora tu plan para acceder a más diseños.",
       "viewPlans": "Ver planes"
     },
+    "pagination": {
+      "title": "Paginación de productos",
+      "subtitle": "Elige cómo se cargan los productos cuando hay muchos.",
+      "none": "Sin paginación",
+      "noneDesc": "Muestra todos los productos",
+      "loadMore": "Cargar más",
+      "loadMoreDesc": "Botón para cargar más",
+      "infiniteScroll": "Scroll infinito",
+      "infiniteScrollDesc": "Carga automática al scroll",
+      "classic": "Páginas",
+      "classicDesc": "Navegación numerada",
+      "upgradeMessage": "Mejora tu plan para acceder a más opciones de paginación.",
+      "viewPlans": "Ver planes"
+    },
     "effects": {
       "title": "Efectos visuales",
       "subtitle": "Agrega animaciones y efectos premium a tu catálogo.",

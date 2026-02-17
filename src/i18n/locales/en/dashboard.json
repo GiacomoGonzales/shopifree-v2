@@ -529,6 +529,20 @@
       "upgradeMessage": "Upgrade your plan for more layouts.",
       "viewPlans": "View plans"
     },
+    "pagination": {
+      "title": "Product pagination",
+      "subtitle": "Choose how products load when there are many.",
+      "none": "No pagination",
+      "noneDesc": "Show all products",
+      "loadMore": "Load more",
+      "loadMoreDesc": "Button to load more",
+      "infiniteScroll": "Infinite scroll",
+      "infiniteScrollDesc": "Auto-load on scroll",
+      "classic": "Pages",
+      "classicDesc": "Numbered navigation",
+      "upgradeMessage": "Upgrade your plan for more pagination options.",
+      "viewPlans": "View plans"
+    },
     "effects": {
       "title": "Visual effects",
       "subtitle": "Add premium animations and effects to your catalog.",

@@ -90,6 +90,7 @@ export interface Store {
     scrollReveal?: boolean
     imageSwapOnHover?: boolean
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
+    paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
   }
 
   // === PAGOS ===

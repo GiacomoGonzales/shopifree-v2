@@ -51,6 +51,7 @@ export interface ThemeConfig {
     scrollReveal?: boolean    // Animate products on scroll into viewport
     imageSwapOnHover?: boolean // Show second image on card hover
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
+    paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
   }
 }
 
@@ -83,7 +84,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   // Merge store-level effect overrides into theme
   const mergedTheme = useMemo(() => {
     const s = store.themeSettings
-    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined) return theme
+    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined && s?.paginationType === undefined) return theme
     return {
       ...theme,
       effects: {
@@ -91,6 +92,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(s?.scrollReveal !== undefined && { scrollReveal: s.scrollReveal }),
         ...(s?.imageSwapOnHover !== undefined && { imageSwapOnHover: s.imageSwapOnHover }),
         ...(s?.productLayout !== undefined && { productLayout: s.productLayout }),
+        ...(s?.paginationType !== undefined && { paginationType: s.paginationType }),
       }
     }
   }, [theme, store.themeSettings])
