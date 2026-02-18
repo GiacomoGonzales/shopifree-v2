@@ -3,7 +3,6 @@ import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
-import { useBusinessType } from '../../hooks/useBusinessType'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { getCatalogProducts } from './catalogProducts'
 import type { CartItemExtras } from './ProductDrawer'
@@ -17,7 +16,6 @@ interface ProductReelsProps {
 
 export default function ProductReels({ initialProduct, onClose, onAddToCart, onOpenDrawer }: ProductReelsProps) {
   const { theme, currency, language } = useTheme()
-  const { features } = useBusinessType()
   const t = getThemeTranslations(language)
 
   const products = useMemo(() => {
@@ -33,22 +31,17 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Swipe state
-  const [deltaY, setDeltaY] = useState(0)
-  const [isSwiping, setIsSwiping] = useState(false)
+  // Swipe / transition state
+  const [offsetY, setOffsetY] = useState(0)        // px offset during drag or animation
+  const [isAnimating, setIsAnimating] = useState(false) // CSS transition active
+  const isSwiping = useRef(false)
   const touchStartY = useRef(0)
   const touchStartTime = useRef(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const pendingIndex = useRef<number | null>(null)  // index to set after animation
 
   const currentProduct = products[currentIndex]
   const prevProduct = currentIndex > 0 ? products[currentIndex - 1] : null
   const nextProduct = currentIndex < products.length - 1 ? products[currentIndex + 1] : null
-
-  // Check if product requires selection (variants/modifiers)
-  const requiresSelection = (product: Product) => {
-    return (features.showModifiers && (product.modifierGroups?.length ?? 0) > 0) ||
-           (features.showVariants && (product.variations?.length ?? 0) > 0)
-  }
 
   // Lock body scroll
   useEffect(() => {
@@ -66,77 +59,110 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     }
   }, [])
 
-  // Preload next image
+  // Preload adjacent images
   useEffect(() => {
-    if (nextProduct?.image) {
-      const img = new Image()
-      img.src = optimizeImage(nextProduct.image, 'gallery')
-    }
-  }, [nextProduct])
+    const toPreload = [nextProduct, prevProduct].filter(Boolean) as Product[]
+    toPreload.forEach(p => {
+      const url = p.image || p.images?.[0]
+      if (url) {
+        const img = new Image()
+        img.src = optimizeImage(url, 'gallery')
+      }
+    })
+  }, [nextProduct, prevProduct])
 
-  // Keyboard navigation
+  // After CSS transition ends, commit the index change
+  const handleTransitionEnd = useCallback(() => {
+    if (pendingIndex.current !== null) {
+      setCurrentIndex(pendingIndex.current)
+      pendingIndex.current = null
+    }
+    setOffsetY(0)
+    setIsAnimating(false)
+  }, [])
+
+  // Animate to a target slide
+  const animateTo = useCallback((targetIndex: number) => {
+    if (targetIndex === currentIndex) {
+      // Snap back
+      setIsAnimating(true)
+      setOffsetY(0)
+      return
+    }
+    const direction = targetIndex > currentIndex ? -1 : 1 // swipe up = next (negative)
+    pendingIndex.current = targetIndex
+    setIsAnimating(true)
+    setOffsetY(direction * window.innerHeight)
+  }, [currentIndex])
+
+  // Navigation helpers
+  const goToNext = useCallback(() => {
+    if (isAnimating) return
+    if (currentIndex < products.length - 1) {
+      animateTo(currentIndex + 1)
+    }
+  }, [currentIndex, products.length, isAnimating, animateTo])
+
+  const goToPrev = useCallback(() => {
+    if (isAnimating) return
+    if (currentIndex > 0) {
+      animateTo(currentIndex - 1)
+    }
+  }, [currentIndex, isAnimating, animateTo])
+
+  // Keyboard
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        goToPrev()
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        goToNext()
-      }
+      if (e.key === 'Escape') onClose()
+      else if (e.key === 'ArrowUp') { e.preventDefault(); goToPrev() }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); goToNext() }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentIndex, products.length])
-
-  const goToNext = useCallback(() => {
-    if (currentIndex < products.length - 1) {
-      setCurrentIndex(prev => prev + 1)
-    }
-  }, [currentIndex, products.length])
-
-  const goToPrev = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1)
-    }
-  }, [currentIndex])
+  }, [goToNext, goToPrev, onClose])
 
   // Touch handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (isAnimating) return
+    isSwiping.current = true
     touchStartY.current = e.touches[0].clientY
     touchStartTime.current = Date.now()
-    setIsSwiping(true)
-  }, [])
+  }, [isAnimating])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isSwiping) return
-    const currentY = e.touches[0].clientY
-    const dy = currentY - touchStartY.current
+    if (!isSwiping.current) return
+    const dy = e.touches[0].clientY - touchStartY.current
 
-    // Limit overscroll at boundaries
+    // Rubber band at boundaries
     if ((currentIndex === 0 && dy > 0) || (currentIndex === products.length - 1 && dy < 0)) {
-      setDeltaY(dy * 0.3) // Rubber band effect
+      setOffsetY(dy * 0.25)
     } else {
-      setDeltaY(dy)
+      setOffsetY(dy)
     }
-  }, [isSwiping, currentIndex, products.length])
+  }, [currentIndex, products.length])
 
   const handleTouchEnd = useCallback(() => {
-    setIsSwiping(false)
-    const elapsed = Date.now() - touchStartTime.current
-    const velocity = Math.abs(deltaY) / elapsed
+    if (!isSwiping.current) return
+    isSwiping.current = false
 
-    if (Math.abs(deltaY) > 80 || velocity > 0.5) {
-      if (deltaY < 0) {
-        goToNext()
-      } else {
-        goToPrev()
+    const elapsed = Date.now() - touchStartTime.current
+    const velocity = Math.abs(offsetY) / Math.max(elapsed, 1)
+    const threshold = window.innerHeight * 0.15
+
+    if ((Math.abs(offsetY) > threshold || velocity > 0.4)) {
+      if (offsetY < 0 && currentIndex < products.length - 1) {
+        animateTo(currentIndex + 1)
+        return
+      }
+      if (offsetY > 0 && currentIndex > 0) {
+        animateTo(currentIndex - 1)
+        return
       }
     }
-    setDeltaY(0)
-  }, [deltaY, goToNext, goToPrev])
+    // Snap back
+    setIsAnimating(true)
+    setOffsetY(0)
+  }, [offsetY, currentIndex, products.length, animateTo])
 
   // Toast auto-hide
   useEffect(() => {
@@ -152,34 +178,28 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     setToast(t.addedToCart)
   }
 
-  const handleViewDetails = (product: Product) => {
-    if (onOpenDrawer) {
-      onOpenDrawer(product)
-    }
-  }
-
   const getProductImage = (product: Product) => {
     return product.image || (product.images?.length ? product.images[0] : '')
   }
 
-  const renderSlide = (product: Product, offset: number) => {
+  const renderSlide = (product: Product, position: 'prev' | 'current' | 'next') => {
     const hasDiscount = product.comparePrice && product.comparePrice > product.price
     const discountPercent = hasDiscount
       ? Math.round((1 - product.price / product.comparePrice!) * 100)
       : 0
     const imageUrl = getProductImage(product)
+    const yOffset = position === 'prev' ? '-100%' : position === 'next' ? '100%' : '0%'
 
     return (
       <div
-        key={product.id}
-        className="absolute inset-0 flex flex-col"
+        key={`${product.id}-${position}`}
+        className="absolute inset-0"
         style={{
-          transform: `translateY(${offset * 100}%)`,
-          willChange: 'transform',
+          transform: `translateY(${yOffset})`,
         }}
       >
-        {/* Image area */}
-        <div className="relative flex-1 overflow-hidden bg-black">
+        {/* Full-screen image */}
+        <div className="relative w-full h-full overflow-hidden bg-black">
           {imageUrl ? (
             <img
               src={optimizeImage(imageUrl, 'gallery')}
@@ -195,29 +215,28 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
             </div>
           )}
 
-          {/* Gradient overlay */}
+          {/* Bottom gradient */}
           <div
             className="absolute bottom-0 left-0 right-0 pointer-events-none"
             style={{
-              height: '55%',
-              background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+              height: '50%',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
             }}
           />
 
           {/* Discount badge */}
           {hasDiscount && (
-            <div className="absolute top-16 left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white">
+            <div className="absolute top-16 left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white shadow-lg">
               -{discountPercent}%
             </div>
           )}
 
-          {/* Product info overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
-            <h2 className="text-xl font-bold text-white mb-1 drop-shadow-lg leading-tight">
+          {/* Product info */}
+          <div className="absolute bottom-0 left-0 right-0 p-5 pb-7">
+            <h2 className="text-xl font-bold text-white mb-1.5 drop-shadow-lg leading-tight">
               {product.name}
             </h2>
 
-            {/* Price */}
             <div className="flex items-baseline gap-2 mb-2">
               <span className="text-2xl font-bold text-white drop-shadow-lg">
                 {formatPrice(product.price, currency)}
@@ -229,50 +248,36 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
               )}
             </div>
 
-            {/* Short description */}
             {(product.shortDescription || product.description) && (
-              <p className="text-sm text-white/80 line-clamp-2 mb-4 drop-shadow">
+              <p className="text-sm text-white/75 line-clamp-2 mb-4 leading-relaxed">
                 {product.shortDescription || product.description}
               </p>
             )}
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              {!requiresSelection(product) ? (
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium text-sm transition-all active:scale-[0.97]"
-                  style={{
-                    backgroundColor: theme.colors.primary,
-                    color: theme.colors.textInverted,
-                  }}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                  </svg>
-                  {t.addToCart}
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium text-sm transition-all active:scale-[0.97]"
-                  style={{
-                    backgroundColor: theme.colors.primary,
-                    color: theme.colors.textInverted,
-                  }}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                  </svg>
-                  {t.addToCart}
-                </button>
-              )}
               <button
-                onClick={() => handleViewDetails(product)}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium text-sm transition-all active:scale-[0.97] backdrop-blur-sm"
+                onClick={() => handleAddToCart(product)}
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
                 style={{
-                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.textInverted,
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                {t.addToCart}
+              </button>
+              <button
+                onClick={() => onOpenDrawer?.(product)}
+                className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
                   color: '#ffffff',
+                  border: '1px solid rgba(255,255,255,0.2)',
                 }}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -289,57 +294,74 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   }
 
   return (
-    <div className="fixed inset-0 z-[70] animate-fadeIn" style={{ backgroundColor: '#000' }}>
-      {/* Container for swipe */}
+    <div className="fixed inset-0 z-[70]" style={{ backgroundColor: '#000' }}>
+      {/* Swipeable area */}
       <div
-        ref={containerRef}
         className="relative w-full h-full mx-auto overflow-hidden"
         style={{ maxWidth: '480px' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Slides wrapper */}
+        {/* All slides move together */}
         <div
           className="relative w-full h-full"
           style={{
-            transform: `translateY(${deltaY}px)`,
-            transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+            transform: `translateY(${offsetY}px)`,
+            transition: isAnimating ? 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
             willChange: 'transform',
           }}
+          onTransitionEnd={handleTransitionEnd}
         >
-          {prevProduct && renderSlide(prevProduct, -1)}
-          {renderSlide(currentProduct, 0)}
-          {nextProduct && renderSlide(nextProduct, 1)}
+          {prevProduct && renderSlide(prevProduct, 'prev')}
+          {renderSlide(currentProduct, 'current')}
+          {nextProduct && renderSlide(nextProduct, 'next')}
         </div>
       </div>
 
-      {/* Header overlay */}
-      <div className="fixed top-0 left-0 right-0 z-[71] flex items-center justify-between p-4" style={{ maxWidth: '480px', margin: '0 auto' }}>
-        {/* Close button */}
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-[71] flex items-center justify-between p-4 pointer-events-none" style={{ maxWidth: '480px', margin: '0 auto' }}>
         <button
           onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+          className="pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        {/* Counter */}
-        <div className="px-3 py-1.5 rounded-full text-sm font-medium text-white backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
+        <div className="pointer-events-none px-3 py-1.5 rounded-full text-xs font-semibold text-white/90 tracking-wide"
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        >
           {t.productCounter.replace('{{current}}', String(currentIndex + 1)).replace('{{total}}', String(products.length))}
         </div>
       </div>
 
+      {/* Progress dots (right side, vertical) */}
+      {products.length > 1 && products.length <= 20 && (
+        <div className="fixed right-2 top-1/2 -translate-y-1/2 z-[71] flex flex-col gap-1 pointer-events-none" style={{ maxWidth: '480px' }}>
+          {products.map((_, i) => (
+            <div
+              key={i}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === currentIndex ? '3px' : '3px',
+                height: i === currentIndex ? '16px' : '6px',
+                backgroundColor: i === currentIndex ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Desktop arrows */}
-      <div className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-4 z-[71] flex-col gap-3" style={{ maxWidth: '480px' }}>
+      <div className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-[71] flex-col gap-2">
         <button
           onClick={goToPrev}
-          disabled={currentIndex === 0}
-          className="w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all disabled:opacity-30"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+          disabled={currentIndex === 0 || isAnimating}
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all disabled:opacity-20"
+          style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
@@ -347,9 +369,9 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         </button>
         <button
           onClick={goToNext}
-          disabled={currentIndex === products.length - 1}
-          className="w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all disabled:opacity-30"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+          disabled={currentIndex === products.length - 1 || isAnimating}
+          className="w-10 h-10 flex items-center justify-center rounded-full transition-all disabled:opacity-20"
+          style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -359,8 +381,8 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[72] px-5 py-2.5 rounded-full text-sm font-medium text-white backdrop-blur-md animate-slideUp"
-          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[72] px-5 py-2.5 rounded-full text-sm font-medium text-white animate-slideUp"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
         >
           {toast}
         </div>
