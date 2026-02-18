@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
@@ -39,8 +39,6 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const isSwiping = useRef(false)
   const isAnimatingRef = useRef(false)
   const pendingIndex = useRef<number | null>(null)
-  const [, forceRender] = useState(0) // only to re-render after index change
-
   const currentProduct = products[currentIndex]
   const prevProduct = currentIndex > 0 ? products[currentIndex - 1] : null
   const nextProduct = currentIndex < products.length - 1 ? products[currentIndex + 1] : null
@@ -81,17 +79,31 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     })
   }, [nextProduct, prevProduct])
 
-  // After CSS transition ends, commit the index change
+  // After CSS transition ends, commit the index change (but don't reset transform yet)
+  const needsTransformReset = useRef(false)
+
   const handleTransitionEnd = useCallback(() => {
     if (pendingIndex.current !== null) {
+      needsTransformReset.current = true
       setCurrentIndex(pendingIndex.current)
       pendingIndex.current = null
+    } else {
+      // Snap-back case (no index change), safe to reset immediately
+      dragOffsetY.current = 0
+      isAnimatingRef.current = false
+      applyTransform(0, false)
     }
-    dragOffsetY.current = 0
-    isAnimatingRef.current = false
-    applyTransform(0, false)
-    forceRender(n => n + 1)
   }, [applyTransform])
+
+  // Reset transform AFTER React re-renders with new slides (before browser paint)
+  useLayoutEffect(() => {
+    if (needsTransformReset.current) {
+      needsTransformReset.current = false
+      dragOffsetY.current = 0
+      isAnimatingRef.current = false
+      applyTransform(0, false)
+    }
+  }, [currentIndex, applyTransform])
 
   // Animate to a target slide
   const animateTo = useCallback((targetIndex: number) => {
