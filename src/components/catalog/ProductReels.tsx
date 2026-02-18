@@ -31,17 +31,27 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Swipe / transition state
-  const [offsetY, setOffsetY] = useState(0)        // px offset during drag or animation
-  const [isAnimating, setIsAnimating] = useState(false) // CSS transition active
-  const isSwiping = useRef(false)
+  // Direct DOM refs for 60fps drag (bypass React rendering)
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef(0)
   const touchStartTime = useRef(0)
-  const pendingIndex = useRef<number | null>(null)  // index to set after animation
+  const dragOffsetY = useRef(0)     // current drag offset in px
+  const isSwiping = useRef(false)
+  const isAnimatingRef = useRef(false)
+  const pendingIndex = useRef<number | null>(null)
+  const [, forceRender] = useState(0) // only to re-render after index change
 
   const currentProduct = products[currentIndex]
   const prevProduct = currentIndex > 0 ? products[currentIndex - 1] : null
   const nextProduct = currentIndex < products.length - 1 ? products[currentIndex + 1] : null
+
+  // Apply transform directly to DOM (no React re-render)
+  const applyTransform = useCallback((y: number, withTransition: boolean) => {
+    const el = wrapperRef.current
+    if (!el) return
+    el.style.transition = withTransition ? 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)' : 'none'
+    el.style.transform = `translateY(${y}px)`
+  }, [])
 
   // Lock body scroll
   useEffect(() => {
@@ -77,38 +87,38 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       setCurrentIndex(pendingIndex.current)
       pendingIndex.current = null
     }
-    setOffsetY(0)
-    setIsAnimating(false)
-  }, [])
+    dragOffsetY.current = 0
+    isAnimatingRef.current = false
+    applyTransform(0, false)
+    forceRender(n => n + 1)
+  }, [applyTransform])
 
   // Animate to a target slide
   const animateTo = useCallback((targetIndex: number) => {
+    isAnimatingRef.current = true
     if (targetIndex === currentIndex) {
-      // Snap back
-      setIsAnimating(true)
-      setOffsetY(0)
+      applyTransform(0, true)
       return
     }
-    const direction = targetIndex > currentIndex ? -1 : 1 // swipe up = next (negative)
+    const direction = targetIndex > currentIndex ? -1 : 1
     pendingIndex.current = targetIndex
-    setIsAnimating(true)
-    setOffsetY(direction * window.innerHeight)
-  }, [currentIndex])
+    applyTransform(direction * window.innerHeight, true)
+  }, [currentIndex, applyTransform])
 
   // Navigation helpers
   const goToNext = useCallback(() => {
-    if (isAnimating) return
+    if (isAnimatingRef.current) return
     if (currentIndex < products.length - 1) {
       animateTo(currentIndex + 1)
     }
-  }, [currentIndex, products.length, isAnimating, animateTo])
+  }, [currentIndex, products.length, animateTo])
 
   const goToPrev = useCallback(() => {
-    if (isAnimating) return
+    if (isAnimatingRef.current) return
     if (currentIndex > 0) {
       animateTo(currentIndex - 1)
     }
-  }, [currentIndex, isAnimating, animateTo])
+  }, [currentIndex, animateTo])
 
   // Keyboard
   useEffect(() => {
@@ -121,13 +131,15 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [goToNext, goToPrev, onClose])
 
-  // Touch handlers
+  // Touch handlers — direct DOM manipulation, zero re-renders during drag
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isAnimating) return
+    if (isAnimatingRef.current) return
     isSwiping.current = true
     touchStartY.current = e.touches[0].clientY
     touchStartTime.current = Date.now()
-  }, [isAnimating])
+    dragOffsetY.current = 0
+    applyTransform(0, false)
+  }, [applyTransform])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isSwiping.current) return
@@ -135,34 +147,36 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
     // Rubber band at boundaries
     if ((currentIndex === 0 && dy > 0) || (currentIndex === products.length - 1 && dy < 0)) {
-      setOffsetY(dy * 0.25)
+      dragOffsetY.current = dy * 0.25
     } else {
-      setOffsetY(dy)
+      dragOffsetY.current = dy
     }
-  }, [currentIndex, products.length])
+    applyTransform(dragOffsetY.current, false)
+  }, [currentIndex, products.length, applyTransform])
 
   const handleTouchEnd = useCallback(() => {
     if (!isSwiping.current) return
     isSwiping.current = false
 
+    const dy = dragOffsetY.current
     const elapsed = Date.now() - touchStartTime.current
-    const velocity = Math.abs(offsetY) / Math.max(elapsed, 1)
+    const velocity = Math.abs(dy) / Math.max(elapsed, 1)
     const threshold = window.innerHeight * 0.15
 
-    if ((Math.abs(offsetY) > threshold || velocity > 0.4)) {
-      if (offsetY < 0 && currentIndex < products.length - 1) {
+    if (Math.abs(dy) > threshold || velocity > 0.4) {
+      if (dy < 0 && currentIndex < products.length - 1) {
         animateTo(currentIndex + 1)
         return
       }
-      if (offsetY > 0 && currentIndex > 0) {
+      if (dy > 0 && currentIndex > 0) {
         animateTo(currentIndex - 1)
         return
       }
     }
     // Snap back
-    setIsAnimating(true)
-    setOffsetY(0)
-  }, [offsetY, currentIndex, products.length, animateTo])
+    isAnimatingRef.current = true
+    applyTransform(0, true)
+  }, [currentIndex, products.length, animateTo, applyTransform])
 
   // Toast auto-hide
   useEffect(() => {
@@ -303,14 +317,11 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* All slides move together */}
+        {/* All slides move together — transform set via ref for 60fps */}
         <div
+          ref={wrapperRef}
           className="relative w-full h-full"
-          style={{
-            transform: `translateY(${offsetY}px)`,
-            transition: isAnimating ? 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
-            willChange: 'transform',
-          }}
+          style={{ willChange: 'transform' }}
           onTransitionEnd={handleTransitionEnd}
         >
           {prevProduct && renderSlide(prevProduct, 'prev')}
@@ -359,7 +370,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       <div className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-[71] flex-col gap-2">
         <button
           onClick={goToPrev}
-          disabled={currentIndex === 0 || isAnimating}
+          disabled={currentIndex === 0}
           className="w-10 h-10 flex items-center justify-center rounded-full transition-all disabled:opacity-20"
           style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
         >
@@ -369,7 +380,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         </button>
         <button
           onClick={goToNext}
-          disabled={currentIndex === products.length - 1 || isAnimating}
+          disabled={currentIndex === products.length - 1}
           className="w-10 h-10 flex items-center justify-center rounded-full transition-all disabled:opacity-20"
           style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
         >
