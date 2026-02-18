@@ -1360,13 +1360,13 @@ export default function Branding() {
                               type="color"
                               value={flashSale.backgroundColor || '#dc2626'}
                               onChange={(e) => setFlashSale({ ...flashSale, backgroundColor: e.target.value })}
-                              className="w-10 h-10 rounded-lg cursor-pointer border-0"
+                              className="w-10 h-10 rounded-lg cursor-pointer border-0 flex-shrink-0"
                             />
                             <input
                               type="text"
                               value={flashSale.backgroundColor || '#dc2626'}
                               onChange={(e) => setFlashSale({ ...flashSale, backgroundColor: e.target.value })}
-                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
                             />
                           </div>
                         </div>
@@ -1377,13 +1377,13 @@ export default function Branding() {
                               type="color"
                               value={flashSale.textColor || '#ffffff'}
                               onChange={(e) => setFlashSale({ ...flashSale, textColor: e.target.value })}
-                              className="w-10 h-10 rounded-lg cursor-pointer border-0"
+                              className="w-10 h-10 rounded-lg cursor-pointer border-0 flex-shrink-0"
                             />
                             <input
                               type="text"
                               value={flashSale.textColor || '#ffffff'}
                               onChange={(e) => setFlashSale({ ...flashSale, textColor: e.target.value })}
-                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
                             />
                           </div>
                         </div>
