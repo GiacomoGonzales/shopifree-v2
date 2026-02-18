@@ -149,52 +149,83 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [goToNext, goToPrev, onClose])
 
-  // Touch handlers — direct DOM manipulation, zero re-renders during drag
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isAnimatingRef.current) return
-    isSwiping.current = true
-    touchStartY.current = e.touches[0].clientY
-    touchStartTime.current = Date.now()
-    dragOffsetY.current = 0
-    applyTransform(0, false)
+  // Refs for values needed in native touch handlers (avoid stale closures)
+  const currentIndexRef = useRef(currentIndex)
+  currentIndexRef.current = currentIndex
+  const productsLengthRef = useRef(products.length)
+  productsLengthRef.current = products.length
+  const animateToRef = useRef(animateTo)
+  animateToRef.current = animateTo
+
+  // Container ref for native event listeners
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Native touch handlers — { passive: false } allows preventDefault to block pull-to-refresh
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (isAnimatingRef.current) return
+      isSwiping.current = true
+      touchStartY.current = e.touches[0].clientY
+      touchStartTime.current = Date.now()
+      dragOffsetY.current = 0
+      applyTransform(0, false)
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isSwiping.current) return
+      e.preventDefault() // Block browser pull-to-refresh / overscroll
+      const dy = e.touches[0].clientY - touchStartY.current
+      const idx = currentIndexRef.current
+      const len = productsLengthRef.current
+
+      // Rubber band at boundaries
+      if ((idx === 0 && dy > 0) || (idx === len - 1 && dy < 0)) {
+        dragOffsetY.current = dy * 0.25
+      } else {
+        dragOffsetY.current = dy
+      }
+      applyTransform(dragOffsetY.current, false)
+    }
+
+    const onTouchEnd = () => {
+      if (!isSwiping.current) return
+      isSwiping.current = false
+
+      const dy = dragOffsetY.current
+      const elapsed = Date.now() - touchStartTime.current
+      const velocity = Math.abs(dy) / Math.max(elapsed, 1)
+      const threshold = window.innerHeight * 0.15
+      const idx = currentIndexRef.current
+      const len = productsLengthRef.current
+
+      if (Math.abs(dy) > threshold || velocity > 0.4) {
+        if (dy < 0 && idx < len - 1) {
+          animateToRef.current(idx + 1)
+          return
+        }
+        if (dy > 0 && idx > 0) {
+          animateToRef.current(idx - 1)
+          return
+        }
+      }
+      // Snap back
+      isAnimatingRef.current = true
+      applyTransform(0, true)
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
   }, [applyTransform])
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isSwiping.current) return
-    const dy = e.touches[0].clientY - touchStartY.current
-
-    // Rubber band at boundaries
-    if ((currentIndex === 0 && dy > 0) || (currentIndex === products.length - 1 && dy < 0)) {
-      dragOffsetY.current = dy * 0.25
-    } else {
-      dragOffsetY.current = dy
-    }
-    applyTransform(dragOffsetY.current, false)
-  }, [currentIndex, products.length, applyTransform])
-
-  const handleTouchEnd = useCallback(() => {
-    if (!isSwiping.current) return
-    isSwiping.current = false
-
-    const dy = dragOffsetY.current
-    const elapsed = Date.now() - touchStartTime.current
-    const velocity = Math.abs(dy) / Math.max(elapsed, 1)
-    const threshold = window.innerHeight * 0.15
-
-    if (Math.abs(dy) > threshold || velocity > 0.4) {
-      if (dy < 0 && currentIndex < products.length - 1) {
-        animateTo(currentIndex + 1)
-        return
-      }
-      if (dy > 0 && currentIndex > 0) {
-        animateTo(currentIndex - 1)
-        return
-      }
-    }
-    // Snap back
-    isAnimatingRef.current = true
-    applyTransform(0, true)
-  }, [currentIndex, products.length, animateTo, applyTransform])
 
   // Toast auto-hide
   useEffect(() => {
@@ -329,11 +360,9 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     <div className="fixed inset-0 z-[70]" style={{ backgroundColor: '#000' }}>
       {/* Swipeable area */}
       <div
+        ref={containerRef}
         className="relative w-full h-full mx-auto overflow-hidden"
-        style={{ maxWidth: '480px' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        style={{ maxWidth: '480px', touchAction: 'none' }}
       >
         {/* All slides move together — transform set via ref for 60fps */}
         <div
