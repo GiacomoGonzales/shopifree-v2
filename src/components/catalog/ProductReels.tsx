@@ -41,12 +41,17 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const holdTriggeredRef = useRef(false)
 
   // Direct DOM refs for 60fps drag (bypass React rendering)
+  const rootRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const touchStartTime = useRef(0)
-  const dragOffsetY = useRef(0)     // current drag offset in px
+  const dragOffsetX = useRef(0)     // horizontal drag offset in px
+  const dragOffsetY = useRef(0)     // vertical drag offset in px
+  const swipeAxis = useRef<'x' | 'y' | null>(null)
   const isSwiping = useRef(false)
   const isAnimatingRef = useRef(false)
+  const isDismissing = useRef(false)
   const pendingIndex = useRef<number | null>(null)
   const currentProduct = products[currentIndex]
   const prevProduct = currentIndex > 0 ? products[currentIndex - 1] : null
@@ -179,6 +184,8 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   productsLengthRef.current = products.length
   const animateToRef = useRef(animateTo)
   animateToRef.current = animateTo
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   // Container ref for native event listeners
   const containerRef = useRef<HTMLDivElement>(null)
@@ -195,12 +202,44 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       }
     }
 
+    // Apply horizontal dismiss transform directly to root DOM element
+    const applyDismissTransform = (dx: number, withTransition: boolean) => {
+      const root = rootRef.current
+      if (!root) return
+      const progress = Math.min(Math.abs(dx) / window.innerWidth, 1)
+      const scale = 1 - progress * 0.08
+      const opacity = 1 - progress * 0.5
+      const radius = progress * 24
+      root.style.transition = withTransition
+        ? 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, border-radius 0.35s ease'
+        : 'none'
+      root.style.transform = dx === 0 && !withTransition ? '' : `translateX(${dx}px) scale(${scale})`
+      root.style.opacity = String(opacity)
+      root.style.borderRadius = `${radius}px`
+    }
+
+    const resetDismissTransform = (withTransition: boolean) => {
+      const root = rootRef.current
+      if (!root) return
+      if (withTransition) {
+        root.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, border-radius 0.35s ease'
+      } else {
+        root.style.transition = 'none'
+      }
+      root.style.transform = ''
+      root.style.opacity = '1'
+      root.style.borderRadius = '0px'
+    }
+
     const onTouchStart = (e: TouchEvent) => {
-      if (isAnimatingRef.current) return
+      if (isAnimatingRef.current || isDismissing.current) return
       isSwiping.current = true
       holdTriggeredRef.current = false
+      swipeAxis.current = null
+      touchStartX.current = e.touches[0].clientX
       touchStartY.current = e.touches[0].clientY
       touchStartTime.current = Date.now()
+      dragOffsetX.current = 0
       dragOffsetY.current = 0
       applyTransform(0, false)
 
@@ -216,15 +255,32 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       if (!isSwiping.current) return
       e.preventDefault() // Block browser pull-to-refresh / overscroll
 
-      // If finger moved, cancel long-press (it's a swipe)
+      const dx = e.touches[0].clientX - touchStartX.current
       const dy = e.touches[0].clientY - touchStartY.current
-      if (Math.abs(dy) > 10) {
+
+      // Cancel long-press if finger moved
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
         clearHoldTimer()
       }
 
       // If holding (long-press active), don't process swipe
       if (holdTriggeredRef.current) return
 
+      // Lock axis after 10px of movement
+      if (!swipeAxis.current && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+        swipeAxis.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+      }
+
+      if (swipeAxis.current === 'x') {
+        // Horizontal dismiss drag
+        dragOffsetX.current = dx
+        applyDismissTransform(dx, false)
+        return
+      }
+
+      if (swipeAxis.current !== 'y') return
+
+      // Vertical swipe (existing logic)
       const idx = currentIndexRef.current
       const len = productsLengthRef.current
 
@@ -244,6 +300,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       if (holdTriggeredRef.current) {
         holdTriggeredRef.current = false
         isSwiping.current = false
+        swipeAxis.current = null
         setHolding(false)
         return
       }
@@ -251,6 +308,37 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       if (!isSwiping.current) return
       isSwiping.current = false
 
+      const axis = swipeAxis.current
+      swipeAxis.current = null
+
+      // --- Horizontal dismiss ---
+      if (axis === 'x') {
+        const dx = dragOffsetX.current
+        const elapsed = Date.now() - touchStartTime.current
+        const velocity = Math.abs(dx) / Math.max(elapsed, 1)
+        const threshold = window.innerWidth * 0.25
+
+        if (Math.abs(dx) > threshold || velocity > 0.5) {
+          // Dismiss — animate off screen
+          isDismissing.current = true
+          const direction = dx > 0 ? 1 : -1
+          const root = rootRef.current
+          if (root) {
+            root.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease'
+            root.style.transform = `translateX(${direction * window.innerWidth}px) scale(0.85)`
+            root.style.opacity = '0'
+          }
+          setTimeout(() => onCloseRef.current(), 300)
+        } else if (Math.abs(dx) < 1) {
+          resetDismissTransform(false)
+        } else {
+          // Snap back
+          resetDismissTransform(true)
+        }
+        return
+      }
+
+      // --- Vertical swipe ---
       const dy = dragOffsetY.current
       const elapsed = Date.now() - touchStartTime.current
       const velocity = Math.abs(dy) / Math.max(elapsed, 1)
@@ -291,6 +379,10 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         setHolding(false)
       }
       isSwiping.current = false
+      if (swipeAxis.current === 'x') {
+        resetDismissTransform(true)
+      }
+      swipeAxis.current = null
     }
 
     el.addEventListener('touchstart', onTouchStart, { passive: true })
@@ -464,7 +556,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   }
 
   return (
-    <div className="fixed inset-0 z-[70]" style={{ backgroundColor: '#000' }}>
+    <div ref={rootRef} className="fixed inset-0 z-[70] overflow-hidden" style={{ backgroundColor: '#000' }}>
       {/* Swipeable area */}
       <div
         ref={containerRef}
