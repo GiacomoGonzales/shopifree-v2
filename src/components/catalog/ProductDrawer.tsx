@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { useTheme } from './ThemeContext'
@@ -40,6 +40,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
 
   // All hooks must be called before any conditional returns (Rules of Hooks)
   const [drawerProduct, setDrawerProduct] = useState<Product | null>(null)
+  const reelsProductRef = useRef<Product>(product) // tracks current reel position
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
   const [selectedModifiers, setSelectedModifiers] = useState<SelectedModifier[]>([])
   const [modifiersExtra, setModifiersExtra] = useState(0)
@@ -83,10 +84,11 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
   if (isReelsMode && !drawerProduct) {
     return (
       <ProductReels
-        initialProduct={product}
+        initialProduct={reelsProductRef.current}
         onClose={onClose}
         onAddToCart={onAddToCart}
         onOpenDrawer={(p) => setDrawerProduct(p)}
+        onProductChange={(p) => { reelsProductRef.current = p }}
       />
     )
   }

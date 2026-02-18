@@ -12,9 +12,10 @@ interface ProductReelsProps {
   onClose: () => void
   onAddToCart: (product: Product, extras?: CartItemExtras) => void
   onOpenDrawer?: (product: Product) => void
+  onProductChange?: (product: Product) => void
 }
 
-export default function ProductReels({ initialProduct, onClose, onAddToCart, onOpenDrawer }: ProductReelsProps) {
+export default function ProductReels({ initialProduct, onClose, onAddToCart, onOpenDrawer, onProductChange }: ProductReelsProps) {
   const { theme, currency, language } = useTheme()
   const t = getThemeTranslations(language)
 
@@ -42,6 +43,11 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const currentProduct = products[currentIndex]
   const prevProduct = currentIndex > 0 ? products[currentIndex - 1] : null
   const nextProduct = currentIndex < products.length - 1 ? products[currentIndex + 1] : null
+
+  // Notify parent of current product (for position tracking)
+  useEffect(() => {
+    onProductChange?.(currentProduct)
+  }, [currentIndex])
 
   // Apply transform directly to DOM (no React re-render)
   const applyTransform = useCallback((y: number, withTransition: boolean) => {
