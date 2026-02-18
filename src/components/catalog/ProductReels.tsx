@@ -255,14 +255,31 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       applyTransform(0, true)
     }
 
+    // Block native context menu (long-press "save image" popup)
+    const onContextMenu = (e: Event) => e.preventDefault()
+
+    // touchcancel fires if browser intercepts the touch — reset holding
+    const onTouchCancel = () => {
+      clearHoldTimer()
+      if (holdTriggeredRef.current) {
+        holdTriggeredRef.current = false
+        setHolding(false)
+      }
+      isSwiping.current = false
+    }
+
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: false })
     el.addEventListener('touchend', onTouchEnd, { passive: true })
+    el.addEventListener('touchcancel', onTouchCancel, { passive: true })
+    el.addEventListener('contextmenu', onContextMenu)
 
     return () => {
       el.removeEventListener('touchstart', onTouchStart)
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchCancel)
+      el.removeEventListener('contextmenu', onContextMenu)
     }
   }, [applyTransform])
 
@@ -409,7 +426,13 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       <div
         ref={containerRef}
         className="relative w-full h-full mx-auto overflow-hidden"
-        style={{ maxWidth: '480px', touchAction: 'none' }}
+        style={{
+          maxWidth: '480px',
+          touchAction: 'none',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+        } as React.CSSProperties}
       >
         {/* All slides move together — transform set via ref for 60fps */}
         <div
