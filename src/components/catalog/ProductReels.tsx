@@ -31,6 +31,11 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [toast, setToast] = useState<string | null>(null)
+  const [holding, setHolding] = useState(false)
+
+  // Long-press refs
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const holdTriggeredRef = useRef(false)
 
   // Direct DOM refs for 60fps drag (bypass React rendering)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -165,19 +170,43 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     const el = containerRef.current
     if (!el) return
 
+    const clearHoldTimer = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+    }
+
     const onTouchStart = (e: TouchEvent) => {
       if (isAnimatingRef.current) return
       isSwiping.current = true
+      holdTriggeredRef.current = false
       touchStartY.current = e.touches[0].clientY
       touchStartTime.current = Date.now()
       dragOffsetY.current = 0
       applyTransform(0, false)
+
+      // Start long-press timer (400ms)
+      clearHoldTimer()
+      holdTimerRef.current = setTimeout(() => {
+        holdTriggeredRef.current = true
+        setHolding(true)
+      }, 400)
     }
 
     const onTouchMove = (e: TouchEvent) => {
       if (!isSwiping.current) return
       e.preventDefault() // Block browser pull-to-refresh / overscroll
+
+      // If finger moved, cancel long-press (it's a swipe)
       const dy = e.touches[0].clientY - touchStartY.current
+      if (Math.abs(dy) > 10) {
+        clearHoldTimer()
+      }
+
+      // If holding (long-press active), don't process swipe
+      if (holdTriggeredRef.current) return
+
       const idx = currentIndexRef.current
       const len = productsLengthRef.current
 
@@ -191,6 +220,16 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     }
 
     const onTouchEnd = () => {
+      clearHoldTimer()
+
+      // If was holding, just release — don't process as swipe
+      if (holdTriggeredRef.current) {
+        holdTriggeredRef.current = false
+        isSwiping.current = false
+        setHolding(false)
+        return
+      }
+
       if (!isSwiping.current) return
       isSwiping.current = false
 
@@ -284,18 +323,26 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
             style={{
               height: '50%',
               background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
+              opacity: holding ? 0 : 1,
+              transition: 'opacity 0.25s ease',
             }}
           />
 
           {/* Discount badge */}
           {hasDiscount && (
-            <div className="absolute top-16 left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white shadow-lg">
+            <div
+              className="absolute top-16 left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white shadow-lg"
+              style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}
+            >
               -{discountPercent}%
             </div>
           )}
 
           {/* Product info */}
-          <div className="absolute bottom-0 left-0 right-0 p-5 pb-7">
+          <div
+            className="absolute bottom-0 left-0 right-0 p-5 pb-7"
+            style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}
+          >
             <h2 className="text-xl font-bold text-white mb-1.5 drop-shadow-lg leading-tight">
               {product.name}
             </h2>
@@ -378,7 +425,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       </div>
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-[71] flex items-center justify-between p-4 pointer-events-none" style={{ maxWidth: '480px', margin: '0 auto' }}>
+      <div className="fixed top-0 left-0 right-0 z-[71] flex items-center justify-between p-4 pointer-events-none" style={{ maxWidth: '480px', margin: '0 auto', opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}>
         <button
           onClick={onClose}
           className="pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full transition-colors"
@@ -398,7 +445,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
       {/* Progress dots (right side, vertical) */}
       {products.length > 1 && products.length <= 20 && (
-        <div className="fixed right-2 top-1/2 -translate-y-1/2 z-[71] flex flex-col gap-1 pointer-events-none" style={{ maxWidth: '480px' }}>
+        <div className="fixed right-2 top-1/2 -translate-y-1/2 z-[71] flex flex-col gap-1 pointer-events-none" style={{ maxWidth: '480px', opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}>
           {products.map((_, i) => (
             <div
               key={i}
@@ -414,7 +461,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       )}
 
       {/* Desktop arrows */}
-      <div className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-[71] flex-col gap-2">
+      <div className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-[71] flex-col gap-2" style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}>
         <button
           onClick={goToPrev}
           disabled={currentIndex === 0}
