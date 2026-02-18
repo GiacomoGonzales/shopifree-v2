@@ -243,6 +243,7 @@ export interface Product {
   // === IMÁGENES ===
   image?: string | null         // Imagen principal
   images?: string[]             // Galería (premium)
+  video?: string | null         // Video del producto (Pro/Business, solo en Reels)
 
   // === ORGANIZACIÓN ===
   categoryId?: string | null

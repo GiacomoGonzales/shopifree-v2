@@ -33,6 +33,9 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const [toast, setToast] = useState<string | null>(null)
   const [holding, setHolding] = useState(false)
 
+  // Video refs
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
+
   // Long-press refs
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const holdTriggeredRef = useRef(false)
@@ -78,10 +81,11 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     }
   }, [])
 
-  // Preload adjacent images
+  // Preload adjacent images (skip products with video — browser handles video buffering)
   useEffect(() => {
     const toPreload = [nextProduct, prevProduct].filter(Boolean) as Product[]
     toPreload.forEach(p => {
+      if (p.video) return
       const url = p.image || p.images?.[0]
       if (url) {
         const img = new Image()
@@ -89,6 +93,20 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       }
     })
   }, [nextProduct, prevProduct])
+
+  // Play/pause videos on slide change
+  useEffect(() => {
+    videoRefs.current.forEach((v, key) => {
+      if (!key.endsWith('-current')) {
+        v.pause()
+      }
+    })
+    const currentVideo = videoRefs.current.get(`${currentProduct.id}-current`)
+    if (currentVideo) {
+      currentVideo.currentTime = 0
+      currentVideo.play().catch(() => {})
+    }
+  }, [currentIndex, currentProduct.id])
 
   // After CSS transition ends, commit the index change (but don't reset transform yet)
   const needsTransformReset = useRef(false)
@@ -251,8 +269,15 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         }
       }
       // Snap back
-      isAnimatingRef.current = true
-      applyTransform(0, true)
+      if (Math.abs(dy) < 1) {
+        // No meaningful drag (tap) — skip animation since transitionend won't fire
+        dragOffsetY.current = 0
+        isAnimatingRef.current = false
+        applyTransform(0, false)
+      } else {
+        isAnimatingRef.current = true
+        applyTransform(0, true)
+      }
     }
 
     // Block native context menu (long-press "save image" popup)
@@ -317,9 +342,27 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
           transform: `translateY(${yOffset})`,
         }}
       >
-        {/* Full-screen image */}
+        {/* Full-screen media */}
         <div className="relative w-full h-full overflow-hidden bg-black">
-          {imageUrl ? (
+          {product.video ? (
+            <video
+              ref={(el) => {
+                const key = `${product.id}-${position}`
+                if (el) {
+                  videoRefs.current.set(key, el)
+                } else {
+                  videoRefs.current.delete(key)
+                }
+              }}
+              src={product.video}
+              autoPlay={position === 'current'}
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              poster={imageUrl ? optimizeImage(imageUrl, 'gallery') : undefined}
+            />
+          ) : imageUrl ? (
             <img
               src={optimizeImage(imageUrl, 'gallery')}
               alt={product.name}

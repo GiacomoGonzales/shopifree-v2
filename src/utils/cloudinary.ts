@@ -87,3 +87,14 @@ export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'
 
   return `${url1x} 1x, ${url2x} 2x`
 }
+
+/**
+ * Generates a thumbnail from a Cloudinary video URL (first frame)
+ * Uses Cloudinary transformations to extract a JPG from frame 0
+ */
+export function getVideoThumbnail(videoUrl: string | undefined | null): string {
+  if (!videoUrl) return ''
+  if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
+  const transforms = 'c_fill,w_600,h_600,q_auto,f_jpg,so_0'
+  return videoUrl.replace('/upload/', `/upload/${transforms}/`).replace(/\.(mp4|webm|mov)$/i, '.jpg')
+}

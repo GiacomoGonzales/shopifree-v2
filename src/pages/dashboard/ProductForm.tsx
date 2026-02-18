@@ -6,8 +6,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
-import { canAddProduct, getMaxImagesPerProduct, type PlanType } from '../../lib/stripe'
+import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, type PlanType } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
+import { getVideoThumbnail } from '../../utils/cloudinary'
 import type { Category, ModifierGroup, ProductVariation } from '../../types'
 import {
   ModifiersSection,
@@ -32,6 +33,7 @@ export default function ProductForm() {
   const { showToast } = useToast()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [productCount, setProductCount] = useState(0)
@@ -45,6 +47,8 @@ export default function ProductForm() {
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
   const [images, setImages] = useState<string[]>([])
+  const [video, setVideo] = useState<string | null>(null)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
   const [categoryId, setCategoryId] = useState('')
   const [active, setActive] = useState(true)
 
@@ -120,6 +124,7 @@ export default function ProductForm() {
             } else {
               setImages([])
             }
+            setVideo(productData.video || null)
             setCategoryId(productData.categoryId || '')
             setActive(productData.active)
 
@@ -177,6 +182,7 @@ export default function ProductForm() {
 
   const plan = (store?.plan || 'free') as PlanType
   const maxImages = getMaxImagesPerProduct(plan)
+  const videoAllowed = canUploadVideo(plan)
 
   const uploadFiles = async (files: FileList | File[]) => {
     const fileArray = Array.from(files)
@@ -277,6 +283,46 @@ export default function ProductForm() {
     setImages(newImages)
   }
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      showToast(t('productForm.video.invalidFormat'), 'error')
+      return
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      showToast(t('productForm.video.tooLarge'), 'error')
+      return
+    }
+
+    setUploadingVideo(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      formData.append('folder', 'shopifree/products')
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
+        { method: 'POST', body: formData }
+      )
+
+      if (!response.ok) throw new Error('Upload failed')
+      const data = await response.json()
+      setVideo(data.secure_url)
+    } catch (error) {
+      console.error('Error uploading video:', error)
+      showToast(t('productForm.video.uploadError'), 'error')
+    } finally {
+      setUploadingVideo(false)
+      if (videoInputRef.current) videoInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveVideo = () => setVideo(null)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!store) return
@@ -319,6 +365,11 @@ export default function ProductForm() {
       if (images.length > 0) {
         productData.image = images[0]
         productData.images = images
+      }
+      if (video) {
+        productData.video = video
+      } else if (isEditing) {
+        productData.video = null
       }
       if (categoryId) productData.categoryId = categoryId
       if (comparePrice) productData.comparePrice = parseFloat(comparePrice)
@@ -599,6 +650,112 @@ export default function ProductForm() {
                 onChange={handleImageUpload}
                 className="hidden"
               />
+            </div>
+
+            {/* Video Upload */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-[#1e3a5f]">
+                  {t('productForm.video.title')}
+                </label>
+                <span className="text-xs text-gray-500">
+                  {t('productForm.video.optional')}
+                </span>
+              </div>
+
+              {videoAllowed ? (
+                <>
+                  {video ? (
+                    <div className="relative group">
+                      <div className="aspect-video rounded-xl overflow-hidden border border-gray-200 bg-black">
+                        <img
+                          src={getVideoThumbnail(video)}
+                          alt={t('productForm.video.preview')}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Play icon overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-14 h-14 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Remove button */}
+                      <button
+                        type="button"
+                        onClick={handleRemoveVideo}
+                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => !uploadingVideo && videoInputRef.current?.click()}
+                      className="border-2 border-dashed border-[#38bdf8]/30 hover:border-[#38bdf8] rounded-xl cursor-pointer transition-all bg-gradient-to-br from-[#f0f7ff] to-white py-8"
+                    >
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        {uploadingVideo ? (
+                          <>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
+                            <p className="text-[#2d6cb5] font-medium">{t('productForm.video.uploading')}</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20">
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <p className="text-[#1e3a5f] font-medium text-sm">{t('productForm.video.clickToUpload')}</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('productForm.video.formats')}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {t('productForm.video.reelsOnly')}
+                  </p>
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                </>
+              ) : (
+                <div className="bg-gradient-to-r from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#38bdf8]/20">
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[#1e3a5f]">{t('productForm.video.proTitle')}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('productForm.video.proDescription')}</p>
+                      <a
+                        href={localePath('/dashboard/plan')}
+                        className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-xs font-semibold rounded-lg hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-md"
+                      >
+                        {t('productForm.video.upgradeToPro')}
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Basic Fields */}

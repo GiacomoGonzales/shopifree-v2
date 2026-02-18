@@ -41,7 +41,8 @@ export const PLAN_FEATURES = {
     limits: {
       products: 10,
       imagesPerProduct: 1,
-      categories: 3
+      categories: 3,
+      videoUpload: false
     }
   },
   pro: {
@@ -59,7 +60,8 @@ export const PLAN_FEATURES = {
     limits: {
       products: 200,
       imagesPerProduct: 5,
-      categories: -1
+      categories: -1,
+      videoUpload: true
     }
   },
   business: {
@@ -75,7 +77,8 @@ export const PLAN_FEATURES = {
     limits: {
       products: -1,
       imagesPerProduct: 10,
-      categories: -1
+      categories: -1,
+      videoUpload: true
     }
   }
 }
@@ -134,6 +137,11 @@ export function canAddCategory(plan: PlanType, currentCategoryCount: number): { 
 export function getMaxImagesPerProduct(plan: PlanType): number {
   const limits = getPlanLimits(plan)
   return limits.imagesPerProduct
+}
+
+export function canUploadVideo(plan: PlanType): boolean {
+  const limits = getPlanLimits(plan)
+  return limits.videoUpload ?? false
 }
 
 export function getRemainingProducts(plan: PlanType, currentProductCount: number): number | 'unlimited' {

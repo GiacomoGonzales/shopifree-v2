@@ -392,6 +392,21 @@
       "length": "Largo (cm)",
       "width": "Ancho (cm)",
       "height": "Alto (cm)"
+    },
+    "video": {
+      "title": "Video del producto",
+      "optional": "Opcional",
+      "clickToUpload": "Click para subir video",
+      "formats": "MP4, WebM o MOV (max. 100MB)",
+      "uploading": "Subiendo video...",
+      "uploadError": "Error al subir el video",
+      "invalidFormat": "Solo se permiten archivos de video",
+      "tooLarge": "El video es demasiado grande. Máximo 100MB.",
+      "preview": "Vista previa del video",
+      "reelsOnly": "El video solo se muestra en modo Reels",
+      "proTitle": "Agrega videos a tus productos",
+      "proDescription": "Con Pro puedes subir un video por producto para mostrarlo en acción en modo Reels",
+      "upgradeToPro": "Pasar a Pro"
     }
   },
   "branding": {
