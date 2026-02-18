@@ -125,7 +125,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     }
 
     onAddToCart(activeProduct, extras)
-    handleCloseDrawer()
+    onClose()
   }
 
   const requiresSelection = (features.showModifiers && (activeProduct.modifierGroups?.length ?? 0) > 0) ||
