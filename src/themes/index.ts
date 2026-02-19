@@ -511,6 +511,96 @@ export const themes: Theme[] = [
       background: '#F0FDFA',
       accent: '#EC4899'
     }
+  },
+  {
+    id: 'vaporwave',
+    name: 'Vaporwave',
+    description: 'Estetica retro-futurista 80s/90s con gradientes rosa-cyan. Ideal para vinilos, ropa vintage, stickers y aesthetic shops.',
+    thumbnail: '/themes/vaporwave.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#FF71CE',
+      background: '#1a0030',
+      accent: '#01CDFE'
+    }
+  },
+  {
+    id: 'candy',
+    name: 'Candy',
+    description: 'Ultra Y2K, bubble gum, glossy y divertido. Ideal para accesorios, phone cases, stickers y moda trendy.',
+    thumbnail: '/themes/candy.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#FF69B4',
+      background: '#FFF0F5',
+      accent: '#B967FF'
+    }
+  },
+  {
+    id: 'brutalist',
+    name: 'Brutalist',
+    description: 'Anti-diseno crudo con tipografia monospace gigante. Ideal para marcas independientes, arte y studios creativos.',
+    thumbnail: '/themes/brutalist.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#FF0000',
+      background: '#FFFFFF',
+      accent: '#000000'
+    }
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    description: 'Espacio profundo con nebulosas violeta-azul y estrellas. Ideal para joyeria, cristales, astrologia y perfumes.',
+    thumbnail: '/themes/midnight.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#7C3AED',
+      background: '#0B0D1A',
+      accent: '#3B82F6'
+    }
+  },
+  {
+    id: 'tropical',
+    name: 'Tropical',
+    description: 'Vibes caribenas con colores sunset naranja-magenta. Ideal para swimwear, moda verano y accesorios de playa.',
+    thumbnail: '/themes/tropical.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#FF6B35',
+      background: '#FFF5E1',
+      accent: '#FF1493'
+    }
+  },
+  {
+    id: 'grunge',
+    name: 'Grunge',
+    description: 'Raw y punk rock con amarillo acido y estetica de poster de banda. Ideal para ropa alternativa, skate y tattoo shops.',
+    thumbnail: '/themes/grunge.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#E4FF1A',
+      background: '#1A1A1A',
+      accent: '#FF2D55'
+    }
   }
 ]
 

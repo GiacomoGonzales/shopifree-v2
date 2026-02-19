@@ -35,6 +35,12 @@ import AuraTheme from './aura/AuraTheme'
 import BlushTheme from './blush/BlushTheme'
 import HarvestTheme from './harvest/HarvestTheme'
 import FurryTheme from './furry/FurryTheme'
+import VaporwaveTheme from './vaporwave/VaporwaveTheme'
+import CandyTheme from './candy/CandyTheme'
+import BrutalistTheme from './brutalist/BrutalistTheme'
+import MidnightTheme from './midnight/MidnightTheme'
+import TropicalTheme from './tropical/TropicalTheme'
+import GrungeTheme from './grunge/GrungeTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -72,10 +78,16 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   blush: BlushTheme,
   harvest: HarvestTheme,
   furry: FurryTheme,
+  vaporwave: VaporwaveTheme,
+  candy: CandyTheme,
+  brutalist: BrutalistTheme,
+  midnight: MidnightTheme,
+  tropical: TropicalTheme,
+  grunge: GrungeTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme, VaporwaveTheme, CandyTheme, BrutalistTheme, MidnightTheme, TropicalTheme, GrungeTheme }

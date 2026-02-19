@@ -62,12 +62,12 @@ export function useScrollReveal(enabled: boolean, delay: number = 0): ScrollReve
   const style: CSSProperties = isVisible
     ? {
         opacity: 1,
-        transform: 'translateY(0)',
+        transform: 'scale(1)',
         transition: 'opacity 0.5s ease-out, transform 0.5s ease-out',
       }
     : {
         opacity: 0,
-        transform: 'translateY(20px)',
+        transform: 'scale(0.97)',
       }
 
   return { ref, style }

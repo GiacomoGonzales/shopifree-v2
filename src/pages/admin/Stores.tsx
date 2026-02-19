@@ -8,6 +8,38 @@ import { PLAN_FEATURES } from '../../lib/stripe'
 import type { Store } from '../../types'
 import { countries } from '../../data/states'
 
+const formatRelativeTime = (date: Date): string => {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Justo ahora'
+  if (diffMins < 60) return `Hace ${diffMins}m`
+  if (diffHours < 24) return `Hace ${diffHours}h`
+  if (diffDays < 7) return `Hace ${diffDays}d`
+  if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} sem`
+  if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} mes${Math.floor(diffDays / 30) > 1 ? 'es' : ''}`
+  return `Hace ${Math.floor(diffDays / 365)} año${Math.floor(diffDays / 365) > 1 ? 's' : ''}`
+}
+
+const getActivityColor = (date: Date): string => {
+  const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
+  if (diffDays <= 3) return 'text-green-600 bg-green-50'
+  if (diffDays <= 14) return 'text-blue-600 bg-blue-50'
+  if (diffDays <= 30) return 'text-yellow-600 bg-yellow-50'
+  return 'text-red-600 bg-red-50'
+}
+
+const getActivityDot = (date: Date): string => {
+  const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
+  if (diffDays <= 3) return 'bg-green-400'
+  if (diffDays <= 14) return 'bg-blue-400'
+  if (diffDays <= 30) return 'bg-yellow-400'
+  return 'bg-red-400'
+}
+
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: 'Activa',
   past_due: 'Pago pendiente',
@@ -29,8 +61,9 @@ export default function AdminStores() {
   const [syncingStore, setSyncingStore] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterPlan, setFilterPlan] = useState<string>('all')
+  const [productCounts, setProductCounts] = useState<Record<string, number>>({})
 
-  type SortField = 'name' | 'subdomain' | 'plan' | 'createdAt'
+  type SortField = 'name' | 'subdomain' | 'plan' | 'createdAt' | 'products' | 'lastActivity'
   type SortOrder = 'asc' | 'desc'
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
@@ -48,6 +81,21 @@ export default function AdminStores() {
       })) as (Store & { id: string })[]
 
       setStores(storesData)
+
+      // Fetch product counts in parallel
+      const counts: Record<string, number> = {}
+      await Promise.all(
+        storesData.map(async (store) => {
+          try {
+            const snap = await getDocs(collection(db, 'stores', store.id, 'products'))
+            counts[store.id] = snap.size
+          } catch (e) {
+            console.warn(`Error counting products for ${store.id}:`, e)
+            counts[store.id] = 0
+          }
+        })
+      )
+      setProductCounts(counts)
     } catch (error) {
       console.error('Error fetching stores:', error)
       showToast('Error al cargar las tiendas', 'error')
@@ -146,12 +194,18 @@ export default function AdminStores() {
         case 'createdAt':
           comparison = toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime()
           break
+        case 'products':
+          comparison = (productCounts[a.id] || 0) - (productCounts[b.id] || 0)
+          break
+        case 'lastActivity':
+          comparison = toDate(a.updatedAt).getTime() - toDate(b.updatedAt).getTime()
+          break
       }
       return sortOrder === 'desc' ? -comparison : comparison
     })
 
     return result
-  }, [stores, searchTerm, filterPlan, sortField, sortOrder])
+  }, [stores, searchTerm, filterPlan, sortField, sortOrder, productCounts])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -252,6 +306,18 @@ export default function AdminStores() {
                     <SortIcon field="plan" />
                   </div>
                 </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('products')}>
+                  <div className="flex items-center gap-1">
+                    Productos
+                    <SortIcon field="products" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('lastActivity')}>
+                  <div className="flex items-center gap-1">
+                    Actividad
+                    <SortIcon field="lastActivity" />
+                  </div>
+                </th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado Suscripcion</th>
                 <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
                   <div className="flex items-center gap-1">
@@ -309,6 +375,34 @@ export default function AdminStores() {
                     }`}>
                       {store.plan}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${
+                      (productCounts[store.id] || 0) > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400'
+                    }`}>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      {productCounts[store.id] ?? '...'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {(() => {
+                      const toDate = (d: any) => {
+                        if (!d) return null
+                        if (d.toDate) return d.toDate()
+                        if (d instanceof Date) return d
+                        return new Date(d)
+                      }
+                      const date = toDate(store.updatedAt)
+                      if (!date) return <span className="text-gray-400 text-sm">-</span>
+                      return (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${getActivityColor(date)}`} title={date.toLocaleString()}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${getActivityDot(date)}`}></span>
+                          {formatRelativeTime(date)}
+                        </span>
+                      )
+                    })()}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -418,8 +512,36 @@ export default function AdminStores() {
                 </div>
               </div>
 
-              {/* Row 2: Subscription + Date + Action */}
-              <div className="flex items-center justify-between mt-3 pl-[52px]">
+              {/* Row 2: Products + Activity */}
+              <div className="flex items-center gap-3 mt-2.5 pl-[52px]">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full ${
+                  (productCounts[store.id] || 0) > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400'
+                }`}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  {productCounts[store.id] ?? '...'} prod.
+                </span>
+                {(() => {
+                  const toDate = (d: any) => {
+                    if (!d) return null
+                    if (d.toDate) return d.toDate()
+                    if (d instanceof Date) return d
+                    return new Date(d)
+                  }
+                  const date = toDate(store.updatedAt)
+                  if (!date) return null
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full ${getActivityColor(date)}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${getActivityDot(date)}`}></span>
+                      {formatRelativeTime(date)}
+                    </span>
+                  )
+                })()}
+              </div>
+
+              {/* Row 3: Subscription + Date + Action */}
+              <div className="flex items-center justify-between mt-2 pl-[52px]">
                 <div className="flex items-center gap-2 flex-wrap">
                   {store.subscription ? (
                     <>
