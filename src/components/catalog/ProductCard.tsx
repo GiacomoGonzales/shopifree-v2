@@ -122,7 +122,9 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
   const aspectClass = variant === 'masonry' ? '' : variant === 'featured' ? 'aspect-[3/4]' : 'aspect-[4/5]'
 
   // Premium effects - use refs for direct DOM manipulation (no React re-renders)
-  const hasTilt = theme.effects.tilt3D ?? false
+  // Disable tilt on touch devices (no hover capability)
+  const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+  const hasTilt = (theme.effects.tilt3D ?? false) && canHover
   const hasGlass = theme.effects.glassMorphism ?? false
   const hasBorder = theme.effects.animatedBorder ?? false
   const cardRef = useRef<HTMLElement>(null)
@@ -323,7 +325,7 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
     </article>
   )
 
-  // Wrap with animated border if enabled (hover-only animation for performance)
+  // Wrap with animated border if enabled (desktop hover-only for performance)
   if (hasBorder) {
     return (
       <div
@@ -332,11 +334,12 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
           background: `linear-gradient(90deg, ${theme.colors.primary}40, ${theme.colors.accent}40)`,
           padding: '1px',
           borderRadius: theme.radius.lg,
-          transition: 'padding 0.3s ease',
         }}
       >
         <style>{`
-          .group\\/border:hover { padding: 2px; background: linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.accent}, ${theme.colors.primary}) !important; background-size: 200% 100% !important; animation: premiumBorderShift 3s ease infinite !important; }
+          @media (hover: hover) {
+            .group\\/border:hover { padding: 2px; background: linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.accent}, ${theme.colors.primary}) !important; background-size: 200% 100% !important; animation: premiumBorderShift 3s ease infinite !important; }
+          }
         `}</style>
         <div style={{ borderRadius: theme.radius.lg, overflow: 'hidden', backgroundColor: theme.colors.background }}>
           {card}
