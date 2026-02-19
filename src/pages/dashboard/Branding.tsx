@@ -507,7 +507,7 @@ export default function Branding() {
                     const isSelected = selectedTheme === theme.id
                     const isFirst = themeIndex === 0
                     const isLast = themeIndex === groupThemes.length - 1
-                    const isLocked = theme.isPremium && store.plan === 'free'
+                    const isLocked = theme.isPremium && store?.plan === 'free'
                     return (
                       <div
                         key={theme.id}
