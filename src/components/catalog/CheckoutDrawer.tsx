@@ -349,7 +349,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                   type="button"
                   onClick={handleContinue}
                   disabled={loading}
-                  className={`${step === 'customer' ? 'w-full' : 'flex-1'} py-3.5 font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
+                  className={`${step === 'customer' ? 'w-full' : 'flex-1'} py-3.5 font-medium transition-all flex items-center justify-center gap-2`}
                   style={{
                     backgroundColor: theme.colors.primary,
                     color: theme.colors.textInverted,
