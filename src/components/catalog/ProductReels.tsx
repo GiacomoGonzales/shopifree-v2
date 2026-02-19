@@ -32,6 +32,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [toast, setToast] = useState<string | null>(null)
   const [holding, setHolding] = useState(false)
+  const [justAddedId, setJustAddedId] = useState<string | null>(null)
 
   // Video refs
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
@@ -408,10 +409,15 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     }
   }, [toast])
 
+  const justAddedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const handleAddToCart = (product: Product) => {
     const extras: CartItemExtras = { itemPrice: product.price }
     onAddToCart(product, extras)
     setToast(t.addedToCart)
+    setJustAddedId(product.id)
+    if (justAddedTimerRef.current) clearTimeout(justAddedTimerRef.current)
+    justAddedTimerRef.current = setTimeout(() => setJustAddedId(null), 2000)
   }
 
   const getProductImage = (product: Product) => {
@@ -518,19 +524,31 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <button
-                onClick={() => handleAddToCart(product)}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
-                style={{
-                  backgroundColor: theme.colors.primary,
-                  color: theme.colors.textInverted,
-                }}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                {t.addToCart}
-              </button>
+              {(() => {
+                const isJustAdded = justAddedId === product.id
+                return (
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
+                    style={{
+                      backgroundColor: isJustAdded ? '#22c55e' : theme.colors.primary,
+                      color: isJustAdded ? '#ffffff' : theme.colors.textInverted,
+                      transition: 'background-color 0.3s ease, color 0.3s ease',
+                    }}
+                  >
+                    {isJustAdded ? (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                    )}
+                    {isJustAdded ? t.addedToCart : t.addToCart}
+                  </button>
+                )
+              })()}
               <button
                 onClick={() => onOpenDrawer?.(product)}
                 className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
