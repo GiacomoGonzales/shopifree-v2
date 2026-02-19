@@ -460,8 +460,11 @@ export default function Branding() {
             { key: 'retail', label: t('branding.theme.categories.retail'), desc: t('branding.theme.categoryDesc.retail'), categories: ['retail'] },
             { key: 'restaurant', label: t('branding.theme.categories.restaurant'), desc: t('branding.theme.categoryDesc.restaurant'), categories: ['restaurant'] },
             { key: 'specialized', label: t('branding.theme.categories.specialized') || 'Especializado', desc: t('branding.theme.categoryDesc.specialized'), categories: ['tech', 'cosmetics', 'grocery', 'pets'] },
+            { key: 'premium', label: 'Premium', desc: 'Temas con efectos exclusivos y animaciones avanzadas', categories: ['__premium__'] },
           ] as const).map((group) => {
-            const groupThemes = themes.filter(th => (group.categories as readonly string[]).includes(th.category))
+            const groupThemes = group.key === 'premium'
+              ? themes.filter(th => th.isPremium)
+              : themes.filter(th => !th.isPremium && (group.categories as readonly string[]).includes(th.category))
             if (groupThemes.length === 0) return null
             const scrollKey = group.key
             return (
@@ -504,18 +507,21 @@ export default function Branding() {
                     const isSelected = selectedTheme === theme.id
                     const isFirst = themeIndex === 0
                     const isLast = themeIndex === groupThemes.length - 1
+                    const isLocked = theme.isPremium && store.plan === 'free'
                     return (
                       <div
                         key={theme.id}
                         className={`carousel-item w-[120px] sm:w-[150px] md:w-[160px] flex-shrink-0 relative rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all group ${isFirst ? 'ml-4 md:ml-6' : ''} ${isLast ? 'mr-4 md:mr-6' : ''} ${
                           isSelected
                             ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
-                            : 'border-gray-200 hover:border-[#38bdf8]/50'
+                            : isLocked
+                              ? 'border-gray-200 opacity-70'
+                              : 'border-gray-200 hover:border-[#38bdf8]/50'
                         }`}
                       >
                         <button
-                          onClick={() => setSelectedTheme(theme.id)}
-                          className="w-full text-left"
+                          onClick={() => { if (!isLocked) setSelectedTheme(theme.id) }}
+                          className={`w-full text-left ${isLocked ? 'cursor-not-allowed' : ''}`}
                         >
                           {/* Mini Preview */}
                           <div
@@ -535,29 +541,45 @@ export default function Branding() {
                               <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
                               <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: theme.colors?.accent || '#666' }} />
                             </div>
-                            {/* Preview overlay */}
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span
-                                onClick={(e) => { e.stopPropagation(); setPreviewTheme(theme.id) }}
-                                className="px-3 py-1.5 bg-white text-[#1e3a5f] text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                {t('branding.theme.preview')}
-                              </span>
-                            </div>
+                            {/* Lock overlay for premium themes on free plan */}
+                            {isLocked ? (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <div className="flex flex-col items-center gap-1">
+                                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                  <span className="text-white text-[10px] font-semibold">PRO</span>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Preview overlay */
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                  onClick={(e) => { e.stopPropagation(); setPreviewTheme(theme.id) }}
+                                  className="px-3 py-1.5 bg-white text-[#1e3a5f] text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                  {t('branding.theme.preview')}
+                                </span>
+                              </div>
+                            )}
                           </div>
                           {/* Theme Name */}
                           <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-white border-t border-gray-100">
                             <div className="flex items-center justify-between">
                               <span className="font-semibold text-xs sm:text-sm text-[#1e3a5f] truncate">{theme.name}</span>
-                              {theme.isNew && (
+                              {theme.isPremium ? (
+                                <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] font-bold rounded-full flex-shrink-0 ml-1">
+                                  PRO
+                                </span>
+                              ) : theme.isNew ? (
                                 <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full flex-shrink-0 ml-1">
                                   NEW
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                             <p className="text-[10px] sm:text-[11px] text-gray-500 truncate mt-0.5 hidden sm:block">{theme.description}</p>
                           </div>

@@ -53,6 +53,10 @@ export interface ThemeConfig {
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
     paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
     productViewMode?: 'drawer' | 'reels'
+    // Premium effects
+    glassMorphism?: boolean    // Glass blur effect on cards
+    tilt3D?: boolean           // 3D tilt on card hover (desktop)
+    animatedBorder?: boolean   // Animated gradient border on cards
   }
 }
 

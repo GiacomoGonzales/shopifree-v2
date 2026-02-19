@@ -601,6 +601,51 @@ export const themes: Theme[] = [
       background: '#1A1A1A',
       accent: '#FF2D55'
     }
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora',
+    description: 'Aurora boreal con fondo animado verde-violeta-azul. Efectos premium: glassmorphism, 3D tilt, bordes animados.',
+    thumbnail: '/themes/aurora.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#00D68F',
+      background: '#0A0F1C',
+      accent: '#7C3AED'
+    }
+  },
+  {
+    id: 'prism',
+    name: 'Prism',
+    description: 'Blanco prismatico con reflejos arcoiris y texto degradado animado. Efectos premium: glassmorphism, bordes animados.',
+    thumbnail: '/themes/prism.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#6366F1',
+      background: '#FFFFFF',
+      accent: '#EC4899'
+    }
+  },
+  {
+    id: 'noir',
+    name: 'Noir',
+    description: 'Negro cinematografico con spotlight dorado y efecto film grain. Efectos premium: 3D tilt, bordes animados.',
+    thumbnail: '/themes/noir.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-18'),
+    colors: {
+      primary: '#D4AF37',
+      background: '#000000',
+      accent: '#C9A227'
+    }
   }
 ]
 

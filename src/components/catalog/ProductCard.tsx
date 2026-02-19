@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
@@ -121,12 +121,49 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
 
   const aspectClass = variant === 'masonry' ? '' : variant === 'featured' ? 'aspect-[3/4]' : 'aspect-[4/5]'
 
-  return (
+  // Premium effects - use refs for direct DOM manipulation (no React re-renders)
+  const hasTilt = theme.effects.tilt3D ?? false
+  const hasGlass = theme.effects.glassMorphism ?? false
+  const hasBorder = theme.effects.animatedBorder ?? false
+  const cardRef = useRef<HTMLElement>(null)
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!hasTilt || !cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width - 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5
+    cardRef.current.style.transform = `perspective(800px) rotateX(${-y * 6}deg) rotateY(${x * 6}deg) scale(1.02)`
+    cardRef.current.style.transition = 'transform 0.15s ease-out'
+  }, [hasTilt])
+
+  const handleMouseLeave = useCallback(() => {
+    if (!hasTilt || !cardRef.current) return
+    cardRef.current.style.transform = ''
+    cardRef.current.style.transition = 'transform 0.4s ease-out'
+    preloadGalleryImages()
+  }, [hasTilt, preloadGalleryImages])
+
+  // Glass effect: lightweight semi-transparent bg, NO backdrop-blur on cards (too expensive per-card)
+  const glassStyle: React.CSSProperties = hasGlass ? {
+    backgroundColor: theme.effects.darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)',
+    border: `1px solid ${theme.effects.darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.4)'}`,
+    borderRadius: theme.radius.lg,
+    padding: '6px',
+  } : {}
+
+  const card = (
     <article
+      ref={cardRef}
       className="group cursor-pointer"
       onClick={() => onSelect(product)}
-      onMouseEnter={preloadGalleryImages}
+      onMouseEnter={hasTilt ? undefined : preloadGalleryImages}
       onTouchStart={preloadGalleryImages}
+      onMouseMove={hasTilt ? handleMouseMove : undefined}
+      onMouseLeave={hasTilt ? handleMouseLeave : undefined}
+      style={{
+        ...(hasGlass ? glassStyle : {}),
+        willChange: hasTilt ? 'transform' : undefined,
+      }}
     >
       {/* Image */}
       <div
@@ -285,4 +322,28 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
       </div>
     </article>
   )
+
+  // Wrap with animated border if enabled (hover-only animation for performance)
+  if (hasBorder) {
+    return (
+      <div
+        className="group/border"
+        style={{
+          background: `linear-gradient(90deg, ${theme.colors.primary}40, ${theme.colors.accent}40)`,
+          padding: '1px',
+          borderRadius: theme.radius.lg,
+          transition: 'padding 0.3s ease',
+        }}
+      >
+        <style>{`
+          .group\\/border:hover { padding: 2px; background: linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.accent}, ${theme.colors.primary}) !important; background-size: 200% 100% !important; animation: premiumBorderShift 3s ease infinite !important; }
+        `}</style>
+        <div style={{ borderRadius: theme.radius.lg, overflow: 'hidden', backgroundColor: theme.colors.background }}>
+          {card}
+        </div>
+      </div>
+    )
+  }
+
+  return card
 }
