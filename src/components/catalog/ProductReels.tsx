@@ -87,10 +87,15 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     }
   }, [])
 
-  // Preload adjacent images (skip products with video — browser handles video buffering)
+  // Preload nearby images: 3 ahead + 1 behind for smooth swiping
   useEffect(() => {
-    const toPreload = [nextProduct, prevProduct].filter(Boolean) as Product[]
-    toPreload.forEach(p => {
+    const indices = [
+      currentIndex + 1, currentIndex + 2, currentIndex + 3,
+      currentIndex - 1,
+    ]
+    indices.forEach(i => {
+      if (i < 0 || i >= products.length) return
+      const p = products[i]
       if (p.video) return
       const url = p.image || p.images?.[0]
       if (url) {
@@ -98,7 +103,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         img.src = optimizeImage(url, 'reels')
       }
     })
-  }, [nextProduct, prevProduct])
+  }, [currentIndex, products])
 
   // Play/pause videos on slide change
   useEffect(() => {
