@@ -73,20 +73,27 @@ export default async function middleware(request: Request) {
     return next()
   }
 
-  // Intercept /sitemap.xml → rewrite to API
+  // Intercept /sitemap.xml → rewrite to og-image API with type=sitemap
   if (pathname === '/sitemap.xml') {
-    const sitemapUrl = new URL('/api/sitemap', url.origin)
+    const sitemapUrl = new URL('/api/og-image', url.origin)
+    sitemapUrl.searchParams.set('type', 'sitemap')
     if (subdomain) sitemapUrl.searchParams.set('subdomain', subdomain)
     if (customDomain) sitemapUrl.searchParams.set('domain', customDomain)
     return fetch(sitemapUrl.toString())
   }
 
-  // Intercept /robots.txt → rewrite to API
+  // Intercept /robots.txt → generate inline (no API call needed)
   if (pathname === '/robots.txt') {
-    const robotsUrl = new URL('/api/robots', url.origin)
-    if (subdomain) robotsUrl.searchParams.set('subdomain', subdomain)
-    if (customDomain) robotsUrl.searchParams.set('domain', customDomain)
-    return fetch(robotsUrl.toString())
+    const storeUrl = customDomain
+      ? `https://${customDomain}`
+      : `https://${subdomain}.shopifree.app`
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${storeUrl}/sitemap.xml\n`
+    return new Response(robotsTxt, {
+      headers: {
+        'Content-Type': 'text/plain',
+        'Cache-Control': 's-maxage=3600, stale-while-revalidate',
+      },
+    })
   }
 
   // Check if this is a crawler

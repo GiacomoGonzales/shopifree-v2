@@ -25,7 +25,9 @@ function getDb(): Firestore {
 interface RequestBody {
   storeId: string
   orderId: string
-  formData: Record<string, unknown>
+  formData?: Record<string, unknown>
+  action?: 'confirm'
+  paymentId?: string
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -43,7 +45,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { storeId, orderId, formData } = req.body as RequestBody
+    const { storeId, orderId, formData, action, paymentId } = req.body as RequestBody
+
+    // Route: confirm order after Checkout Pro redirect
+    if (action === 'confirm') {
+      return handleConfirmOrder(res, storeId, orderId, paymentId)
+    }
 
     if (!storeId || !orderId || !formData) {
       return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, formData' })
@@ -116,4 +123,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[process-mp-payment] Error:', error)
     return res.status(500).json({ error: 'Failed to process payment' })
   }
+}
+
+async function handleConfirmOrder(
+  res: VercelResponse,
+  storeId: string,
+  orderId: string,
+  paymentId?: string
+) {
+  if (!storeId || !orderId || !paymentId) {
+    return res.status(400).json({ error: 'Missing storeId, orderId, or paymentId' })
+  }
+
+  const firestore = getDb()
+
+  const storeDoc = await firestore.collection('stores').doc(storeId).get()
+  if (!storeDoc.exists) {
+    return res.status(404).json({ error: 'Store not found' })
+  }
+
+  const storeData = storeDoc.data()
+  const accessToken = storeData?.payments?.mercadopago?.accessToken
+
+  if (!accessToken) {
+    return res.status(400).json({ error: 'MercadoPago not configured' })
+  }
+
+  // Verify payment with MercadoPago API
+  const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  })
+
+  if (!mpResponse.ok) {
+    console.error('[confirm-mp-order] Failed to verify payment:', mpResponse.status)
+    return res.status(400).json({ error: 'Could not verify payment' })
+  }
+
+  const payment = await mpResponse.json()
+
+  const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
+  const orderDoc = await orderRef.get()
+
+  if (!orderDoc.exists) {
+    return res.status(404).json({ error: 'Order not found' })
+  }
+
+  const updateData: Record<string, unknown> = {
+    paymentId: String(paymentId),
+    updatedAt: new Date()
+  }
+
+  if (payment.status === 'approved') {
+    updateData.paymentStatus = 'paid'
+    updateData.status = 'confirmed'
+  } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
+    updateData.paymentStatus = 'failed'
+  }
+
+  await orderRef.update(updateData)
+
+  console.log('[confirm-mp-order] Order updated:', { orderId, paymentStatus: payment.status })
+
+  return res.status(200).json({
+    status: payment.status,
+    orderStatus: updateData.status || 'pending'
+  })
 }

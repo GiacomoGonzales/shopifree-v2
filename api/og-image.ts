@@ -40,13 +40,27 @@ function getCatalogSuffix(lang?: string): string {
   }
 }
 
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const { subdomain, domain, product: productSlug, bot } = req.query
+    const { subdomain, domain, product: productSlug, bot, type } = req.query
     const isSearchBot = bot === 'search'
 
     if (!subdomain && !domain) {
       return res.status(400).json({ error: 'Missing subdomain or domain parameter' })
+    }
+
+    // Sitemap generation (merged to avoid extra serverless function)
+    if (type === 'sitemap') {
+      return handleSitemap(req, res, subdomain as string | undefined, domain as string | undefined)
     }
 
     // Fetch store from Firebase
@@ -294,4 +308,69 @@ function renderStorePage(
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
   return res.status(200).send(html)
+}
+
+async function handleSitemap(
+  _req: VercelRequest,
+  res: VercelResponse,
+  subdomain: string | undefined,
+  domain: string | undefined
+) {
+  const storesRef = db.collection('stores')
+  const storeQuery = domain
+    ? storesRef.where('customDomain', '==', domain)
+    : storesRef.where('subdomain', '==', subdomain)
+
+  const snapshot = await storeQuery.get()
+  if (snapshot.empty) {
+    return res.status(404).json({ error: 'Store not found' })
+  }
+
+  const store = snapshot.docs[0].data()
+  const storeId = snapshot.docs[0].id
+  const storeUrl = store.customDomain
+    ? `https://${store.customDomain}`
+    : `https://${store.subdomain}.shopifree.app`
+
+  const productsSnapshot = await db
+    .collection('stores').doc(storeId)
+    .collection('products')
+    .where('active', '==', true)
+    .get()
+
+  const storeUpdatedAt = store.updatedAt?.toDate?.()
+    ? store.updatedAt.toDate().toISOString().split('T')[0]
+    : new Date().toISOString().split('T')[0]
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${escapeXml(storeUrl)}</loc>
+    <lastmod>${storeUpdatedAt}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>`
+
+  for (const pdoc of productsSnapshot.docs) {
+    const product = pdoc.data()
+    const slug = product.slug || pdoc.id
+    const updatedAt = product.updatedAt?.toDate?.()
+      ? product.updatedAt.toDate().toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+
+    xml += `
+  <url>
+    <loc>${escapeXml(`${storeUrl}/p/${slug}`)}</loc>
+    <lastmod>${updatedAt}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`
+  }
+
+  xml += `
+</urlset>`
+
+  res.setHeader('Content-Type', 'application/xml')
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+  return res.status(200).send(xml)
 }

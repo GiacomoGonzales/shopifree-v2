@@ -38,10 +38,11 @@ export default function PaymentPending() {
     // Confirm order via server-side API (uses Admin SDK to bypass security rules)
     const paymentId = searchParams.get('payment_id')
     if (paymentId && orderData.orderId && orderData.storeId) {
-      fetch('/api/confirm-mp-order', {
+      fetch('/api/process-mp-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'confirm',
           storeId: orderData.storeId,
           orderId: orderData.orderId,
           paymentId

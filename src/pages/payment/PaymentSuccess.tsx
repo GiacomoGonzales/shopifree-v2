@@ -90,10 +90,11 @@ export default function PaymentSuccess() {
     const paymentId = searchParams.get('payment_id')
     const paymentStatus = searchParams.get('status')
     if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
-      fetch('/api/confirm-mp-order', {
+      fetch('/api/process-mp-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'confirm',
           storeId: data.storeId,
           orderId: data.orderId,
           paymentId
