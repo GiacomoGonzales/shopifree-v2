@@ -1,9 +1,39 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { chatService, type Chat, type ChatMessage } from '../../lib/chatService'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+
+/**
+ * Play a loud, distinctive alert chime using Web Audio API.
+ * Three ascending tones that grab attention.
+ */
+function playAlertChime() {
+  try {
+    const ctx = new AudioContext()
+    const now = ctx.currentTime
+
+    const frequencies = [880, 1100, 1320] // A5, C#6, E6 — major triad
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.35, now + i * 0.15)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.4)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now + i * 0.15)
+      osc.stop(now + i * 0.15 + 0.4)
+    })
+
+    // Close context after sounds finish
+    setTimeout(() => ctx.close(), 1500)
+  } catch {
+    // Web Audio not available — silent fallback
+  }
+}
 
 function linkifyText(text: string, isAdmin: boolean) {
   const urlRegex = /(https?:\/\/[^\s]+)/g
@@ -40,8 +70,23 @@ export default function SupportChats() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const prevUnreadRef = useRef(-1) // -1 = first load, skip alert
+  const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Subscribe to all chats (escalated first)
+  const stopAlert = useCallback(() => {
+    if (alertIntervalRef.current) {
+      clearInterval(alertIntervalRef.current)
+      alertIntervalRef.current = null
+    }
+  }, [])
+
+  const startAlert = useCallback(() => {
+    if (alertIntervalRef.current) return // already ringing
+    playAlertChime() // play immediately
+    alertIntervalRef.current = setInterval(playAlertChime, 3500) // repeat every 3.5s
+  }, [])
+
+  // Subscribe to all chats (escalated first) + alert on new messages
   useEffect(() => {
     const unsub = chatService.subscribeToChats((allChats) => {
       const sorted = [...allChats].sort((a, b) => {
@@ -50,17 +95,34 @@ export default function SupportChats() {
         return 0
       })
       setChats(sorted)
-    })
-    return () => unsub()
-  }, [])
 
-  // Subscribe to messages of selected chat
+      // Alert logic: detect new unread messages from users
+      const totalUnread = sorted.reduce((sum, c) => sum + c.unreadByAdmin, 0)
+      if (prevUnreadRef.current >= 0 && totalUnread > prevUnreadRef.current) {
+        startAlert()
+      }
+      if (totalUnread === 0) {
+        stopAlert()
+      }
+      prevUnreadRef.current = totalUnread
+    })
+    return () => {
+      unsub()
+      stopAlert()
+    }
+  }, [startAlert, stopAlert])
+
+  // Subscribe to messages of selected chat + stop alert when reading
   useEffect(() => {
     if (!selectedChat) return
     chatService.markAsRead(selectedChat.id, 'admin')
+    // If all unread are from this chat, stop alerting
+    const remainingUnread = chats.reduce((sum, c) =>
+      sum + (c.id === selectedChat.id ? 0 : c.unreadByAdmin), 0)
+    if (remainingUnread === 0) stopAlert()
     const unsub = chatService.subscribeToMessages(selectedChat.id, setMessages)
     return () => unsub()
-  }, [selectedChat])
+  }, [selectedChat, chats, stopAlert])
 
   // Scroll to bottom
   useEffect(() => {
