@@ -1,7 +1,7 @@
 import { next } from '@vercel/edge'
 
 // Social media and crawler user agents
-const CRAWLER_USER_AGENTS = [
+const SOCIAL_CRAWLER_USER_AGENTS = [
   'facebookexternalhit',
   'Facebot',
   'Twitterbot',
@@ -12,6 +12,18 @@ const CRAWLER_USER_AGENTS = [
   'TelegramBot',
   'Discordbot',
 ]
+
+// Search engine bots
+const SEARCH_ENGINE_BOTS = [
+  'Googlebot',
+  'Bingbot',
+  'YandexBot',
+  'DuckDuckBot',
+  'Baiduspider',
+]
+
+// All crawler user agents
+const CRAWLER_USER_AGENTS = [...SOCIAL_CRAWLER_USER_AGENTS, ...SEARCH_ENGINE_BOTS]
 
 // Main domains (not store domains)
 const MAIN_DOMAINS = [
@@ -30,15 +42,6 @@ export default async function middleware(request: Request) {
 
   // Skip API routes and static files
   if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2)$/)) {
-    return next()
-  }
-
-  // Check if this is a crawler
-  const isCrawler = CRAWLER_USER_AGENTS.some(crawler =>
-    userAgent.toLowerCase().includes(crawler.toLowerCase())
-  )
-
-  if (!isCrawler) {
     return next()
   }
 
@@ -65,29 +68,66 @@ export default async function middleware(request: Request) {
     subdomain = catalogMatch[1]
   }
 
-  // If store detected, fetch OG data from API
-  if (subdomain || customDomain) {
-    const ogUrl = new URL('/api/og-image', url.origin)
-    if (subdomain) {
-      ogUrl.searchParams.set('subdomain', subdomain)
-    }
-    if (customDomain) {
-      ogUrl.searchParams.set('domain', customDomain)
-    }
+  // If no store detected, pass through
+  if (!subdomain && !customDomain) {
+    return next()
+  }
 
-    try {
-      const response = await fetch(ogUrl.toString())
-      if (response.ok) {
-        return new Response(await response.text(), {
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 's-maxage=3600, stale-while-revalidate',
-          },
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching OG data:', error)
+  // Intercept /sitemap.xml → rewrite to API
+  if (pathname === '/sitemap.xml') {
+    const sitemapUrl = new URL('/api/sitemap', url.origin)
+    if (subdomain) sitemapUrl.searchParams.set('subdomain', subdomain)
+    if (customDomain) sitemapUrl.searchParams.set('domain', customDomain)
+    return fetch(sitemapUrl.toString())
+  }
+
+  // Intercept /robots.txt → rewrite to API
+  if (pathname === '/robots.txt') {
+    const robotsUrl = new URL('/api/robots', url.origin)
+    if (subdomain) robotsUrl.searchParams.set('subdomain', subdomain)
+    if (customDomain) robotsUrl.searchParams.set('domain', customDomain)
+    return fetch(robotsUrl.toString())
+  }
+
+  // Check if this is a crawler
+  const isCrawler = CRAWLER_USER_AGENTS.some(crawler =>
+    userAgent.toLowerCase().includes(crawler.toLowerCase())
+  )
+
+  if (!isCrawler) {
+    return next()
+  }
+
+  // Detect product URL: /p/:productSlug
+  const productMatch = pathname.match(/^\/p\/([^/]+)/)
+  // Also match /c/:storeSlug/p/:productSlug
+  const catalogProductMatch = pathname.match(/^\/c\/[^/]+\/p\/([^/]+)/)
+  const productSlug = catalogProductMatch?.[1] || productMatch?.[1] || null
+
+  // Determine if this is a social bot (needs meta-refresh) vs search bot (no redirect)
+  const isSearchBot = SEARCH_ENGINE_BOTS.some(bot =>
+    userAgent.toLowerCase().includes(bot.toLowerCase())
+  )
+
+  // Fetch prerendered HTML from API
+  const ogUrl = new URL('/api/og-image', url.origin)
+  if (subdomain) ogUrl.searchParams.set('subdomain', subdomain)
+  if (customDomain) ogUrl.searchParams.set('domain', customDomain)
+  if (productSlug) ogUrl.searchParams.set('product', productSlug)
+  if (isSearchBot) ogUrl.searchParams.set('bot', 'search')
+
+  try {
+    const response = await fetch(ogUrl.toString())
+    if (response.ok) {
+      return new Response(await response.text(), {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 's-maxage=3600, stale-while-revalidate',
+        },
+      })
     }
+  } catch (error) {
+    console.error('Error fetching OG data:', error)
   }
 
   return next()

@@ -35,15 +35,16 @@ interface Props {
   products: Product[]
   categories: Category[]
   onWhatsAppClick?: () => void  // REQUERIDO para analytics
+  initialProduct?: Product | null
 }
 
 // =====================================================
 // THEME COMPONENT
 // =====================================================
-export default function TemplateTheme({ store, products, categories, onWhatsAppClick }: Props) {
+export default function TemplateTheme({ store, products, categories, onWhatsAppClick, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [announcementDismissed, setAnnouncementDismissed] = useState(false)

@@ -11,6 +11,7 @@ import type { Store, Product, Category } from '../../types'
 interface CatalogProps {
   subdomainStore?: string
   customDomain?: string
+  productSlug?: string
 }
 
 // Cache helpers - store logo/name in localStorage for instant display on repeat visits
@@ -68,8 +69,9 @@ function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
   )
 }
 
-export default function Catalog({ subdomainStore, customDomain }: CatalogProps) {
-  const { storeSlug } = useParams<{ storeSlug: string }>()
+export default function Catalog({ subdomainStore, customDomain, productSlug: productSlugProp }: CatalogProps) {
+  const { storeSlug, productSlug: productSlugParam } = useParams<{ storeSlug: string; productSlug: string }>()
+  const productSlug = productSlugProp || productSlugParam
   // Use subdomain prop if provided, otherwise use URL param
   const slug = subdomainStore || storeSlug
   const cacheKey = customDomain || slug || ''
@@ -216,9 +218,14 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
   // Get the theme component based on store's themeId
   const ThemeComponent = getThemeComponent(store.themeId || 'minimal')
 
+  // Find initial product from URL slug (for /p/:productSlug routes)
+  const initialProduct = productSlug
+    ? products.find(p => p.slug === productSlug) || null
+    : null
+
   return (
     <>
-      <StoreSEO store={store} products={products} categories={categories} />
+      <StoreSEO store={store} products={products} categories={categories} product={initialProduct} />
       <ThemeComponent
         store={store}
         products={products}
@@ -226,6 +233,7 @@ export default function Catalog({ subdomainStore, customDomain }: CatalogProps) 
         onWhatsAppClick={handleWhatsAppClick}
         onProductView={handleProductView}
         onCartAdd={handleCartAdd}
+        initialProduct={initialProduct}
       />
     </>
   )

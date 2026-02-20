@@ -83,13 +83,14 @@ interface Props {
   onWhatsAppClick?: () => void
   onProductView?: (product: Product) => void
   onCartAdd?: (product: Product) => void
+  initialProduct?: Product | null
 }
 
-export default function NoirTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd }: Props) {
+export default function NoirTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
