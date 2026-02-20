@@ -18,6 +18,7 @@ interface UsePaginationResult<T> {
   goToPage: (page: number) => void
   loadMore: () => void
   sentinelRef: (node: HTMLDivElement | null) => void
+  containerRef: React.RefObject<HTMLDivElement | null>
 }
 
 export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UsePaginationResult<T> {
@@ -25,6 +26,7 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
   const [currentPage, setCurrentPage] = useState(1)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const sentinelNodeRef = useRef<HTMLDivElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   // Reset when items change (category switch)
   useEffect(() => {
@@ -61,12 +63,18 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
     setCurrentPage(clamped)
   }, [totalPages])
 
-  // Scroll to top after page change renders (classic pagination)
+  // Scroll to products section after page change renders (classic pagination)
   const prevPageRef = useRef(currentPage)
   useEffect(() => {
     if (type === 'classic' && currentPage !== prevPageRef.current) {
       prevPageRef.current = currentPage
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (containerRef.current) {
+        const offset = 20
+        const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
+        window.scrollTo({ top, behavior: 'smooth' })
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     }
   }, [currentPage, type])
 
@@ -110,5 +118,6 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
     goToPage,
     loadMore,
     sentinelRef,
+    containerRef,
   }
 }

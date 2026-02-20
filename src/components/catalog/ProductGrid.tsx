@@ -44,6 +44,7 @@ export default function ProductGrid({
     goToPage,
     loadMore,
     sentinelRef,
+    containerRef,
   } = usePagination({ items: products, type: paginationType })
 
   if (products.length === 0) {
@@ -108,7 +109,7 @@ export default function ProductGrid({
   }
 
   return (
-    <div>
+    <div ref={containerRef}>
       {layoutContent}
 
       {/* Showing count */}
