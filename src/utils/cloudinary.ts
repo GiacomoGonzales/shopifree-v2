@@ -3,7 +3,7 @@
  * Transforms Cloudinary URLs to include optimization parameters
  */
 
-type ImageSize = 'thumbnail' | 'card' | 'gallery' | 'reels' | 'hero'
+type ImageSize = 'thumbnail' | 'card' | 'gallery' | 'hero'
 
 interface SizeConfig {
   width: number
@@ -15,7 +15,6 @@ const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
   thumbnail: { width: 160, height: 160, crop: 'fill' },  // 2x for retina
   card: { width: 600, crop: 'limit' },  // Only limit width, preserve aspect ratio
   gallery: { width: 1000, crop: 'limit' },  // Higher quality for detail view
-  reels: { width: 1200, crop: 'limit' },   // Full-screen reels (retina mobile)
   hero: { width: 1600, crop: 'limit' },
 }
 

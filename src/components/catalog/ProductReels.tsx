@@ -100,7 +100,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       const url = p.image || p.images?.[0]
       if (url) {
         const img = new Image()
-        img.src = optimizeImage(url, 'reels')
+        img.src = optimizeImage(url, 'gallery')
       }
     })
   }, [currentIndex, products])
@@ -463,11 +463,11 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
               loop
               playsInline
               className="w-full h-full object-cover"
-              poster={imageUrl ? optimizeImage(imageUrl, 'reels') : undefined}
+              poster={imageUrl ? optimizeImage(imageUrl, 'gallery') : undefined}
             />
           ) : imageUrl ? (
             <img
-              src={optimizeImage(imageUrl, 'reels')}
+              src={optimizeImage(imageUrl, 'gallery')}
               alt={product.name}
               className="w-full h-full object-cover"
               draggable={false}
