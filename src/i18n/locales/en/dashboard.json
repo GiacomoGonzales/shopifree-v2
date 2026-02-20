@@ -8,6 +8,7 @@
     "appearance": "Appearance",
     "myBusiness": "My Business",
     "domain": "Domain",
+    "integrations": "Integrations",
     "payments": "Payments",
     "coupons": "Coupons",
     "myAccount": "My Account",
@@ -864,6 +865,40 @@
         "name": "Bank Transfer",
         "description": "Direct deposit to your account"
       }
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "Connect analytics and tracking tools",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "toast": {
+      "saved": "Integrations saved",
+      "error": "Error saving"
+    },
+    "googleAnalytics": {
+      "title": "Google Analytics 4",
+      "description": "Measure traffic, user behavior, and conversions for your store.",
+      "label": "Measurement ID",
+      "placeholder": "G-XXXXXXXXXX"
+    },
+    "metaPixel": {
+      "title": "Meta Pixel (Facebook / Instagram)",
+      "description": "Track conversions and optimize your Facebook and Instagram ads.",
+      "label": "Pixel ID",
+      "placeholder": "123456789012345"
+    },
+    "tiktokPixel": {
+      "title": "TikTok Pixel",
+      "description": "Measure the performance of your TikTok Ads campaigns.",
+      "label": "Pixel ID",
+      "placeholder": "CXXXXXXXXXXXXXXXXX"
+    },
+    "googleSearchConsole": {
+      "title": "Google Search Console",
+      "description": "Verify site ownership to monitor your presence on Google.",
+      "label": "Verification code",
+      "placeholder": "Paste the meta tag content"
     }
   },
   "coupons": {

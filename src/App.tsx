@@ -21,6 +21,7 @@ import Branding from './pages/dashboard/Branding'
 import Account from './pages/dashboard/Account'
 import Domain from './pages/dashboard/Domain'
 import Payments from './pages/dashboard/Payments'
+import Integrations from './pages/dashboard/Integrations'
 import Coupons from './pages/dashboard/Coupons'
 import Plan from './pages/dashboard/Plan'
 import Analytics from './pages/dashboard/Analytics'
@@ -50,14 +51,16 @@ import PaymentPending from './pages/payment/PaymentPending'
 // Legal Pages
 import Privacy from './pages/Privacy'
 
-// Subdomain catalog wrapper
+// Subdomain catalog wrapper (supports optional product slug)
 function SubdomainCatalog({ subdomain }: { subdomain: string }) {
-  return <Catalog subdomainStore={subdomain} />
+  const { productSlug } = useParams<{ productSlug: string }>()
+  return <Catalog subdomainStore={subdomain} productSlug={productSlug} />
 }
 
-// Custom domain catalog wrapper
+// Custom domain catalog wrapper (supports optional product slug)
 function CustomDomainCatalog({ domain }: { domain: string }) {
-  return <Catalog customDomain={domain} />
+  const { productSlug } = useParams<{ productSlug: string }>()
+  return <Catalog customDomain={domain} productSlug={productSlug} />
 }
 
 // Detect browser language and redirect to appropriate language route
@@ -110,6 +113,7 @@ function AppRoutes() {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/failure" element={<PaymentFailure />} />
         <Route path="/payment/pending" element={<PaymentPending />} />
+        <Route path="/p/:productSlug" element={<SubdomainCatalog subdomain={subdomain} />} />
         <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
       </Routes>
     )
@@ -122,6 +126,7 @@ function AppRoutes() {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/failure" element={<PaymentFailure />} />
         <Route path="/payment/pending" element={<PaymentPending />} />
+        <Route path="/p/:productSlug" element={<CustomDomainCatalog domain={customDomain} />} />
         <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
       </Routes>
     )
@@ -139,6 +144,7 @@ function AppRoutes() {
       <Route path="/payment/pending" element={<PaymentPending />} />
 
       {/* Public catalog (no language prefix) */}
+      <Route path="/c/:storeSlug/p/:productSlug" element={<Catalog />} />
       <Route path="/c/:storeSlug" element={<Catalog />} />
 
       {/* Language-prefixed routes */}
@@ -169,6 +175,7 @@ function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="domain" element={<Domain />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="integrations" element={<Integrations />} />
           <Route path="coupons" element={<Coupons />} />
           {/* Account & Plan */}
           <Route path="account" element={<Account />} />

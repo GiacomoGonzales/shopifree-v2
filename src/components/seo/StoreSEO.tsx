@@ -6,6 +6,25 @@ interface StoreSEOProps {
   store: Store
   products: Product[]
   categories: Category[]
+  product?: Product | null
+}
+
+// Map language code to og:locale
+function getOgLocale(lang?: string): string {
+  switch (lang) {
+    case 'en': return 'en_US'
+    case 'pt': return 'pt_BR'
+    default: return 'es_LA'
+  }
+}
+
+// Map language code to title suffix
+function getCatalogSuffix(lang?: string): string {
+  switch (lang) {
+    case 'en': return 'Online Catalog'
+    case 'pt': return 'Catálogo Online'
+    default: return 'Catálogo Online'
+  }
 }
 
 // Update favicon dynamically by manipulating the DOM directly
@@ -79,32 +98,54 @@ function updateFavicon(logoUrl: string) {
   img.src = logoUrl
 }
 
-export default function StoreSEO({ store, products, categories }: StoreSEOProps) {
+export default function StoreSEO({ store, products, categories, product }: StoreSEOProps) {
   // Update favicon when store logo changes
   useEffect(() => {
     if (store.logo) {
       updateFavicon(store.logo)
     }
   }, [store.logo])
+
   // Build the store URL
   const storeUrl = store.customDomain
     ? `https://${store.customDomain}`
     : `https://${store.subdomain}.shopifree.app`
 
-  // Meta description: use slogan, about description, or generate from name
-  const metaDescription = store.about?.slogan
-    || store.about?.description?.slice(0, 160)
-    || `${store.name} - Explora nuestro catálogo de productos. Compra fácil por WhatsApp.`
+  const catalogSuffix = getCatalogSuffix(store.language)
+  const ogLocale = getOgLocale(store.language)
+
+  // Product-specific vs store-level meta
+  const isProductPage = !!product
+
+  const pageTitle = isProductPage
+    ? `${product.metaTitle || product.name} | ${store.name}`
+    : `${store.name} | ${catalogSuffix}`
+
+  const metaDescription = isProductPage
+    ? (product.metaDescription || product.shortDescription || product.description || `${product.name} - ${store.name}`)?.slice(0, 160)
+    : (store.about?.slogan
+      || store.about?.description?.slice(0, 160)
+      || `${store.name} - Explora nuestro catálogo de productos. Compra fácil por WhatsApp.`)
+
+  const canonicalUrl = isProductPage
+    ? `${storeUrl}/p/${product.slug}`
+    : storeUrl
+
+  const ogImage = isProductPage
+    ? (product.image || product.images?.[0] || store.logo || 'https://shopifree.app/og-image.png')
+    : (store.logo || store.heroImage || products[0]?.image || 'https://shopifree.app/og-image.png')
+
+  const ogType = isProductPage ? 'product' : 'website'
+
+  const ogTitle = isProductPage
+    ? (product.metaTitle || product.name)
+    : store.name
 
   // Keywords from categories
   const categoryKeywords = categories.map(c => c.name).join(', ')
-  const keywords = `${store.name}, ${categoryKeywords}, compras online, tienda, catálogo`
-
-  // OG Image: use store logo, hero image, or first product image
-  const ogImage = store.logo
-    || store.heroImage
-    || products[0]?.image
-    || 'https://shopifree.app/og-image.png'
+  const keywords = isProductPage
+    ? `${product.name}, ${product.brand || store.name}, ${categoryKeywords}`
+    : `${store.name}, ${categoryKeywords}, compras online, tienda, catálogo`
 
   // JSON-LD: LocalBusiness schema
   const localBusinessSchema = {
@@ -112,10 +153,10 @@ export default function StoreSEO({ store, products, categories }: StoreSEOProps)
     '@type': 'LocalBusiness',
     '@id': storeUrl,
     name: store.name,
-    description: metaDescription,
+    description: store.about?.slogan || store.about?.description?.slice(0, 160) || `${store.name}`,
     url: storeUrl,
     logo: store.logo || undefined,
-    image: ogImage,
+    image: store.logo || store.heroImage || 'https://shopifree.app/og-image.png',
     telephone: store.whatsapp ? `+${store.whatsapp.replace(/\D/g, '')}` : undefined,
     email: store.email || undefined,
     address: store.location ? {
@@ -139,26 +180,23 @@ export default function StoreSEO({ store, products, categories }: StoreSEOProps)
     currenciesAccepted: store.currency || 'USD'
   }
 
-  // JSON-LD: Product schemas (limit to first 10 for performance)
-  const productSchemas = products.slice(0, 10).map(product => ({
+  // JSON-LD: Single product schema (for product pages)
+  const singleProductSchema = isProductPage ? {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    '@id': `${storeUrl}/product/${product.slug || product.id}`,
+    '@id': `${storeUrl}/p/${product.slug}`,
     name: product.name,
-    description: product.description || product.shortDescription || `${product.name} disponible en ${store.name}`,
+    description: product.description || product.shortDescription || `${product.name} - ${store.name}`,
     image: product.image || product.images?.[0] || ogImage,
-    url: `${storeUrl}#${product.slug || product.id}`,
+    url: `${storeUrl}/p/${product.slug}`,
     sku: product.sku || product.id,
-    brand: product.brand ? {
+    brand: {
       '@type': 'Brand',
-      name: product.brand
-    } : {
-      '@type': 'Brand',
-      name: store.name
+      name: product.brand || store.name
     },
     offers: {
       '@type': 'Offer',
-      url: `${storeUrl}#${product.slug || product.id}`,
+      url: `${storeUrl}/p/${product.slug}`,
       priceCurrency: store.currency || 'USD',
       price: product.price,
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -170,67 +208,108 @@ export default function StoreSEO({ store, products, categories }: StoreSEOProps)
         name: store.name
       }
     }
-  }))
+  } : null
 
-  // JSON-LD: ItemList for all products
-  const itemListSchema = {
+  // JSON-LD: Product schemas for catalog page (limit to first 10)
+  const productSchemas = !isProductPage ? products.slice(0, 10).map(p => ({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${storeUrl}/p/${p.slug || p.id}`,
+    name: p.name,
+    description: p.description || p.shortDescription || `${p.name} - ${store.name}`,
+    image: p.image || p.images?.[0] || ogImage,
+    url: `${storeUrl}/p/${p.slug || p.id}`,
+    sku: p.sku || p.id,
+    brand: {
+      '@type': 'Brand',
+      name: p.brand || store.name
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `${storeUrl}/p/${p.slug || p.id}`,
+      priceCurrency: store.currency || 'USD',
+      price: p.price,
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      availability: p.trackStock && p.stock === 0
+        ? 'https://schema.org/OutOfStock'
+        : 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: store.name
+      }
+    }
+  })) : []
+
+  // JSON-LD: ItemList for catalog page
+  const itemListSchema = !isProductPage ? {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `Productos de ${store.name}`,
     numberOfItems: products.length,
-    itemListElement: products.slice(0, 20).map((product, index) => ({
+    itemListElement: products.slice(0, 20).map((p, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `${storeUrl}#${product.slug || product.id}`,
-      name: product.name,
-      image: product.image
+      url: `${storeUrl}/p/${p.slug || p.id}`,
+      name: p.name,
+      image: p.image
     }))
-  }
+  } : null
 
   // JSON-LD: BreadcrumbList
+  const breadcrumbItems = [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: store.name,
+      item: storeUrl
+    }
+  ]
+  if (isProductPage) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 2,
+      name: product.name,
+      item: `${storeUrl}/p/${product.slug}`
+    })
+  }
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Inicio',
-        item: storeUrl
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Catálogo',
-        item: `${storeUrl}/catalogo`
-      }
-    ]
+    itemListElement: breadcrumbItems
   }
 
   return (
     <Helmet>
       {/* Basic Meta Tags */}
-      <title>{store.name} | Catálogo Online</title>
-      <meta name="description" content={metaDescription} />
+      <title>{pageTitle}</title>
+      <meta name="description" content={metaDescription!} />
       <meta name="keywords" content={keywords} />
       <meta name="author" content={store.name} />
-      <link rel="canonical" href={storeUrl} />
+      <link rel="canonical" href={canonicalUrl} />
 
       {/* Open Graph */}
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={storeUrl} />
-      <meta property="og:title" content={store.name} />
-      <meta property="og:description" content={metaDescription} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:title" content={ogTitle} />
+      <meta property="og:description" content={metaDescription!} />
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={store.name} />
-      <meta property="og:locale" content={store.language === 'en' ? 'en_US' : 'es_LA'} />
+      <meta property="og:locale" content={ogLocale} />
+
+      {/* Product-specific OG tags */}
+      {isProductPage && (
+        <>
+          <meta property="product:price:amount" content={String(product.price)} />
+          <meta property="product:price:currency" content={store.currency || 'USD'} />
+        </>
+      )}
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={store.name} />
-      <meta name="twitter:description" content={metaDescription} />
+      <meta name="twitter:title" content={ogTitle} />
+      <meta name="twitter:description" content={metaDescription!} />
       <meta name="twitter:image" content={ogImage} />
 
       {/* Additional SEO */}
@@ -242,16 +321,46 @@ export default function StoreSEO({ store, products, categories }: StoreSEOProps)
         {JSON.stringify(localBusinessSchema)}
       </script>
       <script type="application/ld+json">
-        {JSON.stringify(itemListSchema)}
-      </script>
-      <script type="application/ld+json">
         {JSON.stringify(breadcrumbSchema)}
       </script>
+      {singleProductSchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(singleProductSchema)}
+        </script>
+      )}
+      {itemListSchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(itemListSchema)}
+        </script>
+      )}
       {productSchemas.map((schema, index) => (
         <script key={index} type="application/ld+json">
           {JSON.stringify(schema)}
         </script>
       ))}
+
+      {/* Google Search Console verification */}
+      {store.integrations?.googleSearchConsole && (
+        <meta name="google-site-verification" content={store.integrations.googleSearchConsole} />
+      )}
+
+      {/* Google Analytics 4 */}
+      {store.integrations?.googleAnalytics && (
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${store.integrations.googleAnalytics}`} />
+      )}
+      {store.integrations?.googleAnalytics && (
+        <script>{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${store.integrations.googleAnalytics}');`}</script>
+      )}
+
+      {/* Meta Pixel (Facebook / Instagram) */}
+      {store.integrations?.metaPixel && (
+        <script>{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${store.integrations.metaPixel}');fbq('track','PageView');`}</script>
+      )}
+
+      {/* TikTok Pixel */}
+      {store.integrations?.tiktokPixel && (
+        <script>{`!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var i=d.createElement("script");i.type="text/javascript",i.async=!0,i.src=r+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(i,a)};ttq.load('${store.integrations.tiktokPixel}');ttq.page();}(window,document,'ttq');`}</script>
+      )}
     </Helmet>
   )
 }

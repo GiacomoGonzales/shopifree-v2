@@ -8,6 +8,7 @@
     "appearance": "Apariencia",
     "myBusiness": "Mi Negocio",
     "domain": "Dominio",
+    "integrations": "Integraciones",
     "payments": "Pagos",
     "coupons": "Cupones",
     "myAccount": "Mi Cuenta",
@@ -865,6 +866,40 @@
         "name": "Transferencia bancaria",
         "description": "Deposito directo a tu cuenta"
       }
+    }
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "subtitle": "Conecta herramientas de analítica y tracking",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar cambios",
+    "toast": {
+      "saved": "Integraciones guardadas",
+      "error": "Error al guardar"
+    },
+    "googleAnalytics": {
+      "title": "Google Analytics 4",
+      "description": "Mide el tráfico, comportamiento de usuarios y conversiones de tu tienda.",
+      "label": "Measurement ID",
+      "placeholder": "G-XXXXXXXXXX"
+    },
+    "metaPixel": {
+      "title": "Meta Pixel (Facebook / Instagram)",
+      "description": "Rastrea conversiones y optimiza tus anuncios de Facebook e Instagram.",
+      "label": "Pixel ID",
+      "placeholder": "123456789012345"
+    },
+    "tiktokPixel": {
+      "title": "TikTok Pixel",
+      "description": "Mide el rendimiento de tus campañas de TikTok Ads.",
+      "label": "Pixel ID",
+      "placeholder": "CXXXXXXXXXXXXXXXXX"
+    },
+    "googleSearchConsole": {
+      "title": "Google Search Console",
+      "description": "Verifica la propiedad de tu sitio para monitorear tu presencia en Google.",
+      "label": "Código de verificación",
+      "placeholder": "Pega el contenido de la meta tag"
     }
   },
   "coupons": {

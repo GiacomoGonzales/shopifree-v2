@@ -94,6 +94,9 @@ export interface Store {
     productViewMode?: 'drawer' | 'reels'
   }
 
+  // === INTEGRACIONES ===
+  integrations?: StoreIntegrations
+
   // === PAGOS ===
   payments?: StorePayments
 
@@ -173,6 +176,13 @@ export interface StoreLocation {
     lat: number
     lng: number
   }
+}
+
+export interface StoreIntegrations {
+  googleAnalytics?: string    // G-XXXXXXXXXX
+  metaPixel?: string          // 123456789
+  tiktokPixel?: string        // CXXXXXXXXX
+  googleSearchConsole?: string // verification code
 }
 
 export interface StorePayments {
