@@ -59,8 +59,16 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
   const goToPage = useCallback((page: number) => {
     const clamped = Math.max(1, Math.min(page, totalPages))
     setCurrentPage(clamped)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [totalPages])
+
+  // Scroll to top after page change renders (classic pagination)
+  const prevPageRef = useRef(currentPage)
+  useEffect(() => {
+    if (type === 'classic' && currentPage !== prevPageRef.current) {
+      prevPageRef.current = currentPage
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [currentPage, type])
 
   // IntersectionObserver for infinite-scroll
   const sentinelRef = useCallback((node: HTMLDivElement | null) => {
