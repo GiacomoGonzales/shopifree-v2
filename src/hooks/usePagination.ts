@@ -58,22 +58,22 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
     setVisibleCount(prev => Math.min(prev + PAGE_SIZE, totalItems))
   }, [totalItems])
 
+  const shouldScrollRef = useRef(false)
+
   const goToPage = useCallback((page: number) => {
     const clamped = Math.max(1, Math.min(page, totalPages))
     setCurrentPage(clamped)
+    shouldScrollRef.current = true
   }, [totalPages])
 
   // Scroll to products section after page change renders (classic pagination)
-  const prevPageRef = useRef(currentPage)
   useEffect(() => {
-    if (type === 'classic' && currentPage !== prevPageRef.current) {
-      prevPageRef.current = currentPage
+    if (type === 'classic' && shouldScrollRef.current) {
+      shouldScrollRef.current = false
       if (containerRef.current) {
-        const offset = 20
+        const offset = 100
         const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
         window.scrollTo({ top, behavior: 'smooth' })
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     }
   }, [currentPage, type])
