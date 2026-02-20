@@ -70,11 +70,13 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
   useEffect(() => {
     if (type === 'classic' && shouldScrollRef.current) {
       shouldScrollRef.current = false
-      if (containerRef.current) {
-        const offset = 100
-        const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
-        window.scrollTo({ top, behavior: 'smooth' })
-      }
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          const offset = 140
+          const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
+          window.scrollTo({ top, behavior: 'smooth' })
+        }
+      })
     }
   }, [currentPage, type])
 
