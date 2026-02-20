@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { getThemeTranslations } from '../../themes/shared/translations'
 
 interface PendingOrder {
@@ -33,26 +31,23 @@ export default function PaymentPending() {
   const [language, setLanguage] = useState<string>(orderData?.language || 'es')
 
   useEffect(() => {
-    const processPayment = async () => {
-      if (!orderData) return
+    if (!orderData) return
 
-      setLanguage(orderData.language || 'es')
+    setLanguage(orderData.language || 'es')
 
-      try {
-        const paymentId = searchParams.get('payment_id')
-        if (paymentId) {
-          const orderRef = doc(db, 'stores', orderData.storeId, 'orders', orderData.orderId)
-          await updateDoc(orderRef, {
-            paymentId,
-            updatedAt: new Date()
-          })
-        }
-      } catch (error) {
-        console.error('Error processing pending payment:', error)
-      }
+    // Confirm order via server-side API (uses Admin SDK to bypass security rules)
+    const paymentId = searchParams.get('payment_id')
+    if (paymentId && orderData.orderId && orderData.storeId) {
+      fetch('/api/confirm-mp-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: orderData.storeId,
+          orderId: orderData.orderId,
+          paymentId
+        })
+      }).catch(err => console.warn('Order confirmation failed (webhook will handle it):', err))
     }
-
-    processPayment()
   }, [searchParams, orderData])
 
   const t = getThemeTranslations(language)

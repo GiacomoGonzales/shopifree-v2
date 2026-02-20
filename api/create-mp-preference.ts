@@ -87,9 +87,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const isSandbox = mpConfig.sandbox === true
     const baseOrigin = origin || 'https://shopifree.app'
 
-    // Build webhook URL - use the Vercel deployment URL for webhooks
-    const webhookBase = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
+    // Build webhook URL - use stable production URL (not VERCEL_URL which is deployment-specific)
+    const webhookBase = process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : process.env.APP_URL || baseOrigin
     const notificationUrl = `${webhookBase}/api/mp-webhook?storeId=${storeId}`
 

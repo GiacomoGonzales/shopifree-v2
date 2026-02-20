@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { getThemeTranslations } from '../../themes/shared/translations'
 
 interface PendingOrderData {
@@ -88,17 +86,19 @@ export default function PaymentSuccess() {
     // Clean up localStorage
     localStorage.removeItem('pendingOrder')
 
-    // Fire-and-forget: update order in Firestore (webhook also does this as backup)
+    // Confirm order via server-side API (uses Admin SDK to bypass security rules)
     const paymentId = searchParams.get('payment_id')
     const paymentStatus = searchParams.get('status')
     if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
-      const orderRef = doc(db, 'stores', data.storeId, 'orders', data.orderId)
-      updateDoc(orderRef, {
-        paymentStatus: 'paid',
-        paymentId,
-        status: 'confirmed',
-        updatedAt: new Date()
-      }).catch(err => console.warn('Firestore update failed (webhook will handle it):', err))
+      fetch('/api/confirm-mp-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: data.storeId,
+          orderId: data.orderId,
+          paymentId
+        })
+      }).catch(err => console.warn('Order confirmation failed (webhook will handle it):', err))
     }
   }, [searchParams])
 
