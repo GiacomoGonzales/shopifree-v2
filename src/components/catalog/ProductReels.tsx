@@ -530,6 +530,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
               background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
               opacity: holding ? 0 : 1,
               transition: 'opacity 0.25s ease',
+              zIndex: 3,
             }}
           />
 
@@ -537,7 +538,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
           {hasDiscount && (
             <div
               className="absolute top-16 left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white shadow-lg"
-              style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}
+              style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease', zIndex: 3 }}
             >
               -{discountPercent}%
             </div>
@@ -546,7 +547,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
           {/* Product info */}
           <div
             className="absolute bottom-0 left-0 right-0 p-5 pb-7"
-            style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}
+            style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease', zIndex: 3 }}
           >
             <h2 className="text-xl font-bold text-white mb-1.5 drop-shadow-lg leading-tight">
               {product.name}
