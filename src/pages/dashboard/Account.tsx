@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore'
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth'
+import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, linkWithCredential, unlink, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -43,6 +43,12 @@ export default function Account() {
   const [newEmail, setNewEmail] = useState('')
   const [emailPassword, setEmailPassword] = useState('')
   const [changingEmail, setChangingEmail] = useState(false)
+
+  // Unlink Google
+  const [showUnlinkGoogle, setShowUnlinkGoogle] = useState(false)
+  const [unlinkPassword, setUnlinkPassword] = useState('')
+  const [unlinkConfirmPassword, setUnlinkConfirmPassword] = useState('')
+  const [unlinking, setUnlinking] = useState(false)
 
   const isGoogleUser = firebaseUser?.providerData?.some(p => p.providerId === 'google.com') && !firebaseUser?.providerData?.some(p => p.providerId === 'password')
 
@@ -222,6 +228,44 @@ export default function Account() {
     }
   }
 
+  const handleUnlinkGoogle = async () => {
+    if (!firebaseUser || !firebaseUser.email) return
+
+    if (unlinkPassword.length < 6) {
+      showToast(t('account.security.passwordTooShort'), 'error')
+      return
+    }
+    if (unlinkPassword !== unlinkConfirmPassword) {
+      showToast(t('account.security.passwordMismatch'), 'error')
+      return
+    }
+
+    setUnlinking(true)
+    try {
+      const googleProvider = new GoogleAuthProvider()
+      await reauthenticateWithPopup(firebaseUser, googleProvider)
+
+      const credential = EmailAuthProvider.credential(firebaseUser.email, unlinkPassword)
+      await linkWithCredential(firebaseUser, credential)
+      await unlink(firebaseUser, 'google.com')
+
+      showToast(t('account.security.unlinkGoogleSuccess'), 'success')
+      setShowUnlinkGoogle(false)
+      setUnlinkPassword('')
+      setUnlinkConfirmPassword('')
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        showToast(t('account.toast.error'), 'error')
+      } else if (error.code === 'auth/provider-already-linked') {
+        showToast(t('account.toast.error'), 'error')
+      } else {
+        showToast(t('account.toast.error'), 'error')
+      }
+    } finally {
+      setUnlinking(false)
+    }
+  }
+
   const handleManageSubscription = async () => {
     if (!firebaseUser) return
 
@@ -361,9 +405,9 @@ export default function Account() {
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
                   />
                   <button
-                    onClick={() => setShowEmailForm(true)}
+                    onClick={() => isGoogleUser ? setShowUnlinkGoogle(true) : setShowEmailForm(true)}
                     className="px-3 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium flex-shrink-0"
-                    title={t('account.security.changeEmail')}
+                    title={isGoogleUser ? t('account.security.unlinkGoogle') : t('account.security.changeEmail')}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -559,11 +603,17 @@ export default function Account() {
             {/* Change Password */}
             <div className="flex-1 sm:border-r sm:border-gray-100 sm:pr-6">
               {isGoogleUser ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
                     <p className="text-sm text-gray-500">{t('account.security.googleAccount')}</p>
                   </div>
+                  <button
+                    onClick={() => setShowUnlinkGoogle(true)}
+                    className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium flex-shrink-0"
+                  >
+                    {t('account.security.unlinkGoogle')}
+                  </button>
                 </div>
               ) : !showPasswordForm ? (
                 <div className="flex items-center justify-between">
@@ -672,6 +722,91 @@ export default function Account() {
           </button>
         </div>
       </div>
+
+      {/* Unlink Google Modal */}
+      {showUnlinkGoogle && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowUnlinkGoogle(false); setUnlinkPassword(''); setUnlinkConfirmPassword('') }}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#f0f7ff] rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-[#2d6cb5]" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[#1e3a5f]">{t('account.security.unlinkGoogle')}</h3>
+              </div>
+              <button
+                onClick={() => { setShowUnlinkGoogle(false); setUnlinkPassword(''); setUnlinkConfirmPassword('') }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">{t('account.security.unlinkGoogleDesc')}</p>
+
+              {/* New password */}
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.security.createPassword')}</label>
+                <input
+                  type="password"
+                  value={unlinkPassword}
+                  onChange={(e) => setUnlinkPassword(e.target.value)}
+                  placeholder="********"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  autoFocus
+                />
+              </div>
+
+              {/* Confirm password */}
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.security.confirmNewPassword')}</label>
+                <input
+                  type="password"
+                  value={unlinkConfirmPassword}
+                  onChange={(e) => setUnlinkConfirmPassword(e.target.value)}
+                  placeholder="********"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                />
+              </div>
+
+              {/* Info box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex gap-3">
+                <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-blue-800">{t('account.security.unlinkGoogleHint')}</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 pt-0">
+              <button
+                onClick={() => { setShowUnlinkGoogle(false); setUnlinkPassword(''); setUnlinkConfirmPassword('') }}
+                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleUnlinkGoogle}
+                disabled={unlinking || !unlinkPassword || !unlinkConfirmPassword}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+              >
+                {unlinking ? t('account.security.changing') : t('account.security.unlinkAndCreatePassword')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Change Email Modal */}
       {showEmailForm && (

@@ -1037,7 +1037,14 @@
       "invalidEmail": "Enter a valid email address",
       "sameEmail": "The new email is the same as the current one",
       "emailInUse": "This email is already in use by another account",
-      "sendVerification": "Send verification"
+      "sendVerification": "Send verification",
+      "unlinkGoogle": "Unlink from Google",
+      "unlinkGoogleDesc": "To change your email, you first need to unlink your Google account and create a password.",
+      "unlinkGoogleHint": "After unlinking, you'll be able to sign in with your email and password, and change your email address.",
+      "unlinkGoogleSuccess": "Account unlinked from Google. You can now sign in with your email and password.",
+      "createPassword": "Create password",
+      "confirmNewPassword": "Confirm password",
+      "unlinkAndCreatePassword": "Unlink and create password"
     },
     "danger": {
       "deleteCatalog": "Delete catalog",

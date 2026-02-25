@@ -1038,7 +1038,14 @@
       "invalidEmail": "Ingresa un correo electrónico válido",
       "sameEmail": "El nuevo correo es igual al actual",
       "emailInUse": "Este correo ya está en uso por otra cuenta",
-      "sendVerification": "Enviar verificación"
+      "sendVerification": "Enviar verificación",
+      "unlinkGoogle": "Desvincular de Google",
+      "unlinkGoogleDesc": "Para cambiar tu correo electrónico, primero necesitas desvincular tu cuenta de Google y crear una contraseña.",
+      "unlinkGoogleHint": "Después de desvincular, podrás iniciar sesión con tu email y contraseña, y cambiar tu correo electrónico.",
+      "unlinkGoogleSuccess": "Cuenta desvinculada de Google. Ahora puedes iniciar sesión con tu email y contraseña.",
+      "createPassword": "Crear contraseña",
+      "confirmNewPassword": "Confirmar contraseña",
+      "unlinkAndCreatePassword": "Desvincular y crear contraseña"
     },
     "danger": {
       "deleteCatalog": "Eliminar catálogo",
