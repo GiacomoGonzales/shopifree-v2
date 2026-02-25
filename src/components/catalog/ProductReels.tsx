@@ -36,6 +36,8 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
   // Video refs
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
+  // Track which videos have started playing (have visible frames)
+  const [videosReady, setVideosReady] = useState<Set<string>>(new Set())
 
   // Long-press refs
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -87,7 +89,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     }
   }, [])
 
-  // Preload nearby images: 3 ahead + 1 behind for smooth swiping
+  // Preload nearby media: images + video poster images for smooth swiping
   useEffect(() => {
     const indices = [
       currentIndex + 1, currentIndex + 2, currentIndex + 3,
@@ -96,7 +98,6 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     indices.forEach(i => {
       if (i < 0 || i >= products.length) return
       const p = products[i]
-      if (p.video) return
       const url = p.image || p.images?.[0]
       if (url) {
         const img = new Image()
@@ -107,11 +108,27 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
   // Play/pause videos on slide change
   useEffect(() => {
+    // Pause all non-current videos and clear their ready state
+    const pausedIds: string[] = []
     videoRefs.current.forEach((v, key) => {
       if (!key.endsWith('-current')) {
         v.pause()
+        const id = key.replace(/-(prev|current|next)$/, '')
+        pausedIds.push(id)
       }
     })
+    // Remove paused videos from ready set so poster shows next time
+    if (pausedIds.length > 0) {
+      setVideosReady(prev => {
+        const next = new Set(prev)
+        let changed = false
+        pausedIds.forEach(id => {
+          if (next.has(id)) { next.delete(id); changed = true }
+        })
+        return changed ? next : prev
+      })
+    }
+
     const currentVideo = videoRefs.current.get(`${currentProduct.id}-current`)
     if (currentVideo) {
       currentVideo.currentTime = 0
@@ -448,23 +465,48 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         {/* Full-screen media */}
         <div className="relative w-full h-full overflow-hidden bg-black">
           {product.video ? (
-            <video
-              ref={(el) => {
-                const key = `${product.id}-${position}`
-                if (el) {
-                  videoRefs.current.set(key, el)
-                } else {
-                  videoRefs.current.delete(key)
-                }
-              }}
-              src={product.video}
-              autoPlay={position === 'current'}
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-              poster={imageUrl ? optimizeImage(imageUrl, 'gallery') : undefined}
-            />
+            <>
+              {/* Poster image layer — visible until video has frames */}
+              {imageUrl && (
+                <img
+                  src={optimizeImage(imageUrl, 'gallery')}
+                  alt={product.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{
+                    opacity: videosReady.has(product.id) ? 0 : 1,
+                    transition: 'opacity 0.3s ease',
+                    zIndex: 1,
+                  }}
+                  draggable={false}
+                />
+              )}
+              <video
+                ref={(el) => {
+                  const key = `${product.id}-${position}`
+                  if (el) {
+                    videoRefs.current.set(key, el)
+                  } else {
+                    videoRefs.current.delete(key)
+                  }
+                }}
+                src={product.video}
+                autoPlay={position === 'current'}
+                muted
+                loop
+                playsInline
+                preload={position === 'current' ? 'auto' : 'metadata'}
+                className="w-full h-full object-cover"
+                style={{ position: 'relative', zIndex: 2 }}
+                onPlaying={() => {
+                  setVideosReady(prev => {
+                    if (prev.has(product.id)) return prev
+                    const next = new Set(prev)
+                    next.add(product.id)
+                    return next
+                  })
+                }}
+              />
+            </>
           ) : imageUrl ? (
             <img
               src={optimizeImage(imageUrl, 'gallery')}
