@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore'
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
-import { auth } from '../../lib/firebase'
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -202,14 +201,8 @@ export default function Account() {
 
     setChangingEmail(true)
     try {
-      // Re-authenticate based on provider
-      if (isGoogleUser) {
-        const provider = new GoogleAuthProvider()
-        await signInWithPopup(auth, provider)
-      } else {
-        const credential = EmailAuthProvider.credential(firebaseUser.email!, emailPassword)
-        await reauthenticateWithCredential(firebaseUser, credential)
-      }
+      const credential = EmailAuthProvider.credential(firebaseUser.email!, emailPassword)
+      await reauthenticateWithCredential(firebaseUser, credential)
 
       await verifyBeforeUpdateEmail(firebaseUser, newEmail)
       showToast(t('account.security.emailVerificationSent'), 'success')
@@ -368,7 +361,7 @@ export default function Account() {
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
                   />
                   <button
-                    onClick={() => setShowEmailForm(!showEmailForm)}
+                    onClick={() => setShowEmailForm(true)}
                     className="px-3 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium flex-shrink-0"
                     title={t('account.security.changeEmail')}
                   >
@@ -377,46 +370,6 @@ export default function Account() {
                     </svg>
                   </button>
                 </div>
-                {showEmailForm && (
-                  <div className="mt-3 p-4 bg-[#f0f7ff] rounded-xl space-y-3">
-                    <p className="text-xs text-gray-500">{t('account.security.emailChangeHint')}</p>
-                    <input
-                      type="email"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder={t('account.security.newEmail')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
-                    />
-                    {!isGoogleUser && (
-                      <input
-                        type="password"
-                        value={emailPassword}
-                        onChange={(e) => setEmailPassword(e.target.value)}
-                        placeholder={t('account.security.currentPassword')}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
-                      />
-                    )}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleChangeEmail}
-                        disabled={changingEmail || !newEmail || (!isGoogleUser && !emailPassword)}
-                        className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
-                      >
-                        {changingEmail ? t('account.security.changing') : t('account.security.sendVerification')}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowEmailForm(false)
-                          setNewEmail('')
-                          setEmailPassword('')
-                        }}
-                        className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
-                      >
-                        {t('common.cancel')}
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.phone')}</label>
@@ -719,6 +672,95 @@ export default function Account() {
           </button>
         </div>
       </div>
+
+      {/* Change Email Modal */}
+      {showEmailForm && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailPassword('') }}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#f0f7ff] rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[#1e3a5f]">{t('account.security.changeEmail')}</h3>
+              </div>
+              <button
+                onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailPassword('') }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {/* Current email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">{t('account.security.currentEmail')}</label>
+                <p className="text-sm font-medium text-[#1e3a5f]">{firebaseUser?.email}</p>
+              </div>
+
+              {/* New email */}
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.security.newEmail')}</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="nuevo@correo.com"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  autoFocus
+                />
+              </div>
+
+              {/* Password - always required */}
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.security.currentPassword')}</label>
+                <input
+                  type="password"
+                  value={emailPassword}
+                  onChange={(e) => setEmailPassword(e.target.value)}
+                  placeholder="********"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                />
+              </div>
+
+              {/* Info box */}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex gap-3">
+                <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-xs text-amber-800 space-y-1">
+                  <p>{t('account.security.emailChangeHint')}</p>
+                  <p>{t('account.security.emailSpamHint')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 pt-0">
+              <button
+                onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailPassword('') }}
+                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleChangeEmail}
+                disabled={changingEmail || !newEmail || !emailPassword}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+              >
+                {changingEmail ? t('account.security.changing') : t('account.security.sendVerification')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
