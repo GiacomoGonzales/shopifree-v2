@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore'
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { auth } from '../../lib/firebase'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -37,6 +38,12 @@ export default function Account() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
+
+  // Email change
+  const [showEmailForm, setShowEmailForm] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailPassword, setEmailPassword] = useState('')
+  const [changingEmail, setChangingEmail] = useState(false)
 
   const isGoogleUser = firebaseUser?.providerData?.some(p => p.providerId === 'google.com') && !firebaseUser?.providerData?.some(p => p.providerId === 'password')
 
@@ -179,6 +186,49 @@ export default function Account() {
     }
   }
 
+  const handleChangeEmail = async () => {
+    if (!firebaseUser || !newEmail) return
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newEmail)) {
+      showToast(t('account.security.invalidEmail'), 'error')
+      return
+    }
+
+    if (newEmail === firebaseUser.email) {
+      showToast(t('account.security.sameEmail'), 'error')
+      return
+    }
+
+    setChangingEmail(true)
+    try {
+      // Re-authenticate based on provider
+      if (isGoogleUser) {
+        const provider = new GoogleAuthProvider()
+        await signInWithPopup(auth, provider)
+      } else {
+        const credential = EmailAuthProvider.credential(firebaseUser.email!, emailPassword)
+        await reauthenticateWithCredential(firebaseUser, credential)
+      }
+
+      await verifyBeforeUpdateEmail(firebaseUser, newEmail)
+      showToast(t('account.security.emailVerificationSent'), 'success')
+      setShowEmailForm(false)
+      setNewEmail('')
+      setEmailPassword('')
+    } catch (error: any) {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        showToast(t('account.security.wrongPassword'), 'error')
+      } else if (error.code === 'auth/email-already-in-use') {
+        showToast(t('account.security.emailInUse'), 'error')
+      } else {
+        showToast(t('account.toast.error'), 'error')
+      }
+    } finally {
+      setChangingEmail(false)
+    }
+  }
+
   const handleManageSubscription = async () => {
     if (!firebaseUser) return
 
@@ -310,12 +360,63 @@ export default function Account() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.email')}</label>
-                <input
-                  type="email"
-                  value={firebaseUser?.email || ''}
-                  disabled
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={firebaseUser?.email || ''}
+                    disabled
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
+                  />
+                  <button
+                    onClick={() => setShowEmailForm(!showEmailForm)}
+                    className="px-3 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium flex-shrink-0"
+                    title={t('account.security.changeEmail')}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </div>
+                {showEmailForm && (
+                  <div className="mt-3 p-4 bg-[#f0f7ff] rounded-xl space-y-3">
+                    <p className="text-xs text-gray-500">{t('account.security.emailChangeHint')}</p>
+                    <input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder={t('account.security.newEmail')}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                    />
+                    {!isGoogleUser && (
+                      <input
+                        type="password"
+                        value={emailPassword}
+                        onChange={(e) => setEmailPassword(e.target.value)}
+                        placeholder={t('account.security.currentPassword')}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                      />
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleChangeEmail}
+                        disabled={changingEmail || !newEmail || (!isGoogleUser && !emailPassword)}
+                        className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+                      >
+                        {changingEmail ? t('account.security.changing') : t('account.security.sendVerification')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowEmailForm(false)
+                          setNewEmail('')
+                          setEmailPassword('')
+                        }}
+                        className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.personal.phone')}</label>

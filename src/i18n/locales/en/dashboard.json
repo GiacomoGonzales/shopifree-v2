@@ -1027,7 +1027,15 @@
       "passwordMismatch": "Passwords don't match",
       "passwordTooShort": "Minimum 6 characters",
       "googleAccount": "You signed in with Google. Password is managed from your Google account.",
-      "changing": "Changing..."
+      "changing": "Changing...",
+      "changeEmail": "Change email",
+      "newEmail": "New email address",
+      "emailChangeHint": "A verification email will be sent to your new address. The change will take effect once you confirm the link.",
+      "emailVerificationSent": "Verification email sent. Check your inbox.",
+      "invalidEmail": "Enter a valid email address",
+      "sameEmail": "The new email is the same as the current one",
+      "emailInUse": "This email is already in use by another account",
+      "sendVerification": "Send verification"
     },
     "danger": {
       "deleteCatalog": "Delete catalog",

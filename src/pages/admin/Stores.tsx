@@ -67,6 +67,8 @@ export default function AdminStores() {
   type SortOrder = 'asc' | 'desc'
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
 
   useEffect(() => {
     fetchStores()
@@ -81,21 +83,6 @@ export default function AdminStores() {
       })) as (Store & { id: string })[]
 
       setStores(storesData)
-
-      // Fetch product counts in parallel
-      const counts: Record<string, number> = {}
-      await Promise.all(
-        storesData.map(async (store) => {
-          try {
-            const snap = await getDocs(collection(db, 'stores', store.id, 'products'))
-            counts[store.id] = snap.size
-          } catch (e) {
-            console.warn(`Error counting products for ${store.id}:`, e)
-            counts[store.id] = 0
-          }
-        })
-      )
-      setProductCounts(counts)
     } catch (error) {
       console.error('Error fetching stores:', error)
       showToast('Error al cargar las tiendas', 'error')
@@ -206,6 +193,46 @@ export default function AdminStores() {
 
     return result
   }, [stores, searchTerm, filterPlan, sortField, sortOrder, productCounts])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterPlan, sortField, sortOrder])
+
+  const totalPages = Math.ceil(filteredStores.length / itemsPerPage)
+  const paginatedStores = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filteredStores.slice(start, start + itemsPerPage)
+  }, [filteredStores, currentPage, itemsPerPage])
+
+  // Fetch product counts only for visible stores (lazy per page)
+  useEffect(() => {
+    const missingIds = paginatedStores
+      .filter(s => productCounts[s.id] === undefined)
+      .map(s => s.id)
+    if (missingIds.length === 0) return
+
+    let cancelled = false
+    const fetchCounts = async () => {
+      const counts: Record<string, number> = {}
+      await Promise.all(
+        missingIds.map(async (id) => {
+          try {
+            const snap = await getDocs(collection(db, 'stores', id, 'products'))
+            counts[id] = snap.size
+          } catch (e) {
+            console.warn(`Error counting products for ${id}:`, e)
+            counts[id] = 0
+          }
+        })
+      )
+      if (!cancelled) {
+        setProductCounts(prev => ({ ...prev, ...counts }))
+      }
+    }
+    fetchCounts()
+    return () => { cancelled = true }
+  }, [paginatedStores])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -329,7 +356,7 @@ export default function AdminStores() {
               </tr>
             </thead>
             <tbody>
-              {filteredStores.map((store) => (
+              {paginatedStores.map((store) => (
                 <tr key={store.id} className="border-b border-white/60 hover:bg-white/40 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -608,6 +635,65 @@ export default function AdminStores() {
         {filteredStores.length === 0 && (
           <div className="text-center py-12 text-gray-400">
             No se encontraron tiendas
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-white/60">
+            <p className="text-sm text-gray-500">
+              Mostrando {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, filteredStores.length)} de {filteredStores.length} tiendas
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                «
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => p - 1)}
+                disabled={currentPage === 1}
+                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ‹
+              </button>
+              {(() => {
+                const pages: number[] = []
+                let start = Math.max(1, currentPage - 2)
+                let end = Math.min(totalPages, start + 4)
+                if (end - start < 4) start = Math.max(1, end - 4)
+                for (let i = start; i <= end; i++) pages.push(i)
+                return pages.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setCurrentPage(p)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                      p === currentPage
+                        ? 'bg-violet-500 text-white shadow-sm'
+                        : 'text-gray-600 hover:bg-violet-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))
+              })()}
+              <button
+                onClick={() => setCurrentPage(p => p + 1)}
+                disabled={currentPage === totalPages}
+                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ›
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                »
+              </button>
+            </div>
           </div>
         )}
       </div>

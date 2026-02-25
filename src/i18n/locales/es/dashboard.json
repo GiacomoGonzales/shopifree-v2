@@ -1028,7 +1028,15 @@
       "passwordMismatch": "Las contraseñas no coinciden",
       "passwordTooShort": "Mínimo 6 caracteres",
       "googleAccount": "Iniciaste sesión con Google. La contraseña se gestiona desde tu cuenta de Google.",
-      "changing": "Cambiando..."
+      "changing": "Cambiando...",
+      "changeEmail": "Cambiar correo",
+      "newEmail": "Nuevo correo electrónico",
+      "emailChangeHint": "Se enviará un correo de verificación a tu nueva dirección. El cambio se aplicará cuando confirmes el enlace.",
+      "emailVerificationSent": "Correo de verificación enviado. Revisa tu bandeja de entrada.",
+      "invalidEmail": "Ingresa un correo electrónico válido",
+      "sameEmail": "El nuevo correo es igual al actual",
+      "emailInUse": "Este correo ya está en uso por otra cuenta",
+      "sendVerification": "Enviar verificación"
     },
     "danger": {
       "deleteCatalog": "Eliminar catálogo",
