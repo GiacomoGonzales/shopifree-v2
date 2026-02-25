@@ -578,9 +578,10 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
                     onClick={() => handleAddToCart(product)}
                     className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
                     style={{
-                      backgroundColor: isJustAdded ? '#22c55e' : theme.colors.primary,
-                      color: isJustAdded ? '#ffffff' : theme.colors.textInverted,
-                      transition: 'background-color 0.3s ease, color 0.3s ease',
+                      backgroundColor: isJustAdded ? 'transparent' : theme.colors.primary,
+                      color: isJustAdded ? theme.colors.primary : theme.colors.textInverted,
+                      border: isJustAdded ? `2px solid ${theme.colors.primary}` : '2px solid transparent',
+                      transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
                     }}
                   >
                     {isJustAdded ? (
