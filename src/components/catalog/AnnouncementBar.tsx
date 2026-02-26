@@ -28,16 +28,21 @@ export default function AnnouncementBar() {
       {mode === 'marquee' ? (
         <div className="overflow-hidden">
           <div className="animate-marquee">
-            {[0, 1, 2].map((i) => (
-              <span key={i} className="inline-flex items-center gap-8 px-4">
-                {store.announcement?.link ? (
-                  <a href={store.announcement.link} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                    {text}
-                  </a>
-                ) : (
-                  <span>{text}</span>
-                )}
-                <span aria-hidden="true" style={{ opacity: 0.4 }}>&#x2022;</span>
+            {/* Two identical groups — each fills the viewport, animation scrolls -50% for seamless loop */}
+            {[0, 1].map((group) => (
+              <span key={group} className="inline-flex" aria-hidden={group === 1 || undefined}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <span key={i} className="inline-flex items-center gap-8 px-4">
+                    {store.announcement?.link ? (
+                      <a href={store.announcement.link} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                        {text}
+                      </a>
+                    ) : (
+                      <span>{text}</span>
+                    )}
+                    <span aria-hidden="true" style={{ opacity: 0.4 }}>&#x2022;</span>
+                  </span>
+                ))}
               </span>
             ))}
           </div>

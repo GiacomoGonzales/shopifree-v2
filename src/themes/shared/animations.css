@@ -60,13 +60,19 @@
 /* Marquee */
 @keyframes marquee {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-33.33%); }
+  100% { transform: translateX(-50%); }
 }
 
 .animate-marquee {
   display: inline-flex;
   white-space: nowrap;
-  animation: marquee 20s linear infinite;
+  animation: marquee 30s linear infinite;
+}
+
+@media (min-width: 768px) {
+  .animate-marquee {
+    animation-duration: 50s;
+  }
 }
 
 .animate-marquee:hover {
