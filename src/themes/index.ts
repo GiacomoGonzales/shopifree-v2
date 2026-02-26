@@ -646,6 +646,51 @@ export const themes: Theme[] = [
       background: '#000000',
       accent: '#C9A227'
     }
+  },
+  {
+    id: 'barbershop',
+    name: 'Barbershop',
+    description: 'Oscuro y masculino con acentos dorados. Ideal para barberias, peluquerias masculinas y grooming.',
+    thumbnail: '/themes/barbershop.png',
+    category: 'services',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-26'),
+    colors: {
+      primary: '#C8A97E',
+      background: '#111111',
+      accent: '#D4B990'
+    }
+  },
+  {
+    id: 'serenity',
+    name: 'Serenity',
+    description: 'Relajante y premium con tonos rosa nude. Ideal para salones de belleza, spas y centros de bienestar.',
+    thumbnail: '/themes/serenity.png',
+    category: 'services',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-26'),
+    colors: {
+      primary: '#D4A0A0',
+      background: '#FFF9F5',
+      accent: '#8FAE8B'
+    }
+  },
+  {
+    id: 'folio',
+    name: 'Folio',
+    description: 'Moderno y bold con violeta electrico. Ideal para freelancers, coaches, consultores y marca personal.',
+    thumbnail: '/themes/folio.png',
+    category: 'services',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-02-26'),
+    colors: {
+      primary: '#7C3AED',
+      background: '#FFFFFF',
+      accent: '#8B5CF6'
+    }
   }
 ]
 

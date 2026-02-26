@@ -520,12 +520,14 @@
         "grocery": "Grocery",
         "pets": "Pets",
         "general": "For everyone",
+        "services": "Services",
         "specialized": "Specialized"
       },
       "categoryDesc": {
         "general": "Works for any type of business",
         "retail": "Fashion, accessories, furniture and general stores",
         "restaurant": "Restaurants, coffee shops, delivery and food trucks",
+        "services": "Barbershops, spas, freelancers and personal branding",
         "specialized": "Technology, beauty, grocery and pet shops"
       }
     },

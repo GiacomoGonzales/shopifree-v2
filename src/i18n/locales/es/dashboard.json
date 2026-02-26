@@ -521,12 +521,14 @@
         "grocery": "Alimentos",
         "pets": "Mascotas",
         "general": "Para todos",
+        "services": "Servicios",
         "specialized": "Especializado"
       },
       "categoryDesc": {
         "general": "Funcionan para cualquier tipo de negocio",
         "retail": "Moda, accesorios, muebles y tiendas en general",
         "restaurant": "Restaurantes, cafeterias, delivery y food trucks",
+        "services": "Barberias, spas, freelancers y marca personal",
         "specialized": "Tecnologia, belleza, alimentos y mascotas"
       }
     },

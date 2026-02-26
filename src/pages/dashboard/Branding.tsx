@@ -459,6 +459,7 @@ export default function Branding() {
             { key: 'all', label: t('branding.theme.categories.general'), desc: t('branding.theme.categoryDesc.general'), categories: ['all'] },
             { key: 'retail', label: t('branding.theme.categories.retail'), desc: t('branding.theme.categoryDesc.retail'), categories: ['retail'] },
             { key: 'restaurant', label: t('branding.theme.categories.restaurant'), desc: t('branding.theme.categoryDesc.restaurant'), categories: ['restaurant'] },
+            { key: 'services', label: t('branding.theme.categories.services') || 'Servicios', desc: t('branding.theme.categoryDesc.services'), categories: ['services'] },
             { key: 'specialized', label: t('branding.theme.categories.specialized') || 'Especializado', desc: t('branding.theme.categoryDesc.specialized'), categories: ['tech', 'cosmetics', 'grocery', 'pets'] },
             { key: 'premium', label: 'Premium', desc: 'Temas con efectos exclusivos y animaciones avanzadas', categories: ['__premium__'] },
           ] as const).map((group) => {
