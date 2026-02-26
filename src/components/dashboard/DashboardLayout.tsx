@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import { usePresence } from '../../hooks/usePresence'
 import ChatModal from '../chat/ChatModal'
 import { chatService } from '../../lib/chatService'
 
@@ -159,7 +160,9 @@ export default function DashboardLayout() {
 
   const isNative = Capacitor.isNativePlatform()
 
+  // Track presence for any user with a store
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  usePresence(store?.id)
   const [totalUnread, setTotalUnread] = useState(0)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatUnread, setChatUnread] = useState(0)

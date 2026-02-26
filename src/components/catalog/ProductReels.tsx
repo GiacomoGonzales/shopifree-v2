@@ -495,8 +495,8 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
                 loop
                 playsInline
                 preload={position === 'current' ? 'auto' : 'metadata'}
-                className="w-full h-full object-cover"
-                style={{ position: 'relative', zIndex: 2 }}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ zIndex: 2 }}
                 onPlaying={() => {
                   setVideosReady(prev => {
                     if (prev.has(product.id)) return prev

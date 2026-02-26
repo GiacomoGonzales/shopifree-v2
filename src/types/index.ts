@@ -117,6 +117,9 @@ export interface Store {
                  // Legacy values (for backwards compatibility, normalized on read)
                  'retail' | 'restaurant' | 'services' | 'other' | 'beauty'
 
+  // === PRESENCIA ===
+  lastOnlineAt?: Date
+
   // === META ===
   createdAt: Date
   updatedAt: Date

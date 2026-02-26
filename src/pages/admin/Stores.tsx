@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -51,6 +51,23 @@ const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   paused: 'Pausada'
 }
 
+const COLUMNS = [
+  { id: 'name', label: 'Tienda', alwaysVisible: true },
+  { id: 'subdomain', label: 'Subdominio' },
+  { id: 'country', label: 'País' },
+  { id: 'plan', label: 'Plan' },
+  { id: 'products', label: 'Productos' },
+  { id: 'online', label: 'En línea' },
+  { id: 'activity', label: 'Actividad' },
+  { id: 'subscription', label: 'Suscripción' },
+  { id: 'createdAt', label: 'Creada' },
+  { id: 'actions', label: 'Acciones', alwaysVisible: true },
+] as const
+
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
+
+const LS_KEY = 'admin-stores-columns'
+
 export default function AdminStores() {
   const { showToast } = useToast()
   const { localePath } = useLanguage()
@@ -63,6 +80,40 @@ export default function AdminStores() {
   const [filterPlan, setFilterPlan] = useState<string>('all')
   const [productCounts, setProductCounts] = useState<Record<string, number>>({})
 
+  // Column visibility
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY)
+      if (saved) return new Set(JSON.parse(saved))
+    } catch { /* ignore */ }
+    return new Set(COLUMNS.map(c => c.id))
+  })
+  const [columnsOpen, setColumnsOpen] = useState(false)
+  const columnsRef = useRef<HTMLDivElement>(null)
+
+  const isVisible = (id: string) => visibleColumns.has(id)
+  const toggleColumn = (id: string) => {
+    setVisibleColumns(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      localStorage.setItem(LS_KEY, JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    if (!columnsOpen) return
+    const handler = (e: MouseEvent) => {
+      if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) {
+        setColumnsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [columnsOpen])
+
   type SortField = 'name' | 'subdomain' | 'plan' | 'createdAt' | 'products' | 'lastActivity'
   type SortOrder = 'asc' | 'desc'
   const [sortField, setSortField] = useState<SortField>('createdAt')
@@ -70,26 +121,26 @@ export default function AdminStores() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
 
+  // Real-time listener for stores (picks up lastOnlineAt changes instantly)
   useEffect(() => {
-    fetchStores()
+    const unsub = onSnapshot(
+      collection(db, 'stores'),
+      (snapshot) => {
+        const storesData = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data()
+        })) as (Store & { id: string })[]
+        setStores(storesData)
+        setLoading(false)
+      },
+      (error) => {
+        console.error('Error fetching stores:', error)
+        showToast('Error al cargar las tiendas', 'error')
+        setLoading(false)
+      }
+    )
+    return () => unsub()
   }, [])
-
-  const fetchStores = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'stores'))
-      const storesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as (Store & { id: string })[]
-
-      setStores(storesData)
-    } catch (error) {
-      console.error('Error fetching stores:', error)
-      showToast('Error al cargar las tiendas', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSyncSubscription = async (storeId: string) => {
     setSyncingStore(storeId)
@@ -305,6 +356,37 @@ export default function AdminStores() {
           <option value="pro">Pro</option>
           <option value="business">Business</option>
         </select>
+
+        {/* Column visibility toggle */}
+        <div className="relative hidden md:block" ref={columnsRef}>
+          <button
+            onClick={() => setColumnsOpen(o => !o)}
+            className="px-4 py-2.5 bg-white/50 backdrop-blur border border-white/80 rounded-xl hover:bg-white/70 transition-all text-gray-900 text-sm font-medium flex items-center gap-2"
+          >
+            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+            </svg>
+            Columnas
+          </button>
+          {columnsOpen && (
+            <div className="absolute right-0 top-full mt-2 w-52 bg-white/80 backdrop-blur-xl border border-white/80 rounded-xl shadow-lg shadow-black/10 py-2 z-30">
+              {COLUMNS.filter(c => !c.alwaysVisible).map(col => (
+                <label
+                  key={col.id}
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-violet-50/50 cursor-pointer transition-colors text-sm text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isVisible(col.id)}
+                    onChange={() => toggleColumn(col.id)}
+                    className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500/30"
+                  />
+                  {col.label}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stores Table / Cards */}
@@ -314,76 +396,96 @@ export default function AdminStores() {
           <table className="w-full">
             <thead>
               <tr className="bg-white/50 border-b border-white/60">
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
                   <div className="flex items-center gap-1">
                     Tienda
                     <SortIcon field="name" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('subdomain')}>
+                {isVisible('subdomain') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('subdomain')}>
                   <div className="flex items-center gap-1">
                     Subdominio
                     <SortIcon field="subdomain" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">País</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('plan')}>
+                )}
+                {isVisible('country') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">País</th>
+                )}
+                {isVisible('plan') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('plan')}>
                   <div className="flex items-center gap-1">
                     Plan
                     <SortIcon field="plan" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('products')}>
+                )}
+                {isVisible('products') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('products')}>
                   <div className="flex items-center gap-1">
                     Productos
                     <SortIcon field="products" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('lastActivity')}>
+                )}
+                {isVisible('online') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">En línea</th>
+                )}
+                {isVisible('activity') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('lastActivity')}>
                   <div className="flex items-center gap-1">
                     Actividad
                     <SortIcon field="lastActivity" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado Suscripcion</th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
+                )}
+                {isVisible('subscription') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado Suscripcion</th>
+                )}
+                {isVisible('createdAt') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
                   <div className="flex items-center gap-1">
                     Creada
                     <SortIcon field="createdAt" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Acciones</th>
+                )}
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedStores.map((store) => (
                 <tr key={store.id} className="border-b border-white/60 hover:bg-white/40 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
                       {store.logo ? (
-                        <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover ring-1 ring-black/5" />
+                        <img src={store.logo} alt={store.name} className="w-7 h-7 rounded-md object-cover ring-1 ring-black/5" />
                       ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center">
-                          <span className="text-violet-600 font-bold">{store.name.charAt(0)}</span>
+                        <div className="w-7 h-7 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-md flex items-center justify-center">
+                          <span className="text-violet-600 font-bold text-xs">{store.name.charAt(0)}</span>
                         </div>
                       )}
-                      <div>
-                        <p className="font-medium text-gray-900">{store.name}</p>
-                        <p className="text-xs text-gray-400">{store.whatsapp}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{store.name}</p>
+                        <p className="text-[11px] text-gray-400 truncate">{store.whatsapp}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  {isVisible('subdomain') && (
+                  <td className="px-3 py-2">
                     <a
                       href={`https://${store.subdomain}.shopifree.app`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-violet-600 hover:text-violet-700 hover:underline text-sm font-medium"
+                      className="text-violet-600 hover:text-violet-700 hover:underline text-xs font-medium"
                     >
-                      {store.subdomain}.shopifree.app
+                      {store.subdomain}
                     </a>
                   </td>
-                  <td className="px-6 py-4 text-sm">
+                  )}
+                  {isVisible('country') && (
+                  <td className="px-3 py-2 text-sm">
                     {(() => {
                       const c = countries.find(c => c.code === store.location?.country)
                       return c ? (
@@ -394,7 +496,9 @@ export default function AdminStores() {
                       ) : <span className="text-gray-400">-</span>
                     })()}
                   </td>
-                  <td className="px-6 py-4">
+                  )}
+                  {isVisible('plan') && (
+                  <td className="px-3 py-2">
                     <span className={`px-3 py-1 text-xs rounded-full font-medium capitalize ${
                       store.plan === 'free' ? 'bg-gray-100/80 text-gray-600' :
                       store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' :
@@ -403,7 +507,9 @@ export default function AdminStores() {
                       {store.plan}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  )}
+                  {isVisible('products') && (
+                  <td className="px-3 py-2">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${
                       (productCounts[store.id] || 0) > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400'
                     }`}>
@@ -413,7 +519,35 @@ export default function AdminStores() {
                       {productCounts[store.id] ?? '...'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  )}
+                  {isVisible('online') && (
+                  <td className="px-3 py-2">
+                    {(() => {
+                      const toDate = (d: any) => {
+                        if (!d) return null
+                        if (d.toDate) return d.toDate()
+                        if (d instanceof Date) return d
+                        return new Date(d)
+                      }
+                      const lastOnline = toDate(store.lastOnlineAt)
+                      if (!lastOnline) return <span className="text-gray-400 text-xs">-</span>
+                      const isOnline = Date.now() - lastOnline.getTime() < ONLINE_THRESHOLD_MS
+                      return isOnline ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                          En línea
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-gray-50 text-gray-500" title={lastOnline.toLocaleString()}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                          {formatRelativeTime(lastOnline)}
+                        </span>
+                      )
+                    })()}
+                  </td>
+                  )}
+                  {isVisible('activity') && (
+                  <td className="px-3 py-2">
                     {(() => {
                       const toDate = (d: any) => {
                         if (!d) return null
@@ -431,7 +565,9 @@ export default function AdminStores() {
                       )
                     })()}
                   </td>
-                  <td className="px-6 py-4">
+                  )}
+                  {isVisible('subscription') && (
+                  <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       {store.subscription ? (
                         <>
@@ -466,7 +602,9 @@ export default function AdminStores() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  )}
+                  {isVisible('createdAt') && (
+                  <td className="px-3 py-2 text-sm text-gray-500">
                     {store.createdAt
                       ? (store.createdAt as any).toDate
                         ? (store.createdAt as any).toDate().toLocaleDateString()
@@ -476,19 +614,20 @@ export default function AdminStores() {
                       : '-'
                     }
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
+                  )}
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-1">
                       <Link
                         to={localePath('/admin/stores/' + store.id)}
-                        className="px-3 py-1.5 text-sm font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                        className="px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-md transition-all"
                       >
-                        Ver detalle
+                        Ver
                       </Link>
                       <button
                         onClick={() => setEditingStore(store)}
-                        className="px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-all"
+                        className="px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 rounded-md transition-all"
                       >
-                        Editar plan
+                        Plan
                       </button>
                     </div>
                   </td>
@@ -500,20 +639,45 @@ export default function AdminStores() {
 
         {/* Mobile cards */}
         <div className="md:hidden divide-y divide-white/60">
-          {filteredStores.map((store) => (
+          {paginatedStores.map((store) => {
+            const toDate = (d: any) => {
+              if (!d) return null
+              if (d.toDate) return d.toDate()
+              if (d instanceof Date) return d
+              return new Date(d)
+            }
+            const lastOnline = toDate(store.lastOnlineAt)
+            const isOnline = lastOnline ? Date.now() - lastOnline.getTime() < ONLINE_THRESHOLD_MS : false
+            const activityDate = toDate(store.updatedAt)
+            const country = countries.find(c => c.code === store.location?.country)
+            const createdDate = store.createdAt
+              ? (store.createdAt as any).toDate
+                ? (store.createdAt as any).toDate().toLocaleDateString()
+                : store.createdAt instanceof Date
+                  ? store.createdAt.toLocaleDateString()
+                  : new Date(store.createdAt).toLocaleDateString()
+              : '-'
+
+            return (
             <div key={store.id} className="p-4 hover:bg-white/40 transition-colors">
-              {/* Row 1: Logo + Name + Plan badge */}
+              {/* Header: Logo + Name + Online dot + Plan */}
               <div className="flex items-center gap-3">
-                {store.logo ? (
-                  <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover ring-1 ring-black/5" />
-                ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-violet-600 font-bold">{store.name.charAt(0)}</span>
-                  </div>
-                )}
+                <div className="relative flex-shrink-0">
+                  {store.logo ? (
+                    <img src={store.logo} alt={store.name} className="w-11 h-11 rounded-xl object-cover ring-1 ring-black/5" />
+                  ) : (
+                    <div className="w-11 h-11 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center">
+                      <span className="text-violet-600 font-bold">{store.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  {/* Online indicator on avatar */}
+                  {lastOnline && (
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-gray-900 truncate">{store.name}</p>
+                    <p className="font-semibold text-gray-900 truncate">{store.name}</p>
                     <span className={`px-2.5 py-0.5 text-[11px] rounded-full font-medium capitalize flex-shrink-0 ${
                       store.plan === 'free' ? 'bg-gray-100/80 text-gray-600' :
                       store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' :
@@ -522,7 +686,7 @@ export default function AdminStores() {
                       {store.plan}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-0.5">
                     <a
                       href={`https://${store.subdomain}.shopifree.app`}
                       target="_blank"
@@ -531,48 +695,63 @@ export default function AdminStores() {
                     >
                       {store.subdomain}.shopifree.app
                     </a>
-                    {(() => {
-                      const c = countries.find(c => c.code === store.location?.country)
-                      return c ? <img src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.png`} alt={c.code} className="w-4 h-auto rounded-sm" /> : null
-                    })()}
+                    {country && <img src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`} alt={country.code} className="w-4 h-auto rounded-sm" />}
                   </div>
                 </div>
               </div>
 
-              {/* Row 2: Products + Activity */}
-              <div className="flex items-center gap-3 mt-2.5 pl-[52px]">
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full ${
-                  (productCounts[store.id] || 0) > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400'
-                }`}>
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  {productCounts[store.id] ?? '...'} prod.
-                </span>
-                {(() => {
-                  const toDate = (d: any) => {
-                    if (!d) return null
-                    if (d.toDate) return d.toDate()
-                    if (d instanceof Date) return d
-                    return new Date(d)
-                  }
-                  const date = toDate(store.updatedAt)
-                  if (!date) return null
-                  return (
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full ${getActivityColor(date)}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${getActivityDot(date)}`}></span>
-                      {formatRelativeTime(date)}
-                    </span>
-                  )
-                })()}
-              </div>
+              {/* Info grid */}
+              <div className="mt-3 ml-[56px] grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+                {/* Online status */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">Estado</span>
+                  {lastOnline ? (
+                    isOnline ? (
+                      <span className="inline-flex items-center gap-1 text-green-700 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        En línea
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">{formatRelativeTime(lastOnline)}</span>
+                    )
+                  ) : (
+                    <span className="text-gray-300">-</span>
+                  )}
+                </div>
 
-              {/* Row 3: Subscription + Date + Action */}
-              <div className="flex items-center justify-between mt-2 pl-[52px]">
-                <div className="flex items-center gap-2 flex-wrap">
+                {/* Products */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">Prod.</span>
+                  <span className={`font-semibold ${(productCounts[store.id] || 0) > 0 ? 'text-violet-700' : 'text-gray-400'}`}>
+                    {productCounts[store.id] ?? '...'}
+                  </span>
+                </div>
+
+                {/* Activity */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">Actividad</span>
+                  {activityDate ? (
+                    <span className={`inline-flex items-center gap-1 font-medium ${getActivityColor(activityDate).replace('bg-', '').split(' ')[0]}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${getActivityDot(activityDate)}`}></span>
+                      {formatRelativeTime(activityDate)}
+                    </span>
+                  ) : (
+                    <span className="text-gray-300">-</span>
+                  )}
+                </div>
+
+                {/* Country */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">País</span>
+                  <span className="text-gray-700">{country?.name.es || '-'}</span>
+                </div>
+
+                {/* Subscription */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">Suscr.</span>
                   {store.subscription ? (
-                    <>
-                      <span className={`px-2 py-0.5 text-[11px] rounded-full font-medium ${
+                    <div className="flex items-center gap-1">
+                      <span className={`px-1.5 py-0.5 rounded-full font-medium ${
                         store.subscription.status === 'active' ? 'bg-green-100/80 text-green-700' :
                         store.subscription.status === 'trialing' ? 'bg-blue-100/80 text-blue-700' :
                         store.subscription.status === 'past_due' ? 'bg-yellow-100/80 text-yellow-700' :
@@ -584,52 +763,55 @@ export default function AdminStores() {
                         onClick={() => handleSyncSubscription(store.id)}
                         disabled={syncingStore === store.id}
                         className="p-0.5 text-gray-400 hover:text-violet-600 rounded transition-all disabled:opacity-50"
-                        title="Sincronizar con Stripe"
                       >
                         {syncingStore === store.id ? (
-                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                         ) : (
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                         )}
                       </button>
-                    </>
+                    </div>
                   ) : (
-                    <span className="text-gray-400 text-xs">Sin suscripcion</span>
+                    <span className="text-gray-400">-</span>
                   )}
-                  <span className="text-gray-300">·</span>
-                  <span className="text-xs text-gray-400">
-                    {store.createdAt
-                      ? (store.createdAt as any).toDate
-                        ? (store.createdAt as any).toDate().toLocaleDateString()
-                        : store.createdAt instanceof Date
-                          ? store.createdAt.toLocaleDateString()
-                          : new Date(store.createdAt).toLocaleDateString()
-                      : '-'
-                    }
-                  </span>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Link
-                    to={localePath('/admin/stores/' + store.id)}
-                    className="px-2.5 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
-                  >
-                    Detalle
-                  </Link>
-                  <button
-                    onClick={() => setEditingStore(store)}
-                    className="px-2.5 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-all"
-                  >
-                    Editar
-                  </button>
+
+                {/* Created date */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">Creada</span>
+                  <span className="text-gray-500">{createdDate}</span>
+                </div>
+
+                {/* WhatsApp */}
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <span className="text-gray-400 w-14">WhatsApp</span>
+                  <span className="text-gray-700">{store.whatsapp || '-'}</span>
                 </div>
               </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 mt-3 ml-[56px]">
+                <Link
+                  to={localePath('/admin/stores/' + store.id)}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-violet-500 hover:bg-violet-600 rounded-lg transition-all"
+                >
+                  Ver detalle
+                </Link>
+                <button
+                  onClick={() => setEditingStore(store)}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
+                >
+                  Editar plan
+                </button>
+              </div>
             </div>
-          ))}
+            )
+          })}
         </div>
 
         {filteredStores.length === 0 && (
@@ -640,7 +822,7 @@ export default function AdminStores() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-white/60">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-2 border-t border-white/60">
             <p className="text-sm text-gray-500">
               Mostrando {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, filteredStores.length)} de {filteredStores.length} tiendas
             </p>
