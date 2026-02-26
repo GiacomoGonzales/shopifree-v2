@@ -89,6 +89,19 @@ export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'
 }
 
 /**
+ * Optimizes a Cloudinary video URL for Reels (9:16 vertical format)
+ * - Crops to 9:16 using c_fill with auto gravity (focuses on content)
+ * - Compresses with auto quality
+ * - Converts square/horizontal videos to vertical fullscreen
+ */
+export function optimizeReelVideo(videoUrl: string | undefined | null): string {
+  if (!videoUrl) return ''
+  if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
+  const transforms = 'c_fill,w_720,h_1280,g_center,q_auto'
+  return videoUrl.replace('/upload/', `/upload/${transforms}/`)
+}
+
+/**
  * Generates a thumbnail from a Cloudinary video URL (first frame)
  * Uses Cloudinary transformations to extract a JPG from frame 0
  */

@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage, optimizeReelVideo } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { getCatalogProducts } from './catalogProducts'
@@ -466,20 +466,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         <div className="relative w-full h-full overflow-hidden bg-black">
           {product.video ? (
             <>
-              {/* Poster image layer — visible until video has frames */}
-              {imageUrl && (
-                <img
-                  src={optimizeImage(imageUrl, 'gallery')}
-                  alt={product.name}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{
-                    opacity: videosReady.has(product.id) ? 0 : 1,
-                    transition: 'opacity 0.3s ease',
-                    zIndex: 1,
-                  }}
-                  draggable={false}
-                />
-              )}
+              {/* Video layer — loads behind poster */}
               <video
                 ref={(el) => {
                   const key = `${product.id}-${position}`
@@ -489,14 +476,14 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
                     videoRefs.current.delete(key)
                   }
                 }}
-                src={product.video}
+                src={optimizeReelVideo(product.video)}
                 autoPlay={position === 'current'}
                 muted
                 loop
                 playsInline
                 preload={position === 'current' ? 'auto' : 'metadata'}
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ zIndex: 2 }}
+                style={{ zIndex: 1 }}
                 onPlaying={() => {
                   setVideosReady(prev => {
                     if (prev.has(product.id)) return prev
@@ -506,6 +493,20 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
                   })
                 }}
               />
+              {/* Poster image ON TOP — fades out once video is playing */}
+              {imageUrl && (
+                <img
+                  src={optimizeImage(imageUrl, 'gallery')}
+                  alt={product.name}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  style={{
+                    opacity: videosReady.has(product.id) ? 0 : 1,
+                    transition: 'opacity 0.2s ease',
+                    zIndex: 2,
+                  }}
+                  draggable={false}
+                />
+              )}
             </>
           ) : imageUrl ? (
             <img
