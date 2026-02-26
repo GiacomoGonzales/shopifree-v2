@@ -51,7 +51,7 @@ const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   paused: 'Pausada'
 }
 
-const COLUMNS = [
+const COLUMNS: { id: string; label: string; alwaysVisible?: boolean }[] = [
   { id: 'name', label: 'Tienda', alwaysVisible: true },
   { id: 'subdomain', label: 'Subdominio' },
   { id: 'country', label: 'País' },
@@ -62,7 +62,7 @@ const COLUMNS = [
   { id: 'subscription', label: 'Suscripción' },
   { id: 'createdAt', label: 'Creada' },
   { id: 'actions', label: 'Acciones', alwaysVisible: true },
-] as const
+]
 
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
 
