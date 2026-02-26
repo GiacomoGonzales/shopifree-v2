@@ -13,7 +13,41 @@ interface Stats {
     pro: number
     business: number
   }
+  countryDistribution: { code: string; count: number }[]
   recentStores: (Store & { id: string })[]
+}
+
+const COUNTRY_NAMES: Record<string, string> = {
+  CO: 'Colombia',
+  PE: 'Peru',
+  MX: 'Mexico',
+  AR: 'Argentina',
+  CL: 'Chile',
+  EC: 'Ecuador',
+  VE: 'Venezuela',
+  BR: 'Brasil',
+  UY: 'Uruguay',
+  PY: 'Paraguay',
+  BO: 'Bolivia',
+  PA: 'Panama',
+  CR: 'Costa Rica',
+  GT: 'Guatemala',
+  HN: 'Honduras',
+  SV: 'El Salvador',
+  NI: 'Nicaragua',
+  DO: 'Rep. Dominicana',
+  CU: 'Cuba',
+  PR: 'Puerto Rico',
+  US: 'Estados Unidos',
+  ES: 'Espana',
+}
+
+function countryCodeToFlag(code: string): string {
+  return code
+    .toUpperCase()
+    .split('')
+    .map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65))
+    .join('')
 }
 
 export default function AdminDashboard() {
@@ -48,6 +82,16 @@ export default function AdminDashboard() {
           }
         })
 
+        // Calculate country distribution
+        const countryCounts: Record<string, number> = {}
+        stores.forEach(store => {
+          const code = store.location?.country || 'N/A'
+          countryCounts[code] = (countryCounts[code] || 0) + 1
+        })
+        const countryDistribution = Object.entries(countryCounts)
+          .map(([code, count]) => ({ code, count }))
+          .sort((a, b) => b.count - a.count)
+
         // Get recent stores (last 5)
         const toDate = (d: any) => {
           if (!d) return new Date(0)
@@ -63,6 +107,7 @@ export default function AdminDashboard() {
           totalStores: stores.length,
           totalUsers: usersSnapshot.size,
           planDistribution,
+          countryDistribution,
           recentStores
         })
       } catch (error) {
@@ -152,6 +197,41 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Country Distribution */}
+      <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-lg shadow-black/5 rounded-2xl p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Tiendas por pais</h2>
+        {stats?.countryDistribution && stats.countryDistribution.length > 0 ? (
+          <div className="space-y-3">
+            {stats.countryDistribution.map(({ code, count }) => {
+              const total = stats.totalStores || 1
+              const percentage = Math.round((count / total) * 100)
+              const name = code === 'N/A' ? 'Sin pais' : (COUNTRY_NAMES[code] || code)
+              const flag = code === 'N/A' ? '' : countryCodeToFlag(code)
+
+              return (
+                <div key={code} className="flex items-center gap-3">
+                  <span className="text-xl w-8 text-center shrink-0">{flag || '—'}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600 truncate">{name}</span>
+                      <span className="font-medium text-gray-900 shrink-0 ml-2">{count} ({percentage}%)</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-gray-400 text-center py-4">No hay datos de paises</p>
+        )}
       </div>
 
       {/* Plan Distribution + Recent Stores */}
