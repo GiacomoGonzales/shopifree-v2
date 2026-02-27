@@ -31,7 +31,7 @@ export default function MiApp() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser, store } = useAuth()
   const { localePath } = useLanguage()
-  const toast = useToast()
+  const { showToast } = useToast()
 
   // App config form state
   const [appName, setAppName] = useState('')
@@ -105,7 +105,7 @@ export default function MiApp() {
       const data = await response.json()
       setIcon(data.secure_url)
     } catch {
-      toast.error(t('miApp.toast.iconError'))
+      showToast(t('miApp.toast.iconError'), 'error')
     } finally {
       setUploadingIcon(false)
     }
@@ -130,9 +130,9 @@ export default function MiApp() {
         ...(appConfig?.iosUrl && { iosUrl: appConfig.iosUrl }),
       }
       await updateDoc(doc(db, 'stores', store.id), { appConfig: config })
-      toast.success(t('miApp.toast.saved'))
+      showToast(t('miApp.toast.saved'))
     } catch {
-      toast.error(t('miApp.toast.error'))
+      showToast(t('miApp.toast.error'), 'error')
     } finally {
       setSaving(false)
     }
@@ -147,9 +147,9 @@ export default function MiApp() {
         'appConfig.status': 'requested',
         'appConfig.requestedAt': new Date()
       })
-      toast.success(t('miApp.toast.requested'))
+      showToast(t('miApp.toast.requested'))
     } catch {
-      toast.error(t('miApp.toast.error'))
+      showToast(t('miApp.toast.error'), 'error')
     } finally {
       setRequesting(false)
     }
@@ -174,9 +174,9 @@ export default function MiApp() {
       if (!res.ok) throw new Error(data.error)
 
       if (data.sent === 0) {
-        toast.info(t('miApp.push.noTokens'))
+        showToast(t('miApp.push.noTokens'))
       } else {
-        toast.success(t('miApp.push.sent', { count: data.sent }))
+        showToast(t('miApp.push.sent', { count: data.sent }))
       }
       setPushTitle('')
       setPushBody('')
@@ -194,7 +194,7 @@ export default function MiApp() {
         sentAt: d.data().sentAt?.toDate?.() || new Date()
       } as NotificationHistory)))
     } catch {
-      toast.error(t('miApp.push.error'))
+      showToast(t('miApp.push.error'), 'error')
     } finally {
       setSending(false)
     }
