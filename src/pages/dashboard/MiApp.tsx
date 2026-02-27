@@ -160,10 +160,11 @@ export default function MiApp() {
     if (!store || !firebaseUser || !pushTitle.trim() || !pushBody.trim()) return
     setSending(true)
     try {
-      const res = await fetch('/api/send-notification', {
+      const res = await fetch('/api/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'send',
           storeId: store.id,
           title: pushTitle.trim(),
           body: pushBody.trim(),

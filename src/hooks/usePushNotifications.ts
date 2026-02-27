@@ -27,10 +27,11 @@ export function usePushNotifications(storeId?: string) {
           registered.current = true
 
           try {
-            await fetch('/api/register-push-token', {
+            await fetch('/api/push', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
+                action: 'register-token',
                 storeId,
                 token: token.value,
                 platform: Capacitor.getPlatform() as 'ios' | 'android'
