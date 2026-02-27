@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { Store } from '../../types'
@@ -15,6 +15,7 @@ interface Stats {
   }
   countryDistribution: { code: string; count: number }[]
   recentStores: (Store & { id: string })[]
+  appRequests: (Store & { id: string })[]
 }
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -54,6 +55,33 @@ export default function AdminDashboard() {
   const { localePath } = useLanguage()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [updatingApp, setUpdatingApp] = useState<string | null>(null)
+  const [appUrls, setAppUrls] = useState<Record<string, { android: string; ios: string }>>({})
+
+  const updateAppStatus = async (storeId: string, status: string) => {
+    setUpdatingApp(storeId)
+    try {
+      const updates: Record<string, unknown> = { 'appConfig.status': status }
+      if (status === 'published') {
+        updates['appConfig.publishedAt'] = new Date()
+        const urls = appUrls[storeId]
+        if (urls?.android) updates['appConfig.androidUrl'] = urls.android
+        if (urls?.ios) updates['appConfig.iosUrl'] = urls.ios
+      }
+      await updateDoc(doc(db, 'stores', storeId), updates)
+      // Update local state
+      setStats(prev => prev ? {
+        ...prev,
+        appRequests: status === 'published'
+          ? prev.appRequests.filter(s => s.id !== storeId)
+          : prev.appRequests.map(s => s.id === storeId ? { ...s, appConfig: { ...s.appConfig!, status: status as 'requested' | 'building' } } : s)
+      } : prev)
+    } catch (err) {
+      console.error('Error updating app status:', err)
+    } finally {
+      setUpdatingApp(null)
+    }
+  }
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -103,12 +131,18 @@ export default function AdminDashboard() {
           .sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
           .slice(0, 5)
 
+        // App publication requests (requested or building)
+        const appRequests = stores
+          .filter(s => s.appConfig?.status === 'requested' || s.appConfig?.status === 'building')
+          .sort((a, b) => toDate(b.appConfig?.requestedAt).getTime() - toDate(a.appConfig?.requestedAt).getTime())
+
         setStats({
           totalStores: stores.length,
           totalUsers: usersSnapshot.size,
           planDistribution,
           countryDistribution,
-          recentStores
+          recentStores,
+          appRequests
         })
       } catch (error) {
         console.error('Error fetching stats:', error)
@@ -139,6 +173,108 @@ export default function AdminDashboard() {
           <p className="text-violet-200 mt-1">Vista general de la plataforma</p>
         </div>
       </div>
+
+      {/* App Publication Requests */}
+      {stats?.appRequests && stats.appRequests.length > 0 && (
+        <div className="bg-white/60 backdrop-blur-xl border border-purple-200/50 shadow-lg shadow-black/5 rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Solicitudes de App ({stats.appRequests.length})</h2>
+          </div>
+          <div className="space-y-4">
+            {stats.appRequests.map((store) => (
+              <div key={store.id} className="p-4 bg-white/80 rounded-xl border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {store.appConfig?.icon ? (
+                      <img src={store.appConfig.icon} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                    ) : store.logo ? (
+                      <img src={store.logo} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
+                        <span className="text-purple-600 font-bold">{store.name.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-900">{store.appConfig?.appName || store.name}</p>
+                      <p className="text-xs text-gray-400">{store.subdomain}.shopifree.app &middot; ID: {store.id}</p>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
+                    store.appConfig?.status === 'requested'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {store.appConfig?.status === 'requested' ? 'Solicitada' : 'En construccion'}
+                  </span>
+                </div>
+
+                {/* Colors preview */}
+                {store.appConfig && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-5 h-5 rounded-md border border-gray-200" style={{ backgroundColor: store.appConfig.primaryColor }} title="Primary" />
+                    <div className="w-5 h-5 rounded-md border border-gray-200" style={{ backgroundColor: store.appConfig.secondaryColor }} title="Secondary" />
+                    <div className="w-5 h-5 rounded-md border border-gray-200" style={{ backgroundColor: store.appConfig.splashColor }} title="Splash" />
+                    <span className="text-xs text-gray-400 ml-1">Plan: {store.plan}</span>
+                  </div>
+                )}
+
+                {/* URL inputs for publishing */}
+                {store.appConfig?.status === 'building' && (
+                  <div className="space-y-2 mb-3">
+                    <input
+                      type="text"
+                      placeholder="Play Store URL"
+                      value={appUrls[store.id]?.android || ''}
+                      onChange={(e) => setAppUrls(prev => ({ ...prev, [store.id]: { ...prev[store.id], android: e.target.value, ios: prev[store.id]?.ios || '' } }))}
+                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-300"
+                    />
+                    <input
+                      type="text"
+                      placeholder="App Store URL"
+                      value={appUrls[store.id]?.ios || ''}
+                      onChange={(e) => setAppUrls(prev => ({ ...prev, [store.id]: { android: prev[store.id]?.android || '', ...prev[store.id], ios: e.target.value } }))}
+                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-300"
+                    />
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  {store.appConfig?.status === 'requested' && (
+                    <button
+                      onClick={() => updateAppStatus(store.id, 'building')}
+                      disabled={updatingApp === store.id}
+                      className="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-all disabled:opacity-50"
+                    >
+                      {updatingApp === store.id ? '...' : 'Marcar en construccion'}
+                    </button>
+                  )}
+                  {store.appConfig?.status === 'building' && (
+                    <button
+                      onClick={() => updateAppStatus(store.id, 'published')}
+                      disabled={updatingApp === store.id}
+                      className="px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 transition-all disabled:opacity-50"
+                    >
+                      {updatingApp === store.id ? '...' : 'Marcar como publicada'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => navigator.clipboard.writeText(store.id)}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-200 transition-all"
+                  >
+                    Copiar ID
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

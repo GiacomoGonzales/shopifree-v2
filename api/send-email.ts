@@ -248,7 +248,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { type, email, storeName, subdomain, storeId, lang = 'es', daysLeft } = req.body
+    const { type, email, storeName, subdomain, storeId, lang = 'es', daysLeft, appName } = req.body
+
+    // App request notification → send to admin, no dedup needed
+    if (type === 'app-request') {
+      const resend = new Resend(apiKey)
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'Giacomo de Shopifree <hola@shopifree.app>'
+      const adminEmail = process.env.ADMIN_EMAIL || 'giiacomo@gmail.com'
+      await resend.emails.send({
+        from: fromEmail,
+        to: adminEmail,
+        subject: `Nueva solicitud de app: ${storeName || appName}`,
+        html: `<p><strong>${storeName}</strong> (${subdomain}.shopifree.app) ha solicitado la publicacion de su app movil.</p><p>App name: ${appName || storeName}</p><p>Store ID: ${storeId}</p><p><a href="https://shopifree.app/es/admin">Ir al panel admin</a></p>`,
+        text: `${storeName} (${subdomain}.shopifree.app) solicita su app. App: ${appName || storeName}. Store ID: ${storeId}`,
+      })
+      return res.status(200).json({ ok: true })
+    }
 
     if (!type || !email || !storeId) {
       return res.status(400).json({ error: 'Missing required fields: type, email, storeId' })

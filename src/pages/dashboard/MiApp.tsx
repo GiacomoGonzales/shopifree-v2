@@ -145,8 +145,23 @@ export default function MiApp() {
     try {
       await updateDoc(doc(db, 'stores', store.id), {
         'appConfig.status': 'requested',
-        'appConfig.requestedAt': new Date()
+        'appConfig.requestedAt': new Date(),
+        'appConfig.appName': appName || store.name,
       })
+
+      // Notify admin via email
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'app-request',
+          storeId: store.id,
+          storeName: store.name,
+          subdomain: store.subdomain,
+          appName: appName || store.name,
+        })
+      }).catch(() => {}) // fire-and-forget
+
       showToast(t('miApp.toast.requested'))
     } catch {
       showToast(t('miApp.toast.error'), 'error')
