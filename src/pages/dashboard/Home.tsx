@@ -72,8 +72,13 @@ export default function DashboardHome() {
     localStorage.setItem(`linkShared_${store.id}`, 'true')
   }, [store])
 
-  // Get recommended themes (exclude current, show mix of new and popular)
-  const recommendedThemes = themes.filter(th => th.id !== store?.themeId).slice(0, 6)
+  // Get recommended themes: premium first, then visually rich free themes
+  const recommendedThemes = (() => {
+    const curated = ['cosmos', 'hologram', 'velvet', 'liquid', 'glacier', 'noir', 'aurora', 'vapor', 'mirage', 'prism', 'midnight', 'vaporwave', 'neon-cyber']
+    const current = store?.themeId
+    const ordered = curated.filter(id => id !== current).map(id => themes.find(th => th.id === id)).filter(Boolean) as typeof themes
+    return ordered.slice(0, 6)
+  })()
 
   // Milestone logic for free plan users
   const activeMilestone = (() => {
