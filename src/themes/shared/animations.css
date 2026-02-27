@@ -192,3 +192,98 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Premium: Cosmos - Star twinkle */
+@keyframes cosmosTwinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Premium: Cosmos - Shooting star */
+@keyframes cosmosShootingStar {
+  0% { transform: translateX(-100px) translateY(100px); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateX(calc(100vw + 100px)) translateY(-100vh); opacity: 0; }
+}
+
+/* Premium: Liquid - Blob morph variants */
+@keyframes liquidMorph1 {
+  0%, 100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+  25% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; }
+  50% { border-radius: 50% 60% 30% 60% / 50% 40% 70% 50%; }
+  75% { border-radius: 30% 40% 60% 70% / 60% 70% 30% 40%; }
+}
+
+@keyframes liquidMorph2 {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 50% 60% 30% 60%; }
+  25% { border-radius: 30% 60% 70% 40% / 50% 30% 60% 70%; }
+  50% { border-radius: 70% 50% 40% 60% / 30% 70% 50% 40%; }
+  75% { border-radius: 40% 70% 60% 30% / 70% 40% 30% 60%; }
+}
+
+@keyframes liquidMorph3 {
+  0%, 100% { border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
+  25% { border-radius: 60% 70% 30% 40% / 40% 60% 50% 70%; }
+  50% { border-radius: 40% 30% 60% 70% / 70% 50% 40% 30%; }
+  75% { border-radius: 70% 40% 50% 30% / 30% 70% 60% 50%; }
+}
+
+/* Premium: Glacier - Shimmer on borders */
+@keyframes glacierShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Premium: Glacier - Ice particle drift */
+@keyframes glacierParticleDrift {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+}
+
+@keyframes glacierParticleDrift2 {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% { transform: translateY(-100vh) translateX(-15px); opacity: 0; }
+}
+
+/* Premium: Vapor - Smoke drift variants */
+@keyframes vaporDriftLeft {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-8%) translateY(-3%); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes vaporDriftRight {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(8%) translateY(2%); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes vaporDriftDiag {
+  0% { transform: translateX(0) translateY(0); }
+  33% { transform: translateX(5%) translateY(-4%); }
+  66% { transform: translateX(-3%) translateY(3%); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+/* Premium: Mirage - Gradient band shift */
+@keyframes mirageBands {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 200px; }
+}
+
+/* Premium: Mirage - Heat wave distortion */
+@keyframes mirageHeatWave {
+  0%, 100% { filter: blur(0px); transform: scaleY(1); }
+  50% { filter: blur(0.5px); transform: scaleY(1.002); }
+}
+
+/* Premium: Hologram - Mobile sweep fallback */
+@keyframes hologramSweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

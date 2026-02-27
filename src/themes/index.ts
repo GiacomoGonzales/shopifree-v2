@@ -691,6 +691,111 @@ export const themes: Theme[] = [
       background: '#FFFFFF',
       accent: '#8B5CF6'
     }
+  },
+  {
+    id: 'cosmos',
+    name: 'Cosmos',
+    description: 'Espacio profundo con estrellas titilantes, estrellas fugaces y nebula animada. Efectos premium: parallax, glassmorphism, bordes animados.',
+    thumbnail: '/themes/cosmos.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#00E5FF',
+      background: '#070B1A',
+      accent: '#B388FF'
+    }
+  },
+  {
+    id: 'liquid',
+    name: 'Liquid',
+    description: 'Organico y creativo con blobs morfing animados y blur pesado. Efectos premium: glassmorphism, bordes animados.',
+    thumbnail: '/themes/liquid.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#FF7F64',
+      background: '#0A0E12',
+      accent: '#2DD4BF'
+    }
+  },
+  {
+    id: 'glacier',
+    name: 'Glacier',
+    description: 'Artico cristalino con frosted glass, shimmer en bordes y particulas de hielo flotantes. Tema premium claro.',
+    thumbnail: '/themes/glacier.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#0EA5E9',
+      background: '#EFF6FF',
+      accent: '#38BDF8'
+    }
+  },
+  {
+    id: 'velvet',
+    name: 'Velvet',
+    description: 'Lujo opulento con parallax multi-capa, textura grain y glows pulsantes. Efectos premium: glassmorphism, bordes animados.',
+    thumbnail: '/themes/velvet.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#D4A0C0',
+      background: '#120810',
+      accent: '#B8A0D4'
+    }
+  },
+  {
+    id: 'hologram',
+    name: 'Hologram',
+    description: 'Futurista iridiscente con efecto holografico reactivo al cursor. Efectos premium: glassmorphism, bordes animados.',
+    thumbnail: '/themes/hologram.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#FFFFFF',
+      background: '#050508',
+      accent: '#C0C0D0'
+    }
+  },
+  {
+    id: 'vapor',
+    name: 'Vapor',
+    description: 'Atmosferico y misterioso con capas de humo flotantes y glow pulsante. Efectos premium: glassmorphism, bordes animados.',
+    thumbnail: '/themes/vapor.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#C77DFF',
+      background: '#0D0A14',
+      accent: '#FF6B6B'
+    }
+  },
+  {
+    id: 'mirage',
+    name: 'Mirage',
+    description: 'Desierto calido con bandas de gradiente y distorsion de calor SVG. Efectos premium: glassmorphism, bordes animados.',
+    thumbnail: '/themes/mirage.png',
+    category: 'all',
+    isPremium: true,
+    isNew: true,
+    createdAt: new Date('2026-02-27'),
+    colors: {
+      primary: '#F59E0B',
+      background: '#1A0E08',
+      accent: '#EF4444'
+    }
   }
 ]
 
