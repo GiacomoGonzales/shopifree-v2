@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Capacitor } from '@capacitor/core'
+import { apiUrl } from '../utils/apiBase'
 
 export function usePushNotifications(storeId?: string) {
   const registered = useRef(false)
@@ -27,7 +28,7 @@ export function usePushNotifications(storeId?: string) {
           registered.current = true
 
           try {
-            await fetch('/api/push', {
+            await fetch(apiUrl('/api/push'), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

@@ -72,9 +72,18 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
       shouldScrollRef.current = false
       requestAnimationFrame(() => {
         if (containerRef.current) {
-          const offset = 140
-          const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
-          window.scrollTo({ top, behavior: 'smooth' })
+          const offset = 170
+          // In native app, body is position:fixed and #root is the scroll container
+          const scrollContainer = document.getElementById('root')
+          const isNativeScroll = scrollContainer && document.body.classList.contains('native-app')
+
+          if (isNativeScroll) {
+            const top = containerRef.current.getBoundingClientRect().top + scrollContainer.scrollTop - offset
+            scrollContainer.scrollTo({ top, behavior: 'smooth' })
+          } else {
+            const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
+            window.scrollTo({ top, behavior: 'smooth' })
+          }
         }
       })
     }
@@ -91,13 +100,18 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
 
     if (type !== 'infinite-scroll' || !node) return
 
+    // In native app, #root is the scroll container, so use it as observer root
+    const nativeRoot = document.body.classList.contains('native-app')
+      ? document.getElementById('root')
+      : null
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           setVisibleCount(prev => Math.min(prev + PAGE_SIZE, totalItems))
         }
       },
-      { rootMargin: '200px' }
+      { root: nativeRoot, rootMargin: '200px' }
     )
     observerRef.current.observe(node)
   }, [type, totalItems])

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { apiUrl } from '../../utils/apiBase'
 
 interface PendingOrder {
   orderId: string
@@ -38,7 +39,7 @@ export default function PaymentPending() {
     // Confirm order via server-side API (uses Admin SDK to bypass security rules)
     const paymentId = searchParams.get('payment_id')
     if (paymentId && orderData.orderId && orderData.storeId) {
-      fetch('/api/process-mp-payment', {
+      fetch(apiUrl('/api/process-mp-payment'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

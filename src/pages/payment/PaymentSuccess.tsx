@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { apiUrl } from '../../utils/apiBase'
 
 interface PendingOrderData {
   orderId: string
@@ -90,7 +91,7 @@ export default function PaymentSuccess() {
     const paymentId = searchParams.get('payment_id')
     const paymentStatus = searchParams.get('status')
     if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
-      fetch('/api/process-mp-payment', {
+      fetch(apiUrl('/api/process-mp-payment'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

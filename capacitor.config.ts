@@ -1,13 +1,14 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+// Auto-generated config for store: AlienStore (mJe3zuUhY8ggu8FxnKWyVP5fI3Z2)
+// Generated at: 2026-02-27T22:57:54.429Z
+
 const config: CapacitorConfig = {
-  appId: 'app.shopifree.mobile',
-  appName: 'Shopifree',
+  appId: 'app.shopifree.store.alienstore',
+  appName: 'AlienStore',
   webDir: 'dist',
-  backgroundColor: '#ffffff',
+  backgroundColor: '#000000',
   server: {
-    // For production, comment out the url line
-    // url: 'http://192.168.1.X:5173', // For dev testing on device
     cleartext: true,
     androidScheme: 'https'
   },
@@ -15,22 +16,18 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 10000,
       launchAutoHide: false,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#000000',
       showSpinner: false,
     },
     StatusBar: {
       style: 'LIGHT',
-      backgroundColor: '#ffffff'
+      backgroundColor: '#000000'
     },
     Keyboard: {
-      resize: 'native',
-      resizeOnFullScreen: true
+      resize: 'native'
     },
-    GoogleAuth: {
-      scopes: ['profile', 'email'],
-      serverClientId: '610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com',
-      iosClientId: '610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com',
-      forceCodeForRefreshToken: true
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
     }
   },
   ios: {
@@ -40,7 +37,6 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: true,
-    captureInput: true,
     webContentsDebuggingEnabled: false
   }
 };

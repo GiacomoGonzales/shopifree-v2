@@ -35,6 +35,45 @@ html:has(body.native-app) {
   background-color: #ffffff;
 }
 
+/* Safe area: status bar background overlay (matches theme header color) */
+body.native-app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--status-bar-color, #ffffff);
+  z-index: 9999;
+  transition: background-color 0.3s ease;
+}
+
+/* Safe area: navigation bar background overlay (bottom) */
+body.native-app::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-bottom);
+  background: var(--nav-bar-color, rgba(0, 0, 0, 0.7));
+  z-index: 9999;
+  transition: background-color 0.3s ease;
+}
+
+/* Safe area padding for native apps (status bar, notch) */
+body.native-app #root {
+  padding-top: env(safe-area-inset-top);
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Keyboard visible: hide nav bar overlay (keyboard covers it) */
+body.native-app.keyboard-visible::after {
+  display: none;
+}
+
 #root {
   min-height: 100vh;
 }

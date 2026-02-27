@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
 import type { Store, Order, OrderItem, Coupon } from '../types'
 import type { CartItem } from './useCart'
-import { orderService, couponService } from '../lib/firebase'
+import { orderService, couponService, db } from '../lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 
@@ -651,12 +653,44 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       }))
 
       // Redirect to MercadoPago
-      window.location.href = result.init_point
+      if (Capacitor.isNativePlatform()) {
+        // Native: open in in-app browser, then check order status when user returns
+        const { Browser } = await import('@capacitor/browser')
+        const pendingOrderId = orderToUse.id
+        const pendingStoreId = store.id
+
+        const onBrowserFinished = async () => {
+          Browser.removeAllListeners()
+          // Check if the order was confirmed by webhook while user was paying
+          try {
+            const orderDoc = await getDoc(doc(db, 'stores', pendingStoreId, 'orders', pendingOrderId))
+            const confirmedOrder = orderDoc.exists()
+              ? { id: orderDoc.id, storeId: pendingStoreId, ...orderDoc.data() } as Order
+              : null
+            setOrder(confirmedOrder || orderToUse)
+            setStep('confirmation')
+            onOrderComplete?.(confirmedOrder || orderToUse)
+            localStorage.removeItem('pendingOrder')
+          } catch {
+            // Fallback: show confirmation with what we have
+            setStep('confirmation')
+            onOrderComplete?.(orderToUse)
+            localStorage.removeItem('pendingOrder')
+          }
+          setLoading(false)
+        }
+
+        Browser.addListener('browserFinished', onBrowserFinished)
+        await Browser.open({ url: result.init_point })
+      } else {
+        // Web: standard redirect
+        window.location.href = result.init_point
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error processing payment')
       setLoading(false)
     }
-  }, [order, store, items, data.customer, data.delivery])
+  }, [order, store, items, data.customer, data.delivery, onOrderComplete])
 
   // Fallback from Brick to Checkout Pro redirect
   const fallbackToCheckoutPro = useCallback(() => {
@@ -677,15 +711,16 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         const paidOrder = { ...order, paymentStatus: 'paid' as const, status: 'confirmed' as const, paymentId: String(result.payment_id) }
         setOrder(paidOrder)
         setStep('confirmation')
-        onOrderComplete?.(paidOrder)
+        // Don't call onOrderComplete here - it closes the drawer before confirmation shows.
+        // It will be called when user clicks "Back to Store" from the confirmation page.
       } else if (result.status === 'in_process' || result.status === 'pending') {
         const pendingOrder = { ...order, paymentId: String(result.payment_id) }
         setOrder(pendingOrder)
         setStep('confirmation')
-        onOrderComplete?.(pendingOrder)
       } else {
-        // rejected
+        // rejected - throw so Brick component can show its error UI
         setError('paymentRejected')
+        throw new Error('paymentRejected')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error processing payment')
@@ -732,16 +767,14 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const paidOrder = { ...order, paymentStatus: 'paid' as const, status: 'confirmed' as const, paymentId: result.paymentId }
       setOrder(paidOrder)
       setStep('confirmation')
-      onOrderComplete?.(paidOrder)
     } else if (result.status === 'processing') {
       const pendingOrder = { ...order, paymentId: result.paymentId }
       setOrder(pendingOrder)
       setStep('confirmation')
-      onOrderComplete?.(pendingOrder)
     } else {
       setError('paymentRejected')
     }
-  }, [order, onOrderComplete])
+  }, [order])
 
   // Process bank transfer
   const processTransfer = useCallback(async () => {
@@ -758,13 +791,13 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       }
 
       setStep('confirmation')
-      onOrderComplete?.(createdOrder)
+      // Don't call onOrderComplete here - it closes the drawer before confirmation shows.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating order')
     } finally {
       setLoading(false)
     }
-  }, [createOrder, store.id, data.customer, data.delivery, onOrderComplete])
+  }, [createOrder, store.id, data.customer, data.delivery])
 
   // Validate customer data
   const validateCustomer = useCallback((): boolean => {

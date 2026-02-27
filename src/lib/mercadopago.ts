@@ -3,6 +3,19 @@
  * Las credenciales nunca se exponen al frontend - todo se maneja via API route
  */
 
+import { Capacitor } from '@capacitor/core'
+import { apiUrl } from '../utils/apiBase'
+
+/** Get the correct origin for payment redirects (native apps use store subdomain) */
+function getPaymentOrigin(): string {
+  if (Capacitor.isNativePlatform()) {
+    const subdomain = import.meta.env.VITE_STORE_SUBDOMAIN
+    if (subdomain) return `https://${subdomain}.shopifree.app`
+    return 'https://shopifree.app'
+  }
+  return window.location.origin
+}
+
 export interface MercadoPagoPreference {
   items: Array<{
     id: string
@@ -70,7 +83,7 @@ export async function createPreference(
   orderNumber: string,
   preference: MercadoPagoPreference
 ): Promise<CreatePreferenceResult> {
-  const response = await fetch('/api/create-mp-preference', {
+  const response = await fetch(apiUrl('/api/create-mp-preference'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -80,7 +93,7 @@ export async function createPreference(
       items: preference.items,
       payer: preference.payer,
       external_reference: preference.external_reference || orderId,
-      origin: window.location.origin
+      origin: getPaymentOrigin()
     })
   })
 
@@ -110,7 +123,7 @@ export async function processPayment(
   orderId: string,
   formData: Record<string, unknown>
 ): Promise<ProcessPaymentResult> {
-  const response = await fetch('/api/process-mp-payment', {
+  const response = await fetch(apiUrl('/api/process-mp-payment'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ storeId, orderId, formData })

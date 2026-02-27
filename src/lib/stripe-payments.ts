@@ -1,4 +1,5 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
+import { apiUrl } from '../utils/apiBase'
 
 // Cache per-store Stripe instances (separate from platform key in lib/stripe.ts)
 const stripeCache = new Map<string, Promise<Stripe | null>>()
@@ -16,7 +17,7 @@ export async function createPaymentIntent(
   amount: number,
   currency: string
 ): Promise<{ clientSecret: string; paymentIntentId: string }> {
-  const res = await fetch('/api/stripe-payment', {
+  const res = await fetch(apiUrl('/api/stripe-payment'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'create-intent', storeId, orderId, amount, currency })
@@ -35,7 +36,7 @@ export async function confirmStripePayment(
   orderId: string,
   paymentIntentId: string
 ): Promise<{ status: string; paymentId: string }> {
-  const res = await fetch('/api/stripe-payment', {
+  const res = await fetch(apiUrl('/api/stripe-payment'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'confirm-payment', storeId, orderId, paymentIntentId })

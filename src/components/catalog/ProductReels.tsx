@@ -547,8 +547,8 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
 
           {/* Product info */}
           <div
-            className="absolute bottom-0 left-0 right-0 p-5 pb-7"
-            style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease', zIndex: 3 }}
+            className="absolute bottom-0 left-0 right-0 p-5"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)', opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease', zIndex: 3 }}
           >
             <h2 className="text-xl font-bold text-white mb-1.5 drop-shadow-lg leading-tight">
               {product.name}
@@ -651,7 +651,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
       </div>
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-[71] flex items-center justify-between p-4 pointer-events-none" style={{ maxWidth: '480px', margin: '0 auto', opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}>
+      <div className="fixed top-0 left-0 right-0 z-[71] flex items-center justify-between p-4 pointer-events-none" style={{ maxWidth: '480px', margin: '0 auto', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)', opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease' }}>
         <button
           onClick={onClose}
           className="pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full transition-colors"

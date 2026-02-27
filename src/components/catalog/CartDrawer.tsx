@@ -33,14 +33,14 @@ export default function CartDrawer({
       />
 
       <div
-        className="absolute right-0 top-0 bottom-0 w-full max-w-md shadow-2xl animate-slideLeft flex flex-col"
+        className="cart-drawer absolute right-0 top-0 bottom-0 w-full max-w-md shadow-2xl animate-slideLeft flex flex-col"
         style={{ backgroundColor: theme.colors.surface }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between p-6"
-          style={{ borderBottom: `1px solid ${theme.colors.border}` }}
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)', borderBottom: `1px solid ${theme.colors.border}` }}
         >
           <h2
             className="text-xl font-semibold"
@@ -208,6 +208,7 @@ export default function CartDrawer({
           <div
             className="p-6"
             style={{
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
               borderTop: `1px solid ${theme.colors.border}`,
               backgroundColor: theme.colors.surfaceHover
             }}

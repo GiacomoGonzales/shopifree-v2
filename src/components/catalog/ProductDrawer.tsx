@@ -146,8 +146,9 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
         {/* Close Button */}
         <button
           onClick={handleCloseDrawer}
-          className="absolute top-4 right-4 z-10 w-10 h-10 backdrop-blur flex items-center justify-center transition-colors"
+          className="absolute right-4 z-10 w-10 h-10 backdrop-blur flex items-center justify-center transition-colors"
           style={{
+            top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
             backgroundColor: theme.effects.darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)',
             borderRadius: theme.radius.full,
             boxShadow: theme.shadows.lg
@@ -302,7 +303,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
         {/* Add Button */}
         <div
           className="p-6"
-          style={{ borderTop: `1px solid ${theme.colors.border}` }}
+          style={{ borderTop: `1px solid ${theme.colors.border}`, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}
         >
           <button
             onClick={handleAddToCart}

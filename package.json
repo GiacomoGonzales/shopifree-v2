@@ -14,12 +14,17 @@
     "ios": "npx cap open ios",
     "android:build": "npm run build && npx cap sync android && npx cap open android",
     "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
-    "app:config": "npx tsx mobile/build-config.ts"
+    "app:config": "npx tsx mobile/build-config.ts",
+    "wl:config": "npx tsx mobile/build-config.ts",
+    "wl:build": "npx vite build --mode whitelabel",
+    "wl:android": "npm run wl:build && npx cap sync android",
+    "wl:ios": "npm run wl:build && npx cap sync ios"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
     "@capacitor/android": "^8.0.1",
     "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.1",
     "@capacitor/cli": "^7.4.5",
     "@capacitor/core": "^8.0.1",
     "@capacitor/filesystem": "^8.1.0",

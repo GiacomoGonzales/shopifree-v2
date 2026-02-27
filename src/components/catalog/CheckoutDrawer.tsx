@@ -122,8 +122,12 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
   }, [updateData, data.delivery])
 
   const handleBackToStore = useCallback(() => {
-    onClose()
-  }, [onClose])
+    if (order) {
+      onOrderComplete(order) // clears cart + closes drawer
+    } else {
+      onClose()
+    }
+  }, [order, onOrderComplete, onClose])
 
   const handlePaymentSubmit = useCallback((method: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer') => {
     switch (method) {
@@ -177,13 +181,13 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
 
       {/* Drawer */}
       <div
-        className="fixed inset-y-0 right-0 w-full max-w-md z-[71] flex flex-col animate-slideInRight"
+        className="checkout-drawer fixed inset-y-0 right-0 w-full max-w-md z-[71] flex flex-col animate-slideInRight"
         style={{ backgroundColor: theme.colors.background }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 border-b"
-          style={{ borderColor: theme.colors.border }}
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)', borderColor: theme.colors.border }}
         >
           <h2 className="text-lg font-semibold" style={{ color: theme.colors.text }}>
             {t.checkoutTitle}
@@ -283,27 +287,41 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
           )}
 
           {step === 'brick' && (
-            <MercadoPagoBrick
-              store={store}
-              amount={finalTotal}
-              preferenceId={preferenceId}
-              onSubmit={processBrickPayment}
-              onFallbackToRedirect={fallbackToCheckoutPro}
-              onError={(msg) => { /* error is shown by brick itself */ void msg }}
-              t={t}
-            />
+            <>
+              {error && (
+                <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
+                  {error === 'paymentRejected' ? `${t.paymentRejected}. ${t.paymentRejectedMessage}` : error}
+                </div>
+              )}
+              <MercadoPagoBrick
+                store={store}
+                amount={finalTotal}
+                preferenceId={preferenceId}
+                onSubmit={processBrickPayment}
+                onFallbackToRedirect={fallbackToCheckoutPro}
+                onError={(msg) => { void msg }}
+                t={t}
+              />
+            </>
           )}
 
           {step === 'stripe' && order && (
-            <StripeElement
-              store={store}
-              orderId={order.id}
-              amount={finalTotal}
-              currency={store.currency || 'USD'}
-              onPaymentComplete={processStripePaymentComplete}
-              onError={(msg) => { void msg }}
-              t={t}
-            />
+            <>
+              {error && (
+                <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
+                  {error === 'paymentRejected' ? `${t.paymentRejected}. ${t.paymentRejectedMessage}` : error}
+                </div>
+              )}
+              <StripeElement
+                store={store}
+                orderId={order.id}
+                amount={finalTotal}
+                currency={store.currency || 'USD'}
+                onPaymentComplete={processStripePaymentComplete}
+                onError={(msg) => { void msg }}
+                t={t}
+              />
+            </>
           )}
 
           {step === 'confirmation' && order && (
@@ -323,6 +341,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
           <div
             className="px-5 py-4 border-t"
             style={{
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
               borderColor: theme.colors.border,
               backgroundColor: theme.colors.surface
             }}

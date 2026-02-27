@@ -8,6 +8,7 @@ import { getDeviceType, getReferrer } from '../../utils/deviceDetection'
 import { optimizeImage } from '../../utils/cloudinary'
 import type { Store, Product, Category } from '../../types'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { Capacitor } from '@capacitor/core'
 
 interface CatalogProps {
   subdomainStore?: string
@@ -86,6 +87,39 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
 
   // Register push notifications on native app
   usePushNotifications(store?.id)
+
+  // Sync status bar + navigation bar colors with theme header on native apps
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !store) return
+
+    // Wait for theme to render, then read the header's background color
+    const timer = setTimeout(() => {
+      const header = document.querySelector('header')
+      if (!header) return
+
+      const bg = getComputedStyle(header).backgroundColor
+      if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+        const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+        if (match) {
+          const [r, g, b] = [match[1], match[2], match[3]]
+          const solid = `rgb(${r}, ${g}, ${b})`
+          document.documentElement.style.setProperty('--status-bar-color', solid)
+          // Nav bar: dark semi-transparent for white icons contrast
+          document.documentElement.style.setProperty('--nav-bar-color', 'rgba(0, 0, 0, 0.7)')
+
+          const hex = '#' + [r, g, b].map(c => parseInt(c).toString(16).padStart(2, '0')).join('')
+          const isDark = (parseInt(r) * 299 + parseInt(g) * 587 + parseInt(b) * 114) / 1000 < 128
+
+          import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+            StatusBar.setBackgroundColor({ color: hex })
+            StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
+          }).catch(() => {})
+        }
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [store, loadingProducts])
 
   // Analytics callbacks - must be before any conditional returns
   const handleWhatsAppClick = useCallback(() => {
