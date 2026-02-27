@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                       type="text"
                       placeholder="App Store URL"
                       value={appUrls[store.id]?.ios || ''}
-                      onChange={(e) => setAppUrls(prev => ({ ...prev, [store.id]: { android: prev[store.id]?.android || '', ...prev[store.id], ios: e.target.value } }))}
+                      onChange={(e) => setAppUrls(prev => ({ ...prev, [store.id]: { android: prev[store.id]?.android || '', ios: e.target.value } }))}
                       className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-300"
                     />
                   </div>
