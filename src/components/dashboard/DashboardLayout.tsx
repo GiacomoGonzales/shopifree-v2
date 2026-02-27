@@ -99,6 +99,14 @@ function CreditCardIcon({ active }: { active?: boolean }) {
   )
 }
 
+function PhoneIcon({ active }: { active?: boolean }) {
+  return (
+    <svg className="w-5 h-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
 function IntegrationsIcon({ active }: { active?: boolean }) {
   return (
     <svg className="w-5 h-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
@@ -203,6 +211,7 @@ export default function DashboardLayout() {
       { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
       { name: t('nav.integrations'), href: localePath('/dashboard/integrations'), icon: IntegrationsIcon },
+      { name: t('nav.miApp'), href: localePath('/dashboard/mi-app'), icon: PhoneIcon },
       'separator',
       { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
     ]
@@ -242,6 +251,7 @@ export default function DashboardLayout() {
       { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
       { name: t('nav.integrations'), href: localePath('/dashboard/integrations'), icon: IntegrationsIcon },
+      { name: t('nav.miApp'), href: localePath('/dashboard/mi-app'), icon: PhoneIcon },
     )
     if (isAdmin) {
       items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })

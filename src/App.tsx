@@ -29,6 +29,7 @@ import Orders from './pages/dashboard/Orders'
 import Customers from './pages/dashboard/Customers'
 import SupportChats from './pages/dashboard/SupportChats'
 import MoreMenu from './pages/dashboard/MoreMenu'
+import MiApp from './pages/dashboard/MiApp'
 import Catalog from './pages/catalog/Catalog'
 
 // Blog Pages
@@ -176,6 +177,7 @@ function AppRoutes() {
           <Route path="domain" element={<Domain />} />
           <Route path="payments" element={<Payments />} />
           <Route path="integrations" element={<Integrations />} />
+          <Route path="mi-app" element={<MiApp />} />
           <Route path="coupons" element={<Coupons />} />
           {/* Account & Plan */}
           <Route path="account" element={<Account />} />

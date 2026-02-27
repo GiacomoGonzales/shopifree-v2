@@ -13,7 +13,8 @@
     "android": "npx cap open android",
     "ios": "npx cap open ios",
     "android:build": "npm run build && npx cap sync android && npx cap open android",
-    "ios:build": "npm run build && npx cap sync ios && npx cap open ios"
+    "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
+    "app:config": "npx tsx mobile/build-config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -25,6 +26,7 @@
     "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.1",
     "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.1",
     "@capacitor/share": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",

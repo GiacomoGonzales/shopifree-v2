@@ -12,6 +12,7 @@
     "payments": "Payments",
     "coupons": "Coupons",
     "myAccount": "My Account",
+    "miApp": "My App",
     "plan": "Plan",
     "logout": "Logout"
   },
@@ -1112,6 +1113,70 @@
     "toast": {
       "noSubscription": "You don't have an active subscription",
       "portalError": "Error opening payment portal"
+    }
+  },
+  "miApp": {
+    "title": "My App",
+    "subtitle": "Configure your mobile app and send push notifications",
+    "businessRequired": "The mobile app is available on the Business plan. Upgrade to get your own app.",
+    "upgradeToBusiness": "Upgrade to Business",
+    "config": {
+      "title": "App configuration",
+      "appName": "App name",
+      "appNamePlaceholder": "My Store",
+      "icon": "App icon",
+      "iconHint": "Square PNG, 1024x1024px recommended",
+      "uploadIcon": "Upload icon",
+      "primaryColor": "Primary color",
+      "secondaryColor": "Secondary color",
+      "splashColor": "Splash color",
+      "save": "Save configuration",
+      "saving": "Saving...",
+      "saved": "Configuration saved"
+    },
+    "status": {
+      "title": "App status",
+      "none": "Not requested",
+      "noneDesc": "Configure your app and request publication",
+      "requested": "Requested",
+      "requestedDesc": "Your app is in the build queue",
+      "building": "Building",
+      "buildingDesc": "We're preparing your app",
+      "published": "Published",
+      "publishedDesc": "Your app is available in the stores",
+      "request": "Request publication",
+      "requesting": "Requesting..."
+    },
+    "links": {
+      "title": "Download links",
+      "playStore": "Google Play Store",
+      "appStore": "Apple App Store",
+      "noLinks": "Links will be available when your app is published"
+    },
+    "push": {
+      "title": "Push Notifications",
+      "titleLabel": "Title",
+      "titlePlaceholder": "E.g.: New offer!",
+      "bodyLabel": "Message",
+      "bodyPlaceholder": "E.g.: 20% off all products",
+      "send": "Send notification",
+      "sending": "Sending...",
+      "sent": "Notification sent to {{count}} devices",
+      "noTokens": "No devices registered yet",
+      "error": "Error sending notification",
+      "templates": "Quick templates",
+      "templateNewProduct": "New product",
+      "templateDiscount": "Special discount",
+      "templateBackInStock": "Back in stock",
+      "history": "History",
+      "noHistory": "You haven't sent any notifications yet",
+      "recipients": "{{count}} recipients"
+    },
+    "toast": {
+      "saved": "App configuration saved",
+      "error": "Error saving",
+      "requested": "Request sent successfully",
+      "iconError": "Error uploading icon"
     }
   },
   "common": {

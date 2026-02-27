@@ -12,6 +12,7 @@
     "payments": "Pagos",
     "coupons": "Cupones",
     "myAccount": "Mi Cuenta",
+    "miApp": "Mi App",
     "plan": "Plan",
     "logout": "Cerrar sesión"
   },
@@ -1113,6 +1114,70 @@
     "toast": {
       "noSubscription": "No tienes una suscripción activa",
       "portalError": "Error al abrir el portal de pagos"
+    }
+  },
+  "miApp": {
+    "title": "Mi App",
+    "subtitle": "Configura tu app móvil y envía notificaciones push",
+    "businessRequired": "La app móvil está disponible en el plan Business. Mejora tu plan para tener tu propia app.",
+    "upgradeToBusiness": "Mejorar a Business",
+    "config": {
+      "title": "Configuración de la app",
+      "appName": "Nombre de la app",
+      "appNamePlaceholder": "Mi Tienda",
+      "icon": "Ícono de la app",
+      "iconHint": "PNG cuadrado, 1024x1024px recomendado",
+      "uploadIcon": "Subir ícono",
+      "primaryColor": "Color primario",
+      "secondaryColor": "Color secundario",
+      "splashColor": "Color de splash",
+      "save": "Guardar configuración",
+      "saving": "Guardando...",
+      "saved": "Configuración guardada"
+    },
+    "status": {
+      "title": "Estado de la app",
+      "none": "Sin solicitar",
+      "noneDesc": "Configura tu app y solicita la publicación",
+      "requested": "Solicitada",
+      "requestedDesc": "Tu app está en cola de construcción",
+      "building": "En construcción",
+      "buildingDesc": "Estamos preparando tu app",
+      "published": "Publicada",
+      "publishedDesc": "Tu app está disponible en las tiendas",
+      "request": "Solicitar publicación",
+      "requesting": "Solicitando..."
+    },
+    "links": {
+      "title": "Links de descarga",
+      "playStore": "Google Play Store",
+      "appStore": "Apple App Store",
+      "noLinks": "Los links estarán disponibles cuando tu app sea publicada"
+    },
+    "push": {
+      "title": "Notificaciones Push",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Ej: Nueva oferta!",
+      "bodyLabel": "Mensaje",
+      "bodyPlaceholder": "Ej: 20% de descuento en todos los productos",
+      "send": "Enviar notificación",
+      "sending": "Enviando...",
+      "sent": "Notificación enviada a {{count}} dispositivos",
+      "noTokens": "No hay dispositivos registrados aún",
+      "error": "Error al enviar la notificación",
+      "templates": "Plantillas rápidas",
+      "templateNewProduct": "Nuevo producto",
+      "templateDiscount": "Descuento especial",
+      "templateBackInStock": "De vuelta en stock",
+      "history": "Historial",
+      "noHistory": "No has enviado notificaciones aún",
+      "recipients": "{{count}} destinatarios"
+    },
+    "toast": {
+      "saved": "Configuración de app guardada",
+      "error": "Error al guardar",
+      "requested": "Solicitud enviada correctamente",
+      "iconError": "Error al subir el ícono"
     }
   },
   "common": {

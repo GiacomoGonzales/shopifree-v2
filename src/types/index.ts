@@ -103,6 +103,9 @@ export interface Store {
   // === ENVÍO ===
   shipping?: StoreShipping
 
+  // === APP MÓVIL ===
+  appConfig?: StoreAppConfig
+
   // === PLAN & SUBSCRIPTION ===
   plan: 'free' | 'pro' | 'business'
   planExpiresAt?: Date
@@ -598,4 +601,38 @@ export interface TrendComparison {
   previous: number
   percentChange: number
   direction: 'up' | 'down' | 'flat'
+}
+
+// ============================================
+// APP MÓVIL TYPES
+// ============================================
+export interface StoreAppConfig {
+  appName: string
+  icon?: string              // URL Cloudinary
+  primaryColor: string
+  secondaryColor: string
+  splashColor: string
+  status: 'none' | 'requested' | 'building' | 'published'
+  requestedAt?: Date
+  publishedAt?: Date
+  androidUrl?: string
+  iosUrl?: string
+  pushEnabled: boolean
+}
+
+export interface PushToken {
+  id: string
+  token: string
+  platform: 'ios' | 'android' | 'web'
+  storeId: string
+  createdAt: Date
+}
+
+export interface PushNotification {
+  id: string
+  storeId: string
+  title: string
+  body: string
+  sentAt: Date
+  recipientCount: number
 }

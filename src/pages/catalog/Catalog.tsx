@@ -7,6 +7,7 @@ import StoreSEO from '../../components/seo/StoreSEO'
 import { getDeviceType, getReferrer } from '../../utils/deviceDetection'
 import { optimizeImage } from '../../utils/cloudinary'
 import type { Store, Product, Category } from '../../types'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 interface CatalogProps {
   subdomainStore?: string
@@ -82,6 +83,9 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
   const [loadingStore, setLoadingStore] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
   const trackedRef = useRef(false)
+
+  // Register push notifications on native app
+  usePushNotifications(store?.id)
 
   // Analytics callbacks - must be before any conditional returns
   const handleWhatsAppClick = useCallback(() => {
