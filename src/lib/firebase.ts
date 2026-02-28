@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth'
 import { Capacitor } from '@capacitor/core'
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import type { User, Store, Product, Category, Order, Coupon, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
 
@@ -19,7 +19,12 @@ const app = initializeApp(firebaseConfig)
 export const auth = Capacitor.isNativePlatform()
   ? initializeAuth(app, { persistence: indexedDBLocalPersistence })
   : getAuth(app)
-export const db = getFirestore(app)
+
+// Enable Firestore persistence for faster subsequent loads
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+})
+
 export const storage = getStorage(app)
 
 // ============================================

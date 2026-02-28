@@ -82,10 +82,13 @@ export default function SearchModal({ products, onSelectProduct, onClose }: Sear
         style={{ backgroundColor: theme.colors.surface }}
         onClick={(e) => e.stopPropagation()}
       >
-          {/* Header with search input */}
+          {/* Header with search input - with safe area for notch/Dynamic Island */}
           <div
             className="flex items-center gap-3 p-4"
-            style={{ borderBottom: `1px solid ${theme.colors.border}` }}
+            style={{
+              borderBottom: `1px solid ${theme.colors.border}`,
+              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+            }}
           >
             {/* Magnifying glass */}
             <svg

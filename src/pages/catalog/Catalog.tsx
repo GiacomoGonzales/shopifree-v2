@@ -16,56 +16,33 @@ interface CatalogProps {
   productSlug?: string
 }
 
-// Cache helpers - store logo/name in localStorage for instant display on repeat visits
-function getCachedBranding(key: string): { logo?: string; name?: string } | null {
+// Cache helpers - store data in localStorage for faster subsequent loads
+function getCachedStore(key: string): { id?: string; logo?: string; name?: string } | null {
   try {
-    const cached = localStorage.getItem(`store_branding_${key}`)
+    const cached = localStorage.getItem(`store_cache_${key}`)
     return cached ? JSON.parse(cached) : null
   } catch { return null }
 }
 
-function setCachedBranding(key: string, logo?: string, name?: string) {
+function setCachedStore(key: string, id: string, logo?: string, name?: string) {
   try {
-    localStorage.setItem(`store_branding_${key}`, JSON.stringify({ logo, name }))
+    localStorage.setItem(`store_cache_${key}`, JSON.stringify({ id, logo, name }))
   } catch { /* ignore */ }
 }
 
-// Clean loading spinner with optional store logo
+// Simple loader for web (native uses splash screen)
 function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
-  const tinyLogo = logo ? optimizeImage(logo, 'thumbnail') : undefined
+  const optimizedLogo = logo ? optimizeImage(logo, 'thumbnail') : undefined
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
       <div className="text-center">
-        <div className="relative inline-flex items-center justify-center w-24 h-24">
-          {/* Spinner ring */}
-          <svg className="absolute inset-0 w-24 h-24 animate-spin" style={{ animationDuration: '1.2s' }}>
-            <circle
-              cx="48" cy="48" r="44"
-              fill="none" stroke="#e5e7eb" strokeWidth="3"
-            />
-            <circle
-              cx="48" cy="48" r="44"
-              fill="none" stroke="#111827" strokeWidth="3"
-              strokeLinecap="round" strokeDasharray="80 200"
-            />
-          </svg>
-
-          {/* Logo or simple icon */}
-          {tinyLogo ? (
-            <img
-              src={tinyLogo}
-              alt=""
-              className="w-14 h-14 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-gray-100" />
-          )}
-        </div>
-
-        {name && (
-          <p className="mt-5 text-sm font-medium text-gray-800">{name}</p>
+        {optimizedLogo ? (
+          <img src={optimizedLogo} alt="" className="w-24 h-24 rounded-[22%] object-cover mx-auto" />
+        ) : (
+          <div className="w-24 h-24 rounded-[22%] bg-white/10 mx-auto" />
         )}
+        {name && <p className="mt-5 text-base font-semibold text-white tracking-wide">{name}</p>}
       </div>
     </div>
   )
@@ -77,12 +54,11 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
   // Use subdomain prop if provided, otherwise use URL param
   const slug = subdomainStore || storeSlug
   const cacheKey = customDomain || slug || ''
-  const cached = useRef(getCachedBranding(cacheKey)).current
+  const cached = useRef(getCachedStore(cacheKey)).current
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [loadingStore, setLoadingStore] = useState(true)
-  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [loading, setLoading] = useState(true)
   const trackedRef = useRef(false)
 
   // Register push notifications on native app
@@ -102,11 +78,6 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
         if (match) {
           const [r, g, b] = [match[1], match[2], match[3]]
-          const solid = `rgb(${r}, ${g}, ${b})`
-          document.documentElement.style.setProperty('--status-bar-color', solid)
-          // Nav bar: dark semi-transparent for white icons contrast
-          document.documentElement.style.setProperty('--nav-bar-color', 'rgba(0, 0, 0, 0.7)')
-
           const hex = '#' + [r, g, b].map(c => parseInt(c).toString(16).padStart(2, '0')).join('')
           const isDark = (parseInt(r) * 299 + parseInt(g) * 587 + parseInt(b) * 114) / 1000 < 128
 
@@ -119,7 +90,7 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [store, loadingProducts])
+  }, [store, loading])
 
   // Analytics callbacks - must be before any conditional returns
   const handleWhatsAppClick = useCallback(() => {
@@ -144,83 +115,59 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
     }
   }, [store])
 
-  // First: Load store data (fast - shows logo quickly)
+  // Load all data in one effect - optimized for speed
   useEffect(() => {
-    const fetchStore = async () => {
+    const loadAll = async () => {
       if (!slug && !customDomain) return
 
       try {
+        // Step 1: Get store
         const storesRef = collection(db, 'stores')
-        let storeQuery
-
-        if (customDomain) {
-          storeQuery = query(storesRef, where('customDomain', '==', customDomain))
-        } else {
-          storeQuery = query(storesRef, where('subdomain', '==', slug))
-        }
+        const storeQuery = customDomain
+          ? query(storesRef, where('customDomain', '==', customDomain))
+          : query(storesRef, where('subdomain', '==', slug))
 
         const storeSnapshot = await getDocs(storeQuery)
-
-        if (!storeSnapshot.empty) {
-          const storeData = storeSnapshot.docs[0].data() as Store
-          const storeId = storeSnapshot.docs[0].id
-          setStore({ ...storeData, id: storeId })
-          setCachedBranding(cacheKey, storeData.logo, storeData.name)
-
-          // Track page view (only once per session)
-          if (!trackedRef.current) {
-            trackedRef.current = true
-            analyticsService.track(storeId, 'page_view', undefined, {
-              deviceType: getDeviceType(),
-              referrer: getReferrer()
-            })
-          }
+        if (storeSnapshot.empty) {
+          setLoading(false)
+          return
         }
-      } catch (error) {
-        console.error('Error fetching store:', error)
-      } finally {
-        setLoadingStore(false)
-      }
-    }
 
-    fetchStore()
-  }, [slug, customDomain])
+        const storeData = storeSnapshot.docs[0].data() as Store
+        const storeId = storeSnapshot.docs[0].id
+        const fullStore = { ...storeData, id: storeId }
+        setStore(fullStore)
+        setCachedStore(cacheKey, storeId, storeData.logo, storeData.name)
 
-  // Second: Load products and categories (after store is loaded)
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (!store) return
-
-      try {
-        // Fetch products and categories in parallel
-        const productsRef = collection(db, 'stores', store.id, 'products')
-        const productsQuery = query(productsRef, where('active', '==', true))
-        const categoriesRef = collection(db, 'stores', store.id, 'categories')
-
+        // Step 2: Get products + categories in parallel
         const [productsSnapshot, categoriesSnapshot] = await Promise.all([
-          getDocs(productsQuery),
-          getDocs(categoriesRef)
+          getDocs(query(collection(db, 'stores', storeId, 'products'), where('active', '==', true))),
+          getDocs(collection(db, 'stores', storeId, 'categories'))
         ])
 
         setProducts(productsSnapshot.docs.map(doc => ({
           ...doc.data() as Product,
           id: doc.id,
-          storeId: store.id
+          storeId
         })))
         setCategories(
           categoriesSnapshot.docs
-            .map(doc => ({
-              ...doc.data() as Category,
-              id: doc.id,
-              storeId: store.id
-            }))
+            .map(doc => ({ ...doc.data() as Category, id: doc.id, storeId }))
             .sort((a, b) => (a.order || 0) - (b.order || 0))
         )
+
+        // Track page view (async, don't block)
+        if (!trackedRef.current) {
+          trackedRef.current = true
+          analyticsService.track(storeId, 'page_view', undefined, {
+            deviceType: getDeviceType(),
+            referrer: getReferrer()
+          })
+        }
       } catch (error) {
-        console.error('Error fetching products:', error)
+        console.error('Error loading store:', error)
       } finally {
-        setLoadingProducts(false)
-        // Hide native splash screen now that content is ready
+        setLoading(false)
         if (Capacitor.isNativePlatform()) {
           import('@capacitor/splash-screen').then(({ SplashScreen }) => {
             SplashScreen.hide({ fadeOutDuration: 300 })
@@ -229,16 +176,11 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
       }
     }
 
-    fetchProducts()
-  }, [store])
+    loadAll()
+  }, [slug, customDomain, cacheKey])
 
-  // Show loader while loading - use cached branding for instant logo on repeat visits
-  // On native, the splash screen covers this, so it's only visible on web
-  if (loadingStore || loadingProducts) {
-    return <StoreLoader logo={store?.logo || cached?.logo} name={store?.name || cached?.name} />
-  }
-
-  if (!store) {
+  // Store not found
+  if (!store && !loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
@@ -258,6 +200,15 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         </div>
       </div>
     )
+  }
+
+  // Loading state
+  if (loading || !store) {
+    // Native: empty div (splash covers everything)
+    // Web: show loader
+    return Capacitor.isNativePlatform()
+      ? <div style={{ background: '#000' }} />
+      : <StoreLoader logo={cached?.logo} name={cached?.name} />
   }
 
   // Get the theme component based on store's themeId

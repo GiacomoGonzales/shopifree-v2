@@ -245,6 +245,16 @@ async function generateSplashScreens(logoUrl: string, bgColor: string, storeName
   writeFileSync(resolve(resDir, 'drawable', 'splash.png'), defBuf)
 
   console.log(`    ✓ drawable/splash.png (default)`)
+
+  // iOS splash screens (2732x2732 for universal)
+  const iosSplashDir = resolve(process.cwd(), 'ios/App/App/Assets.xcassets/Splash.imageset')
+  if (existsSync(iosSplashDir)) {
+    const iosSplash = await buildSplashImage(logoBuffer, bg, bgColor, storeName, 2732, 2732)
+    writeFileSync(resolve(iosSplashDir, 'splash-2732x2732.png'), iosSplash)
+    writeFileSync(resolve(iosSplashDir, 'splash-2732x2732-1.png'), iosSplash)
+    writeFileSync(resolve(iosSplashDir, 'splash-2732x2732-2.png'), iosSplash)
+    console.log(`    ✓ iOS splash (2732x2732)`)
+  }
 }
 
 const storeId = process.argv[2]

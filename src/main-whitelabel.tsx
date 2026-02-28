@@ -8,11 +8,11 @@ import WhiteLabelApp from './WhiteLabelApp'
 if (Capacitor.isNativePlatform()) {
   document.body.classList.add('native-app')
 
-  // Configure StatusBar - dark text on light background
+  // Configure StatusBar - light text on dark background (matches splash)
   import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-    StatusBar.setStyle({ style: Style.Light })
-    StatusBar.setBackgroundColor({ color: '#ffffff' })
-    StatusBar.setOverlaysWebView({ overlay: true })
+    StatusBar.setStyle({ style: Style.Dark })
+    StatusBar.setBackgroundColor({ color: '#000000' })
+    StatusBar.setOverlaysWebView({ overlay: false })
   }).catch(() => {})
 
   // Splash screen stays visible until Catalog hides it after store data loads.
