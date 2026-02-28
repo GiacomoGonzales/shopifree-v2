@@ -203,6 +203,35 @@ export interface ThemeTranslations {
   waPaymentStatus: string
   waPaidOnline: string
   waPendingPayment: string
+
+  // Privacy policy
+  privacyPolicy: string
+  privacyTitle: string
+  privacyLastUpdated: string
+  privacyInfoTitle: string
+  privacyInfoDesc: string
+  privacyInfoName: string
+  privacyInfoPhone: string
+  privacyInfoEmail: string
+  privacyInfoAddress: string
+  privacyUseTitle: string
+  privacyUseOrders: string
+  privacyUseDelivery: string
+  privacyUseContact: string
+  privacyUseImprove: string
+  privacyStorageTitle: string
+  privacyStorageDesc: string
+  privacySharingTitle: string
+  privacySharingDesc: string
+  privacySharingPayment: string
+  privacySharingLegal: string
+  privacyRightsTitle: string
+  privacyRightsAccess: string
+  privacyRightsCorrect: string
+  privacyRightsDelete: string
+  privacyRightsContact: string
+  privacyContactTitle: string
+  privacyContactDesc: string
 }
 
 export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
@@ -404,6 +433,35 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     waPaymentStatus: 'Estado de pago',
     waPaidOnline: 'Pagado online',
     waPendingPayment: 'Pendiente de pago',
+
+    // Privacy policy
+    privacyPolicy: 'Politica de privacidad',
+    privacyTitle: 'Politica de Privacidad',
+    privacyLastUpdated: 'Ultima actualizacion: febrero 2026',
+    privacyInfoTitle: 'Informacion que recopilamos',
+    privacyInfoDesc: 'Al realizar un pedido en {{store}}, recopilamos la siguiente informacion:',
+    privacyInfoName: 'Nombre completo',
+    privacyInfoPhone: 'Numero de telefono',
+    privacyInfoEmail: 'Correo electronico (opcional)',
+    privacyInfoAddress: 'Direccion de entrega (si aplica)',
+    privacyUseTitle: 'Como usamos tu informacion',
+    privacyUseOrders: 'Procesar y gestionar tus pedidos',
+    privacyUseDelivery: 'Coordinar la entrega de tus productos',
+    privacyUseContact: 'Comunicarnos contigo sobre tu pedido',
+    privacyUseImprove: 'Mejorar nuestro servicio',
+    privacyStorageTitle: 'Almacenamiento de datos',
+    privacyStorageDesc: 'Tu informacion se almacena de forma segura en servidores protegidos con medidas de seguridad estandar de la industria.',
+    privacySharingTitle: 'Compartir informacion',
+    privacySharingDesc: '{{store}} no vende ni comparte tu informacion personal con terceros, excepto:',
+    privacySharingPayment: 'Procesadores de pago necesarios para completar tu compra',
+    privacySharingLegal: 'Cuando sea requerido por ley',
+    privacyRightsTitle: 'Tus derechos',
+    privacyRightsAccess: 'Acceder a tu informacion personal',
+    privacyRightsCorrect: 'Solicitar la correccion de datos inexactos',
+    privacyRightsDelete: 'Solicitar la eliminacion de tus datos',
+    privacyRightsContact: 'Para ejercer tus derechos, contactanos a {{email}}.',
+    privacyContactTitle: 'Contacto',
+    privacyContactDesc: 'Si tienes preguntas sobre esta politica, puedes contactar a {{store}} en {{email}}.',
   },
 
   en: {
@@ -604,6 +662,35 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     waPaymentStatus: 'Payment status',
     waPaidOnline: 'Paid online',
     waPendingPayment: 'Payment pending',
+
+    // Privacy policy
+    privacyPolicy: 'Privacy policy',
+    privacyTitle: 'Privacy Policy',
+    privacyLastUpdated: 'Last updated: February 2026',
+    privacyInfoTitle: 'Information we collect',
+    privacyInfoDesc: 'When placing an order at {{store}}, we collect the following information:',
+    privacyInfoName: 'Full name',
+    privacyInfoPhone: 'Phone number',
+    privacyInfoEmail: 'Email address (optional)',
+    privacyInfoAddress: 'Delivery address (if applicable)',
+    privacyUseTitle: 'How we use your information',
+    privacyUseOrders: 'Process and manage your orders',
+    privacyUseDelivery: 'Coordinate product delivery',
+    privacyUseContact: 'Contact you about your order',
+    privacyUseImprove: 'Improve our service',
+    privacyStorageTitle: 'Data storage',
+    privacyStorageDesc: 'Your information is stored securely on protected servers with industry-standard security measures.',
+    privacySharingTitle: 'Information sharing',
+    privacySharingDesc: '{{store}} does not sell or share your personal information with third parties, except:',
+    privacySharingPayment: 'Payment processors needed to complete your purchase',
+    privacySharingLegal: 'When required by law',
+    privacyRightsTitle: 'Your rights',
+    privacyRightsAccess: 'Access your personal information',
+    privacyRightsCorrect: 'Request correction of inaccurate data',
+    privacyRightsDelete: 'Request deletion of your data',
+    privacyRightsContact: 'To exercise your rights, contact us at {{email}}.',
+    privacyContactTitle: 'Contact',
+    privacyContactDesc: 'If you have questions about this policy, you can contact {{store}} at {{email}}.',
   },
 
   pt: {
@@ -804,6 +891,35 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     waPaymentStatus: 'Status de pagamento',
     waPaidOnline: 'Pago online',
     waPendingPayment: 'Pendente de pagamento',
+
+    // Privacy policy
+    privacyPolicy: 'Politica de privacidade',
+    privacyTitle: 'Politica de Privacidade',
+    privacyLastUpdated: 'Ultima atualizacao: fevereiro 2026',
+    privacyInfoTitle: 'Informacoes que coletamos',
+    privacyInfoDesc: 'Ao fazer um pedido em {{store}}, coletamos as seguintes informacoes:',
+    privacyInfoName: 'Nome completo',
+    privacyInfoPhone: 'Numero de telefone',
+    privacyInfoEmail: 'Endereco de e-mail (opcional)',
+    privacyInfoAddress: 'Endereco de entrega (se aplicavel)',
+    privacyUseTitle: 'Como usamos suas informacoes',
+    privacyUseOrders: 'Processar e gerenciar seus pedidos',
+    privacyUseDelivery: 'Coordenar a entrega dos produtos',
+    privacyUseContact: 'Entrar em contato sobre seu pedido',
+    privacyUseImprove: 'Melhorar nosso servico',
+    privacyStorageTitle: 'Armazenamento de dados',
+    privacyStorageDesc: 'Suas informacoes sao armazenadas de forma segura em servidores protegidos com medidas de seguranca padrao da industria.',
+    privacySharingTitle: 'Compartilhamento de informacoes',
+    privacySharingDesc: '{{store}} nao vende nem compartilha suas informacoes pessoais com terceiros, exceto:',
+    privacySharingPayment: 'Processadores de pagamento necessarios para concluir sua compra',
+    privacySharingLegal: 'Quando exigido por lei',
+    privacyRightsTitle: 'Seus direitos',
+    privacyRightsAccess: 'Acessar suas informacoes pessoais',
+    privacyRightsCorrect: 'Solicitar a correcao de dados incorretos',
+    privacyRightsDelete: 'Solicitar a exclusao de seus dados',
+    privacyRightsContact: 'Para exercer seus direitos, entre em contato em {{email}}.',
+    privacyContactTitle: 'Contato',
+    privacyContactDesc: 'Se tiver duvidas sobre esta politica, entre em contato com {{store}} em {{email}}.',
   },
 }
 

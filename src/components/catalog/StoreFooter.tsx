@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 
@@ -176,9 +177,18 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
           className="mt-12 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
           style={{ borderTop: `1px solid ${theme.colors.border}` }}
         >
-          <p className="text-sm" style={{ color: theme.colors.border }}>
-            © {new Date().getFullYear()} {store.name}
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm" style={{ color: theme.colors.border }}>
+              © {new Date().getFullYear()} {store.name}
+            </p>
+            <Link
+              to="/privacy"
+              className="text-sm transition-colors hover:underline"
+              style={{ color: theme.colors.border }}
+            >
+              {t.privacyPolicy}
+            </Link>
+          </div>
           {store.plan !== 'business' && (
             <a
               href="https://shopifree.app"

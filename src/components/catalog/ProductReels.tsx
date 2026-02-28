@@ -538,8 +538,8 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
           {/* Discount badge */}
           {hasDiscount && (
             <div
-              className="absolute top-16 left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white shadow-lg"
-              style={{ opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease', zIndex: 3 }}
+              className="absolute left-4 px-3 py-1.5 text-sm font-bold rounded-full bg-red-500 text-white shadow-lg"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 72px)', opacity: holding ? 0 : 1, transition: 'opacity 0.25s ease', zIndex: 3 }}
             >
               -{discountPercent}%
             </div>

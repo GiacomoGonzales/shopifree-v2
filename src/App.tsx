@@ -51,6 +51,7 @@ import PaymentPending from './pages/payment/PaymentPending'
 
 // Legal Pages
 import Privacy from './pages/Privacy'
+import StorePrivacyPage from './pages/catalog/StorePrivacyPage'
 
 // Subdomain catalog wrapper (supports optional product slug)
 function SubdomainCatalog({ subdomain }: { subdomain: string }) {
@@ -114,6 +115,7 @@ function AppRoutes() {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/failure" element={<PaymentFailure />} />
         <Route path="/payment/pending" element={<PaymentPending />} />
+        <Route path="/privacy" element={<StorePrivacyPage subdomainStore={subdomain} />} />
         <Route path="/p/:productSlug" element={<SubdomainCatalog subdomain={subdomain} />} />
         <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
       </Routes>
@@ -127,6 +129,7 @@ function AppRoutes() {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/failure" element={<PaymentFailure />} />
         <Route path="/payment/pending" element={<PaymentPending />} />
+        <Route path="/privacy" element={<StorePrivacyPage customDomain={customDomain} />} />
         <Route path="/p/:productSlug" element={<CustomDomainCatalog domain={customDomain} />} />
         <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
       </Routes>
