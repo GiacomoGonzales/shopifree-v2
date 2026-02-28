@@ -718,12 +718,15 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         setOrder(pendingOrder)
         setStep('confirmation')
       } else {
-        // rejected - throw so Brick component can show its error UI
-        setError('paymentRejected')
-        throw new Error('paymentRejected')
+        // rejected - pass status_detail for specific error message
+        const detail = `paymentRejected:${result.status_detail || 'unknown'}`
+        setError(detail)
+        throw new Error(detail)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error processing payment')
+      if (!err || !(err instanceof Error) || !err.message.startsWith('paymentRejected:')) {
+        setError(err instanceof Error ? err.message : 'Error processing payment')
+      }
     } finally {
       setLoading(false)
     }

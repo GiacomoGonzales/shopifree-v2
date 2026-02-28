@@ -17,6 +17,79 @@ import {
   type PaymentSelectorRef
 } from './checkout'
 
+/** Translate MercadoPago status_detail to human-readable message */
+function getPaymentErrorMessage(statusDetail: string, lang?: string): string {
+  const messages: Record<string, Record<string, string>> = {
+    cc_rejected_insufficient_amount: {
+      es: 'Fondos insuficientes. Intenta con otra tarjeta o medio de pago.',
+      en: 'Insufficient funds. Try another card or payment method.',
+      pt: 'Saldo insuficiente. Tente com outro cartão ou meio de pagamento.',
+    },
+    cc_rejected_bad_filled_security_code: {
+      es: 'Código de seguridad incorrecto. Revisa el CVV e intenta de nuevo.',
+      en: 'Incorrect security code. Check the CVV and try again.',
+      pt: 'Código de segurança incorreto. Verifique o CVV e tente novamente.',
+    },
+    cc_rejected_bad_filled_date: {
+      es: 'Fecha de vencimiento incorrecta. Revisa los datos de tu tarjeta.',
+      en: 'Incorrect expiration date. Check your card details.',
+      pt: 'Data de validade incorreta. Verifique os dados do seu cartão.',
+    },
+    cc_rejected_bad_filled_card_number: {
+      es: 'Número de tarjeta incorrecto. Revisa e intenta de nuevo.',
+      en: 'Incorrect card number. Check and try again.',
+      pt: 'Número do cartão incorreto. Verifique e tente novamente.',
+    },
+    cc_rejected_bad_filled_other: {
+      es: 'Datos de la tarjeta incorrectos. Revisa la información e intenta de nuevo.',
+      en: 'Incorrect card details. Check the information and try again.',
+      pt: 'Dados do cartão incorretos. Verifique as informações e tente novamente.',
+    },
+    cc_rejected_call_for_authorize: {
+      es: 'Tu banco requiere autorización. Contacta a tu banco y luego intenta de nuevo.',
+      en: 'Your bank requires authorization. Contact your bank and try again.',
+      pt: 'Seu banco requer autorização. Entre em contato com seu banco e tente novamente.',
+    },
+    cc_rejected_card_disabled: {
+      es: 'Tu tarjeta está deshabilitada. Contacta a tu banco o usa otra tarjeta.',
+      en: 'Your card is disabled. Contact your bank or use another card.',
+      pt: 'Seu cartão está desabilitado. Entre em contato com seu banco ou use outro cartão.',
+    },
+    cc_rejected_duplicated_payment: {
+      es: 'Ya procesaste un pago con este monto. Si necesitas pagar de nuevo, usa otra tarjeta.',
+      en: 'You already made a payment for this amount. Use another card if you need to pay again.',
+      pt: 'Você já fez um pagamento com esse valor. Use outro cartão se precisar pagar novamente.',
+    },
+    cc_rejected_high_risk: {
+      es: 'Pago rechazado por seguridad. Intenta con otro medio de pago.',
+      en: 'Payment rejected for security reasons. Try another payment method.',
+      pt: 'Pagamento recusado por segurança. Tente com outro meio de pagamento.',
+    },
+    cc_rejected_max_attempts: {
+      es: 'Superaste el máximo de intentos. Intenta con otra tarjeta.',
+      en: 'Maximum attempts exceeded. Try with another card.',
+      pt: 'Máximo de tentativas excedido. Tente com outro cartão.',
+    },
+    cc_rejected_other_reason: {
+      es: 'Tu tarjeta fue rechazada. Intenta con otra tarjeta o medio de pago.',
+      en: 'Your card was declined. Try another card or payment method.',
+      pt: 'Seu cartão foi recusado. Tente com outro cartão ou meio de pagamento.',
+    },
+  }
+
+  const l = lang === 'pt' ? 'pt' : lang === 'en' ? 'en' : 'es'
+  const msg = messages[statusDetail]
+  if (msg) return msg[l] || msg.es
+
+  // Fallback genérico
+  const fallback: Record<string, string> = {
+    es: 'Pago rechazado. Intenta con otra tarjeta o medio de pago.',
+    en: 'Payment rejected. Try another card or payment method.',
+    pt: 'Pagamento recusado. Tente com outro cartão ou meio de pagamento.',
+  }
+  return fallback[l] || fallback.es
+}
+
 interface Props {
   items: CartItem[]
   totalPrice: number
@@ -290,7 +363,9 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <>
               {error && (
                 <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
-                  {error === 'paymentRejected' ? `${t.paymentRejected}. ${t.paymentRejectedMessage}` : error}
+                  {error.startsWith('paymentRejected:')
+                    ? getPaymentErrorMessage(error.split(':')[1], store.language)
+                    : error}
                 </div>
               )}
               <MercadoPagoBrick
@@ -309,7 +384,9 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <>
               {error && (
                 <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
-                  {error === 'paymentRejected' ? `${t.paymentRejected}. ${t.paymentRejectedMessage}` : error}
+                  {error.startsWith('paymentRejected:')
+                    ? getPaymentErrorMessage(error.split(':')[1], store.language)
+                    : error}
                 </div>
               )}
               <StripeElement
