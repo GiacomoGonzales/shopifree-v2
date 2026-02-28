@@ -86,6 +86,7 @@ IMPORTANTE: Todos los usuarios nuevos reciben 14 días gratis de Plan Pro al reg
 - Productos ilimitados
 - 10 fotos por producto
 - Sin marca de Shopifree en la tienda
+- App Android y iPhone de tu tienda
 - Soporte prioritario
 - Prueba gratis de 14 días
 

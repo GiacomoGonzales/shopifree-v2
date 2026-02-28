@@ -225,70 +225,109 @@ export default function MiApp() {
   // Plan gate - Business required
   if (store && store.plan !== 'business') {
     return (
-      <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900">{t('miApp.title')}</h1>
-        <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('miApp.title')}</h1>
+          <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Hero */}
+        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-6 sm:p-8 text-white overflow-hidden relative flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
-        <div className="mt-8 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/50 rounded-2xl p-8 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+          <div className="relative">
+            <h1 className="text-2xl sm:text-3xl font-bold">{t('miApp.title')}</h1>
+            <p className="mt-2 text-white/80 text-sm sm:text-base">{t('miApp.subtitle')}</p>
+
+            {/* Official store badges */}
+            <div className="flex flex-wrap items-center gap-1 mt-5">
+              <img
+                src="/badges/google-play-badge.png"
+                alt="Get it on Google Play"
+                className="h-[58px] sm:h-[68px] w-auto -ml-3"
+              />
+              <img
+                src="/badges/app-store-badge.svg"
+                alt="Download on the App Store"
+                className="h-[40px] sm:h-[48px] w-auto"
+              />
+            </div>
           </div>
-          <h3 className="mt-4 text-lg font-semibold text-gray-900">{t('miApp.title')}</h3>
-          <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">{t('miApp.businessRequired')}</p>
+        </div>
+
+        {/* Features + CTA */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-8 flex flex-col">
+          <p className="text-sm text-gray-600 mb-5">{t('miApp.businessRequired')}</p>
+
+          <div className="grid grid-cols-1 gap-3 mb-6 flex-1">
+            {(['heroFeature1', 'heroFeature2', 'heroFeature3', 'heroFeature4'] as const).map((key) => (
+              <div key={key} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-700 font-medium pt-1">{t(`miApp.${key}`)}</span>
+              </div>
+            ))}
+          </div>
+
           <Link
             to={localePath('/dashboard/plan')}
-            className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-md"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-200 self-start"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
             {t('miApp.upgradeToBusiness')}
           </Link>
+        </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl space-y-8">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('miApp.title')}</h1>
+        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('miApp.title')}</h1>
         <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
       </div>
 
+      {/* Store badges banner */}
+      <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex items-center justify-center gap-1">
+          <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto" />
+          <img src="/badges/app-store-badge.svg" alt="App Store" className="h-[33px] sm:h-[36px] w-auto" />
+        </div>
+      </div>
+
       {/* Status tracker */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900">{t('miApp.status.title')}</h2>
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {STATUS_STEPS.map((step, idx) => {
             const isActive = idx <= currentStepIdx
             const isCurrent = step === currentStatus
             return (
-              <div key={step} className="flex items-center gap-2 flex-1">
-                <div className={`flex items-center gap-2 flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                  isCurrent
-                    ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md'
-                    : isActive
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-gray-50 text-gray-400'
-                }`}>
-                  {isActive && idx < currentStepIdx ? (
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  ) : isCurrent ? (
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0" />
-                  ) : null}
-                  <span className="truncate">{t(`miApp.status.${step}`)}</span>
-                </div>
-                {idx < STATUS_STEPS.length - 1 && (
-                  <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <div key={step} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                isCurrent
+                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md'
+                  : isActive
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-50 text-gray-400'
+              }`}>
+                {isActive && idx < currentStepIdx ? (
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                )}
+                ) : isCurrent ? (
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0" />
+                ) : null}
+                <span className="truncate">{t(`miApp.status.${step}`)}</span>
               </div>
             )
           })}
@@ -299,7 +338,7 @@ export default function MiApp() {
       </div>
 
       {/* App config form */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900">{t('miApp.config.title')}</h2>
 
         <div className="mt-4 space-y-4">
@@ -337,7 +376,7 @@ export default function MiApp() {
           </div>
 
           {/* Colors */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.config.primaryColor')}</label>
               <div className="flex items-center gap-2">
@@ -392,7 +431,7 @@ export default function MiApp() {
           </div>
 
           {/* Save + Request */}
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={handleSaveConfig}
               disabled={saving}
@@ -415,7 +454,7 @@ export default function MiApp() {
 
       {/* Download links (when published) */}
       {currentStatus === 'published' && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900">{t('miApp.links.title')}</h2>
           <div className="mt-4 space-y-3">
             {appConfig?.androidUrl ? (
@@ -468,7 +507,7 @@ export default function MiApp() {
       )}
 
       {/* Push Notifications */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900">{t('miApp.push.title')}</h2>
 
         <div className="mt-4 space-y-4">

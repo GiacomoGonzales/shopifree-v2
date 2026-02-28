@@ -72,6 +72,7 @@ export const PLAN_FEATURES = {
       'Todo lo de Pro',
       'Productos sin limite',
       'Tu marca, sin Shopifree',
+      'App Android y iPhone de tu tienda',
       'Soporte prioritario'
     ],
     limits: {

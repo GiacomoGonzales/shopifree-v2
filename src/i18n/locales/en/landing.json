@@ -104,9 +104,23 @@
         "everythingPro": "Everything from Pro",
         "unlimitedProducts": "Unlimited products",
         "noBranding": "Your brand, no Shopifree",
+        "ownApp": "Your store's Android & iPhone app",
         "prioritySupport": "Priority support"
       }
     }
+  },
+  "integrations": {
+    "title": "Integrations and technologies",
+    "subtitle": "Connected with the best tools on the market"
+  },
+  "appPromo": {
+    "title": "Your business in your customers' pocket",
+    "subtitle": "We build and publish your store's app on Google Play and the App Store. No coding, no hassle.",
+    "step1": "Customize your app with your logo and colors",
+    "step2": "We build and publish it for you",
+    "step3": "Your customers download it and buy instantly",
+    "cta": "I want my app",
+    "badge": "Business Plan"
   },
   "demoStores": {
     "title": "Stores created with Shopifree",

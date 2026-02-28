@@ -1116,10 +1116,14 @@
     }
   },
   "miApp": {
-    "title": "My App",
-    "subtitle": "Configure your mobile app and send push notifications",
-    "businessRequired": "The mobile app is available on the Business plan. Upgrade to get your own app.",
-    "upgradeToBusiness": "Upgrade to Business",
+    "title": "Your own app in the stores",
+    "subtitle": "We publish your app on Google Play and the App Store. Your customers download it and buy from their phone.",
+    "businessRequired": "With the Business plan we build and publish your app on Android and iOS stores. Your customers find you, buy, and get notifications directly.",
+    "upgradeToBusiness": "I want my app",
+    "heroFeature1": "Your branded app on Google Play and App Store",
+    "heroFeature2": "Push notifications for your customers",
+    "heroFeature3": "We build and publish it for you",
+    "heroFeature4": "Automatic catalog updates",
     "config": {
       "title": "App configuration",
       "appName": "App name",

@@ -104,9 +104,23 @@
         "everythingPro": "Todo lo de Pro",
         "unlimitedProducts": "Productos sin límite",
         "noBranding": "Tu marca, sin Shopifree",
+        "ownApp": "App Android y iPhone de tu tienda",
         "prioritySupport": "Soporte prioritario"
       }
     }
+  },
+  "integrations": {
+    "title": "Integraciones y tecnologías",
+    "subtitle": "Conectado con las mejores herramientas del mercado"
+  },
+  "appPromo": {
+    "title": "Tu negocio en el celular de tus clientes",
+    "subtitle": "Creamos y publicamos la app de tu tienda en Google Play y App Store. Sin programar, sin complicaciones.",
+    "step1": "Personalizá tu app con tu logo y colores",
+    "step2": "Nosotros la construimos y publicamos por ti",
+    "step3": "Tus clientes la descargan y compran al instante",
+    "cta": "Quiero mi app",
+    "badge": "Plan Business"
   },
   "demoStores": {
     "title": "Tiendas creadas con Shopifree",
