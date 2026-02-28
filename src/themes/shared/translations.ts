@@ -200,6 +200,9 @@ export interface ThemeTranslations {
   waCustomer: string
   waPhone: string
   waThankYou: string
+  waPaymentStatus: string
+  waPaidOnline: string
+  waPendingPayment: string
 }
 
 export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
@@ -398,6 +401,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     waCustomer: 'Cliente',
     waPhone: 'Telefono',
     waThankYou: 'Gracias por tu compra!',
+    waPaymentStatus: 'Estado de pago',
+    waPaidOnline: 'Pagado online',
+    waPendingPayment: 'Pendiente de pago',
   },
 
   en: {
@@ -595,6 +601,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     waCustomer: 'Customer',
     waPhone: 'Phone',
     waThankYou: 'Thank you for your purchase!',
+    waPaymentStatus: 'Payment status',
+    waPaidOnline: 'Paid online',
+    waPendingPayment: 'Payment pending',
   },
 
   pt: {
@@ -792,6 +801,9 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     waCustomer: 'Cliente',
     waPhone: 'Telefone',
     waThankYou: 'Obrigado pela compra!',
+    waPaymentStatus: 'Status de pagamento',
+    waPaidOnline: 'Pago online',
+    waPendingPayment: 'Pendente de pagamento',
   },
 }
 

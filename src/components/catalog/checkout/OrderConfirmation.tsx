@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useTheme } from '../ThemeContext'
 import type { Order } from '../../../types'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
@@ -22,8 +23,8 @@ export default function OrderConfirmation({ order, whatsapp, storeName, currency
   // Build WhatsApp URL with full order details
   const whatsappUrl = hasWhatsApp ? buildWhatsAppUrl(whatsapp, order, currency, t) : ''
 
-  // Generate and download receipt
-  const handleDownloadReceipt = useCallback(() => {
+  // Generate and download/share receipt
+  const handleDownloadReceipt = useCallback(async () => {
     const currencySymbol = currency === 'PEN' ? 'S/' : currency === 'MXN' ? 'MX$' : currency === 'BRL' ? 'R$' : '$'
     const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
     const time = order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString()
@@ -60,6 +61,30 @@ ${order.shippingCost ? `<tr><td colspan="3" style="padding:8px 12px;text-align:r
 ${order.paymentStatus === 'paid' ? `<p style="text-align:center;color:#16a34a;font-weight:600">&#10003; ${t.paymentApproved}</p>` : ''}
 </body></html>`
 
+    // On native, use Filesystem + Share to share the receipt
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem')
+        const { Share } = await import('@capacitor/share')
+
+        const fileName = `recibo-${order.orderNumber}.html`
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: btoa(unescape(encodeURIComponent(html))),
+          directory: Directory.Cache,
+        })
+
+        await Share.share({
+          title: `${t.orderNumber} ${order.orderNumber}`,
+          url: result.uri,
+        })
+      } catch {
+        // Silently fail if sharing is cancelled
+      }
+      return
+    }
+
+    // Web: standard blob download
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -120,25 +145,108 @@ ${order.paymentStatus === 'paid' ? `<p style="text-align:center;color:#16a34a;fo
         <BankTransferInfo t={t} />
       )}
 
-      {/* Order summary - compact */}
+      {/* Order items - full detail */}
       <div
-        className="w-full text-left px-4 py-2 border text-sm"
+        className="w-full text-left border text-sm"
         style={{
           borderColor: theme.colors.border,
-          borderRadius: theme.radius.md
+          borderRadius: theme.radius.md,
+          overflow: 'hidden'
         }}
       >
-        <div className="flex justify-between py-1.5 border-b" style={{ borderColor: theme.colors.border }}>
-          <span style={{ color: theme.colors.textMuted }}>Items</span>
-          <span style={{ color: theme.colors.text }}>{order.items.length}</span>
+        {order.items.map((item, idx) => (
+          <div
+            key={idx}
+            className="flex gap-3 px-3 py-2.5"
+            style={{
+              borderBottom: idx < order.items.length - 1 ? `1px solid ${theme.colors.border}` : undefined
+            }}
+          >
+            {/* Product image */}
+            {item.productImage ? (
+              <img
+                src={item.productImage}
+                alt={item.productName}
+                className="w-12 h-12 object-cover flex-shrink-0"
+                style={{ borderRadius: theme.radius.sm }}
+              />
+            ) : (
+              <div
+                className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
+                style={{
+                  backgroundColor: `${theme.colors.primary}10`,
+                  borderRadius: theme.radius.sm
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke={theme.colors.textMuted} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            )}
+            {/* Product details */}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate" style={{ color: theme.colors.text }}>
+                {item.productName}
+              </p>
+              {/* Variations */}
+              {item.selectedVariations && item.selectedVariations.length > 0 && (
+                <p className="text-xs" style={{ color: theme.colors.textMuted }}>
+                  {item.selectedVariations.map(v => v.value).join(', ')}
+                </p>
+              )}
+              {/* Modifiers */}
+              {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                <p className="text-xs" style={{ color: theme.colors.textMuted }}>
+                  {item.selectedModifiers.flatMap(m => m.options.map(o => o.name)).join(', ')}
+                </p>
+              )}
+              <div className="flex justify-between items-center mt-0.5">
+                <span className="text-xs" style={{ color: theme.colors.textMuted }}>
+                  x{item.quantity}
+                </span>
+                <span className="font-medium" style={{ color: theme.colors.text }}>
+                  {currencySymbol}{item.itemTotal.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Totals section */}
+        <div
+          className="px-3 py-2"
+          style={{ borderTop: `1px solid ${theme.colors.border}` }}
+        >
+          {/* Subtotal - only show if there's shipping or discount */}
+          {(order.shippingCost && order.shippingCost > 0 || order.discount) && (
+            <div className="flex justify-between py-0.5">
+              <span style={{ color: theme.colors.textMuted }}>{t.subtotal}</span>
+              <span style={{ color: theme.colors.text }}>{currencySymbol}{order.subtotal.toFixed(2)}</span>
+            </div>
+          )}
+          {order.discount && order.discount.amount > 0 && (
+            <div className="flex justify-between py-0.5">
+              <span style={{ color: theme.colors.textMuted }}>{t.discount}</span>
+              <span style={{ color: '#16a34a' }}>-{currencySymbol}{order.discount.amount.toFixed(2)}</span>
+            </div>
+          )}
+          {order.shippingCost && order.shippingCost > 0 && (
+            <div className="flex justify-between py-0.5">
+              <span style={{ color: theme.colors.textMuted }}>{t.shipping}</span>
+              <span style={{ color: theme.colors.text }}>{currencySymbol}{order.shippingCost.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between py-1 font-semibold">
+            <span style={{ color: theme.colors.text }}>{t.total}</span>
+            <span style={{ color: theme.colors.text }}>{currencySymbol}{order.total.toFixed(2)}</span>
+          </div>
         </div>
-        <div className="flex justify-between py-1.5 border-b" style={{ borderColor: theme.colors.border }}>
-          <span style={{ color: theme.colors.textMuted }}>{t.total}</span>
-          <span className="font-semibold" style={{ color: theme.colors.text }}>
-            {currencySymbol}{order.total.toFixed(2)}
-          </span>
-        </div>
-        <div className="flex justify-between py-1.5">
+
+        {/* Delivery info */}
+        <div
+          className="flex justify-between px-3 py-2"
+          style={{ borderTop: `1px solid ${theme.colors.border}` }}
+        >
           <span style={{ color: theme.colors.textMuted }}>
             {order.deliveryMethod === 'pickup' ? t.pickupInStore : t.homeDelivery}
           </span>
@@ -226,9 +334,8 @@ function buildWhatsAppUrl(whatsapp: string, order: Order, currency: string, t: T
   const isPaid = order.paymentStatus === 'paid'
 
   let msg = `*${t.waOrderNumber} ${order.orderNumber}*\n`
-  if (isPaid) {
-    msg += `*${t.paymentApproved}*\n`
-  }
+  // Payment status line
+  msg += `${t.waPaymentStatus}: ${isPaid ? t.waPaidOnline : t.waPendingPayment}\n`
   msg += '\n'
 
   // Customer
