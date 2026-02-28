@@ -60,7 +60,11 @@
       "Bash(npx vercel:*)",
       "Bash(python -m json.tool:*)",
       "Bash(git reset:*)",
-      "Bash(# Verify Change 2 - count files with initialProduct in destructuring echo \"\"=== Change 2: initialProduct in destructuring ===\"\" && grep -l \"\"initialProduct }: Props\\)\"\" /c/Users/giaco/shopifree-v2/src/themes/*/*.tsx)"
+      "Bash(# Verify Change 2 - count files with initialProduct in destructuring echo \"\"=== Change 2: initialProduct in destructuring ===\"\" && grep -l \"\"initialProduct }: Props\\)\"\" /c/Users/giaco/shopifree-v2/src/themes/*/*.tsx)",
+      "Bash(npm run:*)",
+      "Bash(npx tsx:*)",
+      "WebFetch(domain:alienstore.shopifree.app)",
+      "Bash(set:*)"
     ]
   }
 }

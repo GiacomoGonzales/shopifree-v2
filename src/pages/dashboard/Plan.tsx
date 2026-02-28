@@ -24,6 +24,18 @@ export default function Plan() {
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [processingPlan, setProcessingPlan] = useState<string | null>(null)
   const toastShownRef = useRef(false)
+  const upgradeTriggeredRef = useRef(false)
+
+  // Auto-trigger upgrade when coming from MiApp with ?upgrade=business
+  useEffect(() => {
+    const upgradePlan = searchParams.get('upgrade') as PlanType | null
+    if (upgradePlan && !upgradeTriggeredRef.current && store && user && firebaseUser) {
+      upgradeTriggeredRef.current = true
+      navigate(localePath('/dashboard/plan'), { replace: true })
+      handleSelectPlan(upgradePlan)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, store, user, firebaseUser])
 
   // Handle success/cancel from Stripe
   useEffect(() => {

@@ -254,6 +254,7 @@ export default function MiApp() {
               />
             </div>
           </div>
+
         </div>
 
         {/* Features + CTA */}
@@ -274,7 +275,7 @@ export default function MiApp() {
           </div>
 
           <Link
-            to={localePath('/dashboard/plan')}
+            to={localePath('/dashboard/plan') + '?upgrade=business'}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-200 self-start"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,11 +298,12 @@ export default function MiApp() {
       </div>
 
       {/* Store badges banner */}
-      <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-4 sm:p-5 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative flex items-center justify-center gap-1">
-          <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto" />
-          <img src="/badges/app-store-badge.svg" alt="App Store" className="h-[33px] sm:h-[36px] w-auto" />
+      <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-4 sm:p-6 relative">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1">
+            <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto" />
+            <img src="/badges/app-store-badge.svg" alt="App Store" className="h-[33px] sm:h-[36px] w-auto" />
+          </div>
         </div>
       </div>
 

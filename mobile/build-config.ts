@@ -194,17 +194,15 @@ async function buildSplashImage(
   const textColor = brightness < 128 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
   const subtextColor = brightness < 128 ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)'
 
-  // Font sizes relative to logo size
+  // Font size relative to logo size
   const nameFontSize = Math.round(logoSize * 0.22)
-  const subFontSize = Math.round(logoSize * 0.12)
 
-  // Text SVG: store name + subtle tagline
+  // Text SVG: store name only
   const escapedName = storeName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const textBlockHeight = nameFontSize + subFontSize + Math.round(logoSize * 0.08)
+  const textBlockHeight = nameFontSize + Math.round(logoSize * 0.04)
   const textSvg = Buffer.from(
     `<svg width="${width}" height="${textBlockHeight}">
       <text x="50%" y="${nameFontSize}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${nameFontSize}" font-weight="600" fill="${textColor}" letter-spacing="1">${escapedName}</text>
-      <text x="50%" y="${nameFontSize + subFontSize + Math.round(logoSize * 0.06)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${subFontSize}" fill="${subtextColor}" letter-spacing="2">STORE</text>
     </svg>`
   )
 
