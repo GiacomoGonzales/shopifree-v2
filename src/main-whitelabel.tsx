@@ -15,9 +15,10 @@ if (Capacitor.isNativePlatform()) {
     StatusBar.setOverlaysWebView({ overlay: true })
   }).catch(() => {})
 
-  // Hide splash screen once app is rendered
+  // Splash screen stays visible until Catalog hides it after store data loads.
+  // Fallback: hide after 8s in case something goes wrong.
   import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-    SplashScreen.hide()
+    setTimeout(() => SplashScreen.hide({ fadeOutDuration: 300 }), 8000)
   }).catch(() => {})
 
   // Handle keyboard show/hide

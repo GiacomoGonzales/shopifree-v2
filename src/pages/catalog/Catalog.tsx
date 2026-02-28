@@ -220,6 +220,12 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         console.error('Error fetching products:', error)
       } finally {
         setLoadingProducts(false)
+        // Hide native splash screen now that content is ready
+        if (Capacitor.isNativePlatform()) {
+          import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+            SplashScreen.hide({ fadeOutDuration: 300 })
+          }).catch(() => {})
+        }
       }
     }
 
@@ -227,6 +233,7 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
   }, [store])
 
   // Show loader while loading - use cached branding for instant logo on repeat visits
+  // On native, the splash screen covers this, so it's only visible on web
   if (loadingStore || loadingProducts) {
     return <StoreLoader logo={store?.logo || cached?.logo} name={store?.name || cached?.name} />
   }

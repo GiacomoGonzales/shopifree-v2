@@ -16,6 +16,15 @@ import https from 'https'
 import http from 'http'
 import sharp from 'sharp'
 
+// Android splash screen sizes per density (portrait w×h, landscape w×h)
+const SPLASH_SIZES = [
+  { port: 'drawable-port-mdpi',    land: 'drawable-land-mdpi',    pw: 320, ph: 480,  lw: 480,  lh: 320  },
+  { port: 'drawable-port-hdpi',    land: 'drawable-land-hdpi',    pw: 480, ph: 800,  lw: 800,  lh: 480  },
+  { port: 'drawable-port-xhdpi',   land: 'drawable-land-xhdpi',   pw: 720, ph: 1280, lw: 1280, lh: 720  },
+  { port: 'drawable-port-xxhdpi',  land: 'drawable-land-xxhdpi',  pw: 960, ph: 1600, lw: 1600, lh: 960  },
+  { port: 'drawable-port-xxxhdpi', land: 'drawable-land-xxxhdpi', pw: 1280, ph: 1920, lw: 1920, lh: 1280 },
+]
+
 // Android icon densities: name → launcher size (dp*scale), foreground size (108dp*scale)
 const ANDROID_DENSITIES = [
   { name: 'mipmap-mdpi',    launcher: 48,  foreground: 108 },
@@ -146,6 +155,100 @@ async function generateIcons(logoUrl: string, bgColor: string) {
   console.log(`    ✓ Background color: ${bgColor}`)
 }
 
+// Build a splash image: rounded logo centered + store name below it
+async function buildSplashImage(
+  logoBuffer: Buffer,
+  bg: { r: number; g: number; b: number; alpha: number },
+  bgColor: string,
+  storeName: string,
+  width: number,
+  height: number,
+): Promise<Buffer> {
+  const isPortrait = height > width
+  const shortSide = Math.min(width, height)
+
+  // Logo size: 28% of short side
+  const logoSize = Math.round(shortSide * 0.28)
+  const borderRadius = Math.round(logoSize * 0.22)
+
+  // Resize logo
+  const resizedLogo = await sharp(logoBuffer)
+    .resize(logoSize, logoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .toBuffer()
+
+  // Create rounded corners mask
+  const roundedMask = Buffer.from(
+    `<svg width="${logoSize}" height="${logoSize}">
+      <rect x="0" y="0" width="${logoSize}" height="${logoSize}" rx="${borderRadius}" ry="${borderRadius}" fill="white"/>
+    </svg>`
+  )
+
+  // Apply rounded corners to logo
+  const roundedLogo = await sharp(resizedLogo)
+    .composite([{ input: roundedMask, blend: 'dest-in' }])
+    .png()
+    .toBuffer()
+
+  // Text color: white on dark bg, dark on light bg
+  const brightness = (bg.r * 299 + bg.g * 587 + bg.b * 114) / 1000
+  const textColor = brightness < 128 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
+  const subtextColor = brightness < 128 ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)'
+
+  // Font sizes relative to logo size
+  const nameFontSize = Math.round(logoSize * 0.22)
+  const subFontSize = Math.round(logoSize * 0.12)
+
+  // Text SVG: store name + subtle tagline
+  const escapedName = storeName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const textBlockHeight = nameFontSize + subFontSize + Math.round(logoSize * 0.08)
+  const textSvg = Buffer.from(
+    `<svg width="${width}" height="${textBlockHeight}">
+      <text x="50%" y="${nameFontSize}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${nameFontSize}" font-weight="600" fill="${textColor}" letter-spacing="1">${escapedName}</text>
+      <text x="50%" y="${nameFontSize + subFontSize + Math.round(logoSize * 0.06)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${subFontSize}" fill="${subtextColor}" letter-spacing="2">STORE</text>
+    </svg>`
+  )
+
+  // Calculate vertical positioning: logo + gap + text centered in the image
+  const gap = Math.round(logoSize * 0.2)
+  const totalContentHeight = logoSize + gap + textBlockHeight
+  const topOffset = Math.round((height - totalContentHeight) / 2)
+  const logoLeft = Math.round((width - logoSize) / 2)
+
+  // Compose everything
+  return sharp({ create: { width, height, channels: 4, background: bg } })
+    .composite([
+      { input: roundedLogo, top: topOffset, left: logoLeft },
+      { input: textSvg, top: topOffset + logoSize + gap, left: 0 },
+    ])
+    .png()
+    .toBuffer()
+}
+
+async function generateSplashScreens(logoUrl: string, bgColor: string, storeName: string) {
+  console.log(`\n  Generating splash screens...`)
+  const logoBuffer = await downloadImage(logoUrl)
+  const bg = hexToRgba(bgColor)
+  const resDir = resolve(process.cwd(), 'android/app/src/main/res')
+
+  for (const size of SPLASH_SIZES) {
+    // Portrait splash
+    const portBuf = await buildSplashImage(logoBuffer, bg, bgColor, storeName, size.pw, size.ph)
+    writeFileSync(resolve(resDir, size.port, 'splash.png'), portBuf)
+
+    // Landscape splash
+    const landBuf = await buildSplashImage(logoBuffer, bg, bgColor, storeName, size.lw, size.lh)
+    writeFileSync(resolve(resDir, size.land, 'splash.png'), landBuf)
+
+    console.log(`    ✓ ${size.port} (${size.pw}x${size.ph}) + landscape`)
+  }
+
+  // Default drawable/splash.png (480x320)
+  const defBuf = await buildSplashImage(logoBuffer, bg, bgColor, storeName, 480, 320)
+  writeFileSync(resolve(resDir, 'drawable', 'splash.png'), defBuf)
+
+  console.log(`    ✓ drawable/splash.png (default)`)
+}
+
 const storeId = process.argv[2]
 if (!storeId) {
   console.error('Usage: npx tsx mobile/build-config.ts <storeId>')
@@ -256,12 +359,13 @@ export default config;
   const stringsPath = resolve(process.cwd(), 'android/app/src/main/res/values/strings.xml')
   writeFileSync(stringsPath, stringsXml, 'utf-8')
 
-  // Generate app icons from store logo
+  // Generate app icons and splash screens from store logo
   const logoUrl = store.logo
   if (logoUrl) {
     await generateIcons(logoUrl, splashColor)
+    await generateSplashScreens(logoUrl, splashColor, appName)
   } else {
-    console.log('\n  ⚠ No store logo found, keeping default icons')
+    console.log('\n  ⚠ No store logo found, keeping default icons/splash')
   }
 
   console.log(`\n  Store:   ${store.name}`)

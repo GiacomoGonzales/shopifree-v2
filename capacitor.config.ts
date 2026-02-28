@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 // Auto-generated config for store: AlienStore (mJe3zuUhY8ggu8FxnKWyVP5fI3Z2)
-// Generated at: 2026-02-27T22:57:54.429Z
+// Generated at: 2026-02-28T04:29:27.278Z
 
 const config: CapacitorConfig = {
   appId: 'app.shopifree.store.alienstore',
