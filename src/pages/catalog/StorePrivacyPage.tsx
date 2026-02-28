@@ -24,9 +24,12 @@ const defaultTheme: ThemeConfig = {
     textInverted: '#ffffff',
     border: '#e5e7eb',
     badge: '#ef4444',
+    badgeText: '#ffffff',
   },
-  radius: { sm: '6px', md: '10px', lg: '16px', full: '9999px' },
-  shadow: { sm: '0 1px 2px rgba(0,0,0,0.05)', md: '0 4px 6px rgba(0,0,0,0.07)' },
+  radius: { sm: '6px', md: '10px', lg: '16px', xl: '24px', full: '9999px' },
+  fonts: { heading: 'system-ui, sans-serif', body: 'system-ui, sans-serif' },
+  shadows: { sm: '0 1px 2px rgba(0,0,0,0.05)', md: '0 4px 6px rgba(0,0,0,0.07)', lg: '0 10px 25px rgba(0,0,0,0.1)' },
+  effects: { cardHover: 'shadow', buttonHover: 'opacity', headerBlur: false, darkMode: false },
 }
 
 export default function StorePrivacyPage({ subdomainStore, customDomain }: Props) {
