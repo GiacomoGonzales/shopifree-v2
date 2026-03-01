@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminGetDashboardStats = exports.adminGetAllUsers = exports.adminUpdateStorePlan = exports.adminGetAllStores = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
+exports.expireTrials = exports.adminGetDashboardStats = exports.adminGetAllUsers = exports.adminUpdateStorePlan = exports.adminGetAllStores = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
@@ -399,5 +399,48 @@ exports.adminGetDashboardStats = functions.https.onCall(async (request) => {
         totalUsers: usersSnapshot.data().count,
         planDistribution: planCounts
     };
+});
+// ============================================
+// SCHEDULED FUNCTIONS
+// ============================================
+/**
+ * Runs daily at 3:00 AM (UTC-5, Colombia time zone)
+ * Checks for expired free trials and downgrades them to free plan
+ */
+exports.expireTrials = functions.pubsub
+    .schedule('0 8 * * *') // 8:00 UTC = 3:00 AM Colombia
+    .timeZone('America/Bogota')
+    .onRun(async () => {
+    var _a, _b;
+    const now = new Date();
+    console.log(`[expireTrials] Running at ${now.toISOString()}`);
+    // Find stores with expired free trials (trialEndsAt < now)
+    // Only target stores that still have a non-free plan and no active subscription
+    const expiredTrialsSnapshot = await db.collection('stores')
+        .where('trialEndsAt', '<', now)
+        .where('plan', 'in', ['pro', 'business'])
+        .get();
+    let expiredCount = 0;
+    const batch = db.batch();
+    for (const doc of expiredTrialsSnapshot.docs) {
+        const store = doc.data();
+        // Skip if store has an active Stripe subscription
+        if (((_a = store.subscription) === null || _a === void 0 ? void 0 : _a.status) === 'active' || ((_b = store.subscription) === null || _b === void 0 ? void 0 : _b.status) === 'trialing') {
+            continue;
+        }
+        // Downgrade to free
+        batch.update(doc.ref, {
+            plan: 'free',
+            trialExpiredAt: now,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        expiredCount++;
+        console.log(`[expireTrials] Downgrading store ${doc.id} (${store.name}) from ${store.plan} to free`);
+    }
+    if (expiredCount > 0) {
+        await batch.commit();
+    }
+    console.log(`[expireTrials] Completed. Downgraded ${expiredCount} stores.`);
+    return null;
 });
 //# sourceMappingURL=index.js.map
