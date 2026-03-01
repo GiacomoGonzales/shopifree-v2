@@ -7,7 +7,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
-import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, PLAN_FEATURES, type PlanType } from '../../lib/stripe'
+import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, getEffectivePlan, PLAN_FEATURES } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
 import type { Product, Category } from '../../types'
 
@@ -38,8 +38,8 @@ export default function Products() {
   // Import modal
   const [showImportModal, setShowImportModal] = useState(false)
 
-  // Plan limits
-  const plan = (store?.plan || 'free') as PlanType
+  // Plan limits - use effective plan (considers subscription status)
+  const plan = store ? getEffectivePlan(store) : 'free'
   const productLimit = canAddProduct(plan, products.length)
   const categoryLimit = canAddCategory(plan, categories.length)
   const remainingProducts = getRemainingProducts(plan, products.length)

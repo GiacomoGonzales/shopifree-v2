@@ -9,7 +9,7 @@ import { optimizeImage } from '../../utils/cloudinary'
 import type { Store, Product, Category } from '../../types'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { Capacitor } from '@capacitor/core'
-import { getPlanLimits, type PlanType } from '../../lib/stripe'
+import { getPlanLimits, getEffectivePlan } from '../../lib/stripe'
 
 interface CatalogProps {
   subdomainStore?: string
@@ -154,7 +154,9 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         }))
 
         // Apply plan limit - only show products up to plan limit
-        const planLimits = getPlanLimits((storeData.plan || 'free') as PlanType)
+        // Use effective plan (considers subscription status - past_due/canceled = free)
+        const effectivePlan = getEffectivePlan(storeData)
+        const planLimits = getPlanLimits(effectivePlan)
         const productLimit = planLimits.products
         const limitedProducts = productLimit === -1
           ? allProducts

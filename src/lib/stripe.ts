@@ -156,3 +156,42 @@ export function getRemainingCategories(plan: PlanType, currentCategoryCount: num
   if (limits.categories === -1) return 'unlimited'
   return Math.max(0, limits.categories - currentCategoryCount)
 }
+
+// ============================================
+// SUBSCRIPTION STATUS HELPERS
+// ============================================
+
+type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing'
+
+interface StoreForPlanCheck {
+  plan: PlanType
+  subscription?: {
+    status: SubscriptionStatus
+  }
+}
+
+/**
+ * Get the effective plan for a store based on subscription status.
+ * Returns 'free' if subscription is not in good standing (past_due, canceled, unpaid).
+ * This ensures users who failed payment don't keep Pro/Business access.
+ */
+export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
+  // Free plan doesn't require active subscription
+  if (store.plan === 'free') {
+    return 'free'
+  }
+
+  // No subscription data = treat as free
+  if (!store.subscription) {
+    return 'free'
+  }
+
+  // Only allow access if subscription is active or trialing
+  const activeStatuses: SubscriptionStatus[] = ['active', 'trialing']
+  if (activeStatuses.includes(store.subscription.status)) {
+    return store.plan
+  }
+
+  // past_due, canceled, unpaid = downgrade to free
+  return 'free'
+}
