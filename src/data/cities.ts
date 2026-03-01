@@ -127,4 +127,27 @@ export const citiesByState: Record<string, Record<string, string[]>> = {
     'Tierra del Fuego': ['Río Grande', 'Tolhuin', 'Ushuaia'],
     'Tucumán': ['Aguilares', 'Banda del Río Salí', 'Bella Vista', 'Concepción', 'Famaillá', 'Juan Bautista Alberdi', 'Lules', 'Monteros', 'San Miguel de Tucumán', 'Simoca', 'Tafí del Valle', 'Tafí Viejo', 'Trancas', 'Yerba Buena'],
   },
+
+  // ES: Provincias por Comunidad Autónoma
+  ES: {
+    'Andalucía': ['Almería', 'Cádiz', 'Córdoba', 'Granada', 'Huelva', 'Jaén', 'Málaga', 'Sevilla'],
+    'Aragón': ['Huesca', 'Teruel', 'Zaragoza'],
+    'Asturias': ['Oviedo', 'Gijón', 'Avilés', 'Mieres', 'Langreo'],
+    'Baleares': ['Palma de Mallorca', 'Ibiza', 'Mahón', 'Manacor', 'Inca'],
+    'Canarias': ['Las Palmas', 'Santa Cruz de Tenerife'],
+    'Cantabria': ['Santander', 'Torrelavega', 'Castro Urdiales', 'Camargo'],
+    'Castilla-La Mancha': ['Albacete', 'Ciudad Real', 'Cuenca', 'Guadalajara', 'Toledo'],
+    'Castilla y León': ['Ávila', 'Burgos', 'León', 'Palencia', 'Salamanca', 'Segovia', 'Soria', 'Valladolid', 'Zamora'],
+    'Cataluña': ['Barcelona', 'Girona', 'Lleida', 'Tarragona'],
+    'Ceuta': ['Ceuta'],
+    'Comunidad Valenciana': ['Alicante', 'Castellón', 'Valencia'],
+    'Extremadura': ['Badajoz', 'Cáceres'],
+    'Galicia': ['A Coruña', 'Lugo', 'Ourense', 'Pontevedra'],
+    'La Rioja': ['Logroño', 'Calahorra', 'Arnedo', 'Haro'],
+    'Madrid': ['Madrid', 'Alcalá de Henares', 'Alcobendas', 'Alcorcón', 'Fuenlabrada', 'Getafe', 'Leganés', 'Móstoles', 'Parla', 'Torrejón de Ardoz'],
+    'Melilla': ['Melilla'],
+    'Murcia': ['Murcia', 'Cartagena', 'Lorca', 'Molina de Segura', 'Alcantarilla'],
+    'Navarra': ['Pamplona', 'Tudela', 'Barañáin', 'Burlada', 'Estella'],
+    'País Vasco': ['Álava', 'Guipúzcoa', 'Vizcaya']
+  }
 }

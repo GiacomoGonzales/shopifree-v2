@@ -1,15 +1,18 @@
 // Districts/Neighborhoods by Province and Department
 // Perú: Departamento → Provincia → Distrito
 // Argentina: Provincia → Ciudad → Barrio
+// España: Comunidad → Provincia → Barrio/Distrito
 
 import { peruDistricts } from './peru'
 import { argentinaDistricts } from './argentina'
+import { spainDistricts } from './spain'
 
 // Export districts by country
 // Structure: Record<CountryCode, Record<State, Record<City, string[]>>>
 export const districtsByCountry: Record<string, Record<string, Record<string, string[]>>> = {
   PE: peruDistricts,
-  AR: argentinaDistricts
+  AR: argentinaDistricts,
+  ES: spainDistricts
 }
 
 // Helper to get districts for a specific state and city
@@ -30,6 +33,7 @@ export function hasDistricts(countryCode: string): boolean {
 export const districtLabel: Record<string, { es: string; en: string; pt: string }> = {
   PE: { es: 'Distrito', en: 'District', pt: 'Distrito' },
   AR: { es: 'Barrio', en: 'Neighborhood', pt: 'Bairro' },
+  ES: { es: 'Barrio', en: 'Neighborhood', pt: 'Bairro' },
   // Future countries can be added here
   // CO: { es: 'Barrio', en: 'Neighborhood', pt: 'Bairro' },
   // MX: { es: 'Colonia', en: 'Colony', pt: 'Colônia' },
