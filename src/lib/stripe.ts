@@ -211,8 +211,11 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
     if (trialEndDate.getTime() > Date.now()) {
       return store.plan
     }
+    // Trial expired = downgrade to free
+    return 'free'
   }
 
-  // No valid subscription or trial = free
-  return 'free'
+  // No subscription AND no trial defined = admin-granted access
+  // Honor the plan if it was manually assigned without requiring payment
+  return store.plan
 }
