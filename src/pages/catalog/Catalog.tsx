@@ -9,6 +9,7 @@ import { optimizeImage } from '../../utils/cloudinary'
 import type { Store, Product, Category } from '../../types'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { Capacitor } from '@capacitor/core'
+import { getPlanLimits, type PlanType } from '../../lib/stripe'
 
 interface CatalogProps {
   subdomainStore?: string
@@ -145,11 +146,21 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
           getDocs(collection(db, 'stores', storeId, 'categories'))
         ])
 
-        setProducts(productsSnapshot.docs.map(doc => ({
+        // Get all products then limit based on plan
+        const allProducts = productsSnapshot.docs.map(doc => ({
           ...doc.data() as Product,
           id: doc.id,
           storeId
-        })))
+        }))
+
+        // Apply plan limit - only show products up to plan limit
+        const planLimits = getPlanLimits((storeData.plan || 'free') as PlanType)
+        const productLimit = planLimits.products
+        const limitedProducts = productLimit === -1
+          ? allProducts
+          : allProducts.slice(0, productLimit)
+
+        setProducts(limitedProducts)
         setCategories(
           categoriesSnapshot.docs
             .map(doc => ({ ...doc.data() as Category, id: doc.id, storeId }))

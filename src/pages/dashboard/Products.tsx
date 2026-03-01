@@ -7,7 +7,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
-import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, PLAN_FEATURES, type PlanType } from '../../lib/stripe'
+import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
 import type { Product, Category } from '../../types'
 
@@ -44,6 +44,14 @@ export default function Products() {
   const categoryLimit = canAddCategory(plan, categories.length)
   const remainingProducts = getRemainingProducts(plan, products.length)
   const remainingCategories = getRemainingCategories(plan, categories.length)
+
+  // Calculate hidden products (over plan limit)
+  const planLimits = getPlanLimits(plan)
+  const maxProducts = planLimits.products
+  const activeProducts = products.filter(p => p.active).length
+  const hiddenProducts = maxProducts !== -1 && activeProducts > maxProducts
+    ? activeProducts - maxProducts
+    : 0
 
   const handleAddProduct = () => {
     if (!productLimit.allowed) {
@@ -310,8 +318,37 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Hidden products warning - products over plan limit are hidden from catalog */}
+      {hiddenProducts > 0 && !Capacitor.isNativePlatform() && (
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl p-4 border border-red-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-red-900">
+                {hiddenProducts === 1
+                  ? '1 producto oculto en tu catálogo'
+                  : `${hiddenProducts} productos ocultos en tu catálogo`}
+              </p>
+              <p className="text-xs text-red-700 mt-0.5">
+                Tu plan {PLAN_FEATURES[plan].name} permite {maxProducts} productos. Los demás no se muestran a tus clientes.
+              </p>
+            </div>
+            <Link
+              to={localePath('/dashboard/plan')}
+              className="px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl hover:from-red-600 hover:to-rose-600 transition-all text-xs font-semibold shadow-lg shadow-red-500/20 flex-shrink-0"
+            >
+              Actualizar plan
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Near-limit warning banner */}
-      {plan === 'free' && !Capacitor.isNativePlatform() && remainingProducts !== 'unlimited' && remainingProducts > 0 && remainingProducts <= 3 && (
+      {hiddenProducts === 0 && plan === 'free' && !Capacitor.isNativePlatform() && remainingProducts !== 'unlimited' && remainingProducts > 0 && remainingProducts <= 3 && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-400/20">
