@@ -165,15 +165,18 @@ type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trial
 
 interface StoreForPlanCheck {
   plan: PlanType
+  trialEndsAt?: Date | { toDate: () => Date } | string | null
   subscription?: {
     status: SubscriptionStatus
   }
 }
 
 /**
- * Get the effective plan for a store based on subscription status.
- * Returns 'free' if subscription is not in good standing (past_due, canceled, unpaid).
- * This ensures users who failed payment don't keep Pro/Business access.
+ * Get the effective plan for a store based on subscription status and trial.
+ * Returns 'free' if:
+ * - Subscription is not in good standing (past_due, canceled, unpaid)
+ * - Free trial (trialEndsAt) has expired
+ * This ensures users who failed payment or expired trial don't keep Pro/Business access.
  */
 export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
   // Free plan doesn't require active subscription
@@ -181,17 +184,35 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
     return 'free'
   }
 
-  // No subscription data = treat as free
-  if (!store.subscription) {
+  // Check if user has a Stripe subscription
+  if (store.subscription) {
+    // Only allow access if subscription is active or trialing
+    const activeStatuses: SubscriptionStatus[] = ['active', 'trialing']
+    if (activeStatuses.includes(store.subscription.status)) {
+      return store.plan
+    }
+    // past_due, canceled, unpaid = downgrade to free
     return 'free'
   }
 
-  // Only allow access if subscription is active or trialing
-  const activeStatuses: SubscriptionStatus[] = ['active', 'trialing']
-  if (activeStatuses.includes(store.subscription.status)) {
-    return store.plan
+  // No Stripe subscription - check for free trial (trialEndsAt)
+  if (store.trialEndsAt) {
+    // Convert to Date if needed
+    let trialEndDate: Date
+    if (store.trialEndsAt instanceof Date) {
+      trialEndDate = store.trialEndsAt
+    } else if (typeof store.trialEndsAt === 'object' && 'toDate' in store.trialEndsAt) {
+      trialEndDate = store.trialEndsAt.toDate()
+    } else {
+      trialEndDate = new Date(store.trialEndsAt as string)
+    }
+
+    // If trial hasn't expired, allow the plan
+    if (trialEndDate.getTime() > Date.now()) {
+      return store.plan
+    }
   }
 
-  // past_due, canceled, unpaid = downgrade to free
+  // No valid subscription or trial = free
   return 'free'
 }

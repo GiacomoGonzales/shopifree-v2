@@ -66,30 +66,49 @@ const COLUMNS: { id: string; label: string; alwaysVisible?: boolean }[] = [
 ]
 
 // Helper for expiration date formatting and urgency
-// Only meaningful for active/trialing subscriptions
+// Handles both Stripe subscriptions AND free trial users (trialEndsAt)
 const getExpirationInfo = (
   periodEnd: Date | null,
   trialEnd: Date | null,
-  status?: string
+  status?: string,
+  storeTrialEndsAt?: Date | null // For free trial users without Stripe subscription
 ): { text: string; color: string; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
-  // Only show expiration for active subscriptions
+  const now = new Date()
+
+  // Case 1: User has active Stripe subscription
   const isActive = status === 'active' || status === 'trialing'
-  const isTrial = status === 'trialing'
+  const isStripeTrial = status === 'trialing'
 
-  // For trialing users, show trial end date; for active, show period end
-  const date = isTrial && trialEnd ? trialEnd : periodEnd
-
-  if (!isActive || !date) {
-    return { text: '-', color: 'text-gray-400', daysLeft: Infinity, showExpiration: false, isTrial: false }
+  if (isActive) {
+    // For trialing users, show trial end date; for active, show period end
+    const date = isStripeTrial && trialEnd ? trialEnd : periodEnd
+    if (date) {
+      const diffMs = date.getTime() - now.getTime()
+      const daysLeft = Math.ceil(diffMs / 86400000)
+      const prefix = isStripeTrial ? 'Prueba: ' : ''
+      return formatExpirationResult(daysLeft, date, prefix, isStripeTrial)
+    }
   }
 
-  const now = new Date()
-  const diffMs = date.getTime() - now.getTime()
-  const daysLeft = Math.ceil(diffMs / 86400000)
+  // Case 2: User on free 14-day trial (no Stripe subscription)
+  if (storeTrialEndsAt) {
+    const diffMs = storeTrialEndsAt.getTime() - now.getTime()
+    const daysLeft = Math.ceil(diffMs / 86400000)
+    // Only show if trial hasn't expired yet (or just expired)
+    if (daysLeft >= -7) { // Show up to 7 days after expiration
+      return formatExpirationResult(daysLeft, storeTrialEndsAt, 'Prueba: ', true)
+    }
+  }
 
-  // Trial-specific labels
-  const prefix = isTrial ? 'Prueba: ' : ''
+  return { text: '-', color: 'text-gray-400', daysLeft: Infinity, showExpiration: false, isTrial: false }
+}
 
+const formatExpirationResult = (
+  daysLeft: number,
+  date: Date,
+  prefix: string,
+  isTrial: boolean
+): { text: string; color: string; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
   if (daysLeft < 0) {
     return { text: `${prefix}Vencido`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
   }
@@ -266,17 +285,27 @@ export default function AdminStores() {
                            store.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesPlan = filterPlan === 'all' || store.plan === filterPlan
 
-      // Expiration filter - only applies to active/trialing subscriptions
+      // Expiration filter - applies to active subscriptions AND free trial users
       let matchesExpiration = true
       if (filterExpiration !== 'all') {
         const isActive = store.subscription?.status === 'active' || store.subscription?.status === 'trialing'
         const expDate = toDate(store.subscription?.currentPeriodEnd)
+        const storeTrialEnd = toDate((store as any).trialEndsAt)
 
-        if (!isActive || !expDate) {
-          // No active subscription = only match 'none' filter
+        // Determine expiration date: Stripe subscription OR free trial
+        let effectiveExpDate: Date | null = null
+        if (isActive && expDate) {
+          effectiveExpDate = expDate
+        } else if (storeTrialEnd && storeTrialEnd.getTime() > Date.now() - 7 * 86400000) {
+          // Include free trial users (up to 7 days after expiration)
+          effectiveExpDate = storeTrialEnd
+        }
+
+        if (!effectiveExpDate) {
+          // No active subscription or trial = only match 'none' filter
           matchesExpiration = filterExpiration === 'none'
         } else {
-          const daysLeft = Math.ceil((expDate.getTime() - Date.now()) / 86400000)
+          const daysLeft = Math.ceil((effectiveExpDate.getTime() - Date.now()) / 86400000)
           switch (filterExpiration) {
             case 'expired': matchesExpiration = daysLeft < 0; break
             case '3days': matchesExpiration = daysLeft >= 0 && daysLeft <= 3; break
@@ -315,11 +344,21 @@ export default function AdminStores() {
           comparison = (toDate(a.updatedAt)?.getTime() || 0) - (toDate(b.updatedAt)?.getTime() || 0)
           break
         case 'expiration': {
-          // Only consider expiration for active/trialing subscriptions
-          const aActive = a.subscription?.status === 'active' || a.subscription?.status === 'trialing'
-          const bActive = b.subscription?.status === 'active' || b.subscription?.status === 'trialing'
-          const aExp = aActive ? (toDate(a.subscription?.currentPeriodEnd)?.getTime() || Infinity) : Infinity
-          const bExp = bActive ? (toDate(b.subscription?.currentPeriodEnd)?.getTime() || Infinity) : Infinity
+          // Consider expiration for active subscriptions AND free trial users
+          const getEffectiveExp = (store: Store & { id: string }): number => {
+            const isActive = store.subscription?.status === 'active' || store.subscription?.status === 'trialing'
+            if (isActive) {
+              return toDate(store.subscription?.currentPeriodEnd)?.getTime() || Infinity
+            }
+            // Check for free trial (trialEndsAt)
+            const trialEnd = toDate((store as any).trialEndsAt)
+            if (trialEnd && trialEnd.getTime() > Date.now() - 7 * 86400000) {
+              return trialEnd.getTime()
+            }
+            return Infinity
+          }
+          const aExp = getEffectiveExp(a)
+          const bExp = getEffectiveExp(b)
           comparison = aExp - bExp
           break
         }
@@ -704,7 +743,23 @@ export default function AdminStores() {
                           </button>
                         </>
                       ) : (
-                        <span className="text-gray-400 text-sm">Sin suscripcion</span>
+                        (() => {
+                          // Check for free trial (trialEndsAt)
+                          const toDate = (d: any) => {
+                            if (!d) return null
+                            if (d.toDate) return d.toDate()
+                            if (d instanceof Date) return d
+                            return new Date(d)
+                          }
+                          const trialEndsAt = toDate((store as any).trialEndsAt)
+                          if (trialEndsAt && trialEndsAt.getTime() > Date.now()) {
+                            return <span className="px-3 py-1 text-xs rounded-full font-medium bg-purple-100/80 text-purple-700">Prueba gratuita</span>
+                          }
+                          if (trialEndsAt && trialEndsAt.getTime() <= Date.now()) {
+                            return <span className="px-3 py-1 text-xs rounded-full font-medium bg-red-100/80 text-red-700">Prueba vencida</span>
+                          }
+                          return <span className="text-gray-400 text-sm">Sin suscripcion</span>
+                        })()
                       )}
                     </div>
                   </td>
@@ -720,12 +775,13 @@ export default function AdminStores() {
                       }
                       const periodEnd = toDate(store.subscription?.currentPeriodEnd)
                       const trialEnd = toDate(store.subscription?.trialEnd)
-                      const info = getExpirationInfo(periodEnd, trialEnd, store.subscription?.status)
+                      const storeTrialEndsAt = toDate((store as any).trialEndsAt)
+                      const info = getExpirationInfo(periodEnd, trialEnd, store.subscription?.status, storeTrialEndsAt)
                       if (!info.showExpiration) return <span className="text-gray-400 text-xs">-</span>
                       return (
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${info.color}`}
-                          title={(info.isTrial ? trialEnd : periodEnd)?.toLocaleString()}
+                          title={(info.isTrial ? (trialEnd || storeTrialEndsAt) : periodEnd)?.toLocaleString()}
                         >
                           {info.text}
                         </span>
@@ -781,7 +837,8 @@ export default function AdminStores() {
             const activityDate = toDate(store.updatedAt)
             const periodEndDate = toDate(store.subscription?.currentPeriodEnd)
             const trialEndDate = toDate(store.subscription?.trialEnd)
-            const expirationInfo = getExpirationInfo(periodEndDate, trialEndDate, store.subscription?.status)
+            const storeTrialEndsAt = toDate((store as any).trialEndsAt)
+            const expirationInfo = getExpirationInfo(periodEndDate, trialEndDate, store.subscription?.status, storeTrialEndsAt)
             const country = countries.find(c => c.code === store.location?.country)
             const createdDate = store.createdAt
               ? (store.createdAt as any).toDate
@@ -910,7 +967,13 @@ export default function AdminStores() {
                       </button>
                     </div>
                   ) : (
-                    <span className="text-gray-400">-</span>
+                    storeTrialEndsAt && storeTrialEndsAt.getTime() > Date.now() ? (
+                      <span className="px-1.5 py-0.5 rounded-full font-medium bg-purple-100/80 text-purple-700">Prueba gratuita</span>
+                    ) : storeTrialEndsAt ? (
+                      <span className="px-1.5 py-0.5 rounded-full font-medium bg-red-100/80 text-red-700">Prueba vencida</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )
                   )}
                 </div>
 
