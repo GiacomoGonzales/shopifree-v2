@@ -98,20 +98,35 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   // Districts for selected state and city (only for countries with district data)
   const countryHasDistricts = hasDistricts(countryCode)
   const allDistrictsForCity = countryHasDistricts ? getDistricts(countryCode, effectiveState, effectiveCity) : []
-  const availableDistricts = coverageMode === 'zones' && effectiveState && effectiveCity
-    ? (() => {
-        // If state is in allowedZones, all districts are allowed
-        if (allowedZones.includes(effectiveState)) return allDistrictsForCity
-        // If province is in allowedProvinces, all districts are allowed
-        const provKey = `${effectiveState}|${effectiveCity}`
-        if (allowedProvinces.includes(provKey)) return allDistrictsForCity
-        // Otherwise filter to specifically allowed districts
-        return allDistrictsForCity.filter((d) => {
-          const distKey = `${effectiveState}|${effectiveCity}|${d}`
-          return allowedDistricts.includes(distKey)
-        })
-      })()
-    : allDistrictsForCity
+  const availableDistricts = (() => {
+    if (!effectiveState || !effectiveCity) return allDistrictsForCity
+
+    // For local mode, filter by allowedDistricts if any are configured
+    if (coverageMode === 'local') {
+      if (allowedDistricts.length === 0) return allDistrictsForCity
+      return allDistrictsForCity.filter((d) => {
+        const distKey = `${effectiveState}|${effectiveCity}|${d}`
+        return allowedDistricts.includes(distKey)
+      })
+    }
+
+    // For zones mode
+    if (coverageMode === 'zones') {
+      // If state is in allowedZones, all districts are allowed
+      if (allowedZones.includes(effectiveState)) return allDistrictsForCity
+      // If province is in allowedProvinces, all districts are allowed
+      const provKey = `${effectiveState}|${effectiveCity}`
+      if (allowedProvinces.includes(provKey)) return allDistrictsForCity
+      // Otherwise filter to specifically allowed districts
+      return allDistrictsForCity.filter((d) => {
+        const distKey = `${effectiveState}|${effectiveCity}|${d}`
+        return allowedDistricts.includes(distKey)
+      })
+    }
+
+    // For nationwide mode, all districts are allowed
+    return allDistrictsForCity
+  })()
   const districtFieldLabel = districtLabel[countryCode]?.[storeLang] || districtLabel[countryCode]?.es || 'Distrito'
 
   // Calculate shipping cost dynamically based on selected zone

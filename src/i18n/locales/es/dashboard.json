@@ -699,6 +699,8 @@
       "coverageZonesHint": "Solo algunas zonas",
       "coverageLocalHint": "Solo tu ciudad",
       "selectZones": "Zonas de envío",
+      "selectLocalDistricts": "Distritos disponibles",
+      "localModeInfo": "Los envíos serán solo para tu ciudad configurada en ubicación.",
       "selectAll": "Seleccionar todos",
       "deselectAll": "Deseleccionar todos",
       "yourZone": "Tu zona",

@@ -189,7 +189,7 @@ export default function Settings() {
           ...(shipping.coverageMode === 'zones' && shipping.allowedProvinces?.length
             ? { allowedProvinces: shipping.allowedProvinces }
             : { allowedProvinces: null }),
-          ...(shipping.coverageMode === 'zones' && shipping.allowedDistricts?.length
+          ...((shipping.coverageMode === 'zones' || shipping.coverageMode === 'local') && shipping.allowedDistricts?.length
             ? { allowedDistricts: shipping.allowedDistricts }
             : { allowedDistricts: null }),
           ...(shipping.localCost != null ? { localCost: shipping.localCost } : { localCost: null }),
@@ -871,6 +871,86 @@ export default function Settings() {
                           })}
                         </div>
                       </div>
+
+                      {/* Local district selector - only for 'local' mode */}
+                      {shipping.coverageMode === 'local' && (() => {
+                        const countryHasDistricts = hasDistricts(location.country)
+                        const cityForDistricts = location.city && location.city !== '__other__' ? location.city : ''
+                        const localDistricts = location.state && cityForDistricts
+                          ? getDistricts(location.country, location.state, cityForDistricts)
+                          : []
+                        const langKey = (language === 'en' ? 'en' : language === 'pt' ? 'pt' : 'es') as 'es' | 'en' | 'pt'
+                        const districtFieldLabel = districtLabel[location.country]?.[langKey] || 'Distrito'
+
+                        if (!countryHasDistricts || localDistricts.length === 0) {
+                          return (
+                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                              <p className="text-sm text-gray-600">
+                                {t('settings.shipping.localModeInfo', 'Los envios seran solo para tu ciudad configurada en ubicación.')}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {location.city && location.city !== '__other__' ? location.city : ''}{location.state ? `, ${location.state}` : ''}
+                              </p>
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-medium text-[#1e3a5f]">
+                                {t('settings.shipping.selectLocalDistricts', `${districtFieldLabel}s disponibles`)}
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const allSelected = (shipping.allowedDistricts || []).length === localDistricts.length
+                                  const prefix = `${location.state}|${cityForDistricts}|`
+                                  setShipping({
+                                    ...shipping,
+                                    allowedDistricts: allSelected ? [] : localDistricts.map(d => `${prefix}${d}`)
+                                  })
+                                }}
+                                className="text-xs text-[#38bdf8] hover:text-[#1e3a5f] font-medium"
+                              >
+                                {(shipping.allowedDistricts || []).length === localDistricts.length
+                                  ? t('settings.shipping.deselectAll', 'Deseleccionar todos')
+                                  : t('settings.shipping.selectAll', 'Seleccionar todos')
+                                }
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                              {location.city && location.city !== '__other__' ? location.city : ''}{location.state ? `, ${location.state}` : ''}
+                            </p>
+                            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-3 grid grid-cols-2 gap-1">
+                              {localDistricts.map((dist) => {
+                                const distKey = `${location.state}|${cityForDistricts}|${dist}`
+                                const isChecked = (shipping.allowedDistricts || []).includes(distKey)
+                                return (
+                                  <label key={dist} className="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {
+                                        const current = shipping.allowedDistricts || []
+                                        const updated = isChecked
+                                          ? current.filter((d) => d !== distKey)
+                                          : [...current, distKey]
+                                        setShipping({ ...shipping, allowedDistricts: updated })
+                                      }}
+                                      className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                    />
+                                    <span className="text-sm text-gray-600">{dist}</span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {(shipping.allowedDistricts || []).length} {districtFieldLabel.toLowerCase()}s seleccionados
+                            </p>
+                          </div>
+                        )
+                      })()}
 
                       {/* Zone selector - only for 'zones' mode */}
                       {(shipping.coverageMode === 'zones') && (statesByCountry[location.country] || []).length > 0 && (

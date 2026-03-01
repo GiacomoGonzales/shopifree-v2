@@ -698,6 +698,8 @@
       "coverageZonesHint": "Only some zones",
       "coverageLocalHint": "Your city only",
       "selectZones": "Shipping zones",
+      "selectLocalDistricts": "Available districts",
+      "localModeInfo": "Deliveries will only be for your city configured in location.",
       "selectAll": "Select all",
       "deselectAll": "Deselect all",
       "yourZone": "Your zone",
