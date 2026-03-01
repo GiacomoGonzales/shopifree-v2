@@ -67,37 +67,48 @@ const COLUMNS: { id: string; label: string; alwaysVisible?: boolean }[] = [
 
 // Helper for expiration date formatting and urgency
 // Only meaningful for active/trialing subscriptions
-const getExpirationInfo = (date: Date | null, status?: string): { text: string; color: string; daysLeft: number; showExpiration: boolean } => {
+const getExpirationInfo = (
+  periodEnd: Date | null,
+  trialEnd: Date | null,
+  status?: string
+): { text: string; color: string; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
   // Only show expiration for active subscriptions
   const isActive = status === 'active' || status === 'trialing'
+  const isTrial = status === 'trialing'
+
+  // For trialing users, show trial end date; for active, show period end
+  const date = isTrial && trialEnd ? trialEnd : periodEnd
 
   if (!isActive || !date) {
-    return { text: '-', color: 'text-gray-400', daysLeft: Infinity, showExpiration: false }
+    return { text: '-', color: 'text-gray-400', daysLeft: Infinity, showExpiration: false, isTrial: false }
   }
 
   const now = new Date()
   const diffMs = date.getTime() - now.getTime()
   const daysLeft = Math.ceil(diffMs / 86400000)
 
+  // Trial-specific labels
+  const prefix = isTrial ? 'Prueba: ' : ''
+
   if (daysLeft < 0) {
-    return { text: `Vencido hace ${Math.abs(daysLeft)}d`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true }
+    return { text: `${prefix}Vencido`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft === 0) {
-    return { text: 'Vence hoy', color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true }
+    return { text: `${prefix}Hoy`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft <= 3) {
-    return { text: `${daysLeft}d`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true }
+    return { text: `${prefix}${daysLeft}d`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft <= 7) {
-    return { text: `${daysLeft}d`, color: 'bg-yellow-100 text-yellow-700', daysLeft, showExpiration: true }
+    return { text: `${prefix}${daysLeft}d`, color: 'bg-yellow-100 text-yellow-700', daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft <= 14) {
-    return { text: `${daysLeft}d`, color: 'bg-orange-100 text-orange-700', daysLeft, showExpiration: true }
+    return { text: `${prefix}${daysLeft}d`, color: isTrial ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700', daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft <= 30) {
-    return { text: `${daysLeft}d`, color: 'bg-blue-100 text-blue-700', daysLeft, showExpiration: true }
+    return { text: `${prefix}${daysLeft}d`, color: 'bg-blue-100 text-blue-700', daysLeft, showExpiration: true, isTrial }
   }
-  return { text: date.toLocaleDateString(), color: 'bg-gray-100 text-gray-600', daysLeft, showExpiration: true }
+  return { text: date.toLocaleDateString(), color: 'bg-gray-100 text-gray-600', daysLeft, showExpiration: true, isTrial }
 }
 
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
@@ -707,13 +718,14 @@ export default function AdminStores() {
                         if (d instanceof Date) return d
                         return new Date(d)
                       }
-                      const expDate = toDate(store.subscription?.currentPeriodEnd)
-                      const info = getExpirationInfo(expDate, store.subscription?.status)
+                      const periodEnd = toDate(store.subscription?.currentPeriodEnd)
+                      const trialEnd = toDate(store.subscription?.trialEnd)
+                      const info = getExpirationInfo(periodEnd, trialEnd, store.subscription?.status)
                       if (!info.showExpiration) return <span className="text-gray-400 text-xs">-</span>
                       return (
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${info.color}`}
-                          title={expDate?.toLocaleString()}
+                          title={(info.isTrial ? trialEnd : periodEnd)?.toLocaleString()}
                         >
                           {info.text}
                         </span>
@@ -767,8 +779,9 @@ export default function AdminStores() {
             const lastOnline = toDate(store.lastOnlineAt)
             const isOnline = lastOnline ? Date.now() - lastOnline.getTime() < ONLINE_THRESHOLD_MS : false
             const activityDate = toDate(store.updatedAt)
-            const expirationDate = toDate(store.subscription?.currentPeriodEnd)
-            const expirationInfo = getExpirationInfo(expirationDate, store.subscription?.status)
+            const periodEndDate = toDate(store.subscription?.currentPeriodEnd)
+            const trialEndDate = toDate(store.subscription?.trialEnd)
+            const expirationInfo = getExpirationInfo(periodEndDate, trialEndDate, store.subscription?.status)
             const country = countries.find(c => c.code === store.location?.country)
             const createdDate = store.createdAt
               ? (store.createdAt as any).toDate
