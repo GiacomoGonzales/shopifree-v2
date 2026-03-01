@@ -22,8 +22,10 @@ interface SavedCustomerData {
   delivery?: {
     method: 'pickup' | 'delivery'
     address?: {
+      state?: string
+      city?: string
+      district?: string
       street: string
-      city: string
       reference?: string
     }
   }
@@ -67,8 +69,9 @@ const saveCustomerData = (storeId: string, customer: CustomerData, delivery: Del
         ...(delivery.address && {
           address: {
             ...(delivery.address.state && { state: delivery.address.state }),
+            ...(delivery.address.city && { city: delivery.address.city }),
+            ...(delivery.address.district && { district: delivery.address.district }),
             street: delivery.address.street,
-            city: delivery.address.city,
             ...(delivery.address.reference && { reference: delivery.address.reference })
           }
         })
@@ -91,8 +94,9 @@ export interface DeliveryData {
   method: 'pickup' | 'delivery'
   address?: {
     state?: string
+    city?: string
+    district?: string
     street: string
-    city: string
     reference?: string
   }
   observations?: string
@@ -305,12 +309,17 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     // Only add delivery address for delivery method
     if (data.delivery.method === 'delivery' && data.delivery.address) {
-      const address: { state?: string; street: string; city: string; reference?: string } = {
-        street: data.delivery.address.street,
-        city: data.delivery.address.city
+      const address: { state?: string; city?: string; district?: string; street: string; reference?: string } = {
+        street: data.delivery.address.street
       }
       if (data.delivery.address.state) {
         address.state = data.delivery.address.state
+      }
+      if (data.delivery.address.city) {
+        address.city = data.delivery.address.city
+      }
+      if (data.delivery.address.district) {
+        address.district = data.delivery.address.district
       }
       if (data.delivery.address.reference) {
         address.reference = data.delivery.address.reference

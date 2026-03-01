@@ -431,9 +431,10 @@ export interface Order {
   deliveryMethod?: 'pickup' | 'delivery'
   deliveryAddress?: {
     state?: string              // Departamento/Estado/Provincia
-    street: string
-    city: string
-    reference?: string
+    city?: string               // Provincia/Municipio/Ciudad
+    district?: string           // Distrito/Colonia/Barrio (PE, MX, etc.)
+    street: string              // Dirección/Calle
+    reference?: string          // Referencia
   }
 
   // Totales

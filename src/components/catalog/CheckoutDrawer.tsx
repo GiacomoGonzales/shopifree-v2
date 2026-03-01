@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useTheme } from './ThemeContext'
-import { useCheckout } from '../../hooks/useCheckout'
+import { useCheckout, type DeliveryData } from '../../hooks/useCheckout'
 import type { Store, Order } from '../../types'
 import type { CartItem } from '../../hooks/useCart'
 import { getThemeTranslations } from '../../themes/shared/translations'
@@ -177,10 +177,10 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     goNext()
   }, [updateData, goNext])
 
-  const handleDeliverySubmit = useCallback((deliveryData: { method: 'pickup' | 'delivery'; address?: { street: string; city: string; reference?: string } }) => {
+  const handleDeliverySubmit = useCallback((deliveryData: DeliveryData) => {
     // Validate
     if (deliveryData.method === 'delivery') {
-      if (!deliveryData.address?.street?.trim() || !deliveryData.address?.city?.trim()) {
+      if (!deliveryData.address?.street?.trim()) {
         return
       }
     }

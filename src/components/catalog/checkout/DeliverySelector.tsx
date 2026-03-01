@@ -6,6 +6,7 @@ import type { Store } from '../../../types'
 import { formatPrice } from '../../../lib/currency'
 import { statesByCountry, stateLabel, cityLabel } from '../../../data/states'
 import { citiesByState } from '../../../data/cities'
+import { getDistricts, hasDistricts, districtLabel } from '../../../data/districts'
 import { resolveShippingCost } from '../../../lib/shipping'
 
 interface Props {
@@ -42,6 +43,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   const [addressState, setAddressState] = useState(data?.address?.state || '')
   const [street, setStreet] = useState(data?.address?.street || '')
   const [city, setCity] = useState(data?.address?.city || '')
+  const [district, setDistrict] = useState(data?.address?.district || '')
   const [reference, setReference] = useState(data?.address?.reference || '')
   const [observations, setObservations] = useState(data?.observations || '')
 
@@ -62,6 +64,11 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   const availableCities = citiesByState[countryCode]?.[addressState]
   const cityFieldLabel = cityLabel[countryCode]?.[storeLang] || cityLabel[countryCode]?.es || t.city
 
+  // Districts for selected state and city (only for countries with district data)
+  const countryHasDistricts = hasDistricts(countryCode)
+  const availableDistricts = countryHasDistricts ? getDistricts(countryCode, addressState, city) : []
+  const districtFieldLabel = districtLabel[countryCode]?.[storeLang] || districtLabel[countryCode]?.es || 'Distrito'
+
   // Calculate shipping cost dynamically based on selected zone
   const shippingCost = resolveShippingCost(store, subtotal, addressState || undefined)
   const isFreeShipping = store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
@@ -71,6 +78,8 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
       if (method === 'delivery') {
         if (showStateSelect && !addressState) return false
         if (!street.trim() || !city.trim() || city === '__other__') return false
+        // Require district for countries that have district data and districts are available
+        if (countryHasDistricts && availableDistricts.length > 0 && !district.trim()) return false
       }
       // For local mode, auto-set the store's state
       const resolvedState = coverageMode === 'local'
@@ -82,6 +91,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           state: resolvedState,
           street,
           city,
+          district: district || undefined,
           reference: reference || undefined
         } : undefined,
         observations: observations || undefined
@@ -285,7 +295,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           {showStateSelect && (
             <select
               value={addressState}
-              onChange={(e) => { setAddressState(e.target.value); setCity('') }}
+              onChange={(e) => { setAddressState(e.target.value); setCity(''); setDistrict('') }}
               className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
               style={{
                 ...inputStyle,
@@ -320,7 +330,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
             <>
               <select
                 value={availableCities.includes(city) ? city : (city && city !== '__other__' ? '__other__' : (city === '__other__' ? '__other__' : ''))}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(e) => { setCity(e.target.value); setDistrict('') }}
                 className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
                 style={{
                   ...inputStyle,
@@ -338,7 +348,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                 <input
                   type="text"
                   value={city === '__other__' ? '' : city}
-                  onChange={(e) => setCity(e.target.value || '__other__')}
+                  onChange={(e) => { setCity(e.target.value || '__other__'); setDistrict('') }}
                   className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
                   style={inputStyle}
                   placeholder={cityFieldLabel + '...'}
@@ -350,7 +360,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
             <input
               type="text"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => { setCity(e.target.value); setDistrict('') }}
               className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
               style={{
                 ...inputStyle,
@@ -362,6 +372,39 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           )}
           {error === 'cityRequired' && (
             <p className="text-sm text-red-500 -mt-2">{t.cityRequired}</p>
+          )}
+
+          {/* District select - only for countries with district data */}
+          {countryHasDistricts && city && city !== '__other__' && availableDistricts.length > 0 && (
+            <>
+              <select
+                value={availableDistricts.includes(district) ? district : (district && district !== '__other__' ? '__other__' : (district === '__other__' ? '__other__' : ''))}
+                onChange={(e) => setDistrict(e.target.value)}
+                className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+                style={{
+                  ...inputStyle,
+                  boxShadow: error === 'districtRequired' ? `0 0 0 2px #ef4444` : undefined
+                }}
+                required
+              >
+                <option value="">{districtFieldLabel}...</option>
+                {availableDistricts.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+                <option value="__other__">{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outro...' : 'Otro...'}</option>
+              </select>
+              {(district === '__other__' || (district && !availableDistricts.includes(district))) && (
+                <input
+                  type="text"
+                  value={district === '__other__' ? '' : district}
+                  onChange={(e) => setDistrict(e.target.value || '__other__')}
+                  className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+                  style={inputStyle}
+                  placeholder={districtFieldLabel + '...'}
+                  required
+                />
+              )}
+            </>
           )}
 
           <input
