@@ -302,8 +302,12 @@ export default function Domain() {
                 {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-semibold rounded-full">PRO</span>
-                      <span className="text-sm font-medium text-green-600">{t('domain.custom.proActive', 'Plan Pro activo')}</span>
+                      <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-semibold rounded-full uppercase">
+                        {getEffectivePlan(store)}
+                      </span>
+                      <span className="text-sm font-medium text-green-600">
+                        {t('domain.custom.planActive', `Plan ${getEffectivePlan(store) === 'business' ? 'Business' : 'Pro'} activo`)}
+                      </span>
                     </div>
 
                     {hasDomainConfigured ? (
