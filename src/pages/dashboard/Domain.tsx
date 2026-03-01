@@ -253,16 +253,6 @@ export default function Domain() {
   const hasDomainConfigured = store?.customDomain && store.customDomain.length > 0
   const isVerified = store?.domainStatus === 'verified'
 
-  // Debug: log plan info
-  if (store) {
-    console.log('[Domain] Store plan info:', {
-      plan: store.plan,
-      subscription: store.subscription,
-      trialEndsAt: store.trialEndsAt,
-      effectivePlan: getEffectivePlan(store)
-    })
-  }
-
   return (
     <div>
       {/* Header */}

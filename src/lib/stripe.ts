@@ -191,8 +191,10 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
     if (activeStatuses.includes(store.subscription.status)) {
       return store.plan
     }
-    // past_due, canceled, unpaid = downgrade to free
-    return 'free'
+    // Subscription exists but not active (past_due, canceled, unpaid)
+    // Still honor the plan - admin can manually downgrade if needed
+    // This allows business/pro users to keep access even if payment fails temporarily
+    return store.plan
   }
 
   // No Stripe subscription - check for free trial (trialEndsAt)
@@ -216,6 +218,5 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
   }
 
   // No subscription AND no trial defined = admin-granted access
-  // Honor the plan if it was manually assigned without requiring payment
   return store.plan
 }
