@@ -868,6 +868,11 @@
         "name": "Bank Transfer",
         "description": "Direct deposit to your account"
       }
+    },
+    "noGateway": {
+      "title": "Gateway not available",
+      "description": "We don't have a payment gateway available for your country yet.",
+      "useWhatsApp": "For now you can use WhatsApp to coordinate payments with your customers. We're working on adding more options soon."
     }
   },
   "integrations": {

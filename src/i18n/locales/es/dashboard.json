@@ -869,6 +869,11 @@
         "name": "Transferencia bancaria",
         "description": "Deposito directo a tu cuenta"
       }
+    },
+    "noGateway": {
+      "title": "Pasarela no disponible",
+      "description": "Aún no tenemos pasarela de pago disponible para tu país.",
+      "useWhatsApp": "Por ahora puedes usar WhatsApp para coordinar los pagos con tus clientes. Estamos trabajando para agregar más opciones pronto."
     }
   },
   "integrations": {

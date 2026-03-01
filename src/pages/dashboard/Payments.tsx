@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { getEffectivePlan } from '../../lib/stripe'
+import { hasGateway } from '../../data/states'
 import type { Store } from '../../types'
 
 export default function Payments() {
@@ -107,6 +108,13 @@ export default function Payments() {
     }
   }
 
+  // Get store country for gateway availability
+  const storeCountry = store?.location?.country?.toUpperCase() || ''
+  const hasMercadoPagoAvailable = hasGateway(storeCountry, 'mercadopago')
+  const hasStripeAvailable = hasGateway(storeCountry, 'stripe')
+  const hasNoGateway = !hasMercadoPagoAvailable && !hasStripeAvailable
+  const isPro = store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business')
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -176,8 +184,8 @@ export default function Payments() {
             </div>
           </div>
 
-          {/* MercadoPago - Pro & Business plans */}
-          {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
+          {/* MercadoPago - Only for countries with MercadoPago */}
+          {hasMercadoPagoAvailable && isPro ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0 overflow-hidden">
@@ -252,7 +260,7 @@ export default function Payments() {
                 </div>
               )}
             </div>
-          ) : (
+          ) : hasMercadoPagoAvailable ? (
             <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-6 shadow-sm text-white">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -282,10 +290,10 @@ export default function Payments() {
                 )}
               </div>
             </div>
-          )}
+          ) : null}
 
-          {/* Stripe - Pro & Business plans */}
-          {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
+          {/* Stripe - Only for countries with Stripe */}
+          {hasStripeAvailable && isPro ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#635bff]/20 flex-shrink-0" style={{ backgroundColor: '#635bff' }}>
@@ -362,7 +370,7 @@ export default function Payments() {
                 </div>
               )}
             </div>
-          ) : (
+          ) : hasStripeAvailable ? (
             <div className="bg-gradient-to-br from-[#635bff] to-[#7a73ff] rounded-2xl p-6 shadow-sm text-white">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white/20">
@@ -392,6 +400,30 @@ export default function Payments() {
                     </svg>
                   </Link>
                 )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* No payment gateway available for this country */}
+          {hasNoGateway && (
+            <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gray-300">
+                  <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold text-gray-700">{t('payments.noGateway.title')}</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {t('payments.noGateway.description')}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-4 bg-white/60 rounded-xl">
+                <p className="text-sm text-gray-600">
+                  {t('payments.noGateway.useWhatsApp')}
+                </p>
               </div>
             </div>
           )}

@@ -160,3 +160,29 @@ export const cityLabel: Record<string, { es: string; en: string; pt: string }> =
   EC: { es: 'Cantón', en: 'Canton', pt: 'Cantão' },
   US: { es: 'Ciudad', en: 'City', pt: 'Cidade' },
 }
+
+// Payment gateways available by country
+export type PaymentGateway = 'mercadopago' | 'stripe' | 'none'
+
+export const paymentGatewaysByCountry: Record<string, PaymentGateway[]> = {
+  // MercadoPago countries
+  PE: ['mercadopago'],
+  AR: ['mercadopago'],
+  CL: ['mercadopago'],
+  CO: ['mercadopago'],
+  MX: ['mercadopago'],
+  BR: ['mercadopago'],
+  UY: ['mercadopago'],
+  // Stripe countries
+  US: ['stripe'],
+  ES: ['stripe'],
+}
+
+export function getAvailableGateways(countryCode: string): PaymentGateway[] {
+  return paymentGatewaysByCountry[countryCode] || ['none']
+}
+
+export function hasGateway(countryCode: string, gateway: PaymentGateway): boolean {
+  const gateways = getAvailableGateways(countryCode)
+  return gateways.includes(gateway)
+}
