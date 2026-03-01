@@ -156,4 +156,7 @@ export const cityLabel: Record<string, { es: string; en: string; pt: string }> =
   CO: { es: 'Municipio', en: 'Municipality', pt: 'Município' },
   AR: { es: 'Ciudad', en: 'City', pt: 'Cidade' },
   ES: { es: 'Provincia', en: 'Province', pt: 'Província' },
+  CL: { es: 'Comuna', en: 'Commune', pt: 'Comuna' },
+  EC: { es: 'Cantón', en: 'Canton', pt: 'Cantão' },
+  US: { es: 'Ciudad', en: 'City', pt: 'Cidade' },
 }
