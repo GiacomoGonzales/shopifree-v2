@@ -73,8 +73,10 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
     : allStates
   const showStateSelect = coverageMode !== 'local' && states.length > 0
 
-  // For local mode, use the store's state to get cities
+  // For local mode, use the store's state and city
   const effectiveState = coverageMode === 'local' ? (store.location?.state || '') : addressState
+  const effectiveCity = coverageMode === 'local' ? (store.location?.city || '') : city
+  const showCitySelect = coverageMode !== 'local'
 
   // Cities for selected state - filter based on allowed zones
   const allCities = citiesByState[countryCode]?.[effectiveState] || []
@@ -95,17 +97,17 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
 
   // Districts for selected state and city (only for countries with district data)
   const countryHasDistricts = hasDistricts(countryCode)
-  const allDistrictsForCity = countryHasDistricts ? getDistricts(countryCode, effectiveState, city) : []
-  const availableDistricts = coverageMode === 'zones' && effectiveState && city
+  const allDistrictsForCity = countryHasDistricts ? getDistricts(countryCode, effectiveState, effectiveCity) : []
+  const availableDistricts = coverageMode === 'zones' && effectiveState && effectiveCity
     ? (() => {
         // If state is in allowedZones, all districts are allowed
         if (allowedZones.includes(effectiveState)) return allDistrictsForCity
         // If province is in allowedProvinces, all districts are allowed
-        const provKey = `${effectiveState}|${city}`
+        const provKey = `${effectiveState}|${effectiveCity}`
         if (allowedProvinces.includes(provKey)) return allDistrictsForCity
         // Otherwise filter to specifically allowed districts
         return allDistrictsForCity.filter((d) => {
-          const distKey = `${effectiveState}|${city}|${d}`
+          const distKey = `${effectiveState}|${effectiveCity}|${d}`
           return allowedDistricts.includes(distKey)
         })
       })()
@@ -120,20 +122,25 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
     submit: () => {
       if (method === 'delivery') {
         if (showStateSelect && !addressState) return false
-        if (!street.trim() || !city.trim() || city === '__other__') return false
+        // For local mode, city is auto-set from store; otherwise require user selection
+        const resolvedCity = coverageMode === 'local' ? effectiveCity : city
+        if (!street.trim() || !resolvedCity.trim() || resolvedCity === '__other__') return false
         // Require district for countries that have district data and districts are available
         if (countryHasDistricts && availableDistricts.length > 0 && !district.trim()) return false
       }
-      // For local mode, auto-set the store's state
+      // For local mode, auto-set the store's state and city
       const resolvedState = coverageMode === 'local'
         ? store.location?.state || undefined
         : addressState || undefined
+      const resolvedCity = coverageMode === 'local'
+        ? store.location?.city || ''
+        : city
       const deliveryData: DeliveryData = {
         method,
         address: method === 'delivery' ? {
           state: resolvedState,
           street,
-          city,
+          city: resolvedCity,
           district: district || undefined,
           reference: reference || undefined
         } : undefined,
@@ -353,52 +360,54 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
             </select>
           )}
 
-          {/* 2. City/Province select */}
-          {availableCities ? (
-            <>
-              <select
-                value={availableCities.includes(city) ? city : (city && city !== '__other__' ? '__other__' : (city === '__other__' ? '__other__' : ''))}
+          {/* 2. City/Province select - hidden in local mode */}
+          {showCitySelect && (
+            availableCities ? (
+              <>
+                <select
+                  value={availableCities.includes(city) ? city : (city && city !== '__other__' ? '__other__' : (city === '__other__' ? '__other__' : ''))}
+                  onChange={(e) => { setCity(e.target.value); setDistrict('') }}
+                  className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+                  style={{
+                    ...inputStyle,
+                    boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
+                  }}
+                  required
+                >
+                  <option value="">{cityFieldLabel}...</option>
+                  {availableCities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                  <option value="__other__">{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outra...' : 'Otra...'}</option>
+                </select>
+                {(city === '__other__' || (city && !availableCities.includes(city))) && (
+                  <input
+                    type="text"
+                    value={city === '__other__' ? '' : city}
+                    onChange={(e) => { setCity(e.target.value || '__other__'); setDistrict('') }}
+                    className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+                    style={inputStyle}
+                    placeholder={cityFieldLabel + '...'}
+                    required
+                  />
+                )}
+              </>
+            ) : (
+              <input
+                type="text"
+                value={city}
                 onChange={(e) => { setCity(e.target.value); setDistrict('') }}
                 className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
                 style={{
                   ...inputStyle,
                   boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
                 }}
+                placeholder={t.city}
                 required
-              >
-                <option value="">{cityFieldLabel}...</option>
-                {availableCities.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-                <option value="__other__">{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outra...' : 'Otra...'}</option>
-              </select>
-              {(city === '__other__' || (city && !availableCities.includes(city))) && (
-                <input
-                  type="text"
-                  value={city === '__other__' ? '' : city}
-                  onChange={(e) => { setCity(e.target.value || '__other__'); setDistrict('') }}
-                  className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
-                  style={inputStyle}
-                  placeholder={cityFieldLabel + '...'}
-                  required
-                />
-              )}
-            </>
-          ) : (
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => { setCity(e.target.value); setDistrict('') }}
-              className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
-              style={{
-                ...inputStyle,
-                boxShadow: error === 'cityRequired' ? `0 0 0 2px #ef4444` : undefined
-              }}
-              placeholder={t.city}
-              required
-            />
+              />
+            )
           )}
-          {error === 'cityRequired' && (
+          {showCitySelect && error === 'cityRequired' && (
             <p className="text-sm text-red-500 -mt-2">{t.cityRequired}</p>
           )}
 
