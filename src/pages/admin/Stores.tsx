@@ -60,9 +60,45 @@ const COLUMNS: { id: string; label: string; alwaysVisible?: boolean }[] = [
   { id: 'online', label: 'En línea' },
   { id: 'activity', label: 'Actividad' },
   { id: 'subscription', label: 'Suscripción' },
+  { id: 'expiration', label: 'Vencimiento' },
   { id: 'createdAt', label: 'Creada' },
   { id: 'actions', label: 'Acciones', alwaysVisible: true },
 ]
+
+// Helper for expiration date formatting and urgency
+// Only meaningful for active/trialing subscriptions
+const getExpirationInfo = (date: Date | null, status?: string): { text: string; color: string; daysLeft: number; showExpiration: boolean } => {
+  // Only show expiration for active subscriptions
+  const isActive = status === 'active' || status === 'trialing'
+
+  if (!isActive || !date) {
+    return { text: '-', color: 'text-gray-400', daysLeft: Infinity, showExpiration: false }
+  }
+
+  const now = new Date()
+  const diffMs = date.getTime() - now.getTime()
+  const daysLeft = Math.ceil(diffMs / 86400000)
+
+  if (daysLeft < 0) {
+    return { text: `Vencido hace ${Math.abs(daysLeft)}d`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true }
+  }
+  if (daysLeft === 0) {
+    return { text: 'Vence hoy', color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true }
+  }
+  if (daysLeft <= 3) {
+    return { text: `${daysLeft}d`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true }
+  }
+  if (daysLeft <= 7) {
+    return { text: `${daysLeft}d`, color: 'bg-yellow-100 text-yellow-700', daysLeft, showExpiration: true }
+  }
+  if (daysLeft <= 14) {
+    return { text: `${daysLeft}d`, color: 'bg-orange-100 text-orange-700', daysLeft, showExpiration: true }
+  }
+  if (daysLeft <= 30) {
+    return { text: `${daysLeft}d`, color: 'bg-blue-100 text-blue-700', daysLeft, showExpiration: true }
+  }
+  return { text: date.toLocaleDateString(), color: 'bg-gray-100 text-gray-600', daysLeft, showExpiration: true }
+}
 
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
 
@@ -78,6 +114,7 @@ export default function AdminStores() {
   const [syncingStore, setSyncingStore] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterPlan, setFilterPlan] = useState<string>('all')
+  const [filterExpiration, setFilterExpiration] = useState<string>('all')
   const [productCounts, setProductCounts] = useState<Record<string, number>>({})
 
   // Column visibility
@@ -114,7 +151,7 @@ export default function AdminStores() {
     return () => document.removeEventListener('mousedown', handler)
   }, [columnsOpen])
 
-  type SortField = 'name' | 'subdomain' | 'plan' | 'createdAt' | 'products' | 'lastActivity'
+  type SortField = 'name' | 'subdomain' | 'plan' | 'createdAt' | 'products' | 'lastActivity' | 'expiration'
   type SortOrder = 'asc' | 'desc'
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
@@ -201,8 +238,8 @@ export default function AdminStores() {
   }
 
   const filteredStores = useMemo(() => {
-    const toDate = (d: any) => {
-      if (!d) return new Date(0)
+    const toDate = (d: any): Date | null => {
+      if (!d) return null
       if (d.toDate) return d.toDate()
       if (d instanceof Date) return d
       return new Date(d)
@@ -212,7 +249,30 @@ export default function AdminStores() {
       const matchesSearch = store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            store.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesPlan = filterPlan === 'all' || store.plan === filterPlan
-      return matchesSearch && matchesPlan
+
+      // Expiration filter - only applies to active/trialing subscriptions
+      let matchesExpiration = true
+      if (filterExpiration !== 'all') {
+        const isActive = store.subscription?.status === 'active' || store.subscription?.status === 'trialing'
+        const expDate = toDate(store.subscription?.currentPeriodEnd)
+
+        if (!isActive || !expDate) {
+          // No active subscription = only match 'none' filter
+          matchesExpiration = filterExpiration === 'none'
+        } else {
+          const daysLeft = Math.ceil((expDate.getTime() - Date.now()) / 86400000)
+          switch (filterExpiration) {
+            case 'expired': matchesExpiration = daysLeft < 0; break
+            case '3days': matchesExpiration = daysLeft >= 0 && daysLeft <= 3; break
+            case '7days': matchesExpiration = daysLeft >= 0 && daysLeft <= 7; break
+            case '14days': matchesExpiration = daysLeft >= 0 && daysLeft <= 14; break
+            case '30days': matchesExpiration = daysLeft >= 0 && daysLeft <= 30; break
+            case 'none': matchesExpiration = false; break
+          }
+        }
+      }
+
+      return matchesSearch && matchesPlan && matchesExpiration
     })
 
     result.sort((a, b) => {
@@ -230,25 +290,34 @@ export default function AdminStores() {
           break
         }
         case 'createdAt':
-          comparison = toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime()
+          comparison = (toDate(a.createdAt)?.getTime() || 0) - (toDate(b.createdAt)?.getTime() || 0)
           break
         case 'products':
           comparison = (productCounts[a.id] || 0) - (productCounts[b.id] || 0)
           break
         case 'lastActivity':
-          comparison = toDate(a.updatedAt).getTime() - toDate(b.updatedAt).getTime()
+          comparison = (toDate(a.updatedAt)?.getTime() || 0) - (toDate(b.updatedAt)?.getTime() || 0)
           break
+        case 'expiration': {
+          // Only consider expiration for active/trialing subscriptions
+          const aActive = a.subscription?.status === 'active' || a.subscription?.status === 'trialing'
+          const bActive = b.subscription?.status === 'active' || b.subscription?.status === 'trialing'
+          const aExp = aActive ? (toDate(a.subscription?.currentPeriodEnd)?.getTime() || Infinity) : Infinity
+          const bExp = bActive ? (toDate(b.subscription?.currentPeriodEnd)?.getTime() || Infinity) : Infinity
+          comparison = aExp - bExp
+          break
+        }
       }
       return sortOrder === 'desc' ? -comparison : comparison
     })
 
     return result
-  }, [stores, searchTerm, filterPlan, sortField, sortOrder, productCounts])
+  }, [stores, searchTerm, filterPlan, filterExpiration, sortField, sortOrder, productCounts])
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, filterPlan, sortField, sortOrder])
+  }, [searchTerm, filterPlan, filterExpiration, sortField, sortOrder])
 
   const totalPages = Math.ceil(filteredStores.length / itemsPerPage)
   const paginatedStores = useMemo(() => {
@@ -356,6 +425,19 @@ export default function AdminStores() {
           <option value="pro">Pro</option>
           <option value="business">Business</option>
         </select>
+        <select
+          value={filterExpiration}
+          onChange={(e) => setFilterExpiration(e.target.value)}
+          className="px-4 py-2.5 bg-white/50 backdrop-blur border border-white/80 rounded-xl focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all text-gray-900"
+        >
+          <option value="all">Todos los vencimientos</option>
+          <option value="expired">⛔ Vencidos</option>
+          <option value="3days">🔴 Vence en 3 días</option>
+          <option value="7days">🟡 Vence en 7 días</option>
+          <option value="14days">🟠 Vence en 14 días</option>
+          <option value="30days">🔵 Vence en 30 días</option>
+          <option value="none">Sin suscripción</option>
+        </select>
 
         {/* Column visibility toggle */}
         <div className="relative hidden md:block" ref={columnsRef}>
@@ -442,6 +524,14 @@ export default function AdminStores() {
                 )}
                 {isVisible('subscription') && (
                 <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado Suscripcion</th>
+                )}
+                {isVisible('expiration') && (
+                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('expiration')}>
+                  <div className="flex items-center gap-1">
+                    Vencimiento
+                    <SortIcon field="expiration" />
+                  </div>
+                </th>
                 )}
                 {isVisible('createdAt') && (
                 <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
@@ -603,6 +693,29 @@ export default function AdminStores() {
                     </div>
                   </td>
                   )}
+                  {isVisible('expiration') && (
+                  <td className="px-3 py-2">
+                    {(() => {
+                      const toDate = (d: any) => {
+                        if (!d) return null
+                        if (d.toDate) return d.toDate()
+                        if (d instanceof Date) return d
+                        return new Date(d)
+                      }
+                      const expDate = toDate(store.subscription?.currentPeriodEnd)
+                      const info = getExpirationInfo(expDate, store.subscription?.status)
+                      if (!info.showExpiration) return <span className="text-gray-400 text-xs">-</span>
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${info.color}`}
+                          title={expDate?.toLocaleString()}
+                        >
+                          {info.text}
+                        </span>
+                      )
+                    })()}
+                  </td>
+                  )}
                   {isVisible('createdAt') && (
                   <td className="px-3 py-2 text-sm text-gray-500">
                     {store.createdAt
@@ -649,6 +762,8 @@ export default function AdminStores() {
             const lastOnline = toDate(store.lastOnlineAt)
             const isOnline = lastOnline ? Date.now() - lastOnline.getTime() < ONLINE_THRESHOLD_MS : false
             const activityDate = toDate(store.updatedAt)
+            const expirationDate = toDate(store.subscription?.currentPeriodEnd)
+            const expirationInfo = getExpirationInfo(expirationDate, store.subscription?.status)
             const country = countries.find(c => c.code === store.location?.country)
             const createdDate = store.createdAt
               ? (store.createdAt as any).toDate
@@ -776,6 +891,18 @@ export default function AdminStores() {
                         )}
                       </button>
                     </div>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+
+                {/* Expiration */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 w-14">Vence</span>
+                  {expirationInfo.showExpiration ? (
+                    <span className={`px-1.5 py-0.5 rounded-full font-medium ${expirationInfo.color}`}>
+                      {expirationInfo.text}
+                    </span>
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}

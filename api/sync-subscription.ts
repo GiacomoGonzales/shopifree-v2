@@ -75,7 +75,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
     const priceId = subscription.items.data[0]?.price.id
-    const plan = getPlanFromPrice(priceId)
+
+    // IMPORTANT: Only give paid plan if subscription is active or trialing
+    // past_due, canceled, unpaid, etc. = downgrade to free
+    const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+    const plan = isActive ? getPlanFromPrice(priceId) : 'free'
 
     // Safely convert timestamps (moved to item level in Stripe API 2025+)
     const item = subscription.items.data[0]

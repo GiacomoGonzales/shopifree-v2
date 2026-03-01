@@ -114,10 +114,14 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   }
 
   const priceId = subscription.items.data[0]?.price.id
-  const plan = getPlanFromPrice(priceId)
+
+  // IMPORTANT: Only give paid plan if subscription is active or trialing
+  // past_due, canceled, unpaid, incomplete, incomplete_expired = downgrade to free
+  const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+  const plan = isActive ? getPlanFromPrice(priceId) : 'free'
 
   const item = subscription.items.data[0]
-  console.log(`Updating store ${storeId} with plan ${plan}, priceId: ${priceId}`)
+  console.log(`Updating store ${storeId} with plan ${plan} (status: ${subscription.status}), priceId: ${priceId}`)
   console.log(`Subscription data: period_end=${item?.current_period_end}, period_start=${item?.current_period_start}`)
 
   // Safely convert timestamps (moved to item level in Stripe API 2025+)
@@ -184,12 +188,15 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice) {
 
   const storeDoc = storesSnapshot.docs[0]
 
+  // IMPORTANT: Downgrade to free immediately when payment fails
+  // User should not have access to paid features if they haven't paid
   await storeDoc.ref.update({
+    plan: 'free',
     'subscription.status': 'past_due',
     updatedAt: new Date()
   })
 
-  console.log(`Store ${storeDoc.id} payment failed, marked as past_due`)
+  console.log(`Store ${storeDoc.id} payment failed, downgraded to free and marked as past_due`)
 }
 
 // Helper to get raw body from request
