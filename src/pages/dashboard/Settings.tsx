@@ -8,6 +8,7 @@ import { validateSubdomain, createSubdomain, deleteSubdomain } from '../../lib/s
 import type { Store, StoreLocation, StoreShipping } from '../../types'
 import { statesByCountry, stateLabel, cityLabel, phoneCodeByCountry, countries } from '../../data/states'
 import { citiesByState } from '../../data/cities'
+import { getDistricts, hasDistricts, districtLabel } from '../../data/districts'
 import {
   type BusinessType,
   getAllBusinessTypes,
@@ -81,6 +82,10 @@ export default function Settings() {
     pickupEnabled: true,
     deliveryEnabled: true
   })
+
+  // Expanded zones for hierarchical selector
+  const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
+  const [expandedProvs, setExpandedProvs] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -181,6 +186,12 @@ export default function Settings() {
           ...(shipping.coverageMode === 'zones' && shipping.allowedZones?.length
             ? { allowedZones: shipping.allowedZones }
             : { allowedZones: null }),
+          ...(shipping.coverageMode === 'zones' && shipping.allowedProvinces?.length
+            ? { allowedProvinces: shipping.allowedProvinces }
+            : { allowedProvinces: null }),
+          ...(shipping.coverageMode === 'zones' && shipping.allowedDistricts?.length
+            ? { allowedDistricts: shipping.allowedDistricts }
+            : { allowedDistricts: null }),
           ...(shipping.localCost != null ? { localCost: shipping.localCost } : { localCost: null }),
           ...(shipping.nationalCost != null ? { nationalCost: shipping.nationalCost } : { nationalCost: null }),
         },
@@ -536,7 +547,7 @@ export default function Settings() {
                   </label>
                   <select
                     value={location.country}
-                    onChange={(e) => setLocation({ ...location, country: e.target.value, state: '', city: '' })}
+                    onChange={(e) => setLocation({ ...location, country: e.target.value, state: '', city: '', district: '' })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                   >
                     {countries.map(c => (
@@ -547,29 +558,37 @@ export default function Settings() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                    {t('settings.location.state')}
-                  </label>
-                  {(statesByCountry[location.country] || []).length > 0 ? (
-                    <select
-                      value={location.state || ''}
-                      onChange={(e) => setLocation({ ...location, state: e.target.value, city: '' })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                    >
-                      <option value="">{(stateLabel[location.country]?.es || t('settings.location.state')) + '...'}</option>
+                  {(() => {
+                    const langKey = (language === 'en' ? 'en' : language === 'pt' ? 'pt' : 'es') as 'es' | 'en' | 'pt'
+                    const stateFieldLabel = stateLabel[location.country]?.[langKey] || t('settings.location.state')
+                    return (
+                      <>
+                        <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                          {stateFieldLabel}
+                        </label>
+                        {(statesByCountry[location.country] || []).length > 0 ? (
+                          <select
+                            value={location.state || ''}
+                            onChange={(e) => setLocation({ ...location, state: e.target.value, city: '', district: '' })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                          >
+                            <option value="">{stateFieldLabel + '...'}</option>
                       {(statesByCountry[location.country] || []).map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={location.state || ''}
-                      onChange={(e) => setLocation({ ...location, state: e.target.value })}
-                      placeholder={t('settings.location.statePlaceholder')}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
-                    />
-                  )}
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={location.state || ''}
+                            onChange={(e) => setLocation({ ...location, state: e.target.value })}
+                            placeholder={stateFieldLabel + '...'}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                          />
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
 
@@ -589,9 +608,9 @@ export default function Settings() {
                             value={cities.includes(location.city || '') || location.city === '__other__' ? (location.city || '') : (location.city ? '__other__' : '')}
                             onChange={(e) => {
                               if (e.target.value === '__other__') {
-                                setLocation({ ...location, city: '__other__' })
+                                setLocation({ ...location, city: '__other__', district: '' })
                               } else {
-                                setLocation({ ...location, city: e.target.value })
+                                setLocation({ ...location, city: e.target.value, district: '' })
                               }
                             }}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
@@ -606,7 +625,7 @@ export default function Settings() {
                             <input
                               type="text"
                               value={location.city === '__other__' ? '' : (location.city || '')}
-                              onChange={(e) => setLocation({ ...location, city: e.target.value || '__other__' })}
+                              onChange={(e) => setLocation({ ...location, city: e.target.value || '__other__', district: '' })}
                               placeholder={cityFieldLabel + '...'}
                               className="w-full mt-2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                             />
@@ -616,11 +635,43 @@ export default function Settings() {
                         <input
                           type="text"
                           value={location.city || ''}
-                          onChange={(e) => setLocation({ ...location, city: e.target.value })}
+                          onChange={(e) => setLocation({ ...location, city: e.target.value, district: '' })}
                           placeholder={t('settings.location.cityPlaceholder')}
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                         />
                       )}
+                    </div>
+                  )
+                })()}
+                {/* District selector - only for countries with district data (e.g., Peru) */}
+                {(() => {
+                  const countryHasDistricts = hasDistricts(location.country)
+                  if (!countryHasDistricts) return null
+
+                  const cityForDistricts = location.city && location.city !== '__other__' ? location.city : ''
+                  const availableDistricts = location.state && cityForDistricts
+                    ? getDistricts(location.country, location.state, cityForDistricts)
+                    : []
+                  const langKey = (language === 'en' ? 'en' : language === 'pt' ? 'pt' : 'es') as 'es' | 'en' | 'pt'
+                  const districtFieldLabel = districtLabel[location.country]?.[langKey] || 'Distrito'
+                  const isDisabled = availableDistricts.length === 0
+
+                  return (
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {districtFieldLabel}
+                      </label>
+                      <select
+                        value={location.district || ''}
+                        onChange={(e) => setLocation({ ...location, district: e.target.value })}
+                        disabled={isDisabled}
+                        className={`w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all ${isDisabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                      >
+                        <option value="">{districtFieldLabel}...</option>
+                        {availableDistricts.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
                     </div>
                   )
                 })()}
@@ -826,7 +877,7 @@ export default function Settings() {
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <label className="block text-sm font-medium text-[#1e3a5f]">
-                              {t('settings.shipping.selectZones', 'Zonas de envio')}
+                              {t('settings.shipping.selectZones', 'Zonas de envío')}
                             </label>
                             <button
                               type="button"
@@ -835,7 +886,9 @@ export default function Settings() {
                                 const allSelected = (shipping.allowedZones || []).length === allStates.length
                                 setShipping({
                                   ...shipping,
-                                  allowedZones: allSelected ? [] : [...allStates]
+                                  allowedZones: allSelected ? [] : [...allStates],
+                                  allowedProvinces: [],
+                                  allowedDistricts: []
                                 })
                               }}
                               className="text-xs text-[#38bdf8] hover:text-[#1e3a5f] font-medium"
@@ -846,35 +899,157 @@ export default function Settings() {
                               }
                             </button>
                           </div>
-                          <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-3 space-y-1">
-                            {(statesByCountry[location.country] || []).map((state) => {
-                              const isChecked = (shipping.allowedZones || []).includes(state)
+                          <div className="max-h-72 overflow-y-auto border border-gray-200 rounded-xl p-3 space-y-1">
+                            {(statesByCountry[location.country] || []).map((dept) => {
+                              const isDeptChecked = (shipping.allowedZones || []).includes(dept)
+                              const provinces = citiesByState[location.country]?.[dept] || []
+                              const isExpanded = expandedDepts.has(dept)
+                              const countryHasDistricts = hasDistricts(location.country)
+
                               return (
-                                <label key={state} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-gray-50 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => {
-                                      const current = shipping.allowedZones || []
-                                      const updated = isChecked
-                                        ? current.filter((z) => z !== state)
-                                        : [...current, state]
-                                      setShipping({ ...shipping, allowedZones: updated })
-                                    }}
-                                    className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
-                                  />
-                                  <span className="text-sm text-gray-700">{state}</span>
-                                  {state === location.state && (
-                                    <span className="text-xs text-[#38bdf8] font-medium ml-auto">
-                                      {t('settings.shipping.yourZone', 'Tu zona')}
-                                    </span>
+                                <div key={dept}>
+                                  {/* Department row */}
+                                  <div className="flex items-center gap-2 py-1.5 px-1 rounded hover:bg-gray-50">
+                                    {provinces.length > 0 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newExpanded = new Set(expandedDepts)
+                                          if (isExpanded) {
+                                            newExpanded.delete(dept)
+                                          } else {
+                                            newExpanded.add(dept)
+                                          }
+                                          setExpandedDepts(newExpanded)
+                                        }}
+                                        className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                      >
+                                        <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                      </button>
+                                    )}
+                                    {provinces.length === 0 && <div className="w-5" />}
+                                    <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={isDeptChecked}
+                                        onChange={() => {
+                                          const current = shipping.allowedZones || []
+                                          const updated = isDeptChecked
+                                            ? current.filter((z) => z !== dept)
+                                            : [...current, dept]
+                                          // If unchecking dept, also remove its provinces and districts
+                                          const newProvinces = isDeptChecked
+                                            ? (shipping.allowedProvinces || []).filter(p => !p.startsWith(`${dept}|`))
+                                            : shipping.allowedProvinces || []
+                                          const newDistricts = isDeptChecked
+                                            ? (shipping.allowedDistricts || []).filter(d => !d.startsWith(`${dept}|`))
+                                            : shipping.allowedDistricts || []
+                                          setShipping({ ...shipping, allowedZones: updated, allowedProvinces: newProvinces, allowedDistricts: newDistricts })
+                                        }}
+                                        className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                      />
+                                      <span className="text-sm font-medium text-gray-700">{dept}</span>
+                                      {dept === location.state && (
+                                        <span className="text-xs text-[#38bdf8] font-medium ml-auto mr-2">
+                                          {t('settings.shipping.yourZone', 'Tu zona')}
+                                        </span>
+                                      )}
+                                    </label>
+                                  </div>
+
+                                  {/* Provinces (expanded) */}
+                                  {isExpanded && provinces.length > 0 && (
+                                    <div className="ml-7 pl-3 border-l border-gray-200 space-y-1 mt-1">
+                                      {provinces.map((prov) => {
+                                        const provKey = `${dept}|${prov}`
+                                        const isProvChecked = (shipping.allowedProvinces || []).includes(provKey)
+                                        const districts = countryHasDistricts ? getDistricts(location.country, dept, prov) : []
+                                        const isProvExpanded = expandedProvs.has(provKey)
+
+                                        return (
+                                          <div key={prov}>
+                                            {/* Province row */}
+                                            <div className="flex items-center gap-2 py-1 px-1 rounded hover:bg-gray-50">
+                                              {districts.length > 0 && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const newExpanded = new Set(expandedProvs)
+                                                    if (isProvExpanded) {
+                                                      newExpanded.delete(provKey)
+                                                    } else {
+                                                      newExpanded.add(provKey)
+                                                    }
+                                                    setExpandedProvs(newExpanded)
+                                                  }}
+                                                  className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                                >
+                                                  <svg className={`w-3 h-3 transition-transform ${isProvExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                  </svg>
+                                                </button>
+                                              )}
+                                              {districts.length === 0 && <div className="w-4" />}
+                                              <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={isProvChecked}
+                                                  onChange={() => {
+                                                    const current = shipping.allowedProvinces || []
+                                                    const updated = isProvChecked
+                                                      ? current.filter((p) => p !== provKey)
+                                                      : [...current, provKey]
+                                                    // If unchecking province, also remove its districts
+                                                    const newDistricts = isProvChecked
+                                                      ? (shipping.allowedDistricts || []).filter(d => !d.startsWith(`${provKey}|`))
+                                                      : shipping.allowedDistricts || []
+                                                    setShipping({ ...shipping, allowedProvinces: updated, allowedDistricts: newDistricts })
+                                                  }}
+                                                  className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                                />
+                                                <span className="text-sm text-gray-600">{prov}</span>
+                                              </label>
+                                            </div>
+
+                                            {/* Districts (expanded) */}
+                                            {isProvExpanded && districts.length > 0 && (
+                                              <div className="ml-6 pl-3 border-l border-gray-100 space-y-0.5 mt-1">
+                                                {districts.map((dist) => {
+                                                  const distKey = `${dept}|${prov}|${dist}`
+                                                  const isDistChecked = (shipping.allowedDistricts || []).includes(distKey)
+                                                  return (
+                                                    <label key={dist} className="flex items-center gap-2 py-0.5 px-1 rounded hover:bg-gray-50 cursor-pointer">
+                                                      <input
+                                                        type="checkbox"
+                                                        checked={isDistChecked}
+                                                        onChange={() => {
+                                                          const current = shipping.allowedDistricts || []
+                                                          const updated = isDistChecked
+                                                            ? current.filter((d) => d !== distKey)
+                                                            : [...current, distKey]
+                                                          setShipping({ ...shipping, allowedDistricts: updated })
+                                                        }}
+                                                        className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                                      />
+                                                      <span className="text-xs text-gray-500">{dist}</span>
+                                                    </label>
+                                                  )
+                                                })}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
                                   )}
-                                </label>
+                                </div>
                               )
                             })}
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
-                            {(shipping.allowedZones || []).length} {t('settings.shipping.zonesSelected', 'zonas seleccionadas')}
+                            {(shipping.allowedZones || []).length} departamentos, {(shipping.allowedProvinces || []).length} provincias, {(shipping.allowedDistricts || []).length} distritos
                           </p>
                         </div>
                       )}

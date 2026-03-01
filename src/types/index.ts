@@ -176,6 +176,7 @@ export interface DnsRecord {
 export interface StoreLocation {
   address?: string
   city?: string
+  district?: string             // Distrito/Colonia/Barrio (PE, MX, etc.)
   state?: string
   country: string               // 'PE', 'MX', 'CO', etc.
   coordinates?: {
@@ -226,9 +227,11 @@ export interface StoreShipping {
   freeAbove?: number            // Envío gratis arriba de este monto (opcional)
   pickupEnabled?: boolean       // Permitir retiro en tienda (default true)
   deliveryEnabled?: boolean     // Permitir delivery a domicilio (default true)
-  // Zonas de envío - Fase 1
+  // Zonas de envío
   coverageMode?: 'nationwide' | 'zones' | 'local'  // default: 'nationwide'
   allowedZones?: string[]       // lista de departamentos/estados permitidos (modo zones)
+  allowedProvinces?: string[]   // lista de provincias: "Departamento|Provincia"
+  allowedDistricts?: string[]   // lista de distritos: "Departamento|Provincia|Distrito"
   localCost?: number            // costo envío local (misma zona que la tienda)
   nationalCost?: number         // costo envío nacional (otras zonas)
 }

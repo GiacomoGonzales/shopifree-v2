@@ -41,8 +41,14 @@ export function resolveShippingCost(
 
 /**
  * Check if a delivery zone is allowed based on store coverage settings.
+ * Supports hierarchical zones: department, province (dept|prov), district (dept|prov|dist)
  */
-export function isZoneAllowed(store: Store, zone?: string): boolean {
+export function isZoneAllowed(
+  store: Store,
+  zone?: string,
+  province?: string,
+  district?: string
+): boolean {
   const shipping = store.shipping
   if (!shipping) return true
 
@@ -52,9 +58,30 @@ export function isZoneAllowed(store: Store, zone?: string): boolean {
     case 'nationwide':
       return true
 
-    case 'zones':
+    case 'zones': {
       if (!zone) return true // no zone selected yet, allow
-      return (shipping.allowedZones || []).includes(zone)
+
+      // Check if department is allowed
+      const deptAllowed = (shipping.allowedZones || []).includes(zone)
+      if (deptAllowed) return true
+
+      // Check if specific province is allowed
+      if (province) {
+        const provKey = `${zone}|${province}`
+        const provAllowed = (shipping.allowedProvinces || []).includes(provKey)
+        if (provAllowed) return true
+
+        // Check if specific district is allowed
+        if (district) {
+          const distKey = `${zone}|${province}|${district}`
+          const distAllowed = (shipping.allowedDistricts || []).includes(distKey)
+          if (distAllowed) return true
+        }
+      }
+
+      // Not in any allowed zone
+      return false
+    }
 
     case 'local':
       if (!zone) return true // no zone selected yet, allow
