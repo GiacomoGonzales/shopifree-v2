@@ -73,15 +73,18 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
     : allStates
   const showStateSelect = coverageMode !== 'local' && states.length > 0
 
+  // For local mode, use the store's state to get cities
+  const effectiveState = coverageMode === 'local' ? (store.location?.state || '') : addressState
+
   // Cities for selected state - filter based on allowed zones
-  const allCities = citiesByState[countryCode]?.[addressState] || []
-  const availableCities = coverageMode === 'zones' && addressState
+  const allCities = citiesByState[countryCode]?.[effectiveState] || []
+  const availableCities = coverageMode === 'zones' && effectiveState
     ? (() => {
         // If state is in allowedZones, all cities are allowed
-        if (allowedZones.includes(addressState)) return allCities
+        if (allowedZones.includes(effectiveState)) return allCities
         // Otherwise filter to cities that are specifically allowed or have allowed districts
         return allCities.filter((c) => {
-          const provKey = `${addressState}|${c}`
+          const provKey = `${effectiveState}|${c}`
           if (allowedProvinces.includes(provKey)) return true
           if (allowedDistricts.some(d => d.startsWith(`${provKey}|`))) return true
           return false
@@ -92,17 +95,17 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
 
   // Districts for selected state and city (only for countries with district data)
   const countryHasDistricts = hasDistricts(countryCode)
-  const allDistrictsForCity = countryHasDistricts ? getDistricts(countryCode, addressState, city) : []
-  const availableDistricts = coverageMode === 'zones' && addressState && city
+  const allDistrictsForCity = countryHasDistricts ? getDistricts(countryCode, effectiveState, city) : []
+  const availableDistricts = coverageMode === 'zones' && effectiveState && city
     ? (() => {
         // If state is in allowedZones, all districts are allowed
-        if (allowedZones.includes(addressState)) return allDistrictsForCity
+        if (allowedZones.includes(effectiveState)) return allDistrictsForCity
         // If province is in allowedProvinces, all districts are allowed
-        const provKey = `${addressState}|${city}`
+        const provKey = `${effectiveState}|${city}`
         if (allowedProvinces.includes(provKey)) return allDistrictsForCity
         // Otherwise filter to specifically allowed districts
         return allDistrictsForCity.filter((d) => {
-          const distKey = `${addressState}|${city}|${d}`
+          const distKey = `${effectiveState}|${city}|${d}`
           return allowedDistricts.includes(distKey)
         })
       })()
