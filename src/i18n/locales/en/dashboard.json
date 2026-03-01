@@ -60,6 +60,12 @@
       "expired": "Your Pro trial has ended",
       "discountOffer": "Subscribe now and get 50% off your first month"
     },
+    "trialExpired": {
+      "title": "Your free trial has ended",
+      "description": "Renew your subscription to keep enjoying all Pro features.",
+      "offer": "Get 20% off your first month",
+      "renew": "Renew now"
+    },
     "milestone": {
       "firstOrder": {
         "title": "Your first order arrived!",

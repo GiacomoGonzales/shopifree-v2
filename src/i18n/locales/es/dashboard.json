@@ -60,6 +60,12 @@
       "expired": "Tu prueba Pro terminó",
       "discountOffer": "Suscribite ahora y obtene 50% off en tu primer mes"
     },
+    "trialExpired": {
+      "title": "Tu prueba gratuita ha terminado",
+      "description": "Renueva tu suscripción para seguir disfrutando de todas las funciones Pro.",
+      "offer": "Obtén 20% de descuento en tu primer mes",
+      "renew": "Renovar ahora"
+    },
     "milestone": {
       "firstOrder": {
         "title": "Tu primer pedido llego!",

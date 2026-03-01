@@ -58,6 +58,17 @@ export default function DashboardHome() {
   })()
   const isOnTrial = trialDaysLeft >= 0 && store?.plan === 'pro'
 
+  // Check if trial has expired (had a trial, now expired, plan is free, no active subscription)
+  const isTrialExpired = (() => {
+    if (!store?.trialEndsAt || store.subscription?.status === 'active') return false
+    const trialEnd = store.trialEndsAt instanceof Date
+      ? store.trialEndsAt
+      : typeof store.trialEndsAt === 'object' && 'toDate' in store.trialEndsAt
+        ? (store.trialEndsAt as { toDate: () => Date }).toDate()
+        : new Date(store.trialEndsAt as string)
+    return trialEnd.getTime() < Date.now() && store.plan === 'free'
+  })()
+
   // Dismiss onboarding
   const dismissOnboarding = useCallback(async () => {
     if (!store) return
@@ -247,6 +258,32 @@ export default function DashboardHome() {
               className="h-full bg-gradient-to-r from-purple-400 to-violet-500 rounded-full transition-all"
               style={{ width: `${Math.max(5, ((14 - trialDaysLeft) / 14) * 100)}%` }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Trial Expired Banner */}
+      {isTrialExpired && !Capacitor.isNativePlatform() && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-red-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-red-900">{t('home.trialExpired.title', 'Tu prueba gratuita ha terminado')}</h3>
+                <p className="text-sm text-red-700 mt-0.5">{t('home.trialExpired.description', 'Renueva tu suscripcion para seguir disfrutando de todas las funciones Pro.')}</p>
+                <p className="text-sm font-semibold text-green-700 mt-1">{t('home.trialExpired.offer', 'Obtén 20% de descuento en tu primer mes')}</p>
+              </div>
+            </div>
+            <Link
+              to={localePath('/dashboard/plan')}
+              className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl hover:from-red-600 hover:to-orange-600 transition-all font-semibold text-sm shadow-lg shadow-red-500/20 text-center flex-shrink-0"
+            >
+              {t('home.trialExpired.renew', 'Renovar ahora')}
+            </Link>
           </div>
         </div>
       )}
