@@ -182,7 +182,12 @@ export default function AdminStores() {
   const handleSyncSubscription = async (storeId: string) => {
     setSyncingStore(storeId)
     try {
-      const response = await fetch('/api/sync-subscription', {
+      // Use production API URL when running locally
+      const apiUrl = window.location.hostname === 'localhost'
+        ? 'https://shopifree.app/api/sync-subscription'
+        : '/api/sync-subscription'
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ storeId })
