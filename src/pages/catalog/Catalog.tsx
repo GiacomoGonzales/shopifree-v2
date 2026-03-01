@@ -153,21 +153,37 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
           storeId
         }))
 
-        // Apply plan limit - only show products up to plan limit
-        // Use effective plan (considers subscription status - past_due/canceled = free)
+        // Apply plan limits - use effective plan (considers subscription status)
         const effectivePlan = getEffectivePlan(storeData)
         const planLimits = getPlanLimits(effectivePlan)
+
+        // Limit products count
         const productLimit = planLimits.products
         const limitedProducts = productLimit === -1
           ? allProducts
           : allProducts.slice(0, productLimit)
 
-        setProducts(limitedProducts)
-        setCategories(
-          categoriesSnapshot.docs
-            .map(doc => ({ ...doc.data() as Category, id: doc.id, storeId }))
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-        )
+        // Limit images per product
+        const maxImages = planLimits.imagesPerProduct
+        const productsWithLimitedImages = limitedProducts.map(product => ({
+          ...product,
+          images: product.images?.slice(0, maxImages),
+          // Keep first image as main image (for backward compatibility)
+          image: product.images?.[0] || product.image
+        }))
+
+        setProducts(productsWithLimitedImages)
+
+        // Limit categories
+        const categoryLimit = planLimits.categories
+        const allCategories = categoriesSnapshot.docs
+          .map(doc => ({ ...doc.data() as Category, id: doc.id, storeId }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+        const limitedCategories = categoryLimit === -1
+          ? allCategories
+          : allCategories.slice(0, categoryLimit)
+
+        setCategories(limitedCategories)
 
         // Track page view (async, don't block)
         if (!trackedRef.current) {

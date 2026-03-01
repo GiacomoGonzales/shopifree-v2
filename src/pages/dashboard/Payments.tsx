@@ -7,6 +7,7 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
+import { getEffectivePlan } from '../../lib/stripe'
 import type { Store } from '../../types'
 
 export default function Payments() {
@@ -176,7 +177,7 @@ export default function Payments() {
           </div>
 
           {/* MercadoPago - Pro & Business plans */}
-          {store?.plan === 'pro' || store?.plan === 'business' ? (
+          {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0 overflow-hidden">
@@ -284,7 +285,7 @@ export default function Payments() {
           )}
 
           {/* Stripe - Pro & Business plans */}
-          {store?.plan === 'pro' || store?.plan === 'business' ? (
+          {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-[#635bff]/20 flex-shrink-0" style={{ backgroundColor: '#635bff' }}>

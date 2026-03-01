@@ -5,6 +5,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
+import { getEffectivePlan } from '../../lib/stripe'
 import type { Store } from '../../types'
 
 const API_URL = 'https://shopifree.app/api'
@@ -298,7 +299,7 @@ export default function Domain() {
                 <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('domain.custom.title')}</h2>
                 <p className="text-sm text-gray-600 mt-1 mb-4" dangerouslySetInnerHTML={{ __html: t('domain.custom.description') }} />
 
-                {store?.plan === 'pro' || store?.plan === 'business' ? (
+                {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-semibold rounded-full">PRO</span>

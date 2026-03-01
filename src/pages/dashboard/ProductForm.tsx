@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
-import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, type PlanType } from '../../lib/stripe'
+import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
 import { getVideoThumbnail } from '../../utils/cloudinary'
 import type { Category, ModifierGroup, ProductVariation } from '../../types'
@@ -180,7 +180,7 @@ export default function ProductForm() {
     fetchData()
   }, [store, isEditing, productId])
 
-  const plan = (store?.plan || 'free') as PlanType
+  const plan = store ? getEffectivePlan(store) : 'free'
   const maxImages = getMaxImagesPerProduct(plan)
   const videoAllowed = canUploadVideo(plan)
 
@@ -329,8 +329,8 @@ export default function ProductForm() {
 
     // Check product limit for new products
     if (!isEditing) {
-      const plan = (store.plan || 'free') as PlanType
-      const limitCheck = canAddProduct(plan, productCount)
+      const effectivePlan = getEffectivePlan(store)
+      const limitCheck = canAddProduct(effectivePlan, productCount)
       if (!limitCheck.allowed) {
         showToast(limitCheck.message || t('productForm.limitReached'), 'error')
         navigate(localePath('/dashboard/plan'))
