@@ -163,11 +163,6 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 <h1 className="font-zen text-2xl md:text-3xl font-medium tracking-wide" style={{ color: white }}>
                   {store.name}
                 </h1>
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs tracking-[0.2em] uppercase mt-0.5 font-sakura-body" style={{ color: gold }}>
-                    {store.about.slogan}
-                  </p>
-                )}
               </div>
             </div>
 
