@@ -219,7 +219,28 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  return res.status(200).json({ ok: true, remindersSent, expiredSent })
+  // 3. Auto-downgrade all expired trials to free plan
+  let downgraded = 0
+  const expiredTrialsQuery = await firestore.collection('stores')
+    .where('trialEndsAt', '<', now)
+    .where('plan', 'in', ['pro', 'business'])
+    .get()
+
+  for (const doc of expiredTrialsQuery.docs) {
+    const store = doc.data()
+    // Skip if store has an active Stripe subscription
+    if (store.subscription?.status === 'active' || store.subscription?.status === 'trialing') {
+      continue
+    }
+    await firestore.doc(`stores/${doc.id}`).update({
+      plan: 'free',
+      updatedAt: FieldValue.serverTimestamp()
+    })
+    downgraded++
+    console.log(`[cron] Downgraded store ${doc.id} (${store.name}) from ${store.plan} to free`)
+  }
+
+  return res.status(200).json({ ok: true, remindersSent, expiredSent, downgraded })
 }
 
 // ── Main handler ─────────────────────────────────────────────────────
