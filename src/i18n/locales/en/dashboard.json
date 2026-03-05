@@ -1196,6 +1196,15 @@
       "iconError": "Error uploading icon"
     }
   },
+  "planBanner": {
+    "trialExpiring": "Your free trial ends in {{days}} day(s). Upgrade your plan to keep your features.",
+    "cancelAtPeriodEnd": "Your plan cancels on {{date}}. Renew to keep your features.",
+    "pastDue": "Your payment failed. Update your payment method to avoid losing access.",
+    "trialExpired": "Your free trial has ended. Upgrade your plan to unlock all features.",
+    "upgrade": "Upgrade plan",
+    "renew": "Renew",
+    "updatePayment": "Update payment"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

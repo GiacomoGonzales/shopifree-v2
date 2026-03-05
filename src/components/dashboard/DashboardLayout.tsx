@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { usePresence } from '../../hooks/usePresence'
 import ChatModal from '../chat/ChatModal'
+import PlanBanner from './PlanBanner'
 import { chatService } from '../../lib/chatService'
 
 // Tipos para la navegacion
@@ -458,6 +459,7 @@ export default function DashboardLayout() {
         {/* Main content - only this area scrolls */}
         <main className="flex-1 overflow-y-auto overscroll-none bg-[#fafbfc]">
           <div className="px-4 py-3">
+            {store && <PlanBanner store={store} />}
             <Outlet />
           </div>
         </main>
@@ -699,6 +701,7 @@ export default function DashboardLayout() {
       {/* Main content */}
       <main className="lg:pl-64 lg:pt-0" style={{ paddingTop: 'calc(3rem + env(safe-area-inset-top))' }}>
         <div className="p-4 sm:p-6 lg:pt-4 lg:pb-8 lg:px-8">
+          {store && <PlanBanner store={store} />}
           <Outlet />
         </div>
       </main>

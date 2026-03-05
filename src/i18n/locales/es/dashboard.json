@@ -1197,6 +1197,15 @@
       "iconError": "Error al subir el ícono"
     }
   },
+  "planBanner": {
+    "trialExpiring": "Tu prueba gratuita termina en {{days}} día(s). Mejora tu plan para no perder tus funciones.",
+    "cancelAtPeriodEnd": "Tu plan se cancela el {{date}}. Renueva para mantener tus funciones.",
+    "pastDue": "Tu pago falló. Actualiza tu método de pago para evitar perder el acceso.",
+    "trialExpired": "Tu prueba gratuita terminó. Mejora tu plan para desbloquear todas las funciones.",
+    "upgrade": "Mejorar plan",
+    "renew": "Renovar",
+    "updatePayment": "Actualizar pago"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
