@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import StoreSEO from '../../components/seo/StoreSEO'
@@ -136,6 +136,20 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
 
         const storeData = storeSnapshot.docs[0].data() as Store
         const storeId = storeSnapshot.docs[0].id
+
+        // Auto-downgrade expired trials in Firestore
+        if (storeData.trialEndsAt && !storeData.subscription && (storeData.plan === 'pro' || storeData.plan === 'business')) {
+          const trialEnd = storeData.trialEndsAt instanceof Date
+            ? storeData.trialEndsAt
+            : typeof storeData.trialEndsAt === 'object' && 'toDate' in (storeData.trialEndsAt as any)
+              ? (storeData.trialEndsAt as any).toDate()
+              : new Date(storeData.trialEndsAt as string)
+          if (trialEnd.getTime() < Date.now()) {
+            storeData.plan = 'free'
+            updateDoc(doc(db, 'stores', storeId), { plan: 'free', updatedAt: new Date() }).catch(() => {})
+          }
+        }
+
         const fullStore = { ...storeData, id: storeId }
         setStore(fullStore)
         setCachedStore(cacheKey, storeId, storeData.logo, storeData.name)

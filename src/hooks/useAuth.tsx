@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const trialEnd = storeData.trialEndsAt instanceof Date
           ? storeData.trialEndsAt
           : new Date(storeData.trialEndsAt)
-        if (trialEnd.getTime() < Date.now() && storeData.plan === 'pro') {
+        if (trialEnd.getTime() < Date.now() && (storeData.plan === 'pro' || storeData.plan === 'business')) {
           console.log('Free Pro trial expired, downgrading to free')
           await updateDoc(doc(db, 'stores', storeData.id), {
             plan: 'free',
@@ -145,7 +145,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Reload both user and store data
       const userData = await userService.get(firebaseUser.uid)
       setUser(userData)
-      const storeData = await storeService.getByOwner(firebaseUser.uid)
+      let storeData = await storeService.getByOwner(firebaseUser.uid)
+
+      // Check if free Pro trial has expired (no Stripe subscription)
+      if (storeData && storeData.trialEndsAt && !storeData.subscription) {
+        const trialEnd = storeData.trialEndsAt instanceof Date
+          ? storeData.trialEndsAt
+          : new Date(storeData.trialEndsAt)
+        if (trialEnd.getTime() < Date.now() && (storeData.plan === 'pro' || storeData.plan === 'business')) {
+          await updateDoc(doc(db, 'stores', storeData.id), {
+            plan: 'free',
+            updatedAt: new Date()
+          })
+          storeData = { ...storeData, plan: 'free' }
+        }
+      }
+
       setStore(storeData)
     }
   }
