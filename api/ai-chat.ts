@@ -304,6 +304,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true, escalated: true, skipped: true })
     }
 
+    // Skip AI if admin has paused automatic responses
+    if (chatDoc.data()?.aiPaused) {
+      return res.status(200).json({ success: true, escalated: false, skipped: true })
+    }
+
     // Fetch store context
     const storeDoc = await firestore.collection('stores').doc(storeId).get()
     const storeData = storeDoc.exists ? storeDoc.data() : null

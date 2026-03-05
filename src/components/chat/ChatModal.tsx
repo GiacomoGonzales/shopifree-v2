@@ -213,7 +213,11 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
       if (msgText) {
         setAiTyping(true)
         try {
-          await chatService.requestAIResponse(chatId, store.id, msgText, firebaseUser.uid)
+          const aiResult = await chatService.requestAIResponse(chatId, store.id, msgText, firebaseUser.uid)
+          // If AI was skipped (paused or escalated), hide typing immediately
+          if (aiResult.skipped) {
+            setAiTyping(false)
+          }
         } catch (aiErr) {
           console.error('Error getting AI response:', aiErr)
         } finally {

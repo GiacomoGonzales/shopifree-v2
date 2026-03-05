@@ -28,6 +28,7 @@ export interface Chat {
   unreadByAdmin: number
   unreadByUser: number
   escalated: boolean
+  aiPaused: boolean
   createdAt: Date
 }
 
@@ -46,6 +47,7 @@ function docToChat(docSnap: { id: string; data: () => Record<string, any> }): Ch
     unreadByAdmin: data.unreadByAdmin || 0,
     unreadByUser: data.unreadByUser || 0,
     escalated: data.escalated || false,
+    aiPaused: data.aiPaused || false,
     createdAt: data.createdAt?.toDate?.() || new Date(),
   }
 }
@@ -82,6 +84,7 @@ export const chatService = {
       id: docRef.id,
       ...chatData,
       escalated: false,
+      aiPaused: false,
       lastMessageAt: new Date(),
       createdAt: new Date(),
     }
@@ -226,6 +229,12 @@ export const chatService = {
       return { escalated: false }
     }
     return res.json()
+  },
+
+  // Toggle AI pause (admin takes over conversation)
+  async toggleAIPause(chatId: string, paused: boolean) {
+    const chatRef = doc(db, 'chats', chatId)
+    await updateDoc(chatRef, { aiPaused: paused })
   },
 
   // Clear escalation flag (when admin responds)

@@ -63,6 +63,7 @@ export default function SupportChats() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [closing, setClosing] = useState(false)
+  const [togglingPause, setTogglingPause] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -120,9 +121,15 @@ export default function SupportChats() {
     const remainingUnread = chats.reduce((sum, c) =>
       sum + (c.id === selectedChat.id ? 0 : c.unreadByAdmin), 0)
     if (remainingUnread === 0) stopAlert()
-    const unsub = chatService.subscribeToMessages(selectedChat.id, setMessages)
-    return () => unsub()
-  }, [selectedChat, chats, stopAlert])
+    const unsubMessages = chatService.subscribeToMessages(selectedChat.id, setMessages)
+    // Subscribe to chat doc to get real-time aiPaused updates
+    const unsubChat = chatService.subscribeToChat(selectedChat.id, (updated) => {
+      if (updated) {
+        setSelectedChat(prev => prev && prev.id === updated.id ? updated : prev)
+      }
+    })
+    return () => { unsubMessages(); unsubChat() }
+  }, [selectedChat?.id, chats, stopAlert])
 
   // Scroll to bottom
   useEffect(() => {
@@ -230,6 +237,18 @@ export default function SupportChats() {
     } finally {
       setSending(false)
       inputRef.current?.focus()
+    }
+  }
+
+  const handleTogglePause = async () => {
+    if (!selectedChat || togglingPause) return
+    setTogglingPause(true)
+    try {
+      await chatService.toggleAIPause(selectedChat.id, !selectedChat.aiPaused)
+    } catch (err) {
+      console.error('Error toggling AI pause:', err)
+    } finally {
+      setTogglingPause(false)
     }
   }
 
@@ -343,6 +362,11 @@ export default function SupportChats() {
                           {chat.lastMessage}
                         </p>
                         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          {chat.aiPaused && (
+                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-semibold rounded-full">
+                              IA pausada
+                            </span>
+                          )}
                           {chat.escalated && (
                             <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-semibold rounded-full">
                               Escalado
@@ -400,13 +424,26 @@ export default function SupportChats() {
                     <p className="text-sm font-semibold text-gray-900">{selectedChat.storeName}</p>
                     <p className="text-[11px] text-gray-500">{selectedChat.userEmail}</p>
                   </div>
-                  <button
-                    onClick={handleCloseChat}
-                    disabled={closing}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {closing ? 'Cerrando...' : 'Cerrar chat'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleTogglePause}
+                      disabled={togglingPause}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50 ${
+                        selectedChat.aiPaused
+                          ? 'text-green-600 bg-green-50 hover:bg-green-100'
+                          : 'text-orange-600 bg-orange-50 hover:bg-orange-100'
+                      }`}
+                    >
+                      {selectedChat.aiPaused ? 'Reanudar IA' : 'Pausar IA'}
+                    </button>
+                    <button
+                      onClick={handleCloseChat}
+                      disabled={closing}
+                      className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {closing ? 'Cerrando...' : 'Cerrar chat'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Messages */}
