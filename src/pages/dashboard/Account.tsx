@@ -302,29 +302,31 @@ export default function Account() {
   }
 
   const handleDeleteAccount = async () => {
-    if (!store?.id || !firebaseUser || deleteConfirmText !== 'ELIMINAR') return
+    if (!firebaseUser || deleteConfirmText !== 'ELIMINAR') return
 
     setDeletingCatalog(true)
     try {
-      // Delete all products
-      const productsRef = collection(db, 'stores', store.id, 'products')
-      const productsSnap = await getDocs(productsRef)
-      const productDeletes = productsSnap.docs.map(d => deleteDoc(d.ref))
+      if (store?.id) {
+        // Delete all products
+        const productsRef = collection(db, 'stores', store.id, 'products')
+        const productsSnap = await getDocs(productsRef)
+        const productDeletes = productsSnap.docs.map(d => deleteDoc(d.ref))
 
-      // Delete all categories
-      const categoriesRef = collection(db, 'stores', store.id, 'categories')
-      const categoriesSnap = await getDocs(categoriesRef)
-      const categoryDeletes = categoriesSnap.docs.map(d => deleteDoc(d.ref))
+        // Delete all categories
+        const categoriesRef = collection(db, 'stores', store.id, 'categories')
+        const categoriesSnap = await getDocs(categoriesRef)
+        const categoryDeletes = categoriesSnap.docs.map(d => deleteDoc(d.ref))
 
-      // Delete all orders
-      const ordersRef = collection(db, 'stores', store.id, 'orders')
-      const ordersSnap = await getDocs(ordersRef)
-      const orderDeletes = ordersSnap.docs.map(d => deleteDoc(d.ref))
+        // Delete all orders
+        const ordersRef = collection(db, 'stores', store.id, 'orders')
+        const ordersSnap = await getDocs(ordersRef)
+        const orderDeletes = ordersSnap.docs.map(d => deleteDoc(d.ref))
 
-      await Promise.all([...productDeletes, ...categoryDeletes, ...orderDeletes])
+        await Promise.all([...productDeletes, ...categoryDeletes, ...orderDeletes])
 
-      // Delete the store document
-      await deleteDoc(doc(db, 'stores', store.id))
+        // Delete the store document
+        await deleteDoc(doc(db, 'stores', store.id))
+      }
 
       // Delete the user document
       await deleteDoc(doc(db, 'users', firebaseUser.uid))
@@ -334,8 +336,8 @@ export default function Account() {
         await deleteUser(firebaseUser)
       } catch {
         // If deleteUser fails (requires recent auth), just logout
-        await logout()
       }
+      await logout()
     } catch (error) {
       console.error('Error deleting account:', error)
       showToast(t('account.toast.error'), 'error')
