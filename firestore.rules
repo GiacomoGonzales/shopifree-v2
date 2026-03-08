@@ -31,7 +31,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
-      allow delete: if false; // Never delete users
+      allow delete: if isOwner(userId);
 
       // User subscriptions subcollection
       match /subscriptions/{subId} {
@@ -71,7 +71,7 @@ service cloud.firestore {
         allow read: if isStoreOwner(storeId);
         allow create: if true; // Customers can create orders
         allow update: if isStoreOwner(storeId);
-        allow delete: if false; // Never delete orders
+        allow delete: if isStoreOwner(storeId);
       }
 
       // Customers subcollection
