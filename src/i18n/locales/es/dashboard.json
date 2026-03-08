@@ -1064,8 +1064,15 @@
       "unlinkAndCreatePassword": "Desvincular y crear contraseña"
     },
     "danger": {
-      "deleteCatalog": "Eliminar catálogo",
-      "description": "Esta acción es permanente y no se puede deshacer"
+      "deleteCatalog": "Eliminar mi cuenta",
+      "description": "Elimina tu cuenta, tienda y todos tus datos permanentemente",
+      "deleteWarning": "Se eliminarán permanentemente tu cuenta, tu tienda, todos los productos, categorías y pedidos. Se cerrará tu sesión y no podrás recuperar nada.",
+      "productsAnd": "productos y",
+      "categoriesWillBeDeleted": "categorías serán eliminados permanentemente.",
+      "typeToConfirm": "Escribe ELIMINAR para confirmar",
+      "deleting": "Eliminando...",
+      "confirmDelete": "Eliminar todo y cerrar sesión",
+      "catalogDeleted": "Cuenta eliminada correctamente"
     }
   },
   "subscription": {

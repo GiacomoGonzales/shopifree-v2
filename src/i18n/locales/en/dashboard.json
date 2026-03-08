@@ -1063,8 +1063,15 @@
       "unlinkAndCreatePassword": "Unlink and create password"
     },
     "danger": {
-      "deleteCatalog": "Delete catalog",
-      "description": "This action is permanent and cannot be undone"
+      "deleteCatalog": "Delete my account",
+      "description": "Delete your account, store and all your data permanently",
+      "deleteWarning": "Your account, store, all products, categories and orders will be permanently deleted. You will be signed out and won't be able to recover anything.",
+      "productsAnd": "products and",
+      "categoriesWillBeDeleted": "categories will be permanently deleted.",
+      "typeToConfirm": "Type ELIMINAR to confirm",
+      "deleting": "Deleting...",
+      "confirmDelete": "Delete all and sign out",
+      "catalogDeleted": "Account deleted successfully"
     }
   },
   "subscription": {

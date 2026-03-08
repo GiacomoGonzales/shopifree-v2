@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore'
-import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, linkWithCredential, unlink, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth'
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore'
+import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, linkWithCredential, unlink, updatePassword, verifyBeforeUpdateEmail, deleteUser } from 'firebase/auth'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -17,7 +17,7 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 export default function Account() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
-  const { firebaseUser, store } = useAuth()
+  const { firebaseUser, store, logout } = useAuth()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -43,6 +43,11 @@ export default function Account() {
   const [newEmail, setNewEmail] = useState('')
   const [emailPassword, setEmailPassword] = useState('')
   const [changingEmail, setChangingEmail] = useState(false)
+
+  // Delete catalog
+  const [showDeleteCatalog, setShowDeleteCatalog] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deletingCatalog, setDeletingCatalog] = useState(false)
 
   // Unlink Google
   const [showUnlinkGoogle, setShowUnlinkGoogle] = useState(false)
@@ -293,6 +298,48 @@ export default function Account() {
       showToast(t('subscription.toast.portalError'), 'error')
     } finally {
       setPortalLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!store?.id || !firebaseUser || deleteConfirmText !== 'ELIMINAR') return
+
+    setDeletingCatalog(true)
+    try {
+      // Delete all products
+      const productsRef = collection(db, 'stores', store.id, 'products')
+      const productsSnap = await getDocs(productsRef)
+      const productDeletes = productsSnap.docs.map(d => deleteDoc(d.ref))
+
+      // Delete all categories
+      const categoriesRef = collection(db, 'stores', store.id, 'categories')
+      const categoriesSnap = await getDocs(categoriesRef)
+      const categoryDeletes = categoriesSnap.docs.map(d => deleteDoc(d.ref))
+
+      // Delete all orders
+      const ordersRef = collection(db, 'stores', store.id, 'orders')
+      const ordersSnap = await getDocs(ordersRef)
+      const orderDeletes = ordersSnap.docs.map(d => deleteDoc(d.ref))
+
+      await Promise.all([...productDeletes, ...categoryDeletes, ...orderDeletes])
+
+      // Delete the store document
+      await deleteDoc(doc(db, 'stores', store.id))
+
+      // Delete the user document
+      await deleteDoc(doc(db, 'users', firebaseUser.uid))
+
+      // Delete Firebase Auth account and sign out
+      try {
+        await deleteUser(firebaseUser)
+      } catch {
+        // If deleteUser fails (requires recent auth), just logout
+        await logout()
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      showToast(t('account.toast.error'), 'error')
+      setDeletingCatalog(false)
     }
   }
 
@@ -702,7 +749,7 @@ export default function Account() {
                 <p className="text-sm text-gray-500">{t('account.danger.description')}</p>
               </div>
               <button
-                onClick={() => showToast(t('account.toast.comingSoon'), 'info')}
+                onClick={() => setShowDeleteCatalog(true)}
                 className="px-4 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
               >
                 {t('common.delete')}
@@ -802,6 +849,69 @@ export default function Account() {
                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
               >
                 {unlinking ? t('account.security.changing') : t('account.security.unlinkAndCreatePassword')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Catalog Modal */}
+      {showDeleteCatalog && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowDeleteCatalog(false); setDeleteConfirmText('') }}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 pb-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-red-600">{t('account.danger.deleteCatalog')}</h3>
+              </div>
+              <button
+                onClick={() => { setShowDeleteCatalog(false); setDeleteConfirmText('') }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">{t('account.danger.deleteWarning')}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex gap-3">
+                <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-red-800">
+                  <strong>{productCount}</strong> {t('account.danger.productsAnd')} <strong>{categoryCount}</strong> {t('account.danger.categoriesWillBeDeleted')}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('account.danger.typeToConfirm')}</label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="ELIMINAR"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-300 focus:border-red-300 transition-all text-sm"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 p-6 pt-0">
+              <button
+                onClick={() => { setShowDeleteCatalog(false); setDeleteConfirmText('') }}
+                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deletingCatalog || deleteConfirmText !== 'ELIMINAR'}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-all disabled:opacity-50"
+              >
+                {deletingCatalog ? t('account.danger.deleting') : t('account.danger.confirmDelete')}
               </button>
             </div>
           </div>
