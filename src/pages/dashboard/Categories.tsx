@@ -3,7 +3,91 @@ import { collection, query, where, getDocs, doc, addDoc, deleteDoc, updateDoc } 
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Category } from '../../types'
+
+function SortableCategory({ category, editingId, editingName, setEditingName, handleSaveEdit, setEditingId, handleEdit, handleDelete }: {
+  category: Category
+  editingId: string | null
+  editingName: string
+  setEditingName: (name: string) => void
+  handleSaveEdit: () => void
+  setEditingId: (id: string | null) => void
+  handleEdit: (category: Category) => void
+  handleDelete: (id: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center justify-between px-4 sm:px-6 py-4 gap-2 border-b border-gray-200 last:border-b-0">
+      {editingId === category.id ? (
+        <div className="flex items-center gap-2 sm:gap-3 flex-1">
+          <input
+            type="text"
+            value={editingName}
+            onChange={(e) => setEditingName(e.target.value)}
+            className="flex-1 min-w-0 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+            autoFocus
+          />
+          <button
+            onClick={handleSaveEdit}
+            className="px-3 py-1.5 text-sm bg-black text-white rounded-lg hover:bg-gray-800 whitespace-nowrap"
+          >
+            Guardar
+          </button>
+          <button
+            onClick={() => setEditingId(null)}
+            className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap"
+          >
+            Cancelar
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Drag handle */}
+          <button
+            {...attributes}
+            {...listeners}
+            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="9" cy="6" r="1.5" />
+              <circle cx="15" cy="6" r="1.5" />
+              <circle cx="9" cy="12" r="1.5" />
+              <circle cx="15" cy="12" r="1.5" />
+              <circle cx="9" cy="18" r="1.5" />
+              <circle cx="15" cy="18" r="1.5" />
+            </svg>
+          </button>
+
+          <span className="font-medium text-gray-900 flex-1 min-w-0 truncate">{category.name}</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => handleEdit(category)}
+              className="px-2 sm:px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => handleDelete(category.id)}
+              className="px-2 sm:px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+            >
+              Eliminar
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function Categories() {
   const { firebaseUser } = useAuth()
@@ -15,12 +99,16 @@ export default function Categories() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+
   useEffect(() => {
     const fetchData = async () => {
       if (!firebaseUser) return
 
       try {
-        // Fetch store
         const storesRef = collection(db, 'stores')
         const storeQuery = query(storesRef, where('ownerId', '==', firebaseUser.uid))
         const storeSnapshot = await getDocs(storeQuery)
@@ -29,7 +117,6 @@ export default function Categories() {
           const sid = storeSnapshot.docs[0].id
           setStoreId(sid)
 
-          // Fetch categories
           const categoriesRef = collection(db, 'categories')
           const categoriesQuery = query(categoriesRef, where('storeId', '==', sid))
           const categoriesSnapshot = await getDocs(categoriesQuery)
@@ -48,6 +135,31 @@ export default function Categories() {
 
     fetchData()
   }, [firebaseUser])
+
+  const sortedCategories = [...categories].sort((a, b) => a.order - b.order)
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = sortedCategories.findIndex(c => c.id === active.id)
+    const newIndex = sortedCategories.findIndex(c => c.id === over.id)
+    const reordered = arrayMove(sortedCategories, oldIndex, newIndex)
+
+    // Update local state immediately
+    const updated = reordered.map((c, i) => ({ ...c, order: i }))
+    setCategories(updated)
+
+    // Persist to Firestore
+    try {
+      await Promise.all(
+        updated.map(c => updateDoc(doc(db, 'categories', c.id), { order: c.order, updatedAt: new Date() }))
+      )
+    } catch (error) {
+      console.error('Error reordering categories:', error)
+      showToast('Error al reordenar', 'error')
+    }
+  }
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -189,52 +301,24 @@ export default function Categories() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-200">
-          {categories.map((category) => (
-            <div key={category.id} className="flex items-center justify-between px-6 py-4">
-              {editingId === category.id ? (
-                <div className="flex items-center gap-3 flex-1">
-                  <input
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSaveEdit}
-                    className="px-3 py-1.5 text-sm bg-black text-white rounded-lg hover:bg-gray-800"
-                  >
-                    Guardar
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="font-medium text-gray-900">{category.name}</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(category)}
-                      className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(category.id)}
-                      className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+        <div className="bg-white rounded-xl border border-gray-200">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={sortedCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              {sortedCategories.map(category => (
+                <SortableCategory
+                  key={category.id}
+                  category={category}
+                  editingId={editingId}
+                  editingName={editingName}
+                  setEditingName={setEditingName}
+                  handleSaveEdit={handleSaveEdit}
+                  setEditingId={setEditingId}
+                  handleEdit={handleEdit}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
     </div>
