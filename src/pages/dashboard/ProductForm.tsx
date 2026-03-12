@@ -526,8 +526,8 @@ export default function ProductForm() {
                           {t('productForm.photos.main')}
                         </span>
                       )}
-                      {/* Overlay controls */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      {/* Overlay controls - visible on mobile, hover on desktop */}
+                      <div className="absolute inset-0 bg-black/50 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                         {index > 0 && (
                           <button
                             type="button"

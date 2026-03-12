@@ -29,6 +29,7 @@ export default function Products() {
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [openCategoryMenu, setOpenCategoryMenu] = useState<string | null>(null)
   const [savingCategory, setSavingCategory] = useState(false)
 
   // Limit warning modal
@@ -37,6 +38,14 @@ export default function Products() {
 
   // Import modal
   const [showImportModal, setShowImportModal] = useState(false)
+
+  // Close category menu when clicking outside
+  useEffect(() => {
+    if (!openCategoryMenu) return
+    const handleClick = () => setOpenCategoryMenu(null)
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openCategoryMenu])
 
   // Plan limits - use effective plan (considers subscription status)
   const plan = store ? getEffectivePlan(store) : 'free'
@@ -413,7 +422,7 @@ export default function Products() {
           </button>
 
           {categories.map(category => (
-            <div key={category.id} className="relative group">
+            <div key={category.id} className="relative group flex items-center gap-1">
               <button
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
@@ -425,27 +434,42 @@ export default function Products() {
                 {category.name} ({getProductCount(category.id)})
               </button>
 
+              {/* Menu toggle button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
+                }}
+                className="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all text-xs"
+              >
+                ⋮
+              </button>
+
               {/* Edit/Delete dropdown */}
-              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEditCategory(category)
-                  }}
-                  className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
-                >
-                  {t('products.categories.edit')}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteCategory(category)
-                  }}
-                  className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
-                >
-                  {t('products.categories.delete')}
-                </button>
-              </div>
+              {openCategoryMenu === category.id && (
+                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenCategoryMenu(null)
+                      openEditCategory(category)
+                    }}
+                    className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                  >
+                    {t('products.categories.edit')}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenCategoryMenu(null)
+                      handleDeleteCategory(category)
+                    }}
+                    className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
+                  >
+                    {t('products.categories.delete')}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

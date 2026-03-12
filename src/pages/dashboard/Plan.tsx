@@ -287,8 +287,12 @@ export default function Plan() {
 
         {/* Right Column - Plans */}
         <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {plans.map(({ id: planId, popular: isPopular }) => {
+          <div className={`grid grid-cols-1 ${currentPlan === 'free' || currentPlan === 'pro' ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
+            {plans.filter(({ id }) => {
+              // Users on free/pro (including trial) can only see Free and Pro plans
+              if ((currentPlan === 'free' || currentPlan === 'pro') && id === 'business') return false
+              return true
+            }).map(({ id: planId, popular: isPopular }) => {
               const plan = PLAN_FEATURES[planId]
               const isCurrentPlan = planId === currentPlan
               const price = selectedBilling === 'yearly' ? plan.priceYearly : plan.price
