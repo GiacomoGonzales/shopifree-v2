@@ -208,27 +208,50 @@ async function handleDetails(storeId: string, body: Record<string, any>) {
   const priceStr = String(p.sellPrice || '0')
   const sellPrice = parseFloat(priceStr.split('--')[0].trim()) || 0
 
-  // Parse variants
+  // Parse variants with full data
   const variants = (p.variants || []).map((v: any) => ({
     vid: v.vid,
     name: v.variantNameEn || v.variantName || '',
     image: v.variantImage || '',
     sellPrice: parseFloat(String(v.variantSellPrice || '0')) || 0,
     sku: v.variantSku || '',
+    variantKey: v.variantKey || '',
+    weight: v.variantWeight || null,
+    length: v.variantLength || null,
+    width: v.variantWidth || null,
+    height: v.variantHeight || null,
   }))
+
+  // Extract variation groups from variantKey (e.g., "Cherry wood-IPhone11" → ["Cherry wood", "IPhone11"])
+  // productKeyEn tells us the attribute names (e.g., "Color-Style")
+  const variantKeyNames = (p.productKeyEn || '').split('-').map((k: string) => k.trim()).filter(Boolean)
+
+  // Parse weight (can be "15.00-38.00" or a number)
+  const weightStr = String(p.productWeight || '0')
+  const weight = parseFloat(weightStr.split('-')[0].trim()) || 0
+
+  // Parse materials
+  let materials: string[] = []
+  try {
+    materials = p.materialNameEnSet || (typeof p.materialNameEn === 'string' && p.materialNameEn.startsWith('[') ? JSON.parse(p.materialNameEn) : [])
+  } catch { /* ignore */ }
 
   return {
     status: 200,
     data: {
       pid: p.pid,
+      sku: p.productSku || '',
       name: p.productNameEn || p.productName || '',
-      description: p.description || p.productNameEn || '',
+      description: p.description || '',
       image: p.bigImage || images[0] || '',
       images,
       sellPrice,
-      weight: p.productWeight,
+      suggestSellPrice: p.suggestSellPrice || null,
+      weight,
       categoryName: p.categoryName || '',
-      variants
+      materials,
+      variants,
+      variantKeyNames,
     }
   }
 }

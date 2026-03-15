@@ -43,16 +43,30 @@ interface CJProduct {
   categoryName?: string
 }
 
+interface CJVariant {
+  vid: string
+  name: string
+  image: string
+  sellPrice: number
+  sku: string
+  variantKey: string
+  weight?: number
+}
+
 interface CJProductDetail {
   pid: string
+  sku: string
   name: string
   description: string
   image: string
   images: string[]
   sellPrice: number
+  suggestSellPrice?: string
   weight?: number
   categoryName?: string
-  variants: { vid: string; name: string; image: string; sellPrice: number; sku: string }[]
+  materials?: string[]
+  variants: CJVariant[]
+  variantKeyNames: string[]
 }
 
 interface Props {
@@ -140,6 +154,47 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
     }
   }
 
+  // Build Shopifree variations from CJ variant data
+  const buildVariations = (product: CJProductDetail) => {
+    if (!product.variants.length || !product.variantKeyNames.length) return undefined
+
+    // Group variant values by attribute name
+    // e.g. variantKey "Cherry wood-IPhone11" + variantKeyNames ["Color","Style"]
+    // → Color: ["Cherry wood"], Style: ["IPhone11"]
+    const groups: Record<string, Set<string>> = {}
+    const imagesByValue: Record<string, string> = {}
+
+    for (const name of product.variantKeyNames) {
+      groups[name] = new Set()
+    }
+
+    for (const v of product.variants) {
+      const parts = v.variantKey.split('-').map(s => s.trim())
+      product.variantKeyNames.forEach((name, i) => {
+        if (parts[i]) {
+          groups[name].add(parts[i])
+          // Save image for first attribute (usually color)
+          if (i === 0 && v.image) {
+            imagesByValue[parts[i]] = v.image
+          }
+        }
+      })
+    }
+
+    return product.variantKeyNames
+      .filter(name => groups[name]?.size > 0)
+      .map(name => ({
+        id: `var-${Math.random().toString(36).substring(2, 9)}`,
+        name,
+        options: Array.from(groups[name]).map(value => ({
+          id: `opt-${Math.random().toString(36).substring(2, 9)}`,
+          value,
+          image: imagesByValue[value] || undefined,
+          available: true,
+        }))
+      }))
+  }
+
   const importProduct = async () => {
     if (!store || !selectedProduct || !importName.trim() || !importPrice) return
 
@@ -153,18 +208,29 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
 
-      await productService.create(store.id, {
+      const variations = buildVariations(selectedProduct)
+
+      const productData: Record<string, unknown> = {
         name: importName.trim(),
         slug,
         price: parseFloat(importPrice),
         image: selectedProduct.image,
-        images: selectedProduct.images?.slice(0, 5) || [],
+        images: selectedProduct.images?.slice(0, 10) || [],
         description: selectedProduct.description || '',
         active: true,
         cjProductId: selectedProduct.pid,
-      })
+        sku: selectedProduct.sku || undefined,
+        weight: selectedProduct.weight || undefined,
+      }
 
-      showToast('Producto importado', 'success')
+      if (variations && variations.length > 0) {
+        productData.hasVariations = true
+        productData.variations = variations
+      }
+
+      await productService.create(store.id, productData as any)
+
+      showToast('Producto importado con variantes', 'success')
       setSelectedProduct(null)
       onImported()
       onClose()
@@ -285,22 +351,64 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 </div>
               </div>
 
-              {/* Variants info */}
-              {selectedProduct.variants.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Variantes disponibles ({selectedProduct.variants.length})</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {selectedProduct.variants.slice(0, 10).map(v => (
-                      <span key={v.vid} className="px-2.5 py-1 bg-gray-100 rounded-lg text-xs text-gray-600">
-                        {v.name}
-                      </span>
+              {/* Product details */}
+              <div className="flex flex-wrap gap-3 text-xs">
+                {selectedProduct.sku && (
+                  <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-500">
+                    SKU: {selectedProduct.sku}
+                  </span>
+                )}
+                {selectedProduct.weight && selectedProduct.weight > 0 && (
+                  <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-500">
+                    Peso: {selectedProduct.weight}g
+                  </span>
+                )}
+                {selectedProduct.materials && selectedProduct.materials.length > 0 && (
+                  <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-500">
+                    Material: {selectedProduct.materials.join(', ')}
+                  </span>
+                )}
+              </div>
+
+              {/* Variants grouped by attribute */}
+              {selectedProduct.variants.length > 0 && selectedProduct.variantKeyNames.length > 0 && (() => {
+                const groups: Record<string, Set<string>> = {}
+                for (const name of selectedProduct.variantKeyNames) groups[name] = new Set()
+                for (const v of selectedProduct.variants) {
+                  const parts = v.variantKey.split('-').map(s => s.trim())
+                  selectedProduct.variantKeyNames.forEach((name, i) => {
+                    if (parts[i]) groups[name].add(parts[i])
+                  })
+                }
+                return (
+                  <div className="space-y-3">
+                    {selectedProduct.variantKeyNames.map(name => (
+                      groups[name].size > 0 && (
+                        <div key={name}>
+                          <p className="text-sm font-medium text-gray-700 mb-1.5">{name} ({groups[name].size})</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {Array.from(groups[name]).map(val => (
+                              <span key={val} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+                                {val}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )
                     ))}
-                    {selectedProduct.variants.length > 10 && (
-                      <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-xs text-gray-400">
-                        +{selectedProduct.variants.length - 10} mas
-                      </span>
-                    )}
+                    <p className="text-xs text-gray-400">{selectedProduct.variants.length} combinaciones totales</p>
                   </div>
+                )
+              })()}
+
+              {/* Description preview */}
+              {selectedProduct.description && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1.5">Descripcion</p>
+                  <div
+                    className="text-xs text-gray-500 max-h-32 overflow-y-auto bg-gray-50 rounded-xl p-3 prose prose-xs"
+                    dangerouslySetInnerHTML={{ __html: selectedProduct.description }}
+                  />
                 </div>
               )}
 
