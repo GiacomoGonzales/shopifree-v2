@@ -178,37 +178,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5">
-          {!hasCJKey ? (
-            /* === NO API KEY === */
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Configura CJ Dropshipping</h3>
-              <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
-                Para importar productos necesitas una cuenta gratuita en CJ Dropshipping.
-                Registrate, obtiene tu API Key y pegala en Integraciones.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a
-                  href="https://cjdropshipping.com/register"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm"
-                >
-                  Crear cuenta en CJ (gratis)
-                </a>
-                <button
-                  onClick={() => { onClose(); window.location.hash = '#/integrations' }}
-                  className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all text-sm"
-                >
-                  Ir a Integraciones
-                </button>
-              </div>
-            </div>
-          ) : selectedProduct ? (
+          {selectedProduct ? (
             /* === DETAIL / IMPORT VIEW === */
             <div className="space-y-5">
               {/* Product preview */}
@@ -283,19 +253,46 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 </div>
               )}
 
-              {/* Import button */}
-              <button
-                onClick={importProduct}
-                disabled={importing || !importName.trim() || !importPrice}
-                className="w-full py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {importing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Importando...
-                  </>
-                ) : 'Importar a mi tienda'}
-              </button>
+              {/* Import button or CJ setup prompt */}
+              {hasCJKey ? (
+                <button
+                  onClick={importProduct}
+                  disabled={importing || !importName.trim() || !importPrice}
+                  className="w-full py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {importing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Importando...
+                    </>
+                  ) : 'Importar a mi tienda'}
+                </button>
+              ) : (
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 space-y-3">
+                  <p className="text-sm text-orange-800 font-medium">
+                    Para importar este producto, conecta tu cuenta de CJ Dropshipping.
+                  </p>
+                  <p className="text-xs text-orange-600">
+                    Registrate gratis en cjdropshipping.com, obtiene tu API Key y pegala en la pagina de Integraciones.
+                  </p>
+                  <div className="flex gap-2">
+                    <a
+                      href="https://cjdropshipping.com/register"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-center py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all"
+                    >
+                      Crear cuenta CJ (gratis)
+                    </a>
+                    <button
+                      onClick={onClose}
+                      className="flex-1 py-2.5 bg-white border border-orange-200 text-orange-700 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-all"
+                    >
+                      Ir a Integraciones
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* === SEARCH VIEW === */

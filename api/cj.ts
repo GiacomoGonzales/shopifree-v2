@@ -23,22 +23,33 @@ function getDb(): Firestore {
 
 const CJ_BASE = 'https://developers.cjdropshipping.com/api2.0/v1'
 
-// Get CJ API key from store's integrations
-async function getStoreApiKey(storeId: string): Promise<string> {
+// Get CJ API key: store's own key or platform fallback for preview
+async function getStoreApiKey(storeId: string, requireOwn = false): Promise<{ apiKey: string; isOwn: boolean }> {
   const firestore = getDb()
   const storeDoc = await firestore.collection('stores').doc(storeId).get()
   if (!storeDoc.exists) throw new Error('Store not found')
 
-  const apiKey = storeDoc.data()?.integrations?.cjApiKey
-  if (!apiKey) throw new Error('CJ Dropshipping no configurado. Ve a Integraciones y agrega tu API Key.')
+  const storeKey = storeDoc.data()?.integrations?.cjApiKey
+  if (storeKey) return { apiKey: storeKey, isOwn: true }
 
-  return apiKey
+  if (requireOwn) {
+    throw new Error('Para importar productos necesitas configurar tu API Key de CJ en Integraciones.')
+  }
+
+  // Fallback to platform key for preview/browsing
+  const platformKey = process.env.CJ_API_KEY
+  if (!platformKey) throw new Error('CJ Dropshipping no disponible.')
+
+  return { apiKey: platformKey, isOwn: false }
 }
 
-// Get or refresh CJ token, cached per store
-async function getCJToken(storeId: string): Promise<string> {
+// Get or refresh CJ token, cached per store (or platform)
+async function getCJToken(storeId: string, requireOwn = false): Promise<string> {
+  const { apiKey, isOwn } = await getStoreApiKey(storeId, requireOwn)
   const firestore = getDb()
-  const tokenDocPath = `stores/${storeId}/config/cj-token`
+  const tokenDocPath = isOwn
+    ? `stores/${storeId}/config/cj-token`
+    : 'config/cj-platform-token'
   const tokenDoc = await firestore.doc(tokenDocPath).get()
   const data = tokenDoc.data()
 
@@ -74,9 +85,7 @@ async function getCJToken(storeId: string): Promise<string> {
     }
   }
 
-  // Full auth with store's API key
-  const apiKey = await getStoreApiKey(storeId)
-
+  // Full auth with API key (already resolved above)
   const authRes = await fetch(`${CJ_BASE}/authentication/getAccessToken`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
