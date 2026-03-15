@@ -130,8 +130,8 @@ async function handleSearch(storeId: string, body: Record<string, any>) {
   const { keyword, categoryId, page, pageSize, minPrice, maxPrice, orderBy } = body
 
   const params: Record<string, string> = {
-    pageNum: String(page || 1),
-    pageSize: String(Math.min(pageSize || 20, 50)),
+    page: String(page || 1),
+    size: String(Math.min(pageSize || 20, 50)),
   }
   if (keyword) params.keyWord = keyword
   if (categoryId) params.categoryId = categoryId
@@ -145,20 +145,29 @@ async function handleSearch(storeId: string, body: Record<string, any>) {
     return { status: 400, data: { error: data.message || 'Search failed' } }
   }
 
-  const products = (data.data?.list || []).map((p: any) => ({
-    pid: p.pid,
-    name: p.productNameEn || p.productName,
-    image: p.productImage,
-    sellPrice: p.sellPrice,
-    categoryName: p.categoryName,
-    productType: p.productType,
-  }))
+  // V2 response: data.content[].productList[]
+  const productList = data.data?.content?.flatMap((c: any) => c.productList || []) || []
+
+  const products = productList.map((p: any) => {
+    // sellPrice can be "2.34 -- 2.70" or a number
+    const priceStr = String(p.sellPrice || '0')
+    const price = parseFloat(priceStr.split('--')[0].trim()) || 0
+
+    return {
+      pid: p.id,
+      name: p.nameEn || p.name || '',
+      image: p.bigImage || '',
+      sellPrice: price,
+      categoryName: p.threeCategoryName || '',
+      productType: p.productType,
+    }
+  })
 
   return {
     status: 200,
     data: {
       products,
-      total: data.data?.total || 0,
+      total: data.data?.totalRecords || 0,
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 20
     }
@@ -172,7 +181,7 @@ async function handleDetails(storeId: string, body: Record<string, any>) {
 
   const params: Record<string, string> = {
     pid,
-    features: 'enable_description,enable_category'
+    features: 'enable_description'
   }
 
   const data = await cjFetch(storeId, '/product/query', params)
@@ -182,24 +191,44 @@ async function handleDetails(storeId: string, body: Record<string, any>) {
   }
 
   const p = data.data
+
+  // productImage can be a JSON string array or a regular string
+  let images: string[] = []
+  try {
+    if (typeof p.productImage === 'string' && p.productImage.startsWith('[')) {
+      images = JSON.parse(p.productImage)
+    } else if (p.productImage) {
+      images = [p.productImage]
+    }
+  } catch {
+    if (p.bigImage) images = [p.bigImage]
+  }
+
+  // sellPrice can be string "2.34" or "2.34 -- 2.70"
+  const priceStr = String(p.sellPrice || '0')
+  const sellPrice = parseFloat(priceStr.split('--')[0].trim()) || 0
+
+  // Parse variants
+  const variants = (p.variants || []).map((v: any) => ({
+    vid: v.vid,
+    name: v.variantNameEn || v.variantName || '',
+    image: v.variantImage || '',
+    sellPrice: parseFloat(String(v.variantSellPrice || '0')) || 0,
+    sku: v.variantSku || '',
+  }))
+
   return {
     status: 200,
     data: {
       pid: p.pid,
-      name: p.productNameEn || p.productName,
+      name: p.productNameEn || p.productName || '',
       description: p.description || p.productNameEn || '',
-      image: p.productImage,
-      images: (p.productImageSet || []).map((img: any) => img.imageUrl || img),
-      sellPrice: p.sellPrice,
+      image: p.bigImage || images[0] || '',
+      images,
+      sellPrice,
       weight: p.productWeight,
-      categoryName: p.categoryName,
-      variants: (p.variants || []).map((v: any) => ({
-        vid: v.vid,
-        name: v.variantNameEn || v.variantName,
-        image: v.variantImage,
-        sellPrice: v.variantSellPrice,
-        sku: v.variantSku,
-      }))
+      categoryName: p.categoryName || '',
+      variants
     }
   }
 }
