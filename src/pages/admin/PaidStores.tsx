@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { auth } from '../../lib/firebase'
 import { apiUrl } from '../../utils/apiBase'
@@ -52,7 +51,6 @@ interface Payment {
 
 export default function PaidStores() {
   const { localePath } = useLanguage()
-  const { firebaseUser } = useAuth()
   const [stores, setStores] = useState<(Store & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'past_due' | 'canceled'>('all')
