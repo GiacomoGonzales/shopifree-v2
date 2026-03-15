@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { productService } from '../../lib/firebase'
+import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
 import { getCurrencySymbol } from '../../lib/currency'
+import type { Category } from '../../types'
 
 // Fallback rates in case API fails
 const FALLBACK_RATES: Record<string, number> = {
@@ -94,6 +95,11 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
 
+  // CJ categories
+  const [cjCategories, setCjCategories] = useState<{ id: string; name: string }[]>([])
+  const [activeCjCategory, setActiveCjCategory] = useState<string>('')
+  const [loadingCategories, setLoadingCategories] = useState(false)
+
   // Detail state
   const [selectedProduct, setSelectedProduct] = useState<CJProductDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -106,6 +112,16 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
   // Freight estimation state
   const [freightOptions, setFreightOptions] = useState<{ carrier: string; days: string; costUSD: number }[]>([])
   const [freightLoading, setFreightLoading] = useState(false)
+
+  // Category state
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
+
+  useEffect(() => {
+    if (store?.id) {
+      categoryService.getAll(store.id).then(cats => setCategories(cats.filter(c => c.active)))
+    }
+  }, [store?.id])
 
   if (!show) return null
 
@@ -122,11 +138,15 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
     return data
   }
 
-  const search = async (newPage = 1) => {
-    if (!keyword.trim()) return
+  const search = async (newPage = 1, categoryOverride?: string) => {
+    const catId = categoryOverride ?? activeCjCategory
+    if (!keyword.trim() && !catId) return
     setSearching(true)
     try {
-      const data = await cjPost({ action: 'search', keyword: keyword.trim(), page: newPage, pageSize: 20 })
+      const params: Record<string, any> = { action: 'search', page: newPage, pageSize: 20 }
+      if (keyword.trim()) params.keyword = keyword.trim()
+      if (catId) params.categoryId = catId
+      const data = await cjPost(params)
       if (data.products) {
         setResults(data.products)
         setTotal(data.total || 0)
@@ -137,6 +157,24 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
     } finally {
       setSearching(false)
     }
+  }
+
+  const loadCjCategories = async () => {
+    if (cjCategories.length > 0) return
+    setLoadingCategories(true)
+    try {
+      const data = await cjPost({ action: 'categories' })
+      if (data.categories) {
+        setCjCategories(data.categories.map((c: any) => ({ id: c.categoryFirstId || c.id, name: c.categoryFirstName || c.name || '' })).filter((c: any) => c.name))
+      }
+    } catch { /* silent */ }
+    finally { setLoadingCategories(false) }
+  }
+
+  const selectCjCategory = (catId: string) => {
+    const next = activeCjCategory === catId ? '' : catId
+    setActiveCjCategory(next)
+    if (next) search(1, next)
   }
 
   const viewDetail = async (pid: string) => {
@@ -245,6 +283,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
         cjProductId: selectedProduct.pid,
         sku: selectedProduct.sku || undefined,
         weight: selectedProduct.weight || undefined,
+        categoryId: selectedCategoryId || null,
       }
 
       if (variations && variations.length > 0) {
@@ -271,6 +310,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
     setImportName('')
     setImportPrice('')
     setFreightOptions([])
+    setSelectedCategoryId('')
   }
 
   const totalPages = Math.ceil(total / 20)
@@ -374,6 +414,21 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                     )
                   })()}
                 </div>
+                {categories.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Categoria</label>
+                    <select
+                      value={selectedCategoryId}
+                      onChange={e => setSelectedCategoryId(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm bg-white"
+                    >
+                      <option value="">Sin categoria</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Product details */}
@@ -538,12 +593,43 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 />
                 <button
                   type="submit"
-                  disabled={searching || !keyword.trim()}
+                  disabled={searching || (!keyword.trim() && !activeCjCategory)}
                   className="px-5 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 text-sm"
                 >
                   {searching ? '...' : 'Buscar'}
                 </button>
               </form>
+
+              {/* CJ Categories */}
+              {cjCategories.length === 0 && !loadingCategories ? (
+                <button
+                  onClick={loadCjCategories}
+                  className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
+                >
+                  Explorar por categorias
+                </button>
+              ) : loadingCategories ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                  <span className="text-xs text-gray-400">Cargando categorias...</span>
+                </div>
+              ) : (
+                <div className="flex gap-2 flex-wrap">
+                  {cjCategories.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => selectCjCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        activeCjCategory === cat.id
+                          ? 'bg-[#1e3a5f] text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Results */}
               {searching ? (
@@ -603,11 +689,11 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                     </div>
                   )}
                 </>
-              ) : keyword && !searching ? (
+              ) : (keyword || activeCjCategory) && !searching ? (
                 <div className="text-center py-16">
                   <p className="text-gray-400">No se encontraron productos</p>
                 </div>
-              ) : (
+              ) : !searching && (
                 <div className="text-center py-16">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -615,7 +701,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                     </svg>
                   </div>
                   <p className="text-gray-500 font-medium">Busca productos en CJ Dropshipping</p>
-                  <p className="text-gray-400 text-sm mt-1">Miles de productos listos para vender</p>
+                  <p className="text-gray-400 text-sm mt-1">Busca por nombre o explora por categorias</p>
                 </div>
               )}
 
