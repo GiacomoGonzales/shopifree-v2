@@ -80,6 +80,54 @@ export default function Dropshipping() {
 
   const rate = rates[currency] || FALLBACK_RATES[currency] || 1
 
+  // Provider selection
+  const [activeProvider, setActiveProvider] = useState<string | null>(null)
+
+  const PROVIDERS = [
+    {
+      id: 'cj',
+      name: 'CJ Dropshipping',
+      description: 'Envio mundial desde China y bodegas locales. Entrega en 7-20 dias. Ideal para LATAM, USA y Europa.',
+      logo: 'https://cjdropshipping.com/favicon.ico',
+      active: true,
+    },
+    {
+      id: 'printful',
+      name: 'Printful',
+      description: 'Print on demand: camisetas, tazas, posters con tu diseño. Bodegas en USA, EU y Mexico. Entrega 3-7 dias.',
+      logo: 'https://www.printful.com/static/images/layout/printful-logo.svg',
+      active: false,
+    },
+    {
+      id: 'printify',
+      name: 'Printify',
+      description: '900+ productos personalizables. Proveedores en USA, EU, UK, Australia y China. Entrega 3-12 dias.',
+      logo: 'https://printify.com/pfh/assets/legacy/favicons/favicon-32x32.png',
+      active: false,
+    },
+    {
+      id: 'aliexpress',
+      name: 'AliExpress',
+      description: 'Millones de productos desde China. Precios muy bajos. Entrega 15-40 dias. Ideal para todo el mundo.',
+      logo: 'https://ae01.alicdn.com/images/eng/wholesale/icon/aliexpress.ico',
+      active: false,
+    },
+    {
+      id: 'spocket',
+      name: 'Spocket',
+      description: 'Productos de USA y Europa con envio rapido 2-5 dias. Ideal para vender en Norteamerica y Europa.',
+      logo: 'https://www.spocket.co/favicon.ico',
+      active: false,
+    },
+    {
+      id: 'dropi',
+      name: 'Dropi',
+      description: 'Bodegas en Colombia, Mexico, Chile y Peru. Entrega 1-3 dias. Ideal para vender en Latinoamerica.',
+      logo: 'https://dropi.co/favicon.ico',
+      active: false,
+    },
+  ]
+
   // Search state
   const [keyword, setKeyword] = useState('')
   const [results, setResults] = useState<CJProduct[]>([])
@@ -89,18 +137,22 @@ export default function Dropshipping() {
 
   // Quick browse categories (search by keyword)
   const BROWSE_CATEGORIES = [
-    { label: 'Ropa', keyword: 'clothing' },
-    { label: 'Electronica', keyword: 'electronics' },
-    { label: 'Accesorios', keyword: 'accessories' },
-    { label: 'Hogar', keyword: 'home decor' },
-    { label: 'Belleza', keyword: 'beauty' },
-    { label: 'Deportes', keyword: 'sports' },
-    { label: 'Juguetes', keyword: 'toys' },
-    { label: 'Mascotas', keyword: 'pets' },
-    { label: 'Cocina', keyword: 'kitchen' },
-    { label: 'Herramientas', keyword: 'tools' },
-    { label: 'Bolsos', keyword: 'bags' },
-    { label: 'Relojes', keyword: 'watches' },
+    { label: 'Moda mujer', keyword: 'women fashion dress' },
+    { label: 'Moda hombre', keyword: 'men casual shirt' },
+    { label: 'Celulares', keyword: 'phone accessories case' },
+    { label: 'Audifonos', keyword: 'wireless earbuds bluetooth' },
+    { label: 'Relojes', keyword: 'smart watch fitness' },
+    { label: 'Belleza', keyword: 'skincare beauty tools' },
+    { label: 'Joyeria', keyword: 'jewelry necklace ring' },
+    { label: 'Hogar', keyword: 'home decor led lights' },
+    { label: 'Cocina', keyword: 'kitchen gadgets organizer' },
+    { label: 'Deportes', keyword: 'yoga fitness gym' },
+    { label: 'Mascotas', keyword: 'pet dog cat toy' },
+    { label: 'Bolsos', keyword: 'women handbag crossbody' },
+    { label: 'Lentes', keyword: 'sunglasses polarized fashion' },
+    { label: 'Niños', keyword: 'kids toys educational' },
+    { label: 'Auto', keyword: 'car accessories interior' },
+    { label: 'Camping', keyword: 'outdoor camping portable' },
   ]
   const [activeCategory, setActiveCategory] = useState<string>('')
 
@@ -111,6 +163,10 @@ export default function Dropshipping() {
   // Detail state
   const [selectedProduct, setSelectedProduct] = useState<CJProductDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+
+  // Translation state
+  const [translatedDesc, setTranslatedDesc] = useState<string>('')
+  const [translating, setTranslating] = useState(false)
 
   // Import state
   const [importName, setImportName] = useState('')
@@ -138,15 +194,21 @@ export default function Dropshipping() {
     return data
   }, [store?.id])
 
-  // Load featured products + categories on mount
+  // Load featured products when CJ is selected
   useEffect(() => {
-    if (!store?.id) return
+    if (!store?.id || activeProvider !== 'cj') return
+    if (featured.length > 0) return // already loaded
 
     // Load featured products — fetch from several popular niches and mix them
-    const featuredKeywords = ['trending gadgets', 'fashion women', 'phone accessories', 'home organization', 'jewelry minimalist', 'fitness']
+    const featuredKeywords = [
+      'wireless earbuds', 'led lights room', 'phone case iphone',
+      'skincare set', 'smart watch', 'yoga leggings',
+      'sunglasses polarized', 'portable charger', 'nail art',
+      'backpack travel',
+    ]
     Promise.allSettled(
       featuredKeywords.map(kw =>
-        cjPost({ action: 'search', keyword: kw, page: 1, pageSize: 6 })
+        cjPost({ action: 'search', keyword: kw, page: 1, pageSize: 8 })
       )
     ).then(results => {
       const all: CJProduct[] = []
@@ -166,10 +228,10 @@ export default function Dropshipping() {
 
     // Load store categories
     categoryService.getAll(store.id).then(cats => setCategories(cats.filter(c => c.active)))
-  }, [store?.id, cjPost])
+  }, [store?.id, cjPost, activeProvider])
 
   const search = async (newPage = 1, keywordOverride?: string) => {
-    const searchKeyword = keywordOverride ?? keyword.trim()
+    const searchKeyword = keywordOverride ?? (activeCategory || keyword.trim())
     if (!searchKeyword) return
     setSearching(true)
     try {
@@ -201,6 +263,7 @@ export default function Dropshipping() {
   const viewDetail = async (pid: string) => {
     setLoadingDetail(true)
     setFreightOptions([])
+    setTranslatedDesc('')
     try {
       const data = await cjPost({ action: 'details', pid })
       if (data.pid) {
@@ -279,7 +342,7 @@ export default function Dropshipping() {
         price: parseFloat(importPrice),
         image: selectedProduct.image,
         images: selectedProduct.images?.slice(0, 10) || [],
-        description: selectedProduct.description || '',
+        description: translatedDesc || selectedProduct.description || '',
         active: true,
         cjProductId: selectedProduct.pid,
         sku: selectedProduct.sku || undefined,
@@ -307,6 +370,7 @@ export default function Dropshipping() {
     setImportPrice('')
     setFreightOptions([])
     setSelectedCategoryId('')
+    setTranslatedDesc('')
   }
 
   const totalPages = Math.ceil(total / 20)
@@ -317,45 +381,87 @@ export default function Dropshipping() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
-          {selectedProduct && (
-            <button onClick={goBack} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+          {(selectedProduct || activeProvider) && (
+            <button
+              onClick={() => selectedProduct ? goBack() : setActiveProvider(null)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
               <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {selectedProduct ? 'Importar producto' : 'Dropshipping'}
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              {selectedProduct ? 'Importar producto' : activeProvider ? PROVIDERS.find(p => p.id === activeProvider)?.name || 'Dropshipping' : 'Dropshipping'}
             </h1>
             <p className="text-sm text-gray-400">
-              {selectedProduct ? 'Ajusta nombre y precio antes de importar' : 'Explora y agrega productos de CJ Dropshipping'}
+              {selectedProduct
+                ? 'Ajusta nombre y precio antes de importar'
+                : activeProvider
+                  ? 'Explora y agrega productos a tu tienda'
+                  : 'Elige un proveedor para explorar productos'}
             </p>
           </div>
         </div>
         <button
           onClick={() => navigate(localePath('/dashboard/products'))}
-          className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+          className="w-full sm:w-auto px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-50 sm:bg-transparent hover:bg-gray-100 rounded-xl transition-colors font-medium"
         >
           Mis productos
         </button>
       </div>
 
-      {selectedProduct ? (
+      {!activeProvider ? (
+        /* === PROVIDER SELECTION === */
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+          {PROVIDERS.map(provider => (
+            <button
+              key={provider.id}
+              onClick={() => provider.active && setActiveProvider(provider.id)}
+              disabled={!provider.active}
+              className={`relative flex flex-col items-center text-center rounded-2xl border p-6 transition-all ${
+                provider.active
+                  ? 'border-gray-200 hover:border-blue-300 hover:shadow-lg cursor-pointer bg-white'
+                  : 'border-gray-100 bg-gray-50/50 cursor-default'
+              }`}
+            >
+              {!provider.active && (
+                <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-gray-200 text-gray-400 text-[10px] font-medium rounded-full">
+                  Pronto
+                </span>
+              )}
+              <img
+                src={provider.logo}
+                alt={provider.name}
+                className={`w-14 h-14 object-contain rounded-2xl mb-3 ${!provider.active ? 'opacity-40 grayscale' : ''}`}
+                onError={e => { (e.target as HTMLImageElement).src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><rect width="56" height="56" rx="12" fill="%23f3f4f6"/><text x="28" y="34" text-anchor="middle" font-size="20" fill="%239ca3af">${provider.name[0]}</text></svg>` }}
+              />
+              <h3 className={`font-semibold text-sm ${provider.active ? 'text-gray-900' : 'text-gray-400'}`}>{provider.name}</h3>
+              <p className={`text-xs mt-1 leading-relaxed ${provider.active ? 'text-gray-400' : 'text-gray-300'}`}>{provider.description}</p>
+              {provider.active && (
+                <div className="mt-3 text-xs font-semibold text-blue-600">
+                  Explorar →
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : selectedProduct ? (
         /* === DETAIL / IMPORT VIEW === */
         <div className="max-w-2xl mx-auto space-y-5">
           {/* Product preview */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <div className="flex gap-5">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
               <img
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
-                className="w-40 h-40 object-cover rounded-xl ring-1 ring-black/5 shrink-0"
+                className="w-full sm:w-40 h-48 sm:h-40 object-cover rounded-xl ring-1 ring-black/5 shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">{selectedProduct.name}</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{selectedProduct.name}</h2>
                 <p className="text-xs text-gray-400 mb-1">Precio CJ (costo)</p>
                 <p className="text-xl font-bold text-red-600">
                   ${selectedProduct.sellPrice} USD
@@ -517,11 +623,43 @@ export default function Dropshipping() {
 
           {/* Description */}
           {selectedProduct.description && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <p className="text-sm font-medium text-gray-700 mb-1.5">Descripcion</p>
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-700">Descripcion</p>
+                {!translatedDesc && !translating && (
+                  <button
+                    onClick={async () => {
+                      setTranslating(true)
+                      try {
+                        const lang = store?.language || 'es'
+                        const data = await cjPost({ action: 'translate', text: selectedProduct.description, targetLang: lang })
+                        if (data.translated) setTranslatedDesc(data.translated)
+                      } catch { /* silent */ }
+                      finally { setTranslating(false) }
+                    }}
+                    className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
+                  >
+                    Traducir
+                  </button>
+                )}
+                {translating && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                    <span className="text-xs text-blue-400">Traduciendo...</span>
+                  </div>
+                )}
+                {translatedDesc && (
+                  <button
+                    onClick={() => setTranslatedDesc('')}
+                    className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
+                  >
+                    Ver original
+                  </button>
+                )}
+              </div>
               <div
                 className="text-xs text-gray-500 max-h-48 overflow-y-auto prose prose-xs"
-                dangerouslySetInnerHTML={{ __html: selectedProduct.description }}
+                dangerouslySetInnerHTML={{ __html: translatedDesc || selectedProduct.description }}
               />
             </div>
           )}
@@ -590,7 +728,7 @@ export default function Dropshipping() {
           </form>
 
           {/* Browse categories */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
             {BROWSE_CATEGORIES.map(cat => (
               <button
                 key={cat.keyword}

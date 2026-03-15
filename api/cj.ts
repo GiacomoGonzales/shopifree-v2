@@ -308,6 +308,46 @@ async function handleFreight(storeId: string, body: Record<string, any>) {
   return { status: 200, data: { options } }
 }
 
+// Translate text using Google Translate (free, no auth needed server-side)
+async function handleTranslate(_storeId: string, body: Record<string, any>) {
+  const { text, targetLang } = body
+  if (!text || !targetLang) {
+    return { status: 400, data: { error: 'text and targetLang are required' } }
+  }
+
+  // Split long text into chunks (Google free endpoint has ~5000 char limit)
+  const MAX_CHUNK = 4500
+  const chunks: string[] = []
+  let remaining = text as string
+  while (remaining.length > 0) {
+    if (remaining.length <= MAX_CHUNK) {
+      chunks.push(remaining)
+      break
+    }
+    // Try to split at a sentence boundary
+    let splitAt = remaining.lastIndexOf('. ', MAX_CHUNK)
+    if (splitAt < MAX_CHUNK / 2) splitAt = remaining.lastIndexOf(' ', MAX_CHUNK)
+    if (splitAt < MAX_CHUNK / 2) splitAt = MAX_CHUNK
+    chunks.push(remaining.substring(0, splitAt + 1))
+    remaining = remaining.substring(splitAt + 1)
+  }
+
+  try {
+    const translatedChunks: string[] = []
+    for (const chunk of chunks) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(chunk)}`
+      const res = await fetch(url)
+      const data = await res.json()
+      // Response format: [[["translated","original",...],...],...]
+      const translated = (data[0] || []).map((s: any) => s[0] || '').join('')
+      translatedChunks.push(translated)
+    }
+    return { status: 200, data: { translated: translatedChunks.join('') } }
+  } catch {
+    return { status: 500, data: { error: 'Translation failed' } }
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -338,8 +378,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'freight':
         result = await handleFreight(storeId, body)
         break
+      case 'translate':
+        result = await handleTranslate(storeId, body)
+        break
       default:
-        return res.status(400).json({ error: 'Invalid action. Use "search", "details", "categories", or "freight"' })
+        return res.status(400).json({ error: 'Invalid action' })
     }
 
     return res.status(result.status).json(result.data)
