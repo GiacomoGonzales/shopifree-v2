@@ -59,6 +59,7 @@ export default function PaidStores() {
   // Payment history state
   const [payments, setPayments] = useState<Payment[]>([])
   const [paymentsLoading, setPaymentsLoading] = useState(false)
+  const [paymentsError, setPaymentsError] = useState(false)
   const [paymentsLoaded, setPaymentsLoaded] = useState(false)
   const [paymentsHasMore, setPaymentsHasMore] = useState(false)
   const [paymentsLastId, setPaymentsLastId] = useState<string | null>(null)
@@ -134,18 +135,19 @@ export default function PaidStores() {
       setPaymentsLoaded(true)
     } catch (error) {
       console.error('Error fetching payments:', error)
+      setPaymentsError(true)
     } finally {
       setPaymentsLoading(false)
       setLoadingMore(false)
     }
   }
 
-  // Load payments when switching to payments tab
+  // Load payments when switching to payments tab (runs once)
   useEffect(() => {
-    if (tab === 'payments' && !paymentsLoaded && !paymentsLoading) {
+    if (tab === 'payments' && !paymentsLoaded && !paymentsLoading && !paymentsError) {
       fetchPayments()
     }
-  }, [tab, paymentsLoaded, paymentsLoading])
+  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredStores = filter === 'all'
     ? stores
