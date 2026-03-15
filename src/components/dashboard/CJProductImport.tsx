@@ -1,15 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { productService } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
 import { getCurrencySymbol } from '../../lib/currency'
 
-// Approximate USD exchange rates for LATAM currencies
-const USD_RATES: Record<string, number> = {
+// Fallback rates in case API fails
+const FALLBACK_RATES: Record<string, number> = {
   USD: 1, EUR: 0.92, MXN: 17.5, COP: 4200, PEN: 3.75, ARS: 900,
   CLP: 950, BRL: 5.1, VES: 36.5, UYU: 39, BOB: 6.9, PYG: 7300,
   GTQ: 7.8, HNL: 24.7, NIO: 36.7, CRC: 510, PAB: 1, DOP: 58,
+}
+
+// Fetch and cache exchange rates (cached 24h in localStorage)
+async function getExchangeRates(): Promise<Record<string, number>> {
+  const CACHE_KEY = 'cj_exchange_rates'
+  const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
+
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const { rates, timestamp } = JSON.parse(cached)
+      if (Date.now() - timestamp < CACHE_TTL) return rates
+    }
+
+    const res = await fetch('https://open.er-api.com/v6/latest/USD')
+    const data = await res.json()
+    if (data.result === 'success' && data.rates) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ rates: data.rates, timestamp: Date.now() }))
+      return data.rates
+    }
+  } catch { /* fall through */ }
+
+  return FALLBACK_RATES
 }
 
 interface CJProduct {
@@ -42,6 +65,13 @@ interface Props {
 export default function CJProductImport({ show, onClose, onImported, currency }: Props) {
   const { store } = useAuth()
   const { showToast } = useToast()
+  const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES)
+
+  useEffect(() => {
+    getExchangeRates().then(setRates)
+  }, [])
+
+  const rate = rates[currency] || FALLBACK_RATES[currency] || 1
 
   // Search state
   const [keyword, setKeyword] = useState('')
@@ -99,7 +129,6 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
         setSelectedProduct(data)
         setImportName(data.name)
         // Convert USD cost to local currency and suggest 2.5x markup
-        const rate = USD_RATES[currency] || 1
         const localCost = data.sellPrice * rate
         const suggestedPrice = Math.ceil(localCost * 2.5)
         setImportPrice(String(suggestedPrice))
@@ -205,7 +234,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                     ${selectedProduct.sellPrice} USD
                     {currency !== 'USD' && (
                       <span className="text-sm font-medium text-gray-400 ml-2">
-                        ({getCurrencySymbol(currency)}{Math.ceil(selectedProduct.sellPrice * (USD_RATES[currency] || 1))} {currency})
+                        ({getCurrencySymbol(currency)}{Math.ceil(selectedProduct.sellPrice * rate)} {currency})
                       </span>
                     )}
                   </p>
@@ -242,7 +271,6 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
                   />
                   {importPrice && selectedProduct.sellPrice && (() => {
-                    const rate = USD_RATES[currency] || 1
                     const costInLocal = selectedProduct.sellPrice * rate
                     const profit = parseFloat(importPrice) - costInLocal
                     return (
