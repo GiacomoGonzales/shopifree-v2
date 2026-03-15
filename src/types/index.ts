@@ -324,6 +324,9 @@ export interface Product {
   metaTitle?: string
   metaDescription?: string
 
+  // === DROPSHIPPING ===
+  cjProductId?: string            // CJ Dropshipping product ID
+
   // === ESTADO ===
   active: boolean
   featured?: boolean

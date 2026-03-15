@@ -31,7 +31,7 @@ export default function SocialProofToast() {
   // Fetch orders once
   useEffect(() => {
     if (store.plan === 'free' || !store.socialProof?.enabled) return
-    fetch(`/api/recent-orders?storeId=${store.id}`)
+    fetch(`/api/push?storeId=${store.id}`)
       .then(res => res.json())
       .then(data => {
         if (data.orders?.length) setOrders(data.orders)

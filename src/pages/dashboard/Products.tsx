@@ -9,6 +9,7 @@ import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, getEffectivePlan, PLAN_FEATURES } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
+import CJProductImport from '../../components/dashboard/CJProductImport'
 import type { Product, Category } from '../../types'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
@@ -36,8 +37,9 @@ export default function Products() {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [limitMessage, setLimitMessage] = useState('')
 
-  // Import modal
+  // Import modals
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showCJImport, setShowCJImport] = useState(false)
 
   // Close category menu when clicking outside
   useEffect(() => {
@@ -305,6 +307,15 @@ export default function Products() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowCJImport(true)}
+            className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-all text-sm font-semibold flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="hidden sm:inline">Dropshipping</span>
+          </button>
           <button
             onClick={() => setShowImportModal(true)}
             className="px-4 py-2.5 bg-white border border-[#38bdf8] text-[#2d6cb5] rounded-xl hover:bg-[#f0f7ff] transition-all text-sm font-semibold flex items-center gap-2"
@@ -650,6 +661,14 @@ export default function Products() {
           categories={categories.map(c => ({ id: c.id, name: c.name }))}
         />
       )}
+
+      {/* CJ Dropshipping Import */}
+      <CJProductImport
+        show={showCJImport}
+        onClose={() => setShowCJImport(false)}
+        onImported={refreshProducts}
+        currency={store?.currency || 'USD'}
+      />
 
       {/* Limit Modal */}
       {showLimitModal && (
