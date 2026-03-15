@@ -43,6 +43,7 @@ import AdminStores from './pages/admin/Stores'
 import AdminStoreDetail from './pages/admin/StoreDetail'
 import AdminUsers from './pages/admin/Users'
 import AdminPlans from './pages/admin/Plans'
+import AdminPaidStores from './pages/admin/PaidStores'
 
 // Payment Pages
 import PaymentSuccess from './pages/payment/PaymentSuccess'
@@ -196,6 +197,7 @@ function AppRoutes() {
           <Route path="stores" element={<AdminStores />} />
           <Route path="stores/:storeId" element={<AdminStoreDetail />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="paid-stores" element={<AdminPaidStores />} />
           <Route path="plans" element={<AdminPlans />} />
         </Route>
       </Route>
