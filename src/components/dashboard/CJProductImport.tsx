@@ -53,23 +53,31 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
 
   if (!show) return null
 
+  const hasCJKey = !!store?.integrations?.cjApiKey
+
+  const cjPost = async (body: Record<string, any>) => {
+    const res = await fetch(apiUrl('/api/cj'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, storeId: store?.id })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    return data
+  }
+
   const search = async (newPage = 1) => {
     if (!keyword.trim()) return
     setSearching(true)
     try {
-      const res = await fetch(apiUrl('/api/cj'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'search', keyword: keyword.trim(), page: newPage, pageSize: 20 })
-      })
-      const data = await res.json()
+      const data = await cjPost({ action: 'search', keyword: keyword.trim(), page: newPage, pageSize: 20 })
       if (data.products) {
         setResults(data.products)
         setTotal(data.total || 0)
         setPage(newPage)
       }
-    } catch {
-      showToast('Error buscando productos', 'error')
+    } catch (err: any) {
+      showToast(err.message || 'Error buscando productos', 'error')
     } finally {
       setSearching(false)
     }
@@ -78,21 +86,15 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
   const viewDetail = async (pid: string) => {
     setLoadingDetail(true)
     try {
-      const res = await fetch(apiUrl('/api/cj'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'details', pid })
-      })
-      const data = await res.json()
+      const data = await cjPost({ action: 'details', pid })
       if (data.pid) {
         setSelectedProduct(data)
         setImportName(data.name)
-        // Suggest a markup price (2x the CJ price)
         const suggestedPrice = (data.sellPrice * 2).toFixed(2)
         setImportPrice(suggestedPrice)
       }
-    } catch {
-      showToast('Error cargando producto', 'error')
+    } catch (err: any) {
+      showToast(err.message || 'Error cargando producto', 'error')
     } finally {
       setLoadingDetail(false)
     }
@@ -176,7 +178,37 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5">
-          {selectedProduct ? (
+          {!hasCJKey ? (
+            /* === NO API KEY === */
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Configura CJ Dropshipping</h3>
+              <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
+                Para importar productos necesitas una cuenta gratuita en CJ Dropshipping.
+                Registrate, obtiene tu API Key y pegala en Integraciones.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a
+                  href="https://cjdropshipping.com/register"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm"
+                >
+                  Crear cuenta en CJ (gratis)
+                </a>
+                <button
+                  onClick={() => { onClose(); window.location.hash = '#/integrations' }}
+                  className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all text-sm"
+                >
+                  Ir a Integraciones
+                </button>
+              </div>
+            </div>
+          ) : selectedProduct ? (
             /* === DETAIL / IMPORT VIEW === */
             <div className="space-y-5">
               {/* Product preview */}

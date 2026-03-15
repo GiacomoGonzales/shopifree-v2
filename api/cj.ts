@@ -22,12 +22,25 @@ function getDb(): Firestore {
 }
 
 const CJ_BASE = 'https://developers.cjdropshipping.com/api2.0/v1'
-const TOKEN_DOC = 'config/cj-dropshipping'
 
-async function getCJToken(): Promise<string> {
+// Get CJ API key from store's integrations
+async function getStoreApiKey(storeId: string): Promise<string> {
   const firestore = getDb()
-  const doc = await firestore.doc(TOKEN_DOC).get()
-  const data = doc.data()
+  const storeDoc = await firestore.collection('stores').doc(storeId).get()
+  if (!storeDoc.exists) throw new Error('Store not found')
+
+  const apiKey = storeDoc.data()?.integrations?.cjApiKey
+  if (!apiKey) throw new Error('CJ Dropshipping no configurado. Ve a Integraciones y agrega tu API Key.')
+
+  return apiKey
+}
+
+// Get or refresh CJ token, cached per store
+async function getCJToken(storeId: string): Promise<string> {
+  const firestore = getDb()
+  const tokenDocPath = `stores/${storeId}/config/cj-token`
+  const tokenDoc = await firestore.doc(tokenDocPath).get()
+  const data = tokenDoc.data()
 
   // Check if token exists and is still valid (with 1 hour buffer)
   if (data?.accessToken && data?.expiresAt) {
@@ -47,7 +60,7 @@ async function getCJToken(): Promise<string> {
       })
       const refreshData = await refreshRes.json()
       if (refreshData.code === 200 && refreshData.data?.accessToken) {
-        await firestore.doc(TOKEN_DOC).set({
+        await firestore.doc(tokenDocPath).set({
           accessToken: refreshData.data.accessToken,
           refreshToken: refreshData.data.refreshToken,
           expiresAt: new Date(refreshData.data.accessTokenExpiryDate),
@@ -61,9 +74,8 @@ async function getCJToken(): Promise<string> {
     }
   }
 
-  // Full auth with API key
-  const apiKey = process.env.CJ_API_KEY
-  if (!apiKey) throw new Error('CJ_API_KEY not configured')
+  // Full auth with store's API key
+  const apiKey = await getStoreApiKey(storeId)
 
   const authRes = await fetch(`${CJ_BASE}/authentication/getAccessToken`, {
     method: 'POST',
@@ -73,10 +85,10 @@ async function getCJToken(): Promise<string> {
   const authData = await authRes.json()
 
   if (authData.code !== 200 || !authData.data?.accessToken) {
-    throw new Error(`CJ auth failed: ${authData.message || 'Unknown error'}`)
+    throw new Error(`CJ auth failed: ${authData.message || 'API Key invalida'}`)
   }
 
-  await firestore.doc(TOKEN_DOC).set({
+  await firestore.doc(tokenDocPath).set({
     accessToken: authData.data.accessToken,
     refreshToken: authData.data.refreshToken,
     expiresAt: new Date(authData.data.accessTokenExpiryDate),
@@ -87,8 +99,8 @@ async function getCJToken(): Promise<string> {
   return authData.data.accessToken
 }
 
-async function cjFetch(path: string, params?: Record<string, string>): Promise<any> {
-  const token = await getCJToken()
+async function cjFetch(storeId: string, path: string, params?: Record<string, string>): Promise<any> {
+  const token = await getCJToken(storeId)
   const url = new URL(`${CJ_BASE}${path}`)
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
@@ -103,7 +115,7 @@ async function cjFetch(path: string, params?: Record<string, string>): Promise<a
 }
 
 // Search products
-async function handleSearch(body: Record<string, any>) {
+async function handleSearch(storeId: string, body: Record<string, any>) {
   const { keyword, categoryId, page, pageSize, minPrice, maxPrice, orderBy } = body
 
   const params: Record<string, string> = {
@@ -116,7 +128,7 @@ async function handleSearch(body: Record<string, any>) {
   if (maxPrice) params.endSellPrice = String(maxPrice)
   if (orderBy !== undefined) params.orderBy = String(orderBy)
 
-  const data = await cjFetch('/product/listV2', params)
+  const data = await cjFetch(storeId, '/product/listV2', params)
 
   if (data.code !== 200) {
     return { status: 400, data: { error: data.message || 'Search failed' } }
@@ -143,7 +155,7 @@ async function handleSearch(body: Record<string, any>) {
 }
 
 // Get product details
-async function handleDetails(body: Record<string, any>) {
+async function handleDetails(storeId: string, body: Record<string, any>) {
   const { pid } = body
   if (!pid) return { status: 400, data: { error: 'pid is required' } }
 
@@ -152,7 +164,7 @@ async function handleDetails(body: Record<string, any>) {
     features: 'enable_description,enable_category'
   }
 
-  const data = await cjFetch('/product/query', params)
+  const data = await cjFetch(storeId, '/product/query', params)
 
   if (data.code !== 200 || !data.data) {
     return { status: 404, data: { error: 'Product not found' } }
@@ -182,8 +194,8 @@ async function handleDetails(body: Record<string, any>) {
 }
 
 // Get categories
-async function handleCategories() {
-  const data = await cjFetch('/product/getCategory')
+async function handleCategories(storeId: string) {
+  const data = await cjFetch(storeId, '/product/getCategory')
 
   if (data.code !== 200) {
     return { status: 400, data: { error: 'Failed to fetch categories' } }
@@ -201,19 +213,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { action, ...body } = req.body
+    const { action, storeId, ...body } = req.body
+
+    if (!storeId) {
+      return res.status(400).json({ error: 'storeId is required' })
+    }
 
     let result: { status: number; data: Record<string, any> }
 
     switch (action) {
       case 'search':
-        result = await handleSearch(body)
+        result = await handleSearch(storeId, body)
         break
       case 'details':
-        result = await handleDetails(body)
+        result = await handleDetails(storeId, body)
         break
       case 'categories':
-        result = await handleCategories()
+        result = await handleCategories(storeId)
         break
       default:
         return res.status(400).json({ error: 'Invalid action. Use "search", "details", or "categories"' })

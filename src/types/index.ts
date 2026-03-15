@@ -190,6 +190,7 @@ export interface StoreIntegrations {
   metaPixel?: string          // 123456789
   tiktokPixel?: string        // CXXXXXXXXX
   googleSearchConsole?: string // verification code
+  cjApiKey?: string           // CJ Dropshipping API key
 }
 
 export interface StorePayments {
