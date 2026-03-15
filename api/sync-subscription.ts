@@ -40,14 +40,21 @@ const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return false
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('[verifyAdmin] No auth header')
+    return false
+  }
 
   try {
     const token = authHeader.split('Bearer ')[1]
+    // Ensure Firebase Admin is initialized before calling getAuth
+    getDb()
     const { getAuth } = await import('firebase-admin/auth')
     const decoded = await getAuth().verifyIdToken(token)
+    console.log('[verifyAdmin] decoded email:', decoded.email)
     return ADMIN_EMAILS.includes(decoded.email || '')
-  } catch {
+  } catch (err) {
+    console.error('[verifyAdmin] Error:', err)
     return false
   }
 }
