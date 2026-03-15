@@ -106,11 +106,18 @@ export default function PaidStores() {
 
     try {
       const token = await auth.currentUser.getIdToken()
-      const params = new URLSearchParams({ limit: '30' })
-      if (startingAfter) params.set('starting_after', startingAfter)
 
-      const res = await fetch(apiUrl(`/api/admin-payments?${params}`), {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(apiUrl('/api/sync-subscription'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'list-payments',
+          limit: 30,
+          ...(startingAfter && { starting_after: startingAfter })
+        })
       })
 
       if (!res.ok) throw new Error('Failed to fetch payments')
