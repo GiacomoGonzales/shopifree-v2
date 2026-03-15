@@ -111,20 +111,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Get origin for redirect URLs
     const origin = req.headers.origin || 'https://shopifree.app'
 
-    // Check if user has ever had a Stripe trial before (prevent trial abuse)
-    let hasHadTrial = false
-    try {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'all',
-        limit: 100
-      })
-      hasHadTrial = subscriptions.data.some(sub => sub.trial_end !== null)
-    } catch {
-      // If we can't check, err on the side of no trial
-      hasHadTrial = true
-    }
-
     // Handle 50% first month discount (only for monthly billing)
     const useDiscount = applyDiscount && billing === 'monthly'
     let couponId: string | undefined
@@ -171,18 +157,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               metadata: { storeId, userId, plan }
             }
           }
-        : (hasHadTrial || plan === 'business')
-          ? {
-              subscription_data: {
-                metadata: { storeId, userId, plan }
-              }
+        : {
+            subscription_data: {
+              metadata: { storeId, userId, plan }
             }
-          : {
-              subscription_data: {
-                trial_period_days: 7,
-                metadata: { storeId, userId, plan }
-              }
-            }
+          }
       )
     })
 
