@@ -3,6 +3,14 @@ import { useAuth } from '../../hooks/useAuth'
 import { productService } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
+import { getCurrencySymbol } from '../../lib/currency'
+
+// Approximate USD exchange rates for LATAM currencies
+const USD_RATES: Record<string, number> = {
+  USD: 1, EUR: 0.92, MXN: 17.5, COP: 4200, PEN: 3.75, ARS: 900,
+  CLP: 950, BRL: 5.1, VES: 36.5, UYU: 39, BOB: 6.9, PYG: 7300,
+  GTQ: 7.8, HNL: 24.7, NIO: 36.7, CRC: 510, PAB: 1, DOP: 58,
+}
 
 interface CJProduct {
   pid: string
@@ -90,8 +98,11 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
       if (data.pid) {
         setSelectedProduct(data)
         setImportName(data.name)
-        const suggestedPrice = (data.sellPrice * 2).toFixed(2)
-        setImportPrice(suggestedPrice)
+        // Convert USD cost to local currency and suggest 2.5x markup
+        const rate = USD_RATES[currency] || 1
+        const localCost = data.sellPrice * rate
+        const suggestedPrice = Math.ceil(localCost * 2.5)
+        setImportPrice(String(suggestedPrice))
       }
     } catch (err: any) {
       showToast(err.message || 'Error cargando producto', 'error')
@@ -190,7 +201,14 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-400 mb-1">Precio CJ (costo)</p>
-                  <p className="text-lg font-bold text-red-600">${selectedProduct.sellPrice} USD</p>
+                  <p className="text-lg font-bold text-red-600">
+                    ${selectedProduct.sellPrice} USD
+                    {currency !== 'USD' && (
+                      <span className="text-sm font-medium text-gray-400 ml-2">
+                        ({getCurrencySymbol(currency)}{Math.ceil(selectedProduct.sellPrice * (USD_RATES[currency] || 1))} {currency})
+                      </span>
+                    )}
+                  </p>
                   {selectedProduct.images.length > 0 && (
                     <div className="flex gap-1.5 mt-3 overflow-x-auto">
                       {selectedProduct.images.slice(0, 5).map((img, i) => (
@@ -223,14 +241,19 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                     onChange={e => setImportPrice(e.target.value)}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
                   />
-                  {importPrice && selectedProduct.sellPrice && (
-                    <p className="text-xs text-gray-400 mt-1.5">
-                      Ganancia estimada: <span className="text-green-600 font-medium">
-                        ${(parseFloat(importPrice) - selectedProduct.sellPrice).toFixed(2)} {currency}
-                      </span>
-                      {' '}por venta
-                    </p>
-                  )}
+                  {importPrice && selectedProduct.sellPrice && (() => {
+                    const rate = USD_RATES[currency] || 1
+                    const costInLocal = selectedProduct.sellPrice * rate
+                    const profit = parseFloat(importPrice) - costInLocal
+                    return (
+                      <p className="text-xs text-gray-400 mt-1.5">
+                        Ganancia estimada: <span className={`font-medium ${profit > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                          {getCurrencySymbol(currency)}{profit.toFixed(2)} {currency}
+                        </span>
+                        {' '}por venta
+                      </p>
+                    )
+                  })()}
                 </div>
               </div>
 
