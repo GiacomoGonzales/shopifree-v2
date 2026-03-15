@@ -86,15 +86,17 @@ async function getCJToken(storeId: string, requireOwn = false): Promise<string> 
   }
 
   // Full auth with API key (already resolved above)
+  console.log('[cj] Requesting new access token...')
   const authRes = await fetch(`${CJ_BASE}/authentication/getAccessToken`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ apiKey })
   })
   const authData = await authRes.json()
+  console.log('[cj] Auth response code:', authData.code, 'message:', authData.message)
 
-  if (authData.code !== 200 || !authData.data?.accessToken) {
-    throw new Error(`CJ auth failed: ${authData.message || 'API Key invalida'}`)
+  if (!authData.data?.accessToken) {
+    throw new Error(`CJ auth failed: ${authData.message || 'API Key invalida. Intenta de nuevo en 5 minutos.'}`)
   }
 
   await firestore.doc(tokenDocPath).set({
