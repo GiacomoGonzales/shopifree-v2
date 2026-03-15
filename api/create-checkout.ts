@@ -171,7 +171,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               metadata: { storeId, userId, plan }
             }
           }
-        : hasHadTrial
+        : (hasHadTrial || plan === 'business')
           ? {
               subscription_data: {
                 metadata: { storeId, userId, plan }
