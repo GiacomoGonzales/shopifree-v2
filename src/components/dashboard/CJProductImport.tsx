@@ -103,6 +103,10 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
   const [importPrice, setImportPrice] = useState('')
   const [importing, setImporting] = useState(false)
 
+  // Freight estimation state
+  const [freightOptions, setFreightOptions] = useState<{ carrier: string; days: string; costUSD: number }[]>([])
+  const [freightLoading, setFreightLoading] = useState(false)
+
   if (!show) return null
 
   const hasCJKey = !!store?.integrations?.cjApiKey
@@ -137,6 +141,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
 
   const viewDetail = async (pid: string) => {
     setLoadingDetail(true)
+    setFreightOptions([])
     try {
       const data = await cjPost({ action: 'details', pid })
       if (data.pid) {
@@ -146,6 +151,25 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
         const localCost = data.sellPrice * rate
         const suggestedPrice = Math.ceil(localCost * 2.5)
         setImportPrice(String(suggestedPrice))
+
+        // Fetch freight estimation — use heaviest variant for worst-case estimate, or pid as fallback
+        const countryCode = store?.location?.country
+        if (countryCode) {
+          const variants = data.variants || []
+          let vid: string | undefined
+          if (variants.length > 0) {
+            // Pick the heaviest variant for a worst-case shipping estimate
+            const sorted = [...variants].sort((a: CJVariant, b: CJVariant) => (b.weight || 0) - (a.weight || 0))
+            vid = sorted[0].vid
+          }
+          setFreightLoading(true)
+          cjPost({ action: 'freight', vid: vid || data.pid, countryCode })
+            .then(freight => {
+              if (freight.options) setFreightOptions(freight.options)
+            })
+            .catch(() => { /* silent - freight is informational */ })
+            .finally(() => setFreightLoading(false))
+        }
       }
     } catch (err: any) {
       showToast(err.message || 'Error cargando producto', 'error')
@@ -246,6 +270,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
     setSelectedProduct(null)
     setImportName('')
     setImportPrice('')
+    setFreightOptions([])
   }
 
   const totalPages = Math.ceil(total / 20)
@@ -369,6 +394,51 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                   </span>
                 )}
               </div>
+
+              {/* CJ Shipping estimation */}
+              {(freightLoading || freightOptions.length > 0) && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Envio CJ a {store?.location?.country || '?'}
+                  </p>
+                  {freightLoading ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                      <span className="text-xs text-blue-600">Calculando envio...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        {freightOptions.map((opt, i) => (
+                          <div key={i} className="flex items-center justify-between bg-white/70 rounded-lg px-3 py-2 text-xs">
+                            <span className="font-medium text-gray-700">{opt.carrier}</span>
+                            <span className="text-gray-400">{opt.days}</span>
+                            <span className="font-bold text-blue-700">
+                              ${opt.costUSD.toFixed(2)} USD
+                              {currency !== 'USD' && (
+                                <span className="font-normal text-gray-400 ml-1">
+                                  ({getCurrencySymbol(currency)}{Math.ceil(opt.costUSD * rate)})
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-blue-600 mt-2">
+                        Incluye este costo en tu precio de envio al cliente
+                        {selectedProduct.variants.length > 1 && (
+                          <span className="block text-blue-400 mt-0.5">
+                            Estimado para la variante mas pesada — puede variar
+                          </span>
+                        )}
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Variants grouped by attribute */}
               {selectedProduct.variants.length > 0 && selectedProduct.variantKeyNames.length > 0 && (() => {

@@ -125,6 +125,19 @@ async function cjFetch(storeId: string, path: string, params?: Record<string, st
   return res.json()
 }
 
+async function cjPost(storeId: string, path: string, body: Record<string, any>): Promise<any> {
+  const token = await getCJToken(storeId)
+  const res = await fetch(`${CJ_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'CJ-Access-Token': token
+    },
+    body: JSON.stringify(body)
+  })
+  return res.json()
+}
+
 // Search products
 async function handleSearch(storeId: string, body: Record<string, any>) {
   const { keyword, categoryId, page, pageSize, minPrice, maxPrice, orderBy } = body
@@ -267,6 +280,34 @@ async function handleCategories(storeId: string) {
   return { status: 200, data: { categories: data.data || [] } }
 }
 
+// Estimate freight cost from CJ warehouse to destination country
+async function handleFreight(storeId: string, body: Record<string, any>) {
+  const { vid, countryCode, quantity } = body
+  if (!vid || !countryCode) {
+    return { status: 400, data: { error: 'vid and countryCode are required' } }
+  }
+
+  const data = await cjPost(storeId, '/logistic/freightCalculate', {
+    endCountryCode: countryCode,
+    products: [{ quantity: quantity || 1, vid }]
+  })
+
+  if (data.code !== 200 || !data.data) {
+    return { status: 400, data: { error: data.message || 'Freight calculation failed' } }
+  }
+
+  const options = (data.data || []).map((opt: any) => ({
+    carrier: opt.logisticName || '',
+    days: opt.estimatedDeliveryDays || opt.logisticAging || '',
+    costUSD: parseFloat(String(opt.logisticPrice || '0')) || 0,
+  })).filter((o: any) => o.costUSD > 0)
+
+  // Sort by price ascending
+  options.sort((a: any, b: any) => a.costUSD - b.costUSD)
+
+  return { status: 200, data: { options } }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -294,8 +335,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'categories':
         result = await handleCategories(storeId)
         break
+      case 'freight':
+        result = await handleFreight(storeId, body)
+        break
       default:
-        return res.status(400).json({ error: 'Invalid action. Use "search", "details", or "categories"' })
+        return res.status(400).json({ error: 'Invalid action. Use "search", "details", "categories", or "freight"' })
     }
 
     return res.status(result.status).json(result.data)
