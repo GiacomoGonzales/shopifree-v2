@@ -5,6 +5,7 @@ import { productService, categoryService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
 import { getCurrencySymbol } from '../../lib/currency'
+import { Link } from 'react-router-dom'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { Category } from '../../types'
 
@@ -73,6 +74,8 @@ export default function Dropshipping() {
   const { showToast } = useToast()
   const { localePath } = useLanguage()
   const navigate = useNavigate()
+
+  const isBusiness = store?.plan === 'business'
   const currency = store?.currency || 'USD'
   const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES)
 
@@ -692,12 +695,30 @@ export default function Dropshipping() {
             </div>
           )}
 
-          {/* Import button */}
-          {hasCJKey ? (
+          {/* Import button or upgrade prompt */}
+          {!isBusiness ? (
+            <div className="bg-gray-50 rounded-xl p-5 text-center space-y-3">
+              <p className="text-sm font-medium text-gray-900">
+                Importar productos requiere el plan Business
+              </p>
+              <p className="text-xs text-gray-500">
+                Explora todos los productos que quieras. Para importarlos a tu tienda, actualiza a Business.
+              </p>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+              >
+                Ver planes
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+          ) : hasCJKey ? (
             <button
               onClick={importProduct}
               disabled={importing || !importName.trim() || !importPrice}
-              className="w-full py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
             >
               {importing ? (
                 <>
@@ -707,27 +728,27 @@ export default function Dropshipping() {
               ) : 'Importar a mi tienda'}
             </button>
           ) : (
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 space-y-3">
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-3">
               <p className="text-sm text-orange-800 font-medium">
-                Para importar este producto, conecta tu cuenta de CJ Dropshipping.
+                Conecta tu cuenta de CJ Dropshipping para importar.
               </p>
               <p className="text-xs text-orange-600">
-                Registrate gratis en cjdropshipping.com, obtiene tu API Key y pegala en la pagina de Integraciones.
+                Registrate gratis en cjdropshipping.com y pega tu API Key en Integraciones.
               </p>
               <div className="flex gap-2">
                 <a
                   href="https://cjdropshipping.com/register"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 text-center py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all"
+                  className="flex-1 text-center py-2.5 bg-orange-500 text-white rounded-lg font-semibold text-sm hover:bg-orange-600 transition-all"
                 >
-                  Crear cuenta CJ (gratis)
+                  Crear cuenta CJ
                 </a>
                 <button
                   onClick={() => navigate(localePath('/dashboard/integrations'))}
                   className="flex-1 py-2.5 bg-white border border-orange-200 text-orange-700 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-all"
                 >
-                  Ir a Integraciones
+                  Integraciones
                 </button>
               </div>
             </div>

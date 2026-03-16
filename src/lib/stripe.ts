@@ -71,6 +71,7 @@ export const PLAN_FEATURES = {
     features: [
       'Todo lo de Pro',
       'Productos sin limite',
+      'Dropshipping (CJ, Printful...)',
       'Tu marca, sin Shopifree',
       'App Android y iPhone de tu tienda',
       'Soporte prioritario'
