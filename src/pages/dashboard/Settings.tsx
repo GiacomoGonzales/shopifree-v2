@@ -194,6 +194,8 @@ export default function Settings() {
             : { allowedDistricts: null }),
           ...(shipping.localCost != null ? { localCost: shipping.localCost } : { localCost: null }),
           ...(shipping.nationalCost != null ? { nationalCost: shipping.nationalCost } : { nationalCost: null }),
+          cjAutoShipping: shipping.cjAutoShipping || false,
+          ...(shipping.cjShippingMargin != null ? { cjShippingMargin: shipping.cjShippingMargin } : { cjShippingMargin: null }),
         },
         updatedAt: new Date()
       })
@@ -1185,6 +1187,55 @@ export default function Settings() {
                               {t('settings.shipping.nationalCostHint', 'Envios a otras zonas')}
                             </p>
                           </div>
+                        </div>
+                      )}
+                      {/* CJ Dropshipping auto-shipping */}
+                      <hr className="border-gray-100" />
+
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="font-medium text-[#1e3a5f]">Envio automatico CJ</p>
+                          <p className="text-sm text-gray-500">Calcular costo de envio real de CJ Dropshipping para productos importados</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShipping({ ...shipping, cjAutoShipping: !shipping.cjAutoShipping })}
+                          className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            shipping.cjAutoShipping ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
+                              shipping.cjAutoShipping ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {shipping.cjAutoShipping && (
+                        <div>
+                          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                            Margen extra de envio
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                              {currencySymbols[currency] || '$'}
+                            </span>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={shipping.cjShippingMargin ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9.]/g, '')
+                                setShipping({ ...shipping, cjShippingMargin: val ? parseFloat(val) : 0 })
+                              }}
+                              placeholder="0"
+                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Se suma al costo real de envio de CJ. Ej: si CJ cobra $8 y tu margen es $3, el cliente paga $11
+                          </p>
                         </div>
                       )}
                     </>

@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { orderService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
+import { apiUrl } from '../../utils/apiBase'
 import type { Order } from '../../types'
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
@@ -202,6 +203,61 @@ export default function Orders() {
       showToast(t('orders.statusError'), 'error')
     } finally {
       setUpdatingStatus(null)
+    }
+  }
+
+  const [fulfillingCJ, setFulfillingCJ] = useState(false)
+
+  const handleCJFulfill = async (order: Order) => {
+    if (!store) return
+    setFulfillingCJ(true)
+    try {
+      const res = await fetch(apiUrl('/api/cj'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'createOrder', storeId: store.id, orderId: order.id })
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      const updated = { ...order, cjOrderId: data.cjOrderId, fulfillmentStatus: 'submitted' as const, updatedAt: new Date() }
+      setOrders(orders.map(o => o.id === order.id ? updated : o))
+      setSelectedOrder(updated)
+      showToast('Orden enviada a CJ Dropshipping', 'success')
+    } catch (err: any) {
+      showToast(err.message || 'Error enviando a CJ', 'error')
+    } finally {
+      setFulfillingCJ(false)
+    }
+  }
+
+  const handleCheckCJStatus = async (order: Order) => {
+    if (!store || !order.cjOrderId) return
+    try {
+      const res = await fetch(apiUrl('/api/cj'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'orderStatus', storeId: store.id, cjOrderId: order.cjOrderId })
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      if (data.trackingNumber) {
+        const updated = {
+          ...order,
+          trackingNumber: data.trackingNumber,
+          trackingCarrier: data.carrier,
+          fulfillmentStatus: 'shipped' as const,
+          updatedAt: new Date(),
+        }
+        setOrders(orders.map(o => o.id === order.id ? updated : o))
+        setSelectedOrder(updated)
+        showToast(`Tracking: ${data.trackingNumber}`, 'success')
+      } else {
+        showToast(`Estado CJ: ${data.status || 'En proceso'}`, 'info')
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error consultando CJ', 'error')
     }
   }
 
@@ -877,6 +933,82 @@ export default function Orders() {
                   )
                 })()}
               </div>
+
+              {/* CJ Dropshipping fulfillment */}
+              {selectedOrder.items?.some(item =>
+                orders.length > 0 // always render if order has items, actual CJ check is server-side
+              ) && (
+                <div className="border-t border-gray-200 pt-4">
+                  {selectedOrder.cjOrderId ? (
+                    <div className="bg-blue-50 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-blue-900">CJ Dropshipping</p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          selectedOrder.fulfillmentStatus === 'shipped' ? 'bg-green-100 text-green-700' :
+                          selectedOrder.fulfillmentStatus === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {selectedOrder.fulfillmentStatus === 'shipped' ? 'Enviado' :
+                           selectedOrder.fulfillmentStatus === 'failed' ? 'Error' :
+                           'Procesando'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-blue-600">Orden CJ: {selectedOrder.cjOrderId}</p>
+                      {selectedOrder.trackingNumber && (
+                        <p className="text-xs text-blue-600">
+                          Tracking: <span className="font-mono font-medium">{selectedOrder.trackingNumber}</span>
+                          {selectedOrder.trackingCarrier && ` (${selectedOrder.trackingCarrier})`}
+                        </p>
+                      )}
+                      {!selectedOrder.trackingNumber && selectedOrder.fulfillmentStatus !== 'failed' && (
+                        <button
+                          onClick={() => handleCheckCJStatus(selectedOrder)}
+                          className="text-xs text-blue-500 hover:text-blue-700 font-medium"
+                        >
+                          Verificar estado de envio
+                        </button>
+                      )}
+                      {selectedOrder.fulfillmentError && (
+                        <p className="text-xs text-red-500">{selectedOrder.fulfillmentError}</p>
+                      )}
+                    </div>
+                  ) : selectedOrder.fulfillmentStatus === 'failed' ? (
+                    <div className="bg-red-50 rounded-xl p-4 space-y-2">
+                      <p className="text-sm font-semibold text-red-800">Error al enviar a CJ</p>
+                      {selectedOrder.fulfillmentError && (
+                        <p className="text-xs text-red-600">{selectedOrder.fulfillmentError}</p>
+                      )}
+                      <button
+                        onClick={() => handleCJFulfill(selectedOrder)}
+                        disabled={fulfillingCJ}
+                        className="text-xs text-red-600 hover:text-red-800 font-medium"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleCJFulfill(selectedOrder)}
+                      disabled={fulfillingCJ || selectedOrder.status === 'pending' || selectedOrder.status === 'cancelled'}
+                      className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                    >
+                      {fulfillingCJ ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Enviando a CJ...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Enviar a CJ Dropshipping
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* WhatsApp button */}
               {selectedOrder.customer?.phone && (

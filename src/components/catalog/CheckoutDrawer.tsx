@@ -118,6 +118,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     loading,
     error,
     shippingCost,
+    shippingLoading,
     finalTotal,
     discountAmount,
     appliedCoupon,
@@ -345,6 +346,8 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
               onMethodChange={handleDeliveryMethodChange}
               error={error}
               t={t}
+              cjShippingCost={shippingCost}
+              cjShippingLoading={shippingLoading}
             />
           )}
 

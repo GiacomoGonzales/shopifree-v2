@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
 import type { Store, Order, OrderItem, Coupon } from '../types'
 import type { CartItem } from './useCart'
@@ -6,6 +6,7 @@ import { orderService, couponService, db } from '../lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
+import { apiUrl } from '../utils/apiBase'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'stripe' | 'confirmation'
 
@@ -170,6 +171,49 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     setCouponError(null)
   }, [])
 
+  // CJ auto-shipping: fetch real freight cost when delivery address changes
+  const [cjShippingCost, setCjShippingCost] = useState<number | null>(null)
+  const [cjShippingLoading, setCjShippingLoading] = useState(false)
+
+  const hasCJAutoShipping = !!store.shipping?.cjAutoShipping
+  const countryCode = store.location?.country || ''
+
+  useEffect(() => {
+    if (!hasCJAutoShipping || !countryCode || data.delivery?.method !== 'delivery') {
+      setCjShippingCost(null)
+      return
+    }
+
+    // Build items for the API
+    const cartItems = items.map(item => ({
+      productId: item.product.id,
+      quantity: item.quantity,
+      selectedVariations: item.selectedVariants
+        ? Object.entries(item.selectedVariants).map(([name, value]) => ({ name, value }))
+        : undefined,
+    }))
+
+    setCjShippingLoading(true)
+    fetch(apiUrl('/api/cj'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'checkoutShipping',
+        storeId: store.id,
+        items: cartItems,
+        countryCode,
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.hasCJProducts && data.shippingCost > 0) {
+          setCjShippingCost(data.shippingCost)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCjShippingLoading(false))
+  }, [hasCJAutoShipping, countryCode, data.delivery?.method, items, store.id])
+
   // Calculate shipping cost based on store settings, delivery method, and zone
   const calculateShippingCost = useCallback((): number => {
     // If no delivery method selected or pickup, no shipping cost
@@ -177,11 +221,17 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       return 0
     }
 
+    // Use CJ auto-shipping cost if available
+    if (hasCJAutoShipping && cjShippingCost !== null) {
+      return cjShippingCost
+    }
+
     return resolveShippingCost(store, totalPrice, data.delivery?.address?.state)
-  }, [data.delivery?.method, data.delivery?.address?.state, store, totalPrice])
+  }, [data.delivery?.method, data.delivery?.address?.state, store, totalPrice, hasCJAutoShipping, cjShippingCost])
 
   // Get the current shipping cost
   const shippingCost = calculateShippingCost()
+  const shippingLoading = cjShippingLoading
   const finalTotal = totalPrice - discountAmount + shippingCost
 
   const updateData = useCallback((updates: Partial<CheckoutData>) => {
@@ -851,6 +901,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     loading,
     error,
     shippingCost,
+    shippingLoading,
     finalTotal,
     discountAmount,
     appliedCoupon,

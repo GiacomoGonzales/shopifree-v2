@@ -353,6 +353,16 @@ export default function Dropshipping() {
         productData.hasVariations = true
         productData.variations = variations
       }
+
+      // Save CJ variant mapping for fulfillment (vid + sku per combination)
+      if (selectedProduct.variants.length > 0) {
+        productData.cjVariants = selectedProduct.variants.map(v => ({
+          variantKey: v.variantKey,
+          vid: v.vid,
+          sku: v.sku,
+          sellPrice: v.sellPrice,
+        }))
+      }
       await productService.create(store.id, productData as any)
       showToast('Producto importado con variantes', 'success')
       setSelectedProduct(null)
@@ -379,9 +389,9 @@ export default function Dropshipping() {
   const showingLabel = hasSearchResults ? `${total} productos encontrados` : 'Productos destacados'
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           {(selectedProduct || activeProvider) && (
             <button
@@ -416,7 +426,7 @@ export default function Dropshipping() {
 
       {!activeProvider ? (
         /* === PROVIDER SELECTION === */
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {PROVIDERS.map(provider => (
             <button
               key={provider.id}
@@ -451,7 +461,7 @@ export default function Dropshipping() {
         </div>
       ) : selectedProduct ? (
         /* === DETAIL / IMPORT VIEW === */
-        <div className="max-w-2xl mx-auto space-y-5">
+        <div className="max-w-2xl space-y-5">
           {/* Product preview */}
           <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">

@@ -17,13 +17,15 @@ interface Props {
   onMethodChange?: (method: 'pickup' | 'delivery') => void
   error?: string | null
   t: ThemeTranslations
+  cjShippingCost?: number | null
+  cjShippingLoading?: boolean
 }
 
 export interface DeliverySelectorRef {
   submit: () => boolean
 }
 
-const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, onMethodChange, error, t }, ref) => {
+const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, onMethodChange, error, t, cjShippingCost, cjShippingLoading }, ref) => {
   const { theme } = useTheme()
 
   const pickupEnabled = store.shipping?.pickupEnabled !== false
@@ -129,8 +131,9 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   })()
   const districtFieldLabel = districtLabel[countryCode]?.[storeLang] || districtLabel[countryCode]?.es || 'Distrito'
 
-  // Calculate shipping cost dynamically based on selected zone
-  const shippingCost = resolveShippingCost(store, subtotal, addressState || undefined)
+  // Calculate shipping cost dynamically based on selected zone (or CJ auto-shipping)
+  const baseShippingCost = resolveShippingCost(store, subtotal, addressState || undefined)
+  const shippingCost = (store.shipping?.cjAutoShipping && cjShippingCost != null) ? cjShippingCost : baseShippingCost
   const isFreeShipping = store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
 
   useImperativeHandle(ref, () => ({
@@ -265,7 +268,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                     className="text-sm font-medium"
                     style={{ color: isFreeShipping ? theme.colors.accent : theme.colors.primary }}
                   >
-                    {isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
+                    {cjShippingLoading ? '...' : isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
                   </span>
                 )}
               </div>
@@ -327,7 +330,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                       className="text-sm font-medium"
                       style={{ color: isFreeShipping ? theme.colors.accent : theme.colors.primary }}
                     >
-                      {isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
+                      {cjShippingLoading ? '...' : isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
                     </span>
                   )}
                 </div>

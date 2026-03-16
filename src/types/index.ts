@@ -235,6 +235,9 @@ export interface StoreShipping {
   allowedDistricts?: string[]   // lista de distritos: "Departamento|Provincia|Distrito"
   localCost?: number            // costo envío local (misma zona que la tienda)
   nationalCost?: number         // costo envío nacional (otras zonas)
+  // Dropshipping: auto-calculate from CJ freight + margin
+  cjAutoShipping?: boolean      // If true, use CJ freight cost instead of fixed cost for CJ products
+  cjShippingMargin?: number     // Extra amount to add on top of CJ freight (in store currency)
 }
 
 // ============================================
@@ -327,6 +330,7 @@ export interface Product {
 
   // === DROPSHIPPING ===
   cjProductId?: string            // CJ Dropshipping product ID
+  cjVariants?: CJVariantMap[]     // Maps variant combos to CJ vid/sku for fulfillment
 
   // === ESTADO ===
   active: boolean
@@ -350,6 +354,15 @@ export interface VariationOption {
   value: string                 // "Rojo", "XL"
   image?: string                // Imagen de esa variante
   available: boolean            // Si está disponible
+}
+
+// Maps a CJ variant combination to its vid/sku for order fulfillment
+// e.g. { variantKey: "Red-XL", vid: "abc123", sku: "CJ-SKU-001", sellPrice: 5.99 }
+export interface CJVariantMap {
+  variantKey: string            // "Cherry wood-IPhone11" — the combo identifier
+  vid: string                   // CJ variant ID needed for order creation
+  sku: string                   // CJ variant SKU
+  sellPrice: number             // CJ cost in USD
 }
 
 // Para RESTAURANTES: Modificadores
@@ -465,6 +478,13 @@ export interface Order {
 
   // Notas
   notes?: string
+
+  // Dropshipping fulfillment
+  cjOrderId?: string
+  trackingNumber?: string
+  trackingCarrier?: string
+  fulfillmentStatus?: 'none' | 'submitted' | 'shipped' | 'delivered' | 'failed'
+  fulfillmentError?: string
 
   createdAt: Date
   updatedAt: Date
