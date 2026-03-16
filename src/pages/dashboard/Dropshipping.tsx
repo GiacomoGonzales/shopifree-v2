@@ -337,27 +337,35 @@ export default function Dropshipping() {
         name: importName.trim(),
         slug,
         price: parseFloat(importPrice),
-        image: selectedProduct.image,
+        image: selectedProduct.image || '',
         images: selectedProduct.images?.slice(0, 10) || [],
         description: translatedDesc || selectedProduct.description || '',
         active: true,
         cjProductId: selectedProduct.pid,
-        sku: selectedProduct.sku || undefined,
-        weight: selectedProduct.weight || undefined,
         categoryId: selectedCategoryId || null,
       }
+      if (selectedProduct.sku) productData.sku = selectedProduct.sku
+      if (selectedProduct.weight) productData.weight = selectedProduct.weight
       if (variations && variations.length > 0) {
         productData.hasVariations = true
-        productData.variations = variations
+        // Strip undefined values from variation options
+        productData.variations = variations.map(v => ({
+          ...v,
+          options: v.options.map(o => {
+            const opt: Record<string, unknown> = { id: o.id, value: o.value, available: o.available }
+            if (o.image) opt.image = o.image
+            return opt
+          })
+        }))
       }
 
       // Save CJ variant mapping for fulfillment (vid + sku per combination)
       if (selectedProduct.variants.length > 0) {
         productData.cjVariants = selectedProduct.variants.map(v => ({
-          variantKey: v.variantKey,
-          vid: v.vid,
-          sku: v.sku,
-          sellPrice: v.sellPrice,
+          variantKey: v.variantKey || '',
+          vid: v.vid || '',
+          sku: v.sku || '',
+          sellPrice: v.sellPrice || 0,
         }))
       }
       await productService.create(store.id, productData as any)
