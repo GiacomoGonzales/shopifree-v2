@@ -167,6 +167,7 @@ export default function Dropshipping() {
   // Translation state
   const [translatedDesc, setTranslatedDesc] = useState<string>('')
   const [translating, setTranslating] = useState(false)
+  const [translatingName, setTranslatingName] = useState(false)
 
   // Import state
   const [importName, setImportName] = useState('')
@@ -199,32 +200,25 @@ export default function Dropshipping() {
     if (!store?.id || activeProvider !== 'cj') return
     if (featured.length > 0) return // already loaded
 
-    // Load featured products — fetch from several popular niches and mix them
-    const featuredKeywords = [
-      'wireless earbuds', 'led lights room', 'phone case iphone',
-      'skincare set', 'smart watch', 'yoga leggings',
-      'sunglasses polarized', 'portable charger', 'nail art',
-      'backpack travel',
-    ]
-    Promise.allSettled(
-      featuredKeywords.map(kw =>
-        cjPost({ action: 'search', keyword: kw, page: 1, pageSize: 8 })
-      )
-    ).then(results => {
-      const all: CJProduct[] = []
-      const seen = new Set<string>()
-      for (const r of results) {
-        if (r.status === 'fulfilled' && r.value.products) {
-          for (const p of r.value.products) {
-            if (!seen.has(p.pid)) {
-              seen.add(p.pid)
-              all.push(p)
+    // Load featured products — fetch 3 popular categories sequentially to avoid rate limits
+    const featuredKeywords = ['trending products', 'best seller accessories', 'new arrivals fashion']
+    const all: CJProduct[] = []
+    const seen = new Set<string>()
+
+    const loadSequentially = async () => {
+      for (const kw of featuredKeywords) {
+        try {
+          const data = await cjPost({ action: 'search', keyword: kw, page: 1, pageSize: 20 })
+          if (data.products) {
+            for (const p of data.products) {
+              if (!seen.has(p.pid)) { seen.add(p.pid); all.push(p) }
             }
           }
-        }
+        } catch { /* continue with next */ }
       }
       setFeatured(all)
-    }).finally(() => setLoadingFeatured(false))
+    }
+    loadSequentially().finally(() => setLoadingFeatured(false))
 
     // Load store categories
     categoryService.getAll(store.id).then(cats => setCategories(cats.filter(c => c.active)))
@@ -495,7 +489,31 @@ export default function Dropshipping() {
           {/* Edit fields */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre del producto</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium text-gray-700">Nombre del producto</label>
+                {!translatingName && (
+                  <button
+                    onClick={async () => {
+                      setTranslatingName(true)
+                      try {
+                        const lang = store?.language || 'es'
+                        const data = await cjPost({ action: 'translate', text: importName, targetLang: lang })
+                        if (data.translated) setImportName(data.translated)
+                      } catch { /* silent */ }
+                      finally { setTranslatingName(false) }
+                    }}
+                    className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
+                  >
+                    Traducir
+                  </button>
+                )}
+                {translatingName && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                    <span className="text-xs text-blue-400">Traduciendo...</span>
+                  </div>
+                )}
+              </div>
               <input
                 type="text"
                 value={importName}

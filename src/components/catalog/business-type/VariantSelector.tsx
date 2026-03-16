@@ -41,72 +41,90 @@ export default function VariantSelector({ variations, selected, onChange }: Vari
 
           {/* Options */}
           <div className="flex flex-wrap gap-2">
-            {variation.options.filter(opt => opt.available).map(option => {
-              const isSelected = selected[variation.name] === option.value
+            {(() => {
+              const availableOptions = variation.options.filter(opt => opt.available)
 
-              // Check if this is a color variation (simple heuristic)
-              const isColor = variation.name.toLowerCase().includes('color') ||
-                              variation.name.toLowerCase().includes('colour')
+              // Check if ALL options in this variation can be rendered as color swatches
+              // Only use swatches if every option has a recognized color — no mixing
+              const isColorVariation = variation.name.toLowerCase().includes('color') ||
+                                       variation.name.toLowerCase().includes('colour')
+              const allHaveColor = isColorVariation && availableOptions.every(opt => getColorValue(opt.value))
 
-              // Try to parse as color if it looks like a color
-              const colorValue = isColor ? getColorValue(option.value) : null
+              return availableOptions.map(option => {
+                const isSelected = selected[variation.name] === option.value
+                const colorValue = allHaveColor ? getColorValue(option.value) : null
 
-              if (colorValue) {
-                // Render as color swatch
+                if (colorValue) {
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleSelect(variation.name, option.value)}
+                      className="w-10 h-10 transition-all flex items-center justify-center"
+                      style={{
+                        backgroundColor: colorValue,
+                        borderRadius: theme.radius.full,
+                        border: isSelected
+                          ? `3px solid ${theme.colors.primary}`
+                          : `2px solid ${theme.colors.border}`,
+                        boxShadow: isSelected ? theme.shadows.md : 'none',
+                      }}
+                      title={option.value}
+                    >
+                      {isSelected && (
+                        <svg
+                          className="w-5 h-5"
+                          style={{ color: isLightColor(colorValue) ? '#000' : '#fff' }}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  )
+                }
+
+                // Option with image thumbnail
+                if (option.image) {
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleSelect(variation.name, option.value)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all"
+                      style={{
+                        backgroundColor: isSelected ? theme.colors.primary : 'transparent',
+                        color: isSelected ? theme.colors.textInverted : theme.colors.text,
+                        borderRadius: theme.radius.md,
+                        border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
+                      }}
+                    >
+                      <img src={option.image} alt={option.value} className="w-6 h-6 rounded object-cover" />
+                      {option.value}
+                    </button>
+                  )
+                }
+
+                // Text button
                 return (
                   <button
                     key={option.id}
                     type="button"
                     onClick={() => handleSelect(variation.name, option.value)}
-                    className="w-10 h-10 transition-all flex items-center justify-center"
+                    className="px-4 py-2 text-sm font-medium transition-all"
                     style={{
-                      backgroundColor: colorValue,
-                      borderRadius: theme.radius.full,
-                      border: isSelected
-                        ? `3px solid ${theme.colors.primary}`
-                        : `2px solid ${theme.colors.border}`,
-                      boxShadow: isSelected ? theme.shadows.md : 'none',
+                      backgroundColor: isSelected ? theme.colors.primary : 'transparent',
+                      color: isSelected ? theme.colors.textInverted : theme.colors.text,
+                      borderRadius: theme.radius.md,
+                      border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
                     }}
-                    title={option.value}
                   >
-                    {isSelected && (
-                      <svg
-                        className="w-5 h-5"
-                        style={{
-                          color: isLightColor(colorValue) ? '#000' : '#fff',
-                        }}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
+                    {option.value}
                   </button>
                 )
-              }
-
-              // Render as text button
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => handleSelect(variation.name, option.value)}
-                  className="px-4 py-2 text-sm font-medium transition-all"
-                  style={{
-                    backgroundColor: isSelected
-                      ? theme.colors.primary
-                      : 'transparent',
-                    color: isSelected
-                      ? theme.colors.textInverted
-                      : theme.colors.text,
-                    borderRadius: theme.radius.md,
-                    border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
-                  }}
-                >
-                  {option.value}
-                </button>
-              )
-            })}
+              })
+            })()}
           </div>
         </div>
       ))}
