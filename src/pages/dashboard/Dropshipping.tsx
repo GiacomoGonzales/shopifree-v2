@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService } from '../../lib/firebase'
@@ -199,29 +199,23 @@ export default function Dropshipping() {
   }, [store?.id])
 
   // Load featured products when CJ is selected
+  const featuredAbort = useRef(false)
+
   useEffect(() => {
     if (!store?.id || activeProvider !== 'cj') return
     if (featured.length > 0) return // already loaded
 
-    // Load featured products — fetch 3 popular categories sequentially to avoid rate limits
-    const featuredKeywords = ['trending products', 'best seller accessories', 'new arrivals fashion']
-    const all: CJProduct[] = []
-    const seen = new Set<string>()
+    featuredAbort.current = false
 
-    const loadSequentially = async () => {
-      for (const kw of featuredKeywords) {
-        try {
-          const data = await cjPost({ action: 'search', keyword: kw, page: 1, pageSize: 20 })
-          if (data.products) {
-            for (const p of data.products) {
-              if (!seen.has(p.pid)) { seen.add(p.pid); all.push(p) }
-            }
-          }
-        } catch { /* continue with next */ }
-      }
-      setFeatured(all)
-    }
-    loadSequentially().finally(() => setLoadingFeatured(false))
+    // Single request for featured products to avoid rate limits
+    cjPost({ action: 'search', keyword: 'best seller trending', page: 1, pageSize: 40 })
+      .then(data => {
+        if (!featuredAbort.current && data.products) {
+          setFeatured(data.products)
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!featuredAbort.current) setLoadingFeatured(false) })
 
     // Load store categories
     categoryService.getAll(store.id).then(cats => setCategories(cats.filter(c => c.active)))
@@ -230,6 +224,7 @@ export default function Dropshipping() {
   const search = async (newPage = 1, keywordOverride?: string) => {
     const searchKeyword = keywordOverride ?? (activeCategory || keyword.trim())
     if (!searchKeyword) return
+    featuredAbort.current = true
     setSearching(true)
     try {
       const data = await cjPost({ action: 'search', keyword: searchKeyword, page: newPage, pageSize: 20 })
@@ -252,8 +247,10 @@ export default function Dropshipping() {
       setTotal(0)
       return
     }
+    featuredAbort.current = true
     setActiveCategory(cat.keyword)
     setKeyword('')
+    setLoadingFeatured(false)
     search(1, cat.keyword)
   }
 
