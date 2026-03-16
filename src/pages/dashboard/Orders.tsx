@@ -935,9 +935,7 @@ export default function Orders() {
               </div>
 
               {/* CJ Dropshipping fulfillment */}
-              {selectedOrder.items?.some(item =>
-                orders.length > 0 // always render if order has items, actual CJ check is server-side
-              ) && (
+              {selectedOrder.items?.length > 0 && (
                 <div className="border-t border-gray-200 pt-4">
                   {selectedOrder.cjOrderId ? (
                     <div className="bg-blue-50 rounded-xl p-4 space-y-2">
