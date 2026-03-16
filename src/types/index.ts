@@ -238,6 +238,9 @@ export interface StoreShipping {
   // Dropshipping: auto-calculate from CJ freight + margin
   cjAutoShipping?: boolean      // If true, use CJ freight cost instead of fixed cost for CJ products
   cjShippingMargin?: number     // Extra amount to add on top of CJ freight (in store currency)
+  // International shipping
+  internationalShipping?: boolean  // Allow customers from other countries
+  internationalCost?: number       // Flat shipping cost for international orders
 }
 
 // ============================================
@@ -450,6 +453,7 @@ export interface Order {
   // Delivery
   deliveryMethod?: 'pickup' | 'delivery'
   deliveryAddress?: {
+    country?: string            // Country code (PE, AR, MX) — only for international
     state?: string              // Departamento/Estado/Provincia
     city?: string               // Provincia/Municipio/Ciudad
     district?: string           // Distrito/Colonia/Barrio (PE, MX, etc.)
@@ -510,6 +514,8 @@ export interface OrderItem {
     }[]
   }[]
   itemTotal: number
+  // Dropshipping
+  cjProductId?: string            // Set if this item is from CJ Dropshipping
 }
 
 // ============================================

@@ -453,92 +453,6 @@ async function handleOrderStatus(storeId: string, body: Record<string, any>) {
   }
 }
 
-// Calculate checkout shipping cost from CJ freight for cart items
-async function handleCheckoutShipping(storeId: string, body: Record<string, any>) {
-  const { items, countryCode } = body
-  if (!items?.length || !countryCode) {
-    return { status: 400, data: { error: 'items and countryCode are required' } }
-  }
-
-  const firestore = getDb()
-  const storeDoc = await firestore.collection('stores').doc(storeId).get()
-  const storeData = storeDoc.data()
-  const margin = storeData?.shipping?.cjShippingMargin || 0
-  const currency = storeData?.currency || 'USD'
-
-  // Get exchange rate
-  let rate = 1
-  if (currency !== 'USD') {
-    try {
-      const rateRes = await fetch('https://open.er-api.com/v6/latest/USD')
-      const rateData = await rateRes.json()
-      if (rateData.result === 'success' && rateData.rates?.[currency]) {
-        rate = rateData.rates[currency]
-      }
-    } catch { /* use rate = 1 */ }
-  }
-
-  // Collect CJ products from cart items
-  const cjProducts: { vid: string; quantity: number }[] = []
-
-  for (const item of items) {
-    const productDoc = await firestore.doc(`stores/${storeId}/products/${item.productId}`).get()
-    if (!productDoc.exists) continue
-    const product = productDoc.data()!
-    if (!product.cjProductId) continue
-
-    const cjVariants = product.cjVariants || []
-    let vid: string | undefined
-
-    if (cjVariants.length > 0 && item.selectedVariations?.length) {
-      const selectedKey = item.selectedVariations.map((v: any) => v.value).join('-')
-      const match = cjVariants.find((cv: any) => cv.variantKey === selectedKey)
-      vid = match?.vid || cjVariants[0]?.vid
-    } else if (cjVariants.length > 0) {
-      vid = cjVariants[0].vid
-    }
-
-    if (vid) {
-      cjProducts.push({ vid, quantity: item.quantity || 1 })
-    }
-  }
-
-  if (cjProducts.length === 0) {
-    return { status: 200, data: { shippingCost: 0, hasCJProducts: false } }
-  }
-
-  // Call CJ freight API
-  const data = await cjPost(storeId, '/logistic/freightCalculate', {
-    endCountryCode: countryCode,
-    products: cjProducts,
-  })
-
-  if (data.code !== 200 || !data.data?.length) {
-    return { status: 200, data: { shippingCost: 0, hasCJProducts: true, error: 'Could not calculate CJ freight' } }
-  }
-
-  // Get cheapest option
-  const options = (data.data || [])
-    .map((opt: any) => parseFloat(String(opt.logisticPrice || '0')) || 0)
-    .filter((p: number) => p > 0)
-    .sort((a: number, b: number) => a - b)
-
-  const cheapestUSD = options[0] || 0
-  const costInLocal = Math.ceil(cheapestUSD * rate)
-  const totalShipping = costInLocal + margin
-
-  return {
-    status: 200,
-    data: {
-      shippingCost: totalShipping,
-      hasCJProducts: true,
-      cjFreightUSD: cheapestUSD,
-      cjFreightLocal: costInLocal,
-      margin,
-    }
-  }
-}
-
 // Translate text using Google Translate (free, no auth needed server-side)
 async function handleTranslate(_storeId: string, body: Record<string, any>) {
   const { text, targetLang } = body
@@ -611,9 +525,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break
       case 'translate':
         result = await handleTranslate(storeId, body)
-        break
-      case 'checkoutShipping':
-        result = await handleCheckoutShipping(storeId, body)
         break
       case 'createOrder':
         result = await handleCreateOrder(storeId, body)

@@ -891,7 +891,12 @@ export default function Orders() {
                   {selectedOrder.items?.map((item, index) => (
                     <div key={index} className="p-4 flex justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">{item.productName}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-900">{item.productName}</p>
+                          {item.cjProductId && (
+                            <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-semibold rounded">CJ</span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">x{item.quantity}</p>
                       </div>
                       <p className="font-semibold text-[#2d6cb5]">
@@ -935,7 +940,7 @@ export default function Orders() {
               </div>
 
               {/* CJ Dropshipping fulfillment */}
-              {selectedOrder.items?.length > 0 && (
+              {selectedOrder.items?.some(item => item.cjProductId) && (
                 <div className="border-t border-gray-200 pt-4">
                   {selectedOrder.cjOrderId ? (
                     <div className="bg-blue-50 rounded-xl p-4 space-y-2">

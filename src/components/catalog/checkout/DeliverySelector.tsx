@@ -4,7 +4,7 @@ import type { DeliveryData } from '../../../hooks/useCheckout'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 import { formatPrice } from '../../../lib/currency'
-import { statesByCountry, stateLabel, cityLabel } from '../../../data/states'
+import { statesByCountry, stateLabel, cityLabel, countries } from '../../../data/states'
 import { citiesByState } from '../../../data/cities'
 import { getDistricts, hasDistricts, districtLabel } from '../../../data/districts'
 import { resolveShippingCost } from '../../../lib/shipping'
@@ -17,15 +17,13 @@ interface Props {
   onMethodChange?: (method: 'pickup' | 'delivery') => void
   error?: string | null
   t: ThemeTranslations
-  cjShippingCost?: number | null
-  cjShippingLoading?: boolean
 }
 
 export interface DeliverySelectorRef {
   submit: () => boolean
 }
 
-const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, onMethodChange, error, t, cjShippingCost, cjShippingLoading }, ref) => {
+const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, subtotal, onSubmit, onMethodChange, error, t }, ref) => {
   const { theme } = useTheme()
 
   const pickupEnabled = store.shipping?.pickupEnabled !== false
@@ -42,6 +40,8 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   }
 
   const [method, setMethod] = useState<'pickup' | 'delivery'>(getDefaultMethod())
+  const storeCountry = store.location?.country || 'PE'
+  const [selectedCountry, setSelectedCountry] = useState(data?.address?.country || storeCountry)
   const [addressState, setAddressState] = useState(data?.address?.state || '')
   const [street, setStreet] = useState(data?.address?.street || '')
   const [city, setCity] = useState(data?.address?.city || '')
@@ -49,14 +49,17 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   const [reference, setReference] = useState(data?.address?.reference || '')
   const [observations, setObservations] = useState(data?.observations || '')
 
-  // Get states for the store's country
-  const countryCode = store.location?.country || 'PE'
+  const isInternational = !!store.shipping?.internationalShipping
+
+  // Get states for the selected country (or store's country)
+  const isCustomerInternational = isInternational && selectedCountry !== storeCountry
+  const countryCode = isInternational ? selectedCountry : storeCountry
   const allStates = statesByCountry[countryCode] || []
   const storeLang = (store.language?.substring(0, 2) || 'es') as 'es' | 'en' | 'pt'
   const stateFieldLabel = stateLabel[countryCode]?.[storeLang] || stateLabel[countryCode]?.es || 'Estado'
 
-  // Filter states based on coverage mode
-  const coverageMode = store.shipping?.coverageMode || 'nationwide'
+  // No zone restrictions for international customers
+  const coverageMode = isCustomerInternational ? 'nationwide' : (store.shipping?.coverageMode || 'nationwide')
   const allowedZones = store.shipping?.allowedZones || []
   const allowedProvinces = store.shipping?.allowedProvinces || []
   const allowedDistricts = store.shipping?.allowedDistricts || []
@@ -131,10 +134,11 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   })()
   const districtFieldLabel = districtLabel[countryCode]?.[storeLang] || districtLabel[countryCode]?.es || 'Distrito'
 
-  // Calculate shipping cost dynamically based on selected zone (or CJ auto-shipping)
-  const baseShippingCost = resolveShippingCost(store, subtotal, addressState || undefined)
-  const shippingCost = (store.shipping?.cjAutoShipping && cjShippingCost != null) ? cjShippingCost : baseShippingCost
-  const isFreeShipping = store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
+  // Calculate shipping cost — international uses flat rate, national uses zone-based
+  const shippingCost = isCustomerInternational
+    ? (store.shipping?.internationalCost || store.shipping?.cost || 0)
+    : resolveShippingCost(store, subtotal, addressState || undefined)
+  const isFreeShipping = !isCustomerInternational && store.shipping?.enabled && store.shipping.freeAbove && subtotal >= store.shipping.freeAbove
 
   useImperativeHandle(ref, () => ({
     submit: () => {
@@ -156,6 +160,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
       const deliveryData: DeliveryData = {
         method,
         address: method === 'delivery' ? {
+          ...(isInternational ? { country: selectedCountry } : {}),
           state: resolvedState,
           street,
           city: resolvedCity,
@@ -175,6 +180,9 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
     color: theme.colors.text,
     borderRadius: theme.radius.md
   }
+
+  // Force readable colors on native <option> dropdowns (dark themes break them)
+  const selectOptionStyle: React.CSSProperties = { color: '#1f2937', backgroundColor: '#ffffff' }
 
   const optionStyle = (selected: boolean) => ({
     backgroundColor: selected ? `${theme.colors.primary}10` : theme.colors.surface,
@@ -268,7 +276,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                     className="text-sm font-medium"
                     style={{ color: isFreeShipping ? theme.colors.accent : theme.colors.primary }}
                   >
-                    {cjShippingLoading ? '...' : isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
+                    {isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
                   </span>
                 )}
               </div>
@@ -330,7 +338,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                       className="text-sm font-medium"
                       style={{ color: isFreeShipping ? theme.colors.accent : theme.colors.primary }}
                     >
-                      {cjShippingLoading ? '...' : isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
+                      {isFreeShipping ? t.freeShipping : shippingCost > 0 ? `+${formatPrice(shippingCost, store.currency)}` : t.freeShipping}
                     </span>
                   )}
                 </div>
@@ -359,6 +367,22 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
             {t.deliveryAddress}
           </h4>
 
+          {/* 0. Country select (international) */}
+          {isInternational && (
+            <select
+              value={selectedCountry}
+              onChange={(e) => { setSelectedCountry(e.target.value); setAddressState(''); setCity(''); setDistrict('') }}
+              className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+              style={inputStyle}
+            >
+              {countries.map(c => (
+                <option key={c.code} value={c.code} style={selectOptionStyle}>
+                  {c.name[storeLang === 'en' ? 'en' : 'es']}
+                </option>
+              ))}
+            </select>
+          )}
+
           {/* 1. State/Department select */}
           {showStateSelect && (
             <select
@@ -371,9 +395,9 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
               }}
               required
             >
-              <option value="">{stateFieldLabel}...</option>
+              <option value="" style={selectOptionStyle}>{stateFieldLabel}...</option>
               {states.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s} style={selectOptionStyle}>{s}</option>
               ))}
             </select>
           )}
@@ -392,11 +416,11 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                   }}
                   required
                 >
-                  <option value="">{cityFieldLabel}...</option>
+                  <option value="" style={selectOptionStyle}>{cityFieldLabel}...</option>
                   {availableCities.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c} style={selectOptionStyle}>{c}</option>
                   ))}
-                  <option value="__other__">{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outra...' : 'Otra...'}</option>
+                  <option value="__other__" style={selectOptionStyle}>{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outra...' : 'Otra...'}</option>
                 </select>
                 {(city === '__other__' || (city && !availableCities.includes(city))) && (
                   <input
@@ -445,12 +469,12 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
                 }}
                 required={availableDistricts.length > 0}
               >
-                <option value="">{districtFieldLabel}...</option>
+                <option value="" style={selectOptionStyle}>{districtFieldLabel}...</option>
                 {availableDistricts.map((d) => (
-                  <option key={d} value={d}>{d}</option>
+                  <option key={d} value={d} style={selectOptionStyle}>{d}</option>
                 ))}
                 {availableDistricts.length > 0 && (
-                  <option value="__other__">{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outro...' : 'Otro...'}</option>
+                  <option value="__other__" style={selectOptionStyle}>{storeLang === 'en' ? 'Other...' : storeLang === 'pt' ? 'Outro...' : 'Otro...'}</option>
                 )}
               </select>
               {availableDistricts.length > 0 && (district === '__other__' || (district && !availableDistricts.includes(district))) && (
