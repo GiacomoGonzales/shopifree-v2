@@ -764,8 +764,7 @@ export default function Dropshipping() {
               value={keyword}
               onChange={e => { setKeyword(e.target.value); if (activeCategory) setActiveCategory('') }}
               placeholder="Buscar productos (ej: camiseta, reloj, funda)..."
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
-              autoFocus
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-base sm:text-sm"
             />
             <button
               type="submit"
