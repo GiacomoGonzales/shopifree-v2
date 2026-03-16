@@ -233,14 +233,32 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                 )}
               </div>
 
-              {activeProduct.description && (
-                <p
-                  className="leading-relaxed"
-                  style={{ color: theme.colors.textMuted }}
-                >
-                  {activeProduct.description}
-                </p>
-              )}
+              {activeProduct.description && (() => {
+                // Check if description contains HTML tags
+                const hasHtml = /<[a-z][\s\S]*>/i.test(activeProduct.description)
+                if (hasHtml) {
+                  // Clean CJ descriptions: remove img tags, empty divs, excessive whitespace
+                  const cleaned = activeProduct.description
+                    .replace(/<img[^>]*>/gi, '')
+                    .replace(/<div[^>]*>\s*<\/div>/gi, '')
+                    .replace(/(<br\s*\/?>\s*){3,}/gi, '<br/><br/>')
+                    .replace(/Product Image:?/gi, '')
+                    .trim()
+                  if (!cleaned || cleaned.replace(/<[^>]*>/g, '').trim().length === 0) return null
+                  return (
+                    <div
+                      className="leading-relaxed text-sm prose prose-sm max-w-none"
+                      style={{ color: theme.colors.textMuted }}
+                      dangerouslySetInnerHTML={{ __html: cleaned }}
+                    />
+                  )
+                }
+                return (
+                  <p className="leading-relaxed" style={{ color: theme.colors.textMuted }}>
+                    {activeProduct.description}
+                  </p>
+                )
+              })()}
             </div>
 
             {/* Price */}
