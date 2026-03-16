@@ -46,12 +46,12 @@ export default function ProductGallery({ images, productName, variant = 'light' 
   if (images.length <= 1) {
     const isDark = variant === 'dark'
     return (
-      <div className={`aspect-[4/5] relative ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
+      <div className={`aspect-square relative ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
         {images[0] ? (
           <img
             src={optimizeImage(images[0], 'gallery')}
             alt={productName}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -83,12 +83,12 @@ export default function ProductGallery({ images, productName, variant = 'light' 
           <div
             key={index}
             ref={(el) => { imageRefs.current[index] = el }}
-            className="w-full flex-shrink-0 snap-center aspect-[4/5]"
+            className="w-full flex-shrink-0 snap-center aspect-square"
           >
             <img
               src={optimizeImage(image, 'gallery')}
               alt={`${productName} - ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               loading={index === 0 ? 'eager' : 'lazy'}
             />
           </div>

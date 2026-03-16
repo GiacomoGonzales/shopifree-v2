@@ -237,17 +237,19 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                 // Check if description contains HTML tags
                 const hasHtml = /<[a-z][\s\S]*>/i.test(activeProduct.description)
                 if (hasHtml) {
-                  // Clean CJ descriptions: remove img tags, empty divs, excessive whitespace
+                  // Clean CJ descriptions: remove img tags, empty divs, inline colors, excessive whitespace
                   const cleaned = activeProduct.description
                     .replace(/<img[^>]*>/gi, '')
                     .replace(/<div[^>]*>\s*<\/div>/gi, '')
                     .replace(/(<br\s*\/?>\s*){3,}/gi, '<br/><br/>')
                     .replace(/Product Image:?/gi, '')
+                    .replace(/color\s*:\s*[^;"']+/gi, `color: ${theme.colors.textMuted}`)
+                    .replace(/background(-color)?\s*:\s*[^;"']+/gi, '')
                     .trim()
                   if (!cleaned || cleaned.replace(/<[^>]*>/g, '').trim().length === 0) return null
                   return (
                     <div
-                      className="leading-relaxed text-sm prose prose-sm max-w-none"
+                      className="leading-relaxed text-sm prose prose-sm max-w-none [&_*]:!text-inherit"
                       style={{ color: theme.colors.textMuted }}
                       dangerouslySetInnerHTML={{ __html: cleaned }}
                     />

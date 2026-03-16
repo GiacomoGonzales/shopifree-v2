@@ -667,31 +667,10 @@ export default function DashboardLayout() {
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 shadow-sm">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <Link to={localePath('/dashboard')} className="flex items-center">
-                <img src="/newlogo.png" alt="Shopifree" className="h-8" />
-              </Link>
-              <Link
-                to={localePath('/dashboard/plan')}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all hover:opacity-80 ${
-                  store?.plan === 'business'
-                    ? 'bg-purple-50 text-purple-600'
-                    : store?.plan === 'pro'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {store?.plan === 'business' ? (
-                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                ) : store?.plan === 'pro' ? (
-                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                ) : (
-                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                )}
-                {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
-              </Link>
-            </div>
+          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
+            <Link to={localePath('/dashboard')} className="flex items-center">
+              <img src="/newlogo.png" alt="Shopifree" className="h-7" />
+            </Link>
             {isAdmin && (
               <Link
                 to={localePath('/admin')}
@@ -708,7 +687,55 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:pl-64 lg:pt-0" style={{ paddingTop: 'calc(3rem + env(safe-area-inset-top))' }}>
+      <main className="lg:pl-64 lg:!pt-0" style={{ paddingTop: isNative ? 'calc(3rem + env(safe-area-inset-top))' : '3rem' }}>
+        {/* Desktop top bar */}
+        {store && (
+          <div className="hidden lg:flex items-center justify-between px-8 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <Link
+                to={localePath('/dashboard/plan')}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  store.plan === 'business' ? 'bg-amber-100 text-amber-700' :
+                  store.plan === 'pro' ? 'bg-blue-100 text-blue-700' :
+                  'bg-gray-100 text-gray-500'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  store.plan === 'business' ? 'bg-amber-500' :
+                  store.plan === 'pro' ? 'bg-blue-500' :
+                  'bg-gray-400'
+                }`} />
+                {store.plan === 'business' ? 'Business' : store.plan === 'pro' ? 'Pro' : 'Free'}
+              </Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-[#1e3a5f] hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                {store.customDomain || `${store.subdomain}.shopifree.app`}
+              </a>
+              <button
+                onClick={() => setChatOpen(!chatOpen)}
+                className="relative p-2 text-gray-400 hover:text-[#1e3a5f] hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {chatUnread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {chatUnread > 9 ? '9+' : chatUnread}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
         <div className="p-4 sm:p-6 lg:pt-4 lg:pb-8 lg:px-8">
           {store && <PlanBanner store={store} />}
           <Outlet />

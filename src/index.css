@@ -12,6 +12,7 @@
 /* Custom base styles */
 html {
   background-color: #fafbfc;
+  scrollbar-gutter: stable;
 }
 
 body {

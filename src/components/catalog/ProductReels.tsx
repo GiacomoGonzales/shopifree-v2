@@ -565,11 +565,24 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
               )}
             </div>
 
-            {(product.shortDescription || product.description) && (
-              <p className="text-sm text-white/75 line-clamp-2 mb-4 leading-relaxed">
-                {product.shortDescription || product.description}
-              </p>
-            )}
+            {(product.shortDescription || product.description) && (() => {
+              const raw = product.shortDescription || product.description || ''
+              const hasHtml = /<[a-z][\s\S]*>/i.test(raw)
+              if (!hasHtml) return (
+                <p className="text-sm text-white/75 line-clamp-2 mb-4 leading-relaxed">{raw}</p>
+              )
+              // Strip all HTML tags for reel view — show plain text only
+              const text = raw
+                .replace(/<img[^>]*>/gi, '')
+                .replace(/Product Image:?/gi, '')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+              if (!text) return null
+              return (
+                <p className="text-sm text-white/75 line-clamp-2 mb-4 leading-relaxed">{text}</p>
+              )
+            })()}
 
             {/* Action buttons */}
             <div className="flex gap-3">
