@@ -459,6 +459,7 @@ export interface Order {
     district?: string           // Distrito/Colonia/Barrio (PE, MX, etc.)
     street: string              // Dirección/Calle
     reference?: string          // Referencia
+    zipCode?: string            // Código postal
   }
 
   // Totales

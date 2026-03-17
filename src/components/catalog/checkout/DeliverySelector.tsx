@@ -47,6 +47,7 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   const [city, setCity] = useState(data?.address?.city || '')
   const [district, setDistrict] = useState(data?.address?.district || '')
   const [reference, setReference] = useState(data?.address?.reference || '')
+  const [zipCode, setZipCode] = useState(data?.address?.zipCode || '')
   const [observations, setObservations] = useState(data?.observations || '')
 
   const isInternational = !!store.shipping?.internationalShipping
@@ -165,7 +166,8 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
           street,
           city: resolvedCity,
           district: district || undefined,
-          reference: reference || undefined
+          reference: reference || undefined,
+          zipCode: zipCode || undefined
         } : undefined,
         observations: observations || undefined
       }
@@ -516,6 +518,16 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
             className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
             style={inputStyle}
             placeholder={t.referenceOptional}
+          />
+
+          {/* 6. Zip code (optional) */}
+          <input
+            type="text"
+            value={zipCode}
+            onChange={(e) => setZipCode(e.target.value)}
+            className="w-full px-4 py-3 border outline-none focus:ring-2 transition-all"
+            style={inputStyle}
+            placeholder={t.zipCode}
           />
         </div>
       )}

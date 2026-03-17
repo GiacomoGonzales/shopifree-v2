@@ -981,7 +981,7 @@
     },
     "custom": {
       "title": "Dominio personalizado",
-      "description": "URL profesional como <strong>www.tutienda.com</strong>",
+      "description": "URL profesional como <strong>tutienda.com</strong>. No incluyas www.",
       "proBadge": "PRO",
       "proPlan": "Plan Pro",
       "upgradeMessage": "Mejora tu plan para conectar tu dominio.",

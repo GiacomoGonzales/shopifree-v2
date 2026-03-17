@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { userService, storeService } from '../../lib/firebase'
-import { createSubdomain } from '../../lib/subdomain'
+
 import { BUSINESS_TYPES, type BusinessType } from '../../config/businessTypes'
 import { countries, currencyByCountry, phoneCodeByCountry } from '../../data/states'
 import LanguageSelector from '../../components/common/LanguageSelector'
@@ -231,14 +231,6 @@ export default function Register() {
         ...(!isAdmin && { trialEndsAt }),
         businessType,
       })
-
-      // Create subdomain in Vercel (non-blocking)
-      try {
-        await createSubdomain(subdomain)
-        console.log('[Register] Subdominio creado:', `${subdomain}.shopifree.app`)
-      } catch (subdomainError) {
-        console.warn('[Register] Error creando subdominio (no bloqueante):', subdomainError)
-      }
 
       // Send welcome email (non-blocking, fire-and-forget)
       fetch('/api/send-email', {

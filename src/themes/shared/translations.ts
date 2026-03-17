@@ -73,6 +73,7 @@ export interface ThemeTranslations {
   city: string
   reference: string
   referenceOptional: string
+  zipCode: string
   storeAddress: string
 
   // Payment
@@ -303,6 +304,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     city: 'Ciudad',
     reference: 'Referencia',
     referenceOptional: 'ej: cerca del parque',
+    zipCode: 'Codigo postal (opcional)',
     storeAddress: 'Direccion de la tienda',
 
     // Payment
@@ -532,6 +534,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     city: 'City',
     reference: 'Reference',
     referenceOptional: 'e.g: near the park',
+    zipCode: 'Zip code (optional)',
     storeAddress: 'Store address',
 
     // Payment
@@ -761,6 +764,7 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     city: 'Cidade',
     reference: 'Referencia',
     referenceOptional: 'ex: perto do parque',
+    zipCode: 'CEP (opcional)',
     storeAddress: 'Endereco da loja',
 
     // Payment

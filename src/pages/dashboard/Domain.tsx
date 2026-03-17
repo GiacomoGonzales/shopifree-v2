@@ -110,7 +110,7 @@ export default function Domain() {
 
     // Validar formato de dominio
     const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
-    const cleanDomain = customDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
+    const cleanDomain = customDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
 
     if (!cleanDomain) {
       showToast('Ingresa un dominio válido', 'error')
@@ -443,7 +443,7 @@ export default function Domain() {
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
                           />
                           <p className="text-xs text-gray-500 mt-1">
-                            {t('domain.custom.domainHint', 'Ingresa el dominio que deseas conectar (ej: mitienda.com)')}
+                            {t('domain.custom.domainHint', 'Ingresa tu dominio sin www (ej: mitienda.com, NO www.mitienda.com)')}
                           </p>
                         </div>
                         <button

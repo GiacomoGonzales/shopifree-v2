@@ -99,6 +99,7 @@ export interface DeliveryData {
     district?: string
     street: string
     reference?: string
+    zipCode?: string
   }
   observations?: string
 }

@@ -378,9 +378,13 @@ async function handleCreateOrder(storeId: string, body: Record<string, any>) {
     return { status: 400, data: { error: 'No CJ products found in this order' } }
   }
 
-  // Build address fields
+  // Build address fields — include district for precise delivery (important for PE, MX, CO, etc.)
   const addr = order.deliveryAddress
-  const shippingAddress = [addr.street, addr.reference].filter(Boolean).join(', ')
+  const addressParts = [addr.street, addr.district, addr.reference].filter(Boolean)
+  const shippingAddress = addressParts.join(', ')
+
+  // Use customer's country if available, fallback to store's country
+  const shippingCountryCode = addr.country || countryCode
 
   // Create order on CJ
   const token = await getCJToken(storeId, true) // Require store's own key for orders
@@ -392,13 +396,14 @@ async function handleCreateOrder(storeId: string, body: Record<string, any>) {
     },
     body: JSON.stringify({
       orderNumber: order.orderNumber,
-      shippingZip: '',
-      shippingCountryCode: countryCode,
+      shippingZip: addr.zipCode || '',
+      shippingCountryCode,
       shippingProvince: addr.state || '',
       shippingCity: addr.city || '',
       shippingAddress,
       shippingCustomerName: order.customer.name || '',
       shippingPhone: order.customer.phone || '',
+      shippingCustomerEmail: order.customer.email || '',
       products: cjProducts,
     })
   })

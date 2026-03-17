@@ -980,7 +980,7 @@
     },
     "custom": {
       "title": "Custom domain",
-      "description": "Professional URL like <strong>www.yourstore.com</strong>",
+      "description": "Professional URL like <strong>yourstore.com</strong>. Do not include www.",
       "proBadge": "PRO",
       "proPlan": "Pro Plan",
       "upgradeMessage": "Upgrade your plan to connect your domain.",

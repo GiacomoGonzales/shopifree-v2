@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
-import { validateSubdomain, createSubdomain, deleteSubdomain } from '../../lib/subdomain'
+import { validateSubdomain } from '../../lib/subdomain'
 import type { Store, StoreLocation, StoreShipping } from '../../types'
 import { statesByCountry, stateLabel, cityLabel, phoneCodeByCountry, countries } from '../../data/states'
 import { citiesByState } from '../../data/cities'
@@ -240,36 +240,21 @@ export default function Settings() {
         return
       }
 
-      // 1. Create new subdomain in Vercel (non-blocking)
-      try {
-        await createSubdomain(subdomain)
-      } catch (vercelError) {
-        console.warn('[Settings] Error creating subdomain in Vercel:', vercelError)
-        // Continue anyway - subdomain might already exist or Vercel will handle it
-      }
-
-      // 2. Update store document with new subdomain
+      // 1. Update store document with new subdomain
       await updateDoc(doc(db, 'stores', store.id), {
         subdomain,
         updatedAt: new Date()
       })
 
-      // 3. Create new subdomain document in Firestore
+      // 2. Create new subdomain document in Firestore
       await setDoc(doc(db, 'subdomains', subdomain), {
         storeId: store.id,
         createdAt: new Date()
       })
 
-      // 4. Delete old subdomain document from Firestore
+      // 3. Delete old subdomain document from Firestore
       if (originalSubdomain) {
         await deleteDoc(doc(db, 'subdomains', originalSubdomain))
-      }
-
-      // 5. Delete old subdomain from Vercel (non-blocking)
-      if (originalSubdomain) {
-        deleteSubdomain(originalSubdomain).catch(err => {
-          console.warn('[Settings] Error deleting old subdomain from Vercel:', err)
-        })
       }
 
       setOriginalSubdomain(subdomain)
