@@ -379,12 +379,12 @@ async function handleCreateOrder(storeId: string, body: Record<string, any>) {
   }
 
   // Build address fields — include district for precise delivery (important for PE, MX, CO, etc.)
-  const addr = order.deliveryAddress
+  const addr = order.deliveryAddress || {}
   const addressParts = [addr.street, addr.district, addr.reference].filter(Boolean)
   const shippingAddress = addressParts.join(', ')
 
-  // Use customer's country if available, fallback to store's country
-  const shippingCountryCode = addr.country || countryCode
+  // Use customer's country if available, fallback to store's country, then 'PE'
+  const shippingCountryCode = addr?.country || countryCode || 'PE'
 
   // Create order on CJ
   const token = await getCJToken(storeId, true) // Require store's own key for orders
