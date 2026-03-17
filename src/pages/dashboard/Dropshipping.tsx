@@ -141,7 +141,7 @@ export default function Dropshipping() {
       id: 'printful',
       name: 'Printful',
       description: 'Print on demand: camisetas, tazas, posters con tu diseño. Bodegas en USA, EU y Mexico. Entrega 3-7 dias.',
-      logo: 'https://www.printful.com/static/images/layout/printful-logo.svg',
+      logo: '/printful-logo.jpg',
       active: true,
     },
     {
