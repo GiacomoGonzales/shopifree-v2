@@ -259,6 +259,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       if (item.product.cjProductId) {
         orderItem.cjProductId = item.product.cjProductId
       }
+      if (item.product.printfulProductId) {
+        orderItem.printfulProductId = item.product.printfulProductId
+      }
 
       return orderItem
     })

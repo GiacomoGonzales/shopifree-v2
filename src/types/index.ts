@@ -191,6 +191,7 @@ export interface StoreIntegrations {
   tiktokPixel?: string        // CXXXXXXXXX
   googleSearchConsole?: string // verification code
   cjApiKey?: string           // CJ Dropshipping API key
+  printfulToken?: string      // Printful API private token
 }
 
 export interface StorePayments {
@@ -334,6 +335,8 @@ export interface Product {
   // === DROPSHIPPING ===
   cjProductId?: string            // CJ Dropshipping product ID
   cjVariants?: CJVariantMap[]     // Maps variant combos to CJ vid/sku for fulfillment
+  printfulProductId?: number      // Printful sync product ID
+  printfulVariants?: PrintfulVariantMap[]  // Maps variant combos to Printful variant IDs
 
   // === ESTADO ===
   active: boolean
@@ -366,6 +369,15 @@ export interface CJVariantMap {
   vid: string                   // CJ variant ID needed for order creation
   sku: string                   // CJ variant SKU
   sellPrice: number             // CJ cost in USD
+}
+
+// Maps a Printful variant to its catalog variant ID for order fulfillment
+export interface PrintfulVariantMap {
+  variantKey: string            // "Black-M" — the combo identifier
+  variantId: number             // Printful catalog variant ID
+  retailPrice: number           // Price set by the store owner
+  costPrice: number             // Printful base cost in USD
+  sku?: string                  // Optional SKU
 }
 
 // Para RESTAURANTES: Modificadores
@@ -486,6 +498,8 @@ export interface Order {
 
   // Dropshipping fulfillment
   cjOrderId?: string
+  printfulOrderId?: number        // Printful order ID
+  fulfillmentProvider?: 'cj' | 'printful'  // Which provider fulfills this order
   trackingNumber?: string
   trackingCarrier?: string
   fulfillmentStatus?: 'none' | 'submitted' | 'shipped' | 'delivered' | 'failed'
@@ -517,6 +531,7 @@ export interface OrderItem {
   itemTotal: number
   // Dropshipping
   cjProductId?: string            // Set if this item is from CJ Dropshipping
+  printfulProductId?: number      // Set if this item is from Printful
 }
 
 // ============================================

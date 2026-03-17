@@ -69,6 +69,49 @@ interface CJProductDetail {
   variantKeyNames: string[]
 }
 
+// Printful types
+interface PrintfulCatalogProduct {
+  id: number
+  title: string
+  description: string
+  image: string
+  brand: string
+  model: string
+  type: string
+  variantCount: number
+  currency: string
+}
+
+interface PrintfulVariant {
+  id: number
+  name: string
+  size: string
+  color: string
+  colorCode: string
+  colorCode2?: string
+  image: string
+  price: number
+  inStock: boolean
+  availabilityRegions: Record<string, string>
+}
+
+interface PrintfulProductDetail {
+  product: {
+    id: number
+    title: string
+    description: string
+    brand: string
+    model: string
+    image: string
+    type: string
+    variantCount: number
+    currency: string
+    files: { id: string; type: string; title: string }[]
+    dimensions: any
+  }
+  variants: PrintfulVariant[]
+}
+
 export default function Dropshipping() {
   const { store } = useAuth()
   const { showToast } = useToast()
@@ -99,7 +142,7 @@ export default function Dropshipping() {
       name: 'Printful',
       description: 'Print on demand: camisetas, tazas, posters con tu diseño. Bodegas en USA, EU y Mexico. Entrega 3-7 dias.',
       logo: 'https://www.printful.com/static/images/layout/printful-logo.svg',
-      active: false,
+      active: true,
     },
     {
       id: 'printify',
@@ -186,6 +229,258 @@ export default function Dropshipping() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
 
   const hasCJKey = !!store?.integrations?.cjApiKey
+  const hasPrintfulToken = !!store?.integrations?.printfulToken
+
+  // Printful state
+  const [pfCatalog, setPfCatalog] = useState<PrintfulCatalogProduct[]>([])
+  const [pfCatalogLoading, setPfCatalogLoading] = useState(false)
+  const [pfCatalogSearch, setPfCatalogSearch] = useState('')
+  const [pfProduct, setPfProduct] = useState<PrintfulProductDetail | null>(null)
+  const [pfProductLoading, setPfProductLoading] = useState(false)
+  const [pfSelectedVariants, setPfSelectedVariants] = useState<number[]>([])
+  const [pfDesignUrl, setPfDesignUrl] = useState('')
+  const [pfDesignPlacement, setPfDesignPlacement] = useState('front')
+  const [pfMockupUrl, setPfMockupUrl] = useState('')
+  const [pfMockupLoading, setPfMockupLoading] = useState(false)
+  const [pfImporting, setPfImporting] = useState(false)
+  const [pfImportName, setPfImportName] = useState('')
+  const [pfImportPrice, setPfImportPrice] = useState('')
+  const [pfShippingRates, setPfShippingRates] = useState<{ name: string; rate: number; currency: string; minDeliveryDays: number; maxDeliveryDays: number }[]>([])
+  const [pfShippingLoading, setPfShippingLoading] = useState(false)
+
+  const printfulPost = useCallback(async (body: Record<string, any>) => {
+    const res = await fetch(apiUrl('/api/printful'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, storeId: store?.id })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    return data
+  }, [store?.id])
+
+  // Load Printful catalog
+  useEffect(() => {
+    if (!store?.id || activeProvider !== 'printful') return
+    if (pfCatalog.length > 0) return
+
+    setPfCatalogLoading(true)
+    printfulPost({ action: 'catalog' })
+      .then(data => { if (data.products) setPfCatalog(data.products) })
+      .catch(() => {})
+      .finally(() => setPfCatalogLoading(false))
+  }, [store?.id, activeProvider, printfulPost])
+
+  // Load store categories when Printful is selected
+  useEffect(() => {
+    if (!store?.id || activeProvider !== 'printful') return
+    if (categories.length > 0) return
+    categoryService.getAll(store.id).then(cats => setCategories(cats.filter(c => c.active)))
+  }, [store?.id, activeProvider])
+
+  const pfViewProduct = async (productId: number) => {
+    setPfProductLoading(true)
+    setPfMockupUrl('')
+    setPfDesignUrl('')
+    setPfShippingRates([])
+    setPfSelectedVariants([])
+    try {
+      const data = await printfulPost({ action: 'product', productId })
+      if (data.product) {
+        setPfProduct(data)
+        setPfImportName(data.product.title)
+        // Select all in-stock variants by default
+        const inStock = (data.variants || []).filter((v: PrintfulVariant) => v.inStock).map((v: PrintfulVariant) => v.id)
+        setPfSelectedVariants(inStock)
+        // Set default price based on average variant cost
+        const prices = (data.variants || []).map((v: PrintfulVariant) => v.price).filter((p: number) => p > 0)
+        if (prices.length > 0) {
+          const avgCost = prices.reduce((a: number, b: number) => a + b, 0) / prices.length
+          const suggestedPrice = Math.ceil(avgCost * rate * 2.5)
+          setPfImportPrice(String(suggestedPrice))
+        }
+        // Set default placement
+        if (data.product.files?.length > 0) {
+          setPfDesignPlacement(data.product.files[0].type || 'front')
+        }
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error cargando producto', 'error')
+    } finally {
+      setPfProductLoading(false)
+    }
+  }
+
+  const pfGenerateMockup = async () => {
+    if (!pfProduct || !pfDesignUrl) return
+    setPfMockupLoading(true)
+    try {
+      const data = await printfulPost({
+        action: 'mockup',
+        productId: pfProduct.product.id,
+        variantIds: pfSelectedVariants.slice(0, 5),
+        files: [{ placement: pfDesignPlacement, image_url: pfDesignUrl }],
+      })
+      if (data.taskKey) {
+        // Poll for result
+        let attempts = 0
+        const poll = async () => {
+          attempts++
+          if (attempts > 30) { setPfMockupLoading(false); return }
+          const result = await printfulPost({ action: 'mockupResult', taskKey: data.taskKey })
+          if (result.status === 'completed' && result.mockups?.length > 0) {
+            const firstMockup = result.mockups[0]
+            if (firstMockup.mockup_url) setPfMockupUrl(firstMockup.mockup_url)
+            else if (firstMockup.extra?.length > 0) setPfMockupUrl(firstMockup.extra[0].url)
+            setPfMockupLoading(false)
+          } else if (result.status === 'failed') {
+            showToast('Error generando mockup', 'error')
+            setPfMockupLoading(false)
+          } else {
+            setTimeout(poll, 2000)
+          }
+        }
+        setTimeout(poll, 3000)
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error generando mockup', 'error')
+      setPfMockupLoading(false)
+    }
+  }
+
+  const pfCalcShipping = async () => {
+    if (!pfProduct || pfSelectedVariants.length === 0) return
+    setPfShippingLoading(true)
+    try {
+      const countryCode = store?.location?.country || 'US'
+      const data = await printfulPost({
+        action: 'shipping',
+        recipient: { country_code: countryCode },
+        items: [{ variant_id: pfSelectedVariants[0], quantity: 1 }],
+      })
+      if (data.rates) setPfShippingRates(data.rates)
+    } catch { /* silent */ }
+    finally { setPfShippingLoading(false) }
+  }
+
+  const pfImportProduct = async () => {
+    if (!store || !pfProduct || !pfImportName.trim() || !pfImportPrice) return
+    setPfImporting(true)
+    try {
+      const slug = pfImportName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+      const selectedVars = pfProduct.variants.filter(v => pfSelectedVariants.includes(v.id))
+
+      // Build variations (Color + Size groups)
+      const colors = new Map<string, { code: string; image: string }>()
+      const sizes = new Set<string>()
+      for (const v of selectedVars) {
+        if (v.color && !colors.has(v.color)) {
+          colors.set(v.color, { code: v.colorCode, image: v.image })
+        }
+        if (v.size) sizes.add(v.size)
+      }
+
+      const variations: any[] = []
+      if (colors.size > 0) {
+        variations.push({
+          id: `var-${Math.random().toString(36).substring(2, 9)}`,
+          name: 'Color',
+          options: Array.from(colors.entries()).map(([color, info]) => ({
+            id: `opt-${Math.random().toString(36).substring(2, 9)}`,
+            value: color,
+            image: info.image || undefined,
+            available: true,
+          })).map(o => {
+            const opt: Record<string, unknown> = { id: o.id, value: o.value, available: o.available }
+            if (o.image) opt.image = o.image
+            return opt
+          })
+        })
+      }
+      if (sizes.size > 0) {
+        variations.push({
+          id: `var-${Math.random().toString(36).substring(2, 9)}`,
+          name: 'Size',
+          options: Array.from(sizes).map(size => ({
+            id: `opt-${Math.random().toString(36).substring(2, 9)}`,
+            value: size,
+            available: true,
+          }))
+        })
+      }
+
+      // Build Printful variant mapping for fulfillment
+      const printfulVariants = selectedVars.map(v => ({
+        variantKey: [v.color, v.size].filter(Boolean).join('-'),
+        variantId: v.id,
+        retailPrice: parseFloat(pfImportPrice),
+        costPrice: v.price,
+      }))
+
+      // Build design files for order fulfillment
+      const printfulFiles = pfDesignUrl ? [{ type: pfDesignPlacement, url: pfDesignUrl }] : []
+
+      const productData: Record<string, unknown> = {
+        name: pfImportName.trim(),
+        slug,
+        price: parseFloat(pfImportPrice),
+        image: pfMockupUrl || pfProduct.product.image || '',
+        images: pfMockupUrl ? [pfMockupUrl, pfProduct.product.image].filter(Boolean) : [pfProduct.product.image].filter(Boolean),
+        description: pfProduct.product.description || '',
+        active: true,
+        printfulProductId: pfProduct.product.id,
+        printfulVariants,
+        printfulFiles,
+        categoryId: selectedCategoryId || null,
+      }
+
+      if (variations.length > 0) {
+        productData.hasVariations = true
+        productData.variations = variations
+      }
+
+      await productService.create(store.id, productData as any)
+      showToast('Producto Printful importado', 'success')
+      setPfProduct(null)
+      setPfMockupUrl('')
+      setPfDesignUrl('')
+      setPfImportName('')
+      setPfImportPrice('')
+      setPfSelectedVariants([])
+    } catch (err) {
+      console.error('Error importing Printful product:', err)
+      showToast('Error importando producto', 'error')
+    } finally {
+      setPfImporting(false)
+    }
+  }
+
+  const pfGoBack = () => {
+    setPfProduct(null)
+    setPfMockupUrl('')
+    setPfDesignUrl('')
+    setPfImportName('')
+    setPfImportPrice('')
+    setPfSelectedVariants([])
+    setPfShippingRates([])
+    setSelectedCategoryId('')
+  }
+
+  // Filter Printful catalog by search
+  const pfFilteredCatalog = pfCatalogSearch
+    ? pfCatalog.filter(p =>
+        p.title.toLowerCase().includes(pfCatalogSearch.toLowerCase()) ||
+        p.type.toLowerCase().includes(pfCatalogSearch.toLowerCase()) ||
+        p.brand.toLowerCase().includes(pfCatalogSearch.toLowerCase())
+      )
+    : pfCatalog
 
   const cjPost = useCallback(async (body: Record<string, any>) => {
     const res = await fetch(apiUrl('/api/cj'), {
@@ -395,9 +690,9 @@ export default function Dropshipping() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
-          {(selectedProduct || activeProvider) && (
+          {(selectedProduct || pfProduct || activeProvider) && (
             <button
-              onClick={() => selectedProduct ? goBack() : setActiveProvider(null)}
+              onClick={() => selectedProduct ? goBack() : pfProduct ? pfGoBack() : setActiveProvider(null)}
               className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
               <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -407,11 +702,11 @@ export default function Dropshipping() {
           )}
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-              {selectedProduct ? 'Importar producto' : activeProvider ? PROVIDERS.find(p => p.id === activeProvider)?.name || 'Dropshipping' : 'Dropshipping'}
+              {(selectedProduct || pfProduct) ? 'Importar producto' : activeProvider ? PROVIDERS.find(p => p.id === activeProvider)?.name || 'Dropshipping' : 'Dropshipping'}
             </h1>
             <p className="text-sm text-gray-400">
-              {selectedProduct
-                ? 'Ajusta nombre y precio antes de importar'
+              {(selectedProduct || pfProduct)
+                ? (pfProduct ? 'Sube tu diseño, ajusta nombre y precio' : 'Ajusta nombre y precio antes de importar')
                 : activeProvider
                   ? 'Explora y agrega productos a tu tienda'
                   : 'Elige un proveedor para explorar productos'}
@@ -426,7 +721,361 @@ export default function Dropshipping() {
         </button>
       </div>
 
-      {!activeProvider ? (
+      {/* === PRINTFUL PRODUCT DETAIL === */}
+      {activeProvider === 'printful' && pfProduct ? (
+        <div className="max-w-2xl space-y-5">
+          {/* Product preview */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
+              <img
+                src={pfMockupUrl || pfProduct.product.image}
+                alt={pfProduct.product.title}
+                className="w-full sm:w-40 h-48 sm:h-40 object-cover rounded-xl ring-1 ring-black/5 shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{pfProduct.product.title}</h2>
+                <p className="text-xs text-gray-400 mb-1">{pfProduct.product.brand} - {pfProduct.product.model}</p>
+                <p className="text-xs text-gray-400">{pfProduct.variants.length} variantes disponibles</p>
+                {pfProduct.variants.length > 0 && (
+                  <p className="text-sm font-bold text-red-600 mt-2">
+                    Costo desde ${Math.min(...pfProduct.variants.map(v => v.price)).toFixed(2)} USD
+                    {currency !== 'USD' && (
+                      <span className="text-xs font-medium text-gray-400 ml-2">
+                        ({getCurrencySymbol(currency)}{Math.ceil(Math.min(...pfProduct.variants.map(v => v.price)) * rate)} {currency})
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Design upload */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900">Tu diseño</h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">URL de la imagen del diseño</label>
+              <input
+                type="url"
+                value={pfDesignUrl}
+                onChange={e => { setPfDesignUrl(e.target.value); setPfMockupUrl('') }}
+                placeholder="https://ejemplo.com/mi-diseño.png"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
+              />
+              <p className="text-xs text-gray-400 mt-1">PNG o PDF, minimo 150 DPI (ideal 300 DPI). Sube tu imagen a Cloudinary u otro hosting.</p>
+            </div>
+            {pfProduct.product.files?.length > 1 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Ubicacion del diseño</label>
+                <div className="flex gap-2 flex-wrap">
+                  {pfProduct.product.files.map((f: any) => (
+                    <button
+                      key={f.type || f.id}
+                      onClick={() => setPfDesignPlacement(f.type || f.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        pfDesignPlacement === (f.type || f.id)
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {f.title || f.type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {pfDesignUrl && (
+              <button
+                onClick={pfGenerateMockup}
+                disabled={pfMockupLoading}
+                className="w-full py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              >
+                {pfMockupLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Generando mockup...
+                  </>
+                ) : pfMockupUrl ? 'Regenerar mockup' : 'Generar mockup'}
+              </button>
+            )}
+            {pfMockupUrl && (
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-2">Mockup generado</p>
+                <img src={pfMockupUrl} alt="Mockup" className="w-full max-w-xs rounded-xl ring-1 ring-black/5" />
+              </div>
+            )}
+          </div>
+
+          {/* Edit fields */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre del producto</label>
+              <input
+                type="text"
+                value={pfImportName}
+                onChange={e => setPfImportName(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Precio de venta ({currency})
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={pfImportPrice}
+                onChange={e => setPfImportPrice(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
+              />
+              {pfImportPrice && pfProduct.variants.length > 0 && (() => {
+                const avgCost = pfProduct.variants.reduce((a, b) => a + b.price, 0) / pfProduct.variants.length
+                const costInLocal = avgCost * rate
+                const profit = parseFloat(pfImportPrice) - costInLocal
+                return (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    Ganancia estimada: <span className={`font-medium ${profit > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {getCurrencySymbol(currency)}{profit.toFixed(2)} {currency}
+                    </span>
+                    {' '}por venta (costo promedio)
+                  </p>
+                )
+              })()}
+            </div>
+            {categories.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Categoria</label>
+                <select
+                  value={selectedCategoryId}
+                  onChange={e => setSelectedCategoryId(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm bg-white"
+                >
+                  <option value="">Sin categoria</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Variants selection */}
+          {pfProduct.variants.length > 0 && (() => {
+            const colors = new Map<string, { code: string; count: number }>()
+            const sizes = new Set<string>()
+            for (const v of pfProduct.variants) {
+              if (v.color && !colors.has(v.color)) colors.set(v.color, { code: v.colorCode, count: 0 })
+              if (v.color) colors.get(v.color)!.count++
+              if (v.size) sizes.add(v.size)
+            }
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-900">Variantes</p>
+                  <button
+                    onClick={() => {
+                      if (pfSelectedVariants.length === pfProduct!.variants.length) {
+                        setPfSelectedVariants([])
+                      } else {
+                        setPfSelectedVariants(pfProduct!.variants.map(v => v.id))
+                      }
+                    }}
+                    className="text-xs text-green-600 hover:text-green-700 font-medium"
+                  >
+                    {pfSelectedVariants.length === pfProduct.variants.length ? 'Deseleccionar todas' : 'Seleccionar todas'}
+                  </button>
+                </div>
+                {colors.size > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 mb-1.5">Colores ({colors.size})</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {Array.from(colors.entries()).map(([color, info]) => (
+                        <span key={color} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg text-xs">
+                          <span
+                            className="w-3 h-3 rounded-full border border-gray-200"
+                            style={{ backgroundColor: info.code || '#ccc' }}
+                          />
+                          {color}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {sizes.size > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 mb-1.5">Tallas ({sizes.size})</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {Array.from(sizes).map(size => (
+                        <span key={size} className="px-2.5 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-medium">{size}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400">{pfSelectedVariants.length} de {pfProduct.variants.length} variantes seleccionadas</p>
+              </div>
+            )
+          })()}
+
+          {/* Shipping estimation */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-green-900 flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Envio Printful a {store?.location?.country || '?'}
+              </p>
+              {!pfShippingLoading && pfShippingRates.length === 0 && pfSelectedVariants.length > 0 && (
+                <button
+                  onClick={pfCalcShipping}
+                  className="text-xs text-green-600 hover:text-green-700 font-medium"
+                >
+                  Calcular
+                </button>
+              )}
+            </div>
+            {pfShippingLoading ? (
+              <div className="flex items-center gap-2 py-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+                <span className="text-xs text-green-600">Calculando envio...</span>
+              </div>
+            ) : pfShippingRates.length > 0 ? (
+              <div className="space-y-1.5">
+                {pfShippingRates.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between bg-white/70 rounded-lg px-3 py-2 text-xs">
+                    <span className="font-medium text-gray-700">{r.name}</span>
+                    <span className="text-gray-400">{r.minDeliveryDays}-{r.maxDeliveryDays} dias</span>
+                    <span className="font-bold text-green-700">
+                      ${r.rate.toFixed(2)} {r.currency}
+                      {currency !== 'USD' && r.currency === 'USD' && (
+                        <span className="font-normal text-gray-400 ml-1">
+                          ({getCurrencySymbol(currency)}{Math.ceil(r.rate * rate)})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-green-600">Selecciona variantes y calcula el costo de envio</p>
+            )}
+          </div>
+
+          {/* Import button or prompts */}
+          {!isBusiness ? (
+            <div className="bg-gray-50 rounded-xl p-5 text-center space-y-3">
+              <p className="text-sm font-medium text-gray-900">Importar productos requiere el plan Business</p>
+              <p className="text-xs text-gray-500">Explora el catalogo. Para importar, actualiza a Business.</p>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+              >
+                Ver planes
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+          ) : hasPrintfulToken ? (
+            <button
+              onClick={pfImportProduct}
+              disabled={pfImporting || !pfImportName.trim() || !pfImportPrice || pfSelectedVariants.length === 0}
+              className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              {pfImporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Importando...
+                </>
+              ) : `Importar a mi tienda (${pfSelectedVariants.length} variantes)`}
+            </button>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+              <p className="text-sm text-green-800 font-medium">Conecta tu cuenta de Printful para importar.</p>
+              <p className="text-xs text-green-600">Crea una cuenta gratis en printful.com y pega tu Private Token en Integraciones.</p>
+              <div className="flex gap-2">
+                <a
+                  href="https://www.printful.com/auth/signup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center py-2.5 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700 transition-all"
+                >
+                  Crear cuenta Printful
+                </a>
+                <button
+                  onClick={() => navigate(localePath('/dashboard/integrations'))}
+                  className="flex-1 py-2.5 bg-white border border-green-200 text-green-700 rounded-lg font-semibold text-sm hover:bg-green-50 transition-all"
+                >
+                  Integraciones
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+      ) : activeProvider === 'printful' ? (
+        /* === PRINTFUL CATALOG BROWSE === */
+        <div className="space-y-5">
+          {/* Search/filter */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={pfCatalogSearch}
+              onChange={e => setPfCatalogSearch(e.target.value)}
+              placeholder="Filtrar catalogo (ej: t-shirt, mug, poster)..."
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-base sm:text-sm"
+            />
+          </div>
+
+          {/* Catalog grid */}
+          {pfCatalogLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
+          ) : pfFilteredCatalog.length > 0 ? (
+            <>
+              <p className="text-sm text-gray-400">{pfFilteredCatalog.length} productos en catalogo</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {pfFilteredCatalog.map(product => (
+                  <button
+                    key={product.id}
+                    onClick={() => pfViewProduct(product.id)}
+                    className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg hover:border-green-200 transition-all text-left group"
+                  >
+                    <div className="aspect-square bg-gray-50">
+                      <img
+                        src={product.image}
+                        alt={product.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-2.5">
+                      <p className="text-xs text-gray-700 font-medium line-clamp-2 leading-tight">{product.title}</p>
+                      <p className="text-xs text-gray-400 mt-1">{product.variantCount} variantes</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : pfCatalogSearch ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400">No se encontraron productos para "{pfCatalogSearch}"</p>
+            </div>
+          ) : null}
+
+          {/* Loading detail overlay */}
+          {pfProductLoading && (
+            <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-2xl shadow-xl flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+                <span className="text-sm text-gray-600">Cargando producto...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+      ) : !activeProvider ? (
         /* === PROVIDER SELECTION === */
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {PROVIDERS.map(provider => (

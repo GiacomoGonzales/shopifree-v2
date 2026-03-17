@@ -207,6 +207,60 @@ export default function Orders() {
   }
 
   const [fulfillingCJ, setFulfillingCJ] = useState(false)
+  const [fulfillingPrintful, setFulfillingPrintful] = useState(false)
+
+  const handlePrintfulFulfill = async (order: Order) => {
+    if (!store) return
+    setFulfillingPrintful(true)
+    try {
+      const res = await fetch(apiUrl('/api/printful'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'createOrder', storeId: store.id, orderId: order.id })
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      const updated = { ...order, printfulOrderId: data.printfulOrderId, fulfillmentProvider: 'printful' as const, fulfillmentStatus: 'submitted' as const, updatedAt: new Date() }
+      setOrders(orders.map(o => o.id === order.id ? updated : o))
+      setSelectedOrder(updated)
+      showToast('Orden enviada a Printful', 'success')
+    } catch (err: any) {
+      showToast(err.message || 'Error enviando a Printful', 'error')
+    } finally {
+      setFulfillingPrintful(false)
+    }
+  }
+
+  const handleCheckPrintfulStatus = async (order: Order) => {
+    if (!store || !order.printfulOrderId) return
+    try {
+      const res = await fetch(apiUrl('/api/printful'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'orderStatus', storeId: store.id, printfulOrderId: order.printfulOrderId })
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      if (data.trackingNumber) {
+        const updated = {
+          ...order,
+          trackingNumber: data.trackingNumber,
+          trackingCarrier: data.carrier,
+          fulfillmentStatus: 'shipped' as const,
+          updatedAt: new Date(),
+        }
+        setOrders(orders.map(o => o.id === order.id ? updated : o))
+        setSelectedOrder(updated)
+        showToast(`Tracking: ${data.trackingNumber}`, 'success')
+      } else {
+        showToast(`Estado Printful: ${data.status || 'En proceso'}`, 'info')
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error consultando Printful', 'error')
+    }
+  }
 
   const handleCJFulfill = async (order: Order) => {
     if (!store) return
@@ -846,6 +900,9 @@ export default function Orders() {
                           {item.cjProductId && (
                             <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-semibold rounded">CJ</span>
                           )}
+                          {item.printfulProductId && (
+                            <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded">Printful</span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-500">x{item.quantity}</p>
                       </div>
@@ -956,6 +1013,80 @@ export default function Orders() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           Enviar a CJ Dropshipping
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Printful fulfillment */}
+              {selectedOrder.items?.some(item => item.printfulProductId) && (
+                <div className="border-t border-gray-200 pt-4">
+                  {selectedOrder.printfulOrderId ? (
+                    <div className="bg-green-50 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-green-900">Printful</p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          selectedOrder.fulfillmentStatus === 'shipped' ? 'bg-green-100 text-green-700' :
+                          selectedOrder.fulfillmentStatus === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {selectedOrder.fulfillmentStatus === 'shipped' ? 'Enviado' :
+                           selectedOrder.fulfillmentStatus === 'failed' ? 'Error' :
+                           'Procesando'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-600">Orden Printful: {selectedOrder.printfulOrderId}</p>
+                      {selectedOrder.trackingNumber && (
+                        <p className="text-xs text-green-600">
+                          Tracking: <span className="font-mono font-medium">{selectedOrder.trackingNumber}</span>
+                          {selectedOrder.trackingCarrier && ` (${selectedOrder.trackingCarrier})`}
+                        </p>
+                      )}
+                      {!selectedOrder.trackingNumber && selectedOrder.fulfillmentStatus !== 'failed' && (
+                        <button
+                          onClick={() => handleCheckPrintfulStatus(selectedOrder)}
+                          className="text-xs text-green-500 hover:text-green-700 font-medium"
+                        >
+                          Verificar estado de envio
+                        </button>
+                      )}
+                      {selectedOrder.fulfillmentError && (
+                        <p className="text-xs text-red-500">{selectedOrder.fulfillmentError}</p>
+                      )}
+                    </div>
+                  ) : selectedOrder.fulfillmentStatus === 'failed' && selectedOrder.fulfillmentProvider === 'printful' ? (
+                    <div className="bg-red-50 rounded-xl p-4 space-y-2">
+                      <p className="text-sm font-semibold text-red-800">Error al enviar a Printful</p>
+                      {selectedOrder.fulfillmentError && (
+                        <p className="text-xs text-red-600">{selectedOrder.fulfillmentError}</p>
+                      )}
+                      <button
+                        onClick={() => handlePrintfulFulfill(selectedOrder)}
+                        disabled={fulfillingPrintful}
+                        className="text-xs text-red-600 hover:text-red-800 font-medium"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handlePrintfulFulfill(selectedOrder)}
+                      disabled={fulfillingPrintful || selectedOrder.status === 'pending' || selectedOrder.status === 'cancelled'}
+                      className="w-full py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold text-sm hover:from-green-600 hover:to-emerald-600 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                    >
+                      {fulfillingPrintful ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Enviando a Printful...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                          </svg>
+                          Enviar a Printful
                         </>
                       )}
                     </button>
