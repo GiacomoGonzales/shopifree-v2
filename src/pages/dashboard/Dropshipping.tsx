@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { productService, categoryService } from '../../lib/firebase'
+import { productService, categoryService, storage } from '../../lib/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useToast } from '../../components/ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
 import { getCurrencySymbol } from '../../lib/currency'
@@ -247,6 +248,8 @@ export default function Dropshipping() {
   const [pfImportPrice, setPfImportPrice] = useState('')
   const [pfShippingRates, setPfShippingRates] = useState<{ name: string; rate: number; currency: string; minDeliveryDays: number; maxDeliveryDays: number }[]>([])
   const [pfShippingLoading, setPfShippingLoading] = useState(false)
+  const [pfDesignUploading, setPfDesignUploading] = useState(false)
+  const pfFileInputRef = useRef<HTMLInputElement>(null)
 
   const printfulPost = useCallback(async (body: Record<string, any>) => {
     const res = await fetch(apiUrl('/api/printful'), {
@@ -308,6 +311,53 @@ export default function Dropshipping() {
       showToast(err.message || 'Error cargando producto', 'error')
     } finally {
       setPfProductLoading(false)
+    }
+  }
+
+  const pfUploadDesign = async (file: File) => {
+    if (!store?.id || !pfProduct) return
+    setPfDesignUploading(true)
+    setPfMockupUrl('')
+    try {
+      const ext = file.name.split('.').pop() || 'png'
+      const path = `stores/${store.id}/printful-designs/${pfProduct.product.id}.${ext}`
+      const storageRef = ref(storage, path)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setPfDesignUrl(url)
+      // Auto-generate mockup
+      setPfMockupLoading(true)
+      setPfDesignUploading(false)
+      const data = await printfulPost({
+        action: 'mockup',
+        productId: pfProduct.product.id,
+        variantIds: pfSelectedVariants.slice(0, 5),
+        files: [{ placement: pfDesignPlacement, image_url: url }],
+      })
+      if (data.taskKey) {
+        let attempts = 0
+        const poll = async () => {
+          attempts++
+          if (attempts > 30) { setPfMockupLoading(false); return }
+          const result = await printfulPost({ action: 'mockupResult', taskKey: data.taskKey })
+          if (result.status === 'completed' && result.mockups?.length > 0) {
+            const firstMockup = result.mockups[0]
+            if (firstMockup.mockup_url) setPfMockupUrl(firstMockup.mockup_url)
+            else if (firstMockup.extra?.length > 0) setPfMockupUrl(firstMockup.extra[0].url)
+            setPfMockupLoading(false)
+          } else if (result.status === 'failed') {
+            showToast('Error generando mockup', 'error')
+            setPfMockupLoading(false)
+          } else {
+            setTimeout(poll, 2000)
+          }
+        }
+        setTimeout(poll, 3000)
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error subiendo diseño', 'error')
+      setPfDesignUploading(false)
+      setPfMockupLoading(false)
     }
   }
 
@@ -753,17 +803,6 @@ export default function Dropshipping() {
           {/* Design upload */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Tu diseño</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">URL de la imagen del diseño</label>
-              <input
-                type="url"
-                value={pfDesignUrl}
-                onChange={e => { setPfDesignUrl(e.target.value); setPfMockupUrl('') }}
-                placeholder="https://ejemplo.com/mi-diseño.png"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
-              />
-              <p className="text-xs text-gray-400 mt-1">PNG o PDF, minimo 150 DPI (ideal 300 DPI). Sube tu imagen a Cloudinary u otro hosting.</p>
-            </div>
             {pfProduct.product.files?.length > 1 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Ubicacion del diseño</label>
@@ -784,25 +823,63 @@ export default function Dropshipping() {
                 </div>
               </div>
             )}
-            {pfDesignUrl && (
-              <button
-                onClick={pfGenerateMockup}
-                disabled={pfMockupLoading}
-                className="w-full py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-              >
-                {pfMockupLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Generando mockup...
-                  </>
-                ) : pfMockupUrl ? 'Regenerar mockup' : 'Generar mockup'}
-              </button>
-            )}
-            {pfMockupUrl && (
-              <div>
-                <p className="text-xs font-medium text-gray-700 mb-2">Mockup generado</p>
-                <img src={pfMockupUrl} alt="Mockup" className="w-full max-w-xs rounded-xl ring-1 ring-black/5" />
+            <input
+              ref={pfFileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,application/pdf"
+              className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0]
+                if (file) pfUploadDesign(file)
+                e.target.value = ''
+              }}
+            />
+            {pfDesignUrl && !pfDesignUploading && !pfMockupLoading ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <img src={pfDesignUrl} alt="Diseño" className="w-16 h-16 object-contain rounded-lg ring-1 ring-black/5 bg-gray-50" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">Diseño subido</p>
+                    <p className="text-xs text-gray-400 truncate">{pfDesignUrl.split('/').pop()?.split('?')[0]}</p>
+                  </div>
+                  <button
+                    onClick={() => pfFileInputRef.current?.click()}
+                    className="px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    Cambiar
+                  </button>
+                </div>
+                {pfMockupUrl ? (
+                  <div>
+                    <p className="text-xs font-medium text-gray-700 mb-2">Mockup generado</p>
+                    <img src={pfMockupUrl} alt="Mockup" className="w-full max-w-xs rounded-xl ring-1 ring-black/5" />
+                    <button
+                      onClick={pfGenerateMockup}
+                      className="mt-2 text-xs text-green-600 hover:text-green-700 font-medium"
+                    >
+                      Regenerar mockup
+                    </button>
+                  </div>
+                ) : null}
               </div>
+            ) : (pfDesignUploading || pfMockupLoading) ? (
+              <div className="flex items-center justify-center gap-3 py-8">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+                <span className="text-sm text-gray-600">
+                  {pfDesignUploading ? 'Subiendo diseño...' : 'Generando mockup...'}
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={() => pfFileInputRef.current?.click()}
+                className="w-full py-8 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50/50 transition-all flex flex-col items-center gap-2 group"
+              >
+                <svg className="w-8 h-8 text-gray-300 group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm font-medium text-gray-500 group-hover:text-green-600">Sube tu diseño</span>
+                <span className="text-xs text-gray-400">PNG, JPG o PDF — minimo 150 DPI</span>
+              </button>
             )}
           </div>
 
