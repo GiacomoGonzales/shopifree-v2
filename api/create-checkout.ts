@@ -108,6 +108,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
+    // Cancel any existing active subscriptions for this customer to prevent double charges
+    const existingSubscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'active'
+    })
+    for (const sub of existingSubscriptions.data) {
+      // Only cancel subscriptions for the same store
+      if (sub.metadata.storeId === storeId) {
+        console.log(`Canceling existing subscription ${sub.id} for store ${storeId} before creating new one`)
+        await stripe.subscriptions.cancel(sub.id, { prorate: true })
+      }
+    }
+    // Also cancel trialing subscriptions
+    const trialingSubscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'trialing'
+    })
+    for (const sub of trialingSubscriptions.data) {
+      if (sub.metadata.storeId === storeId) {
+        console.log(`Canceling trialing subscription ${sub.id} for store ${storeId} before creating new one`)
+        await stripe.subscriptions.cancel(sub.id)
+      }
+    }
+
     // Get origin for redirect URLs
     const origin = req.headers.origin || 'https://shopifree.app'
 

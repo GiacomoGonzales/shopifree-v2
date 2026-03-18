@@ -188,15 +188,16 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice) {
 
   const storeDoc = storesSnapshot.docs[0]
 
-  // IMPORTANT: Downgrade to free immediately when payment fails
-  // User should not have access to paid features if they haven't paid
+  // Mark as past_due but DON'T downgrade to free yet.
+  // Stripe retries failed payments (up to 3-4 times over several days).
+  // The subscription.deleted event will fire if all retries fail,
+  // and handleSubscriptionCanceled will downgrade to free at that point.
   await storeDoc.ref.update({
-    plan: 'free',
     'subscription.status': 'past_due',
     updatedAt: new Date()
   })
 
-  console.log(`Store ${storeDoc.id} payment failed, downgraded to free and marked as past_due`)
+  console.log(`Store ${storeDoc.id} payment failed, marked as past_due (plan kept until subscription is canceled by Stripe)`)
 }
 
 // Helper to get raw body from request
