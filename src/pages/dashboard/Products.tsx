@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy, horizontalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { SortableContext, rectSortingStrategy, horizontalListSortingStrategy, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -527,7 +527,106 @@ export default function Products() {
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+        {/* Mobile: vertical list for clean drag & drop */}
+        <div className="flex flex-col gap-1.5 sm:hidden">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+              selectedCategory === null
+                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {t('products.categories.all')} ({getProductCount(null)})
+          </button>
+
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+            <SortableContext items={sortedCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              {sortedCategories.map(category => (
+                <SortableCategoryTab key={category.id} category={category}>
+                  {({ attributes, listeners }) => (
+                    <div className={`relative flex items-center gap-2 rounded-xl transition-all ${
+                      selectedCategory === category.id
+                        ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] shadow-lg shadow-[#1e3a5f]/20'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}>
+                      <button
+                        {...attributes}
+                        {...listeners}
+                        className={`pl-3 py-2.5 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${
+                          selectedCategory === category.id ? 'text-white/50' : 'text-gray-300'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="9" cy="6" r="1.5" />
+                          <circle cx="15" cy="6" r="1.5" />
+                          <circle cx="9" cy="12" r="1.5" />
+                          <circle cx="15" cy="12" r="1.5" />
+                          <circle cx="9" cy="18" r="1.5" />
+                          <circle cx="15" cy="18" r="1.5" />
+                        </svg>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`flex-1 py-2.5 text-sm font-medium text-left ${
+                          selectedCategory === category.id ? 'text-white' : 'text-gray-700'
+                        }`}
+                      >
+                        {category.name} ({getProductCount(category.id)})
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
+                        }}
+                        className={`pr-3 py-2.5 ${
+                          selectedCategory === category.id ? 'text-white/60' : 'text-gray-400'
+                        }`}
+                      >
+                        ⋮
+                      </button>
+
+                      {openCategoryMenu === category.id && (
+                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); openEditCategory(category) }}
+                            className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                          >
+                            {t('products.categories.edit')}
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); handleDeleteCategory(category) }}
+                            className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
+                          >
+                            {t('products.categories.delete')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </SortableCategoryTab>
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {products.some(p => !p.categoryId) && (
+            <button
+              onClick={() => setSelectedCategory('uncategorized')}
+              className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+                selectedCategory === 'uncategorized'
+                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('products.categories.uncategorized')} ({getProductCount('uncategorized')})
+            </button>
+          )}
+        </div>
+
+        {/* Desktop: horizontal tabs */}
+        <div className="hidden sm:flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
@@ -545,7 +644,6 @@ export default function Products() {
                 <SortableCategoryTab key={category.id} category={category}>
                   {({ attributes, listeners }) => (
                     <div className="relative group flex items-center gap-1">
-                      {/* Drag handle */}
                       <button
                         {...attributes}
                         {...listeners}
@@ -572,7 +670,6 @@ export default function Products() {
                         {category.name} ({getProductCount(category.id)})
                       </button>
 
-                      {/* Menu toggle button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -583,25 +680,16 @@ export default function Products() {
                         ⋮
                       </button>
 
-                      {/* Edit/Delete dropdown */}
                       {openCategoryMenu === category.id && (
                         <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenCategoryMenu(null)
-                              openEditCategory(category)
-                            }}
+                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); openEditCategory(category) }}
                             className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
                           >
                             {t('products.categories.edit')}
                           </button>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenCategoryMenu(null)
-                              handleDeleteCategory(category)
-                            }}
+                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); handleDeleteCategory(category) }}
                             className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
                           >
                             {t('products.categories.delete')}
