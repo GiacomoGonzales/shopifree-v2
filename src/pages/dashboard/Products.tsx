@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { SortableContext, rectSortingStrategy, horizontalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -16,6 +16,23 @@ import type { Product, Category } from '../../types'
 
 function SortableProductCard({ product, children }: { product: Product; children: (dragHandleProps: { attributes: ReturnType<typeof useSortable>['attributes']; listeners: ReturnType<typeof useSortable>['listeners']; isDragging: boolean }) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ attributes, listeners, isDragging })}
+    </div>
+  )
+}
+
+function SortableCategoryTab({ category, children }: { category: Category; children: (props: { attributes: ReturnType<typeof useSortable>['attributes']; listeners: ReturnType<typeof useSortable>['listeners']; isDragging: boolean }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -145,6 +162,29 @@ export default function Products() {
       showToast(t('products.reorderError') || 'Error al reordenar', 'error')
     } finally {
       setIsReordering(false)
+    }
+  }
+
+  const handleCategoryDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !store) return
+
+    const sorted = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    const oldIndex = sorted.findIndex(c => c.id === active.id)
+    const newIndex = sorted.findIndex(c => c.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reordered = arrayMove(sorted, oldIndex, newIndex)
+    const updated = reordered.map((c, i) => ({ ...c, order: i }))
+    setCategories(updated)
+
+    try {
+      await Promise.all(
+        updated.map(c => categoryService.update(store.id, c.id, { order: c.order }))
+      )
+    } catch (error) {
+      console.error('Error reordering categories:', error)
+      showToast('Error al reordenar categorias', 'error')
     }
   }
 
@@ -333,6 +373,8 @@ export default function Products() {
     }
   }
 
+  const sortedCategories = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
   const filteredProducts = (selectedCategory
     ? selectedCategory === 'uncategorized'
       ? products.filter(p => !p.categoryId)
@@ -497,57 +539,81 @@ export default function Products() {
             {t('products.categories.all')} ({getProductCount(null)})
           </button>
 
-          {categories.map(category => (
-            <div key={category.id} className="relative group flex items-center gap-1">
-              <button
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.name} ({getProductCount(category.id)})
-              </button>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+            <SortableContext items={sortedCategories.map(c => c.id)} strategy={horizontalListSortingStrategy}>
+              {sortedCategories.map(category => (
+                <SortableCategoryTab key={category.id} category={category}>
+                  {({ attributes, listeners }) => (
+                    <div className="relative group flex items-center gap-1">
+                      {/* Drag handle */}
+                      <button
+                        {...attributes}
+                        {...listeners}
+                        className="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none rounded transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="9" cy="6" r="1.5" />
+                          <circle cx="15" cy="6" r="1.5" />
+                          <circle cx="9" cy="12" r="1.5" />
+                          <circle cx="15" cy="12" r="1.5" />
+                          <circle cx="9" cy="18" r="1.5" />
+                          <circle cx="15" cy="18" r="1.5" />
+                        </svg>
+                      </button>
 
-              {/* Menu toggle button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
-                }}
-                className="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all text-xs"
-              >
-                ⋮
-              </button>
+                      <button
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                          selectedCategory === category.id
+                            ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {category.name} ({getProductCount(category.id)})
+                      </button>
 
-              {/* Edit/Delete dropdown */}
-              {openCategoryMenu === category.id && (
-                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setOpenCategoryMenu(null)
-                      openEditCategory(category)
-                    }}
-                    className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
-                  >
-                    {t('products.categories.edit')}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setOpenCategoryMenu(null)
-                      handleDeleteCategory(category)
-                    }}
-                    className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
-                  >
-                    {t('products.categories.delete')}
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                      {/* Menu toggle button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
+                        }}
+                        className="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all text-xs"
+                      >
+                        ⋮
+                      </button>
+
+                      {/* Edit/Delete dropdown */}
+                      {openCategoryMenu === category.id && (
+                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenCategoryMenu(null)
+                              openEditCategory(category)
+                            }}
+                            className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                          >
+                            {t('products.categories.edit')}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenCategoryMenu(null)
+                              handleDeleteCategory(category)
+                            }}
+                            className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
+                          >
+                            {t('products.categories.delete')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </SortableCategoryTab>
+              ))}
+            </SortableContext>
+          </DndContext>
 
           {products.some(p => !p.categoryId) && (
             <button
