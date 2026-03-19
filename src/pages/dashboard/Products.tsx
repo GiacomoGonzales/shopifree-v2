@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, categoryService } from '../../lib/firebase'
@@ -10,6 +13,23 @@ import { getCurrencySymbol } from '../../lib/currency'
 import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, getEffectivePlan, PLAN_FEATURES } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
 import type { Product, Category } from '../../types'
+
+function SortableProductCard({ product, children }: { product: Product; children: (dragHandleProps: { attributes: Record<string, unknown>; listeners: Record<string, unknown> | undefined; isDragging: boolean }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ attributes: attributes as Record<string, unknown>, listeners: listeners as Record<string, unknown> | undefined, isDragging })}
+    </div>
+  )
+}
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -80,6 +100,52 @@ export default function Products() {
     setEditingCategory(null)
     setNewCategoryName('')
     setShowCategoryModal(true)
+  }
+
+  // Drag & drop reorder
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+  const [isReordering, setIsReordering] = useState(false)
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !store) return
+
+    const sourceList = selectedCategory
+      ? selectedCategory === 'uncategorized'
+        ? products.filter(p => !p.categoryId)
+        : products.filter(p => p.categoryId === selectedCategory)
+      : products
+
+    const oldIndex = sourceList.findIndex(p => p.id === active.id)
+    const newIndex = sourceList.findIndex(p => p.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reordered = arrayMove(sourceList, oldIndex, newIndex)
+    const updatedItems = reordered.map((p, i) => ({ ...p, order: i }))
+
+    // Update local state - merge back with products not in current filter
+    if (selectedCategory) {
+      const otherProducts = products.filter(p => !sourceList.some(sp => sp.id === p.id))
+      setProducts([...otherProducts, ...updatedItems])
+    } else {
+      setProducts(updatedItems)
+    }
+
+    // Persist to Firestore
+    setIsReordering(true)
+    try {
+      await Promise.all(
+        updatedItems.map(p => productService.update(store.id, p.id, { order: p.order }))
+      )
+    } catch (error) {
+      console.error('Error reordering products:', error)
+      showToast(t('products.reorderError') || 'Error al reordenar', 'error')
+    } finally {
+      setIsReordering(false)
+    }
   }
 
   // Image upload
@@ -267,11 +333,12 @@ export default function Products() {
     }
   }
 
-  const filteredProducts = selectedCategory
+  const filteredProducts = (selectedCategory
     ? selectedCategory === 'uncategorized'
       ? products.filter(p => !p.categoryId)
       : products.filter(p => p.categoryId === selectedCategory)
     : products
+  ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
   const getProductCount = (categoryId: string | null) => {
     if (categoryId === null) return products.length
@@ -523,91 +590,118 @@ export default function Products() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group"
-            >
-              {/* Image section */}
-              <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative">
-                {product.image ? (
-                  <Link to={localePath(`/dashboard/products/${product.id}`)}>
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </Link>
-                ) : uploadingProductId === product.id ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
-                    <p className="text-xs text-[#2d6cb5] font-medium">{t('products.uploading')}</p>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => fileInputRefs.current[product.id]?.click()}
-                    onDrop={(e) => handleDrop(product.id, e)}
-                    onDragOver={handleDragOver}
-                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[#f0f7ff] transition-colors border-2 border-dashed border-transparent hover:border-[#38bdf8] rounded-t-2xl"
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8]/20 to-[#2d6cb5]/20 rounded-xl flex items-center justify-center mb-2">
-                      <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={filteredProducts.map(p => p.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredProducts.map((product) => (
+                <SortableProductCard key={product.id} product={product}>
+                  {({ attributes, listeners }) => (
+                    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group">
+                      {/* Drag handle */}
+                      <div className="flex items-center justify-between px-3 pt-2">
+                        <button
+                          {...attributes}
+                          {...listeners}
+                          className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none rounded-lg hover:bg-gray-100 transition-colors"
+                          title={t('products.reorder') || 'Reordenar'}
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="9" cy="6" r="1.5" />
+                            <circle cx="15" cy="6" r="1.5" />
+                            <circle cx="9" cy="12" r="1.5" />
+                            <circle cx="15" cy="12" r="1.5" />
+                            <circle cx="9" cy="18" r="1.5" />
+                            <circle cx="15" cy="18" r="1.5" />
+                          </svg>
+                        </button>
+                        {isReordering && (
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#2d6cb5]"></div>
+                        )}
+                      </div>
+
+                      {/* Image section */}
+                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative">
+                        {product.image ? (
+                          <Link to={localePath(`/dashboard/products/${product.id}`)}>
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </Link>
+                        ) : uploadingProductId === product.id ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
+                            <p className="text-xs text-[#2d6cb5] font-medium">{t('products.uploading')}</p>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => fileInputRefs.current[product.id]?.click()}
+                            onDrop={(e) => handleDrop(product.id, e)}
+                            onDragOver={handleDragOver}
+                            className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[#f0f7ff] transition-colors border-2 border-dashed border-transparent hover:border-[#38bdf8] rounded-t-2xl"
+                          >
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8]/20 to-[#2d6cb5]/20 rounded-xl flex items-center justify-center mb-2">
+                              <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                            </div>
+                            <p className="text-xs text-[#2d6cb5] font-medium">{t('products.addPhoto')}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{t('products.clickOrDrag')}</p>
+                            <input
+                              ref={(el) => { fileInputRefs.current[product.id] = el }}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFileChange(product.id, e)}
+                              className="hidden"
+                            />
+                          </div>
+                        )}
+                        {!product.active && (
+                          <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900/70 text-white text-xs rounded-lg">
+                            {t('products.hidden')}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product info */}
+                      <Link to={localePath(`/dashboard/products/${product.id}`)}>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-[#1e3a5f] truncate group-hover:text-[#2d6cb5] transition-colors">
+                            {product.name}
+                          </h3>
+                          <p className="text-[#2d6cb5] font-bold text-sm mt-1">
+                            {getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}
+                          </p>
+                          {product.categoryId && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {categories.find(c => c.id === product.categoryId)?.name}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+
+                      <div className="px-4 pb-4 flex gap-2">
+                        <Link
+                          to={localePath(`/dashboard/products/${product.id}`)}
+                          className="flex-1 px-3 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center"
+                        >
+                          {t('products.edit')}
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                          {t('products.delete')}
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-xs text-[#2d6cb5] font-medium">{t('products.addPhoto')}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{t('products.clickOrDrag')}</p>
-                    <input
-                      ref={(el) => { fileInputRefs.current[product.id] = el }}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(product.id, e)}
-                      className="hidden"
-                    />
-                  </div>
-                )}
-                {!product.active && (
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900/70 text-white text-xs rounded-lg">
-                    {t('products.hidden')}
-                  </div>
-                )}
-              </div>
-
-              {/* Product info */}
-              <Link to={localePath(`/dashboard/products/${product.id}`)}>
-                <div className="p-4">
-                  <h3 className="font-semibold text-[#1e3a5f] truncate group-hover:text-[#2d6cb5] transition-colors">
-                    {product.name}
-                  </h3>
-                  <p className="text-[#2d6cb5] font-bold text-sm mt-1">
-                    {getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}
-                  </p>
-                  {product.categoryId && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {categories.find(c => c.id === product.categoryId)?.name}
-                    </p>
                   )}
-                </div>
-              </Link>
-
-              <div className="px-4 pb-4 flex gap-2">
-                <Link
-                  to={localePath(`/dashboard/products/${product.id}`)}
-                  className="flex-1 px-3 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center"
-                >
-                  {t('products.edit')}
-                </Link>
-                <button
-                  onClick={() => handleDeleteProduct(product.id)}
-                  className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                >
-                  {t('products.delete')}
-                </button>
-              </div>
+                </SortableProductCard>
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Category Modal */}

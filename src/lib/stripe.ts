@@ -198,6 +198,23 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
     return store.plan
   }
 
+  // Check manual plan expiration (planExpiresAt) - admin-set expiration date
+  if (store.planExpiresAt) {
+    let expiresDate: Date
+    if (store.planExpiresAt instanceof Date) {
+      expiresDate = store.planExpiresAt
+    } else if (typeof store.planExpiresAt === 'object' && 'toDate' in store.planExpiresAt) {
+      expiresDate = store.planExpiresAt.toDate()
+    } else {
+      expiresDate = new Date(store.planExpiresAt as string)
+    }
+
+    if (expiresDate.getTime() <= Date.now()) {
+      return 'free'
+    }
+    return store.plan
+  }
+
   // No Stripe subscription - check for free trial (trialEndsAt)
   if (store.trialEndsAt) {
     // Convert to Date if needed

@@ -140,6 +140,7 @@ export default function AdminStores() {
   const [stores, setStores] = useState<(Store & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [editingStore, setEditingStore] = useState<(Store & { id: string }) | null>(null)
+  const [planExpiresAt, setPlanExpiresAt] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [syncingStore, setSyncingStore] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -250,19 +251,49 @@ export default function AdminStores() {
     }
   }
 
+  const openEditPlan = (store: Store & { id: string }) => {
+    setEditingStore(store)
+    // Initialize expiration date from existing planExpiresAt
+    if (store.planExpiresAt) {
+      const d = store.planExpiresAt instanceof Date
+        ? store.planExpiresAt
+        : (store.planExpiresAt as any).toDate
+          ? (store.planExpiresAt as any).toDate()
+          : new Date(store.planExpiresAt as any)
+      setPlanExpiresAt(d.toISOString().split('T')[0])
+    } else {
+      setPlanExpiresAt('')
+    }
+  }
+
   const handleUpdatePlan = async (storeId: string, newPlan: 'free' | 'pro' | 'business') => {
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'stores', storeId), {
+      const updateData: Record<string, unknown> = {
         plan: newPlan,
         updatedAt: new Date()
-      })
+      }
 
+      if (newPlan === 'free') {
+        // Free plan doesn't need expiration
+        updateData.planExpiresAt = null
+      } else if (planExpiresAt) {
+        updateData.planExpiresAt = new Date(planExpiresAt + 'T23:59:59')
+      } else {
+        updateData.planExpiresAt = null
+      }
+
+      await updateDoc(doc(db, 'stores', storeId), updateData)
+
+      const expiresDate = planExpiresAt && newPlan !== 'free' ? new Date(planExpiresAt + 'T23:59:59') : undefined
       setStores(stores.map(s =>
-        s.id === storeId ? { ...s, plan: newPlan } : s
+        s.id === storeId ? { ...s, plan: newPlan, planExpiresAt: expiresDate } as typeof s : s
       ))
 
-      showToast(`Plan actualizado a ${newPlan}`, 'success')
+      const msg = planExpiresAt && newPlan !== 'free'
+        ? `Plan ${newPlan} hasta ${planExpiresAt}`
+        : `Plan actualizado a ${newPlan}`
+      showToast(msg, 'success')
       setEditingStore(null)
     } catch (error) {
       console.error('Error updating plan:', error)
@@ -810,7 +841,7 @@ export default function AdminStores() {
                         Ver
                       </Link>
                       <button
-                        onClick={() => setEditingStore(store)}
+                        onClick={() => openEditPlan(store)}
                         className="px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 rounded-md transition-all"
                       >
                         Plan
@@ -1011,7 +1042,7 @@ export default function AdminStores() {
                   Ver detalle
                 </Link>
                 <button
-                  onClick={() => setEditingStore(store)}
+                  onClick={() => openEditPlan(store)}
                   className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
                 >
                   Editar plan
@@ -1096,12 +1127,13 @@ export default function AdminStores() {
               Editar plan: {editingStore.name}
             </h3>
 
-            <div className="space-y-3 mb-6">
+            {/* Plan selection */}
+            <div className="space-y-3 mb-4">
               {['free', 'pro', 'business'].map((plan) => (
                 <button
                   key={plan}
                   onClick={() => handleUpdatePlan(editingStore.id, plan as 'free' | 'pro' | 'business')}
-                  disabled={saving || editingStore.plan === plan}
+                  disabled={saving}
                   className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
                     editingStore.plan === plan
                       ? 'border-violet-500 bg-violet-50/50'
@@ -1121,6 +1153,33 @@ export default function AdminStores() {
                   )}
                 </button>
               ))}
+            </div>
+
+            {/* Expiration date */}
+            <div className="mb-6 p-4 rounded-xl bg-amber-50/50 border border-amber-200/50">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Fecha de vencimiento del plan
+              </label>
+              <input
+                type="date"
+                value={planExpiresAt}
+                onChange={(e) => setPlanExpiresAt(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                {planExpiresAt
+                  ? `El plan vuelve a Free el ${new Date(planExpiresAt).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                  : 'Sin fecha = plan permanente (o hasta que Stripe lo gestione)'}
+              </p>
+              {planExpiresAt && (
+                <button
+                  onClick={() => setPlanExpiresAt('')}
+                  className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium"
+                >
+                  Quitar fecha de vencimiento
+                </button>
+              )}
             </div>
 
             <div className="flex gap-3">
