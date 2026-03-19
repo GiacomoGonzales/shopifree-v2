@@ -71,7 +71,8 @@ const getExpirationInfo = (
   periodEnd: Date | null,
   trialEnd: Date | null,
   status?: string,
-  storeTrialEndsAt?: Date | null // For free trial users without Stripe subscription
+  storeTrialEndsAt?: Date | null, // For free trial users without Stripe subscription
+  storePlanExpiresAt?: Date | null // Manual plan expiration set by admin
 ): { text: string; color: string; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
   const now = new Date()
 
@@ -90,7 +91,14 @@ const getExpirationInfo = (
     }
   }
 
-  // Case 2: User on free 14-day trial (no Stripe subscription)
+  // Case 2: Manual plan expiration (admin-granted access)
+  if (storePlanExpiresAt) {
+    const diffMs = storePlanExpiresAt.getTime() - now.getTime()
+    const daysLeft = Math.ceil(diffMs / 86400000)
+    return formatExpirationResult(daysLeft, storePlanExpiresAt, 'Manual: ', false)
+  }
+
+  // Case 3: User on free 14-day trial (no Stripe subscription)
   if (storeTrialEndsAt) {
     const diffMs = storeTrialEndsAt.getTime() - now.getTime()
     const daysLeft = Math.ceil(diffMs / 86400000)
@@ -807,7 +815,8 @@ export default function AdminStores() {
                       const periodEnd = toDate(store.subscription?.currentPeriodEnd)
                       const trialEnd = toDate(store.subscription?.trialEnd)
                       const storeTrialEndsAt = toDate((store as any).trialEndsAt)
-                      const info = getExpirationInfo(periodEnd, trialEnd, store.subscription?.status, storeTrialEndsAt)
+                      const storePlanExpiresAt = toDate((store as any).planExpiresAt)
+                      const info = getExpirationInfo(periodEnd, trialEnd, store.subscription?.status, storeTrialEndsAt, storePlanExpiresAt)
                       if (!info.showExpiration) return <span className="text-gray-400 text-xs">-</span>
                       return (
                         <span
@@ -869,7 +878,8 @@ export default function AdminStores() {
             const periodEndDate = toDate(store.subscription?.currentPeriodEnd)
             const trialEndDate = toDate(store.subscription?.trialEnd)
             const storeTrialEndsAt = toDate((store as any).trialEndsAt)
-            const expirationInfo = getExpirationInfo(periodEndDate, trialEndDate, store.subscription?.status, storeTrialEndsAt)
+            const storePlanExpiresAt = toDate((store as any).planExpiresAt)
+            const expirationInfo = getExpirationInfo(periodEndDate, trialEndDate, store.subscription?.status, storeTrialEndsAt, storePlanExpiresAt)
             const country = countries.find(c => c.code === store.location?.country)
             const createdDate = store.createdAt
               ? (store.createdAt as any).toDate
