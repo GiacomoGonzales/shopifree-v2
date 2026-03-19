@@ -14,7 +14,7 @@ import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCatego
 import ProductImport from '../../components/dashboard/ProductImport'
 import type { Product, Category } from '../../types'
 
-function SortableProductCard({ product, children }: { product: Product; children: (dragHandleProps: { attributes: Record<string, unknown>; listeners: Record<string, unknown> | undefined; isDragging: boolean }) => React.ReactNode }) {
+function SortableProductCard({ product, children }: { product: Product; children: (dragHandleProps: { attributes: ReturnType<typeof useSortable>['attributes']; listeners: ReturnType<typeof useSortable>['listeners']; isDragging: boolean }) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id })
 
   const style = {
@@ -26,7 +26,7 @@ function SortableProductCard({ product, children }: { product: Product; children
 
   return (
     <div ref={setNodeRef} style={style}>
-      {children({ attributes: attributes as Record<string, unknown>, listeners: listeners as Record<string, unknown> | undefined, isDragging })}
+      {children({ attributes, listeners, isDragging })}
     </div>
   )
 }

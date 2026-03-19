@@ -166,6 +166,7 @@ type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trial
 
 interface StoreForPlanCheck {
   plan: PlanType
+  planExpiresAt?: Date | { toDate: () => Date } | string | null
   trialEndsAt?: Date | { toDate: () => Date } | string | null
   subscription?: {
     status: SubscriptionStatus
