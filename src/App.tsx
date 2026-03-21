@@ -223,13 +223,23 @@ declare global {
 
 function GoogleAnalyticsTracker() {
   const location = useLocation()
+  const { subdomain, isSubdomain, isCustomDomain, customDomain } = useSubdomain()
+
+  // Determine site context: "main" (landing/dashboard), "storefront" (subdomain/custom domain)
+  const siteType = isSubdomain || isCustomDomain ? 'storefront' : 'main'
+  const storeName = subdomain || customDomain || ''
+
   useEffect(() => {
     if (window.gtag) {
       window.gtag('event', 'page_view', {
         page_path: location.pathname + location.search,
+        page_location: window.location.href,
+        page_title: document.title,
+        site_type: siteType,
+        store_name: storeName,
       })
     }
-  }, [location])
+  }, [location, siteType, storeName])
   return null
 }
 
