@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import { ToastProvider } from './components/ui/Toast'
 import { useSubdomain } from './hooks/useSubdomain'
@@ -215,11 +215,30 @@ function AppRoutes() {
   )
 }
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
+function GoogleAnalyticsTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    if (window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+      })
+    }
+  }, [location])
+  return null
+}
+
 function App() {
   return (
     <ToastProvider>
       <AuthProvider>
         <BrowserRouter>
+          <GoogleAnalyticsTracker />
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
