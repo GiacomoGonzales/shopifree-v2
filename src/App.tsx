@@ -45,6 +45,7 @@ import AdminStoreDetail from './pages/admin/StoreDetail'
 import AdminUsers from './pages/admin/Users'
 import AdminPlans from './pages/admin/Plans'
 import AdminPaidStores from './pages/admin/PaidStores'
+import AdminFeedback from './pages/admin/Feedback'
 
 // Payment Pages
 import PaymentSuccess from './pages/payment/PaymentSuccess'
@@ -201,6 +202,7 @@ function AppRoutes() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="paid-stores" element={<AdminPaidStores />} />
           <Route path="plans" element={<AdminPlans />} />
+          <Route path="feedback" element={<AdminFeedback />} />
         </Route>
       </Route>
 
