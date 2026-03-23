@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { useTheme } from './ThemeContext'
@@ -45,8 +45,27 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
   const [selectedModifiers, setSelectedModifiers] = useState<SelectedModifier[]>([])
   const [modifiersExtra, setModifiersExtra] = useState(0)
   const [customNote, setCustomNote] = useState('')
+  const [selectionWarning, setSelectionWarning] = useState(false)
+  const variantSectionRef = useRef<HTMLDivElement>(null)
 
   const activeProduct = drawerProduct || product
+
+  // Auto-select variants that have only one available option
+  useEffect(() => {
+    if (!features.showVariants || !activeProduct.variations?.length) return
+    const autoSelected: Record<string, string> = {}
+    let hasAuto = false
+    for (const variation of activeProduct.variations) {
+      const available = variation.options.filter(opt => opt.available)
+      if (available.length === 1 && !selectedVariants[variation.name]) {
+        autoSelected[variation.name] = available[0].value
+        hasAuto = true
+      }
+    }
+    if (hasAuto) {
+      setSelectedVariants(prev => ({ ...prev, ...autoSelected }))
+    }
+  }, [activeProduct.variations, features.showVariants])
 
   const totalPrice = useMemo(() => {
     return activeProduct.price + modifiersExtra
@@ -56,6 +75,11 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     setSelectedModifiers(selected)
     setModifiersExtra(extra)
   }, [])
+
+  // Clear warning when selections change
+  useEffect(() => {
+    if (selectionWarning) setSelectionWarning(false)
+  }, [selectedVariants, selectedModifiers])
 
   const canAddToCart = useMemo(() => {
     if (features.showModifiers && activeProduct.modifierGroups?.length) {
@@ -108,6 +132,13 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     : 0
 
   const handleAddToCart = () => {
+    if (requiresSelection && !canAddToCart) {
+      setSelectionWarning(true)
+      setTimeout(() => setSelectionWarning(false), 3000)
+      variantSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+
     const extras: CartItemExtras = {
       itemPrice: totalPrice,
     }
@@ -283,20 +314,54 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
 
             {/* Fashion/Pets: Variants */}
             {features.showVariants && activeProduct.variations && activeProduct.variations.length > 0 && (
-              <VariantSelector
-                variations={activeProduct.variations}
-                selected={selectedVariants}
-                onChange={setSelectedVariants}
-              />
+              <div ref={variantSectionRef}>
+                {selectionWarning && (
+                  <div
+                    className="mb-3 px-4 py-2.5 text-sm font-medium animate-fadeIn"
+                    style={{
+                      backgroundColor: theme.effects.darkMode ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)',
+                      color: '#ef4444',
+                      borderRadius: theme.radius.md,
+                      border: '1px solid rgba(239,68,68,0.3)',
+                    }}
+                  >
+                    {language === 'en' ? 'Please select all options before adding to cart' :
+                     language === 'pt' ? 'Selecione todas as opcoes antes de adicionar ao carrinho' :
+                     'Selecciona todas las opciones antes de agregar al carrito'}
+                  </div>
+                )}
+                <VariantSelector
+                  variations={activeProduct.variations}
+                  selected={selectedVariants}
+                  onChange={setSelectedVariants}
+                />
+              </div>
             )}
 
             {/* Food: Modifiers */}
             {features.showModifiers && activeProduct.modifierGroups && activeProduct.modifierGroups.length > 0 && (
-              <ModifierSelector
-                modifierGroups={activeProduct.modifierGroups}
-                onChange={handleModifiersChange}
-                language={language}
-              />
+              <div ref={!activeProduct.variations?.length ? variantSectionRef : undefined}>
+                {selectionWarning && !activeProduct.variations?.length && (
+                  <div
+                    className="mb-3 px-4 py-2.5 text-sm font-medium animate-fadeIn"
+                    style={{
+                      backgroundColor: theme.effects.darkMode ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)',
+                      color: '#ef4444',
+                      borderRadius: theme.radius.md,
+                      border: '1px solid rgba(239,68,68,0.3)',
+                    }}
+                  >
+                    {language === 'en' ? 'Please select required options before adding to cart' :
+                     language === 'pt' ? 'Selecione as opcoes obrigatorias antes de adicionar ao carrinho' :
+                     'Selecciona las opciones requeridas antes de agregar al carrito'}
+                  </div>
+                )}
+                <ModifierSelector
+                  modifierGroups={activeProduct.modifierGroups}
+                  onChange={handleModifiersChange}
+                  language={language}
+                />
+              </div>
             )}
 
             {/* Tech: Specs */}
@@ -327,8 +392,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
         >
           <button
             onClick={handleAddToCart}
-            disabled={requiresSelection && !canAddToCart}
-            className="w-full py-4 font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 font-medium transition-all active:scale-[0.98]"
             style={{
               backgroundColor: theme.colors.primary,
               color: theme.colors.textInverted,
