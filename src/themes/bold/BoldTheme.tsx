@@ -18,6 +18,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 /**
@@ -82,6 +83,7 @@ interface Props {
 
 export default function BoldTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -143,9 +145,11 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                   <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
                 </div>
               )}
+              {showName && (
               <span className="text-xl md:text-2xl font-black uppercase tracking-tight" style={{ color: accent }}>
                 {store.name}
               </span>
+              )}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="relative group">
               <div

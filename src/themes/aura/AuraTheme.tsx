@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Aura colors
@@ -93,6 +94,7 @@ interface Props {
 
 export default function AuraTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -171,9 +173,11 @@ export default function AuraTheme({ store, products, categories, onWhatsAppClick
                 </div>
               )}
               <div>
+                {(!store.logo || showName) && (
                 <h1 className="font-aura text-2xl md:text-3xl tracking-wide" style={{ color: darkText }}>
                   {store.name}
                 </h1>
+                )}
                 {store.about?.slogan && !scrolled && (
                   <p className="text-xs tracking-[0.12em] uppercase mt-0.5 font-aura-body" style={{ color: violet }}>
                     {store.about.slogan}

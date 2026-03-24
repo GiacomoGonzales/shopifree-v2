@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Bistro colors
@@ -90,6 +91,7 @@ interface Props {
 
 export default function BistroTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -149,6 +151,7 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                   <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
                 </div>
               )}
+              {showName && (
               <div>
                 <h1 className="font-serif-bistro text-2xl md:text-3xl font-semibold" style={{ color: cream }}>
                   {store.name}
@@ -159,6 +162,7 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                   </p>
                 )}
               </div>
+              )}
             </div>
 
             {/* Cart button */}

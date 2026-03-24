@@ -30,6 +30,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 const brutalistTheme: ThemeConfig = {
@@ -83,6 +84,7 @@ interface Props {
 
 export default function BrutalistTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -132,12 +134,14 @@ export default function BrutalistTheme({ store, products, categories, onWhatsApp
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" style={{ filter: 'grayscale(100%) contrast(200%)' }} />
                 )}
+                {showName && (
                 <h1
                   className="text-lg font-bold uppercase tracking-tighter"
                   style={{ fontFamily: "'Space Mono', monospace" }}
                 >
                   {store.name}
                 </h1>
+                )}
               </div>
 
               <div className="flex items-center gap-3">

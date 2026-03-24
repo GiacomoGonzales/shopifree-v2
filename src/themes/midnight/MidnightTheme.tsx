@@ -31,6 +31,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 const midnightTheme: ThemeConfig = {
   colors: {
@@ -83,6 +84,7 @@ interface Props {
 
 export default function MidnightTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -183,7 +185,7 @@ export default function MidnightTheme({ store, products, categories, onWhatsAppC
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" />
                 )}
-                <h1
+                {showName && <h1
                   className="text-xl font-semibold tracking-wide"
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
@@ -192,7 +194,7 @@ export default function MidnightTheme({ store, products, categories, onWhatsAppC
                   }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
 
               <div className="flex items-center gap-3">

@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -83,6 +84,7 @@ interface Props {
 
 export default function CraftTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -152,9 +154,9 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
                   <span className="font-craft-title text-lg" style={{ color: colors.primary }}>{store.name.charAt(0)}</span>
                 </div>
               )}
-              <h1 className="font-craft-title text-xl md:text-2xl" style={{ color: colors.text }}>
+              {showName && <h1 className="font-craft-title text-xl md:text-2xl" style={{ color: colors.text }}>
                 {store.name}
-              </h1>
+              </h1>}
             </div>
 
             {/* Cart */}

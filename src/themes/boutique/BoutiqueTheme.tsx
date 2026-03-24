@@ -19,6 +19,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Boutique theme configuration - feminine and elegant
@@ -73,6 +74,7 @@ interface Props {
 
 export default function BoutiqueTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -121,12 +123,14 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                   <span className="text-white font-serif text-xl">{store.name.charAt(0)}</span>
                 </div>
               )}
+              {(!store.logo || showName) && (
               <div>
                 <h1 className="font-serif text-xl text-gray-900 tracking-wide">{store.name}</h1>
                 {store.about?.slogan && (
                   <p className="text-xs text-pink-600 italic">{store.about.slogan}</p>
                 )}
               </div>
+              )}
             </div>
             <button
               onClick={() => setIsCartOpen(true)}

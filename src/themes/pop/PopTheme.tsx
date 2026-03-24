@@ -19,6 +19,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 /**
  * POP THEME - "DIVERTIDO"
@@ -92,6 +93,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { showName } = useLogoOrientation(store.logo)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -138,18 +140,19 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
         >
           <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
+              {store.logo && (
                 <div className="w-12 h-12 rounded-2xl overflow-hidden" style={{ borderColor: pink, borderWidth: '3px', borderStyle: 'solid' }}>
                   <img src={store.logo} alt={store.name} className="w-full h-full object-contain" />
                 </div>
-              ) : (
+              )}
+              {!store.logo && (
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-pop font-black text-xl" style={{ backgroundColor: pink, color: light }}>
                   {store.name.charAt(0)}
                 </div>
               )}
-              <h1 className="font-pop font-black text-xl md:text-2xl" style={{ color: dark }}>
+              {showName && <h1 className="font-pop font-black text-xl md:text-2xl" style={{ color: dark }}>
                 {store.name}
-              </h1>
+              </h1>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="relative">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform hover:scale-105" style={{ backgroundColor: blue }}>

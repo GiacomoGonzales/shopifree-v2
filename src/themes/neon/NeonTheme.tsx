@@ -29,6 +29,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 // Neon theme colors
 const neonGreen = '#00ff88'
@@ -93,6 +94,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { showName } = useLogoOrientation(store.logo)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -143,11 +145,12 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
         >
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
+              {store.logo && (
                 <div className="w-10 h-10 rounded-lg overflow-hidden neon-box">
                   <img src={store.logo} alt={store.name} className="w-full h-full object-contain" />
                 </div>
-              ) : (
+              )}
+              {!store.logo && (
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center neon-box"
                   style={{ backgroundColor: `${neonGreen}20` }}
@@ -155,9 +158,9 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                   <span className="font-bold neon-glow" style={{ color: neonGreen }}>{store.name.charAt(0)}</span>
                 </div>
               )}
-              <h1 className="font-bold text-lg tracking-wide" style={{ color: neonGreen }}>
+              {showName && <h1 className="font-bold text-lg tracking-wide" style={{ color: neonGreen }}>
                 {store.name}
-              </h1>
+              </h1>}
             </div>
             <button
               onClick={() => setIsCartOpen(true)}

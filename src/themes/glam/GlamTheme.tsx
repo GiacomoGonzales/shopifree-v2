@@ -30,6 +30,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 // Glam colors
 const nude = '#FDF5F3'
@@ -92,6 +93,7 @@ interface Props {
 
 export default function GlamTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -163,9 +165,9 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
                 </div>
               )}
               <div>
-                <h1 className="font-glam text-2xl md:text-3xl font-medium tracking-wide" style={{ color: black }}>
+                {(!store.logo || showName) && <h1 className="font-glam text-2xl md:text-3xl font-medium tracking-wide" style={{ color: black }}>
                   {store.name}
-                </h1>
+                </h1>}
                 {store.about?.slogan && !scrolled && (
                   <p className="text-xs tracking-[0.15em] uppercase mt-0.5 font-glam-body" style={{ color: gold }}>
                     {store.about.slogan}

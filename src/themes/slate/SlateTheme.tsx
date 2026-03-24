@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Slate colors
@@ -93,6 +94,7 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
+  const { showName } = useLogoOrientation(store.logo)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -164,9 +166,11 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
                   <SlateIcon className="w-5 h-5" style={{ color: slateBlue }} />
                 </div>
               )}
-              <h1 className="font-slate text-xl md:text-2xl font-semibold" style={{ color: '#0F172A' }}>
-                {store.name}
-              </h1>
+              {showName && (
+                <h1 className="font-slate text-xl md:text-2xl font-semibold" style={{ color: '#0F172A' }}>
+                  {store.name}
+                </h1>
+              )}
             </div>
 
             {/* Cart button */}

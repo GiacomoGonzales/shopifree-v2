@@ -25,6 +25,7 @@ import type { Store, Product, Category } from '../types'
 import { formatPrice } from '../lib/currency'
 import { useCart } from '../hooks/useCart'
 import ProductGallery from './shared/ProductGallery'
+import { useLogoOrientation } from './shared/useLogoOrientation'
 import './shared/animations.css'
 
 // =====================================================
@@ -43,6 +44,7 @@ interface Props {
 // =====================================================
 export default function TemplateTheme({ store, products, categories, onWhatsAppClick, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -131,9 +133,10 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              {store.logo ? (
+              {store.logo && (
                 <img src={store.logo} alt={store.name} className="h-10 w-auto" />
-              ) : (
+              )}
+              {(!store.logo || showName) && (
                 <h1 className="text-xl font-bold" style={{ color: colors.primary }}>{store.name}</h1>
               )}
             </div>

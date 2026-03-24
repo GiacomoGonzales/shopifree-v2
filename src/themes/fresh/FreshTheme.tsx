@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -81,6 +82,7 @@ interface Props {
 
 export default function FreshTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -132,7 +134,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                 </div>
               )}
               <div>
-                <h1 className="font-semibold text-gray-900">{store.name}</h1>
+                {showName && <h1 className="font-semibold text-gray-900">{store.name}</h1>}
                 {store.about?.slogan && (
                   <p className="text-xs text-emerald-600">{store.about.slogan}</p>
                 )}

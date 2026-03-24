@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Barbershop colors
@@ -93,6 +94,7 @@ interface Props {
 
 export default function BarbershopTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -165,9 +167,11 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
                   <BarbershopIcon className="w-5 h-5" style={{ color: gold }} />
                 </div>
               )}
+              {(!store.logo || showName) && (
               <h1 className="font-barbershop-heading text-2xl md:text-3xl tracking-wider" style={{ color: gold }}>
                 {store.name}
               </h1>
+              )}
             </div>
 
             {/* Cart button */}

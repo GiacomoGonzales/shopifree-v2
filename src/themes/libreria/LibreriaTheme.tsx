@@ -30,6 +30,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 // Libreria colors
 const nightBlue = '#1E3A5F'
@@ -94,6 +95,7 @@ interface Props {
 
 export default function LibreriaTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -176,9 +178,9 @@ export default function LibreriaTheme({ store, products, categories, onWhatsAppC
                 </div>
               )}
               <div>
-                <h1 className="font-libreria-heading text-2xl md:text-3xl font-bold" style={{ color: nightBlue }}>
+                {(!store.logo || showName) && <h1 className="font-libreria-heading text-2xl md:text-3xl font-bold" style={{ color: nightBlue }}>
                   {store.name}
-                </h1>
+                </h1>}
                 {store.about?.slogan && !scrolled && (
                   <p className="text-xs font-libreria-heading italic" style={{ color: inkRed }}>
                     {store.about.slogan}

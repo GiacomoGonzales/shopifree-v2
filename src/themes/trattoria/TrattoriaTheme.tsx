@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Trattoria colors
@@ -97,6 +98,7 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
+  const { showName } = useLogoOrientation(store.logo)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -158,16 +160,18 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
                   <span className="text-2xl">🍕</span>
                 </div>
               )}
-              <div>
-                <h1 className="font-trattoria text-2xl md:text-3xl font-semibold italic" style={{ color: darkBrown }}>
-                  {store.name}
-                </h1>
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs font-trattoria-body tracking-wide" style={{ color: terracotta }}>
-                    {store.about.slogan}
-                  </p>
-                )}
-              </div>
+              {showName && (
+                <div>
+                  <h1 className="font-trattoria text-2xl md:text-3xl font-semibold italic" style={{ color: darkBrown }}>
+                    {store.name}
+                  </h1>
+                  {store.about?.slogan && !scrolled && (
+                    <p className="text-xs font-trattoria-body tracking-wide" style={{ color: terracotta }}>
+                      {store.about.slogan}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Cart button */}

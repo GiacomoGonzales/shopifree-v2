@@ -28,6 +28,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 const mirageTheme: ThemeConfig = {
   colors: {
@@ -92,6 +93,7 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { showName } = useLogoOrientation(store.logo)
   const heroRef = useRef<HTMLDivElement>(null)
   const heroImgRef = useRef<HTMLImageElement>(null)
   const heroImgMobileRef = useRef<HTMLImageElement>(null)
@@ -222,7 +224,7 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
                 {store.logo && <img src={store.logo} alt={store.name} className="h-8 w-auto" />}
-                <h1
+                {showName && <h1
                   className="text-xl font-semibold"
                   style={{
                     fontFamily: "'Fraunces', serif",
@@ -231,7 +233,7 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
                   }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
               <div className="flex items-center gap-3">
                 {store.instagram && (

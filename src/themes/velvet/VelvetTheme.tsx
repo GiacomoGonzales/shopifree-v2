@@ -27,6 +27,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 const velvetTheme: ThemeConfig = {
@@ -77,6 +78,7 @@ interface Props {
 
 export default function VelvetTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -179,17 +181,19 @@ export default function VelvetTheme({ store, products, categories, onWhatsAppCli
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
                 {store.logo && <img src={store.logo} alt={store.name} className="h-8 w-auto" />}
-                <h1
-                  className="text-xl font-medium italic"
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    color: rose,
-                    textShadow: `0 0 40px ${rose}40, 0 0 80px ${lavender}20`,
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  {store.name}
-                </h1>
+                {showName && (
+                  <h1
+                    className="text-xl font-medium italic"
+                    style={{
+                      fontFamily: "'Playfair Display', serif",
+                      color: rose,
+                      textShadow: `0 0 40px ${rose}40, 0 0 80px ${lavender}20`,
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    {store.name}
+                  </h1>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 {store.instagram && (

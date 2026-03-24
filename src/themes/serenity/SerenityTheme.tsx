@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Serenity colors
@@ -95,6 +96,7 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
+  const { showName } = useLogoOrientation(store.logo)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -166,9 +168,11 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
                   <SerenityIcon className="w-5 h-5" style={{ color: blush }} />
                 </div>
               )}
-              <h1 className="font-serenity-heading text-xl md:text-2xl font-medium" style={{ color: textDark }}>
-                {store.name}
-              </h1>
+              {showName && (
+                <h1 className="font-serenity-heading text-xl md:text-2xl font-medium" style={{ color: textDark }}>
+                  {store.name}
+                </h1>
+              )}
             </div>
 
             {/* Cart button */}

@@ -31,6 +31,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 const grungeTheme: ThemeConfig = {
   colors: {
@@ -83,6 +84,7 @@ interface Props {
 
 export default function GrungeTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -160,7 +162,7 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" />
                 )}
-                <h1
+                {showName && <h1
                   className="text-xl font-bold uppercase tracking-wider"
                   style={{
                     fontFamily: "'Oswald', system-ui, sans-serif",
@@ -168,7 +170,7 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
                   }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
 
               <div className="flex items-center gap-3">

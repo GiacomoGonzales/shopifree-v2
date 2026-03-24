@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Toyland colors
@@ -103,6 +104,7 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
+  const { showName } = useLogoOrientation(store.logo)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -176,16 +178,18 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
                   <BlockIcon className="w-7 h-7" style={{ color: darkText }} />
                 </div>
               )}
-              <div>
-                <h1 className="font-toyland text-2xl md:text-3xl font-extrabold" style={{ color: darkText }}>
-                  {store.name}
-                </h1>
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs font-bold font-toyland" style={{ color: turquoise }}>
-                    {store.about.slogan}
-                  </p>
-                )}
-              </div>
+              {showName && (
+                <div>
+                  <h1 className="font-toyland text-2xl md:text-3xl font-extrabold" style={{ color: darkText }}>
+                    {store.name}
+                  </h1>
+                  {store.about?.slogan && !scrolled && (
+                    <p className="text-xs font-bold font-toyland" style={{ color: turquoise }}>
+                      {store.about.slogan}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Cart button */}

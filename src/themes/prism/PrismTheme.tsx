@@ -32,6 +32,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 const prismTheme: ThemeConfig = {
   colors: {
@@ -93,6 +94,7 @@ export default function PrismTheme({ store, products, categories, onWhatsAppClic
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { showName } = useLogoOrientation(store.logo)
   const heroRef = useRef<HTMLDivElement>(null)
   const heroImgRef = useRef<HTMLImageElement>(null)
   const heroImgMobileRef = useRef<HTMLImageElement>(null)
@@ -157,7 +159,7 @@ export default function PrismTheme({ store, products, categories, onWhatsAppClic
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
                 {store.logo && <img src={store.logo} alt={store.name} className="h-8 w-auto" />}
-                <h1
+                {showName && <h1
                   className="text-xl font-bold animate-gradient-text"
                   style={{
                     fontFamily: "'Sora', system-ui, sans-serif",
@@ -166,7 +168,7 @@ export default function PrismTheme({ store, products, categories, onWhatsAppClic
                   }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
               <div className="flex items-center gap-3">
                 {store.instagram && (

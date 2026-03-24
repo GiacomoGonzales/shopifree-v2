@@ -14,6 +14,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -94,6 +95,7 @@ interface Props {
 export default function CircuitTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -174,12 +176,13 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
             <div className="flex items-center justify-between h-16">
               {/* Logo + Name */}
               <div className="flex items-center gap-3">
-                {store.logo ? (
+                {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" />
-                ) : (
+                )}
+                {!store.logo && (
                   <CircuitIcon className="w-7 h-7" style={{ color: electricBlue }} />
                 )}
-                <h1
+                {showName && <h1
                   className="text-lg font-semibold tracking-wide"
                   style={{
                     color: electricBlue,
@@ -187,7 +190,7 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
                   }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
 
               {/* Cart button */}

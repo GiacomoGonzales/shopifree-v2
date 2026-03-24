@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Sakura colors
@@ -97,6 +98,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
+  const { showName } = useLogoOrientation(store.logo)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -159,11 +161,13 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                   <span className="text-lg" style={{ color: crimson }}>桜</span>
                 </div>
               )}
-              <div>
-                <h1 className="font-zen text-2xl md:text-3xl font-medium tracking-wide" style={{ color: white }}>
-                  {store.name}
-                </h1>
-              </div>
+              {showName && (
+                <div>
+                  <h1 className="font-zen text-2xl md:text-3xl font-medium tracking-wide" style={{ color: white }}>
+                    {store.name}
+                  </h1>
+                </div>
+              )}
             </div>
 
             {/* Cart button */}

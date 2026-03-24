@@ -14,6 +14,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -85,6 +86,7 @@ interface Props {
 export default function FlavorTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -135,9 +137,9 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-10 w-auto" />
                 )}
-                <h1 className="text-lg font-bold" style={{ color: colors.text }}>
+                {showName && <h1 className="text-lg font-bold" style={{ color: colors.text }}>
                   {store.name}
-                </h1>
+                </h1>}
               </div>
 
               {/* Nav Actions */}

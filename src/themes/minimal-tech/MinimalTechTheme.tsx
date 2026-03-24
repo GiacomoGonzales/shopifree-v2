@@ -31,6 +31,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 // Minimal Tech theme configuration - Apple-inspired minimalism
 const minimalTechTheme: ThemeConfig = {
@@ -91,6 +92,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { showName } = useLogoOrientation(store.logo)
 
   // Apple-style colors
   const spaceGray = '#1d1d1f'
@@ -139,12 +141,12 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-7 w-auto" />
                 )}
-                <h1
+                {showName && <h1
                   className="text-lg font-semibold tracking-tight"
                   style={{ color: spaceGray }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
 
               {/* Right side actions */}

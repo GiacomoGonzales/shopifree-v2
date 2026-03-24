@@ -14,6 +14,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -84,6 +85,7 @@ interface Props {
 export default function CandyTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -153,7 +155,7 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-9 w-auto" />
                 )}
-                <h1
+                {showName && <h1
                   className="text-xl font-bold"
                   style={{
                     fontFamily: "'Bubblegum Sans', cursive",
@@ -161,7 +163,7 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
                   }}
                 >
                   {store.name}
-                </h1>
+                </h1>}
               </div>
 
               <div className="flex items-center gap-3">

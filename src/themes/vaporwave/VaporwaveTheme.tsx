@@ -30,6 +30,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 const vaporwaveTheme: ThemeConfig = {
@@ -83,6 +84,7 @@ interface Props {
 
 export default function VaporwaveTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -169,17 +171,19 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
                 {store.logo && (
                   <img src={store.logo} alt={store.name} className="h-8 w-auto" />
                 )}
-                <h1
-                  className="text-xl font-bold"
-                  style={{
-                    fontFamily: "'Righteous', system-ui, sans-serif",
-                    background: `linear-gradient(135deg, ${pink}, ${cyan})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
-                >
-                  {store.name}
-                </h1>
+                {showName && (
+                  <h1
+                    className="text-xl font-bold"
+                    style={{
+                      fontFamily: "'Righteous', system-ui, sans-serif",
+                      background: `linear-gradient(135deg, ${pink}, ${cyan})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {store.name}
+                  </h1>
+                )}
               </div>
 
               <div className="flex items-center gap-3">

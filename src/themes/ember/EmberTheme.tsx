@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -90,6 +91,7 @@ interface Props {
 
 export default function EmberTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -164,9 +166,9 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                   <FlameIcon className="w-6 h-6" style={{ color: amber }} />
                 </div>
               )}
-              <h1 className="font-ember text-xl md:text-2xl font-semibold" style={{ color: '#F5F0EB' }}>
+              {showName && <h1 className="font-ember text-xl md:text-2xl font-semibold" style={{ color: '#F5F0EB' }}>
                 {store.name}
-              </h1>
+              </h1>}
             </div>
 
             {/* Cart button */}

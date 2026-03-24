@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Taqueria colors
@@ -97,6 +98,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
+  const { showName } = useLogoOrientation(store.logo)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -157,16 +159,18 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                   🌮
                 </div>
               )}
-              <div>
-                <h1 className="font-taqueria text-2xl md:text-3xl font-bold" style={{ color: darkBrown }}>
-                  {store.name}
-                </h1>
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs font-taqueria-body font-semibold" style={{ color: orange }}>
-                    {store.about.slogan}
-                  </p>
-                )}
-              </div>
+              {showName && (
+                <div>
+                  <h1 className="font-taqueria text-2xl md:text-3xl font-bold" style={{ color: darkBrown }}>
+                    {store.name}
+                  </h1>
+                  {store.about?.slogan && !scrolled && (
+                    <p className="text-xs font-taqueria-body font-semibold" style={{ color: orange }}>
+                      {store.about.slogan}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Cart button */}

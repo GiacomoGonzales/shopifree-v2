@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -93,6 +94,7 @@ interface Props {
 
 export default function DecoTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -174,9 +176,9 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
                 </div>
               )}
               <div>
-                <h1 className="font-deco text-2xl md:text-3xl font-bold tracking-tight" style={{ color: charcoal }}>
+                {showName && <h1 className="font-deco text-2xl md:text-3xl font-bold tracking-tight" style={{ color: charcoal }}>
                   {store.name}
-                </h1>
+                </h1>}
                 {store.about?.slogan && !scrolled && (
                   <p className="text-xs font-medium font-deco tracking-wide" style={{ color: olive }}>
                     {store.about.slogan}

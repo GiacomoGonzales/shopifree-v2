@@ -19,6 +19,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 /**
  * LUXE THEME - "ELEGANCIA"
@@ -84,6 +85,7 @@ interface Props {
 
 export default function LuxeTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -141,9 +143,9 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
                   <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
                 </div>
               )}
-              <h1 className="font-serif-luxe text-2xl md:text-3xl font-semibold tracking-wide" style={{ color: darkBg }}>
+              {showName && <h1 className="font-serif-luxe text-2xl md:text-3xl font-semibold tracking-wide" style={{ color: darkBg }}>
                 {store.name}
-              </h1>
+              </h1>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="relative group">
               <div className="w-12 h-12 flex items-center justify-center border transition-all duration-300 group-hover:scale-105" style={{ borderColor: darkBg }}>

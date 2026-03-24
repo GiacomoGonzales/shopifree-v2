@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { optimizeImage } from '../../utils/cloudinary'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import {
   ThemeProvider,
   ProductGrid,
@@ -91,6 +92,7 @@ interface Props {
 
 export default function FitnessTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -166,9 +168,9 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 </div>
               )}
               <div>
-                <h1 className="font-fitness-heading text-2xl md:text-3xl font-bold uppercase tracking-wider" style={{ color: white }}>
+                {showName && <h1 className="font-fitness-heading text-2xl md:text-3xl font-bold uppercase tracking-wider" style={{ color: white }}>
                   {store.name}
-                </h1>
+                </h1>}
                 {store.about?.slogan && !scrolled && (
                   <p className="text-xs font-medium font-fitness-body uppercase tracking-widest" style={{ color: red }}>
                     {store.about.slogan}

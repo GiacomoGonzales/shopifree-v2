@@ -30,6 +30,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 
 // Furry colors
 const teal = '#0D9488'
@@ -93,6 +94,7 @@ interface Props {
 
 export default function FurryTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -178,9 +180,9 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
                 </div>
               )}
               <div>
-                <h1 className="font-furry text-2xl md:text-3xl font-bold" style={{ color: darkText }}>
+                {(!store.logo || showName) && <h1 className="font-furry text-2xl md:text-3xl font-bold" style={{ color: darkText }}>
                   {store.name}
-                </h1>
+                </h1>}
                 {store.about?.slogan && !scrolled && (
                   <p className="text-xs font-semibold font-furry-body" style={{ color: pink }}>
                     {store.about.slogan}

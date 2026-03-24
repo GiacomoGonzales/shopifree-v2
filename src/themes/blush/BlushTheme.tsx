@@ -29,6 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
+import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
 
 // Blush colors
@@ -93,6 +94,7 @@ interface Props {
 
 export default function BlushTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
+  const { showName } = useLogoOrientation(store.logo)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -170,6 +172,7 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                   <BlushIcon className="w-6 h-6" style={{ color: rose }} />
                 </div>
               )}
+              {(!store.logo || showName) && (
               <div>
                 <h1 className="font-blush text-2xl md:text-3xl font-semibold" style={{ color: darkText }}>
                   {store.name}
@@ -180,6 +183,7 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                   </p>
                 )}
               </div>
+              )}
             </div>
 
             {/* Cart button */}
