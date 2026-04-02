@@ -129,6 +129,13 @@ service cloud.firestore {
       allow write: if false; // Only backend handles tokens
     }
 
+    // Feedback from dashboard users
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
     // Demo stores for landing carousel
     match /demoStores/{storeId} {
       allow read: if true;

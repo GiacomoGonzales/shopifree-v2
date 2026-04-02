@@ -1,27 +1,27 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Auto-generated config for store: AlienStore (mJe3zuUhY8ggu8FxnKWyVP5fI3Z2)
-// Generated at: 2026-02-28T04:29:27.278Z
+// Shopifree Platform App - default config
+// For white-label store builds, use: npx tsx mobile/build-config.ts <storeId>
 
 const config: CapacitorConfig = {
-  appId: 'app.shopifree.store.alienstore',
-  appName: 'AlienStore',
+  appId: 'app.shopifree.mobile',
+  appName: 'Shopifree',
   webDir: 'dist',
-  backgroundColor: '#000000',
+  backgroundColor: '#1e3a5f',
   server: {
     cleartext: true,
     androidScheme: 'https'
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 10000,
-      launchAutoHide: false,
-      backgroundColor: '#000000',
+      launchShowDuration: 3000,
+      launchAutoHide: true,
+      backgroundColor: '#1e3a5f',
       showSpinner: false,
     },
     StatusBar: {
       style: 'LIGHT',
-      backgroundColor: '#000000'
+      backgroundColor: '#1e3a5f'
     },
     Keyboard: {
       resize: 'native'
