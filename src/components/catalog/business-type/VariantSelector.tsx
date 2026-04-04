@@ -1,14 +1,17 @@
 import { useTheme } from '../ThemeContext'
 import type { ProductVariation } from '../../../types'
+import { getThemeTranslations } from '../../../themes/shared/translations'
 
 interface VariantSelectorProps {
   variations: ProductVariation[]
   selected: Record<string, string>  // { variationName: selectedValue }
   onChange: (selected: Record<string, string>) => void
+  trackStock?: boolean
 }
 
-export default function VariantSelector({ variations, selected, onChange }: VariantSelectorProps) {
-  const { theme } = useTheme()
+export default function VariantSelector({ variations, selected, onChange, trackStock }: VariantSelectorProps) {
+  const { theme, language } = useTheme()
+  const t = getThemeTranslations(language)
 
   const handleSelect = (variationName: string, value: string) => {
     onChange({
@@ -53,14 +56,16 @@ export default function VariantSelector({ variations, selected, onChange }: Vari
               return availableOptions.map(option => {
                 const isSelected = selected[variation.name] === option.value
                 const colorValue = allHaveColor ? getColorValue(option.value) : null
+                const variantOutOfStock = trackStock && typeof option.stock === 'number' && option.stock <= 0
 
                 if (colorValue) {
                   return (
                     <button
                       key={option.id}
                       type="button"
-                      onClick={() => handleSelect(variation.name, option.value)}
-                      className="w-10 h-10 transition-all flex items-center justify-center"
+                      onClick={() => !variantOutOfStock && handleSelect(variation.name, option.value)}
+                      disabled={variantOutOfStock}
+                      className="w-10 h-10 transition-all flex items-center justify-center relative"
                       style={{
                         backgroundColor: colorValue,
                         borderRadius: theme.radius.full,
@@ -68,10 +73,11 @@ export default function VariantSelector({ variations, selected, onChange }: Vari
                           ? `3px solid ${theme.colors.primary}`
                           : `2px solid ${theme.colors.border}`,
                         boxShadow: isSelected ? theme.shadows.md : 'none',
+                        opacity: variantOutOfStock ? 0.4 : 1,
                       }}
-                      title={option.value}
+                      title={variantOutOfStock ? `${option.value} - ${t.outOfStock}` : option.value}
                     >
-                      {isSelected && (
+                      {isSelected && !variantOutOfStock && (
                         <svg
                           className="w-5 h-5"
                           style={{ color: isLightColor(colorValue) ? '#000' : '#fff' }}
@@ -80,6 +86,11 @@ export default function VariantSelector({ variations, selected, onChange }: Vari
                         >
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
+                      )}
+                      {variantOutOfStock && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-full h-0.5 bg-gray-500 rotate-45" style={{ borderRadius: '1px' }} />
+                        </div>
                       )}
                     </button>
                   )
@@ -91,16 +102,19 @@ export default function VariantSelector({ variations, selected, onChange }: Vari
                     <button
                       key={option.id}
                       type="button"
-                      onClick={() => handleSelect(variation.name, option.value)}
+                      onClick={() => !variantOutOfStock && handleSelect(variation.name, option.value)}
+                      disabled={variantOutOfStock}
                       className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all"
                       style={{
-                        backgroundColor: isSelected ? theme.colors.primary : 'transparent',
-                        color: isSelected ? theme.colors.textInverted : theme.colors.text,
+                        backgroundColor: isSelected && !variantOutOfStock ? theme.colors.primary : 'transparent',
+                        color: variantOutOfStock ? theme.colors.textMuted : isSelected ? theme.colors.textInverted : theme.colors.text,
                         borderRadius: theme.radius.md,
-                        border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
+                        border: `1px solid ${isSelected && !variantOutOfStock ? theme.colors.primary : theme.colors.border}`,
+                        opacity: variantOutOfStock ? 0.5 : 1,
+                        textDecoration: variantOutOfStock ? 'line-through' : 'none',
                       }}
                     >
-                      <img src={option.image} alt={option.value} className="w-6 h-6 rounded object-cover" />
+                      <img src={option.image} alt={option.value} className="w-6 h-6 rounded object-cover" style={{ opacity: variantOutOfStock ? 0.5 : 1 }} />
                       {option.value}
                     </button>
                   )
@@ -111,13 +125,16 @@ export default function VariantSelector({ variations, selected, onChange }: Vari
                   <button
                     key={option.id}
                     type="button"
-                    onClick={() => handleSelect(variation.name, option.value)}
+                    onClick={() => !variantOutOfStock && handleSelect(variation.name, option.value)}
+                    disabled={variantOutOfStock}
                     className="px-4 py-2 text-sm font-medium transition-all"
                     style={{
-                      backgroundColor: isSelected ? theme.colors.primary : 'transparent',
-                      color: isSelected ? theme.colors.textInverted : theme.colors.text,
+                      backgroundColor: isSelected && !variantOutOfStock ? theme.colors.primary : 'transparent',
+                      color: variantOutOfStock ? theme.colors.textMuted : isSelected ? theme.colors.textInverted : theme.colors.text,
                       borderRadius: theme.radius.md,
-                      border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
+                      border: `1px solid ${isSelected && !variantOutOfStock ? theme.colors.primary : theme.colors.border}`,
+                      opacity: variantOutOfStock ? 0.5 : 1,
+                      textDecoration: variantOutOfStock ? 'line-through' : 'none',
                     }}
                   >
                     {option.value}

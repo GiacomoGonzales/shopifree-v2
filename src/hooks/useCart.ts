@@ -43,7 +43,8 @@ function generateCartItemKey(product: Product, extras?: CartItemExtras): string 
 export function useCart() {
   const [items, setItems] = useState<CartItem[]>([])
 
-  const addItem = useCallback((product: Product, extras?: CartItemExtras) => {
+  const addItem = useCallback((product: Product, extras?: CartItemExtras): boolean => {
+    let blocked = false
     setItems(currentItems => {
       const itemKey = generateCartItemKey(product, extras)
 
@@ -56,6 +57,31 @@ export function useCart() {
         })
         return currentKey === itemKey
       })
+
+      // Check stock limit (variant-level first, then product-level)
+      if (product.trackStock) {
+        const currentQty = existingIndex !== -1 ? currentItems[existingIndex].quantity : 0
+        let stockLimit: number | undefined
+
+        if (extras?.selectedVariants && product.variations?.length) {
+          for (const [varName, varValue] of Object.entries(extras.selectedVariants)) {
+            const variation = product.variations.find(v => v.name === varName)
+            const option = variation?.options.find(o => o.value === varValue)
+            if (option && typeof option.stock === 'number') {
+              stockLimit = stockLimit === undefined ? option.stock : Math.min(stockLimit, option.stock)
+            }
+          }
+        }
+
+        if (stockLimit === undefined && typeof product.stock === 'number') {
+          stockLimit = product.stock
+        }
+
+        if (stockLimit !== undefined && currentQty + 1 > stockLimit) {
+          blocked = true
+          return currentItems
+        }
+      }
 
       if (existingIndex !== -1) {
         // Increment quantity of existing item
@@ -78,22 +104,48 @@ export function useCart() {
 
       return [...currentItems, newItem]
     })
+    return !blocked
   }, [])
 
   const removeItem = useCallback((index: number) => {
     setItems(currentItems => currentItems.filter((_, i) => i !== index))
   }, [])
 
-  const updateQuantity = useCallback((index: number, quantity: number) => {
+  const updateQuantity = useCallback((index: number, quantity: number): boolean => {
     if (quantity <= 0) {
       setItems(currentItems => currentItems.filter((_, i) => i !== index))
-      return
+      return true
     }
+    let blocked = false
     setItems(currentItems =>
-      currentItems.map((item, i) =>
-        i === index ? { ...item, quantity } : item
-      )
+      currentItems.map((item, i) => {
+        if (i !== index) return item
+        if (item.product.trackStock) {
+          let stockLimit: number | undefined
+
+          if (item.selectedVariants && item.product.variations?.length) {
+            for (const [varName, varValue] of Object.entries(item.selectedVariants)) {
+              const variation = item.product.variations.find(v => v.name === varName)
+              const option = variation?.options.find(o => o.value === varValue)
+              if (option && typeof option.stock === 'number') {
+                stockLimit = stockLimit === undefined ? option.stock : Math.min(stockLimit, option.stock)
+              }
+            }
+          }
+
+          if (stockLimit === undefined && typeof item.product.stock === 'number') {
+            stockLimit = item.product.stock
+          }
+
+          if (stockLimit !== undefined && quantity > stockLimit) {
+            blocked = true
+            return item
+          }
+        }
+        return { ...item, quantity }
+      })
     )
+    return !blocked
   }, [])
 
   const updateCustomNote = useCallback((index: number, customNote: string) => {

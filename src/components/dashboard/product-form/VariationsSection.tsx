@@ -5,13 +5,14 @@ import type { ProductVariation, VariationOption } from '../../../types'
 interface VariationsSectionProps {
   variations: ProductVariation[]
   onChange: (variations: ProductVariation[]) => void
+  trackStock?: boolean
 }
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 9)
 }
 
-export default function VariationsSection({ variations, onChange }: VariationsSectionProps) {
+export default function VariationsSection({ variations, onChange, trackStock }: VariationsSectionProps) {
   const { t } = useTranslation('dashboard')
   const [expandedVariation, setExpandedVariation] = useState<string | null>(null)
 
@@ -244,6 +245,20 @@ export default function VariationsSection({ variations, onChange }: VariationsSe
                               placeholder={t('productForm.variations.optionValue', 'Valor')}
                               className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                             />
+                            {trackStock && (
+                              <input
+                                type="number"
+                                min="0"
+                                value={option.stock ?? ''}
+                                onChange={(e) =>
+                                  updateOption(variation.id, option.id, {
+                                    stock: e.target.value === '' ? undefined : Number(e.target.value)
+                                  })
+                                }
+                                placeholder="Stock"
+                                className="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                              />
+                            )}
                             <label className="flex items-center gap-1.5 text-xs text-gray-500">
                               <input
                                 type="checkbox"

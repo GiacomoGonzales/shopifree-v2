@@ -5,6 +5,7 @@ import { optimizeImage } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import { PrepTimeDisplay, DurationDisplay, AvailabilityBadge } from './business-type'
+import { getThemeTranslations } from '../../themes/shared/translations'
 
 export type ProductCardVariant = 'default' | 'masonry' | 'horizontal' | 'featured'
 
@@ -18,6 +19,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onSelect, onQuickAdd, variant = 'default' }: ProductCardProps) {
   const { theme, currency, language, store } = useTheme()
   const { features } = useBusinessType()
+  const t = getThemeTranslations(language)
 
   // Preload gallery image on hover/touch for faster modal opening
   const preloadGalleryImages = useCallback(() => {
@@ -37,6 +39,7 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.comparePrice!) * 100)
     : 0
+  const isOutOfStock = product.trackStock && typeof product.stock === 'number' && product.stock <= 0
 
   // Determine if product requires selection (hide quick-add)
   const requiresSelection = (features.showModifiers && product.modifierGroups?.length) ||
@@ -88,6 +91,13 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
               }}
             >
               -{discountPercent}%
+            </div>
+          )}
+          {isOutOfStock && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40" style={{ borderRadius: theme.radius.lg }}>
+              <span className="px-2 py-1 bg-white/90 text-gray-900 text-xs font-semibold" style={{ borderRadius: theme.radius.full }}>
+                {t.outOfStock}
+              </span>
             </div>
           )}
         </div>
@@ -254,8 +264,17 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
           </div>
         )}
 
-        {/* Quick Add Button - Hidden when requires selection */}
-        {!requiresSelection && (
+        {/* Out of Stock Overlay */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40" style={{ borderRadius: theme.radius.lg }}>
+            <span className="px-3 py-1.5 bg-white/90 text-gray-900 text-sm font-semibold" style={{ borderRadius: theme.radius.full }}>
+              {t.outOfStock}
+            </span>
+          </div>
+        )}
+
+        {/* Quick Add Button - Hidden when requires selection or out of stock */}
+        {!requiresSelection && !isOutOfStock && (
           <button
             onClick={(e) => {
               e.stopPropagation()

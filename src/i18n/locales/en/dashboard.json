@@ -257,6 +257,13 @@
     "contactInfo": "Contact information",
     "orderHistory": "Order history",
     "contactWhatsApp": "Contact via WhatsApp",
+    "deleteCustomer": "Delete customer",
+    "deleteConfirm": "All orders from this customer ({{count}}) will be deleted. This action cannot be undone.",
+    "deleteConfirmButton": "Delete",
+    "deleteCancelButton": "Cancel",
+    "deleteSuccess": "Customer deleted successfully",
+    "deleteError": "Error deleting customer",
+    "deleting": "Deleting...",
     "close": "Close",
     "searchPlaceholder": "Search by name, phone or email...",
     "fetchError": "Error loading customers",
@@ -383,6 +390,7 @@
       "trackStock": "Track stock",
       "stock": "Stock",
       "lowStockAlert": "Low stock alert",
+      "stockPerVariant": "Stock is managed per variant. Edit stock in the variants section.",
       "cost": "Cost (not visible)"
     },
     "organization": {

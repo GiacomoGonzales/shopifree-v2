@@ -360,6 +360,7 @@ export interface VariationOption {
   value: string                 // "Rojo", "XL"
   image?: string                // Imagen de esa variante
   available: boolean            // Si está disponible
+  stock?: number                // Stock por variante (cuando trackStock está activo)
 }
 
 // Maps a CJ variant combination to its vid/sku for order fulfillment

@@ -49,6 +49,10 @@ export interface ThemeTranslations {
   schedule: string
   customize: string
 
+  // Stock
+  outOfStock: string
+  stockLimit: string
+
   // Powered by
   poweredBy: string
 
@@ -280,6 +284,10 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     schedule: 'Agendar',
     customize: 'Personalizar',
 
+    // Stock
+    outOfStock: 'Agotado',
+    stockLimit: 'Max. disponible: ',
+
     // Powered by
     poweredBy: 'Creado con Shopifree',
 
@@ -510,6 +518,10 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     schedule: 'Schedule',
     customize: 'Customize',
 
+    // Stock
+    outOfStock: 'Out of stock',
+    stockLimit: 'Max. available: ',
+
     // Powered by
     poweredBy: 'Powered by Shopifree',
 
@@ -739,6 +751,10 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     book: 'Reservar',
     schedule: 'Agendar',
     customize: 'Personalizar',
+
+    // Stock
+    outOfStock: 'Esgotado',
+    stockLimit: 'Máx. disponível: ',
 
     // Powered by
     poweredBy: 'Criado com Shopifree',

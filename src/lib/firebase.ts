@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth'
 import { Capacitor } from '@capacitor/core'
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, increment, writeBatch, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import type { User, Store, Product, Category, Order, Coupon, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
 
@@ -201,6 +201,89 @@ export const productService = {
 
   async delete(storeId: string, productId: string): Promise<void> {
     await deleteDoc(doc(db, 'stores', storeId, 'products', productId))
+  },
+
+  async decrementStock(storeId: string, items: { productId: string; quantity: number }[]): Promise<void> {
+    const batch = writeBatch(db)
+    for (const item of items) {
+      const ref = doc(db, 'stores', storeId, 'products', item.productId)
+      batch.update(ref, {
+        stock: increment(-item.quantity),
+        updatedAt: new Date()
+      })
+    }
+    await batch.commit()
+  },
+
+  async restoreStock(storeId: string, items: { productId: string; quantity: number }[]): Promise<void> {
+    const batch = writeBatch(db)
+    for (const item of items) {
+      const ref = doc(db, 'stores', storeId, 'products', item.productId)
+      batch.update(ref, {
+        stock: increment(item.quantity),
+        updatedAt: new Date()
+      })
+    }
+    await batch.commit()
+  },
+
+  async decrementVariantStock(storeId: string, updates: { productId: string; variationName: string; optionValue: string; quantity: number }[]): Promise<void> {
+    // Group updates by productId to batch reads
+    const byProduct = new Map<string, typeof updates>()
+    for (const u of updates) {
+      const list = byProduct.get(u.productId) || []
+      list.push(u)
+      byProduct.set(u.productId, list)
+    }
+
+    for (const [productId, productUpdates] of byProduct) {
+      const ref = doc(db, 'stores', storeId, 'products', productId)
+      const snap = await getDoc(ref)
+      if (!snap.exists()) continue
+
+      const data = snap.data()
+      const variations = data.variations as Array<{ id: string; name: string; options: Array<{ id: string; value: string; stock?: number; available: boolean; image?: string }> }>
+      if (!variations) continue
+
+      for (const update of productUpdates) {
+        const variation = variations.find(v => v.name === update.variationName)
+        const option = variation?.options.find(o => o.value === update.optionValue)
+        if (option && typeof option.stock === 'number') {
+          option.stock = Math.max(0, option.stock - update.quantity)
+        }
+      }
+
+      await updateDoc(ref, { variations, updatedAt: new Date() })
+    }
+  },
+
+  async restoreVariantStock(storeId: string, updates: { productId: string; variationName: string; optionValue: string; quantity: number }[]): Promise<void> {
+    const byProduct = new Map<string, typeof updates>()
+    for (const u of updates) {
+      const list = byProduct.get(u.productId) || []
+      list.push(u)
+      byProduct.set(u.productId, list)
+    }
+
+    for (const [productId, productUpdates] of byProduct) {
+      const ref = doc(db, 'stores', storeId, 'products', productId)
+      const snap = await getDoc(ref)
+      if (!snap.exists()) continue
+
+      const data = snap.data()
+      const variations = data.variations as Array<{ id: string; name: string; options: Array<{ id: string; value: string; stock?: number; available: boolean; image?: string }> }>
+      if (!variations) continue
+
+      for (const update of productUpdates) {
+        const variation = variations.find(v => v.name === update.variationName)
+        const option = variation?.options.find(o => o.value === update.optionValue)
+        if (option && typeof option.stock === 'number') {
+          option.stock += update.quantity
+        }
+      }
+
+      await updateDoc(ref, { variations, updatedAt: new Date() })
+    }
   }
 }
 
@@ -322,6 +405,10 @@ export const orderService = {
       status,
       updatedAt: new Date()
     })
+  },
+
+  async delete(storeId: string, orderId: string): Promise<void> {
+    await deleteDoc(doc(db, 'stores', storeId, 'orders', orderId))
   }
 }
 

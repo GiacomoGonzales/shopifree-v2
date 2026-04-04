@@ -90,6 +90,27 @@ function getPaymentErrorMessage(statusDetail: string, lang?: string): string {
   return fallback[l] || fallback.es
 }
 
+/** Parse stock error into human-readable message */
+function getStockErrorMessage(error: string, lang?: string): string | null {
+  if (!error.startsWith('stockInsufficient:')) return null
+  const parts = error.split(':')
+  const productName = parts[1] || ''
+  const available = parts[2] || '0'
+  const l = lang === 'pt' ? 'pt' : lang === 'en' ? 'en' : 'es'
+  const msgs: Record<string, string> = {
+    es: available === '0'
+      ? `"${productName}" está agotado.`
+      : `"${productName}" solo tiene ${available} unidades disponibles.`,
+    en: available === '0'
+      ? `"${productName}" is out of stock.`
+      : `"${productName}" only has ${available} units available.`,
+    pt: available === '0'
+      ? `"${productName}" está esgotado.`
+      : `"${productName}" só tem ${available} unidades disponíveis.`,
+  }
+  return msgs[l] || msgs.es
+}
+
 interface Props {
   items: CartItem[]
   totalPrice: number
@@ -354,7 +375,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
               store={store}
               onSubmit={handlePaymentSubmit}
               onSelectionChange={setSelectedPayment}
-              error={error}
+              error={error ? (getStockErrorMessage(error, store.language) || error) : error}
               t={t}
             />
           )}
@@ -363,9 +384,10 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <>
               {error && (
                 <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
-                  {error.startsWith('paymentRejected:')
-                    ? getPaymentErrorMessage(error.split(':')[1], store.language)
-                    : error}
+                  {getStockErrorMessage(error, store.language)
+                    || (error.startsWith('paymentRejected:')
+                      ? getPaymentErrorMessage(error.split(':')[1], store.language)
+                      : error)}
                 </div>
               )}
               <MercadoPagoBrick
@@ -384,9 +406,10 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
             <>
               {error && (
                 <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
-                  {error.startsWith('paymentRejected:')
-                    ? getPaymentErrorMessage(error.split(':')[1], store.language)
-                    : error}
+                  {getStockErrorMessage(error, store.language)
+                    || (error.startsWith('paymentRejected:')
+                      ? getPaymentErrorMessage(error.split(':')[1], store.language)
+                      : error)}
                 </div>
               )}
               <StripeElement

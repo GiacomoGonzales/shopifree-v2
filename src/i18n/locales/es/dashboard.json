@@ -258,6 +258,13 @@
     "contactInfo": "Información de contacto",
     "orderHistory": "Historial de pedidos",
     "contactWhatsApp": "Contactar por WhatsApp",
+    "deleteCustomer": "Eliminar cliente",
+    "deleteConfirm": "Se eliminarán todos los pedidos de este cliente ({{count}}). Esta acción no se puede deshacer.",
+    "deleteConfirmButton": "Eliminar",
+    "deleteCancelButton": "Cancelar",
+    "deleteSuccess": "Cliente eliminado correctamente",
+    "deleteError": "Error al eliminar el cliente",
+    "deleting": "Eliminando...",
     "close": "Cerrar",
     "searchPlaceholder": "Buscar por nombre, teléfono o email...",
     "fetchError": "Error al cargar clientes",
@@ -384,6 +391,7 @@
       "trackStock": "Controlar stock",
       "stock": "Stock",
       "lowStockAlert": "Alerta bajo",
+      "stockPerVariant": "El stock se controla por variante. Edita el stock en la seccion de variantes.",
       "cost": "Costo (no visible)"
     },
     "organization": {

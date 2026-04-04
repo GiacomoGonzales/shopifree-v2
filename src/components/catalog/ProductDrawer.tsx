@@ -130,6 +130,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
   const discountPercent = hasDiscount
     ? Math.round((1 - activeProduct.price / activeProduct.comparePrice!) * 100)
     : 0
+  const isOutOfStock = activeProduct.trackStock && typeof activeProduct.stock === 'number' && activeProduct.stock <= 0
 
   const handleAddToCart = () => {
     if (requiresSelection && !canAddToCart) {
@@ -334,6 +335,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                   variations={activeProduct.variations}
                   selected={selectedVariants}
                   onChange={setSelectedVariants}
+                  trackStock={activeProduct.trackStock}
                 />
               </div>
             )}
@@ -392,17 +394,20 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
         >
           <button
             onClick={handleAddToCart}
-            className="w-full py-4 font-medium transition-all active:scale-[0.98]"
+            disabled={isOutOfStock}
+            className="w-full py-4 font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: theme.colors.primary,
+              backgroundColor: isOutOfStock ? '#9ca3af' : theme.colors.primary,
               color: theme.colors.textInverted,
               borderRadius: theme.radius.lg
             }}
           >
-            {features.showBookingCTA
-              ? (language === 'en' ? 'Book Now' : language === 'pt' ? 'Reservar' : 'Reservar')
-              : t.addToCart}
-            {modifiersExtra > 0 && ` - ${formatPrice(totalPrice, currency)}`}
+            {isOutOfStock
+              ? t.outOfStock
+              : features.showBookingCTA
+                ? (language === 'en' ? 'Book Now' : language === 'pt' ? 'Reservar' : 'Reservar')
+                : t.addToCart}
+            {!isOutOfStock && modifiersExtra > 0 && ` - ${formatPrice(totalPrice, currency)}`}
           </button>
         </div>
       </div>

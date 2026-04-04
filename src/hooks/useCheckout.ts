@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { Capacitor } from '@capacitor/core'
 import type { Store, Order, OrderItem, Coupon } from '../types'
 import type { CartItem } from './useCart'
-import { orderService, couponService, db } from '../lib/firebase'
+import { orderService, couponService, productService, db } from '../lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
@@ -339,7 +339,59 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       orderData.notes = data.delivery.observations
     }
 
+    // Validate stock before creating the order
+    const stockItems: { productId: string; quantity: number; name: string }[] = []
+    const variantStockUpdates: { productId: string; variationName: string; optionValue: string; quantity: number; productName: string }[] = []
+
+    for (const item of items) {
+      if (!item.product.trackStock) continue
+
+      const freshProduct = await productService.get(store.id, item.product.id)
+      if (!freshProduct || !freshProduct.trackStock) continue
+
+      // Check variant-level stock first
+      if (item.selectedVariants && freshProduct.variations?.length) {
+        let hasVariantStock = false
+        for (const [varName, varValue] of Object.entries(item.selectedVariants)) {
+          const variation = freshProduct.variations.find(v => v.name === varName)
+          const option = variation?.options.find(o => o.value === varValue)
+          if (option && typeof option.stock === 'number') {
+            hasVariantStock = true
+            if (option.stock < item.quantity) {
+              throw new Error(`stockInsufficient:${item.product.name} (${varValue}):${option.stock}`)
+            }
+            variantStockUpdates.push({
+              productId: item.product.id,
+              variationName: varName,
+              optionValue: varValue,
+              quantity: item.quantity,
+              productName: item.product.name
+            })
+          }
+        }
+        if (hasVariantStock) continue
+      }
+
+      // Fallback to product-level stock
+      if (typeof freshProduct.stock === 'number') {
+        if (freshProduct.stock < item.quantity) {
+          throw new Error(`stockInsufficient:${item.product.name}:${freshProduct.stock}`)
+        }
+        stockItems.push({ productId: item.product.id, quantity: item.quantity, name: item.product.name })
+      }
+    }
+
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
+
+    // Decrement product-level stock
+    if (stockItems.length > 0) {
+      productService.decrementStock(store.id, stockItems).catch(() => {})
+    }
+
+    // Decrement variant-level stock
+    if (variantStockUpdates.length > 0) {
+      productService.decrementVariantStock(store.id, variantStockUpdates).catch(() => {})
+    }
 
     // Increment coupon uses after successful order creation
     if (appliedCoupon) {
