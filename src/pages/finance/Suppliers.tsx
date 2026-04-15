@@ -64,11 +64,11 @@ export default function Suppliers() {
     try {
       const data = {
         name: name.trim(),
-        contactName: contactName.trim() || null,
-        phone: phone.trim() || null,
-        email: email.trim() || null,
-        address: address.trim() || null,
-        notes: notes.trim() || null,
+        contactName: contactName.trim() || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        address: address.trim() || undefined,
+        notes: notes.trim() || undefined,
         active: true,
         updatedAt: Timestamp.now(),
       }

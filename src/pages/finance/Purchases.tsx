@@ -123,7 +123,7 @@ export default function Purchases() {
 
       // 1. Create purchase
       const purchaseData = {
-        supplierId: supplierId || null,
+        supplierId: supplierId || undefined,
         supplierName: supplier?.name || 'Sin proveedor',
         items: activeItems.map(({ ...i }) => {
           const { _comboId, ...clean } = i as PurchaseItem & { _comboId?: string }
@@ -132,9 +132,9 @@ export default function Purchases() {
         subtotal: total,
         total,
         status: 'received',
-        warehouseId: warehouseId || null,
-        warehouseName: warehouse?.name || null,
-        notes: purchaseNotes.trim() || null,
+        warehouseId: warehouseId || undefined,
+        warehouseName: warehouse?.name || undefined,
+        notes: purchaseNotes.trim() || undefined,
         date: Timestamp.fromDate(new Date(purchaseDate + 'T12:00:00')),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -171,8 +171,8 @@ export default function Purchases() {
         await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
           productId: item.productId,
           productName: item.productName,
-          variationName: item.variationName || null,
-          optionValue: item.optionValue || null,
+          variationName: item.variationName || undefined,
+          optionValue: item.optionValue || undefined,
           type: 'purchase',
           quantity: item.quantity,
           previousStock: product.stock ?? 0,
@@ -180,8 +180,8 @@ export default function Purchases() {
           referenceType: 'purchase',
           referenceId: purchaseRef.id,
           reason: `Compra a ${supplier?.name || 'proveedor'}`,
-          warehouseId: warehouseId || null,
-          warehouseName: warehouse?.name || null,
+          warehouseId: warehouseId || undefined,
+          warehouseName: warehouse?.name || undefined,
           createdBy: firebaseUser.uid,
           createdAt: Timestamp.now(),
         })

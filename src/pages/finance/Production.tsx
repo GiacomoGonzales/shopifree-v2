@@ -39,7 +39,7 @@ export default function Production() {
         ])
         setOrders(oSnap.docs.map(d => {
           const data = d.data()
-          return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() || new Date(), completedAt: data.completedAt?.toDate?.() || null } as ProductionOrder
+          return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() || new Date(), completedAt: data.completedAt?.toDate?.() || undefined } as ProductionOrder
         }))
         setProducts(pSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product)))
         const wList = wSnap.docs.map(d => ({ id: d.id, ...d.data() } as Warehouse))
@@ -75,16 +75,16 @@ export default function Production() {
       const data = {
         productId: selectedProductId,
         productName: product.name,
-        variationName: comboLabel ? Object.keys(combo!.options).join(' / ') : null,
+        variationName: comboLabel ? Object.keys(combo!.options).join(' / ') : undefined,
         optionValue: comboLabel,
         quantity: parseInt(quantity),
         status: 'planned' as const,
-        warehouseId: warehouseId || null,
-        warehouseName: warehouse?.name || null,
-        notes: notes.trim() || null,
+        warehouseId: warehouseId || undefined,
+        warehouseName: warehouse?.name || undefined,
+        notes: notes.trim() || undefined,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        _comboId: combo?.id || null,
+        _comboId: combo?.id || undefined,
       }
       const ref = await addDoc(collection(db, `stores/${store.id}/production_orders`), data)
       setOrders(prev => [{ id: ref.id, ...data, createdAt: new Date(), updatedAt: new Date() } as ProductionOrder & { _comboId?: string }, ...prev])
@@ -104,7 +104,7 @@ export default function Production() {
       if (!product) { setCompleting(null); return }
 
       const productRef = doc(db, `stores/${store.id}/products`, order.productId)
-      const comboId = order._comboId || null
+      const comboId = order._comboId || undefined
 
       if (comboId && product.combinations) {
         const updatedCombinations = product.combinations.map(c => {
@@ -126,8 +126,8 @@ export default function Production() {
       await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
         productId: order.productId,
         productName: order.productName,
-        variationName: order.variationName || null,
-        optionValue: order.optionValue || null,
+        variationName: order.variationName || undefined,
+        optionValue: order.optionValue || undefined,
         type: 'production',
         quantity: order.quantity,
         previousStock: product.stock ?? 0,
@@ -135,8 +135,8 @@ export default function Production() {
         referenceType: 'production_order',
         referenceId: order.id,
         reason: `Produccion completada${order.notes ? ` - ${order.notes}` : ''}`,
-        warehouseId: order.warehouseId || null,
-        warehouseName: order.warehouseName || null,
+        warehouseId: order.warehouseId || undefined,
+        warehouseName: order.warehouseName || undefined,
         createdBy: firebaseUser.uid,
         createdAt: Timestamp.now(),
       })
