@@ -9,10 +9,15 @@ interface ModeSwitcherProps {
 export default function ModeSwitcher({ mode }: ModeSwitcherProps) {
   const { localePath } = useLanguage()
 
+  // When switching mode from inside the mobile sidebar, pass ?sidebar=open
+  // so the target layout opens its sidebar immediately
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+  const sidebarParam = isMobile ? '?sidebar=open' : ''
+
   return (
     <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5 w-full">
       <Link
-        to={localePath('/dashboard')}
+        to={localePath('/dashboard') + (mode !== 'ecommerce' ? sidebarParam : '')}
         className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
           mode === 'ecommerce'
             ? 'bg-white text-gray-900 shadow-sm'
@@ -25,7 +30,7 @@ export default function ModeSwitcher({ mode }: ModeSwitcherProps) {
         Tienda
       </Link>
       <Link
-        to={localePath('/finance')}
+        to={localePath('/finance') + (mode !== 'finance' ? sidebarParam : '')}
         className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
           mode === 'finance'
             ? 'bg-white text-gray-900 shadow-sm'

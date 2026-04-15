@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, type JSX } from 'react'
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Link, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
@@ -67,8 +67,17 @@ export default function FinanceLayout() {
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [sidebarOpen, setSidebarOpen] = useState(() => searchParams.get('sidebar') === 'open')
   const isNative = Capacitor.isNativePlatform()
+
+  // Clear sidebar param after opening
+  useEffect(() => {
+    if (searchParams.get('sidebar') === 'open') {
+      searchParams.delete('sidebar')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [])
 
   const navigation: NavElement[] = useMemo(() => [
     { name: 'Resumen', href: localePath('/finance'), icon: DashboardIcon },

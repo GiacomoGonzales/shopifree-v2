@@ -125,6 +125,25 @@ export const storeService = {
         createdAt: new Date()
       })
     }
+
+    // Create default branch + warehouse
+    const branchRef = await addDoc(collection(db, `stores/${storeId}/branches`), {
+      name: 'Principal',
+      address: '',
+      active: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    await addDoc(collection(db, `stores/${storeId}/warehouses`), {
+      name: 'Almacen Principal',
+      address: '',
+      branchId: branchRef.id,
+      branchName: 'Principal',
+      isDefault: true,
+      active: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
   },
 
   async update(storeId: string, data: Partial<Store>): Promise<void> {
