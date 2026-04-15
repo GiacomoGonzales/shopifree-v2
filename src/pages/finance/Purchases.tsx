@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { collection, query, orderBy, getDocs, addDoc, doc, updateDoc, Timestamp, where, limit as fbLimit } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { Product, Supplier, Purchase, PurchaseItem, Warehouse } from '../../types'
 
@@ -109,9 +109,6 @@ export default function Purchases() {
   const filteredProducts = productSearch
     ? products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()) || p.sku?.toLowerCase().includes(productSearch.toLowerCase()))
     : products
-
-  // Already added product IDs (to avoid duplicates for simple products)
-  const addedProductIds = new Set(items.map(i => `${i.productId}-${(i as PurchaseItem & { _comboId?: string })._comboId || ''}`))
 
   const handleSave = async () => {
     if (!store || !firebaseUser || items.length === 0 || totalQty === 0) return

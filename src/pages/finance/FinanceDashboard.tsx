@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
@@ -8,7 +7,6 @@ import type { Order } from '../../types'
 type Period = 'today' | '7d' | '30d' | 'month'
 
 export default function FinanceDashboard() {
-  const { t } = useTranslation('dashboard')
   const { store } = useAuth()
   const [period, setPeriod] = useState<Period>('30d')
   const [orders, setOrders] = useState<Order[]>([])
@@ -172,9 +170,9 @@ export default function FinanceDashboard() {
                           #{order.orderNumber} - {order.customer?.name || 'Cliente'}
                         </p>
                         <p className="text-xs text-gray-400">
-                          {order.createdAt && (typeof order.createdAt === 'object' && 'toDate' in order.createdAt
-                            ? (order.createdAt as Timestamp).toDate().toLocaleDateString('es')
-                            : new Date(order.createdAt as string).toLocaleDateString('es')
+                          {order.createdAt && (typeof order.createdAt === 'object' && 'toDate' in (order.createdAt as unknown as Record<string, unknown>)
+                            ? ((order.createdAt as unknown as Timestamp).toDate()).toLocaleDateString('es')
+                            : new Date(order.createdAt as unknown as string).toLocaleDateString('es')
                           )}
                         </p>
                       </div>

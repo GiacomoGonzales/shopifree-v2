@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
 import type { ProductVariation, VariationOption, VariantCombination } from '../../../types'
 
 interface VariationsSectionProps {
@@ -61,9 +60,8 @@ function generateCombinations(
 }
 
 export default function VariationsSection({
-  variations, onChange, combinations, onCombinationsChange, trackStock, basePrice, isEditing
+  variations, onChange, combinations, onCombinationsChange, basePrice, isEditing
 }: VariationsSectionProps) {
-  const { t } = useTranslation('dashboard')
   const [expandedVariation, setExpandedVariation] = useState<string | null>(null)
 
   // Regenerate combinations when variations change
@@ -147,8 +145,6 @@ export default function VariationsSection({
   }
 
   const comboLabel = (combo: VariantCombination) => Object.values(combo.options).join(' / ')
-
-  const currency = 'PEN' // TODO: get from store
 
   return (
     <div className="space-y-4 border-t border-gray-100 pt-4 mt-2">

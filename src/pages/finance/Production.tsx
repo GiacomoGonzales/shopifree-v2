@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, Timestamp, where, limit as fbLimit } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { Product, ProductionOrder, Warehouse } from '../../types'
 
@@ -23,9 +23,6 @@ export default function Production() {
 
   // Completing
   const [completing, setCompleting] = useState<string | null>(null)
-
-  const currency = store?.currency || 'PEN'
-  const fmt = (n: number) => new Intl.NumberFormat('es', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n)
 
   useEffect(() => {
     if (!store) return

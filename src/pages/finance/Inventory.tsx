@@ -32,10 +32,6 @@ export default function Inventory() {
   const [adjustValue, setAdjustValue] = useState('')
   const [adjustSaving, setAdjustSaving] = useState(false)
 
-  // Variant adjust (productId-variationId-optionId)
-  const [adjustingVariant, setAdjustingVariant] = useState<string | null>(null)
-  const [adjustVariantValue, setAdjustVariantValue] = useState('')
-
   // Bulk mode
   const [bulkMode, setBulkMode] = useState(false)
   const [bulkChanges, setBulkChanges] = useState<Record<string, string>>({})
@@ -123,61 +119,6 @@ export default function Inventory() {
       setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: newStockNum } : p))
       setAdjustingId(null)
       setAdjustValue('')
-    } catch (err) {
-      console.error(err)
-    }
-    setAdjustSaving(false)
-  }
-
-  // Variant inline adjust
-  const handleVariantAdjust = async (product: Product, variationId: string, optionId: string) => {
-    if (!store || !firebaseUser || adjustVariantValue === '') return
-    const newStockNum = parseInt(adjustVariantValue)
-    if (isNaN(newStockNum)) { setAdjustingVariant(null); return }
-
-    // Find current option stock
-    let currentStock = 0
-    for (const v of product.variations || []) {
-      const opt = v.options.find(o => o.id === optionId && v.id === variationId)
-      if (opt) { currentStock = opt.stock ?? 0; break }
-    }
-    if (newStockNum === currentStock) { setAdjustingVariant(null); return }
-
-    setAdjustSaving(true)
-    try {
-      const updatedVariations = (product.variations || []).map(v => ({
-        ...v,
-        options: v.options.map(o => {
-          if (v.id === variationId && o.id === optionId) return { ...o, stock: newStockNum }
-          return o
-        })
-      }))
-      const totalStock = updatedVariations.reduce((sum, v) => sum + v.options.reduce((s, o) => s + (o.stock ?? 0), 0), 0)
-
-      const defaultWId = await getDefaultWarehouseId()
-      const updateData: Record<string, unknown> = { variations: updatedVariations, stock: totalStock }
-      if (defaultWId) updateData[`warehouseStock.${defaultWId}`] = totalStock
-      await updateDoc(doc(db, `stores/${store.id}/products`, product.id), updateData)
-
-      // Find variant label for movement
-      let varName = '', optValue = ''
-      for (const v of product.variations || []) {
-        const opt = v.options.find(o => o.id === optionId && v.id === variationId)
-        if (opt) { varName = v.name; optValue = opt.value; break }
-      }
-
-      await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
-        productId: product.id, productName: product.name,
-        variationName: varName, optionValue: optValue,
-        type: 'adjustment', quantity: newStockNum - currentStock,
-        previousStock: currentStock, newStock: newStockNum,
-        referenceType: 'manual', reason: 'Ajuste rapido',
-        createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
-      })
-
-      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, variations: updatedVariations, stock: totalStock } : p))
-      setAdjustingVariant(null)
-      setAdjustVariantValue('')
     } catch (err) {
       console.error(err)
     }
