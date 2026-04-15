@@ -53,18 +53,18 @@ export default function WarehousesPage() {
         if (bList.length === 0 && wList.length === 0) {
           const bRef = await addDoc(collection(db, `stores/${store.id}/branches`), {
             name: 'Principal',
-            address: store.address || '',
+            address: store.location?.address || '',
             phone: store.whatsapp || '',
             active: true,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now(),
           })
-          const newBranch: Branch = { id: bRef.id, name: 'Principal', address: store.address || '', phone: store.whatsapp || '', active: true, createdAt: new Date(), updatedAt: new Date() }
+          const newBranch: Branch = { id: bRef.id, name: 'Principal', address: store.location?.address || '', phone: store.whatsapp || '', active: true, createdAt: new Date(), updatedAt: new Date() }
           bList = [newBranch]
 
           const wRef = await addDoc(collection(db, `stores/${store.id}/warehouses`), {
             name: 'Almacen Principal',
-            address: store.address || '',
+            address: store.location?.address || '',
             branchId: bRef.id,
             branchName: 'Principal',
             isDefault: true,
@@ -72,14 +72,14 @@ export default function WarehousesPage() {
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now(),
           })
-          wList = [{ id: wRef.id, name: 'Almacen Principal', address: store.address || '', branchId: bRef.id, branchName: 'Principal', isDefault: true, active: true, createdAt: new Date(), updatedAt: new Date() }]
+          wList = [{ id: wRef.id, name: 'Almacen Principal', address: store.location?.address || '', branchId: bRef.id, branchName: 'Principal', isDefault: true, active: true, createdAt: new Date(), updatedAt: new Date() }]
         } else if (bList.length === 0 && wList.length > 0) {
           // Warehouses exist but no branches — create a default branch
           const bRef = await addDoc(collection(db, `stores/${store.id}/branches`), {
-            name: 'Principal', address: store.address || '', phone: store.whatsapp || '',
+            name: 'Principal', address: store.location?.address || '', phone: store.whatsapp || '',
             active: true, createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
           })
-          bList = [{ id: bRef.id, name: 'Principal', address: store.address || '', phone: store.whatsapp || '', active: true, createdAt: new Date(), updatedAt: new Date() }]
+          bList = [{ id: bRef.id, name: 'Principal', address: store.location?.address || '', phone: store.whatsapp || '', active: true, createdAt: new Date(), updatedAt: new Date() }]
         }
 
         // Fix orphan warehouses — assign to first branch
