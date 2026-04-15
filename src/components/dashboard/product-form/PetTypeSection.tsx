@@ -36,7 +36,7 @@ export default function PetTypeSection({
   ]
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-[#1e3a5f]">
           {t('productForm.petType.title', 'Tipo de mascota')}

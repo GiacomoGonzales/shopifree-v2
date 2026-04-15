@@ -438,13 +438,17 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     type: 'general',
     features: {
       ...defaultFeatures,
-      // General: basic retail features
+      showVariants: true,
+      multipleImages: true,
+      // General: full retail features
       showComparePrice: true,
       showSku: true,
+      showBarcode: true,
       showStock: true,
       showCost: true,
       showBrand: true,
       showTags: true,
+      showShipping: true,
     },
     labels: {
       es: {
@@ -515,13 +519,13 @@ export function normalizeBusinessType(type: string | undefined): BusinessType {
     return type as BusinessType
   }
 
-  // Legacy type mapping
+  // Legacy type mapping — all non-food types map to general
   const legacyMap: Record<string, BusinessType> = {
     retail: 'general',
     restaurant: 'food',
     services: 'general',
     other: 'general',
-    beauty: 'cosmetics', // beauty was renamed to cosmetics
+    beauty: 'general',
   }
 
   return legacyMap[type] || 'general'
@@ -531,7 +535,9 @@ export function normalizeBusinessType(type: string | undefined): BusinessType {
  * Get all business types for selection UI
  */
 export function getAllBusinessTypes(): BusinessTypeConfig[] {
-  return Object.values(BUSINESS_TYPES)
+  // Only show General and Restaurant as options for new stores
+  // Other types still work for existing stores (backwards compatible)
+  return [BUSINESS_TYPES.general, BUSINESS_TYPES.food]
 }
 
 /**

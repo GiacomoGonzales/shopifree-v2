@@ -184,13 +184,13 @@ export default function Integrations() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('integrations.title')}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('integrations.title')}</h1>
           <p className="text-gray-600 mt-1">{t('integrations.subtitle')}</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+          className="w-full sm:w-auto px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
         >
           {saving ? t('integrations.saving') : t('integrations.saveChanges')}
         </button>
@@ -199,10 +199,10 @@ export default function Integrations() {
       {/* Cards */}
       <div className="space-y-6">
         {cards.map((card) => (
-          <div key={card.key} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div key={card.key} className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <div className="flex items-start gap-4">
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
                 style={{ backgroundColor: card.color, boxShadow: `0 4px 14px ${card.color}33` }}
               >
                 {card.icon}
@@ -213,14 +213,14 @@ export default function Integrations() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="mt-4 pt-4 border-t border-gray-200/60">
               <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{card.label}</label>
               <input
                 type="text"
                 value={card.value}
                 onChange={(e) => card.onChange(e.target.value)}
                 placeholder={card.placeholder}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all font-mono text-sm"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
               />
             </div>
           </div>

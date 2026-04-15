@@ -37,6 +37,20 @@ import Catalog from './pages/catalog/Catalog'
 import BlogList from './pages/blog/BlogList'
 import BlogPost from './pages/blog/BlogPost'
 
+// Finance Pages
+import FinanceLayout from './components/finance/FinanceLayout'
+import FinanceDashboard from './pages/finance/FinanceDashboard'
+import Expenses from './pages/finance/Expenses'
+import CashFlow from './pages/finance/CashFlow'
+import ComingSoon from './pages/finance/ComingSoon'
+import Inventory from './pages/finance/Inventory'
+import InventoryAdjust from './pages/finance/InventoryAdjust'
+import StockMovements from './pages/finance/StockMovements'
+import WarehousesPage from './pages/finance/Warehouses'
+import Suppliers from './pages/finance/Suppliers'
+import PurchasesPage from './pages/finance/Purchases'
+import ProductionPage from './pages/finance/Production'
+
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -194,6 +208,29 @@ function AppRoutes() {
           <Route path="subscription" element={<Navigate to="account" replace />} />
         </Route>
 
+        {/* Finance routes */}
+        <Route path="finance" element={<FinanceLayout />}>
+          <Route index element={<FinanceDashboard />} />
+          {/* Inventario */}
+          <Route path="inventory" element={<Inventory />} />
+          <Route path="inventory/adjust" element={<InventoryAdjust />} />
+          <Route path="stock-movements" element={<StockMovements />} />
+          <Route path="warehouses" element={<WarehousesPage />} />
+          {/* Compras */}
+          <Route path="suppliers" element={<Suppliers />} />
+          <Route path="purchases" element={<PurchasesPage />} />
+          <Route path="production" element={<ProductionPage />} />
+          {/* Operaciones */}
+          <Route path="branches" element={<WarehousesPage />} />
+          <Route path="expenses" element={<Expenses />} />
+          <Route path="cashflow" element={<CashFlow />} />
+          {/* Reportes */}
+          <Route path="reports" element={<ComingSoon />} />
+          {/* Compartidas */}
+          <Route path="account" element={<Account />} />
+          <Route path="support-chats" element={<SupportChats />} />
+        </Route>
+
         {/* Admin routes (protected for admin@shopifree.app) */}
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -210,6 +247,7 @@ function AppRoutes() {
       <Route path="/login" element={<Navigate to="/es/login" replace />} />
       <Route path="/register" element={<Navigate to="/es/register" replace />} />
       <Route path="/dashboard/*" element={<Navigate to="/es/dashboard" replace />} />
+      <Route path="/finance/*" element={<Navigate to="/es/finance" replace />} />
       <Route path="/admin/*" element={<Navigate to="/es/admin" replace />} />
       <Route path="/blog" element={<Navigate to="/es/blog" replace />} />
       <Route path="/blog/*" element={<Navigate to="/es/blog" replace />} />

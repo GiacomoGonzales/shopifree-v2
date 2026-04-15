@@ -282,17 +282,17 @@ export default function Analytics() {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="max-w-md text-center p-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl mx-auto mb-6 flex items-center justify-center">
+          <div className="w-20 h-20 bg-[#1e3a5f] rounded-xl mx-auto mb-6 flex items-center justify-center">
             <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-[#1e3a5f] mb-3">{t('analytics.upgrade.title')}</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">{t('analytics.upgrade.title')}</h2>
           <p className="text-gray-600 mb-6">{t('analytics.upgrade.description')}</p>
           {!Capacitor.isNativePlatform() && (
             <Link
               to={localePath('/dashboard/plan')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-lg shadow-[#1e3a5f]/20"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#1e3a5f] text-white rounded-xl font-semibold hover:bg-[#2d6cb5] transition-all shadow-sm"
             >
               {t('analytics.upgrade.button')}
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -329,7 +329,7 @@ export default function Analytics() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('analytics.title')}</h1>
           <p className="text-gray-500 mt-1">{t('analytics.subtitle')}</p>
         </div>
 
@@ -353,7 +353,7 @@ export default function Analytics() {
 
       {/* Custom date inputs */}
       {dateRange === 'custom' && (
-        <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-gray-100 p-4">
+        <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-gray-200/60 p-4">
           <label className="text-sm text-gray-600">{t('analytics.dateRange.from')}</label>
           <input
             type="date"
@@ -430,7 +430,7 @@ export default function Analytics() {
       </div>
 
       {/* Daily Chart with Tabs */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
+      <div className="bg-white rounded-xl border border-gray-200/60 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {chartTab === 'visits' ? t('analytics.charts.dailyVisits') : t('analytics.charts.dailyRevenue')}
@@ -476,7 +476,7 @@ export default function Analytics() {
       {/* Two Column: Top Viewed & Top Selling */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Viewed Products */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 min-w-0">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.topProducts')}</h3>
           {topProducts.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
@@ -501,7 +501,7 @@ export default function Analytics() {
         </div>
 
         {/* Top Selling Products */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 min-w-0">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.topSelling')}</h3>
           {topSelling.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
@@ -535,7 +535,7 @@ export default function Analytics() {
       {/* Two Column: Traffic Sources & Devices */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Traffic Sources */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 min-w-0">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.trafficSources')}</h3>
           {referrerChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
@@ -557,7 +557,7 @@ export default function Analytics() {
         </div>
 
         {/* Device Distribution */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 min-w-0">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.deviceDistribution')}</h3>
           {devicePieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
@@ -587,7 +587,7 @@ export default function Analytics() {
       </div>
 
       {/* Conversion Funnel */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
+      <div className="bg-white rounded-xl border border-gray-200/60 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.conversionFunnel')}</h3>
         <div className="space-y-4">
           {funnelData.map((item, index) => {
@@ -614,10 +614,10 @@ export default function Analytics() {
               </div>
             )
           })}
-          <div className="pt-4 border-t border-gray-100">
+          <div className="pt-4 border-t border-gray-200/60">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('analytics.conversionRate')}</span>
-              <span className="text-2xl font-bold text-[#1e3a5f]">{conversionRate}%</span>
+              <span className="text-xl font-semibold text-gray-900">{conversionRate}%</span>
             </div>
           </div>
         </div>
@@ -653,7 +653,7 @@ function SummaryCard({ label, value, color, trend, prefix, formatValue }: Summar
   const displayValue = formatValue ? formatValue(value) : value.toLocaleString()
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-5">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-3 sm:p-5">
       <div className="text-xs sm:text-sm text-gray-500 truncate">{label}</div>
       <div className={`text-lg sm:text-2xl font-semibold mt-1 truncate ${accentColors[color]}`}>
         {prefix && <span className="text-sm sm:text-lg">{prefix}</span>}

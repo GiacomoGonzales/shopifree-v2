@@ -401,7 +401,7 @@ export default function Products() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">{t('products.title')}</h1>
+          <h1 className="text-xl sm:text-xl font-semibold text-gray-900">{t('products.title')}</h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
             {products.length === 1
               ? t('products.subtitle', { count: products.length })
@@ -436,7 +436,7 @@ export default function Products() {
             onClick={handleAddProduct}
             className={`w-full sm:w-auto px-4 py-2.5 rounded-xl transition-all text-sm font-semibold text-center ${
               productLimit.allowed
-                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] shadow-lg shadow-[#1e3a5f]/20'
+                ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -447,7 +447,7 @@ export default function Products() {
 
       {/* Hidden products warning - products over plan limit are hidden from catalog */}
       {hiddenProducts > 0 && !Capacitor.isNativePlatform() && (
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl p-4 border border-red-200 shadow-sm">
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-xl p-4 border border-red-200 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -476,7 +476,7 @@ export default function Products() {
 
       {/* Near-limit warning banner */}
       {hiddenProducts === 0 && plan === 'free' && !Capacitor.isNativePlatform() && remainingProducts !== 'unlimited' && remainingProducts > 0 && remainingProducts <= 3 && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-sm">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-400/20">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,7 +502,7 @@ export default function Products() {
       )}
 
       {/* Categories tabs */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="text-sm font-semibold text-[#1e3a5f]">{t('products.categories.title')}</h3>
@@ -533,7 +533,7 @@ export default function Products() {
             onClick={() => setSelectedCategory(null)}
             className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
               selectedCategory === null
-                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                ? 'bg-[#1e3a5f] text-white shadow-sm'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -547,7 +547,7 @@ export default function Products() {
                   {({ attributes, listeners }) => (
                     <div className={`relative flex items-center gap-2 rounded-xl transition-all ${
                       selectedCategory === category.id
-                        ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] shadow-lg shadow-[#1e3a5f]/20'
+                        ? 'bg-[#1e3a5f] shadow-sm'
                         : 'bg-gray-100 hover:bg-gray-200'
                     }`}>
                       <button
@@ -589,7 +589,7 @@ export default function Products() {
                       </button>
 
                       {openCategoryMenu === category.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
+                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200/60 z-10 min-w-[120px]">
                           <button
                             onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); openEditCategory(category) }}
                             className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
@@ -616,7 +616,7 @@ export default function Products() {
               onClick={() => setSelectedCategory('uncategorized')}
               className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
                 selectedCategory === 'uncategorized'
-                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                  ? 'bg-[#1e3a5f] text-white shadow-sm'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -631,7 +631,7 @@ export default function Products() {
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               selectedCategory === null
-                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                ? 'bg-[#1e3a5f] text-white shadow-sm'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -663,7 +663,7 @@ export default function Products() {
                         onClick={() => setSelectedCategory(category.id)}
                         className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                           selectedCategory === category.id
-                            ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                            ? 'bg-[#1e3a5f] text-white shadow-sm'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -681,7 +681,7 @@ export default function Products() {
                       </button>
 
                       {openCategoryMenu === category.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-10 min-w-[120px]">
+                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200/60 z-10 min-w-[120px]">
                           <button
                             onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); openEditCategory(category) }}
                             className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
@@ -708,7 +708,7 @@ export default function Products() {
               onClick={() => setSelectedCategory('uncategorized')}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 selectedCategory === 'uncategorized'
-                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-lg shadow-[#1e3a5f]/20'
+                  ? 'bg-[#1e3a5f] text-white shadow-sm'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -720,8 +720,8 @@ export default function Products() {
 
       {/* Products list */}
       {filteredProducts.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center shadow-sm">
+          <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
@@ -736,7 +736,7 @@ export default function Products() {
             onClick={handleAddProduct}
             className={`inline-flex px-6 py-3 rounded-xl transition-all font-semibold ${
               productLimit.allowed
-                ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] shadow-lg shadow-[#1e3a5f]/20'
+                ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -750,7 +750,7 @@ export default function Products() {
               {filteredProducts.map((product) => (
                 <SortableProductCard key={product.id} product={product}>
                   {({ attributes, listeners }) => (
-                    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group">
+                    <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group">
                       {/* Drag handle */}
                       <div className="flex items-center justify-between px-3 pt-2">
                         <button
@@ -861,7 +861,7 @@ export default function Products() {
       {/* Category Modal */}
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold text-[#1e3a5f] mb-4">
               {editingCategory ? t('products.categories.editTitle') : t('products.categories.newTitle')}
             </h3>
@@ -871,7 +871,7 @@ export default function Products() {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder={t('products.categories.namePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all mb-4"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all mb-4"
                 autoFocus
               />
               <div className="flex gap-3">
@@ -889,7 +889,7 @@ export default function Products() {
                 <button
                   type="submit"
                   disabled={!newCategoryName.trim() || savingCategory}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-medium disabled:opacity-50"
                 >
                   {savingCategory ? t('products.categories.saving') : t('products.categories.save')}
                 </button>
@@ -912,8 +912,8 @@ export default function Products() {
       {/* Limit Modal */}
       {showLimitModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
@@ -928,7 +928,7 @@ export default function Products() {
               {!Capacitor.isNativePlatform() && (
                 <Link
                   to={localePath('/dashboard/plan')}
-                  className="block w-full px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-center rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+                  className="block w-full px-4 py-3 bg-[#1e3a5f] text-white text-center rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold shadow-sm"
                 >
                   {t('products.limit.upgrade', { price: PLAN_FEATURES.pro.price })}
                 </Link>

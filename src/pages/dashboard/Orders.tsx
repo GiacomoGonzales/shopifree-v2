@@ -386,7 +386,7 @@ export default function Orders() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('orders.title')}</h1>
           <p className="text-gray-500 mt-1">
             {realOrders.length} {realOrders.length === 1 ? t('orders.order') : t('orders.orders')}
           </p>
@@ -401,7 +401,7 @@ export default function Orders() {
           { label: t('orders.avgOrder'), value: `${currencySymbol}${stats.avgOrderValue.toFixed(0)}` },
           { label: t('orders.pendingOrders'), value: String(stats.pendingOrders) },
         ].map(card => (
-          <div key={card.label} className="bg-white rounded-xl border border-gray-100 p-4">
+          <div key={card.label} className="bg-white rounded-xl border border-gray-200/60 p-4">
             <p className="text-xs text-gray-500 mb-1">{card.label}</p>
             <p className="text-xl font-bold text-gray-900">{card.value}</p>
           </div>
@@ -450,7 +450,7 @@ export default function Orders() {
           </svg>
           {t('orders.filters')}
           {activeFiltersCount > 0 && (
-            <span className="w-5 h-5 bg-white text-gray-900 rounded-full text-xs font-bold flex items-center justify-center">
+            <span className="w-5 h-5 bg-white text-gray-900 rounded-full text-xs font-medium flex items-center justify-center">
               {activeFiltersCount}
             </span>
           )}
@@ -459,7 +459,7 @@ export default function Orders() {
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -562,7 +562,7 @@ export default function Orders() {
 
       {/* Orders list */}
       {filteredOrders.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -576,7 +576,7 @@ export default function Orders() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
           {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
@@ -728,7 +728,7 @@ export default function Orders() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-200/60">
               <p className="text-xs text-gray-400">
                 {t('orders.pagination', {
                   start: (currentPage - 1) * ITEMS_PER_PAGE + 1,
@@ -800,7 +800,7 @@ export default function Orders() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedOrder(null)}>
           <div className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
             {/* Modal header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200/60">
               <div>
                 <h3 className="text-base font-bold text-gray-900">{selectedOrder.orderNumber}</h3>
                 <p className="text-sm text-gray-400">{formatDate(selectedOrder.createdAt)}</p>
@@ -915,7 +915,7 @@ export default function Orders() {
               </div>
 
               {/* Total */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200/60">
                 <span className="text-sm font-medium text-gray-500">{t('orders.total')}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-gray-900">

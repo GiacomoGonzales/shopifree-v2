@@ -371,21 +371,21 @@ export default function Account() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('account.title')}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('account.title')}</h1>
         <p className="text-gray-600 mt-1">{t('account.subtitle')}</p>
       </div>
 
       <div className="space-y-6">
         {/* Personal Data */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('account.personal.title')}</h2>
 
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Avatar */}
-            <div className="flex items-center gap-4 sm:border-r sm:border-gray-100 sm:pr-6">
+            <div className="flex items-center gap-4 sm:border-r sm:border-gray-200/60 sm:pr-6">
               <div
                 onClick={() => avatarInputRef.current?.click()}
-                className="w-16 h-16 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-all flex items-center justify-center shadow-lg shadow-[#38bdf8]/20 flex-shrink-0"
+                className="w-16 h-16 bg-[#1e3a5f] rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all flex items-center justify-center shadow-sm flex-shrink-0"
               >
                 {uploadingAvatar ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -431,7 +431,7 @@ export default function Account() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder={t('account.personal.firstNamePlaceholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
               <div>
@@ -441,7 +441,7 @@ export default function Account() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder={t('account.personal.lastNamePlaceholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
               <div>
@@ -471,7 +471,7 @@ export default function Account() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder={t('account.personal.phonePlaceholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
             </div>
@@ -479,14 +479,14 @@ export default function Account() {
         </div>
 
         {/* My Plan */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
                 currentPlan === 'free'
                   ? 'bg-gray-100'
                   : currentPlan === 'pro'
-                  ? 'bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] shadow-[#38bdf8]/20'
+                  ? 'bg-[#1e3a5f] shadow-[#38bdf8]/20'
                   : 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-purple-500/20'
               }`}>
                 {currentPlan === 'free' ? (
@@ -590,7 +590,7 @@ export default function Account() {
 
           {/* Plan Cards - hidden on native iOS app */}
           {!Capacitor.isNativePlatform() && (
-            <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="mt-6 pt-6 border-t border-gray-200/60">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {plans.map((plan) => {
                   const info = PLAN_FEATURES[plan]
@@ -603,7 +603,7 @@ export default function Account() {
                       className={`relative rounded-xl border p-4 transition-all ${
                         isCurrentPlan
                           ? 'border-[#38bdf8] bg-[#f0f7ff]'
-                          : 'border-gray-100 hover:border-gray-200'
+                          : 'border-gray-200/60 hover:border-gray-200'
                       }`}
                     >
                       {isCurrentPlan && (
@@ -623,7 +623,7 @@ export default function Account() {
                           isUpgrade ? (
                             <Link
                               to={localePath('/dashboard/plan')}
-                              className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all"
+                              className="px-3 py-1.5 bg-[#1e3a5f] text-white rounded-lg text-xs font-medium hover:bg-[#2d6cb5] transition-all"
                             >
                               {t('plan.buttons.upgrade')}
                             </Link>
@@ -647,10 +647,10 @@ export default function Account() {
         </div>
 
         {/* Security & Danger Zone */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             {/* Change Password */}
-            <div className="flex-1 sm:border-r sm:border-gray-100 sm:pr-6">
+            <div className="flex-1 sm:border-r sm:border-gray-200/60 sm:pr-6">
               {isGoogleUser ? (
                 <div className="flex items-center justify-between">
                   <div>
@@ -686,27 +686,27 @@ export default function Account() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder={t('account.security.currentPassword')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                     />
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder={t('account.security.newPassword')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                     />
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder={t('account.security.confirmPassword')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleChangePassword}
                         disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
-                        className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+                        className="px-4 py-2 bg-[#1e3a5f] text-white rounded-xl text-sm font-medium hover:bg-[#2d6cb5] transition-all disabled:opacity-50"
                       >
                         {changingPassword ? t('account.security.changing') : t('common.save')}
                       </button>
@@ -729,7 +729,7 @@ export default function Account() {
 
             {/* Cancel Subscription */}
             {hasActiveSubscription && (
-              <div className="flex-1 flex items-center justify-between sm:border-r sm:border-gray-100 sm:pr-6">
+              <div className="flex-1 flex items-center justify-between sm:border-r sm:border-gray-200/60 sm:pr-6">
                 <div>
                   <h3 className="font-medium text-[#1e3a5f]">{t('subscription.cancelSubscription')}</h3>
                   <p className="text-sm text-gray-500">{t('subscription.danger.description')}</p>
@@ -765,7 +765,7 @@ export default function Account() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+            className="w-full sm:w-auto px-8 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
           >
             {saving ? t('account.saving') : t('account.saveChanges')}
           </button>
@@ -775,7 +775,7 @@ export default function Account() {
       {/* Unlink Google Modal */}
       {showUnlinkGoogle && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowUnlinkGoogle(false); setUnlinkPassword(''); setUnlinkConfirmPassword('') }}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between p-6 pb-0">
               <div className="flex items-center gap-3">
@@ -811,7 +811,7 @@ export default function Account() {
                   value={unlinkPassword}
                   onChange={(e) => setUnlinkPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                   autoFocus
                 />
               </div>
@@ -824,7 +824,7 @@ export default function Account() {
                   value={unlinkConfirmPassword}
                   onChange={(e) => setUnlinkConfirmPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
 
@@ -848,7 +848,7 @@ export default function Account() {
               <button
                 onClick={handleUnlinkGoogle}
                 disabled={unlinking || !unlinkPassword || !unlinkConfirmPassword}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-[#1e3a5f] text-white rounded-xl text-sm font-medium hover:bg-[#2d6cb5] transition-all disabled:opacity-50"
               >
                 {unlinking ? t('account.security.changing') : t('account.security.unlinkAndCreatePassword')}
               </button>
@@ -860,7 +860,7 @@ export default function Account() {
       {/* Delete Catalog Modal */}
       {showDeleteCatalog && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowDeleteCatalog(false); setDeleteConfirmText('') }}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 pb-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
@@ -923,7 +923,7 @@ export default function Account() {
       {/* Change Email Modal */}
       {showEmailForm && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailPassword('') }}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between p-6 pb-0">
               <div className="flex items-center gap-3">
@@ -960,7 +960,7 @@ export default function Account() {
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="nuevo@correo.com"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                   autoFocus
                 />
               </div>
@@ -973,7 +973,7 @@ export default function Account() {
                   value={emailPassword}
                   onChange={(e) => setEmailPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
 
@@ -1000,7 +1000,7 @@ export default function Account() {
               <button
                 onClick={handleChangeEmail}
                 disabled={changingEmail || !newEmail || !emailPassword}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-[#1e3a5f] text-white rounded-xl text-sm font-medium hover:bg-[#2d6cb5] transition-all disabled:opacity-50"
               >
                 {changingEmail ? t('account.security.changing') : t('account.security.sendVerification')}
               </button>

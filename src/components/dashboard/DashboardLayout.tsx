@@ -7,6 +7,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { usePresence } from '../../hooks/usePresence'
 import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
+import ModeSwitcher from '../finance/ModeSwitcher'
 import { chatService } from '../../lib/chatService'
 
 // Tipos para la navegacion
@@ -335,13 +336,11 @@ export default function DashboardLayout() {
   const SidebarContent = () => (
     <>
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
         {navigation.map((item, index) => {
           // Render separator
           if (item === 'separator') {
-            return (
-              <div key={`separator-${index}`} className="my-2 mx-3 border-t border-gray-100" />
-            )
+            return <div key={`separator-${index}`} className="my-1.5" />
           }
 
           const isActive = isItemActive(item.href)
@@ -350,17 +349,18 @@ export default function DashboardLayout() {
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-2.5 px-3 py-[5px] rounded-md text-[13px] transition-colors relative ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md shadow-[#1e3a5f]/20'
-                  : 'text-gray-600 hover:bg-[#f0f7ff] hover:text-[#1e3a5f]'
+                  ? 'bg-gray-900/[0.04] text-gray-900 font-medium'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-900/[0.02] font-normal'
               }`}
             >
+              {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-gray-900 rounded-r-full" />}
               <item.icon />
               <span className="flex-1">{item.name}</span>
               {isChatItem && totalUnread > 0 && (
-                <span className={`min-w-[20px] h-5 px-1.5 text-[11px] font-bold rounded-full flex items-center justify-center ${
-                  isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
+                <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
+                  isActive ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
                 }`}>
                   {totalUnread > 9 ? '9+' : totalUnread}
                 </span>
@@ -371,37 +371,36 @@ export default function DashboardLayout() {
       </nav>
 
       {/* User section */}
-      <div className="p-4 border-t border-gray-100">
-        <div className="flex items-center gap-3">
+      <div className="p-3 border-t border-gray-100">
+        <div className="flex items-center gap-2.5">
           {user.avatar ? (
             <img
               src={user.avatar}
               alt={user.firstName || user.email}
-              className="w-9 h-9 rounded-xl object-cover shadow-md"
+              className="w-7 h-7 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center shadow-md shadow-[#38bdf8]/20">
-              <span className="text-sm font-semibold text-white">
+            <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-[11px] font-medium text-gray-600">
                 {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
               </span>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-[13px] font-medium text-gray-700 truncate">
               {user.firstName && user.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : user.firstName || user.email
               }
             </p>
-            <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="text-gray-400 hover:text-[#1e3a5f] transition-colors p-1.5 rounded-lg hover:bg-gray-100"
+            className="text-gray-300 hover:text-gray-500 transition-colors p-1.5 rounded-md hover:bg-gray-100"
             title={t('nav.logout')}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </button>
         </div>
@@ -455,7 +454,7 @@ export default function DashboardLayout() {
               {user.avatar ? (
                 <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />
               ) : (
-                <div className="w-7 h-7 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                <div className="w-7 h-7 bg-[#1e3a5f] rounded-full flex items-center justify-center">
                   <span className="text-xs font-semibold text-white">
                     {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
                   </span>
@@ -535,62 +534,33 @@ export default function DashboardLayout() {
         {/* Status bar background - matches header seamlessly */}
         <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
         {/* Header bar */}
-        <div className="h-12 bg-white flex items-center justify-between px-4 border-b border-gray-100/80">
+        <div className="h-12 bg-white flex items-center justify-between px-4 border-b border-gray-100">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-1.5 text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
+            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
           >
             <MenuIcon />
           </button>
+          <Link to={localePath('/dashboard')}>
+            <img src="/newlogo.png" alt="Shopifree" className="h-5" />
+          </Link>
           <div className="flex items-center gap-1.5">
-            <Link to={localePath('/dashboard')}>
-              <img src="/newlogo.png" alt="Shopifree" className="h-6" />
-            </Link>
-            <Link
-              to={localePath('/dashboard/plan')}
-              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-all hover:opacity-80 ${
-                store?.plan === 'business'
-                  ? 'bg-purple-50 text-purple-600'
-                  : store?.plan === 'pro'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {store?.plan === 'business' ? (
-                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-              ) : store?.plan === 'pro' ? (
-                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-              ) : (
-                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-              )}
-              {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
-            </Link>
-            {isAdmin && (
-              <Link
-                to={localePath('/admin')}
-                className="px-1.5 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[10px] rounded-full font-semibold"
-              >
-                Admin
-              </Link>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
             {!isAdmin && (
-              <button onClick={() => setChatOpen(true)} className="relative w-9 h-9 flex items-center justify-center">
-                <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
+              <button onClick={() => setChatOpen(true)} className="relative w-8 h-8 flex items-center justify-center">
+                <img src="/chat-support.png" alt="Soporte" className="w-6 h-6 object-contain" />
                 {chatUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
                     {chatUnread > 9 ? '9+' : chatUnread}
                   </span>
                 )}
               </button>
             )}
-            <Link to={localePath('/dashboard/account')} className="w-9 h-9 flex items-center justify-center">
+            <Link to={localePath('/dashboard/account')} className="w-8 h-8 flex items-center justify-center">
               {user.avatar ? (
-                <img src={user.avatar} alt={user.firstName || user.email} className="w-8 h-8 rounded-full object-cover" />
+                <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-lg object-cover" />
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-full flex items-center justify-center">
-                  <span className="text-xs font-semibold text-white">
+                <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="text-[11px] font-medium text-gray-600">
                     {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
                   </span>
                 </div>
@@ -603,60 +573,37 @@ export default function DashboardLayout() {
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-[2px]"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar - Mobile */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-y-0 left-0 w-[280px] bg-white border-r border-gray-200/60 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Safe area + Logo + Close */}
           <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
-          <div className="flex items-center justify-between h-12 px-4 border-b border-gray-100/80">
-            <div className="flex items-center gap-1.5">
-              <Link to={localePath('/dashboard')} className="flex items-center">
-                <img src="/newlogo.png" alt="Shopifree" className="h-7" />
-              </Link>
-              <Link
-                to={localePath('/dashboard/plan')}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all hover:opacity-80 ${
-                  store?.plan === 'business'
-                    ? 'bg-purple-50 text-purple-600'
-                    : store?.plan === 'pro'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {store?.plan === 'business' ? (
-                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                ) : store?.plan === 'pro' ? (
-                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                ) : (
-                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                )}
-                {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100 space-y-3 relative">
+            <div className="flex items-center justify-center gap-2">
+              <Link to={localePath('/dashboard')}>
+                <img src="/newlogo.png" alt="Shopifree" className="h-8" />
               </Link>
               {isAdmin && (
-                <Link
-                  to={localePath('/admin')}
-                  className="p-1 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
-                  title="Super Admin"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                <Link to={localePath('/admin')} className="p-1 rounded-md text-gray-300 hover:text-violet-500 transition-colors" title="Admin">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                  </svg>
                 </Link>
               )}
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-md transition-colors absolute right-4 top-4">
+                <CloseIcon />
+              </button>
             </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 -mr-2 text-gray-600 hover:text-[#1e3a5f] hover:bg-gray-100 rounded-lg transition-all"
-            >
-              <CloseIcon />
-            </button>
+            <ModeSwitcher mode="ecommerce" />
           </div>
 
           <SidebarContent />
@@ -664,22 +611,27 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 shadow-sm">
+      <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-gray-100">
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
-            <Link to={localePath('/dashboard')} className="flex items-center">
-              <img src="/newlogo.png" alt="Shopifree" className="h-7" />
-            </Link>
-            {isAdmin && (
-              <Link
-                to={localePath('/admin')}
-                className="p-1.5 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
-                title="Super Admin"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          {/* Logo + Mode Switcher */}
+          <div className="px-4 pt-5 pb-3 border-b border-gray-100 space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <Link to={localePath('/dashboard')}>
+                <img src="/newlogo.png" alt="Shopifree" className="h-10" />
               </Link>
-            )}
+              {isAdmin && (
+                <Link
+                  to={localePath('/admin')}
+                  className="p-1 rounded-md text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-colors"
+                  title="Admin"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+            <ModeSwitcher mode="ecommerce" />
           </div>
 
           <SidebarContent />
@@ -687,17 +639,17 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:pl-64 lg:!pt-0" style={{ paddingTop: isNative ? 'calc(3rem + env(safe-area-inset-top))' : '3rem' }}>
+      <main className="lg:pl-60 lg:!pt-0" style={{ paddingTop: isNative ? 'calc(3rem + env(safe-area-inset-top))' : '3rem' }}>
         {/* Desktop top bar */}
         {store && (
-          <div className="hidden lg:flex items-center justify-between px-8 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
+          <div className="hidden lg:flex items-center justify-between px-8 py-2.5 border-b border-gray-100 bg-white sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <Link
                 to={localePath('/dashboard/plan')}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  store.plan === 'business' ? 'bg-amber-100 text-amber-700' :
-                  store.plan === 'pro' ? 'bg-blue-100 text-blue-700' :
-                  'bg-gray-100 text-gray-500'
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium ${
+                  store.plan === 'business' ? 'bg-amber-50 text-amber-600' :
+                  store.plan === 'pro' ? 'bg-blue-50 text-blue-600' :
+                  'bg-gray-50 text-gray-500'
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${
@@ -708,12 +660,12 @@ export default function DashboardLayout() {
                 {store.plan === 'business' ? 'Business' : store.plan === 'pro' ? 'Pro' : 'Free'}
               </Link>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <a
                 href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-[#1e3a5f] hover:bg-gray-50 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -722,13 +674,13 @@ export default function DashboardLayout() {
               </a>
               <button
                 onClick={() => setChatOpen(!chatOpen)}
-                className="relative p-2 text-gray-400 hover:text-[#1e3a5f] hover:bg-gray-50 rounded-lg transition-colors"
+                className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {chatUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
                     {chatUnread > 9 ? '9+' : chatUnread}
                   </span>
                 )}
@@ -736,7 +688,7 @@ export default function DashboardLayout() {
             </div>
           </div>
         )}
-        <div className="p-4 sm:p-6 lg:pt-4 lg:pb-8 lg:px-8">
+        <div className="p-4 sm:p-6 lg:pt-5 lg:pb-8 lg:px-8">
           {store && <PlanBanner store={store} />}
           <Outlet />
         </div>
@@ -746,11 +698,11 @@ export default function DashboardLayout() {
       {!isAdmin && !chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
-          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-white shadow-lg hover:shadow-xl items-center justify-center transition-all hover:scale-105 active:scale-95 border border-gray-100"
+          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-xl bg-white shadow-md hover:shadow-lg items-center justify-center transition-all hover:scale-105 active:scale-95 border border-gray-200/60"
         >
-          <img src="/chat-support.png" alt="Soporte" className="w-9 h-9 object-contain" />
+          <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
           {chatUnread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
               {chatUnread > 9 ? '9+' : chatUnread}
             </span>
           )}

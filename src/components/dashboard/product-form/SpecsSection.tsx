@@ -49,7 +49,7 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[#1e3a5f]">
@@ -78,7 +78,7 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
           value={model || ''}
           onChange={(e) => onModelChange(e.target.value || undefined)}
           placeholder={t('productForm.specs.modelPlaceholder', 'Ej: XM5-2024')}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
         />
       </div>
 

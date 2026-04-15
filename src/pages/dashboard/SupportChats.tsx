@@ -311,14 +311,14 @@ export default function SupportChats() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#1e3a5f] mb-1">Chats de Soporte</h1>
+      <h1 className="text-xl font-semibold text-gray-900 mb-1">Chats de Soporte</h1>
       <p className="text-gray-600 mb-6 text-sm">Conversaciones con tus usuarios</p>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '400px' }}>
+      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '400px' }}>
         <div className="flex h-full">
           {/* Chat list */}
-          <div className={`w-full lg:w-80 lg:min-w-[320px] lg:border-r border-gray-100 flex flex-col ${showingConversation ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="p-3 border-b border-gray-100">
+          <div className={`w-full lg:w-80 lg:min-w-[320px] lg:border-r border-gray-200/60 flex flex-col ${showingConversation ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="p-3 border-b border-gray-200/60">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 {chats.length} conversacion{chats.length !== 1 ? 'es' : ''}
               </p>
@@ -406,7 +406,7 @@ export default function SupportChats() {
             {selectedChat ? (
               <>
                 {/* Conversation header */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/60 bg-white">
                   <button
                     onClick={() => setSelectedChat(null)}
                     className="lg:hidden p-1 text-gray-500 hover:text-gray-700"
@@ -471,7 +471,7 @@ export default function SupportChats() {
                                 </div>
                               )}
                               <div
-                                className={`max-w-[70%] px-3.5 py-2 rounded-2xl shadow-sm ${
+                                className={`max-w-[70%] px-3.5 py-2 rounded-xl shadow-sm ${
                                   isAdmin
                                     ? 'bg-[#007AFF] text-white rounded-br-md'
                                     : isAssistant
@@ -507,7 +507,7 @@ export default function SupportChats() {
                 </div>
 
                 {/* Input */}
-                <div className="border-t border-gray-100 px-3 py-2 bg-white">
+                <div className="border-t border-gray-200/60 px-3 py-2 bg-white">
                   <div className="max-w-2xl mx-auto">
                     {/* Image preview */}
                     {imagePreview && (

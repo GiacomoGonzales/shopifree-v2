@@ -441,12 +441,12 @@ export default function Branding() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('branding.title')}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('branding.title')}</h1>
         <p className="text-gray-600 mt-1">{t('branding.subtitle')}</p>
       </div>
 
       {/* Theme Selector - Carousel by Category */}
-      <div className="bg-white rounded-2xl border border-gray-100 py-6 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-200/60 py-6 shadow-sm">
         <div className="px-4 md:px-6">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">{t('branding.theme.title')}</h2>
           <p className="text-sm text-gray-600 mb-5">
@@ -512,7 +512,7 @@ export default function Branding() {
                     return (
                       <div
                         key={theme.id}
-                        className={`carousel-item w-[120px] sm:w-[150px] md:w-[160px] flex-shrink-0 relative rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all group ${isFirst ? 'ml-4 md:ml-6' : ''} ${isLast ? 'mr-4 md:mr-6' : ''} ${
+                        className={`carousel-item w-[120px] sm:w-[150px] md:w-[160px] flex-shrink-0 relative rounded-xl sm:rounded-xl overflow-hidden border-2 transition-all group ${isFirst ? 'ml-4 md:ml-6' : ''} ${isLast ? 'mr-4 md:mr-6' : ''} ${
                           isSelected
                             ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
                             : isLocked
@@ -569,7 +569,7 @@ export default function Branding() {
                             )}
                           </div>
                           {/* Theme Name */}
-                          <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-white border-t border-gray-100">
+                          <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-white border-t border-gray-200/60">
                             <div className="flex items-center justify-between">
                               <span className="font-semibold text-xs sm:text-sm text-[#1e3a5f] truncate">{theme.name}</span>
                               {theme.isPremium ? (
@@ -587,7 +587,7 @@ export default function Branding() {
                         </button>
                         {/* Selected indicator */}
                         {isSelected && (
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center shadow-lg z-10">
+                          <div className="absolute top-2 right-2 w-6 h-6 bg-[#1e3a5f] rounded-full flex items-center justify-center shadow-lg z-10">
                             <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
@@ -605,12 +605,12 @@ export default function Branding() {
 
       {/* Logo */}
       <div className="mt-6">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('branding.logo.title')}</h2>
           <div className="flex items-start gap-4">
             <div
               onClick={() => logoInputRef.current?.click()}
-              className="w-24 h-24 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
+              className="w-24 h-24 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
             >
               {uploadingLogo ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2d6cb5]"></div>
@@ -652,9 +652,9 @@ export default function Branding() {
       {/* Catalog Layout + Visual Effects | Hero Images */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Left Column: Layout + Effects in one card */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm h-fit">
           {store && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.layout.title')}</h2>
                 {store.plan === 'free' && (
@@ -732,7 +732,7 @@ export default function Branding() {
                         isSelected
                           ? 'border-[#2d6cb5] bg-[#f0f7ff]'
                           : isDisabled
-                            ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                            ? 'border-gray-200/60 bg-gray-50 opacity-60 cursor-not-allowed'
                             : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
                       }`}
                     >
@@ -746,7 +746,7 @@ export default function Branding() {
                         {t(`branding.layout.${layout.id}Desc`)}
                       </div>
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#1e3a5f] rounded-full flex items-center justify-center">
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
@@ -776,7 +776,7 @@ export default function Branding() {
 
           {/* Product Pagination */}
           {store && (
-            <div className="border-t border-gray-100 pt-6 mt-6">
+            <div className="border-t border-gray-200/60 pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.pagination.title')}</h3>
                 {store.plan === 'free' && (
@@ -837,7 +837,7 @@ export default function Branding() {
                         isSelected
                           ? 'border-[#2d6cb5] bg-[#f0f7ff]'
                           : isDisabled
-                            ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                            ? 'border-gray-200/60 bg-gray-50 opacity-60 cursor-not-allowed'
                             : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
                       }`}
                     >
@@ -851,7 +851,7 @@ export default function Branding() {
                         {t(`branding.pagination.${descKey}`)}
                       </div>
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#1e3a5f] rounded-full flex items-center justify-center">
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
@@ -881,7 +881,7 @@ export default function Branding() {
 
           {/* Product View Mode */}
           {store && (
-            <div className="border-t border-gray-100 pt-6 mt-6">
+            <div className="border-t border-gray-200/60 pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.viewMode.title')}</h3>
                 {store.plan === 'free' && (
@@ -929,7 +929,7 @@ export default function Branding() {
                         isSelected
                           ? 'border-[#2d6cb5] bg-[#f0f7ff]'
                           : isDisabled
-                            ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                            ? 'border-gray-200/60 bg-gray-50 opacity-60 cursor-not-allowed'
                             : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
                       }`}
                     >
@@ -943,7 +943,7 @@ export default function Branding() {
                         {t(`branding.viewMode.${option.descKey}`)}
                       </div>
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#1e3a5f] rounded-full flex items-center justify-center">
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
@@ -972,7 +972,7 @@ export default function Branding() {
 
           {/* Visual Effects */}
           {store && (
-            <div className="border-t border-gray-100 pt-6 mt-6">
+            <div className="border-t border-gray-200/60 pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.effects.title')}</h3>
                 {store.plan === 'free' && (
@@ -985,7 +985,7 @@ export default function Branding() {
 
               <div className="space-y-3">
                 {/* Scroll Reveal */}
-                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-200/60' : 'bg-white border-gray-200'}`}>
                   <div className="flex-1 mr-4">
                     <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
                     <p className="text-xs text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
@@ -1019,7 +1019,7 @@ export default function Branding() {
                 </div>
 
                 {/* Image Swap on Hover */}
-                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-200/60' : 'bg-white border-gray-200'}`}>
                   <div className="flex-1 mr-4">
                     <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
                     <p className="text-xs text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
@@ -1072,7 +1072,7 @@ export default function Branding() {
         </div>
 
         {/* Right Column - Hero Images */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-fit">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm h-fit">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">{t('branding.hero.title')}</h2>
           <p className="text-sm text-gray-600 mb-6">
             {t('branding.hero.description')}
@@ -1167,7 +1167,7 @@ export default function Branding() {
           </div>
 
           {/* Gallery + Tip */}
-          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
+          <div className="mt-4 pt-4 border-t border-gray-200/60 flex items-center justify-between gap-4">
             <p className="text-xs text-gray-400">
               <span className="font-medium">{t('branding.hero.tip')}</span> {t('branding.hero.tipText')}
             </p>
@@ -1184,7 +1184,7 @@ export default function Branding() {
       {/* Conversion Features - Single unified card */}
       {store && (
         <div className="mt-6">
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             {/* Header */}
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.conversion.title')}</h2>
@@ -1333,7 +1333,7 @@ export default function Branding() {
                 </div>
 
                 {/* Section 3: Flash Sale */}
-                <div className="border-t border-gray-100 pt-5 mt-5">
+                <div className="border-t border-gray-200/60 pt-5 mt-5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-[#1e3a5f]">{t('branding.flashSale.title')}</h3>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1495,7 +1495,7 @@ export default function Branding() {
                       {trustBadges.badges.some(b => b.enabled) && (
                         <div className="mt-4">
                           <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.trustBadges.preview')}</div>
-                          <div className="py-3.5 px-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-100 overflow-x-auto scrollbar-hide">
+                          <div className="py-3.5 px-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/60 overflow-x-auto scrollbar-hide">
                             <div className="flex items-center justify-center gap-5 md:gap-8 min-w-max">
                               {trustBadges.badges.filter(b => b.enabled).map((badge) => (
                                 <div key={badge.id} className="flex items-center gap-2.5 flex-shrink-0">
@@ -1516,7 +1516,7 @@ export default function Branding() {
                 </div>
 
                 {/* Section 4: Social Proof */}
-                <div className="border-t border-gray-100 pt-5 mt-5">
+                <div className="border-t border-gray-200/60 pt-5 mt-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-[#1e3a5f]">{t('branding.socialProof.title')}</h3>
@@ -1562,7 +1562,7 @@ export default function Branding() {
                 <button
                   onClick={handleSaveConversion}
                   disabled={savingConversion}
-                  className="px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+                  className="px-6 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
                 >
                   {savingConversion ? t('branding.saving') : t('branding.saveChanges')}
                 </button>
@@ -1663,9 +1663,9 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 border-b border-gray-200/60 flex items-center justify-between flex-shrink-0">
           <h3 className="text-lg font-semibold text-[#1e3a5f]">
             {t('branding.hero.selectCover')}
           </h3>
@@ -1680,7 +1680,7 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
         </div>
 
         {/* Category tabs */}
-        <div className="px-6 py-3 border-b border-gray-100 flex-shrink-0 overflow-x-auto">
+        <div className="px-6 py-3 border-b border-gray-200/60 flex-shrink-0 overflow-x-auto">
           <div className="flex gap-2">
             {categories.map((cat) => (
               <button
@@ -1688,7 +1688,7 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
                 onClick={() => onCategoryChange(cat.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                   category === cat.id
-                    ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md'
+                    ? 'bg-[#1e3a5f] text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -1725,7 +1725,7 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0">
+        <div className="px-6 py-4 border-t border-gray-200/60 flex-shrink-0">
           <button
             onClick={onClose}
             className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
@@ -1856,9 +1856,9 @@ function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onText
 
   return (
     <div
-      className={`relative rounded-2xl border-2 p-4 transition-all duration-200 ${
+      className={`relative rounded-xl border-2 p-4 transition-all duration-200 ${
         isDisabled
-          ? 'bg-gray-50 border-gray-100 opacity-50 cursor-not-allowed'
+          ? 'bg-gray-50 border-gray-200/60 opacity-50 cursor-not-allowed'
           : isEnabled
             ? 'bg-[#f0f7ff] border-[#2d6cb5]/30 shadow-sm'
             : 'bg-white border-gray-200 hover:border-gray-300 cursor-pointer'
@@ -1870,7 +1870,7 @@ function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onText
     >
       {/* Selected check */}
       {isEnabled && !isDisabled && (
-        <div className="absolute top-2.5 right-2.5 w-5 h-5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] rounded-full flex items-center justify-center">
+        <div className="absolute top-2.5 right-2.5 w-5 h-5 bg-[#1e3a5f] rounded-full flex items-center justify-center">
           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
@@ -1880,7 +1880,7 @@ function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onText
       {/* Icon */}
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${
         isEnabled && !isDisabled
-          ? 'bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] text-white'
+          ? 'bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] text-white'
           : 'bg-gray-100 text-gray-400'
       }`}>
         <TrustBadgeIcon id={badgeId} />
@@ -2094,9 +2094,9 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-200/60">
           <h3 className="text-lg font-semibold text-[#1e3a5f]">
             {title}
           </h3>
@@ -2180,7 +2180,7 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+        <div className="px-6 py-4 border-t border-gray-200/60 flex gap-3">
           <button
             onClick={onCancel}
             className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
@@ -2190,7 +2190,7 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
           <button
             onClick={handleCrop}
             disabled={!imageLoaded}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-[#1e3a5f] text-white rounded-xl font-medium hover:bg-[#2d6cb5] transition-all disabled:opacity-50"
           >
             {t('branding.logo.apply', 'Aplicar')}
           </button>

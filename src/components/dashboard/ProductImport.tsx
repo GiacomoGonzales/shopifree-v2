@@ -847,9 +847,9 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-gray-200/60 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-[#1e3a5f]">Importar productos</h2>
             <p className="text-sm text-gray-500">Plantilla para: {businessTypeLabels[businessType]}</p>
@@ -907,7 +907,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
                       : 'border-gray-200 hover:border-[#38bdf8]'
                   }`}
                 >
-                  <div className={`w-14 h-14 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#38bdf8]/20 transition-transform ${isDragging ? 'scale-110' : ''}`}>
+                  <div className={`w-14 h-14 bg-[#1e3a5f] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm transition-transform ${isDragging ? 'scale-110' : ''}`}>
                     <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
@@ -936,7 +936,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
               <div className="flex items-center justify-between p-4 bg-gradient-to-br from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20">
                 <div>
                   <p className="text-sm text-gray-600">Productos a importar</p>
-                  <p className="text-2xl font-bold text-[#1e3a5f]">{products.length}</p>
+                  <p className="text-xl font-semibold text-gray-900">{products.length}</p>
                 </div>
                 {errors.length > 0 && (
                   <div className="text-right">
@@ -1038,7 +1038,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
 
         {/* Footer */}
         {step !== 'importing' && (
-          <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          <div className="px-6 py-4 border-t border-gray-200/60 flex gap-3">
             {step === 'preview' && (
               <button
                 onClick={() => {
@@ -1060,7 +1060,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
             {step === 'preview' && products.length > 0 && (
               <button
                 onClick={handleImport}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+                className="flex-1 px-4 py-2.5 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors font-medium"
               >
                 Importar {products.length} producto{products.length !== 1 ? 's' : ''}
               </button>

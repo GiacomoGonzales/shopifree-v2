@@ -27,7 +27,7 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[#1e3a5f]">
@@ -59,7 +59,7 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
             value={prepTime?.min || ''}
             onChange={(e) => handleChange('min', e.target.value)}
             placeholder="15"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           />
         </div>
         <div>
@@ -72,7 +72,7 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
             value={prepTime?.max || ''}
             onChange={(e) => handleChange('max', e.target.value)}
             placeholder="20"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           />
         </div>
         <div>
@@ -82,7 +82,7 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
           <select
             value={prepTime?.unit || 'min'}
             onChange={(e) => handleChange('unit', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           >
             <option value="min">{t('productForm.prepTime.minutes', 'Minutos')}</option>
             <option value="hr">{t('productForm.prepTime.hours', 'Horas')}</option>

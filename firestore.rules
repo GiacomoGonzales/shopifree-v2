@@ -88,6 +88,50 @@ service cloud.firestore {
         allow write: if isStoreOwner(storeId);
       }
 
+      // Expenses subcollection (finance module)
+      match /expenses/{expenseId} {
+        allow read: if isStoreOwner(storeId);
+        allow create: if isStoreOwner(storeId);
+        allow update: if isStoreOwner(storeId);
+        allow delete: if isStoreOwner(storeId);
+      }
+
+      // Stock movements subcollection (finance module)
+      match /stock_movements/{movementId} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if isStoreOwner(storeId);
+      }
+
+      // Suppliers subcollection (finance module)
+      match /suppliers/{supplierId} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if isStoreOwner(storeId);
+      }
+
+      // Purchases subcollection (finance module)
+      match /purchases/{purchaseId} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if isStoreOwner(storeId);
+      }
+
+      // Warehouses subcollection (finance module)
+      match /warehouses/{warehouseId} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if isStoreOwner(storeId);
+      }
+
+      // Branches subcollection (finance module)
+      match /branches/{branchId} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if isStoreOwner(storeId);
+      }
+
+      // Production orders subcollection (finance module)
+      match /production_orders/{productionOrderId} {
+        allow read: if isStoreOwner(storeId);
+        allow write: if isStoreOwner(storeId);
+      }
+
       // Analytics subcollection
       match /analytics/{eventId} {
         allow read: if isStoreOwner(storeId);

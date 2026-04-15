@@ -751,7 +751,7 @@ export default function Dropshipping() {
             </button>
           )}
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <h1 className="text-xl sm:text-xl font-semibold text-gray-900">
               {(selectedProduct || pfProduct) ? 'Importar producto' : activeProvider ? PROVIDERS.find(p => p.id === activeProvider)?.name || 'Dropshipping' : 'Dropshipping'}
             </h1>
             <p className="text-sm text-gray-400">
@@ -775,7 +775,7 @@ export default function Dropshipping() {
       {activeProvider === 'printful' && pfProduct ? (
         <div className="max-w-2xl space-y-5">
           {/* Product preview */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
               <img
                 src={pfMockupUrl || pfProduct.product.image}
@@ -801,7 +801,7 @@ export default function Dropshipping() {
           </div>
 
           {/* Design upload */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Tu diseño</h3>
             {pfProduct.product.files?.length > 1 && (
               <div>
@@ -884,7 +884,7 @@ export default function Dropshipping() {
           </div>
 
           {/* Edit fields */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre del producto</label>
               <input
@@ -946,7 +946,7 @@ export default function Dropshipping() {
               if (v.size) sizes.add(v.size)
             }
             return (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+              <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">Variantes</p>
                   <button
@@ -1117,7 +1117,7 @@ export default function Dropshipping() {
                   <button
                     key={product.id}
                     onClick={() => pfViewProduct(product.id)}
-                    className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg hover:border-green-200 transition-all text-left group"
+                    className="bg-white border border-gray-200/60 rounded-xl overflow-hidden hover:shadow-lg hover:border-green-200 transition-all text-left group"
                   >
                     <div className="aspect-square bg-gray-50">
                       <img
@@ -1144,7 +1144,7 @@ export default function Dropshipping() {
           {/* Loading detail overlay */}
           {pfProductLoading && (
             <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-2xl shadow-xl flex items-center gap-3">
+              <div className="bg-white p-6 rounded-xl shadow-xl flex items-center gap-3">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
                 <span className="text-sm text-gray-600">Cargando producto...</span>
               </div>
@@ -1160,10 +1160,10 @@ export default function Dropshipping() {
               key={provider.id}
               onClick={() => provider.active && setActiveProvider(provider.id)}
               disabled={!provider.active}
-              className={`relative flex flex-col items-center text-center rounded-2xl border p-6 transition-all ${
+              className={`relative flex flex-col items-center text-center rounded-xl border p-6 transition-all ${
                 provider.active
                   ? 'border-gray-200 hover:border-blue-300 hover:shadow-lg cursor-pointer bg-white'
-                  : 'border-gray-100 bg-gray-50/50 cursor-default'
+                  : 'border-gray-200/60 bg-gray-50/50 cursor-default'
               }`}
             >
               {!provider.active && (
@@ -1174,7 +1174,7 @@ export default function Dropshipping() {
               <img
                 src={provider.logo}
                 alt={provider.name}
-                className={`w-14 h-14 object-contain rounded-2xl mb-3 ${!provider.active ? 'opacity-40 grayscale' : ''}`}
+                className={`w-14 h-14 object-contain rounded-xl mb-3 ${!provider.active ? 'opacity-40 grayscale' : ''}`}
                 onError={e => { (e.target as HTMLImageElement).src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><rect width="56" height="56" rx="12" fill="%23f3f4f6"/><text x="28" y="34" text-anchor="middle" font-size="20" fill="%239ca3af">${provider.name[0]}</text></svg>` }}
               />
               <h3 className={`font-semibold text-sm ${provider.active ? 'text-gray-900' : 'text-gray-400'}`}>{provider.name}</h3>
@@ -1191,7 +1191,7 @@ export default function Dropshipping() {
         /* === DETAIL / IMPORT VIEW === */
         <div className="max-w-2xl space-y-5">
           {/* Product preview */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
               <img
                 src={selectedProduct.image}
@@ -1221,7 +1221,7 @@ export default function Dropshipping() {
           </div>
 
           {/* Edit fields */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-medium text-gray-700">Nombre del producto</label>
@@ -1365,7 +1365,7 @@ export default function Dropshipping() {
               })
             }
             return (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+              <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-3">
                 {selectedProduct.variantKeyNames.map(name => (
                   groups[name].size > 0 && (
                     <div key={name}>
@@ -1385,7 +1385,7 @@ export default function Dropshipping() {
 
           {/* Description */}
           {selectedProduct.description && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+            <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-gray-700">Descripcion</p>
                 {!translatedDesc && !translating && (
@@ -1500,7 +1500,7 @@ export default function Dropshipping() {
             <button
               type="submit"
               disabled={searching || !keyword.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 text-sm"
+              className="px-6 py-3 bg-[#1e3a5f] text-white rounded-xl font-semibold hover:bg-[#2d6cb5] transition-all disabled:opacity-50 text-sm"
             >
               {searching ? '...' : 'Buscar'}
             </button>
@@ -1536,7 +1536,7 @@ export default function Dropshipping() {
                   <button
                     key={product.pid}
                     onClick={() => viewDetail(product.pid)}
-                    className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all text-left group"
+                    className="bg-white border border-gray-200/60 rounded-xl overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all text-left group"
                   >
                     <div className="aspect-square bg-gray-50">
                       <img
@@ -1588,7 +1588,7 @@ export default function Dropshipping() {
           {/* Loading detail overlay */}
           {loadingDetail && (
             <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-2xl shadow-xl flex items-center gap-3">
+              <div className="bg-white p-6 rounded-xl shadow-xl flex items-center gap-3">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#2d6cb5]"></div>
                 <span className="text-sm text-gray-600">Cargando producto...</span>
               </div>

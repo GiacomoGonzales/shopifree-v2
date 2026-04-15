@@ -179,7 +179,7 @@ export default function Coupons() {
   if (!isPro) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
-        <div className="w-20 h-20 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mb-6">
           <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
@@ -189,7 +189,7 @@ export default function Coupons() {
         {!Capacitor.isNativePlatform() && (
           <Link
             to={localePath('/dashboard/plan')}
-            className="px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+            className="px-6 py-3 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors font-medium"
           >
             {t('coupons.proRequired.upgrade')}
           </Link>
@@ -203,12 +203,12 @@ export default function Coupons() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('coupons.title')}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('coupons.title')}</h1>
           <p className="text-gray-600 mt-1">{t('coupons.subtitle')}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
-          className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+          className="w-full sm:w-auto px-6 py-2.5 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors font-medium"
         >
           {t('coupons.create')}
         </button>
@@ -218,7 +218,7 @@ export default function Coupons() {
       {coupons.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Active coupons */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -226,13 +226,13 @@ export default function Coupons() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#1e3a5f]">{stats.activeCoupons}</p>
+                <p className="text-xl font-semibold text-gray-900">{stats.activeCoupons}</p>
                 <p className="text-xs text-gray-500">{t('coupons.stats.active')}</p>
               </div>
             </div>
           </div>
           {/* Total uses */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -240,13 +240,13 @@ export default function Coupons() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#1e3a5f]">{stats.totalUses}</p>
+                <p className="text-xl font-semibold text-gray-900">{stats.totalUses}</p>
                 <p className="text-xs text-gray-500">{t('coupons.stats.totalUses')}</p>
               </div>
             </div>
           </div>
           {/* Total discounted */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm col-span-2 lg:col-span-1">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -254,7 +254,7 @@ export default function Coupons() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#1e3a5f]">~{currencySymbol}{stats.totalDiscounted.toLocaleString()}</p>
+                <p className="text-xl font-semibold text-gray-900">~{currencySymbol}{stats.totalDiscounted.toLocaleString()}</p>
                 <p className="text-xs text-gray-500">{t('coupons.stats.totalDiscounted')}</p>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function Coupons() {
 
       {/* Create/Edit Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mb-6">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm mb-6">
           <h3 className="font-semibold text-[#1e3a5f] mb-4">
             {editingId ? t('coupons.edit') : t('coupons.new')}
           </h3>
@@ -277,7 +277,7 @@ export default function Coupons() {
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="VERANO20"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all uppercase font-mono"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all uppercase font-mono"
               />
             </div>
             {/* Discount type + value */}
@@ -287,7 +287,7 @@ export default function Coupons() {
                 <select
                   value={discountType}
                   onChange={(e) => setDiscountType(e.target.value as 'percentage' | 'fixed')}
-                  className="px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 >
                   <option value="percentage">%</option>
                   <option value="fixed">{currencySymbol}</option>
@@ -299,7 +299,7 @@ export default function Coupons() {
                   placeholder={discountType === 'percentage' ? '20' : '10.00'}
                   min="0"
                   step={discountType === 'percentage' ? '1' : '0.01'}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 />
               </div>
             </div>
@@ -313,7 +313,7 @@ export default function Coupons() {
                 placeholder={t('coupons.form.optional')}
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
             {/* Max uses */}
@@ -325,7 +325,7 @@ export default function Coupons() {
                 onChange={(e) => setMaxUses(e.target.value)}
                 placeholder={t('coupons.form.unlimited')}
                 min="1"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
             {/* Expires */}
@@ -335,7 +335,7 @@ export default function Coupons() {
                 type="date"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
           </div>
@@ -344,7 +344,7 @@ export default function Coupons() {
             <button
               onClick={handleSave}
               disabled={saving || !code.trim() || !discountValue}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+              className="px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
             >
               {saving ? t('coupons.form.saving') : editingId ? t('coupons.form.update') : t('coupons.form.save')}
             </button>
@@ -360,8 +360,8 @@ export default function Coupons() {
 
       {/* Coupons list */}
       {coupons.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center shadow-sm">
+          <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
@@ -379,14 +379,14 @@ export default function Coupons() {
             return (
               <div
                 key={coupon.id}
-                className={`bg-white rounded-2xl border p-4 sm:p-5 shadow-sm transition-all ${
-                  !coupon.active || isExpired || isMaxed ? 'border-gray-200 opacity-60' : 'border-gray-100'
+                className={`bg-white rounded-xl border p-4 sm:p-5 shadow-sm transition-all ${
+                  !coupon.active || isExpired || isMaxed ? 'border-gray-200 opacity-60' : 'border-gray-200/60'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Code + info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center flex-shrink-0">
                       <svg className="w-6 h-6 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>

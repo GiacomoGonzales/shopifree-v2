@@ -173,7 +173,7 @@ export default function Plan() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('plan.title')}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('plan.title')}</h1>
           <p className="text-gray-600 mt-1">{t('plan.subtitle')}</p>
         </div>
         {/* Billing toggle */}
@@ -207,9 +207,9 @@ export default function Plan() {
         {/* Left Column - Current Plan */}
         <div className="lg:col-span-1 space-y-6">
           {/* Current plan badge */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-[#1e3a5f] rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -262,7 +262,7 @@ export default function Plan() {
           </div>
 
           {/* Support */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <h3 className="font-semibold text-[#1e3a5f] mb-3">{t('plan.support.title')}</h3>
             <p className="text-sm text-gray-600 mb-4">
               {t('plan.support.description')}
@@ -303,15 +303,15 @@ export default function Plan() {
               return (
                 <div
                   key={planId}
-                  className={`relative bg-white rounded-2xl border-2 p-5 shadow-sm transition-all ${
+                  className={`relative bg-white rounded-xl border-2 p-5 shadow-sm transition-all ${
                     isPopular
                       ? 'border-[#2d6cb5] shadow-lg shadow-[#2d6cb5]/10'
-                      : 'border-gray-100 hover:border-[#38bdf8]/50'
+                      : 'border-gray-200/60 hover:border-[#38bdf8]/50'
                   }`}
                 >
                   {isPopular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="px-3 py-1 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-xs font-semibold rounded-full shadow-lg">
+                      <span className="px-3 py-1 bg-[#1e3a5f] text-white text-xs font-semibold rounded-full shadow-lg">
                         {t('plan.badge.popular')}
                       </span>
                     </div>
@@ -372,12 +372,12 @@ export default function Plan() {
 
                   <button
                     onClick={() => handleSelectPlan(planId)}
-                    disabled={isCurrentPlan || loading || planId === 'free'}
+                    disabled={(isCurrentPlan && !isTrialing) || loading || planId === 'free'}
                     className={`w-full py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm ${
-                      isCurrentPlan || planId === 'free'
+                      (isCurrentPlan && !isTrialing) || planId === 'free'
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : isPopular
-                        ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white hover:from-[#2d6cb5] hover:to-[#38bdf8] shadow-lg shadow-[#1e3a5f]/20'
+                        ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
                         : 'bg-[#f0f7ff] text-[#1e3a5f] hover:bg-[#e0efff]'
                     }`}
                   >
@@ -386,8 +386,10 @@ export default function Plan() {
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                         {t('plan.buttons.processing')}
                       </>
-                    ) : isCurrentPlan ? (
+                    ) : isCurrentPlan && !isTrialing ? (
                       t('plan.buttons.current')
+                    ) : isCurrentPlan && isTrialing ? (
+                      t('plan.trial.subscribe', 'Suscribirme')
                     ) : planId === 'free' ? (
                       t('plan.buttons.free')
                     ) : hasDiscount ? (
@@ -406,7 +408,7 @@ export default function Plan() {
       </div>
 
       {/* FAQ - Two Columns */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('plan.faq.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">

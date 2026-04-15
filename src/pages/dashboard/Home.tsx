@@ -243,7 +243,7 @@ export default function DashboardHome() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('home.title')}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('home.title')}</h1>
         <p className="text-gray-600 mt-1">
           {t('home.welcomeStore', { store: store?.name || 'Store' })}
         </p>
@@ -251,7 +251,7 @@ export default function DashboardHome() {
 
       {/* Trial Banner */}
       {isOnTrial && !Capacitor.isNativePlatform() && (
-        <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-4 sm:p-5 border border-purple-200 shadow-sm">
+        <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-4 sm:p-5 border border-purple-200 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
@@ -291,7 +291,7 @@ export default function DashboardHome() {
 
       {/* Trial Expired Banner */}
       {isTrialExpired && !Capacitor.isNativePlatform() && (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-red-200 shadow-sm">
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-4 sm:p-5 border border-red-200 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
@@ -330,7 +330,7 @@ export default function DashboardHome() {
         if (allDone) return null
 
         return (
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="font-semibold text-[#1e3a5f]">{t('home.onboarding.title')}</h2>
@@ -377,7 +377,7 @@ export default function DashboardHome() {
                     step.link ? (
                       <Link
                         to={localePath(step.link)}
-                        className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all flex-shrink-0"
+                        className="px-3 py-1.5 bg-[#1e3a5f] text-white rounded-lg text-xs font-medium hover:bg-[#2d6cb5] transition-all flex-shrink-0"
                       >
                         {t('home.onboarding.go')}
                       </Link>
@@ -387,7 +387,7 @@ export default function DashboardHome() {
                           copyLink()
                           markLinkShared()
                         }}
-                        className="px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-lg text-xs font-medium hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all flex-shrink-0"
+                        className="px-3 py-1.5 bg-[#1e3a5f] text-white rounded-lg text-xs font-medium hover:bg-[#2d6cb5] transition-all flex-shrink-0"
                       >
                         {t('home.copyLink')}
                       </button>
@@ -401,7 +401,7 @@ export default function DashboardHome() {
       })()}
 
       {/* Quick share */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200/60 shadow-sm">
         <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">{t('home.yourLink')}</h2>
         <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
           <code className="block w-full px-4 py-3 bg-[#f0f7ff] rounded-xl text-xs sm:text-sm text-[#1e3a5f] font-medium border border-[#38bdf8]/20 truncate">
@@ -412,7 +412,7 @@ export default function DashboardHome() {
               href={catalogUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 sm:flex-none px-3 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition flex items-center justify-center shadow-lg shadow-[#1e3a5f]/20"
+              className="flex-1 sm:flex-none px-3 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition flex items-center justify-center shadow-sm"
               title={t('home.openCatalog')}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -453,8 +453,8 @@ export default function DashboardHome() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-6">
-        <div className="bg-white rounded-2xl p-3 sm:p-6 border border-gray-100 shadow-sm flex flex-col items-center text-center">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-[#38bdf8]/20">
+        <div className="bg-white rounded-xl p-3 sm:p-6 border border-gray-200/60 shadow-sm flex flex-col items-center text-center">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1e3a5f] rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-sm">
             <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
@@ -462,8 +462,8 @@ export default function DashboardHome() {
           <p className="text-xl sm:text-3xl font-bold text-[#1e3a5f]">{products.length}</p>
           <p className="text-gray-600 text-[11px] sm:text-sm mt-0.5 sm:mt-1">{t('home.products')}</p>
         </div>
-        <div className="bg-white rounded-2xl p-3 sm:p-6 border border-gray-100 shadow-sm flex flex-col items-center text-center">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-[#1e3a5f]/20">
+        <div className="bg-white rounded-xl p-3 sm:p-6 border border-gray-200/60 shadow-sm flex flex-col items-center text-center">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-sm">
             <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -472,7 +472,7 @@ export default function DashboardHome() {
           <p className="text-xl sm:text-3xl font-bold text-[#1e3a5f]">{analytics.pageViews}</p>
           <p className="text-gray-600 text-[11px] sm:text-sm mt-0.5 sm:mt-1">{t('home.visitsWeek')}</p>
         </div>
-        <div className="bg-white rounded-2xl p-3 sm:p-6 border border-gray-100 shadow-sm flex flex-col items-center text-center">
+        <div className="bg-white rounded-xl p-3 sm:p-6 border border-gray-200/60 shadow-sm flex flex-col items-center text-center">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-green-400/20">
             <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -516,7 +516,7 @@ export default function DashboardHome() {
         const iconGradient = activeMilestone.id === 'first_order' ? 'from-green-500 to-emerald-600' : activeMilestone.id === 'products_5' ? 'from-blue-500 to-indigo-600' : 'from-emerald-500 to-green-600'
 
         return (
-          <div className={`rounded-2xl p-4 sm:p-5 border shadow-sm bg-gradient-to-r ${style.gradient}`}>
+          <div className={`rounded-xl p-4 sm:p-5 border shadow-sm bg-gradient-to-r ${style.gradient}`}>
             <div className="flex items-start gap-3">
               <div className={`w-10 h-10 bg-gradient-to-br ${iconGradient} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
                 {style.icon}
@@ -555,10 +555,10 @@ export default function DashboardHome() {
         const isNearLimit = productPct >= 70 || categoryPct >= 70
 
         return (
-          <div className={`rounded-2xl p-4 sm:p-5 border shadow-sm ${isNearLimit ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200' : 'bg-white border-gray-100'}`}>
+          <div className={`rounded-xl p-4 sm:p-5 border shadow-sm ${isNearLimit ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200' : 'bg-white border-gray-200/60'}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isNearLimit ? 'bg-gradient-to-br from-orange-400 to-amber-500' : 'bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5]'}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isNearLimit ? 'bg-gradient-to-br from-orange-400 to-amber-500' : 'bg-[#1e3a5f]'}`}>
                   <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
@@ -621,7 +621,7 @@ export default function DashboardHome() {
             {isNearLimit && (
               <Link
                 to={localePath('/dashboard/plan')}
-                className="mt-4 w-full block text-center px-4 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
+                className="mt-4 w-full block text-center px-4 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all text-sm font-semibold shadow-sm"
               >
                 {t('home.planUsage.unlockMore')}
               </Link>
@@ -646,7 +646,7 @@ export default function DashboardHome() {
           ) : (
             <Link
               to={localePath('/dashboard/products/new')}
-              className="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all text-sm font-semibold shadow-lg shadow-[#1e3a5f]/20"
+              className="px-4 py-2 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all text-sm font-semibold shadow-sm"
             >
               {t('home.addFirstProduct', { defaultValue: 'Crear mi primer producto' })}
             </Link>
@@ -654,8 +654,8 @@ export default function DashboardHome() {
         </div>
 
         {products.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#f0f7ff] to-white border border-[#38bdf8]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center shadow-sm">
+            <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
@@ -668,7 +668,7 @@ export default function DashboardHome() {
             </p>
             <Link
               to={localePath('/dashboard/products/new')}
-              className="inline-flex px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold shadow-lg shadow-[#1e3a5f]/20"
+              className="inline-flex px-6 py-3 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors font-medium"
             >
               {t('home.addFirstProduct')}
             </Link>
@@ -680,7 +680,7 @@ export default function DashboardHome() {
               <Link
                 key={product.id}
                 to={localePath(`/dashboard/products/${product.id}`)}
-                className="flex-shrink-0 w-36 sm:w-44 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group snap-start"
+                className="flex-shrink-0 w-36 sm:w-44 bg-white rounded-xl border border-gray-200/60 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group snap-start"
               >
                 <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100">
                   {product.image ? (
@@ -710,9 +710,9 @@ export default function DashboardHome() {
             {/* Ver más card */}
             <Link
               to={localePath('/dashboard/products')}
-              className="flex-shrink-0 w-36 sm:w-44 bg-gradient-to-br from-[#f0f7ff] to-white rounded-2xl border border-[#38bdf8]/20 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all flex flex-col items-center justify-center snap-start"
+              className="flex-shrink-0 w-36 sm:w-44 bg-gradient-to-br from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all flex flex-col items-center justify-center snap-start"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-[#1e3a5f]/20">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-xl flex items-center justify-center mb-3 shadow-sm">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -744,7 +744,7 @@ export default function DashboardHome() {
             <button
               key={theme.id}
               onClick={() => setPreviewTheme(theme.id)}
-              className="flex-shrink-0 w-36 sm:w-44 rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-[#38bdf8]/50 transition-all group snap-start text-left"
+              className="flex-shrink-0 w-36 sm:w-44 rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-[#38bdf8]/50 transition-all group snap-start text-left"
             >
               {/* Mini preview */}
               <div
@@ -780,7 +780,7 @@ export default function DashboardHome() {
                 </div>
               </div>
               {/* Theme info */}
-              <div className="p-2.5 bg-white border-t border-gray-100">
+              <div className="p-2.5 bg-white border-t border-gray-200/60">
                 <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-xs text-[#1e3a5f] truncate">{theme.name}</span>
                   {theme.isNew && (
@@ -798,7 +798,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Feedback / Suggestions */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
         <div className="flex items-start gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#38bdf8]/20 to-[#2d6cb5]/20 flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -858,7 +858,7 @@ export default function DashboardHome() {
             <button
               onClick={submitFeedback}
               disabled={feedbackSending || !feedbackMessage.trim()}
-              className="mt-2 w-full py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="mt-2 w-full py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {feedbackSending ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -878,7 +878,7 @@ export default function DashboardHome() {
 
       {/* Upgrade banner - hidden on native iOS, on trial, or on paid plans */}
       {!Capacitor.isNativePlatform() && !isOnTrial && store?.plan === 'free' && (
-        <div className="bg-gradient-to-r from-[#1e3a5f] via-[#2d6cb5] to-[#38bdf8] rounded-2xl p-4 sm:p-6 text-white shadow-xl shadow-[#1e3a5f]/20">
+        <div className="bg-[#1e3a5f] rounded-xl p-4 sm:p-6 text-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="font-bold text-lg">{t('home.upgradeTitle')}</h3>
@@ -960,7 +960,7 @@ export default function DashboardHome() {
           onClick={() => setShowQR(false)}
         >
           <div
-            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -975,7 +975,7 @@ export default function DashboardHome() {
               </button>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-center mb-4">
+            <div className="bg-white p-4 rounded-xl border border-gray-200/60 flex items-center justify-center mb-4">
               <img
                 src={qrCodeUrl}
                 alt="QR Code"
@@ -989,7 +989,7 @@ export default function DashboardHome() {
 
             <button
               onClick={downloadQR}
-              className="w-full py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition font-medium flex items-center justify-center gap-2 shadow-lg shadow-[#1e3a5f]/20"
+              className="w-full py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition font-medium flex items-center justify-center gap-2 shadow-sm"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

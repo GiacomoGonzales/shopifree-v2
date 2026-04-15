@@ -20,7 +20,7 @@ export default function CustomOrderSection({
   const { t } = useTranslation('dashboard')
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-[#1e3a5f]">
           {t('productForm.customOrder.title', 'Pedido personalizado')}
@@ -63,7 +63,7 @@ export default function CustomOrderSection({
               onChange={(e) => onInstructionsChange(e.target.value || undefined)}
               rows={3}
               placeholder={t('productForm.customOrder.instructionsPlaceholder', 'Ej: Describe el color, tamano, texto que deseas...')}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
             />
             <p className="text-xs text-gray-400 mt-1">
               {t('productForm.customOrder.instructionsHint', 'Este texto se mostrara al cliente junto al campo de personalizacion')}
@@ -86,7 +86,7 @@ export default function CustomOrderSection({
                 onQuantityChange(val ? parseInt(val) : undefined)
               }}
               placeholder={t('productForm.customOrder.quantityPlaceholder', 'Ilimitado')}
-              className="w-32 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+              className="w-32 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
             />
             <span className="text-sm text-gray-500">
               {t('productForm.customOrder.quantityHint', 'Deja vacio para ilimitado')}

@@ -33,7 +33,7 @@ export default function WarrantySection({ warranty, onChange }: WarrantySectionP
   const presets = [3, 6, 12, 24, 36]
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[#1e3a5f]">
@@ -90,7 +90,7 @@ export default function WarrantySection({ warranty, onChange }: WarrantySectionP
             value={warranty?.months || ''}
             onChange={(e) => handleChange('months', e.target.value)}
             placeholder="12"
-            className="w-32 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-32 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           />
         </div>
 
@@ -103,7 +103,7 @@ export default function WarrantySection({ warranty, onChange }: WarrantySectionP
             value={warranty?.description || ''}
             onChange={(e) => handleChange('description', e.target.value)}
             placeholder={t('productForm.warranty.descriptionPlaceholder', 'Ej: Garantia del fabricante')}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           />
         </div>
       </div>

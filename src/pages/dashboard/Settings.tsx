@@ -281,7 +281,7 @@ export default function Settings() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('settings.title')}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('settings.title')}</h1>
         <p className="text-gray-600 mt-1">{t('settings.subtitle')}</p>
       </div>
 
@@ -290,7 +290,7 @@ export default function Settings() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.basic.title')}</h2>
 
             <div className="space-y-4">
@@ -302,7 +302,7 @@ export default function Settings() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 />
               </div>
 
@@ -330,7 +330,7 @@ export default function Settings() {
                     <button
                       onClick={handleSubdomainSave}
                       disabled={savingSubdomain || !subdomain}
-                      className="px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-medium disabled:opacity-50 whitespace-nowrap"
+                      className="px-4 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-medium disabled:opacity-50 whitespace-nowrap"
                     >
                       {savingSubdomain ? (
                         <span className="flex items-center gap-2">
@@ -403,7 +403,7 @@ export default function Settings() {
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   >
                     <option value="PEN">{t('settings.basic.currencies.PEN')}</option>
                     <option value="USD">{t('settings.basic.currencies.USD')}</option>
@@ -432,7 +432,7 @@ export default function Settings() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 >
                   <option value="es">Espanol</option>
                   <option value="en">English</option>
@@ -487,7 +487,7 @@ export default function Settings() {
           </div>
 
           {/* About */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.about.title')}</h2>
 
             <div className="space-y-4">
@@ -500,7 +500,7 @@ export default function Settings() {
                   value={slogan}
                   onChange={(e) => setSlogan(e.target.value)}
                   placeholder={t('settings.about.sloganPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 />
               </div>
 
@@ -513,14 +513,14 @@ export default function Settings() {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
                   placeholder={t('settings.about.descriptionPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
                 />
               </div>
             </div>
           </div>
 
           {/* Location */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.location.title')}</h2>
 
             <div className="space-y-4">
@@ -532,7 +532,7 @@ export default function Settings() {
                   <select
                     value={location.country}
                     onChange={(e) => setLocation({ ...location, country: e.target.value, state: '', city: '', district: '' })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   >
                     {countries.map(c => (
                       <option key={c.code} value={c.code}>
@@ -554,7 +554,7 @@ export default function Settings() {
                           <select
                             value={location.state || ''}
                             onChange={(e) => setLocation({ ...location, state: e.target.value, city: '', district: '' })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           >
                             <option value="">{stateFieldLabel + '...'}</option>
                             {(statesByCountry[location.country] || []).map((s) => (
@@ -567,7 +567,7 @@ export default function Settings() {
                             value={location.state || ''}
                             onChange={(e) => setLocation({ ...location, state: e.target.value })}
                             placeholder={stateFieldLabel + '...'}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           />
                         )}
                       </>
@@ -597,7 +597,7 @@ export default function Settings() {
                                 setLocation({ ...location, city: e.target.value, district: '' })
                               }
                             }}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           >
                             <option value="">{cityFieldLabel}...</option>
                             {cities.map((c) => (
@@ -611,7 +611,7 @@ export default function Settings() {
                               value={location.city === '__other__' ? '' : (location.city || '')}
                               onChange={(e) => setLocation({ ...location, city: e.target.value || '__other__', district: '' })}
                               placeholder={cityFieldLabel + '...'}
-                              className="w-full mt-2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                              className="w-full mt-2 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                             />
                           )}
                         </>
@@ -621,7 +621,7 @@ export default function Settings() {
                           value={location.city || ''}
                           onChange={(e) => setLocation({ ...location, city: e.target.value, district: '' })}
                           placeholder={t('settings.location.cityPlaceholder')}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                         />
                       )}
                     </div>
@@ -648,7 +648,7 @@ export default function Settings() {
                         value={location.district || ''}
                         onChange={(e) => setLocation({ ...location, district: e.target.value })}
                         disabled={isDisabled}
-                        className={`w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all ${isDisabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                        className={`w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all ${isDisabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       >
                         <option value="">{districtFieldLabel}...</option>
                         {availableDistricts.map((d) => (
@@ -667,7 +667,7 @@ export default function Settings() {
                     value={location.address || ''}
                     onChange={(e) => setLocation({ ...location, address: e.target.value })}
                     placeholder={t('settings.location.addressPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               </div>
@@ -678,7 +678,7 @@ export default function Settings() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Shipping / Delivery Methods */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.shipping.title')}</h2>
 
             <div className="space-y-4">
@@ -740,7 +740,7 @@ export default function Settings() {
               {/* Shipping cost toggle - only relevant if delivery is enabled */}
               {shipping.deliveryEnabled !== false && (
                 <>
-                  <hr className="border-gray-100" />
+                  <hr className="border-gray-200/60" />
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
@@ -786,7 +786,7 @@ export default function Settings() {
                                 setShipping({ ...shipping, cost: parseFloat(val) || 0 })
                               }}
                               placeholder="0.00"
-                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
                             />
                           </div>
                         </div>
@@ -812,7 +812,7 @@ export default function Settings() {
                                 })
                               }}
                               placeholder={t('settings.shipping.freeAbovePlaceholder')}
-                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
                             />
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.freeAboveHint')}</p>
@@ -1083,7 +1083,7 @@ export default function Settings() {
 
                                             {/* Districts (expanded) */}
                                             {isProvExpanded && districts.length > 0 && (
-                                              <div className="ml-6 pl-3 border-l border-gray-100 space-y-0.5 mt-1">
+                                              <div className="ml-6 pl-3 border-l border-gray-200/60 space-y-0.5 mt-1">
                                                 {districts.map((dist) => {
                                                   const distKey = `${dept}|${prov}|${dist}`
                                                   const isDistChecked = (shipping.allowedDistricts || []).includes(distKey)
@@ -1142,7 +1142,7 @@ export default function Settings() {
                                   setShipping({ ...shipping, localCost: val ? parseFloat(val) : undefined })
                                 }}
                                 placeholder="0.00"
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                               />
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
@@ -1166,7 +1166,7 @@ export default function Settings() {
                                   setShipping({ ...shipping, nationalCost: val ? parseFloat(val) : undefined })
                                 }}
                                 placeholder="0.00"
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                               />
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
@@ -1215,7 +1215,7 @@ export default function Settings() {
                                   setShipping({ ...shipping, internationalCost: val ? parseFloat(val) : undefined })
                                 }}
                                 placeholder="0.00"
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all bg-white"
+                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
                               />
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
@@ -1233,7 +1233,7 @@ export default function Settings() {
           </div>
 
           {/* Contact */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.contact.title')}</h2>
 
             <div className="space-y-4">
@@ -1252,7 +1252,7 @@ export default function Settings() {
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d]/g, ''))}
                       placeholder="999888777"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                     />
                   </div>
                 </div>
@@ -1266,7 +1266,7 @@ export default function Settings() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('settings.contact.emailPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               </div>
@@ -1281,7 +1281,7 @@ export default function Settings() {
                     value={instagram}
                     onChange={(e) => setInstagram(e.target.value)}
                     placeholder={t('settings.contact.instagramPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
                 <div>
@@ -1293,7 +1293,7 @@ export default function Settings() {
                     value={facebook}
                     onChange={(e) => setFacebook(e.target.value)}
                     placeholder={t('settings.contact.facebookPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
                 <div>
@@ -1305,7 +1305,7 @@ export default function Settings() {
                     value={tiktok}
                     onChange={(e) => setTiktok(e.target.value)}
                     placeholder={t('settings.contact.tiktokPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               </div>
@@ -1319,7 +1319,7 @@ export default function Settings() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+          className="w-full sm:w-auto px-8 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
         >
           {saving ? t('settings.saving') : t('settings.saveChanges')}
         </button>

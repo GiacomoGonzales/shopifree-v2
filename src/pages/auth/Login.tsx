@@ -71,7 +71,7 @@ export default function Login() {
           <img src="/newlogo.png" alt="Shopifree" className="h-10" />
           <LanguageSelector />
         </div>
-        <h2 className="mt-6 text-center text-2xl font-bold text-[#1e3a5f]">
+        <h2 className="mt-6 text-center text-xl font-semibold text-gray-900">
           {t('login.title')}
         </h2>
 

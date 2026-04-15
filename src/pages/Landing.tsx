@@ -48,7 +48,7 @@ export default function Landing() {
               )}
               <Link
                 to={localePath('/register')}
-                className="bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:shadow-lg hover:shadow-[#38bdf8]/25 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+                className="bg-[#1e3a5f] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:shadow-lg hover:shadow-[#38bdf8]/25 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
               >
                 <span className="hidden sm:inline">{t('common:nav.createCatalog')}</span>
                 <span className="sm:hidden">{t('common:nav.createFree')}</span>
@@ -83,7 +83,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Link
               to={localePath('/register')}
-              className="group bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-[#38bdf8]/30 transition-all duration-300 flex items-center justify-center gap-2"
+              className="group bg-[#1e3a5f] text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-[#38bdf8]/30 transition-all duration-300 flex items-center justify-center gap-2"
             >
               {t('common:buttons.createMyCatalog')}
               <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -385,7 +385,7 @@ export default function Landing() {
             </div>
 
             {/* Pro */}
-            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-8 text-white relative overflow-hidden md:scale-105 shadow-xl">
+            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-2xl p-8 text-white relative overflow-hidden md:scale-105 shadow-xl">
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
               <div className="flex justify-center mb-4">
                 <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-4 py-1 rounded-full font-semibold uppercase tracking-wider">
@@ -453,7 +453,7 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-[#38bdf8]/15 to-transparent rounded-full blur-3xl"></div>
 
         <div className="max-w-5xl mx-auto relative">
-          <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-3xl p-8 sm:p-12 lg:p-16 overflow-hidden relative">
+          <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-3xl p-8 sm:p-12 lg:p-16 overflow-hidden relative">
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-60 h-60 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />

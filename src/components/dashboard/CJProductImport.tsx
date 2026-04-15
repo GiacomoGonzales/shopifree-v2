@@ -318,11 +318,11 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200/60">
           <div className="flex items-center gap-3">
             {selectedProduct && (
               <button onClick={goBack} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
@@ -542,7 +542,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 <button
                   onClick={importProduct}
                   disabled={importing || !importName.trim() || !importPrice}
-                  className="w-full py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-[#1e3a5f] text-white rounded-xl font-semibold hover:bg-[#2d6cb5] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {importing ? (
                     <>
@@ -594,7 +594,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 <button
                   type="submit"
                   disabled={searching || (!keyword.trim() && !activeCjCategory)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl font-semibold hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all disabled:opacity-50 text-sm"
+                  className="px-5 py-2.5 bg-[#1e3a5f] text-white rounded-xl font-semibold hover:bg-[#2d6cb5] transition-all disabled:opacity-50 text-sm"
                 >
                   {searching ? '...' : 'Buscar'}
                 </button>
@@ -644,7 +644,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                       <button
                         key={product.pid}
                         onClick={() => viewDetail(product.pid)}
-                        className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all text-left group"
+                        className="bg-white border border-gray-200/60 rounded-xl overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all text-left group"
                       >
                         <div className="aspect-square bg-gray-50">
                           <img
@@ -695,7 +695,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
                 </div>
               ) : !searching && (
                 <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -707,7 +707,7 @@ export default function CJProductImport({ show, onClose, onImported, currency }:
 
               {loadingDetail && (
                 <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-2xl shadow-xl flex items-center gap-3">
+                  <div className="bg-white p-6 rounded-xl shadow-xl flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#2d6cb5]"></div>
                     <span className="text-sm text-gray-600">Cargando producto...</span>
                   </div>

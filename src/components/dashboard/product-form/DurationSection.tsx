@@ -37,7 +37,7 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[#1e3a5f]">
@@ -93,7 +93,7 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
             value={duration?.value || ''}
             onChange={(e) => handleChange('value', e.target.value)}
             placeholder="30"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           />
         </div>
         <div>
@@ -103,7 +103,7 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
           <select
             value={duration?.unit || 'min'}
             onChange={(e) => handleChange('unit', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
           >
             <option value="min">{t('productForm.duration.minutes', 'Minutos')}</option>
             <option value="hr">{t('productForm.duration.hours', 'Horas')}</option>

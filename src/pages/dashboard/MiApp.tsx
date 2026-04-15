@@ -227,12 +227,12 @@ export default function MiApp() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('miApp.title')}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('miApp.title')}</h1>
           <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Hero */}
-        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-6 sm:p-8 text-white overflow-hidden relative flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-xl p-6 sm:p-8 text-white overflow-hidden relative flex flex-col justify-between">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -258,7 +258,7 @@ export default function MiApp() {
         </div>
 
         {/* Features + CTA */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-8 flex flex-col">
+        <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-8 flex flex-col">
           <p className="text-sm text-gray-600 mb-5">{t('miApp.businessRequired')}</p>
 
           <div className="grid grid-cols-1 gap-3 mb-6 flex-1">
@@ -293,12 +293,12 @@ export default function MiApp() {
     <div className="space-y-8">
       {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-[#1e3a5f]">{t('miApp.title')}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('miApp.title')}</h1>
         <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
       </div>
 
       {/* Store badges banner */}
-      <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2d6cb5] rounded-2xl p-4 sm:p-6 relative">
+      <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-xl p-4 sm:p-6 relative">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-1">
             <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto" />
@@ -308,7 +308,7 @@ export default function MiApp() {
       </div>
 
       {/* Status tracker */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900">{t('miApp.status.title')}</h2>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {STATUS_STEPS.map((step, idx) => {
@@ -317,7 +317,7 @@ export default function MiApp() {
             return (
               <div key={step} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                 isCurrent
-                  ? 'bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white shadow-md'
+                  ? 'bg-[#1e3a5f] text-white shadow-md'
                   : isActive
                     ? 'bg-green-50 text-green-700'
                     : 'bg-gray-50 text-gray-400'
@@ -340,7 +340,7 @@ export default function MiApp() {
       </div>
 
       {/* App config form */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900">{t('miApp.config.title')}</h2>
 
         <div className="mt-4 space-y-4">
@@ -362,9 +362,9 @@ export default function MiApp() {
             <p className="text-xs text-gray-400 mb-2">{t('miApp.config.iconHint')}</p>
             <div className="flex items-center gap-4">
               {icon ? (
-                <img src={icon} alt="App icon" className="w-16 h-16 rounded-2xl object-cover border border-gray-200 shadow-sm" />
+                <img src={icon} alt="App icon" className="w-16 h-16 rounded-xl object-cover border border-gray-200 shadow-sm" />
               ) : (
-                <div className="w-16 h-16 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
                   <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
@@ -456,7 +456,7 @@ export default function MiApp() {
 
       {/* Download links (when published) */}
       {currentStatus === 'published' && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+        <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900">{t('miApp.links.title')}</h2>
           <div className="mt-4 space-y-3">
             {appConfig?.androidUrl ? (
@@ -509,7 +509,7 @@ export default function MiApp() {
       )}
 
       {/* Push Notifications */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900">{t('miApp.push.title')}</h2>
 
         <div className="mt-4 space-y-4">
@@ -559,7 +559,7 @@ export default function MiApp() {
           <button
             onClick={handleSendPush}
             disabled={sending || !pushTitle.trim() || !pushBody.trim()}
-            className="px-5 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2 bg-[#1e3a5f] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -570,7 +570,7 @@ export default function MiApp() {
 
         {/* History */}
         {history.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-100">
+          <div className="mt-6 pt-6 border-t border-gray-200/60">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('miApp.push.history')}</h3>
             <div className="space-y-2">
               {history.map((notif) => (

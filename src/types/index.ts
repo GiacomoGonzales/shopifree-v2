@@ -288,6 +288,7 @@ export interface Product {
   // === VARIACIONES (para ropa/retail) ===
   hasVariations?: boolean
   variations?: ProductVariation[]
+  combinations?: VariantCombination[]  // Combinaciones generadas (ej: Negro-XL, Blanco-M)
 
   // === MODIFICADORES (para restaurantes/food) ===
   hasModifiers?: boolean
@@ -360,7 +361,21 @@ export interface VariationOption {
   value: string                 // "Rojo", "XL"
   image?: string                // Imagen de esa variante
   available: boolean            // Si está disponible
-  stock?: number                // Stock por variante (cuando trackStock está activo)
+  stock?: number                // Stock por variante (legacy, usar combinations)
+}
+
+// Combinacion de variantes con stock y precio independiente
+// Ej: { options: { "Color": "Negro", "Talla": "XL" }, sku: "CAM-NEG-XL", stock: 15, price: 28 }
+export interface VariantCombination {
+  id: string                    // ID unico
+  options: Record<string, string>  // { "Color": "Negro", "Talla": "XL" }
+  sku?: string
+  barcode?: string
+  stock: number
+  price?: number                // Si no tiene, usa el precio del producto
+  cost?: number                 // Costo de esta combinacion
+  image?: string                // Imagen de esta combinacion
+  available: boolean
 }
 
 // Maps a CJ variant combination to its vid/sku for order fulfillment
@@ -686,4 +701,107 @@ export interface PushNotification {
   body: string
   sentAt: Date
   recipientCount: number
+}
+
+// ============================================
+// FINANCE TYPES
+// ============================================
+export interface StockMovement {
+  id: string
+  productId: string
+  productName: string
+  variationName?: string
+  optionValue?: string
+  type: 'sale' | 'purchase' | 'adjustment' | 'production' | 'transfer'
+  quantity: number              // positive = increase, negative = decrease
+  previousStock: number
+  newStock: number
+  referenceType?: 'order' | 'purchase' | 'production_order' | 'manual'
+  referenceId?: string
+  reason?: string
+  warehouseId?: string
+  warehouseName?: string
+  createdBy: string
+  createdAt: Date
+}
+
+export interface Supplier {
+  id: string
+  name: string
+  contactName?: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+  productIds?: string[]
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface PurchaseItem {
+  productId: string
+  productName: string
+  quantity: number
+  unitCost: number
+  totalCost: number
+  variationName?: string
+  optionValue?: string
+}
+
+export interface Purchase {
+  id: string
+  supplierId: string
+  supplierName: string
+  items: PurchaseItem[]
+  subtotal: number
+  total: number
+  status: 'draft' | 'received' | 'cancelled'
+  warehouseId?: string
+  warehouseName?: string
+  notes?: string
+  date: Date
+  expenseId?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Warehouse {
+  id: string
+  name: string
+  address?: string
+  branchId: string
+  branchName?: string
+  isDefault: boolean
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Branch {
+  id: string
+  name: string
+  address?: string
+  phone?: string
+  warehouseId?: string
+  warehouseName?: string
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ProductionOrder {
+  id: string
+  productId: string
+  productName: string
+  variationName?: string
+  optionValue?: string
+  quantity: number
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled'
+  warehouseId?: string
+  warehouseName?: string
+  notes?: string
+  completedAt?: Date
+  createdAt: Date
+  updatedAt: Date
 }

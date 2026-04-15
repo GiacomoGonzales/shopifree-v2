@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
-import { productService, categoryService } from '../../lib/firebase'
+import { productService, categoryService, db } from '../../lib/firebase'
+import { collection, query, orderBy, getDocs } from 'firebase/firestore'
+import type { Warehouse } from '../../types'
 import { useToast } from '../../components/ui/Toast'
 import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
@@ -60,6 +62,8 @@ export default function ProductForm() {
   const [stock, setStock] = useState('')
   const [trackStock, setTrackStock] = useState(false)
   const [lowStockAlert, setLowStockAlert] = useState('')
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState('')
   const [brand, setBrand] = useState('')
   const [tags, setTags] = useState('')
   const [weight, setWeight] = useState('')
@@ -73,8 +77,9 @@ export default function ProductForm() {
   const [modifierGroups, setModifierGroups] = useState<ModifierGroup[]>([])
   const [prepTime, setPrepTime] = useState<{ min: number; max: number; unit: 'min' | 'hr' } | undefined>()
 
-  // Fashion/Pets
+  // Fashion/Pets/General
   const [variations, setVariations] = useState<ProductVariation[]>([])
+  const [combinations, setCombinations] = useState<import('../../types').VariantCombination[]>([])
 
   // Beauty
   const [duration, setDuration] = useState<{ value: number; unit: 'min' | 'hr' } | undefined>()
@@ -102,12 +107,17 @@ export default function ProductForm() {
       if (!store) return
 
       try {
-        const [categoriesData, productsData] = await Promise.all([
+        const [categoriesData, productsData, warehousesSnap] = await Promise.all([
           categoryService.getAll(store.id),
-          productService.getAll(store.id)
+          productService.getAll(store.id),
+          getDocs(query(collection(db, `stores/${store.id}/warehouses`), orderBy('createdAt'))),
         ])
         setCategories(categoriesData)
         setProductCount(productsData.length)
+        const wList = warehousesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Warehouse))
+        setWarehouses(wList)
+        const defaultW = wList.find(w => w.isDefault)
+        if (defaultW) setSelectedWarehouseId(defaultW.id)
 
         if (isEditing && productId) {
           const productData = await productService.get(store.id, productId)
@@ -149,8 +159,9 @@ export default function ProductForm() {
             setModifierGroups(productData.modifierGroups || [])
             setPrepTime(productData.prepTime)
 
-            // Fashion/Pets
+            // Fashion/Pets/General
             setVariations(productData.variations || [])
+            setCombinations(productData.combinations || [])
 
             // Beauty
             setDuration(productData.duration)
@@ -378,6 +389,15 @@ export default function ProductForm() {
       if (barcode) productData.barcode = barcode
       if (stock) productData.stock = parseInt(stock)
       if (lowStockAlert) productData.lowStockAlert = parseInt(lowStockAlert)
+      // Assign stock to selected warehouse when creating
+      if (!isEditing && trackStock && selectedWarehouseId) {
+        const totalStock = combinations.length > 0
+          ? combinations.reduce((sum, c) => sum + c.stock, 0)
+          : (stock ? parseInt(stock) : 0)
+        if (totalStock > 0) {
+          productData.warehouseStock = { [selectedWarehouseId]: totalStock }
+        }
+      }
       if (brand) productData.brand = brand
       if (weight) productData.weight = parseFloat(weight)
 
@@ -400,10 +420,17 @@ export default function ProductForm() {
         productData.prepTime = prepTime
       }
 
-      // Fashion/Pets
+      // Variants + Combinations
       if (features.showVariants && variations.length > 0) {
         productData.hasVariations = true
         productData.variations = variations
+        if (combinations.length > 0) {
+          productData.combinations = combinations
+          // Stock total = suma de stock de combinaciones
+          if (trackStock) {
+            productData.stock = combinations.reduce((sum, c) => sum + c.stock, 0)
+          }
+        }
       }
 
       // Beauty
@@ -471,7 +498,7 @@ export default function ProductForm() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">
+          <h1 className="text-xl font-semibold text-gray-900">
             {isEditing ? t('productForm.editTitle') : t('productForm.newTitle')}
           </h1>
           <p className="text-gray-600 mt-1">
@@ -489,7 +516,7 @@ export default function ProductForm() {
             <button
               onClick={handleSubmit}
               disabled={saving || !name || !price}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+              className="px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
             >
               {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
             </button>
@@ -503,7 +530,7 @@ export default function ProductForm() {
           {/* Left Column - Basic Info */}
           <div className="space-y-6">
             {/* Image upload - Multiple images */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-semibold text-[#1e3a5f]">
                   {t('productForm.photos.title')}
@@ -590,7 +617,7 @@ export default function ProductForm() {
                       </>
                     ) : (
                       <>
-                        <div className={`w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20 transition-transform ${isDragging ? 'scale-110' : ''}`}>
+                        <div className={`w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center mb-2 shadow-sm transition-transform ${isDragging ? 'scale-110' : ''}`}>
                           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
@@ -615,7 +642,7 @@ export default function ProductForm() {
                 maxImages === 1 && !Capacitor.isNativePlatform() ? (
                   <div className="bg-gradient-to-r from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20 p-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#38bdf8]/20">
+                      <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
                         <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -625,7 +652,7 @@ export default function ProductForm() {
                         <p className="text-xs text-gray-500 mt-0.5">{t('productForm.photos.proImages')}</p>
                         <a
                           href={localePath('/dashboard/plan')}
-                          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-xs font-semibold rounded-lg hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-md"
+                          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-[#1e3a5f] text-white text-xs font-semibold rounded-lg hover:bg-[#2d6cb5] transition-all shadow-md"
                         >
                           {t('productForm.photos.upgradeForMore')}
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -653,7 +680,7 @@ export default function ProductForm() {
             </div>
 
             {/* Video Upload */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-semibold text-[#1e3a5f]">
                   {t('productForm.video.title')}
@@ -706,7 +733,7 @@ export default function ProductForm() {
                           </>
                         ) : (
                           <>
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-[#38bdf8]/20">
+                            <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center mb-2 shadow-sm">
                               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                               </svg>
@@ -735,7 +762,7 @@ export default function ProductForm() {
               ) : (
                 <div className="bg-gradient-to-r from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20 p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-[#2d6cb5] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#38bdf8]/20">
+                    <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
                       <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
@@ -745,7 +772,7 @@ export default function ProductForm() {
                       <p className="text-xs text-gray-500 mt-0.5">{t('productForm.video.proDescription')}</p>
                       <a
                         href={localePath('/dashboard/plan')}
-                        className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white text-xs font-semibold rounded-lg hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all shadow-md"
+                        className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-[#1e3a5f] text-white text-xs font-semibold rounded-lg hover:bg-[#2d6cb5] transition-all shadow-md"
                       >
                         {t('productForm.video.upgradeToPro')}
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -759,7 +786,7 @@ export default function ProductForm() {
             </div>
 
             {/* Basic Fields */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.basic.title')}</h2>
               <div className="space-y-4">
                 {/* Name */}
@@ -774,7 +801,7 @@ export default function ProductForm() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t('productForm.basic.namePlaceholder')}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
 
@@ -793,7 +820,7 @@ export default function ProductForm() {
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                     />
                   </div>
                   {features.showComparePrice && (
@@ -809,7 +836,7 @@ export default function ProductForm() {
                         value={comparePrice}
                         onChange={(e) => setComparePrice(e.target.value)}
                         placeholder="0.00"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                       />
                     </div>
                   )}
@@ -826,7 +853,7 @@ export default function ProductForm() {
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                     placeholder={t('productForm.basic.descriptionPlaceholder')}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all resize-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
                   />
                 </div>
               </div>
@@ -834,7 +861,7 @@ export default function ProductForm() {
 
             {/* Organization - Category & Tags (always show if categories exist or tags enabled) */}
             {(categories.length > 0 || features.showTags) && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.title')}</h2>
                 <div className="space-y-4">
                   {/* Category */}
@@ -847,7 +874,7 @@ export default function ProductForm() {
                         id="category"
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                       >
                         <option value="">{t('productForm.basic.noCategory')}</option>
                         {categories.map(cat => (
@@ -880,7 +907,7 @@ export default function ProductForm() {
           {/* Right Column - Visibility + Business Type Sections + Advanced Options */}
           <div className="space-y-6">
             {/* Visibility */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.visibility.title')}</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-[#f0f7ff] rounded-xl">
@@ -933,13 +960,7 @@ export default function ProductForm() {
               />
             )}
 
-            {/* Fashion/Pets: Variations */}
-            {features.showVariants && (
-              <VariationsSection
-                variations={variations}
-                onChange={setVariations}
-              />
-            )}
+            {/* Variations moved inside Inventory block below */}
 
             {/* Beauty: Duration */}
             {features.showServiceDuration && (
@@ -988,114 +1009,105 @@ export default function ProductForm() {
                 onPetAgeChange={setPetAge}
               />
             )}
-            {/* Inventory - show if any inventory feature is enabled */}
-            {(features.showSku || features.showBarcode || features.showStock || features.showCost) && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.inventory.title')}</h2>
-                <div className="space-y-4">
-                  {/* SKU & Barcode */}
-                  {(features.showSku || features.showBarcode) && (
-                    <div className={`grid gap-4 ${features.showSku && features.showBarcode ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                      {features.showSku && (
-                        <div>
-                          <label htmlFor="sku" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.sku')}</label>
-                          <input
-                            id="sku"
-                            type="text"
-                            value={sku}
-                            onChange={(e) => setSku(e.target.value)}
-                            placeholder="ABC-123"
-                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                          />
-                        </div>
-                      )}
-                      {features.showBarcode && (
-                        <div>
-                          <label htmlFor="barcode" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.barcode')}</label>
-                          <input
-                            id="barcode"
-                            type="text"
-                            value={barcode}
-                            onChange={(e) => setBarcode(e.target.value)}
-                            placeholder="7501234567890"
-                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                          />
-                        </div>
-                      )}
+            {/* Inventory + Variants — unified block */}
+            {(features.showSku || features.showBarcode || features.showStock || features.showCost || features.showVariants) && (
+              <div className="bg-white rounded-xl border border-gray-200/60 p-5 space-y-4">
+                <h2 className="text-sm font-medium text-gray-900">{t('productForm.inventory.title')}</h2>
+
+                {/* SKU, Barcode, Cost */}
+                <div className="grid grid-cols-2 gap-3">
+                  {features.showSku && (
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">SKU</label>
+                      <input type="text" value={sku} onChange={e => setSku(e.target.value)} placeholder="ABC-123"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                     </div>
                   )}
-
-                  {/* Track Stock */}
-                  {features.showStock && (
-                    <>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <span className="text-sm text-gray-700">{t('productForm.inventory.trackStock')}</span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={trackStock}
-                            onChange={(e) => setTrackStock(e.target.checked)}
-                            className="sr-only peer"
-                          />
-                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]"></div>
-                        </label>
-                      </div>
-
-                      {trackStock && (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="stock" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.stock')}</label>
-                            <input
-                              id="stock"
-                              type="number"
-                              min="0"
-                              value={stock}
-                              onChange={(e) => setStock(e.target.value)}
-                              placeholder="0"
-                              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="lowStockAlert" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.lowStockAlert')}</label>
-                            <input
-                              id="lowStockAlert"
-                              type="number"
-                              min="0"
-                              value={lowStockAlert}
-                              onChange={(e) => setLowStockAlert(e.target.value)}
-                              placeholder="5"
-                              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </>
+                  {features.showBarcode && (
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Codigo de barras</label>
+                      <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} placeholder="7501234567890"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                    </div>
                   )}
-
-                  {/* Cost */}
                   {features.showCost && (
                     <div>
-                      <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.inventory.cost')}</label>
-                      <input
-                        id="cost"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={cost}
-                        onChange={(e) => setCost(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">{t('productForm.inventory.costHint', 'Para calcular tu margen de ganancia')}</p>
+                      <label className="text-xs text-gray-500 mb-1 block">Costo (no visible)</label>
+                      <input type="number" min="0" step="0.01" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                     </div>
                   )}
                 </div>
+
+                {/* Track Stock toggle */}
+                {features.showStock && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Controlar stock</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={trackStock} onChange={e => setTrackStock(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]" />
+                    </label>
+                  </div>
+                )}
+
+                {/* Stock fields when trackStock is on */}
+                {trackStock && (
+                  <>
+                    {!isEditing && warehouses.length > 0 && (
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Almacen destino</label>
+                        <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                          {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    {combinations.length > 0 ? (
+                      <p className="text-xs text-gray-400">
+                        {isEditing ? 'Stock por combinacion (se gestiona desde Inventario)' : 'Stock inicial por combinacion (abajo)'}
+                        {' — '}{combinations.reduce((s, c) => s + c.stock, 0)} uds total
+                      </p>
+                    ) : isEditing ? (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm text-gray-600">Stock actual</span>
+                        <span className="text-sm font-medium text-gray-900">{stock || 0} uds</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Stock inicial</label>
+                          <input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} placeholder="0"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Alerta bajo stock</label>
+                          <input type="number" min="0" value={lowStockAlert} onChange={e => setLowStockAlert(e.target.value)} placeholder="5"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Variants + Combinations inside inventory */}
+                {features.showVariants && (
+                  <VariationsSection
+                    variations={variations}
+                    onChange={setVariations}
+                    combinations={combinations}
+                    onCombinationsChange={setCombinations}
+                    trackStock={trackStock}
+                    basePrice={price ? parseFloat(price) : undefined}
+                    isEditing={!!isEditing}
+                  />
+                )}
               </div>
             )}
 
             {/* Brand - only show if enabled */}
             {features.showBrand && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.brand')}</h2>
                 <div>
                   <input
@@ -1112,7 +1124,7 @@ export default function ProductForm() {
 
             {/* Shipping - only show if enabled */}
             {features.showShipping && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.shipping.title')}</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -1182,7 +1194,7 @@ export default function ProductForm() {
           <button
             onClick={handleSubmit}
             disabled={saving || !name || !price}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#2d6cb5] text-white rounded-xl hover:from-[#2d6cb5] hover:to-[#38bdf8] transition-all font-semibold disabled:opacity-50 shadow-lg shadow-[#1e3a5f]/20"
+            className="flex-1 px-4 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
           >
             {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
           </button>
