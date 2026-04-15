@@ -64,11 +64,11 @@ Estado: [ ] Pendiente | [x] Completado | [~] En progreso
 
 ## BLOQUE 7: Dashboard mejorado
 
-- [ ] 28. Dashboard con ventas del dia, semana, mes
-- [ ] 29. Grafico de ventas (barras, ultimos 7/30 dias)
-- [ ] 30. Top 5 productos mas vendidos
-- [ ] 31. Indicadores clave (ticket promedio, conversion, pedidos pendientes)
-- [ ] 32. Resumen de gastos vs ingresos del periodo
+- [x] 28. Dashboard con ventas del dia, semana, mes
+- [x] 29. Grafico de ventas (barras, ultimos 7/30 dias)
+- [x] 30. Top 5 productos mas vendidos
+- [x] 31. Indicadores clave (ticket promedio, conversion, pedidos pendientes)
+- [x] 32. Resumen de gastos vs ingresos del periodo
 
 ---
 
