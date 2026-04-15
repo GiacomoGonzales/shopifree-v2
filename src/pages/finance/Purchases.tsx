@@ -201,11 +201,21 @@ export default function Purchases() {
 
       // Update local state
       setPurchases(prev => [{
-        id: purchaseRef.id, ...purchaseData,
+        id: purchaseRef.id,
+        supplierId: purchaseData.supplierId || '',
+        supplierName: purchaseData.supplierName,
+        items: purchaseData.items as Purchase['items'],
+        subtotal: purchaseData.subtotal,
+        total: purchaseData.total,
+        status: 'received' as const,
+        warehouseId: purchaseData.warehouseId,
+        warehouseName: purchaseData.warehouseName,
+        notes: purchaseData.notes,
         date: new Date(purchaseDate + 'T12:00:00'),
         createdAt: new Date(),
+        updatedAt: new Date(),
         expenseId: expenseRef.id,
-      } as Purchase, ...prev])
+      }, ...prev])
 
       // Reset form
       setShowForm(false)
