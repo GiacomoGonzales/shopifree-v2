@@ -191,8 +191,8 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     type: 'grocery',
     features: {
       ...defaultFeatures,
+      showVariants: true,
       multipleImages: true,
-      // Grocery: retail features for food products
       showComparePrice: true,
       showSku: true,
       showBarcode: true,
@@ -240,8 +240,8 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     type: 'cosmetics',
     features: {
       ...defaultFeatures,
+      showVariants: true,
       multipleImages: true,
-      // Cosmetics: retail features for beauty products
       showComparePrice: true,
       showSku: true,
       showBarcode: true,
@@ -289,11 +289,11 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     type: 'tech',
     features: {
       ...defaultFeatures,
+      showVariants: true,
       showSpecs: true,
       showWarranty: true,
       showModel: true,
       multipleImages: true,
-      // Tech: full retail features
       showComparePrice: true,
       showSku: true,
       showBarcode: true,
@@ -392,11 +392,12 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeConfig> = {
     type: 'craft',
     features: {
       ...defaultFeatures,
+      showVariants: true,
       showCustomOrder: true,
       showLimitedStock: true,
       multipleImages: true,
-      // Craft: handmade - cost for margin, tags, no barcodes
       showComparePrice: true,
+      showStock: true,
       showCost: true,
       showTags: true,
     },
@@ -535,9 +536,7 @@ export function normalizeBusinessType(type: string | undefined): BusinessType {
  * Get all business types for selection UI
  */
 export function getAllBusinessTypes(): BusinessTypeConfig[] {
-  // Only show General and Restaurant as options for new stores
-  // Other types still work for existing stores (backwards compatible)
-  return [BUSINESS_TYPES.general, BUSINESS_TYPES.food]
+  return Object.values(BUSINESS_TYPES)
 }
 
 /**
