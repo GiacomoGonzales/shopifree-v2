@@ -47,6 +47,7 @@ import Inventory from './pages/finance/Inventory'
 import InventoryAdjust from './pages/finance/InventoryAdjust'
 import StockMovements from './pages/finance/StockMovements'
 import StockDiagnostic from './pages/finance/StockDiagnostic'
+import StockTransfer from './pages/finance/StockTransfer'
 import WarehousesPage from './pages/finance/Warehouses'
 import Suppliers from './pages/finance/Suppliers'
 import PurchasesPage from './pages/finance/Purchases'
@@ -216,6 +217,7 @@ function AppRoutes() {
           <Route path="inventory" element={<Inventory />} />
           <Route path="inventory/adjust" element={<InventoryAdjust />} />
           <Route path="inventory/diagnostic" element={<StockDiagnostic />} />
+          <Route path="inventory/transfer" element={<StockTransfer />} />
           <Route path="stock-movements" element={<StockMovements />} />
           <Route path="warehouses" element={<WarehousesPage />} />
           {/* Compras */}

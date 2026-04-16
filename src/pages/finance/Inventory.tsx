@@ -235,6 +235,10 @@ export default function Inventory() {
             </>
           ) : (
             <>
+              <Link to={localePath('/finance/inventory/transfer')}
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                Transferir
+              </Link>
               <Link to={localePath('/finance/inventory/diagnostic')}
                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                 Diagnostico
