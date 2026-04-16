@@ -46,6 +46,7 @@ export default function Inventory() {
   const [transferComboQtys, setTransferComboQtys] = useState<Record<string, string>>({})  // comboId -> qty
   const [transferNote, setTransferNote] = useState('')
   const [transferSaving, setTransferSaving] = useState(false)
+  const [transferSearch, setTransferSearch] = useState('')
 
   // Bulk mode
   const [bulkMode, setBulkMode] = useState(false)
@@ -681,101 +682,7 @@ export default function Inventory() {
                       </div>
                     )}
 
-                    {/* Transfer modal inline */}
-                    {transferProduct?.id === product.id && (
-                      <div className="border-t border-gray-100 bg-gray-50/40 px-4 py-4 animate-[slideDown_0.15s_ease-out]" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-sm font-medium text-gray-900">Transferir stock</h3>
-                          <button onClick={() => setTransferProduct(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
-                        </div>
-
-                        {/* Warehouses */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                          <div>
-                            <label className="text-[11px] text-gray-500 mb-1 block">Desde</label>
-                            <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty(''); setTransferComboQtys({}) }}
-                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
-                              <option value="">Seleccionar</option>
-                              {warehouses.map(w => {
-                                const pws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                                return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0})</option>
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-[11px] text-gray-500 mb-1 block">Hacia</label>
-                            <select value={transferTo} onChange={e => setTransferTo(e.target.value)}
-                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
-                              <option value="">Seleccionar</option>
-                              {warehouses.filter(w => w.id !== transferFrom).map(w => {
-                                const pws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                                return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0})</option>
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-[11px] text-gray-500 mb-1 block">Nota</label>
-                            <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Motivo (opcional)"
-                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                          </div>
-                        </div>
-
-                        {/* Quantity: simple product */}
-                        {transferFrom && transferTo && !transferHasCombos && (
-                          <div className="mb-3 animate-[slideDown_0.1s_ease-out]">
-                            <div className="flex items-center gap-3">
-                              <div className="flex-1">
-                                <label className="text-[11px] text-gray-500 mb-1 block">Cantidad <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
-                                <input type="number" min="1" max={transferAvailable} value={transferQty} onChange={e => setTransferQty(e.target.value)}
-                                  placeholder="0"
-                                  className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Quantity per combination */}
-                        {transferFrom && transferTo && transferHasCombos && (
-                          <div className="mb-3 animate-[slideDown_0.1s_ease-out]">
-                            <label className="text-[11px] text-gray-500 mb-2 block">Cantidad por combinacion <span className="text-gray-400">(disponible total: {transferAvailable})</span></label>
-                            <div className="border border-gray-200 rounded-lg overflow-hidden">
-                              <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
-                                {product.combinations!.map(combo => {
-                                  const comboLabel = Object.values(combo.options).join(' / ')
-                                  return (
-                                    <div key={combo.id} className="px-3 py-2 flex items-center justify-between gap-3">
-                                      <div className="min-w-0 flex-1">
-                                        <p className="text-xs text-gray-700">{comboLabel}</p>
-                                        <p className="text-[10px] text-gray-400">Stock: {combo.stock}</p>
-                                      </div>
-                                      <input type="number" min="0" max={combo.stock}
-                                        value={transferComboQtys[combo.id] || ''}
-                                        onChange={e => setTransferComboQtys(prev => ({ ...prev, [combo.id]: e.target.value }))}
-                                        placeholder="0"
-                                        className="w-16 px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10" />
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                              {transferTotalQty > 0 && (
-                                <div className="px-3 py-2 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                                  <p className="text-[11px] text-gray-500">Total a transferir</p>
-                                  <p className="text-xs font-medium text-gray-900">{transferTotalQty} uds</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex justify-end">
-                          <button onClick={handleTransfer}
-                            disabled={transferSaving || !transferIsValid}
-                            className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-xs font-medium disabled:opacity-40">
-                            {transferSaving ? 'Transfiriendo...' : `Transferir${transferTotalQty > 0 ? ` (${transferTotalQty})` : ''}`}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    {/* Transfer handled in modal below */}
                   </div>
                 )
               })}
@@ -783,6 +690,137 @@ export default function Inventory() {
           </>
         )}
       </div>
+
+      {/* Transfer Modal */}
+      {transferProduct && (
+        <>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50" onClick={() => setTransferProduct(null)} />
+          <div className="fixed inset-x-4 top-[10%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg z-50 animate-[slideDown_0.2s_ease-out]">
+            <div className="bg-white rounded-xl shadow-2xl border border-gray-200/60 max-h-[80vh] flex flex-col">
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div>
+                  <h2 className="text-sm font-medium text-gray-900">Transferir stock</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">{transferProduct.name}</p>
+                </div>
+                <button onClick={() => setTransferProduct(null)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+                {/* Warehouses */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Desde</label>
+                    <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty(''); setTransferComboQtys({}); setTransferSearch('') }}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                      <option value="">Seleccionar almacen</option>
+                      {warehouses.map(w => {
+                        const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+                        return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0} uds)</option>
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Hacia</label>
+                    <select value={transferTo} onChange={e => setTransferTo(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                      <option value="">Seleccionar almacen</option>
+                      {warehouses.filter(w => w.id !== transferFrom).map(w => {
+                        const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+                        return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0} uds)</option>
+                      })}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Note */}
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Motivo (opcional)</label>
+                  <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Ej: Reposicion sucursal norte"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                </div>
+
+                {/* Quantity: simple product */}
+                {transferFrom && transferTo && !transferHasCombos && (
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Cantidad <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
+                    <input type="number" min="1" max={transferAvailable} value={transferQty} onChange={e => setTransferQty(e.target.value)} placeholder="0"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                  </div>
+                )}
+
+                {/* Quantity per combination */}
+                {transferFrom && transferTo && transferHasCombos && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs text-gray-500">Combinaciones <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
+                    </div>
+                    {/* Search */}
+                    <div className="relative mb-2">
+                      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                      </svg>
+                      <input type="text" value={transferSearch} onChange={e => setTransferSearch(e.target.value)}
+                        placeholder="Buscar combinacion..."
+                        className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                    </div>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="divide-y divide-gray-50 max-h-56 overflow-y-auto">
+                        {transferProduct.combinations!
+                          .filter(c => {
+                            if (!transferSearch) return true
+                            const label = Object.values(c.options).join(' ').toLowerCase()
+                            return label.includes(transferSearch.toLowerCase())
+                          })
+                          .map(combo => {
+                            const comboLabel = Object.values(combo.options).join(' / ')
+                            const qty = parseInt(transferComboQtys[combo.id]) || 0
+                            return (
+                              <div key={combo.id} className={`px-3 py-2.5 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-blue-50/30' : ''}`}>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm text-gray-800">{comboLabel}</p>
+                                  <p className="text-[11px] text-gray-400">Stock: {combo.stock}</p>
+                                </div>
+                                <input type="number" min="0" max={combo.stock}
+                                  value={transferComboQtys[combo.id] || ''}
+                                  onChange={e => setTransferComboQtys(prev => ({ ...prev, [combo.id]: e.target.value }))}
+                                  placeholder="0"
+                                  className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 ${
+                                    qty > 0 ? 'border-blue-300 bg-white' : 'border-gray-200'
+                                  }`} />
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div>
+                  {transferTotalQty > 0 && (
+                    <p className="text-sm text-gray-700"><span className="font-medium">{transferTotalQty}</span> unidades a transferir</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setTransferProduct(null)} className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
+                  <button onClick={handleTransfer} disabled={transferSaving || !transferIsValid}
+                    className="px-5 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-40">
+                    {transferSaving ? 'Transfiriendo...' : 'Transferir'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
