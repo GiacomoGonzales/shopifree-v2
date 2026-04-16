@@ -42,7 +42,8 @@ export default function Inventory() {
   const [transferProduct, setTransferProduct] = useState<Product | null>(null)
   const [transferFrom, setTransferFrom] = useState('')
   const [transferTo, setTransferTo] = useState('')
-  const [transferQty, setTransferQty] = useState('')
+  const [transferQty, setTransferQty] = useState('')  // for simple products
+  const [transferComboQtys, setTransferComboQtys] = useState<Record<string, string>>({})  // comboId -> qty
   const [transferNote, setTransferNote] = useState('')
   const [transferSaving, setTransferSaving] = useState(false)
 
@@ -195,9 +196,12 @@ export default function Inventory() {
     setTransferFrom('')
     setTransferTo('')
     setTransferQty('')
+    setTransferComboQtys({})
     setTransferNote('')
     setMenuOpenId(null)
   }
+
+  const transferHasCombos = transferProduct?.combinations && transferProduct.combinations.length > 0
 
   const transferAvailable = (() => {
     if (!transferProduct || !transferFrom) return 0
@@ -205,10 +209,14 @@ export default function Inventory() {
     return ws?.[transferFrom] || 0
   })()
 
+  const transferTotalQty = transferHasCombos
+    ? Object.values(transferComboQtys).reduce((s, v) => s + (parseInt(v) || 0), 0)
+    : (parseInt(transferQty) || 0)
+
+  const transferIsValid = transferFrom && transferTo && transferFrom !== transferTo && transferTotalQty > 0 && transferTotalQty <= transferAvailable
+
   const handleTransfer = async () => {
-    if (!store || !firebaseUser || !transferProduct || !transferFrom || !transferTo || transferFrom === transferTo) return
-    const qty = parseInt(transferQty) || 0
-    if (qty <= 0 || qty > transferAvailable) return
+    if (!store || !firebaseUser || !transferProduct || !transferIsValid) return
     setTransferSaving(true)
     try {
       const ref = doc(db, `stores/${store.id}/products`, transferProduct.id)
@@ -216,28 +224,55 @@ export default function Inventory() {
       const fromW = warehouses.find(w => w.id === transferFrom)
       const toW = warehouses.find(w => w.id === transferTo)
 
-      ws[transferFrom] = (ws[transferFrom] || 0) - qty
-      ws[transferTo] = (ws[transferTo] || 0) + qty
+      ws[transferFrom] = (ws[transferFrom] || 0) - transferTotalQty
+      ws[transferTo] = (ws[transferTo] || 0) + transferTotalQty
       await updateDoc(ref, { warehouseStock: ws })
 
-      const reason = transferNote.trim() ? `Transferencia: ${transferNote.trim()}` : `Transferencia a ${toW?.name || 'otro almacen'}`
-      await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
-        productId: transferProduct.id, productName: transferProduct.name,
-        type: 'transfer', quantity: -qty,
-        previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
-        reason, warehouseId: transferFrom, warehouseName: fromW?.name,
-        createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
-      })
-      await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
-        productId: transferProduct.id, productName: transferProduct.name,
-        type: 'transfer', quantity: qty,
-        previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
-        reason: transferNote.trim() ? `Transferencia: ${transferNote.trim()}` : `Transferencia desde ${fromW?.name || 'otro almacen'}`,
-        warehouseId: transferTo, warehouseName: toW?.name,
-        createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
-      })
+      // Stock movements per combo or one for simple
+      if (transferHasCombos) {
+        for (const combo of transferProduct.combinations!) {
+          const qty = parseInt(transferComboQtys[combo.id]) || 0
+          if (qty <= 0) continue
+          const comboLabel = Object.values(combo.options).join(' / ')
+          const baseReason = transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`
 
-      // Update local
+          await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+            productId: transferProduct.id, productName: transferProduct.name,
+            variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
+            type: 'transfer', quantity: -qty,
+            previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+            reason: baseReason, warehouseId: transferFrom, warehouseName: fromW?.name,
+            createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+          })
+          await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+            productId: transferProduct.id, productName: transferProduct.name,
+            variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
+            type: 'transfer', quantity: qty,
+            previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+            reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacen'}`,
+            warehouseId: transferTo, warehouseName: toW?.name,
+            createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+          })
+        }
+      } else {
+        const reason = transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`
+        await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+          productId: transferProduct.id, productName: transferProduct.name,
+          type: 'transfer', quantity: -transferTotalQty,
+          previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+          reason, warehouseId: transferFrom, warehouseName: fromW?.name,
+          createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+        })
+        await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+          productId: transferProduct.id, productName: transferProduct.name,
+          type: 'transfer', quantity: transferTotalQty,
+          previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+          reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacen'}`,
+          warehouseId: transferTo, warehouseName: toW?.name,
+          createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+        })
+      }
+
       setProducts(prev => prev.map(p => p.id === transferProduct.id ? { ...p, warehouseStock: ws } as Product : p))
       setTransferProduct(null)
     } catch (err) {
@@ -653,16 +688,17 @@ export default function Inventory() {
                           <h3 className="text-sm font-medium text-gray-900">Transferir stock</h3>
                           <button onClick={() => setTransferProduct(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+
+                        {/* Warehouses */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                           <div>
                             <label className="text-[11px] text-gray-500 mb-1 block">Desde</label>
-                            <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty('') }}
+                            <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty(''); setTransferComboQtys({}) }}
                               className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                               <option value="">Seleccionar</option>
                               {warehouses.map(w => {
-                                const ws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                                const wStock = ws?.[w.id] || 0
-                                return <option key={w.id} value={w.id}>{w.name} ({wStock})</option>
+                                const pws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+                                return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0})</option>
                               })}
                             </select>
                           </div>
@@ -672,29 +708,70 @@ export default function Inventory() {
                               className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                               <option value="">Seleccionar</option>
                               {warehouses.filter(w => w.id !== transferFrom).map(w => {
-                                const ws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                                const wStock = ws?.[w.id] || 0
-                                return <option key={w.id} value={w.id}>{w.name} ({wStock})</option>
+                                const pws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+                                return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0})</option>
                               })}
                             </select>
                           </div>
                           <div>
-                            <label className="text-[11px] text-gray-500 mb-1 block">Cantidad {transferFrom && <span className="text-gray-400">(max {transferAvailable})</span>}</label>
-                            <input type="number" min="1" max={transferAvailable} value={transferQty} onChange={e => setTransferQty(e.target.value)}
-                              placeholder="0"
-                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                          </div>
-                          <div>
                             <label className="text-[11px] text-gray-500 mb-1 block">Nota</label>
-                            <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Opcional"
+                            <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Motivo (opcional)"
                               className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                           </div>
                         </div>
-                        <div className="flex justify-end mt-3">
+
+                        {/* Quantity: simple product */}
+                        {transferFrom && transferTo && !transferHasCombos && (
+                          <div className="mb-3 animate-[slideDown_0.1s_ease-out]">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1">
+                                <label className="text-[11px] text-gray-500 mb-1 block">Cantidad <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
+                                <input type="number" min="1" max={transferAvailable} value={transferQty} onChange={e => setTransferQty(e.target.value)}
+                                  placeholder="0"
+                                  className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quantity per combination */}
+                        {transferFrom && transferTo && transferHasCombos && (
+                          <div className="mb-3 animate-[slideDown_0.1s_ease-out]">
+                            <label className="text-[11px] text-gray-500 mb-2 block">Cantidad por combinacion <span className="text-gray-400">(disponible total: {transferAvailable})</span></label>
+                            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                              <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
+                                {product.combinations!.map(combo => {
+                                  const comboLabel = Object.values(combo.options).join(' / ')
+                                  return (
+                                    <div key={combo.id} className="px-3 py-2 flex items-center justify-between gap-3">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs text-gray-700">{comboLabel}</p>
+                                        <p className="text-[10px] text-gray-400">Stock: {combo.stock}</p>
+                                      </div>
+                                      <input type="number" min="0" max={combo.stock}
+                                        value={transferComboQtys[combo.id] || ''}
+                                        onChange={e => setTransferComboQtys(prev => ({ ...prev, [combo.id]: e.target.value }))}
+                                        placeholder="0"
+                                        className="w-16 px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10" />
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                              {transferTotalQty > 0 && (
+                                <div className="px-3 py-2 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                                  <p className="text-[11px] text-gray-500">Total a transferir</p>
+                                  <p className="text-xs font-medium text-gray-900">{transferTotalQty} uds</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end">
                           <button onClick={handleTransfer}
-                            disabled={transferSaving || !transferFrom || !transferTo || transferFrom === transferTo || (parseInt(transferQty) || 0) <= 0 || (parseInt(transferQty) || 0) > transferAvailable}
+                            disabled={transferSaving || !transferIsValid}
                             className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-xs font-medium disabled:opacity-40">
-                            {transferSaving ? 'Transfiriendo...' : 'Transferir'}
+                            {transferSaving ? 'Transfiriendo...' : `Transferir${transferTotalQty > 0 ? ` (${transferTotalQty})` : ''}`}
                           </button>
                         </div>
                       </div>
