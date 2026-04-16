@@ -612,7 +612,7 @@ export default function DashboardLayout() {
                 <CloseIcon />
               </button>
             </div>
-            <ModeSwitcher mode="ecommerce" />
+            <ModeSwitcher mode="ecommerce" isAdmin={isAdmin} />
           </div>
 
           <SidebarContent />
@@ -640,7 +640,7 @@ export default function DashboardLayout() {
                 </Link>
               )}
             </div>
-            <ModeSwitcher mode="ecommerce" />
+            <ModeSwitcher mode="ecommerce" isAdmin={isAdmin} />
           </div>
 
           <SidebarContent />
