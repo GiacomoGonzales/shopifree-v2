@@ -397,6 +397,13 @@ export default function ProductForm() {
         if (totalStock > 0) {
           productData.warehouseStock = { [selectedWarehouseId]: totalStock }
         }
+        // Assign each combination's stock to the selected warehouse
+        if (combinations.length > 0) {
+          productData.combinations = combinations.map(c => ({
+            ...c,
+            warehouseStock: c.stock > 0 ? { [selectedWarehouseId]: c.stock } : undefined,
+          }))
+        }
       }
       if (brand) productData.brand = brand
       if (weight) productData.weight = parseFloat(weight)

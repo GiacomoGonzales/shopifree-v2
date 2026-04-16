@@ -371,7 +371,8 @@ export interface VariantCombination {
   options: Record<string, string>  // { "Color": "Negro", "Talla": "XL" }
   sku?: string
   barcode?: string
-  stock: number
+  stock: number                 // Stock total (suma de todos los almacenes)
+  warehouseStock?: Record<string, number>  // { warehouseId: quantity } stock por almacen
   price?: number                // Si no tiene, usa el precio del producto
   cost?: number                 // Costo de esta combinacion
   image?: string                // Imagen de esta combinacion

@@ -225,24 +225,39 @@ export default function Inventory() {
       const fromW = warehouses.find(w => w.id === transferFrom)
       const toW = warehouses.find(w => w.id === transferTo)
 
+      // Update product-level warehouseStock
       ws[transferFrom] = (ws[transferFrom] || 0) - transferTotalQty
       ws[transferTo] = (ws[transferTo] || 0) + transferTotalQty
-      await updateDoc(ref, { warehouseStock: ws })
+      const updateData: Record<string, unknown> = { warehouseStock: ws }
 
-      // Stock movements per combo or one for simple
+      // Update combo-level warehouseStock
+      let updatedCombinations = transferProduct.combinations
+      if (transferHasCombos) {
+        updatedCombinations = transferProduct.combinations!.map(combo => {
+          const qty = parseInt(transferComboQtys[combo.id]) || 0
+          if (qty <= 0) return combo
+          const cws = { ...(combo.warehouseStock || {}) }
+          cws[transferFrom] = (cws[transferFrom] || 0) - qty
+          cws[transferTo] = (cws[transferTo] || 0) + qty
+          return { ...combo, warehouseStock: cws }
+        })
+        updateData.combinations = updatedCombinations
+      }
+      await updateDoc(ref, updateData)
+
+      // Stock movements
       if (transferHasCombos) {
         for (const combo of transferProduct.combinations!) {
           const qty = parseInt(transferComboQtys[combo.id]) || 0
           if (qty <= 0) continue
           const comboLabel = Object.values(combo.options).join(' / ')
-          const baseReason = transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`
-
           await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
             productId: transferProduct.id, productName: transferProduct.name,
             variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
             type: 'transfer', quantity: -qty,
             previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
-            reason: baseReason, warehouseId: transferFrom, warehouseName: fromW?.name,
+            reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`,
+            warehouseId: transferFrom, warehouseName: fromW?.name,
             createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
           })
           await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
@@ -256,12 +271,12 @@ export default function Inventory() {
           })
         }
       } else {
-        const reason = transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`
         await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
           productId: transferProduct.id, productName: transferProduct.name,
           type: 'transfer', quantity: -transferTotalQty,
           previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
-          reason, warehouseId: transferFrom, warehouseName: fromW?.name,
+          reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`,
+          warehouseId: transferFrom, warehouseName: fromW?.name,
           createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
         })
         await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
@@ -274,7 +289,7 @@ export default function Inventory() {
         })
       }
 
-      setProducts(prev => prev.map(p => p.id === transferProduct.id ? { ...p, warehouseStock: ws } as Product : p))
+      setProducts(prev => prev.map(p => p.id === transferProduct.id ? { ...p, warehouseStock: ws, combinations: updatedCombinations } as Product : p))
       setTransferProduct(null)
     } catch (err) {
       console.error(err)
@@ -623,7 +638,24 @@ export default function Inventory() {
                                             </div>
                                             <p className="text-xs font-medium text-gray-700">{wStock} total</p>
                                           </div>
-                                          {/* Combinations not shown per-warehouse (no per-warehouse combo stock data) */}
+                                          {/* Combinations per warehouse */}
+                                          {hasCombinations(product) && wStock > 0 && (
+                                            <div className="pl-8 pr-3 pb-2 space-y-0.5">
+                                              {product.combinations!.filter(c => {
+                                                const cws = c.warehouseStock?.[w.id] ?? 0
+                                                return cws > 0
+                                              }).map(combo => {
+                                                const comboLabel = Object.values(combo.options).join(' / ')
+                                                const comboWStock = combo.warehouseStock?.[w.id] ?? 0
+                                                return (
+                                                  <div key={combo.id} className="flex items-center justify-between py-0.5">
+                                                    <p className="text-[11px] text-gray-600">{comboLabel}</p>
+                                                    <p className="text-[11px] font-medium tabular-nums text-gray-700">{comboWStock}</p>
+                                                  </div>
+                                                )
+                                              })}
+                                            </div>
+                                          )}
                                           {/* Legacy: variants without combinations — only if warehouse has stock */}
                                           {hasVariants && !hasCombinations(product) && wStock > 0 && (
                                             <div className="pl-8 pr-3 pb-2 space-y-0.5">
@@ -649,31 +681,7 @@ export default function Inventory() {
                           })
                         )}
 
-                        {/* Combinations at product level (stock is global, not per-warehouse) */}
-                        {hasCombinations(product) && (
-                          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-                            <div className="px-3 py-2 bg-gray-50/80 border-b border-gray-100">
-                              <p className="text-[11px] text-gray-500 font-medium">Stock por combinacion</p>
-                            </div>
-                            <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
-                              {product.combinations!.filter(c => c.stock > 0).map(combo => {
-                                const comboLabel = Object.values(combo.options).join(' / ')
-                                return (
-                                  <div key={combo.id} className="px-3 py-1.5 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-[11px] text-gray-600">{comboLabel}</p>
-                                      {combo.sku && <span className="text-[10px] text-gray-300">{combo.sku}</span>}
-                                    </div>
-                                    <p className="text-[11px] font-medium tabular-nums text-gray-700">{combo.stock}</p>
-                                  </div>
-                                )
-                              })}
-                              {product.combinations!.filter(c => c.stock > 0).length === 0 && (
-                                <p className="px-3 py-3 text-[11px] text-gray-400 text-center">Todas las combinaciones en 0</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                        {/* Combinations at product level removed — now shown per warehouse above */}
 
                         {/* Legacy variants without combinations */}
                         {hasVariants && !hasCombinations(product) && warehouses.length === 0 && (

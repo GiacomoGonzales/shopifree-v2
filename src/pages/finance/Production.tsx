@@ -105,8 +105,10 @@ export default function Production() {
 
       if (comboId && product.combinations) {
         const updatedCombinations = product.combinations.map(c => {
-          if (c.id === comboId) return { ...c, stock: c.stock + order.quantity }
-          return c
+          if (c.id !== comboId) return c
+          const cws = { ...(c.warehouseStock || {}) }
+          if (order.warehouseId) cws[order.warehouseId] = (cws[order.warehouseId] || 0) + order.quantity
+          return { ...c, stock: c.stock + order.quantity, warehouseStock: cws }
         })
         const newTotal = updatedCombinations.reduce((s, c) => s + c.stock, 0)
         const updateData: Record<string, unknown> = { combinations: updatedCombinations, stock: newTotal }

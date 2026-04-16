@@ -147,10 +147,12 @@ export default function Purchases() {
         const productRef = doc(db, `stores/${store.id}/products`, item.productId)
 
         if (comboId && product.combinations) {
-          // Update combination stock
+          // Update combination stock + combo warehouseStock
           const updatedCombinations = product.combinations.map(c => {
-            if (c.id === comboId) return { ...c, stock: c.stock + item.quantity }
-            return c
+            if (c.id !== comboId) return c
+            const cws = { ...(c.warehouseStock || {}) }
+            if (warehouseId) cws[warehouseId] = (cws[warehouseId] || 0) + item.quantity
+            return { ...c, stock: c.stock + item.quantity, warehouseStock: cws }
           })
           const newTotal = updatedCombinations.reduce((s, c) => s + c.stock, 0)
           const updateData: Record<string, unknown> = { combinations: updatedCombinations, stock: newTotal }
