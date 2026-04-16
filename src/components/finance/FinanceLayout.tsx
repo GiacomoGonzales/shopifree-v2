@@ -105,6 +105,13 @@ export default function FinanceLayout() {
     }
   }, [user, loading, navigate, localePath])
 
+  // Finanzas temporarily restricted to admin only
+  useEffect(() => {
+    if (!loading && user && !isAdmin) {
+      navigate(localePath('/dashboard'), { replace: true })
+    }
+  }, [loading, user, isAdmin, navigate, localePath])
+
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname])
@@ -303,7 +310,7 @@ export default function FinanceLayout() {
                 <CloseIcon />
               </button>
             </div>
-            <ModeSwitcher mode="finance" />
+            <ModeSwitcher mode="finance" isAdmin={isAdmin} />
           </div>
           <SidebarContent />
         </div>
@@ -325,7 +332,7 @@ export default function FinanceLayout() {
                 </Link>
               )}
             </div>
-            <ModeSwitcher mode="finance" />
+            <ModeSwitcher mode="finance" isAdmin={isAdmin} />
           </div>
           <SidebarContent />
         </div>
