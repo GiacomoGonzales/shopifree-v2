@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
@@ -20,6 +20,9 @@ export default function Plan() {
   const { showToast } = useToast()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  // Canonical self-path — preserves whether we're under /dashboard/plan or /finance/subscription
+  const selfPath = location.pathname
   const [loading, setLoading] = useState(false)
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [processingPlan, setProcessingPlan] = useState<string | null>(null)
@@ -31,7 +34,7 @@ export default function Plan() {
     const upgradePlan = searchParams.get('upgrade') as PlanType | null
     if (upgradePlan && !upgradeTriggeredRef.current && store && user && firebaseUser) {
       upgradeTriggeredRef.current = true
-      navigate(localePath('/dashboard/plan'), { replace: true })
+      navigate(selfPath, { replace: true })
       handleSelectPlan(upgradePlan)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -46,11 +49,11 @@ export default function Plan() {
       showToast(t('plan.toast.success'), 'success')
       refreshStore()
       // Clear URL params
-      navigate(localePath('/dashboard/plan'), { replace: true })
+      navigate(selfPath, { replace: true })
     } else if (searchParams.get('canceled') === 'true') {
       toastShownRef.current = true
       showToast(t('plan.toast.canceled'), 'info')
-      navigate(localePath('/dashboard/plan'), { replace: true })
+      navigate(selfPath, { replace: true })
     }
   }, [searchParams, showToast, refreshStore, navigate, t, localePath])
 

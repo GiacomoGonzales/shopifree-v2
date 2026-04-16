@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { collection, query, orderBy, getDocs, Timestamp, limit as fbLimit, where, writeBatch, doc } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs, Timestamp, limit as fbLimit, where } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { StockMovement } from '../../types'
 
@@ -30,8 +30,6 @@ export default function StockMovements() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('30d')
   const [search, setSearch] = useState('')
-  const [clearing, setClearing] = useState(false)
-  const [clearResult, setClearResult] = useState<string | null>(null)
 
   useEffect(() => {
     if (!store) return
@@ -110,39 +108,6 @@ export default function StockMovements() {
     { key: 'all', label: 'Todo' },
   ]
 
-  // DEV-only: permanently delete ALL stock_movements for this store. Remove before shipping.
-  const handleClearAllMovements = async () => {
-    if (!store) return
-    const ok = window.confirm(
-      'Esto eliminara TODOS los movimientos de stock de esta tienda de forma permanente.\n\n' +
-      'Solo afecta al historial — no modifica el stock actual de los productos.\n\n' +
-      'Esta accion no se puede deshacer. Continuar?'
-    )
-    if (!ok) return
-
-    setClearing(true)
-    setClearResult(null)
-    let totalDeleted = 0
-    try {
-      // Paginate through all docs and batch-delete. Firestore batch max = 500 writes.
-      while (true) {
-        const snap = await getDocs(query(collection(db, `stores/${store.id}/stock_movements`), fbLimit(500)))
-        if (snap.empty) break
-        const batch = writeBatch(db)
-        snap.docs.forEach(d => batch.delete(doc(db, `stores/${store.id}/stock_movements`, d.id)))
-        await batch.commit()
-        totalDeleted += snap.size
-        if (snap.size < 500) break
-      }
-      setMovements([])
-      setClearResult(`${totalDeleted} movimientos eliminados.`)
-    } catch (err) {
-      console.error(err)
-      setClearResult('Error al eliminar. Revisa la consola.')
-    }
-    setClearing(false)
-  }
-
   const formatDate = (d: Date) => {
     const now = new Date()
     const diff = now.getTime() - d.getTime()
@@ -155,25 +120,9 @@ export default function StockMovements() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Movimientos de stock</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Historial de entradas y salidas de inventario</p>
-        </div>
-        {/* DEV-only: temporary cleanup button. Remove when inventory is stable. */}
-        <div className="flex items-start gap-2">
-          {clearResult && (
-            <span className="text-xs text-gray-500 self-center">{clearResult}</span>
-          )}
-          <button
-            onClick={handleClearAllMovements}
-            disabled={clearing || movements.length === 0}
-            className="px-3 py-2 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-40"
-            title="Solo desarrollo — elimina todo el historial"
-          >
-            {clearing ? 'Eliminando...' : 'Limpiar historial (DEV)'}
-          </button>
-        </div>
+      <div>
+        <h1 className="text-xl font-semibold text-gray-900">Movimientos de stock</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Historial de entradas y salidas de inventario</p>
       </div>
 
       {/* Stats */}

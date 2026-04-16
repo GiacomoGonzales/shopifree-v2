@@ -11,7 +11,7 @@ import {
   IntegrationsIcon, UserIcon, ChatIcon,
   FinanceDashIcon, InventoryIcon, MovementsIcon, WarehouseIcon, SupplierIcon,
   PurchaseIcon, ProductionIcon, ExpenseIcon, CashFlowIcon, ReportsIcon, AccountIcon,
-  ChatNavIcon, CloseIcon,
+  SubscriptionIcon, ChatNavIcon, CloseIcon,
 } from './sharedIcons'
 
 const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
@@ -84,6 +84,7 @@ export default function SharedMobileSidebar() {
         'separator',
         { name: 'Reportes', href: localePath('/finance/reports'), icon: ReportsIcon },
         'separator',
+        { name: 'Suscripcion', href: localePath('/finance/subscription'), icon: SubscriptionIcon },
         { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
       ]
       if (isAdmin) items.push({ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon })

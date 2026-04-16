@@ -22,7 +22,6 @@ export default function Account() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [portalLoading, setPortalLoading] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   // Personal data
@@ -57,17 +56,11 @@ export default function Account() {
 
   const isGoogleUser = firebaseUser?.providerData?.some(p => p.providerId === 'google.com') && !firebaseUser?.providerData?.some(p => p.providerId === 'password')
 
-  // Usage stats
-  const [productCount, setProductCount] = useState(0)
-  const [categoryCount, setCategoryCount] = useState(0)
-  const [loadingUsage, setLoadingUsage] = useState(true)
-
-  // Subscription data
+  // Subscription summary (displayed on the compact "My Plan" card that links to /finance/subscription)
   const currentPlan = (store?.plan || 'free') as PlanType
   const planInfo = PLAN_FEATURES[currentPlan]
   const subscription = store?.subscription
   const hasActiveSubscription = subscription?.status === 'active'
-  const limits = planInfo.limits
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -92,26 +85,7 @@ export default function Account() {
     fetchUserData()
   }, [firebaseUser])
 
-  // Fetch usage stats
-  useEffect(() => {
-    async function fetchUsage() {
-      if (!store?.id) return
-      try {
-        const productsRef = collection(db, 'stores', store.id, 'products')
-        const productsSnap = await getDocs(productsRef)
-        setProductCount(productsSnap.size)
-
-        const categoriesRef = collection(db, 'stores', store.id, 'categories')
-        const categoriesSnap = await getDocs(categoriesRef)
-        setCategoryCount(categoriesSnap.size)
-      } catch (error) {
-        console.error('Error fetching usage:', error)
-      } finally {
-        setLoadingUsage(false)
-      }
-    }
-    fetchUsage()
-  }, [store?.id])
+  // Usage stats (products/categories/images) moved to the dedicated Subscription page
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -271,35 +245,7 @@ export default function Account() {
     }
   }
 
-  const handleManageSubscription = async () => {
-    if (!firebaseUser) return
-
-    setPortalLoading(true)
-    try {
-      const apiBase = import.meta.env.DEV ? 'https://shopifree.app' : ''
-      const response = await fetch(
-        `${apiBase}/api/create-checkout`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'portal', userId: firebaseUser.uid })
-        }
-      )
-
-      const data = await response.json()
-
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        showToast(t('subscription.toast.noSubscription'), 'info')
-      }
-    } catch (error) {
-      console.error('Error opening portal:', error)
-      showToast(t('subscription.toast.portalError'), 'error')
-    } finally {
-      setPortalLoading(false)
-    }
-  }
+  // Subscription management moved to /finance/subscription
 
   const handleDeleteAccount = async () => {
     if (!firebaseUser || deleteConfirmText !== 'ELIMINAR') return
@@ -344,20 +290,6 @@ export default function Account() {
       setDeletingCatalog(false)
     }
   }
-
-  // Usage helpers
-  const getUsagePercentage = (current: number, limit: number) => {
-    if (limit === -1) return 0
-    return Math.min(100, (current / limit) * 100)
-  }
-
-  const getUsageColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-red-500'
-    if (percentage >= 70) return 'bg-yellow-500'
-    return 'bg-green-500'
-  }
-
-  const plans: PlanType[] = ['free', 'pro', 'business']
 
   if (loading) {
     return (
@@ -478,173 +410,52 @@ export default function Account() {
           </div>
         </div>
 
-        {/* My Plan */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
-                currentPlan === 'free'
-                  ? 'bg-gray-100'
-                  : currentPlan === 'pro'
-                  ? 'bg-[#1e3a5f] shadow-[#38bdf8]/20'
-                  : 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-purple-500/20'
+        {/* My Plan — compact card linking to the dedicated Subscription page */}
+        <Link
+          to={localePath('/finance/subscription')}
+          className="block bg-white rounded-xl border border-gray-200/60 p-5 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all group"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                currentPlan === 'free' ? 'bg-gray-100'
+                : currentPlan === 'pro' ? 'bg-[#1e3a5f]'
+                : 'bg-gradient-to-br from-purple-500 to-purple-700'
               }`}>
                 {currentPlan === 'free' ? (
-                  <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 ) : (
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 )}
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-[#1e3a5f]">{planInfo.name}</h2>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider">{t('plan.current')}</p>
                   {hasActiveSubscription && (
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                    <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
                       {t('subscription.status.active')}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">{t(`plan.${currentPlan}Description`)}</p>
+                <h2 className="text-lg font-semibold text-[#1e3a5f] truncate">{planInfo.name}</h2>
+                <p className="text-xs text-gray-500 truncate">{t(`plan.${currentPlan}Description`)}</p>
               </div>
             </div>
             {!Capacitor.isNativePlatform() && (
-              <Link
-                to={localePath('/dashboard/plan')}
-                className="px-4 py-2 text-sm font-medium text-[#2d6cb5] hover:text-[#1e3a5f] hover:bg-[#f0f7ff] rounded-xl transition-all"
-              >
-                {t('subscription.changePlan')} →
-              </Link>
+              <div className="flex items-center gap-1 text-sm font-medium text-[#2d6cb5] group-hover:text-[#1e3a5f] flex-shrink-0 whitespace-nowrap">
+                {currentPlan === 'free' ? 'Suscribirme' : t('subscription.changePlan')}
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
             )}
           </div>
+        </Link>
 
-          {/* Usage Stats */}
-          {loadingUsage ? (
-            <div className="animate-pulse h-16 bg-gray-100 rounded-xl"></div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Products */}
-              <div className="bg-[#f0f7ff] rounded-xl p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-[#1e3a5f]">{t('subscription.usage.products')}</span>
-                  <span className="text-sm text-gray-500">
-                    {productCount}/{limits.products === -1 ? '∞' : limits.products}
-                  </span>
-                </div>
-                <div className="h-2 bg-white rounded-full overflow-hidden">
-                  {limits.products !== -1 ? (
-                    <div
-                      className={`h-full rounded-full transition-all ${getUsageColor(getUsagePercentage(productCount, limits.products))}`}
-                      style={{ width: `${Math.max(5, getUsagePercentage(productCount, limits.products))}%` }}
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-r from-green-400 to-green-500 rounded-full" />
-                  )}
-                </div>
-              </div>
-
-              {/* Categories */}
-              <div className="bg-[#f0f7ff] rounded-xl p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-[#1e3a5f]">{t('subscription.usage.categories')}</span>
-                  <span className="text-sm text-gray-500">
-                    {categoryCount}/{limits.categories === -1 ? '∞' : limits.categories}
-                  </span>
-                </div>
-                <div className="h-2 bg-white rounded-full overflow-hidden">
-                  {limits.categories !== -1 ? (
-                    <div
-                      className={`h-full rounded-full transition-all ${getUsageColor(getUsagePercentage(categoryCount, limits.categories))}`}
-                      style={{ width: `${Math.max(5, getUsagePercentage(categoryCount, limits.categories))}%` }}
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-r from-green-400 to-green-500 rounded-full" />
-                  )}
-                </div>
-              </div>
-
-              {/* Images */}
-              <div className="bg-[#f0f7ff] rounded-xl p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-[#1e3a5f]">{t('subscription.usage.imagesPerProduct')}</span>
-                  <span className="text-sm text-gray-500">{limits.imagesPerProduct}</span>
-                </div>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className={`h-2 flex-1 rounded ${
-                        i <= limits.imagesPerProduct
-                          ? 'bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5]'
-                          : 'bg-white'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Plan Cards - hidden on native iOS app */}
-          {!Capacitor.isNativePlatform() && (
-            <div className="mt-6 pt-6 border-t border-gray-200/60">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {plans.map((plan) => {
-                  const info = PLAN_FEATURES[plan]
-                  const isCurrentPlan = plan === currentPlan
-                  const isUpgrade = plans.indexOf(plan) > plans.indexOf(currentPlan)
-
-                  return (
-                    <div
-                      key={plan}
-                      className={`relative rounded-xl border p-4 transition-all ${
-                        isCurrentPlan
-                          ? 'border-[#38bdf8] bg-[#f0f7ff]'
-                          : 'border-gray-200/60 hover:border-gray-200'
-                      }`}
-                    >
-                      {isCurrentPlan && (
-                        <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-[#38bdf8] text-white text-xs font-medium rounded-full">
-                          {t('subscription.currentPlan')}
-                        </span>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-[#1e3a5f]">{info.name}</h4>
-                          <p className="text-sm text-gray-500">
-                            {info.price > 0 ? `$${info.price}/mes` : t('plan.badge.free')}
-                          </p>
-                        </div>
-                        {!isCurrentPlan && (
-                          isUpgrade ? (
-                            <Link
-                              to={localePath('/dashboard/plan')}
-                              className="px-3 py-1.5 bg-[#1e3a5f] text-white rounded-lg text-xs font-medium hover:bg-[#2d6cb5] transition-all"
-                            >
-                              {t('plan.buttons.upgrade')}
-                            </Link>
-                          ) : (
-                            <button
-                              onClick={handleManageSubscription}
-                              disabled={portalLoading}
-                              className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all disabled:opacity-50"
-                            >
-                              {t('subscription.downgrade')}
-                            </button>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Security & Danger Zone */}
         <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
@@ -727,22 +538,7 @@ export default function Account() {
               )}
             </div>
 
-            {/* Cancel Subscription */}
-            {hasActiveSubscription && (
-              <div className="flex-1 flex items-center justify-between sm:border-r sm:border-gray-200/60 sm:pr-6">
-                <div>
-                  <h3 className="font-medium text-[#1e3a5f]">{t('subscription.cancelSubscription')}</h3>
-                  <p className="text-sm text-gray-500">{t('subscription.danger.description')}</p>
-                </div>
-                <button
-                  onClick={handleManageSubscription}
-                  disabled={portalLoading}
-                  className="px-4 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium disabled:opacity-50"
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-            )}
+            {/* Cancel subscription moved to /finance/subscription (dedicated Subscription page) */}
 
             {/* Delete Catalog */}
             <div className="flex-1 flex items-center justify-between">
@@ -886,7 +682,7 @@ export default function Account() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-xs text-red-800">
-                  <strong>{productCount}</strong> {t('account.danger.productsAnd')} <strong>{categoryCount}</strong> {t('account.danger.categoriesWillBeDeleted')}
+                  {t('account.danger.allCatalogWillBeDeleted')}
                 </p>
               </div>
               <div>

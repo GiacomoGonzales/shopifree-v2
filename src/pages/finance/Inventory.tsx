@@ -705,16 +705,21 @@ export default function Inventory() {
             </p>
             <div className="flex items-center gap-2">
               <label className="text-xs text-blue-700 font-medium">Almacen:</label>
-              <select
-                value={bulkWarehouseId}
-                onChange={e => { setBulkWarehouseId(e.target.value); setBulkChanges({}); setBulkComboChanges({}) }}
-                className="px-3 py-1.5 border border-blue-200 bg-white rounded-lg text-sm focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-              >
-                <option value="">-- Elegir --</option>
-                {warehouses.map(w => (
-                  <option key={w.id} value={w.id}>{w.name}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={bulkWarehouseId}
+                  onChange={e => { setBulkWarehouseId(e.target.value); setBulkChanges({}); setBulkComboChanges({}) }}
+                  className="appearance-none pl-3 pr-8 py-1.5 border border-blue-200 bg-white rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300/40 focus:border-blue-400 transition-colors cursor-pointer min-w-[180px]"
+                >
+                  <option value="">Seleccionar almacen...</option>
+                  {warehouses.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+                <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>

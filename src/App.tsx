@@ -232,6 +232,7 @@ function AppRoutes() {
             {/* Reportes */}
             <Route path="reports" element={<ComingSoon />} />
             {/* Compartidas */}
+            <Route path="subscription" element={<Plan />} />
             <Route path="account" element={<Account />} />
             <Route path="support-chats" element={<SupportChats />} />
           </Route>

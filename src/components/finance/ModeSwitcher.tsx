@@ -3,17 +3,13 @@ import { useLanguage } from '../../hooks/useLanguage'
 
 interface ModeSwitcherProps {
   mode: 'ecommerce' | 'finance'
+  // Kept for backwards compatibility with existing callers; no longer used now that
+  // the Gestión section is open to all users.
   isAdmin?: boolean
 }
 
-export default function ModeSwitcher({ mode, isAdmin = false }: ModeSwitcherProps) {
+export default function ModeSwitcher({ mode }: ModeSwitcherProps) {
   const { localePath } = useLanguage()
-
-  const financeIcon = (
-    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-    </svg>
-  )
 
   return (
     <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5 w-full">
@@ -30,30 +26,19 @@ export default function ModeSwitcher({ mode, isAdmin = false }: ModeSwitcherProp
         </svg>
         Tienda
       </Link>
-      {isAdmin ? (
-        <Link
-          to={localePath('/finance')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
-            mode === 'finance'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-400 hover:text-gray-600'
-          }`}
-        >
-          {financeIcon}
-          Finanzas
-        </Link>
-      ) : (
-        <div
-          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium text-gray-400 cursor-not-allowed"
-          title="Próximamente"
-        >
-          {financeIcon}
-          <span>Finanzas</span>
-          <span className="ml-0.5 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide bg-gray-200 text-gray-500 rounded">
-            Pronto
-          </span>
-        </div>
-      )}
+      <Link
+        to={localePath('/finance')}
+        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
+          mode === 'finance'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-400 hover:text-gray-600'
+        }`}
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
+        </svg>
+        Gestion
+      </Link>
     </div>
   )
 }

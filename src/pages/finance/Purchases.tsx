@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { collection, query, orderBy, getDocs, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { Product, Supplier, Purchase, PurchaseItem, Warehouse } from '../../types'
+
+type Period = '30d' | '90d' | 'year' | 'all'
+type StatusFilter = 'all' | 'received' | 'cancelled'
 
 export default function Purchases() {
   const { store, firebaseUser } = useAuth()
@@ -27,6 +30,15 @@ export default function Purchases() {
 
   // Expanded purchase
   const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  // Filters
+  const [period, setPeriod] = useState<Period>('30d')
+  const [search, setSearch] = useState('')
+  const [supplierFilter, setSupplierFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+
+  // Cancel flow
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   const currency = store?.currency || 'PEN'
   const fmt = (n: number) => new Intl.NumberFormat('es', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n)
@@ -235,6 +247,179 @@ export default function Purchases() {
     setSaving(false)
   }
 
+  // Cancel a purchase: reverses stock, deletes linked expense, marks as cancelled
+  const handleCancelPurchase = async (purchase: Purchase) => {
+    if (!store || !firebaseUser) return
+    if (purchase.status === 'cancelled') return
+    const ok = confirm(
+      `Cancelar esta compra revertira el stock agregado y eliminara el gasto asociado. Continuar?\n\nProveedor: ${purchase.supplierName}\nTotal: ${fmt(purchase.total)}`
+    )
+    if (!ok) return
+
+    setCancellingId(purchase.id)
+    try {
+      // 1. Reverse stock for each item
+      for (const item of purchase.items) {
+        const product = products.find(p => p.id === item.productId)
+        if (!product || !product.trackStock) continue
+
+        const productRef = doc(db, `stores/${store.id}/products`, item.productId)
+
+        // For combo items (variationName/optionValue was set when the item was added)
+        const hasCombo = !!item.variationName && !!item.optionValue && !!product.combinations?.length
+        if (hasCombo && product.combinations) {
+          const targetCombo = product.combinations.find(c =>
+            Object.keys(c.options).join(' / ') === item.variationName
+            && Object.values(c.options).join(' / ') === item.optionValue
+          )
+          if (!targetCombo) continue
+
+          const updatedCombinations = product.combinations.map(c => {
+            if (c.id !== targetCombo.id) return c
+            const cws = { ...(c.warehouseStock || {}) }
+            if (purchase.warehouseId) {
+              cws[purchase.warehouseId] = Math.max(0, (cws[purchase.warehouseId] || 0) - item.quantity)
+            }
+            return { ...c, stock: Math.max(0, c.stock - item.quantity), warehouseStock: cws }
+          })
+          const newTotal = updatedCombinations.reduce((s, c) => s + c.stock, 0)
+          const updateData: Record<string, unknown> = { combinations: updatedCombinations, stock: newTotal }
+          if (purchase.warehouseId) {
+            const currentWarehouseStock = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock?.[purchase.warehouseId] || 0
+            updateData[`warehouseStock.${purchase.warehouseId}`] = Math.max(0, currentWarehouseStock - item.quantity)
+          }
+          await updateDoc(productRef, updateData)
+        } else {
+          const newStock = Math.max(0, (product.stock ?? 0) - item.quantity)
+          const updateData: Record<string, unknown> = { stock: newStock }
+          if (purchase.warehouseId) {
+            const currentWarehouseStock = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock?.[purchase.warehouseId] || 0
+            updateData[`warehouseStock.${purchase.warehouseId}`] = Math.max(0, currentWarehouseStock - item.quantity)
+          }
+          await updateDoc(productRef, updateData)
+        }
+
+        // Log reversal movement
+        const movement: Record<string, unknown> = {
+          productId: item.productId,
+          productName: item.productName,
+          type: 'adjustment',
+          quantity: -item.quantity,
+          previousStock: product.stock ?? 0,
+          newStock: Math.max(0, (product.stock ?? 0) - item.quantity),
+          referenceType: 'purchase',
+          referenceId: purchase.id,
+          reason: `Cancelacion de compra a ${purchase.supplierName}`,
+          createdBy: firebaseUser.uid,
+          createdAt: Timestamp.now(),
+        }
+        if (item.variationName) movement.variationName = item.variationName
+        if (item.optionValue) movement.optionValue = item.optionValue
+        if (purchase.warehouseId) movement.warehouseId = purchase.warehouseId
+        if (purchase.warehouseName) movement.warehouseName = purchase.warehouseName
+        await addDoc(collection(db, `stores/${store.id}/stock_movements`), movement)
+      }
+
+      // 2. Delete linked expense (so cancelled purchase doesn't affect cashflow)
+      if (purchase.expenseId) {
+        try {
+          await deleteDoc(doc(db, `stores/${store.id}/expenses`, purchase.expenseId))
+        } catch (err) {
+          console.error('Could not delete expense:', err)
+        }
+      }
+
+      // 3. Mark purchase as cancelled
+      await updateDoc(doc(db, `stores/${store.id}/purchases`, purchase.id), {
+        status: 'cancelled',
+        updatedAt: Timestamp.now(),
+      })
+
+      // Update local state + refresh products (stock changed)
+      setPurchases(prev => prev.map(p => p.id === purchase.id ? { ...p, status: 'cancelled' as const, updatedAt: new Date() } : p))
+      // Refresh products in-memory (subtract quantities)
+      setProducts(prev => prev.map(p => {
+        const affectedItems = purchase.items.filter(i => i.productId === p.id)
+        if (affectedItems.length === 0) return p
+        const totalQty = affectedItems.reduce((s, i) => s + i.quantity, 0)
+        return { ...p, stock: Math.max(0, (p.stock ?? 0) - totalQty) } as Product
+      }))
+    } catch (err) {
+      console.error('Error cancelling purchase:', err)
+      alert('Error al cancelar la compra. Revisa la consola.')
+    }
+    setCancellingId(null)
+  }
+
+  // Period boundary
+  const periodStartTs = useMemo(() => {
+    const now = Date.now()
+    if (period === '30d') return now - 30 * 24 * 60 * 60 * 1000
+    if (period === '90d') return now - 90 * 24 * 60 * 60 * 1000
+    if (period === 'year') return now - 365 * 24 * 60 * 60 * 1000
+    return 0
+  }, [period])
+
+  // Filtered purchases
+  const filtered = useMemo(() => {
+    return purchases.filter(p => {
+      if (period !== 'all' && p.date.getTime() < periodStartTs) return false
+      if (supplierFilter !== 'all' && p.supplierId !== supplierFilter) return false
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false
+      if (search.trim()) {
+        const q = search.trim().toLowerCase()
+        const matchesSupplier = p.supplierName.toLowerCase().includes(q)
+        const matchesNotes = (p.notes || '').toLowerCase().includes(q)
+        const matchesItems = p.items.some(i => i.productName.toLowerCase().includes(q))
+        if (!matchesSupplier && !matchesNotes && !matchesItems) return false
+      }
+      return true
+    })
+  }, [purchases, period, periodStartTs, supplierFilter, statusFilter, search])
+
+  // Summary stats over filtered (excluding cancelled from money totals)
+  const stats = useMemo(() => {
+    const valid = filtered.filter(p => p.status !== 'cancelled')
+    const totalSpend = valid.reduce((s, p) => s + (p.total || 0), 0)
+    const count = valid.length
+    const avg = count > 0 ? totalSpend / count : 0
+
+    const bySupplier: Record<string, { name: string; total: number }> = {}
+    valid.forEach(p => {
+      const key = p.supplierId || '__none__'
+      if (!bySupplier[key]) bySupplier[key] = { name: p.supplierName || 'Sin proveedor', total: 0 }
+      bySupplier[key].total += p.total || 0
+    })
+    const topSupplier = Object.values(bySupplier).sort((a, b) => b.total - a.total)[0]
+
+    return { totalSpend, count, avg, topSupplier, cancelledCount: filtered.length - valid.length }
+  }, [filtered])
+
+  // Group filtered purchases by month (YYYY-MM)
+  const grouped = useMemo(() => {
+    const map: Record<string, Purchase[]> = {}
+    filtered.forEach(p => {
+      const d = p.date
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      if (!map[key]) map[key] = []
+      map[key].push(p)
+    })
+    // Already sorted desc by date in state; preserve order
+    return Object.entries(map).map(([month, items]) => {
+      const monthDate = new Date(parseInt(month.split('-')[0]), parseInt(month.split('-')[1]) - 1, 1)
+      const label = monthDate.toLocaleDateString('es', { month: 'long', year: 'numeric' })
+      const monthTotal = items.filter(p => p.status !== 'cancelled').reduce((s, p) => s + (p.total || 0), 0)
+      return { month, label, items, monthTotal }
+    })
+  }, [filtered])
+
+  const periods: { key: Period; label: string }[] = [
+    { key: '30d', label: '30 dias' },
+    { key: '90d', label: '90 dias' },
+    { key: 'year', label: '1 ano' },
+    { key: 'all', label: 'Todo' },
+  ]
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -251,11 +436,76 @@ export default function Purchases() {
           <h1 className="text-xl font-semibold text-gray-900">Compras</h1>
           <p className="text-sm text-gray-500 mt-0.5">{purchases.length} compra{purchases.length !== 1 ? 's' : ''} registrada{purchases.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
-          {showForm ? 'Cancelar' : '+ Nueva compra'}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+            {periods.map(p => (
+              <button key={p.key} onClick={() => setPeriod(p.key)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  period === p.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
+            {showForm ? 'Cancelar' : '+ Nueva compra'}
+          </button>
+        </div>
       </div>
+
+      {/* Summary stats */}
+      {purchases.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <p className="text-[11px] text-gray-400 mb-1">Total gastado</p>
+            <p className="text-xl font-semibold text-gray-900 tabular-nums">{fmt(stats.totalSpend)}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">en el periodo</p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <p className="text-[11px] text-gray-400 mb-1">Compras</p>
+            <p className="text-xl font-semibold text-gray-900">{stats.count}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {stats.cancelledCount > 0 && <span className="text-red-400">{stats.cancelledCount} canceladas · </span>}
+              {stats.count > 0 ? fmt(stats.avg) + ' promedio' : 'Sin compras'}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <p className="text-[11px] text-gray-400 mb-1">Proveedor principal</p>
+            <p className="text-xl font-semibold text-gray-900 truncate">{stats.topSupplier?.name || '—'}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">{stats.topSupplier ? fmt(stats.topSupplier.total) : 'Sin datos'}</p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <p className="text-[11px] text-gray-400 mb-1">Resultados filtrados</p>
+            <p className="text-xl font-semibold text-gray-900">{filtered.length}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">de {purchases.length} totales</p>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      {purchases.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por proveedor, producto o notas..."
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+          </div>
+          <select value={supplierFilter} onChange={e => setSupplierFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+            <option value="all">Todos los proveedores</option>
+            {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+            <option value="all">Todos</option>
+            <option value="received">Recibidas</option>
+            <option value="cancelled">Canceladas</option>
+          </select>
+        </div>
+      )}
 
       {/* New purchase form */}
       {showForm && (
@@ -416,64 +666,114 @@ export default function Purchases() {
         </div>
       )}
 
-      {/* Purchase list */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
-        {purchases.length === 0 && !showForm ? (
-          <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">Sin compras registradas</p>
-            <p className="text-xs text-gray-300 mt-1">Registra una compra para actualizar el stock y el flujo de caja</p>
-          </div>
-        ) : purchases.length > 0 && (
-          <div className="divide-y divide-gray-50">
-            {purchases.map(p => {
-              const isOpen = expandedId === p.id
-              return (
-                <div key={p.id}>
-                  <div className="px-4 py-3 flex items-center justify-between hover:bg-gray-50/50 transition-colors cursor-pointer"
-                    onClick={() => setExpandedId(isOpen ? null : p.id)}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'received' ? 'bg-green-500' : p.status === 'cancelled' ? 'bg-red-400' : 'bg-amber-400'}`} />
-                      <div className="min-w-0">
-                        <p className="text-sm text-gray-900 truncate">{p.supplierName}</p>
-                        <p className="text-xs text-gray-400">
-                          {(p.date as Date).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          {' · '}{p.items.length} producto{p.items.length !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <p className="text-sm font-medium text-gray-900">{fmt(p.total)}</p>
-                      <svg className={`w-4 h-4 text-gray-300 transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                      </svg>
-                    </div>
-                  </div>
-                  {isOpen && (
-                    <div className="px-4 pb-3 border-t border-gray-50 animate-[slideDown_0.15s_ease-out]">
-                      <div className="divide-y divide-gray-50">
-                        {p.items.map((item, idx) => (
-                          <div key={idx} className="py-2 flex items-center justify-between">
-                            <div className="min-w-0">
-                              <p className="text-sm text-gray-700">{item.productName}</p>
-                              {item.optionValue && <p className="text-[11px] text-gray-400">{item.optionValue}</p>}
+      {/* Purchase list — grouped by month */}
+      {purchases.length === 0 && !showForm ? (
+        <div className="bg-white rounded-xl border border-gray-200/60 px-4 py-16 text-center">
+          <p className="text-sm text-gray-400">Sin compras registradas</p>
+          <p className="text-xs text-gray-300 mt-1">Registra una compra para actualizar el stock y el flujo de caja</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200/60 px-4 py-16 text-center">
+          <p className="text-sm text-gray-400">Sin resultados para los filtros seleccionados</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {grouped.map(group => (
+            <div key={group.month}>
+              <div className="flex items-center justify-between px-1 mb-1.5">
+                <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">{group.label}</p>
+                <p className="text-[11px] text-gray-500 tabular-nums">{fmt(group.monthTotal)}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden divide-y divide-gray-50">
+                {group.items.map(p => {
+                  const isOpen = expandedId === p.id
+                  const isCancelled = p.status === 'cancelled'
+                  const isCancelling = cancellingId === p.id
+                  return (
+                    <div key={p.id} className={isCancelled ? 'opacity-60' : ''}>
+                      <div
+                        className="px-4 py-3 flex items-center justify-between hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        onClick={() => setExpandedId(isOpen ? null : p.id)}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            p.status === 'received' ? 'bg-green-500' : p.status === 'cancelled' ? 'bg-red-400' : 'bg-amber-400'
+                          }`} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <p className={`text-sm truncate ${isCancelled ? 'text-gray-500 line-through' : 'text-gray-900 font-medium'}`}>
+                                {p.supplierName}
+                              </p>
+                              {isCancelled && (
+                                <span className="px-1.5 py-0.5 bg-red-50 text-red-500 text-[10px] font-medium rounded">Cancelada</span>
+                              )}
                             </div>
-                            <div className="text-right flex-shrink-0 ml-3">
-                              <p className="text-xs text-gray-500">{item.quantity} x {fmt(item.unitCost)}</p>
-                              <p className="text-sm font-medium text-gray-700">{fmt(item.totalCost)}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="text-xs text-gray-400">
+                                {p.date.toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+                                {' · '}{p.items.length} item{p.items.length !== 1 ? 's' : ''}
+                              </span>
+                              {p.warehouseName && (
+                                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded">
+                                  {p.warehouseName}
+                                </span>
+                              )}
                             </div>
                           </div>
-                        ))}
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <p className={`text-sm font-medium tabular-nums ${isCancelled ? 'text-gray-400' : 'text-gray-900'}`}>
+                            {fmt(p.total)}
+                          </p>
+                          <svg className={`w-4 h-4 text-gray-300 transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </div>
                       </div>
-                      {p.notes && <p className="text-xs text-gray-400 mt-2">{p.notes}</p>}
-                      {p.warehouseName && <p className="text-[11px] text-gray-400 mt-1">Almacen: {p.warehouseName}</p>}
+
+                      {isOpen && (
+                        <div className="px-4 pb-3 border-t border-gray-50 bg-gray-50/30 animate-[slideDown_0.15s_ease-out]">
+                          <div className="divide-y divide-gray-100 bg-white rounded-lg border border-gray-100 mt-3">
+                            {p.items.map((item, idx) => (
+                              <div key={idx} className="px-3 py-2 flex items-center justify-between">
+                                <div className="min-w-0">
+                                  <p className="text-sm text-gray-700">{item.productName}</p>
+                                  {item.optionValue && <p className="text-[11px] text-gray-400">{item.optionValue}</p>}
+                                </div>
+                                <div className="text-right flex-shrink-0 ml-3">
+                                  <p className="text-[11px] text-gray-500">{item.quantity} × {fmt(item.unitCost)}</p>
+                                  <p className="text-sm font-medium text-gray-700 tabular-nums">{fmt(item.totalCost)}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {p.notes && (
+                            <div className="mt-2 bg-white rounded-lg border border-gray-100 px-3 py-2">
+                              <p className="text-[11px] text-gray-400 mb-0.5">Notas</p>
+                              <p className="text-xs text-gray-600 whitespace-pre-wrap">{p.notes}</p>
+                            </div>
+                          )}
+                          {!isCancelled && (
+                            <div className="flex justify-end mt-3">
+                              <button
+                                onClick={() => handleCancelPurchase(p)}
+                                disabled={isCancelling}
+                                className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-40"
+                              >
+                                {isCancelling ? 'Cancelando...' : 'Cancelar compra'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
