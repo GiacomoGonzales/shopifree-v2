@@ -623,23 +623,7 @@ export default function Inventory() {
                                             </div>
                                             <p className="text-xs font-medium text-gray-700">{wStock} total</p>
                                           </div>
-                                          {/* Combinations inside this warehouse — only show if warehouse has stock */}
-                                          {hasCombinations(product) && wStock > 0 && (
-                                            <div className="pl-8 pr-3 pb-2 space-y-0.5">
-                                              {product.combinations!.filter(c => c.stock > 0).map(combo => {
-                                                const comboLabel = Object.values(combo.options).join(' / ')
-                                                return (
-                                                  <div key={combo.id} className="flex items-center justify-between py-0.5">
-                                                    <div className="flex items-center gap-2">
-                                                      <p className="text-[11px] text-gray-600">{comboLabel}</p>
-                                                      {combo.sku && <span className="text-[10px] text-gray-300">{combo.sku}</span>}
-                                                    </div>
-                                                    <p className="text-[11px] font-medium tabular-nums text-gray-700">{combo.stock}</p>
-                                                  </div>
-                                                )
-                                              })}
-                                            </div>
-                                          )}
+                                          {/* Combinations not shown per-warehouse (no per-warehouse combo stock data) */}
                                           {/* Legacy: variants without combinations — only if warehouse has stock */}
                                           {hasVariants && !hasCombinations(product) && wStock > 0 && (
                                             <div className="pl-8 pr-3 pb-2 space-y-0.5">
@@ -665,8 +649,34 @@ export default function Inventory() {
                           })
                         )}
 
-                        {/* Variants without warehouse context (if no warehouses) */}
-                        {hasVariants && warehouses.length === 0 && (
+                        {/* Combinations at product level (stock is global, not per-warehouse) */}
+                        {hasCombinations(product) && (
+                          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+                            <div className="px-3 py-2 bg-gray-50/80 border-b border-gray-100">
+                              <p className="text-[11px] text-gray-500 font-medium">Stock por combinacion</p>
+                            </div>
+                            <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
+                              {product.combinations!.filter(c => c.stock > 0).map(combo => {
+                                const comboLabel = Object.values(combo.options).join(' / ')
+                                return (
+                                  <div key={combo.id} className="px-3 py-1.5 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-[11px] text-gray-600">{comboLabel}</p>
+                                      {combo.sku && <span className="text-[10px] text-gray-300">{combo.sku}</span>}
+                                    </div>
+                                    <p className="text-[11px] font-medium tabular-nums text-gray-700">{combo.stock}</p>
+                                  </div>
+                                )
+                              })}
+                              {product.combinations!.filter(c => c.stock > 0).length === 0 && (
+                                <p className="px-3 py-3 text-[11px] text-gray-400 text-center">Todas las combinaciones en 0</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Legacy variants without combinations */}
+                        {hasVariants && !hasCombinations(product) && warehouses.length === 0 && (
                           <div className="bg-white rounded-lg border border-gray-100 p-3 space-y-1">
                             <p className="text-[11px] text-gray-400 mb-1">Variantes</p>
                             {product.variations!.map(variation =>
