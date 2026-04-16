@@ -51,6 +51,7 @@ import WarehousesPage from './pages/finance/Warehouses'
 import Suppliers from './pages/finance/Suppliers'
 import PurchasesPage from './pages/finance/Purchases'
 import ProductionPage from './pages/finance/Production'
+import AppShell from './components/layout/AppShell'
 
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout'
@@ -183,54 +184,57 @@ function AppRoutes() {
         <Route path="blog" element={<BlogList />} />
         <Route path="blog/:slug" element={<BlogPost />} />
 
-        {/* Dashboard routes */}
-        <Route path="dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardHome />} />
-          <Route path="products" element={<Products />} />
-          <Route path="products/:productId" element={<ProductForm />} />
-          <Route path="categories" element={<Navigate to="products" replace />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="analytics" element={<Analytics />} />
-          {/* Mi Tienda */}
-          <Route path="branding" element={<Branding />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="domain" element={<Domain />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="integrations" element={<Integrations />} />
-          <Route path="mi-app" element={<MiApp />} />
-          <Route path="coupons" element={<Coupons />} />
-          <Route path="dropshipping" element={<Dropshipping />} />
-          {/* Account & Plan */}
-          <Route path="account" element={<Account />} />
-          <Route path="plan" element={<Plan />} />
-          <Route path="support-chats" element={<SupportChats />} />
-          <Route path="more" element={<MoreMenu />} />
-          <Route path="subscription" element={<Navigate to="account" replace />} />
-        </Route>
+        {/* Dashboard + Finance routes share an AppShell that persists the mobile sidebar */}
+        <Route element={<AppShell />}>
+          {/* Dashboard routes */}
+          <Route path="dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="products" element={<Products />} />
+            <Route path="products/:productId" element={<ProductForm />} />
+            <Route path="categories" element={<Navigate to="products" replace />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="analytics" element={<Analytics />} />
+            {/* Mi Tienda */}
+            <Route path="branding" element={<Branding />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="domain" element={<Domain />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="integrations" element={<Integrations />} />
+            <Route path="mi-app" element={<MiApp />} />
+            <Route path="coupons" element={<Coupons />} />
+            <Route path="dropshipping" element={<Dropshipping />} />
+            {/* Account & Plan */}
+            <Route path="account" element={<Account />} />
+            <Route path="plan" element={<Plan />} />
+            <Route path="support-chats" element={<SupportChats />} />
+            <Route path="more" element={<MoreMenu />} />
+            <Route path="subscription" element={<Navigate to="account" replace />} />
+          </Route>
 
-        {/* Finance routes */}
-        <Route path="finance" element={<FinanceLayout />}>
-          <Route index element={<FinanceDashboard />} />
-          {/* Inventario */}
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="inventory/adjust" element={<InventoryAdjust />} />
-          <Route path="inventory/diagnostic" element={<StockDiagnostic />} />
-          <Route path="stock-movements" element={<StockMovements />} />
-          <Route path="warehouses" element={<WarehousesPage />} />
-          {/* Compras */}
-          <Route path="suppliers" element={<Suppliers />} />
-          <Route path="purchases" element={<PurchasesPage />} />
-          <Route path="production" element={<ProductionPage />} />
-          {/* Operaciones */}
-          <Route path="branches" element={<WarehousesPage />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="cashflow" element={<CashFlow />} />
-          {/* Reportes */}
-          <Route path="reports" element={<ComingSoon />} />
-          {/* Compartidas */}
-          <Route path="account" element={<Account />} />
-          <Route path="support-chats" element={<SupportChats />} />
+          {/* Finance routes */}
+          <Route path="finance" element={<FinanceLayout />}>
+            <Route index element={<FinanceDashboard />} />
+            {/* Inventario */}
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="inventory/adjust" element={<InventoryAdjust />} />
+            <Route path="inventory/diagnostic" element={<StockDiagnostic />} />
+            <Route path="stock-movements" element={<StockMovements />} />
+            <Route path="warehouses" element={<WarehousesPage />} />
+            {/* Compras */}
+            <Route path="suppliers" element={<Suppliers />} />
+            <Route path="purchases" element={<PurchasesPage />} />
+            <Route path="production" element={<ProductionPage />} />
+            {/* Operaciones */}
+            <Route path="branches" element={<WarehousesPage />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="cashflow" element={<CashFlow />} />
+            {/* Reportes */}
+            <Route path="reports" element={<ComingSoon />} />
+            {/* Compartidas */}
+            <Route path="account" element={<Account />} />
+            <Route path="support-chats" element={<SupportChats />} />
+          </Route>
         </Route>
 
         {/* Admin routes (protected for admin@shopifree.app) */}

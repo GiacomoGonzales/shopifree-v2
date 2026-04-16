@@ -15,8 +15,9 @@ export default function Production() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState('')
-  const [selectedComboId, setSelectedComboId] = useState('')
-  const [quantity, setQuantity] = useState('')
+  const [quantity, setQuantity] = useState('')  // only used for simple (no-combos) products
+  const [comboQuantities, setComboQuantities] = useState<Record<string, string>>({})  // comboId -> qty (combo products)
+  const [comboSearch, setComboSearch] = useState('')
   const [warehouseId, setWarehouseId] = useState('')
   const [notes, setNotes] = useState('')
   const [productSearch, setProductSearch] = useState('')
@@ -57,34 +58,70 @@ export default function Production() {
     : trackedProducts
 
   const resetForm = () => {
-    setSelectedProductId(''); setSelectedComboId(''); setQuantity(''); setNotes(''); setProductSearch('')
+    setSelectedProductId(''); setQuantity(''); setComboQuantities({}); setComboSearch(''); setNotes(''); setProductSearch('')
   }
 
+  const comboQtyTotal = Object.values(comboQuantities).reduce((s, v) => s + (parseInt(v) || 0), 0)
+
   const handleSave = async () => {
-    if (!store || !firebaseUser || !selectedProductId || !quantity || parseInt(quantity) <= 0) return
+    if (!store || !firebaseUser || !selectedProductId) return
+    const product = products.find(p => p.id === selectedProductId)
+    if (!product) return
+
+    const productHasCombos = product.combinations && product.combinations.length > 0
+    if (productHasCombos) {
+      if (comboQtyTotal <= 0) return
+    } else {
+      if (!quantity || parseInt(quantity) <= 0) return
+    }
+
     setSaving(true)
     try {
-      const product = products.find(p => p.id === selectedProductId)!
       const warehouse = warehouses.find(w => w.id === warehouseId)
-      const combo = hasCombos ? product.combinations!.find(c => c.id === selectedComboId) : null
-      const comboLabel = combo ? Object.values(combo.options).join(' / ') : null
+      const newOrders: (ProductionOrder & { _comboId?: string })[] = []
 
-      const data = {
-        productId: selectedProductId,
-        productName: product.name,
-        variationName: comboLabel ? Object.keys(combo!.options).join(' / ') : undefined,
-        optionValue: comboLabel,
-        quantity: parseInt(quantity),
-        status: 'planned' as const,
-        warehouseId: warehouseId || undefined,
-        warehouseName: warehouse?.name || undefined,
-        notes: notes.trim() || undefined,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        _comboId: combo?.id || undefined,
+      if (productHasCombos) {
+        // Create one production order per combo that has quantity > 0
+        const targets = product.combinations!.filter(c => (parseInt(comboQuantities[c.id]) || 0) > 0)
+        for (const combo of targets) {
+          const qty = parseInt(comboQuantities[combo.id])
+          const comboLabel = Object.values(combo.options).join(' / ')
+          const data: Record<string, unknown> = {
+            productId: selectedProductId,
+            productName: product.name,
+            variationName: Object.keys(combo.options).join(' / '),
+            optionValue: comboLabel,
+            quantity: qty,
+            status: 'planned',
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+            _comboId: combo.id,
+          }
+          if (warehouseId) data.warehouseId = warehouseId
+          if (warehouse?.name) data.warehouseName = warehouse.name
+          if (notes.trim()) data.notes = notes.trim()
+          const ref = await addDoc(collection(db, `stores/${store.id}/production_orders`), data)
+          newOrders.push({ id: ref.id, ...data, createdAt: new Date(), updatedAt: new Date() } as ProductionOrder & { _comboId?: string })
+        }
+      } else {
+        const data: Record<string, unknown> = {
+          productId: selectedProductId,
+          productName: product.name,
+          quantity: parseInt(quantity),
+          status: 'planned',
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }
+        if (warehouseId) data.warehouseId = warehouseId
+        if (warehouse?.name) data.warehouseName = warehouse.name
+        if (notes.trim()) data.notes = notes.trim()
+        const ref = await addDoc(collection(db, `stores/${store.id}/production_orders`), data)
+        newOrders.push({ id: ref.id, ...data, createdAt: new Date(), updatedAt: new Date() } as ProductionOrder & { _comboId?: string })
       }
-      const ref = await addDoc(collection(db, `stores/${store.id}/production_orders`), data)
-      setOrders(prev => [{ id: ref.id, ...data, createdAt: new Date(), updatedAt: new Date() } as ProductionOrder & { _comboId?: string }, ...prev])
+
+      if (newOrders.length > 0) {
+        setOrders(prev => [...newOrders, ...prev])
+      }
       setShowForm(false)
       resetForm()
     } catch (err) {
@@ -235,36 +272,85 @@ export default function Production() {
             )}
           </div>
 
-          {/* Combination selector */}
+          {/* Combinations list with quantity per combo */}
           {selectedProduct && hasCombos && (
-            <div className="animate-[slideDown_0.15s_ease-out]">
-              <label className="text-xs text-gray-500 mb-1.5 block">Combinacion</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {selectedProduct.combinations!.filter(c => c.available).map(combo => {
-                  const label = Object.values(combo.options).join(' / ')
-                  return (
-                    <button key={combo.id} type="button"
-                      onClick={() => setSelectedComboId(combo.id)}
-                      className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors text-left ${
-                        selectedComboId === combo.id ? 'border-[#1e3a5f] bg-[#1e3a5f]/5 text-[#1e3a5f]' : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                      }`}>
-                      {label}
-                      <span className="block text-[10px] mt-0.5 opacity-60">Stock: {combo.stock}</span>
-                    </button>
-                  )
-                })}
+            <div className="animate-[slideDown_0.15s_ease-out] space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-gray-500">Combinaciones a producir</label>
+                <div className="flex items-center gap-2">
+                  <button type="button"
+                    onClick={() => setComboQuantities({})}
+                    disabled={comboQtyTotal === 0}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 disabled:opacity-40">
+                    Limpiar
+                  </button>
+                </div>
+              </div>
+
+              {/* Combo search */}
+              {selectedProduct.combinations!.length > 6 && (
+                <div className="relative">
+                  <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                  </svg>
+                  <input type="text" value={comboSearch} onChange={e => setComboSearch(e.target.value)}
+                    placeholder="Buscar combinacion..."
+                    className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                </div>
+              )}
+
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+                  {selectedProduct.combinations!
+                    .filter(c => c.available)
+                    .filter(c => {
+                      if (!comboSearch) return true
+                      const label = Object.values(c.options).join(' ').toLowerCase()
+                      return label.includes(comboSearch.toLowerCase())
+                    })
+                    .map(combo => {
+                      const label = Object.values(combo.options).join(' / ')
+                      const qty = parseInt(comboQuantities[combo.id]) || 0
+                      return (
+                        <div key={combo.id} className={`px-3 py-2 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-blue-50/30' : ''}`}>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-gray-800 truncate">{label}</p>
+                            <p className="text-[11px] text-gray-400">Stock actual: {combo.stock}{combo.sku ? ` · ${combo.sku}` : ''}</p>
+                          </div>
+                          <input type="number" min="0"
+                            value={comboQuantities[combo.id] || ''}
+                            onChange={e => setComboQuantities(prev => ({ ...prev, [combo.id]: e.target.value }))}
+                            placeholder="0"
+                            className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 ${
+                              qty > 0 ? 'border-blue-300 bg-white' : 'border-gray-200'
+                            }`} />
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+              <div className="flex items-center justify-between px-1 text-[11px]">
+                <span className="text-gray-400">
+                  {(() => {
+                    const n = selectedProduct.combinations!.filter(c => (parseInt(comboQuantities[c.id]) || 0) > 0).length
+                    return `${n} combinacion${n === 1 ? '' : 'es'} seleccionada${n === 1 ? '' : 's'}`
+                  })()}
+                </span>
+                <span className="text-gray-600 font-medium">Total: {comboQtyTotal} uds</span>
               </div>
             </div>
           )}
 
-          {/* Quantity, warehouse, notes */}
-          {selectedProduct && (!hasCombos || selectedComboId) && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-[slideDown_0.15s_ease-out]">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Cantidad a producir</label>
-                <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="0"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-              </div>
+          {/* Quantity (simple products only), warehouse, notes */}
+          {selectedProduct && (
+            <div className={`grid grid-cols-1 ${hasCombos ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-3 animate-[slideDown_0.15s_ease-out]`}>
+              {!hasCombos && (
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Cantidad a producir</label>
+                  <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                </div>
+              )}
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Almacen destino</label>
                 <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)}
@@ -281,9 +367,12 @@ export default function Production() {
           )}
 
           <div className="flex justify-end">
-            <button onClick={handleSave} disabled={saving || !selectedProductId || !quantity || parseInt(quantity) <= 0 || (hasCombos && !selectedComboId)}
+            <button onClick={handleSave}
+              disabled={saving || !selectedProductId || (hasCombos ? comboQtyTotal <= 0 : (!quantity || parseInt(quantity) <= 0))}
               className="px-5 py-2.5 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-40">
-              {saving ? 'Guardando...' : 'Crear orden'}
+              {saving ? 'Guardando...' : hasCombos
+                ? `Crear ${selectedProduct?.combinations!.filter(c => (parseInt(comboQuantities[c.id]) || 0) > 0).length || ''} orden${(selectedProduct?.combinations!.filter(c => (parseInt(comboQuantities[c.id]) || 0) > 0).length || 0) === 1 ? '' : 'es'}`.trim()
+                : 'Crear orden'}
             </button>
           </div>
         </div>

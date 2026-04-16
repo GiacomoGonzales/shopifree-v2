@@ -62,19 +62,21 @@ export default function Suppliers() {
     if (!store || !name.trim()) return
     setSaving(true)
     try {
-      const data = {
+      // Build data dynamically — Firestore rejects undefined values.
+      const data: Record<string, unknown> = {
         name: name.trim(),
-        contactName: contactName.trim() || undefined,
-        phone: phone.trim() || undefined,
-        email: email.trim() || undefined,
-        address: address.trim() || undefined,
-        notes: notes.trim() || undefined,
         active: true,
         updatedAt: Timestamp.now(),
       }
+      if (contactName.trim()) data.contactName = contactName.trim()
+      if (phone.trim()) data.phone = phone.trim()
+      if (email.trim()) data.email = email.trim()
+      if (address.trim()) data.address = address.trim()
+      if (notes.trim()) data.notes = notes.trim()
+
       if (editing) {
         await updateDoc(doc(db, `stores/${store.id}/suppliers`, editing.id), data)
-        setSuppliers(prev => prev.map(s => s.id === editing.id ? { ...s, ...data, updatedAt: new Date() } : s))
+        setSuppliers(prev => prev.map(s => s.id === editing.id ? { ...s, ...data, updatedAt: new Date() } as Supplier : s))
       } else {
         const ref = await addDoc(collection(db, `stores/${store.id}/suppliers`), { ...data, createdAt: Timestamp.now() })
         setSuppliers(prev => [{ id: ref.id, ...data, createdAt: new Date(), updatedAt: new Date() } as Supplier, ...prev])

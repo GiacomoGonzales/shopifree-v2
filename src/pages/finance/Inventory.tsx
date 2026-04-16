@@ -56,6 +56,9 @@ export default function Inventory() {
   const [bulkComboChanges, setBulkComboChanges] = useState<Record<string, Record<string, string>>>({})  // productId -> comboId -> new stock in selected warehouse
   const [bulkSaving, setBulkSaving] = useState(false)
 
+  // Sync (migration) — fix products whose combos have stock but no warehouseStock
+  const [syncing, setSyncing] = useState(false)
+
   // Close menu on outside click
   useEffect(() => {
     if (!menuOpenId) return
@@ -88,6 +91,138 @@ export default function Inventory() {
   }
 
   const hasCombinations = (p: Product) => p.combinations && p.combinations.length > 0
+
+  // Detect desync scenarios:
+  //  (a) Combos with stock > 0 but no warehouseStock distribution.
+  //  (b) Orphan product-level stock: product has combos but product.stock / product.warehouseStock
+  //      don't match the sum of combos (e.g. had stock before variants were added).
+  //  (c) Simple products with stock > 0 and no product-level warehouseStock.
+  const isDesynced = (p: Product): boolean => {
+    if (!p.trackStock) return false
+    const pWs = (p as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}
+    if (p.combinations && p.combinations.length > 0) {
+      // (a)
+      if (p.combinations.some(c => (c.stock || 0) > 0 && (!c.warehouseStock || Object.keys(c.warehouseStock).length === 0))) return true
+      // (b) compare product-level vs sum of combos
+      const combosSum: Record<string, number> = {}
+      for (const c of p.combinations) {
+        for (const [wid, qty] of Object.entries(c.warehouseStock || {})) {
+          combosSum[wid] = (combosSum[wid] || 0) + (qty || 0)
+        }
+      }
+      const allKeys = new Set([...Object.keys(pWs), ...Object.keys(combosSum)])
+      for (const k of allKeys) {
+        if ((pWs[k] || 0) !== (combosSum[k] || 0)) return true
+      }
+      const combosTotal = p.combinations.reduce((s, c) => s + (c.stock || 0), 0)
+      if ((p.stock ?? 0) !== combosTotal) return true
+      return false
+    }
+    // (c) Simple product
+    return (p.stock ?? 0) > 0 && Object.keys(pWs).length === 0
+  }
+
+  const desyncedProducts = products.filter(isDesynced)
+  const desyncedCount = desyncedProducts.length
+
+  // Self-healing: assigns all combo.stock (and product.stock for simple) to the default warehouse.
+  const handleSync = async () => {
+    if (!store || !firebaseUser) return
+    const defaultWId = await getDefaultWarehouseId()
+    if (!defaultWId) {
+      alert('No hay un almacen marcado como principal. Marca uno en Almacenes primero.')
+      return
+    }
+    const defaultW = warehouses.find(w => w.id === defaultWId)
+    const defaultWName = defaultW?.name || 'Almacen principal'
+
+    const toFix = products.filter(isDesynced)
+    if (toFix.length === 0) return
+
+    setSyncing(true)
+    const updatedProducts: Record<string, Product> = {}
+    try {
+      for (const product of toFix) {
+        if (product.combinations && product.combinations.length > 0) {
+          const newCombos = product.combinations.map(c => {
+            if ((c.stock || 0) > 0 && (!c.warehouseStock || Object.keys(c.warehouseStock).length === 0)) {
+              return { ...c, warehouseStock: { [defaultWId]: c.stock } }
+            }
+            return c
+          })
+          // Recompute product-level warehouseStock as sum of combos (source of truth)
+          const newWs: Record<string, number> = {}
+          for (const c of newCombos) {
+            for (const [wid, qty] of Object.entries(c.warehouseStock || {})) {
+              newWs[wid] = (newWs[wid] || 0) + (qty || 0)
+            }
+          }
+          const newTotal = newCombos.reduce((s, c) => s + (c.stock || 0), 0)
+          await updateDoc(doc(db, `stores/${store.id}/products`, product.id), {
+            combinations: newCombos,
+            warehouseStock: newWs,
+            stock: newTotal,
+          })
+          updatedProducts[product.id] = { ...product, combinations: newCombos, warehouseStock: newWs, stock: newTotal } as Product
+          // Log one adjustment movement per combo that was healed
+          for (const c of newCombos) {
+            const was = product.combinations!.find(o => o.id === c.id)
+            const prev = was?.warehouseStock?.[defaultWId] ?? 0
+            const now = c.warehouseStock?.[defaultWId] ?? 0
+            if (prev === now) continue
+            const comboLabel = Object.values(c.options).join(' / ')
+            await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+              productId: product.id, productName: product.name,
+              variationName: Object.keys(c.options).join(' / '), optionValue: comboLabel,
+              type: 'adjustment', quantity: now - prev,
+              previousStock: prev, newStock: now,
+              referenceType: 'manual', reason: `Sincronizacion: asignado a ${defaultWName}`,
+              warehouseId: defaultWId, warehouseName: defaultWName,
+              createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+            })
+          }
+          // Log orphan cleanup: product-level stock removed that didn't exist in any combo
+          const oldPWs = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}
+          for (const [wid, prevQty] of Object.entries(oldPWs)) {
+            const newQty = newWs[wid] || 0
+            if (prevQty === newQty) continue
+            // Only log if this warehouse was actually reduced without a matching combo healing
+            const wh = warehouses.find(w => w.id === wid)
+            await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+              productId: product.id, productName: product.name,
+              type: 'adjustment', quantity: newQty - prevQty,
+              previousStock: prevQty, newStock: newQty,
+              referenceType: 'manual', reason: `Sincronizacion: stock huerfano removido (sin variante asignada)`,
+              warehouseId: wid, warehouseName: wh?.name,
+              createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+            })
+          }
+        } else {
+          // Simple product: put all stock in default warehouse
+          const total = product.stock ?? 0
+          const newWs = { [defaultWId]: total }
+          await updateDoc(doc(db, `stores/${store.id}/products`, product.id), {
+            warehouseStock: newWs,
+          })
+          updatedProducts[product.id] = { ...product, warehouseStock: newWs } as Product
+          await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+            productId: product.id, productName: product.name,
+            type: 'adjustment', quantity: 0,
+            previousStock: 0, newStock: total,
+            referenceType: 'manual', reason: `Sincronizacion: asignado a ${defaultWName}`,
+            warehouseId: defaultWId, warehouseName: defaultWName,
+            createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+          })
+        }
+      }
+      if (Object.keys(updatedProducts).length > 0) {
+        setProducts(prev => prev.map(p => updatedProducts[p.id] || p))
+      }
+    } catch (err) {
+      console.error(err)
+    }
+    setSyncing(false)
+  }
 
   const fetchData = async () => {
     if (!store) return
@@ -130,20 +265,48 @@ export default function Inventory() {
     setAdjustSaving(true)
     try {
       const defaultWId = await getDefaultWarehouseId()
-      const updateData: Record<string, unknown> = { stock: newStockNum }
-      if (defaultWId) updateData[`warehouseStock.${defaultWId}`] = newStockNum
+      const prevWs = { ...((product as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}) }
+      const prevTotal = product.stock ?? 0
+      const delta = newStockNum - prevTotal
+
+      const updateData: Record<string, unknown> = {}
+      let newWs = prevWs
+      let warehouseForMovement: { id: string; name: string } | null = null
+
+      if (defaultWId) {
+        const wh = warehouses.find(w => w.id === defaultWId)
+        warehouseForMovement = wh ? { id: wh.id, name: wh.name } : null
+        const prevWhStock = prevWs[defaultWId] ?? 0
+        // Apply delta to default warehouse (not just overwrite — preserves other warehouses).
+        const nextWhStock = Math.max(0, prevWhStock + delta)
+        newWs = { ...prevWs, [defaultWId]: nextWhStock }
+        updateData.warehouseStock = newWs
+        updateData.stock = Object.values(newWs).reduce((s, n) => s + (n || 0), 0)
+      } else {
+        // No default warehouse: just set top-level stock (legacy mode).
+        updateData.stock = newStockNum
+      }
+
       await updateDoc(doc(db, `stores/${store.id}/products`, product.id), updateData)
 
-      await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+      const movement: Record<string, unknown> = {
         productId: product.id, productName: product.name,
-        type: 'adjustment', quantity: newStockNum - (product.stock ?? 0),
-        previousStock: product.stock ?? 0, newStock: newStockNum,
+        type: 'adjustment', quantity: delta,
+        previousStock: warehouseForMovement ? (prevWs[warehouseForMovement.id] ?? 0) : prevTotal,
+        newStock: warehouseForMovement ? (newWs[warehouseForMovement.id] ?? 0) : newStockNum,
         referenceType: 'manual', reason: 'Ajuste rapido',
         createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
-      })
+      }
+      if (warehouseForMovement) {
+        movement.warehouseId = warehouseForMovement.id
+        movement.warehouseName = warehouseForMovement.name
+      }
+      await addDoc(collection(db, `stores/${store.id}/stock_movements`), movement)
 
-      // Update local state
-      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: newStockNum } : p))
+      // Update local state with new totals
+      setProducts(prev => prev.map(p => p.id === product.id
+        ? { ...p, stock: (updateData.stock as number), warehouseStock: newWs } as Product
+        : p))
       setAdjustingId(null)
       setAdjustValue('')
     } catch (err) {
@@ -282,6 +445,10 @@ export default function Inventory() {
 
   const transferAvailable = (() => {
     if (!transferProduct || !transferFrom) return 0
+    // For combo products, sum combo-level stock in source warehouse (source of truth)
+    if (transferProduct.combinations && transferProduct.combinations.length > 0) {
+      return transferProduct.combinations.reduce((s, c) => s + (c.warehouseStock?.[transferFrom] ?? 0), 0)
+    }
     const ws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
     return ws?.[transferFrom] || 0
   })()
@@ -306,13 +473,16 @@ export default function Inventory() {
     setTransferSaving(true)
     try {
       const ref = doc(db, `stores/${store.id}/products`, transferProduct.id)
-      const ws = { ...((transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}) }
+      const prevWs = { ...((transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}) }
+      const ws = { ...prevWs }
       const fromW = warehouses.find(w => w.id === transferFrom)
       const toW = warehouses.find(w => w.id === transferTo)
 
       // Update product-level warehouseStock
-      ws[transferFrom] = (ws[transferFrom] || 0) - transferTotalQty
-      ws[transferTo] = (ws[transferTo] || 0) + transferTotalQty
+      const prevFromTotal = prevWs[transferFrom] || 0
+      const prevToTotal = prevWs[transferTo] || 0
+      ws[transferFrom] = prevFromTotal - transferTotalQty
+      ws[transferTo] = prevToTotal + transferTotalQty
       const updateData: Record<string, unknown> = { warehouseStock: ws }
 
       // Update combo-level warehouseStock
@@ -330,17 +500,19 @@ export default function Inventory() {
       }
       await updateDoc(ref, updateData)
 
-      // Stock movements
+      // Stock movements — previousStock/newStock reflect warehouse-specific values
       if (transferHasCombos) {
         for (const combo of transferProduct.combinations!) {
           const qty = parseInt(transferComboQtys[combo.id]) || 0
           if (qty <= 0) continue
           const comboLabel = Object.values(combo.options).join(' / ')
+          const prevFrom = combo.warehouseStock?.[transferFrom] ?? 0
+          const prevTo = combo.warehouseStock?.[transferTo] ?? 0
           await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
             productId: transferProduct.id, productName: transferProduct.name,
             variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
             type: 'transfer', quantity: -qty,
-            previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+            previousStock: prevFrom, newStock: prevFrom - qty,
             reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`,
             warehouseId: transferFrom, warehouseName: fromW?.name,
             createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
@@ -349,7 +521,7 @@ export default function Inventory() {
             productId: transferProduct.id, productName: transferProduct.name,
             variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
             type: 'transfer', quantity: qty,
-            previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+            previousStock: prevTo, newStock: prevTo + qty,
             reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacen'}`,
             warehouseId: transferTo, warehouseName: toW?.name,
             createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
@@ -359,7 +531,7 @@ export default function Inventory() {
         await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
           productId: transferProduct.id, productName: transferProduct.name,
           type: 'transfer', quantity: -transferTotalQty,
-          previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+          previousStock: prevFromTotal, newStock: prevFromTotal - transferTotalQty,
           reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`,
           warehouseId: transferFrom, warehouseName: fromW?.name,
           createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
@@ -367,7 +539,7 @@ export default function Inventory() {
         await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
           productId: transferProduct.id, productName: transferProduct.name,
           type: 'transfer', quantity: transferTotalQty,
-          previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+          previousStock: prevToTotal, newStock: prevToTotal + transferTotalQty,
           reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacen'}`,
           warehouseId: transferTo, warehouseName: toW?.name,
           createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
@@ -482,6 +654,45 @@ export default function Inventory() {
           )}
         </div>
       </div>
+
+      {/* Desync banner */}
+      {!bulkMode && desyncedCount > 0 && (
+        <div className="bg-amber-50 border border-amber-200/60 rounded-xl px-4 py-3 flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-amber-800 font-medium">
+                {desyncedCount} {desyncedCount === 1 ? 'producto tiene' : 'productos tienen'} stock desincronizado
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Stock sin asignar a almacenes o stock general huerfano tras agregar variantes. Sincroniza para asignarlo al almacen principal o limpiar el residuo.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {desyncedProducts.slice(0, 8).map(p => (
+                  <span key={p.id} className="inline-flex items-center px-2 py-0.5 bg-white border border-amber-200 rounded-md text-[11px] text-amber-800">
+                    {p.name}
+                    {p.sku && <span className="ml-1 text-amber-400">· {p.sku}</span>}
+                  </span>
+                ))}
+                {desyncedProducts.length > 8 && (
+                  <span className="inline-flex items-center px-2 py-0.5 text-[11px] text-amber-700 font-medium">
+                    +{desyncedProducts.length - 8} mas
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium disabled:opacity-40 flex-shrink-0"
+          >
+            {syncing ? 'Sincronizando...' : 'Sincronizar'}
+          </button>
+        </div>
+      )}
 
       {/* Bulk mode banner with warehouse selector */}
       {bulkMode && (
@@ -620,7 +831,7 @@ export default function Inventory() {
                             <p className="text-xs text-gray-400">{product.sku || 'Sin SKU'}</p>
                           </div>
                         </div>
-                        <div className="flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {bulkMode && product.trackStock && bulkWarehouseId && !productHasCombos ? (
                             <input type="number" min="0"
                               value={bulkChanges[product.id] ?? String(productWhStock)}
@@ -638,6 +849,38 @@ export default function Inventory() {
                             <div className="text-right">
                               <p className="text-sm font-medium text-gray-900">{product.trackStock ? stock : '--'}</p>
                               <StatusBadge status={status} />
+                            </div>
+                          )}
+                          {/* Action menu (mobile) */}
+                          {!bulkMode && product.trackStock && (
+                            <div className="relative">
+                              <button onClick={e => { e.stopPropagation(); setMenuOpenId(menuOpenId === product.id ? null : product.id) }}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                                </svg>
+                              </button>
+                              {menuOpenId === product.id && (
+                                <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 animate-[slideDown_0.1s_ease-out]"
+                                  onClick={e => e.stopPropagation()}>
+                                  {!hasVariants && !productHasCombos && (
+                                    <button onClick={() => { setAdjustingId(product.id); setAdjustValue(String(stock)); setMenuOpenId(null); toggleExpand(product.id) }}
+                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      Ajustar stock
+                                    </button>
+                                  )}
+                                  {warehouses.length >= 2 && (
+                                    <button onClick={() => openTransfer(product)}
+                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      Transferir
+                                    </button>
+                                  )}
+                                  <button onClick={() => { toggleExpand(product.id); setMenuOpenId(null) }}
+                                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                    {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -711,7 +954,7 @@ export default function Inventory() {
                               {menuOpenId === product.id && (
                                 <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 animate-[slideDown_0.1s_ease-out]"
                                   onClick={e => e.stopPropagation()}>
-                                  {!hasVariants && (
+                                  {!hasVariants && !productHasCombos && (
                                     <button onClick={() => { setAdjustingId(product.id); setAdjustValue(String(stock)); setMenuOpenId(null) }}
                                       className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                                       Ajustar stock
@@ -795,7 +1038,12 @@ export default function Inventory() {
                                   <div className="divide-y divide-gray-50">
                                     {branchWarehouses.map(w => {
                                       const pWs = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                                      const wStock = pWs?.[w.id] ?? (w.isDefault && !pWs ? (product.stock ?? 0) : 0)
+                                      const hasAnyDistribution = pWs && Object.keys(pWs).length > 0
+                                      // When the product has combinations, combos are the source of truth:
+                                      // sum their stock in this warehouse. Any product-level leftover is orphan data.
+                                      const wStock = hasCombinations(product)
+                                        ? product.combinations!.reduce((s, c) => s + (c.warehouseStock?.[w.id] ?? 0), 0)
+                                        : (pWs?.[w.id] ?? (w.isDefault && !hasAnyDistribution ? (product.stock ?? 0) : 0))
                                       const whKey = `${product.id}:${w.id}`
                                       const showsBreakdown = hasCombinations(product) || (hasVariants && !hasCombinations(product))
                                       const isCollapsed = collapsedWarehouses.has(whKey)
@@ -931,7 +1179,10 @@ export default function Inventory() {
                       <option value="">Seleccionar almacen</option>
                       {warehouses.map(w => {
                         const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                        return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0} uds)</option>
+                        const whStock = transferProduct.combinations && transferProduct.combinations.length > 0
+                          ? transferProduct.combinations.reduce((s, c) => s + (c.warehouseStock?.[w.id] ?? 0), 0)
+                          : (pws?.[w.id] || 0)
+                        return <option key={w.id} value={w.id}>{w.name} ({whStock} uds)</option>
                       })}
                     </select>
                   </div>
@@ -942,7 +1193,10 @@ export default function Inventory() {
                       <option value="">Seleccionar almacen</option>
                       {warehouses.filter(w => w.id !== transferFrom).map(w => {
                         const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
-                        return <option key={w.id} value={w.id}>{w.name} ({pws?.[w.id] || 0} uds)</option>
+                        const whStock = transferProduct.combinations && transferProduct.combinations.length > 0
+                          ? transferProduct.combinations.reduce((s, c) => s + (c.warehouseStock?.[w.id] ?? 0), 0)
+                          : (pws?.[w.id] || 0)
+                        return <option key={w.id} value={w.id}>{w.name} ({whStock} uds)</option>
                       })}
                     </select>
                   </div>

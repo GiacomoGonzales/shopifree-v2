@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo, type JSX } from 'react'
-import { Link, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, type JSX } from 'react'
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import { useSidebar } from '../../contexts/SidebarContext'
 import ModeSwitcher from './ModeSwitcher'
 
 interface NavItem {
@@ -67,17 +68,9 @@ export default function FinanceLayout() {
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
   const navigate = useNavigate()
   const location = useLocation()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [sidebarOpen, setSidebarOpen] = useState(() => searchParams.get('sidebar') === 'open')
+  // Mobile sidebar state is shared via AppShell's SidebarProvider
+  const { setOpen: setSidebarOpen } = useSidebar()
   const isNative = Capacitor.isNativePlatform()
-
-  // Clear sidebar param after opening
-  useEffect(() => {
-    if (searchParams.get('sidebar') === 'open') {
-      searchParams.delete('sidebar')
-      setSearchParams(searchParams, { replace: true })
-    }
-  }, [])
 
   const navigation: NavElement[] = useMemo(() => [
     { name: 'Resumen', href: localePath('/finance'), icon: DashboardIcon },
@@ -111,10 +104,6 @@ export default function FinanceLayout() {
       navigate(localePath('/dashboard'), { replace: true })
     }
   }, [loading, user, isAdmin, navigate, localePath])
-
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [location.pathname])
 
   const handleLogout = async () => {
     await logout()
@@ -283,38 +272,7 @@ export default function FinanceLayout() {
         </div>
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-[2px]" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar - Mobile */}
-      <aside className={`lg:hidden fixed inset-y-0 left-0 w-[280px] bg-white border-r border-gray-100 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="flex flex-col h-full">
-          <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
-          <div className="px-4 pt-4 pb-3 border-b border-gray-100 space-y-3 relative">
-            <div className="flex items-center justify-center gap-2">
-              <Link to={localePath('/finance')}>
-                <img src="/newlogo.png" alt="Shopifree" className="h-8" />
-              </Link>
-              {isAdmin && (
-                <Link to={localePath('/admin')} className="p-1 rounded-md text-gray-300 hover:text-violet-500 transition-colors" title="Admin">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                  </svg>
-                </Link>
-              )}
-              <button onClick={() => setSidebarOpen(false)} className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-md transition-colors absolute right-4 top-4">
-                <CloseIcon />
-              </button>
-            </div>
-            <ModeSwitcher mode="finance" isAdmin={isAdmin} />
-          </div>
-          <SidebarContent />
-        </div>
-      </aside>
+      {/* Mobile sidebar rendered by AppShell to persist across mode switches */}
 
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-gray-100">

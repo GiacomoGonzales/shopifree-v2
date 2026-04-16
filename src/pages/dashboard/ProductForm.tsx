@@ -80,6 +80,18 @@ export default function ProductForm() {
   // Fashion/Pets/General
   const [variations, setVariations] = useState<ProductVariation[]>([])
   const [combinations, setCombinations] = useState<import('../../types').VariantCombination[]>([])
+  // Snapshot of original stock state when loading an existing product.
+  // Used to detect "simple -> variants" transition and offer stock redistribution.
+  const originalStockRef = useRef<{ stock: number; hadCombinations: boolean } | null>(null)
+  // Orphan-stock dialog state
+  const [orphanDialog, setOrphanDialog] = useState<{
+    open: boolean
+    origStock: number
+    mode: 'assign' | 'distribute' | 'discard'
+    assignComboId: string
+    distribution: Record<string, string>  // comboId -> qty
+  } | null>(null)
+  const [orphanResolved, setOrphanResolved] = useState(false)
 
   // Beauty
   const [duration, setDuration] = useState<{ value: number; unit: 'min' | 'hr' } | undefined>()
@@ -162,6 +174,13 @@ export default function ProductForm() {
             // Fashion/Pets/General
             setVariations(productData.variations || [])
             setCombinations(productData.combinations || [])
+
+            // Capture original stock snapshot (used to detect "adding variants to a product
+            // that had stock but no combinations" and prompt for redistribution)
+            originalStockRef.current = {
+              stock: productData.stock ?? 0,
+              hadCombinations: (productData.combinations?.length ?? 0) > 0,
+            }
 
             // Beauty
             setDuration(productData.duration)
@@ -334,9 +353,14 @@ export default function ProductForm() {
 
   const handleRemoveVideo = () => setVideo(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (
+    e: React.FormEvent | null,
+    opts: { overrideCombinations?: import('../../types').VariantCombination[]; skipOrphanCheck?: boolean } = {}
+  ) => {
+    if (e) e.preventDefault()
     if (!store) return
+
+    const combosToSave = opts.overrideCombinations ?? combinations
 
     // Check product limit for new products
     if (!isEditing) {
@@ -345,6 +369,24 @@ export default function ProductForm() {
       if (!limitCheck.allowed) {
         showToast(limitCheck.message || t('productForm.limitReached'), 'error')
         navigate(localePath('/dashboard/plan'))
+        return
+      }
+    }
+
+    // Orphan-stock detection: user is editing a product that originally had stock but no
+    // combinations, and is now adding variants. Prompt them to decide what to do with the
+    // original stock before saving.
+    if (isEditing && !opts.skipOrphanCheck && !orphanResolved && originalStockRef.current && trackStock) {
+      const orig = originalStockRef.current
+      const nowHasCombos = combosToSave.length > 0
+      if (!orig.hadCombinations && nowHasCombos && orig.stock > 0) {
+        setOrphanDialog({
+          open: true,
+          origStock: orig.stock,
+          mode: 'assign',
+          assignComboId: combosToSave[0]?.id || '',
+          distribution: Object.fromEntries(combosToSave.map(c => [c.id, ''])),
+        })
         return
       }
     }
@@ -389,20 +431,14 @@ export default function ProductForm() {
       if (barcode) productData.barcode = barcode
       if (stock) productData.stock = parseInt(stock)
       if (lowStockAlert) productData.lowStockAlert = parseInt(lowStockAlert)
-      // Assign stock to selected warehouse when creating
+      // Assign product-level stock to selected warehouse when creating.
+      // Combinations are enriched below in the Variants block to avoid being overwritten.
       if (!isEditing && trackStock && selectedWarehouseId) {
-        const totalStock = combinations.length > 0
-          ? combinations.reduce((sum, c) => sum + c.stock, 0)
+        const totalStock = combosToSave.length > 0
+          ? combosToSave.reduce((sum, c) => sum + c.stock, 0)
           : (stock ? parseInt(stock) : 0)
         if (totalStock > 0) {
           productData.warehouseStock = { [selectedWarehouseId]: totalStock }
-        }
-        // Assign each combination's stock to the selected warehouse
-        if (combinations.length > 0) {
-          productData.combinations = combinations.map(c => ({
-            ...c,
-            warehouseStock: c.stock > 0 ? { [selectedWarehouseId]: c.stock } : undefined,
-          }))
         }
       }
       if (brand) productData.brand = brand
@@ -431,11 +467,27 @@ export default function ProductForm() {
       if (features.showVariants && variations.length > 0) {
         productData.hasVariations = true
         productData.variations = variations
-        if (combinations.length > 0) {
-          productData.combinations = combinations
+        if (combosToSave.length > 0) {
+          const assignToWarehouse = trackStock && !!selectedWarehouseId
+          productData.combinations = combosToSave.map(c => {
+            if (assignToWarehouse && c.stock > 0 && !c.warehouseStock) {
+              return { ...c, warehouseStock: { [selectedWarehouseId]: c.stock } }
+            }
+            return c
+          })
           // Stock total = suma de stock de combinaciones
           if (trackStock) {
-            productData.stock = combinations.reduce((sum, c) => sum + c.stock, 0)
+            productData.stock = combosToSave.reduce((sum, c) => sum + c.stock, 0)
+            // Also recompute product-level warehouseStock from combos (source of truth)
+            const newWs: Record<string, number> = {}
+            for (const c of productData.combinations as import('../../types').VariantCombination[]) {
+              for (const [wid, qty] of Object.entries(c.warehouseStock || {})) {
+                newWs[wid] = (newWs[wid] || 0) + (qty || 0)
+              }
+            }
+            if (Object.keys(newWs).length > 0) {
+              productData.warehouseStock = newWs
+            }
           }
         }
       }
@@ -491,6 +543,41 @@ export default function ProductForm() {
       setSaving(false)
     }
   }
+
+  // Apply the user's choice for orphan stock, then resubmit the form.
+  const handleOrphanConfirm = () => {
+    if (!orphanDialog) return
+    let newCombos = combinations
+    if (orphanDialog.mode === 'assign') {
+      const assignId = orphanDialog.assignComboId
+      if (!assignId) return
+      newCombos = combinations.map(c =>
+        c.id === assignId ? { ...c, stock: orphanDialog.origStock } : c
+      )
+    } else if (orphanDialog.mode === 'distribute') {
+      newCombos = combinations.map(c => ({
+        ...c,
+        stock: parseInt(orphanDialog.distribution[c.id]) || 0,
+      }))
+    }
+    // 'discard': combos stay as-is (all 0 or whatever user typed in the form)
+    setCombinations(newCombos)
+    setOrphanResolved(true)
+    setOrphanDialog(null)
+    // Submit with overrideCombinations so we don't wait for state flush
+    handleSubmit(null, { overrideCombinations: newCombos, skipOrphanCheck: true })
+  }
+
+  const orphanDistributionTotal = orphanDialog
+    ? Object.values(orphanDialog.distribution).reduce((s, v) => s + (parseInt(v) || 0), 0)
+    : 0
+
+  const orphanCanConfirm = (() => {
+    if (!orphanDialog) return false
+    if (orphanDialog.mode === 'assign') return !!orphanDialog.assignComboId
+    if (orphanDialog.mode === 'distribute') return orphanDistributionTotal === orphanDialog.origStock
+    return true // discard
+  })()
 
   if (loading) {
     return (
@@ -1206,6 +1293,133 @@ export default function ProductForm() {
             {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
           </button>
         </div>
+      )}
+
+      {/* Orphan stock dialog — shown when adding variants to a product that had stock */}
+      {orphanDialog && (
+        <>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50" onClick={() => setOrphanDialog(null)} />
+          <div className="fixed inset-x-4 top-[8%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg z-50 animate-[slideDown_0.2s_ease-out]">
+            <div className="bg-white rounded-xl shadow-2xl border border-gray-200/60 max-h-[85vh] flex flex-col">
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                <h2 className="text-sm font-medium text-gray-900">Este producto tiene stock previo</h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Este producto tenia <span className="font-medium text-gray-700">{orphanDialog.origStock} unidades</span> en stock antes de agregar variantes. Elegi que hacer con ese stock:
+                </p>
+              </div>
+
+              {/* Options */}
+              <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
+                {/* Mode: assign to one combo */}
+                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'assign' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="radio"
+                      checked={orphanDialog.mode === 'assign'}
+                      onChange={() => setOrphanDialog({ ...orphanDialog, mode: 'assign' })}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">Asignar todo a una variante</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Pone las {orphanDialog.origStock} unidades en la combinacion que elijas.
+                      </p>
+                      {orphanDialog.mode === 'assign' && (
+                        <select
+                          value={orphanDialog.assignComboId}
+                          onChange={e => setOrphanDialog({ ...orphanDialog, assignComboId: e.target.value })}
+                          className="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                        >
+                          {combinations.map(c => (
+                            <option key={c.id} value={c.id}>{Object.values(c.options).join(' / ')}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                </label>
+
+                {/* Mode: distribute */}
+                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'distribute' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="radio"
+                      checked={orphanDialog.mode === 'distribute'}
+                      onChange={() => setOrphanDialog({ ...orphanDialog, mode: 'distribute' })}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">Distribuir manualmente</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Asigna cuanto stock va a cada combinacion. La suma debe ser {orphanDialog.origStock}.
+                      </p>
+                      {orphanDialog.mode === 'distribute' && (
+                        <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+                          {combinations.map(c => (
+                            <div key={c.id} className="flex items-center justify-between gap-2 bg-white border border-gray-100 rounded-md px-2.5 py-1.5">
+                              <span className="text-xs text-gray-700 flex-1 truncate">{Object.values(c.options).join(' / ')}</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={orphanDialog.distribution[c.id] || ''}
+                                placeholder="0"
+                                onChange={e => setOrphanDialog({
+                                  ...orphanDialog,
+                                  distribution: { ...orphanDialog.distribution, [c.id]: e.target.value },
+                                })}
+                                className="w-16 px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                              />
+                            </div>
+                          ))}
+                          <div className={`flex items-center justify-between px-2.5 py-1 text-[11px] ${orphanDistributionTotal === orphanDialog.origStock ? 'text-green-600' : 'text-amber-600'}`}>
+                            <span>Total asignado:</span>
+                            <span className="font-medium tabular-nums">{orphanDistributionTotal} / {orphanDialog.origStock}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </label>
+
+                {/* Mode: discard */}
+                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'discard' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="radio"
+                      checked={orphanDialog.mode === 'discard'}
+                      onChange={() => setOrphanDialog({ ...orphanDialog, mode: 'discard' })}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">Descartar</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Las {orphanDialog.origStock} unidades se ignoran. Las combinaciones arrancan con el stock que hayas escrito en el formulario (probablemente 0).
+                      </p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-end gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setOrphanDialog(null)}
+                  className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleOrphanConfirm}
+                  disabled={!orphanCanConfirm}
+                  className="px-5 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-40"
+                >
+                  Continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

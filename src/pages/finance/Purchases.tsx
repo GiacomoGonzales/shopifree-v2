@@ -118,9 +118,8 @@ export default function Purchases() {
       const warehouse = warehouses.find(w => w.id === warehouseId)
       const activeItems = items.filter(i => i.quantity > 0)
 
-      // 1. Create purchase
-      const purchaseData = {
-        supplierId: supplierId || undefined,
+      // 1. Create purchase — build dynamically to avoid undefined (Firestore rejects it)
+      const purchaseData: Record<string, unknown> = {
         supplierName: supplier?.name || 'Sin proveedor',
         items: activeItems.map(({ ...i }) => {
           const { _comboId, ...clean } = i as PurchaseItem & { _comboId?: string }
@@ -129,13 +128,14 @@ export default function Purchases() {
         subtotal: total,
         total,
         status: 'received',
-        warehouseId: warehouseId || undefined,
-        warehouseName: warehouse?.name || undefined,
-        notes: purchaseNotes.trim() || undefined,
         date: Timestamp.fromDate(new Date(purchaseDate + 'T12:00:00')),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       }
+      if (supplierId) purchaseData.supplierId = supplierId
+      if (warehouseId) purchaseData.warehouseId = warehouseId
+      if (warehouse?.name) purchaseData.warehouseName = warehouse.name
+      if (purchaseNotes.trim()) purchaseData.notes = purchaseNotes.trim()
       const purchaseRef = await addDoc(collection(db, `stores/${store.id}/purchases`), purchaseData)
 
       // 2. Update stock per product + create stock movements
@@ -166,12 +166,10 @@ export default function Purchases() {
           await updateDoc(productRef, updateData)
         }
 
-        // Stock movement
-        await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+        // Stock movement — build dynamically to avoid undefined
+        const movement: Record<string, unknown> = {
           productId: item.productId,
           productName: item.productName,
-          variationName: item.variationName || undefined,
-          optionValue: item.optionValue || undefined,
           type: 'purchase',
           quantity: item.quantity,
           previousStock: product.stock ?? 0,
@@ -179,11 +177,14 @@ export default function Purchases() {
           referenceType: 'purchase',
           referenceId: purchaseRef.id,
           reason: `Compra a ${supplier?.name || 'proveedor'}`,
-          warehouseId: warehouseId || undefined,
-          warehouseName: warehouse?.name || undefined,
           createdBy: firebaseUser.uid,
           createdAt: Timestamp.now(),
-        })
+        }
+        if (item.variationName) movement.variationName = item.variationName
+        if (item.optionValue) movement.optionValue = item.optionValue
+        if (warehouseId) movement.warehouseId = warehouseId
+        if (warehouse?.name) movement.warehouseName = warehouse.name
+        await addDoc(collection(db, `stores/${store.id}/stock_movements`), movement)
       }
 
       // 3. Auto-create expense
