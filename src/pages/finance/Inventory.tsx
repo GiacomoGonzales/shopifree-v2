@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, Timestamp, where, limit as fbLimit } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { Product, Category, Warehouse, Branch } from '../../types'
@@ -16,6 +18,7 @@ function ChevronIcon({ open }: { open: boolean }) {
 
 export default function Inventory() {
   const { store, firebaseUser } = useAuth()
+  const { localePath } = useLanguage()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
@@ -231,10 +234,16 @@ export default function Inventory() {
               </button>
             </>
           ) : (
-            <button onClick={() => setBulkMode(true)}
-              className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
-              Recuento
-            </button>
+            <>
+              <Link to={localePath('/finance/inventory/diagnostic')}
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                Diagnostico
+              </Link>
+              <button onClick={() => setBulkMode(true)}
+                className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
+                Recuento
+              </button>
+            </>
           )}
         </div>
       </div>
