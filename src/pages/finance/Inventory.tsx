@@ -29,6 +29,7 @@ export default function Inventory() {
   const [stockFilter, setStockFilter] = useState<StockFilter>('all')
   const [onlyTracked, setOnlyTracked] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [collapsedWarehouses, setCollapsedWarehouses] = useState<Set<string>>(new Set())  // keys: `${productId}:${warehouseId}` — collapsed = combo breakdown hidden
 
   // Inline adjust (for simple products)
   const [adjustingId, setAdjustingId] = useState<string | null>(null)
@@ -48,9 +49,11 @@ export default function Inventory() {
   const [transferSaving, setTransferSaving] = useState(false)
   const [transferSearch, setTransferSearch] = useState('')
 
-  // Bulk mode
+  // Bulk mode (recuento por almacen)
   const [bulkMode, setBulkMode] = useState(false)
-  const [bulkChanges, setBulkChanges] = useState<Record<string, string>>({})
+  const [bulkWarehouseId, setBulkWarehouseId] = useState('')  // selected warehouse for bulk count
+  const [bulkChanges, setBulkChanges] = useState<Record<string, string>>({})  // productId -> new stock in selected warehouse (simple products)
+  const [bulkComboChanges, setBulkComboChanges] = useState<Record<string, Record<string, string>>>({})  // productId -> comboId -> new stock in selected warehouse
   const [bulkSaving, setBulkSaving] = useState(false)
 
   // Close menu on outside click
@@ -149,42 +152,115 @@ export default function Inventory() {
     setAdjustSaving(false)
   }
 
-  // Bulk save
+  // Bulk save (recuento por almacen)
   const handleBulkSave = async () => {
-    if (!store || !firebaseUser) return
-    const changes = Object.entries(bulkChanges).filter(([id, val]) => {
-      const p = products.find(x => x.id === id)
-      return val !== '' && p && parseInt(val) !== (p.stock ?? 0)
-    })
-    if (changes.length === 0) { setBulkMode(false); return }
+    if (!store || !firebaseUser || !bulkWarehouseId) return
+    const wh = warehouses.find(w => w.id === bulkWarehouseId)
+    if (!wh) return
 
     setBulkSaving(true)
+    const updatedProducts: Record<string, Product> = {}
     try {
-      const defaultWId = await getDefaultWarehouseId()
-      for (const [productId, val] of changes) {
+      // 1) Simple products (no combinations)
+      for (const [productId, val] of Object.entries(bulkChanges)) {
+        if (val === '') continue
         const product = products.find(p => p.id === productId)
-        if (!product) continue
-        const newStockNum = parseInt(val)
-        const updateData: Record<string, unknown> = { stock: newStockNum }
-        if (defaultWId) updateData[`warehouseStock.${defaultWId}`] = newStockNum
-        await updateDoc(doc(db, `stores/${store.id}/products`, productId), updateData)
+        if (!product || hasCombinations(product)) continue
+        const newWhStock = parseInt(val)
+        if (isNaN(newWhStock) || newWhStock < 0) continue
 
+        const ws = { ...((product as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}) }
+        const prevWhStock = ws[bulkWarehouseId] ?? 0
+        if (newWhStock === prevWhStock) continue
+        ws[bulkWarehouseId] = newWhStock
+        const newTotal = Object.values(ws).reduce((s, n) => s + (n || 0), 0)
+
+        await updateDoc(doc(db, `stores/${store.id}/products`, productId), {
+          stock: newTotal,
+          warehouseStock: ws,
+        })
         await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
           productId, productName: product.name,
-          type: 'adjustment', quantity: newStockNum - (product.stock ?? 0),
-          previousStock: product.stock ?? 0, newStock: newStockNum,
-          referenceType: 'manual', reason: 'Recuento masivo',
+          type: 'adjustment', quantity: newWhStock - prevWhStock,
+          previousStock: prevWhStock, newStock: newWhStock,
+          referenceType: 'manual', reason: `Recuento (${wh.name})`,
+          warehouseId: bulkWarehouseId, warehouseName: wh.name,
           createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
         })
+        updatedProducts[productId] = { ...product, stock: newTotal, warehouseStock: ws } as Product
       }
-      // Update local
-      setProducts(prev => prev.map(p => {
-        const newVal = bulkChanges[p.id]
-        if (newVal !== undefined && newVal !== '') return { ...p, stock: parseInt(newVal) }
-        return p
-      }))
+
+      // 2) Products with combinations
+      for (const [productId, comboMap] of Object.entries(bulkComboChanges)) {
+        const product = products.find(p => p.id === productId)
+        if (!product || !product.combinations) continue
+        const baseProduct = updatedProducts[productId] || product
+
+        let combosChanged = false
+        const newCombos = baseProduct.combinations!.map(combo => {
+          const raw = comboMap[combo.id]
+          if (raw === undefined || raw === '') return combo
+          const newWhStock = parseInt(raw)
+          if (isNaN(newWhStock) || newWhStock < 0) return combo
+          const cws = { ...(combo.warehouseStock || {}) }
+          const prevWhStock = cws[bulkWarehouseId] ?? 0
+          if (newWhStock === prevWhStock) return combo
+          cws[bulkWarehouseId] = newWhStock
+          const newComboTotal = Object.values(cws).reduce((s, n) => s + (n || 0), 0)
+          combosChanged = true
+          return { ...combo, stock: newComboTotal, warehouseStock: cws }
+        })
+        if (!combosChanged) continue
+
+        // Recompute product-level warehouseStock and stock as sums of combos
+        const newProductWs: Record<string, number> = {}
+        for (const c of newCombos) {
+          for (const [wid, qty] of Object.entries(c.warehouseStock || {})) {
+            newProductWs[wid] = (newProductWs[wid] || 0) + (qty || 0)
+          }
+        }
+        const newProductTotal = newCombos.reduce((s, c) => s + (c.stock || 0), 0)
+
+        await updateDoc(doc(db, `stores/${store.id}/products`, productId), {
+          combinations: newCombos,
+          stock: newProductTotal,
+          warehouseStock: newProductWs,
+        })
+
+        // One movement per changed combination
+        const prevCombosById = Object.fromEntries((product.combinations || []).map(c => [c.id, c]))
+        for (const c of newCombos) {
+          const prev = prevCombosById[c.id]
+          const prevWhStock = prev?.warehouseStock?.[bulkWarehouseId] ?? 0
+          const newWhStock = c.warehouseStock?.[bulkWarehouseId] ?? 0
+          if (prevWhStock === newWhStock) continue
+          const comboLabel = Object.values(c.options).join(' / ')
+          await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+            productId, productName: product.name,
+            variationName: Object.keys(c.options).join(' / '), optionValue: comboLabel,
+            type: 'adjustment', quantity: newWhStock - prevWhStock,
+            previousStock: prevWhStock, newStock: newWhStock,
+            referenceType: 'manual', reason: `Recuento (${wh.name})`,
+            warehouseId: bulkWarehouseId, warehouseName: wh.name,
+            createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+          })
+        }
+
+        updatedProducts[productId] = {
+          ...baseProduct,
+          combinations: newCombos,
+          stock: newProductTotal,
+          warehouseStock: newProductWs,
+        } as Product
+      }
+
+      if (Object.keys(updatedProducts).length > 0) {
+        setProducts(prev => prev.map(p => updatedProducts[p.id] || p))
+      }
       setBulkChanges({})
+      setBulkComboChanges({})
       setBulkMode(false)
+      setBulkWarehouseId('')
     } catch (err) {
       console.error(err)
     }
@@ -214,7 +290,16 @@ export default function Inventory() {
     ? Object.values(transferComboQtys).reduce((s, v) => s + (parseInt(v) || 0), 0)
     : (parseInt(transferQty) || 0)
 
-  const transferIsValid = transferFrom && transferTo && transferFrom !== transferTo && transferTotalQty > 0 && transferTotalQty <= transferAvailable
+  // Per-combo validation: each entered qty must not exceed the combo's stock in the source warehouse
+  const transferCombosWithinLimit = transferHasCombos && transferFrom
+    ? transferProduct!.combinations!.every(combo => {
+        const qty = parseInt(transferComboQtys[combo.id]) || 0
+        const available = combo.warehouseStock?.[transferFrom] ?? 0
+        return qty <= available
+      })
+    : true
+
+  const transferIsValid = transferFrom && transferTo && transferFrom !== transferTo && transferTotalQty > 0 && transferTotalQty <= transferAvailable && transferCombosWithinLimit
 
   const handleTransfer = async () => {
     if (!store || !firebaseUser || !transferProduct || !transferIsValid) return
@@ -297,10 +382,33 @@ export default function Inventory() {
     setTransferSaving(false)
   }
 
-  const bulkChangeCount = Object.entries(bulkChanges).filter(([id, val]) => {
-    const p = products.find(x => x.id === id)
-    return val !== '' && p && parseInt(val) !== (p.stock ?? 0)
-  }).length
+  const bulkChangeCount = (() => {
+    if (!bulkWarehouseId) return 0
+    let n = 0
+    // Simple products: changes in selected warehouse
+    for (const [id, val] of Object.entries(bulkChanges)) {
+      if (val === '') continue
+      const p = products.find(x => x.id === id)
+      if (!p || hasCombinations(p)) continue
+      const cur = (p as Product & { warehouseStock?: Record<string, number> }).warehouseStock?.[bulkWarehouseId] ?? 0
+      const next = parseInt(val)
+      if (!isNaN(next) && next !== cur) n++
+    }
+    // Combo products: changes per combination in selected warehouse
+    for (const [pid, comboMap] of Object.entries(bulkComboChanges)) {
+      const p = products.find(x => x.id === pid)
+      if (!p || !p.combinations) continue
+      for (const [cid, val] of Object.entries(comboMap)) {
+        if (val === '') continue
+        const combo = p.combinations.find(c => c.id === cid)
+        if (!combo) continue
+        const cur = combo.warehouseStock?.[bulkWarehouseId] ?? 0
+        const next = parseInt(val)
+        if (!isNaN(next) && next !== cur) n++
+      }
+    }
+    return n
+  })()
 
   const filtered = useMemo(() => {
     let list = products.filter(p => p.active !== false)
@@ -351,11 +459,11 @@ export default function Inventory() {
         <div className="flex items-center gap-2">
           {bulkMode ? (
             <>
-              <button onClick={() => { setBulkMode(false); setBulkChanges({}) }}
+              <button onClick={() => { setBulkMode(false); setBulkChanges({}); setBulkComboChanges({}); setBulkWarehouseId('') }}
                 className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
                 Cancelar
               </button>
-              <button onClick={handleBulkSave} disabled={bulkSaving || bulkChangeCount === 0}
+              <button onClick={handleBulkSave} disabled={bulkSaving || bulkChangeCount === 0 || !bulkWarehouseId}
                 className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-40">
                 {bulkSaving ? 'Guardando...' : `Guardar ${bulkChangeCount > 0 ? `(${bulkChangeCount})` : ''}`}
               </button>
@@ -375,10 +483,29 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* Bulk mode banner */}
+      {/* Bulk mode banner with warehouse selector */}
       {bulkMode && (
-        <div className="bg-blue-50 border border-blue-200/60 rounded-xl px-4 py-3 text-sm text-blue-700 animate-[slideDown_0.2s_ease-out]">
-          Modo recuento: edita las cantidades directamente y guarda todos los cambios de una vez.
+        <div className="bg-blue-50 border border-blue-200/60 rounded-xl px-4 py-3 animate-[slideDown_0.2s_ease-out] space-y-2">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm text-blue-700">
+              {bulkWarehouseId
+                ? 'Modo recuento: edita el stock de cada combinacion en el almacen seleccionado.'
+                : 'Selecciona un almacen para empezar el recuento.'}
+            </p>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-blue-700 font-medium">Almacen:</label>
+              <select
+                value={bulkWarehouseId}
+                onChange={e => { setBulkWarehouseId(e.target.value); setBulkChanges({}); setBulkComboChanges({}) }}
+                className="px-3 py-1.5 border border-blue-200 bg-white rounded-lg text-sm focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+              >
+                <option value="">-- Elegir --</option>
+                {warehouses.map(w => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       )}
 
@@ -474,6 +601,8 @@ export default function Inventory() {
                 const hasVariants = product.hasVariations && product.variations && product.variations.length > 0
                 const isExpanded = expanded.has(product.id)
                 const isAdjusting = adjustingId === product.id
+                const productHasCombos = hasCombinations(product)
+                const productWhStock = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock?.[bulkWarehouseId] ?? 0
 
                 return (
                   <div key={product.id}>
@@ -492,15 +621,19 @@ export default function Inventory() {
                           </div>
                         </div>
                         <div className="flex-shrink-0">
-                          {bulkMode && product.trackStock ? (
+                          {bulkMode && product.trackStock && bulkWarehouseId && !productHasCombos ? (
                             <input type="number" min="0"
-                              value={bulkChanges[product.id] ?? String(stock)}
+                              value={bulkChanges[product.id] ?? String(productWhStock)}
                               onChange={e => setBulkChanges(prev => ({ ...prev, [product.id]: e.target.value }))}
                               className={`w-16 px-2 py-1 text-sm text-right border rounded-md ${
-                                bulkChanges[product.id] !== undefined && parseInt(bulkChanges[product.id]) !== stock
+                                bulkChanges[product.id] !== undefined && parseInt(bulkChanges[product.id]) !== productWhStock
                                   ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
                               }`}
                               onClick={e => e.stopPropagation()} />
+                          ) : bulkMode && product.trackStock && productHasCombos ? (
+                            <div className="text-right">
+                              <p className="text-[11px] text-gray-400">{product.combinations!.length} combinaciones</p>
+                            </div>
                           ) : (
                             <div className="text-right">
                               <p className="text-sm font-medium text-gray-900">{product.trackStock ? stock : '--'}</p>
@@ -524,12 +657,12 @@ export default function Inventory() {
                           </div>
                         </div>
                         <div className="col-span-2 text-right">
-                          {bulkMode && product.trackStock ? (
+                          {bulkMode && product.trackStock && bulkWarehouseId && !productHasCombos ? (
                             <input type="number" min="0"
-                              value={bulkChanges[product.id] ?? String(stock)}
+                              value={bulkChanges[product.id] ?? String(productWhStock)}
                               onChange={e => setBulkChanges(prev => ({ ...prev, [product.id]: e.target.value }))}
                               className={`w-20 px-2 py-1 text-sm text-right border rounded-md ml-auto block ${
-                                bulkChanges[product.id] !== undefined && parseInt(bulkChanges[product.id]) !== stock
+                                bulkChanges[product.id] !== undefined && parseInt(bulkChanges[product.id]) !== productWhStock
                                   ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
                               }`}
                               onClick={e => e.stopPropagation()} />
@@ -602,6 +735,44 @@ export default function Inventory() {
                       </div>
                     </div>
 
+                    {/* Bulk mode: per-combination inputs for selected warehouse */}
+                    {bulkMode && bulkWarehouseId && productHasCombos && product.trackStock && (
+                      <div className="border-t border-gray-100 bg-blue-50/20 px-4 py-3 animate-[slideDown_0.15s_ease-out]">
+                        <p className="text-[11px] text-gray-500 uppercase tracking-wider font-medium mb-2">
+                          Combinaciones - stock en {warehouses.find(w => w.id === bulkWarehouseId)?.name}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {product.combinations!.map(combo => {
+                            const comboLabel = Object.values(combo.options).join(' / ')
+                            const cur = combo.warehouseStock?.[bulkWarehouseId] ?? 0
+                            const editedRaw = bulkComboChanges[product.id]?.[combo.id]
+                            const inputVal = editedRaw ?? String(cur)
+                            const changed = editedRaw !== undefined && editedRaw !== '' && parseInt(editedRaw) !== cur
+                            return (
+                              <div key={combo.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-white border border-gray-100 rounded-md">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs text-gray-700 truncate">{comboLabel}</p>
+                                  <p className="text-[10px] text-gray-400">Actual: {cur}</p>
+                                </div>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={inputVal}
+                                  onChange={e => setBulkComboChanges(prev => ({
+                                    ...prev,
+                                    [product.id]: { ...(prev[product.id] || {}), [combo.id]: e.target.value }
+                                  }))}
+                                  className={`w-16 px-2 py-1 text-sm text-right border rounded-md ${
+                                    changed ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+                                  }`}
+                                />
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Expanded: Sucursales > Almacenes > Variantes */}
                     {isExpanded && !bulkMode && (
                       <div className="border-t border-gray-100 bg-gray-50/20 px-4 py-3 space-y-2 animate-[slideDown_0.15s_ease-out]">
@@ -625,11 +796,30 @@ export default function Inventory() {
                                     {branchWarehouses.map(w => {
                                       const pWs = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
                                       const wStock = pWs?.[w.id] ?? (w.isDefault && !pWs ? (product.stock ?? 0) : 0)
+                                      const whKey = `${product.id}:${w.id}`
+                                      const showsBreakdown = hasCombinations(product) || (hasVariants && !hasCombinations(product))
+                                      const isCollapsed = collapsedWarehouses.has(whKey)
 
                                       return (
                                         <div key={w.id}>
-                                          <div className="px-3 py-2 flex items-center justify-between">
+                                          <div
+                                            className={`px-3 py-2 flex items-center justify-between ${showsBreakdown ? 'cursor-pointer hover:bg-gray-50/60' : ''}`}
+                                            onClick={() => {
+                                              if (!showsBreakdown) return
+                                              setCollapsedWarehouses(prev => {
+                                                const next = new Set(prev)
+                                                if (next.has(whKey)) next.delete(whKey)
+                                                else next.add(whKey)
+                                                return next
+                                              })
+                                            }}
+                                          >
                                             <div className="flex items-center gap-2">
+                                              {showsBreakdown && (
+                                                <svg className={`w-3 h-3 text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                              )}
                                               <svg className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5M10.5 21H3m1.125-9.75H3.375c-.621 0-1.125-.504-1.125-1.125V3.375c0-.621.504-1.125 1.125-1.125h17.25c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125H4.125Z" />
                                               </svg>
@@ -639,35 +829,37 @@ export default function Inventory() {
                                             <p className="text-xs font-medium text-gray-700">{wStock} total</p>
                                           </div>
                                           {/* Combinations per warehouse */}
-                                          {hasCombinations(product) && wStock > 0 && (
+                                          {hasCombinations(product) && !isCollapsed && (
                                             <div className="pl-8 pr-3 pb-2 space-y-0.5">
-                                              {product.combinations!.filter(c => {
-                                                const cws = c.warehouseStock?.[w.id] ?? 0
-                                                return cws > 0
-                                              }).map(combo => {
+                                              {product.combinations!.map(combo => {
                                                 const comboLabel = Object.values(combo.options).join(' / ')
                                                 const comboWStock = combo.warehouseStock?.[w.id] ?? 0
+                                                const isZero = comboWStock === 0
                                                 return (
                                                   <div key={combo.id} className="flex items-center justify-between py-0.5">
-                                                    <p className="text-[11px] text-gray-600">{comboLabel}</p>
-                                                    <p className="text-[11px] font-medium tabular-nums text-gray-700">{comboWStock}</p>
+                                                    <p className={`text-[11px] ${isZero ? 'text-gray-300' : 'text-gray-600'}`}>{comboLabel}</p>
+                                                    <p className={`text-[11px] font-medium tabular-nums ${isZero ? 'text-gray-300' : 'text-gray-700'}`}>{comboWStock}</p>
                                                   </div>
                                                 )
                                               })}
                                             </div>
                                           )}
-                                          {/* Legacy: variants without combinations — only if warehouse has stock */}
-                                          {hasVariants && !hasCombinations(product) && wStock > 0 && (
+                                          {/* Legacy: variants without combinations */}
+                                          {hasVariants && !hasCombinations(product) && !isCollapsed && (
                                             <div className="pl-8 pr-3 pb-2 space-y-0.5">
                                               {product.variations!.map(variation =>
-                                                variation.options.map(option => (
-                                                  <div key={`${variation.id}-${option.id}`} className="flex items-center justify-between py-0.5">
-                                                    <p className="text-[11px] text-gray-500">
-                                                      <span className="text-gray-400">{variation.name}:</span> {option.value}
-                                                    </p>
-                                                    <p className="text-[11px] font-medium tabular-nums text-gray-700">{option.stock ?? 0}</p>
-                                                  </div>
-                                                ))
+                                                variation.options.map(option => {
+                                                  const optStock = option.stock ?? 0
+                                                  const isZero = optStock === 0
+                                                  return (
+                                                    <div key={`${variation.id}-${option.id}`} className="flex items-center justify-between py-0.5">
+                                                      <p className={`text-[11px] ${isZero ? 'text-gray-300' : 'text-gray-500'}`}>
+                                                        <span className="text-gray-400">{variation.name}:</span> {option.value}
+                                                      </p>
+                                                      <p className={`text-[11px] font-medium tabular-nums ${isZero ? 'text-gray-300' : 'text-gray-700'}`}>{optStock}</p>
+                                                    </div>
+                                                  )
+                                                })
                                               )}
                                             </div>
                                           )}
@@ -767,7 +959,15 @@ export default function Inventory() {
                 {transferFrom && transferTo && !transferHasCombos && (
                   <div>
                     <label className="text-xs text-gray-500 mb-1 block">Cantidad <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
-                    <input type="number" min="1" max={transferAvailable} value={transferQty} onChange={e => setTransferQty(e.target.value)} placeholder="0"
+                    <input type="number" min="1" max={transferAvailable} value={transferQty}
+                      onChange={e => {
+                        const raw = e.target.value
+                        if (raw === '') { setTransferQty(''); return }
+                        const n = parseInt(raw)
+                        if (isNaN(n) || n < 0) return
+                        setTransferQty(String(Math.min(n, transferAvailable)))
+                      }}
+                      placeholder="0"
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                   </div>
                 )}
@@ -798,17 +998,31 @@ export default function Inventory() {
                           .map(combo => {
                             const comboLabel = Object.values(combo.options).join(' / ')
                             const qty = parseInt(transferComboQtys[combo.id]) || 0
+                            const comboAvailable = combo.warehouseStock?.[transferFrom] ?? 0
+                            const exceeds = qty > comboAvailable
                             return (
                               <div key={combo.id} className={`px-3 py-2.5 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-blue-50/30' : ''}`}>
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm text-gray-800">{comboLabel}</p>
-                                  <p className="text-[11px] text-gray-400">Stock: {combo.stock}</p>
+                                  <p className="text-[11px] text-gray-400">Stock: {comboAvailable}</p>
                                 </div>
-                                <input type="number" min="0" max={combo.stock}
+                                <input type="number" min="0" max={comboAvailable}
+                                  disabled={comboAvailable === 0}
                                   value={transferComboQtys[combo.id] || ''}
-                                  onChange={e => setTransferComboQtys(prev => ({ ...prev, [combo.id]: e.target.value }))}
+                                  onChange={e => {
+                                    const raw = e.target.value
+                                    if (raw === '') {
+                                      setTransferComboQtys(prev => ({ ...prev, [combo.id]: '' }))
+                                      return
+                                    }
+                                    const n = parseInt(raw)
+                                    if (isNaN(n) || n < 0) return
+                                    const clamped = Math.min(n, comboAvailable)
+                                    setTransferComboQtys(prev => ({ ...prev, [combo.id]: String(clamped) }))
+                                  }}
                                   placeholder="0"
-                                  className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 ${
+                                  className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 disabled:bg-gray-50 disabled:text-gray-400 ${
+                                    exceeds ? 'border-red-300 bg-red-50' :
                                     qty > 0 ? 'border-blue-300 bg-white' : 'border-gray-200'
                                   }`} />
                               </div>
