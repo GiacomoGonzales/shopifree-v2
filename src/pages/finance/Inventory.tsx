@@ -35,10 +35,29 @@ export default function Inventory() {
   const [adjustValue, setAdjustValue] = useState('')
   const [adjustSaving, setAdjustSaving] = useState(false)
 
+  // Action menu
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+
+  // Transfer modal
+  const [transferProduct, setTransferProduct] = useState<Product | null>(null)
+  const [transferFrom, setTransferFrom] = useState('')
+  const [transferTo, setTransferTo] = useState('')
+  const [transferQty, setTransferQty] = useState('')
+  const [transferNote, setTransferNote] = useState('')
+  const [transferSaving, setTransferSaving] = useState(false)
+
   // Bulk mode
   const [bulkMode, setBulkMode] = useState(false)
   const [bulkChanges, setBulkChanges] = useState<Record<string, string>>({})
   const [bulkSaving, setBulkSaving] = useState(false)
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpenId) return
+    const handler = () => setMenuOpenId(null)
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
+  }, [menuOpenId])
 
   const toggleExpand = (id: string) => {
     setExpanded(prev => {
@@ -170,6 +189,63 @@ export default function Inventory() {
     setBulkSaving(false)
   }
 
+  // Transfer
+  const openTransfer = (product: Product) => {
+    setTransferProduct(product)
+    setTransferFrom('')
+    setTransferTo('')
+    setTransferQty('')
+    setTransferNote('')
+    setMenuOpenId(null)
+  }
+
+  const transferAvailable = (() => {
+    if (!transferProduct || !transferFrom) return 0
+    const ws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+    return ws?.[transferFrom] || 0
+  })()
+
+  const handleTransfer = async () => {
+    if (!store || !firebaseUser || !transferProduct || !transferFrom || !transferTo || transferFrom === transferTo) return
+    const qty = parseInt(transferQty) || 0
+    if (qty <= 0 || qty > transferAvailable) return
+    setTransferSaving(true)
+    try {
+      const ref = doc(db, `stores/${store.id}/products`, transferProduct.id)
+      const ws = { ...((transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock || {}) }
+      const fromW = warehouses.find(w => w.id === transferFrom)
+      const toW = warehouses.find(w => w.id === transferTo)
+
+      ws[transferFrom] = (ws[transferFrom] || 0) - qty
+      ws[transferTo] = (ws[transferTo] || 0) + qty
+      await updateDoc(ref, { warehouseStock: ws })
+
+      const reason = transferNote.trim() ? `Transferencia: ${transferNote.trim()}` : `Transferencia a ${toW?.name || 'otro almacen'}`
+      await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+        productId: transferProduct.id, productName: transferProduct.name,
+        type: 'transfer', quantity: -qty,
+        previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+        reason, warehouseId: transferFrom, warehouseName: fromW?.name,
+        createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+      })
+      await addDoc(collection(db, `stores/${store.id}/stock_movements`), {
+        productId: transferProduct.id, productName: transferProduct.name,
+        type: 'transfer', quantity: qty,
+        previousStock: transferProduct.stock ?? 0, newStock: transferProduct.stock ?? 0,
+        reason: transferNote.trim() ? `Transferencia: ${transferNote.trim()}` : `Transferencia desde ${fromW?.name || 'otro almacen'}`,
+        warehouseId: transferTo, warehouseName: toW?.name,
+        createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
+      })
+
+      // Update local
+      setProducts(prev => prev.map(p => p.id === transferProduct.id ? { ...p, warehouseStock: ws } as Product : p))
+      setTransferProduct(null)
+    } catch (err) {
+      console.error(err)
+    }
+    setTransferSaving(false)
+  }
+
   const bulkChangeCount = Object.entries(bulkChanges).filter(([id, val]) => {
     const p = products.find(x => x.id === id)
     return val !== '' && p && parseInt(val) !== (p.stock ?? 0)
@@ -235,10 +311,6 @@ export default function Inventory() {
             </>
           ) : (
             <>
-              <Link to={localePath('/finance/inventory/transfer')}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                Transferir
-              </Link>
               <Link to={localePath('/finance/inventory/diagnostic')}
                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                 Diagnostico
@@ -444,11 +516,36 @@ export default function Inventory() {
                         </div>
                         <div className="col-span-2 flex items-center justify-end gap-2">
                           <StatusBadge status={status} />
-                          {!bulkMode && product.trackStock && !isAdjusting && !hasVariants && (
-                            <button onClick={e => { e.stopPropagation(); setAdjustingId(product.id); setAdjustValue(String(stock)) }}
-                              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 hover:bg-gray-100 rounded-md transition-colors">
-                              Ajustar
-                            </button>
+                          {!bulkMode && product.trackStock && (
+                            <div className="relative">
+                              <button onClick={e => { e.stopPropagation(); setMenuOpenId(menuOpenId === product.id ? null : product.id) }}
+                                className="p-1 text-gray-300 hover:text-gray-500 rounded-md hover:bg-gray-100 transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                                </svg>
+                              </button>
+                              {menuOpenId === product.id && (
+                                <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 animate-[slideDown_0.1s_ease-out]"
+                                  onClick={e => e.stopPropagation()}>
+                                  {!hasVariants && (
+                                    <button onClick={() => { setAdjustingId(product.id); setAdjustValue(String(stock)); setMenuOpenId(null) }}
+                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      Ajustar stock
+                                    </button>
+                                  )}
+                                  {warehouses.length >= 2 && (
+                                    <button onClick={() => openTransfer(product)}
+                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      Transferir
+                                    </button>
+                                  )}
+                                  <button onClick={() => { toggleExpand(product.id); setMenuOpenId(null) }}
+                                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                    {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -546,6 +643,60 @@ export default function Inventory() {
                             )}
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Transfer modal inline */}
+                    {transferProduct?.id === product.id && (
+                      <div className="border-t border-gray-100 bg-gray-50/40 px-4 py-4 animate-[slideDown_0.15s_ease-out]" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-medium text-gray-900">Transferir stock</h3>
+                          <button onClick={() => setTransferProduct(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                          <div>
+                            <label className="text-[11px] text-gray-500 mb-1 block">Desde</label>
+                            <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty('') }}
+                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                              <option value="">Seleccionar</option>
+                              {warehouses.map(w => {
+                                const ws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+                                const wStock = ws?.[w.id] || 0
+                                return <option key={w.id} value={w.id}>{w.name} ({wStock})</option>
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[11px] text-gray-500 mb-1 block">Hacia</label>
+                            <select value={transferTo} onChange={e => setTransferTo(e.target.value)}
+                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                              <option value="">Seleccionar</option>
+                              {warehouses.filter(w => w.id !== transferFrom).map(w => {
+                                const ws = (product as Product & { warehouseStock?: Record<string, number> }).warehouseStock
+                                const wStock = ws?.[w.id] || 0
+                                return <option key={w.id} value={w.id}>{w.name} ({wStock})</option>
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[11px] text-gray-500 mb-1 block">Cantidad {transferFrom && <span className="text-gray-400">(max {transferAvailable})</span>}</label>
+                            <input type="number" min="1" max={transferAvailable} value={transferQty} onChange={e => setTransferQty(e.target.value)}
+                              placeholder="0"
+                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                          </div>
+                          <div>
+                            <label className="text-[11px] text-gray-500 mb-1 block">Nota</label>
+                            <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Opcional"
+                              className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                          </div>
+                        </div>
+                        <div className="flex justify-end mt-3">
+                          <button onClick={handleTransfer}
+                            disabled={transferSaving || !transferFrom || !transferTo || transferFrom === transferTo || (parseInt(transferQty) || 0) <= 0 || (parseInt(transferQty) || 0) > transferAvailable}
+                            className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-xs font-medium disabled:opacity-40">
+                            {transferSaving ? 'Transfiriendo...' : 'Transferir'}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
