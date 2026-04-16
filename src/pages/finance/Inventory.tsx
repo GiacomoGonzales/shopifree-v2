@@ -622,10 +622,10 @@ export default function Inventory() {
                                             </div>
                                             <p className="text-xs font-medium text-gray-700">{wStock} total</p>
                                           </div>
-                                          {/* Combinations inside this warehouse */}
-                                          {hasCombinations(product) && (
+                                          {/* Combinations inside this warehouse — only show if warehouse has stock */}
+                                          {hasCombinations(product) && wStock > 0 && (
                                             <div className="pl-8 pr-3 pb-2 space-y-0.5">
-                                              {product.combinations!.map(combo => {
+                                              {product.combinations!.filter(c => c.stock > 0).map(combo => {
                                                 const comboLabel = Object.values(combo.options).join(' / ')
                                                 return (
                                                   <div key={combo.id} className="flex items-center justify-between py-0.5">
@@ -639,8 +639,8 @@ export default function Inventory() {
                                               })}
                                             </div>
                                           )}
-                                          {/* Legacy: variants without combinations */}
-                                          {hasVariants && !hasCombinations(product) && (
+                                          {/* Legacy: variants without combinations — only if warehouse has stock */}
+                                          {hasVariants && !hasCombinations(product) && wStock > 0 && (
                                             <div className="pl-8 pr-3 pb-2 space-y-0.5">
                                               {product.variations!.map(variation =>
                                                 variation.options.map(option => (
