@@ -199,23 +199,29 @@ export default function Purchases() {
       // Link expense to purchase
       await updateDoc(doc(db, `stores/${store.id}/purchases`, purchaseRef.id), { expenseId: expenseRef.id })
 
-      // Update local state
-      setPurchases(prev => [{
+      // Update local state — use our original typed locals rather than the
+      // Record<string, unknown> purchaseData (whose values are `unknown`).
+      const newPurchase: Purchase = {
         id: purchaseRef.id,
-        supplierId: purchaseData.supplierId || '',
-        supplierName: purchaseData.supplierName,
-        items: purchaseData.items as Purchase['items'],
-        subtotal: purchaseData.subtotal,
-        total: purchaseData.total,
-        status: 'received' as const,
-        warehouseId: purchaseData.warehouseId,
-        warehouseName: purchaseData.warehouseName,
-        notes: purchaseData.notes,
+        supplierId: supplierId || '',
+        supplierName: supplier?.name || 'Sin proveedor',
+        items: activeItems.map(({ ...i }) => {
+          const { _comboId: _unused, ...clean } = i as PurchaseItem & { _comboId?: string }
+          void _unused
+          return clean
+        }),
+        subtotal: total,
+        total,
+        status: 'received',
         date: new Date(purchaseDate + 'T12:00:00'),
         createdAt: new Date(),
         updatedAt: new Date(),
         expenseId: expenseRef.id,
-      }, ...prev])
+      }
+      if (warehouseId) newPurchase.warehouseId = warehouseId
+      if (warehouse?.name) newPurchase.warehouseName = warehouse.name
+      if (purchaseNotes.trim()) newPurchase.notes = purchaseNotes.trim()
+      setPurchases(prev => [newPurchase, ...prev])
 
       // Reset form
       setShowForm(false)

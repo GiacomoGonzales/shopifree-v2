@@ -266,7 +266,7 @@ export default function Production() {
                   <p className="text-sm font-medium text-gray-900">{selectedProduct.name}</p>
                   <p className="text-xs text-gray-400">{selectedProduct.sku || 'Sin SKU'}</p>
                 </div>
-                <button onClick={() => { setSelectedProductId(''); setSelectedComboId('') }}
+                <button onClick={() => { setSelectedProductId(''); setComboQuantities({}) }}
                   className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 hover:bg-gray-200 rounded-md">Cambiar</button>
               </div>
             )}
