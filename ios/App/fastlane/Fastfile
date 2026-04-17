@@ -59,16 +59,22 @@ platform :ios do
 
     UI.message("Checking App Store Connect for app: #{bundle_id}")
     if Spaceship::ConnectAPI::App.find(bundle_id).nil?
-      UI.message("Creating app record in App Store Connect…")
-      Spaceship::ConnectAPI::App.create(
-        name: app_name,
-        version_string: ENV["VERSION_NAME"] || "1.0",
-        sku: bundle_id.gsub(".", "_"),
-        primary_locale: "en-US",
-        bundle_id: bundle_id,
-        platforms: ["IOS"]
-      )
-      UI.success("App record created in App Store Connect: #{app_name}")
+      UI.user_error!(<<~MSG)
+        App record not found in App Store Connect for bundle id '#{bundle_id}'.
+
+        Apple no longer allows creating App Store Connect apps via API. You need
+        to create it once in the web UI, then re-run this build:
+
+          1. Go to https://appstoreconnect.apple.com/apps
+          2. Click '+' → 'New App'
+          3. Platform: iOS
+             Name: #{app_name}
+             Primary Language: English (U.S.) or the store's language
+             Bundle ID: choose '#{bundle_id}' from the dropdown (already registered in Dev Portal)
+             SKU: #{bundle_id.gsub('.', '_')}
+             User Access: Full Access
+          4. Save. Then trigger this build again.
+      MSG
     else
       UI.message("App record already exists in App Store Connect.")
     end
