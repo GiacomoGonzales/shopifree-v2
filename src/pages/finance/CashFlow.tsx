@@ -17,7 +17,10 @@ interface Expense {
 type Period = '7d' | '30d' | '90d'
 
 interface PeriodStats {
-  income: number
+  income: number        // same as collected — used for P&L
+  invoiced: number      // delivered orders total (facturado)
+  collected: number     // paid orders total (cobrado)
+  receivable: number    // accounts receivable (por cobrar)
   cogs: number
   grossProfit: number
   opex: number
@@ -29,21 +32,34 @@ interface PeriodStats {
 }
 
 // Computes stats for a given slice of data
+// Facturado = ventas confirmadas (delivered, no canceladas). Cobrado = dinero que entro a caja (paymentStatus=paid).
+// El P&L se calcula sobre Cobrado para reflejar flujo de caja real.
 function computeStats(orders: Order[], expenses: Expense[], products: Product[]): PeriodStats {
   const costById = new Map<string, number>()
   products.forEach(p => costById.set(p.id, p.cost || 0))
 
-  const completed = orders.filter(o => o.status === 'delivered')
-  const income = completed.reduce((sum, o) => sum + (o.total || 0), 0)
+  const validOrders = orders.filter(o => o.status !== 'cancelled')
+  const invoicedOrders = validOrders.filter(o => o.status === 'delivered')
+  const paidOrders = validOrders.filter(o => o.paymentStatus === 'paid')
 
-  // Real COGS = cost of products sold in delivered orders
-  const cogs = completed.reduce((sum, o) => {
+  const invoiced = invoicedOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+  const collected = paidOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+  // Income for P&L = what you actually received (cash basis).
+  const income = collected
+
+  // Real COGS = cost of products sold in paid orders (aligns with income)
+  const cogs = paidOrders.reduce((sum, o) => {
     const orderCost = (o.items || []).reduce((s, item) => {
       const unitCost = costById.get(item.productId) || 0
       return s + unitCost * item.quantity
     }, 0)
     return sum + orderCost
   }, 0)
+
+  // Accounts receivable = invoiced but not yet paid
+  const receivable = validOrders
+    .filter(o => o.status !== 'pending' && o.paymentStatus !== 'paid' && o.paymentStatus !== 'refunded')
+    .reduce((sum, o) => sum + (o.total || 0), 0)
 
   // OPEX = expenses that are NOT inventory purchases (inventory is an asset until sold)
   const opexExpenses = expenses.filter(e => e.category !== 'Inventario')
@@ -64,7 +80,7 @@ function computeStats(orders: Order[], expenses: Expense[], products: Product[])
 
   const topExpenses = [...opexExpenses].sort((a, b) => b.amount - a.amount).slice(0, 5)
 
-  return { income, cogs, grossProfit, opex, netProfit, grossMarginPct, netMarginPct, opexByCategory, topExpenses }
+  return { income, invoiced, collected, receivable, cogs, grossProfit, opex, netProfit, grossMarginPct, netMarginPct, opexByCategory, topExpenses }
 }
 
 export default function CashFlow() {
@@ -205,10 +221,24 @@ export default function CashFlow() {
         <>
           {/* Top summary cards with period-over-period comparison */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <SummaryCard label="Ingresos" value={fmt(current.income)} delta={incomeDelta} fmtPct={fmtPct} accent="green" />
+            <SummaryCard
+              label="Cobrado"
+              value={fmt(current.collected)}
+              delta={incomeDelta}
+              fmtPct={fmtPct}
+              accent="green"
+              hint={`Facturado ${fmt(current.invoiced)}`}
+            />
             <SummaryCard label="Gastos operativos" value={fmt(current.opex)} delta={opexDelta} fmtPct={fmtPct} accent="red" inverted />
             <SummaryCard label="Utilidad neta" value={fmt(current.netProfit)} delta={netDelta} fmtPct={fmtPct} accent={current.netProfit >= 0 ? 'blue' : 'red'} />
-            <SummaryCard label="Balance del periodo" value={fmt(balance)} delta={balanceDelta} fmtPct={fmtPct} accent={balance >= 0 ? 'blue' : 'red'} />
+            <SummaryCard
+              label={current.receivable > 0 ? 'Por cobrar' : 'Balance del periodo'}
+              value={current.receivable > 0 ? fmt(current.receivable) : fmt(balance)}
+              delta={balanceDelta}
+              fmtPct={fmtPct}
+              accent={current.receivable > 0 ? 'red' : (balance >= 0 ? 'blue' : 'red')}
+              hint={current.receivable > 0 ? 'deudas activas' : undefined}
+            />
           </div>
 
           {/* P&L — Simple income statement */}
@@ -227,7 +257,8 @@ export default function CashFlow() {
             </div>
 
             <div className="space-y-2">
-              <PnLRow label="Ingresos" value={fmt(current.income)} positive />
+              <PnLRow label="Facturado" value={fmt(current.invoiced)} muted indent />
+              <PnLRow label="Ingresos (cobrado)" value={fmt(current.collected)} positive />
               <PnLRow label="− Costo de ventas (COGS)" value={fmt(current.cogs)} muted indent />
               <PnLDivider />
               <PnLRow
@@ -246,10 +277,16 @@ export default function CashFlow() {
                 negative={current.netProfit < 0}
                 hint={`margen ${current.netMarginPct.toFixed(1)}%`}
               />
+              {current.receivable > 0 && (
+                <>
+                  <PnLDivider />
+                  <PnLRow label="Por cobrar" value={fmt(current.receivable)} muted hint="deudas activas" />
+                </>
+              )}
             </div>
 
             <p className="text-[11px] text-gray-400 mt-4">
-              COGS calculado como costo unitario de cada producto × unidades vendidas en ordenes entregadas. Las compras de inventario no se cuentan como gasto operativo hasta que se venden.
+              Ingresos cuentan sobre pedidos con pago confirmado (Cobrado), no sobre entregas sin pagar. COGS = costo unitario × unidades en pedidos pagados. Las compras de inventario no se cuentan como gasto operativo hasta que se venden.
             </p>
           </div>
 
@@ -311,7 +348,7 @@ export default function CashFlow() {
 interface Delta { pct: number; direction: 'up' | 'down' | 'flat' }
 
 function SummaryCard({
-  label, value, delta, fmtPct, accent, inverted = false,
+  label, value, delta, fmtPct, accent, inverted = false, hint,
 }: {
   label: string
   value: string
@@ -319,9 +356,9 @@ function SummaryCard({
   fmtPct: (n: number) => string
   accent: 'green' | 'red' | 'blue'
   inverted?: boolean  // when true, "up" is bad (e.g. gastos subiendo)
+  hint?: string
 }) {
   const accentClass = accent === 'green' ? 'text-green-600' : accent === 'red' ? 'text-red-500' : 'text-gray-900'
-  // Determine color of the delta arrow/text
   const positiveIsGood = !inverted
   const goodClass = 'text-green-600'
   const badClass = 'text-red-500'
@@ -336,6 +373,7 @@ function SummaryCard({
     <div className="bg-white rounded-xl border border-gray-200/60 p-4">
       <p className="text-[11px] text-gray-400 mb-1">{label}</p>
       <p className={`text-xl font-semibold ${accentClass}`}>{value}</p>
+      {hint && <p className="text-[10px] text-gray-400 mt-0.5">{hint}</p>}
       <p className={`text-[11px] mt-1 ${deltaClass}`}>
         {arrow} {fmtPct(delta.pct)} <span className="text-gray-400 font-normal">vs periodo previo</span>
       </p>

@@ -41,6 +41,19 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
     : 0
   const isOutOfStock = product.trackStock && typeof product.stock === 'number' && product.stock <= 0
 
+  // Low-stock badge — only shown when the store enables it in catalogSettings.
+  const showLowStockBadge = store?.catalogSettings?.showLowStockBadge === true
+  const lowStockThreshold = store?.catalogSettings?.lowStockThreshold ?? 5
+  const currentStock = typeof product.stock === 'number' ? product.stock : 0
+  const isLowStock = showLowStockBadge
+    && product.trackStock === true
+    && !isOutOfStock
+    && currentStock > 0
+    && currentStock <= lowStockThreshold
+  const lowStockLabel = isLowStock
+    ? (t.unitsLeft || '{n} left').replace('{n}', String(currentStock))
+    : ''
+
   // Determine if product requires selection (hide quick-add)
   const requiresSelection = (features.showModifiers && product.modifierGroups?.length) ||
                             (features.showVariants && product.variations?.length)
@@ -98,6 +111,14 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
               <span className="px-2 py-1 bg-white/90 text-gray-900 text-xs font-semibold" style={{ borderRadius: theme.radius.full }}>
                 {t.outOfStock}
               </span>
+            </div>
+          )}
+          {isLowStock && !isOutOfStock && (
+            <div
+              className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm shadow-sm bg-amber-500/95 text-white"
+              style={{ borderRadius: theme.radius.full }}
+            >
+              {lowStockLabel}
             </div>
           )}
         </div>
@@ -270,6 +291,16 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
             <span className="px-3 py-1.5 bg-white/90 text-gray-900 text-sm font-semibold" style={{ borderRadius: theme.radius.full }}>
               {t.outOfStock}
             </span>
+          </div>
+        )}
+
+        {/* Low Stock Badge */}
+        {isLowStock && !isOutOfStock && (
+          <div
+            className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm shadow-sm bg-amber-500/95 text-white"
+            style={{ borderRadius: theme.radius.full }}
+          >
+            {lowStockLabel}
           </div>
         )}
 

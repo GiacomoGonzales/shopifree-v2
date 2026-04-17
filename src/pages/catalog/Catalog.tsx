@@ -186,7 +186,18 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
           image: product.images?.[0] || product.image
         }))
 
-        setProducts(productsWithLimitedImages)
+        // Apply catalog settings: optionally hide out-of-stock products.
+        // Default = show them (with the "Agotado" badge on the card).
+        const showOutOfStock = storeData.catalogSettings?.showOutOfStock !== false
+        const visibleProducts = showOutOfStock
+          ? productsWithLimitedImages
+          : productsWithLimitedImages.filter(p => {
+              if (!p.trackStock) return true
+              const stock = typeof p.stock === 'number' ? p.stock : 0
+              return stock > 0
+            })
+
+        setProducts(visibleProducts)
 
         // Limit categories
         const categoryLimit = planLimits.categories

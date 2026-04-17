@@ -5,6 +5,7 @@ import { orderService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { apiUrl } from '../../utils/apiBase'
+import NewSaleModal from '../../components/dashboard/NewSaleModal'
 import type { Order } from '../../types'
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
@@ -12,6 +13,17 @@ type SortField = 'orderNumber' | 'customer' | 'total' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 type DateFilter = 'all' | 'today' | 'week' | 'month'
 type PaymentFilter = 'all' | 'whatsapp' | 'mercadopago' | 'transfer'
+type ViewFilter = 'all' | 'unpaid'  // 'unpaid' = delivered/preparing/etc. but paymentStatus != paid
+
+type Channel = 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'
+
+const CHANNEL_LABELS: Record<Channel, string> = {
+  online: 'Online',
+  in_store: 'Tienda fisica',
+  whatsapp: 'WhatsApp',
+  instagram: 'Instagram',
+  other: 'Otro',
+}
 
 const ITEMS_PER_PAGE = 10
 
@@ -49,7 +61,16 @@ export default function Orders() {
   const [filterStatus, setFilterStatus] = useState<OrderStatus | 'all'>('all')
   const [dateFilter, setDateFilter] = useState<DateFilter>('all')
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all')
+  const [viewFilter, setViewFilter] = useState<ViewFilter>('all')
   const [showFilters, setShowFilters] = useState(false)
+
+  // Payment action states
+  const [markingPaid, setMarkingPaid] = useState(false)
+  const [completingSale, setCompletingSale] = useState(false)
+  const [paymentNoteInput, setPaymentNoteInput] = useState('')
+
+  // Manual sale modal
+  const [showNewSale, setShowNewSale] = useState(false)
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>('createdAt')
@@ -94,16 +115,17 @@ export default function Orders() {
   // Calculate stats (only real orders)
   const stats = useMemo(() => {
     const totalOrders = realOrders.length
-    const totalRevenue = realOrders.reduce((sum, o) => sum + (o.total || 0), 0)
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+    const validOrders = realOrders.filter(o => o.status !== 'cancelled')
+    // Facturado = ventas confirmadas/entregadas (no canceladas)
+    const invoiced = validOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+    // Cobrado = lo que realmente entro a caja (paymentStatus === 'paid')
+    const collected = validOrders
+      .filter(o => o.paymentStatus === 'paid')
+      .reduce((sum, o) => sum + (o.total || 0), 0)
+    const avgOrderValue = validOrders.length > 0 ? invoiced / validOrders.length : 0
     const pendingOrders = realOrders.filter(o => o.status === 'pending').length
-    const todayOrders = realOrders.filter(o => {
-      const orderDate = new Date(o.createdAt)
-      const today = new Date()
-      return orderDate.toDateString() === today.toDateString()
-    }).length
 
-    return { totalOrders, totalRevenue, avgOrderValue, pendingOrders, todayOrders }
+    return { totalOrders, invoiced, collected, avgOrderValue, pendingOrders }
   }, [realOrders])
 
   // Filter orders (abandoned carts hidden by default)
@@ -150,6 +172,16 @@ export default function Orders() {
       result = result.filter(order => order.paymentMethod === paymentFilter)
     }
 
+    // View filter: "Por cobrar" = confirmed/preparing/ready/delivered but not paid, not cancelled
+    if (viewFilter === 'unpaid') {
+      result = result.filter(order =>
+        order.status !== 'cancelled'
+        && order.status !== 'pending'
+        && order.paymentStatus !== 'paid'
+        && order.paymentStatus !== 'refunded'
+      )
+    }
+
     // Sort
     result.sort((a, b) => {
       let comparison = 0
@@ -171,7 +203,28 @@ export default function Orders() {
     })
 
     return result
-  }, [realOrders, searchQuery, filterStatus, dateFilter, paymentFilter, sortField, sortOrder])
+  }, [realOrders, searchQuery, filterStatus, dateFilter, paymentFilter, viewFilter, sortField, sortOrder])
+
+  // "Por cobrar" total — sum of confirmed+ orders that haven't been paid
+  const unpaidTotal = useMemo(() => {
+    return realOrders
+      .filter(o =>
+        o.status !== 'cancelled'
+        && o.status !== 'pending'
+        && o.paymentStatus !== 'paid'
+        && o.paymentStatus !== 'refunded'
+      )
+      .reduce((sum, o) => sum + (o.total || 0), 0)
+  }, [realOrders])
+
+  const unpaidCount = useMemo(() => {
+    return realOrders.filter(o =>
+      o.status !== 'cancelled'
+      && o.status !== 'pending'
+      && o.paymentStatus !== 'paid'
+      && o.paymentStatus !== 'refunded'
+    ).length
+  }, [realOrders])
 
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)
@@ -203,6 +256,54 @@ export default function Orders() {
       showToast(t('orders.statusError'), 'error')
     } finally {
       setUpdatingStatus(null)
+    }
+  }
+
+  // Mark an order as paid (records paidAt + optional note)
+  const handleMarkPaid = async (order: Order, note?: string) => {
+    if (!store) return
+    setMarkingPaid(true)
+    try {
+      const now = new Date()
+      const update: Partial<Order> = {
+        paymentStatus: 'paid',
+        paidAt: now,
+      }
+      if (note && note.trim()) update.paymentNote = note.trim()
+      await orderService.update(store.id, order.id, update)
+      const updated = { ...order, ...update, updatedAt: now } as Order
+      setOrders(prev => prev.map(o => o.id === order.id ? updated : o))
+      if (selectedOrder?.id === order.id) setSelectedOrder(updated)
+      showToast('Pago registrado', 'success')
+    } catch (err) {
+      console.error('Error marking paid:', err)
+      showToast('Error al registrar el pago', 'error')
+    } finally {
+      setMarkingPaid(false)
+    }
+  }
+
+  // Complete the sale: delivered + paid in one click
+  const handleCompleteSale = async (order: Order) => {
+    if (!store) return
+    setCompletingSale(true)
+    try {
+      const now = new Date()
+      const update: Partial<Order> = {
+        status: 'delivered',
+        paymentStatus: 'paid',
+        paidAt: order.paidAt || now,
+      }
+      await orderService.update(store.id, order.id, update)
+      const updated = { ...order, ...update, updatedAt: now } as Order
+      setOrders(prev => prev.map(o => o.id === order.id ? updated : o))
+      if (selectedOrder?.id === order.id) setSelectedOrder(updated)
+      showToast('Venta completada', 'success')
+    } catch (err) {
+      console.error('Error completing sale:', err)
+      showToast('Error al completar la venta', 'error')
+    } finally {
+      setCompletingSale(false)
     }
   }
 
@@ -387,25 +488,48 @@ export default function Orders() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{t('orders.title')}</h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 mt-0.5">
             {realOrders.length} {realOrders.length === 1 ? t('orders.order') : t('orders.orders')}
           </p>
         </div>
+        <button
+          onClick={() => setShowNewSale(true)}
+          className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium w-full sm:w-auto"
+        >
+          + Nueva venta
+        </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards — Facturado vs Cobrado with unpaid exposure */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: t('orders.totalOrders'), value: String(stats.totalOrders) },
-          { label: t('orders.totalRevenue'), value: `${currencySymbol}${stats.totalRevenue.toFixed(0)}` },
-          { label: t('orders.avgOrder'), value: `${currencySymbol}${stats.avgOrderValue.toFixed(0)}` },
-          { label: t('orders.pendingOrders'), value: String(stats.pendingOrders) },
-        ].map(card => (
-          <div key={card.label} className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-xs text-gray-500 mb-1">{card.label}</p>
-            <p className="text-xl font-bold text-gray-900">{card.value}</p>
-          </div>
-        ))}
+        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+          <p className="text-xs text-gray-500 mb-1">{t('orders.totalOrders')}</p>
+          <p className="text-xl font-semibold text-gray-900">{stats.totalOrders}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+          <p className="text-xs text-gray-500 mb-1">Facturado</p>
+          <p className="text-xl font-semibold text-gray-900">{currencySymbol}{stats.invoiced.toFixed(0)}</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">ventas confirmadas</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+          <p className="text-xs text-gray-500 mb-1">Cobrado</p>
+          <p className="text-xl font-semibold text-green-600">{currencySymbol}{stats.collected.toFixed(0)}</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">dinero en caja</p>
+        </div>
+        <button
+          onClick={() => setViewFilter(viewFilter === 'unpaid' ? 'all' : 'unpaid')}
+          className={`bg-white rounded-xl border p-4 text-left transition-all ${
+            viewFilter === 'unpaid' ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200/60 hover:border-gray-300'
+          }`}
+        >
+          <p className="text-xs text-gray-500 mb-1">Por cobrar</p>
+          <p className={`text-xl font-semibold ${unpaidTotal > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
+            {currencySymbol}{unpaidTotal.toFixed(0)}
+          </p>
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            {unpaidCount} pedido{unpaidCount !== 1 ? 's' : ''} {viewFilter === 'unpaid' ? '· ver todos' : '· filtrar'}
+          </p>
+        </button>
       </div>
 
       {/* Search and Filters */}
@@ -650,11 +774,11 @@ export default function Orders() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex flex-col gap-1">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold w-fit ${STATUS_COLORS[order.status as OrderStatus]?.bg || 'bg-gray-100'} ${STATUS_COLORS[order.status as OrderStatus]?.text || 'text-gray-800'}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[order.status as OrderStatus]?.dot || 'bg-gray-500'}`}></span>
                           {STATUS_LABELS[order.status as OrderStatus]?.[lang] || order.status}
                         </span>
-                        {(order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') && (() => {
+                        {order.status !== 'cancelled' && (() => {
                           const badge = getPaymentBadge(order.paymentStatus)
                           return (
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium w-fit ${badge.bg}`}>
@@ -663,6 +787,11 @@ export default function Orders() {
                             </span>
                           )
                         })()}
+                        {order.channel && order.channel !== 'online' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600 w-fit">
+                            {CHANNEL_LABELS[order.channel]}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -691,9 +820,16 @@ export default function Orders() {
                 onClick={() => setSelectedOrder(order)}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
-                  <div className="flex items-center gap-1.5">
-                    {(order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') && (() => {
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
+                    {order.channel && order.channel !== 'online' && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">
+                        {CHANNEL_LABELS[order.channel]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {order.status !== 'cancelled' && (() => {
                       const badge = getPaymentBadge(order.paymentStatus)
                       return (
                         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${badge.bg}`}>
@@ -927,23 +1063,69 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* Payment info */}
-              <div className="pt-2 space-y-2">
-                <p className="text-sm text-gray-500">
-                  {t('orders.paymentMethod')}: <span className="font-medium capitalize">{selectedOrder.paymentMethod}</span>
-                </p>
-                {(selectedOrder.paymentMethod === 'mercadopago' || selectedOrder.paymentMethod === 'stripe') && (() => {
-                  const badge = getPaymentBadge(selectedOrder.paymentStatus)
-                  return (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">{lang === 'es' ? 'Estado del pago' : 'Payment status'}:</span>
+              {/* Payment info + actions */}
+              <div className="pt-2 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-sm text-gray-500">
+                    {t('orders.paymentMethod')}: <span className="font-medium capitalize">{selectedOrder.paymentMethod || '-'}</span>
+                  </p>
+                  {(() => {
+                    const badge = getPaymentBadge(selectedOrder.paymentStatus)
+                    return (
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.bg}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
                         {badge.label}
                       </span>
+                    )
+                  })()}
+                </div>
+
+                {selectedOrder.paidAt && (
+                  <p className="text-xs text-gray-500">
+                    Pagado el {formatDate(selectedOrder.paidAt as Date)}
+                    {selectedOrder.paymentNote && <span className="ml-1 text-gray-400">· {selectedOrder.paymentNote}</span>}
+                  </p>
+                )}
+
+                {/* Action buttons — hidden for cancelled */}
+                {selectedOrder.status !== 'cancelled' && selectedOrder.paymentStatus !== 'paid' && (
+                  <div className="bg-[#f0f7ff] border border-[#1e3a5f]/15 rounded-xl p-3 space-y-2.5">
+                    <div className="flex items-start gap-2">
+                      <svg className="w-4 h-4 text-[#2d6cb5] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-[#1e3a5f]">Este pedido esta pendiente de pago</p>
+                        <p className="text-[11px] text-[#2d6cb5] mt-0.5">Marcalo como pagado cuando recibas el dinero.</p>
+                      </div>
                     </div>
-                  )
-                })()}
+                    <input
+                      type="text"
+                      value={paymentNoteInput}
+                      onChange={e => setPaymentNoteInput(e.target.value)}
+                      placeholder="Nota opcional (ej: referencia, banco...)"
+                      className="w-full px-3 py-1.5 border border-[#1e3a5f]/20 bg-white rounded-md text-xs focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                    />
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => { handleMarkPaid(selectedOrder, paymentNoteInput); setPaymentNoteInput('') }}
+                        disabled={markingPaid || completingSale}
+                        className="flex-1 px-3 py-2 bg-white border border-[#1e3a5f]/25 text-[#1e3a5f] rounded-lg hover:bg-[#1e3a5f]/5 transition-colors text-xs font-medium disabled:opacity-40"
+                      >
+                        {markingPaid ? 'Registrando...' : 'Marcar como pagado'}
+                      </button>
+                      {selectedOrder.status !== 'delivered' && (
+                        <button
+                          onClick={() => { handleCompleteSale(selectedOrder); setPaymentNoteInput('') }}
+                          disabled={markingPaid || completingSale}
+                          className="flex-1 px-3 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-xs font-medium disabled:opacity-40"
+                        >
+                          {completingSale ? 'Completando...' : 'Completar venta (entregado + pagado)'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* CJ Dropshipping fulfillment */}
@@ -1113,6 +1295,16 @@ export default function Orders() {
           </div>
         </div>
       )}
+
+      {/* Manual sale modal */}
+      <NewSaleModal
+        open={showNewSale}
+        onClose={() => setShowNewSale(false)}
+        onCreated={(order) => {
+          setOrders(prev => [order, ...prev])
+          showToast(`Venta ${order.orderNumber} registrada`, 'success')
+        }}
+      />
     </div>
   )
 }

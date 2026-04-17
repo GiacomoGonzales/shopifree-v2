@@ -81,6 +81,9 @@ export interface Store {
   timezone?: string
   language?: string             // 'es', 'en'
 
+  // === CATÁLOGO ===
+  catalogSettings?: StoreCatalogSettings
+
   // === TEMA ===
   themeId?: string              // ID del tema seleccionado
   themeSettings?: {
@@ -126,6 +129,12 @@ export interface Store {
   // === META ===
   createdAt: Date
   updatedAt: Date
+}
+
+export interface StoreCatalogSettings {
+  showOutOfStock?: boolean      // If true, show products with stock 0 in catalog (with "Agotado" badge). If false, they are hidden. Default true.
+  showLowStockBadge?: boolean   // If true, show a "low stock" badge on cards when remaining units are at/below threshold. Default false.
+  lowStockThreshold?: number    // Number of units considered "low stock". Default 5.
 }
 
 export interface StoreAnnouncement {
@@ -506,9 +515,15 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 
   // Pago
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer' | 'cash'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer' | 'cash' | 'card' | 'other'
   paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded'
   paymentId?: string            // ID de MercadoPago
+  paidAt?: Date                 // When payment was confirmed (marks real income for cash flow)
+  paymentNote?: string          // Optional note: reference #, terminal, etc.
+
+  // Origen del pedido (para distinguir ventas online vs manuales)
+  channel?: 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'
+  manual?: boolean              // true if created from Dashboard (Nueva venta), false/undefined if from storefront
 
   // Notas
   notes?: string

@@ -83,6 +83,11 @@ export default function Settings() {
     deliveryEnabled: true
   })
 
+  // Catalog settings (low stock badge + show out-of-stock products)
+  const [showOutOfStock, setShowOutOfStock] = useState(true)
+  const [showLowStockBadge, setShowLowStockBadge] = useState(false)
+  const [lowStockThreshold, setLowStockThreshold] = useState(5)
+
   // Expanded zones for hierarchical selector
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
   const [expandedProvs, setExpandedProvs] = useState<Set<string>>(new Set())
@@ -141,6 +146,13 @@ export default function Settings() {
           if (storeData.shipping) {
             setShipping(storeData.shipping)
           }
+
+          // Catalog settings
+          if (storeData.catalogSettings) {
+            setShowOutOfStock(storeData.catalogSettings.showOutOfStock !== false)
+            setShowLowStockBadge(storeData.catalogSettings.showLowStockBadge === true)
+            setLowStockThreshold(storeData.catalogSettings.lowStockThreshold ?? 5)
+          }
         }
       } catch (error) {
         console.error('Error fetching store:', error)
@@ -196,6 +208,11 @@ export default function Settings() {
           ...(shipping.nationalCost != null ? { nationalCost: shipping.nationalCost } : { nationalCost: null }),
           internationalShipping: shipping.internationalShipping || false,
           ...(shipping.internationalCost != null ? { internationalCost: shipping.internationalCost } : { internationalCost: null }),
+        },
+        catalogSettings: {
+          showOutOfStock,
+          showLowStockBadge,
+          lowStockThreshold: Math.max(1, Math.floor(lowStockThreshold)) || 5,
         },
         updatedAt: new Date()
       })
@@ -1228,6 +1245,74 @@ export default function Settings() {
                     </>
                   )}
                 </>
+              )}
+            </div>
+          </div>
+
+          {/* Catalog display settings */}
+          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Catalogo</h2>
+            <p className="text-sm text-gray-500 mb-4">Como se muestran los productos con poco o sin stock en la tienda</p>
+
+            <div className="space-y-4">
+              {/* Show out-of-stock */}
+              <div className="flex items-start justify-between gap-4 py-2 border-b border-gray-100">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900">Mostrar productos agotados</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Si esta activo, los productos sin stock siguen apareciendo en el catalogo con la etiqueta "Agotado" y el boton de compra deshabilitado. Si lo desactivas, desaparecen del catalogo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowOutOfStock(!showOutOfStock)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+                    showOutOfStock ? 'bg-[#1e3a5f]' : 'bg-gray-200'
+                  }`}
+                  aria-label="Toggle mostrar agotados"
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    showOutOfStock ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+
+              {/* Show low-stock badge */}
+              <div className="flex items-start justify-between gap-4 py-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900">Mostrar aviso de pocas unidades</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Muestra un badge "Pocas unidades" en los productos cuando el stock esta cerca de agotarse. Genera urgencia al cliente.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLowStockBadge(!showLowStockBadge)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+                    showLowStockBadge ? 'bg-[#1e3a5f]' : 'bg-gray-200'
+                  }`}
+                  aria-label="Toggle mostrar low stock"
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    showLowStockBadge ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+
+              {showLowStockBadge && (
+                <div className="pl-0 sm:pl-4 border-l-0 sm:border-l-2 border-gray-100 animate-[slideDown_0.15s_ease-out]">
+                  <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Umbral de pocas unidades</label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    El badge aparece cuando el stock queda en este numero o menos.
+                  </p>
+                  <input
+                    type="number"
+                    min="1"
+                    value={lowStockThreshold}
+                    onChange={(e) => setLowStockThreshold(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-32 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                  />
+                </div>
               )}
             </div>
           </div>

@@ -52,6 +52,8 @@ export interface ThemeTranslations {
   // Stock
   outOfStock: string
   stockLimit: string
+  lowStock: string              // "Pocas unidades" / "Low stock"
+  unitsLeft: string             // "quedan {n}" / "{n} left" — {n} is replaced with the count
 
   // Powered by
   poweredBy: string
@@ -287,6 +289,8 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Stock
     outOfStock: 'Agotado',
     stockLimit: 'Max. disponible: ',
+    lowStock: 'Pocas unidades',
+    unitsLeft: 'quedan {n}',
 
     // Powered by
     poweredBy: 'Creado con Shopifree',
@@ -521,6 +525,8 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Stock
     outOfStock: 'Out of stock',
     stockLimit: 'Max. available: ',
+    lowStock: 'Low stock',
+    unitsLeft: '{n} left',
 
     // Powered by
     poweredBy: 'Powered by Shopifree',
@@ -755,6 +761,8 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     // Stock
     outOfStock: 'Esgotado',
     stockLimit: 'Máx. disponível: ',
+    lowStock: 'Poucas unidades',
+    unitsLeft: 'restam {n}',
 
     // Powered by
     poweredBy: 'Criado com Shopifree',

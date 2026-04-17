@@ -18,7 +18,10 @@ interface Expense {
 }
 
 interface PeriodStats {
-  income: number
+  income: number        // = collected (cash basis for P&L)
+  invoiced: number      // delivered orders (ventas)
+  collected: number     // paid orders (dinero cobrado)
+  receivable: number    // facturado pendiente de cobro
   cogs: number
   grossProfit: number
   opex: number
@@ -26,6 +29,7 @@ interface PeriodStats {
   grossMarginPct: number
   netMarginPct: number
   deliveredCount: number
+  paidCount: number
   avgTicket: number
   pendingCount: number
   pendingRevenue: number
@@ -36,18 +40,28 @@ function computeStats(orders: Order[], expenses: Expense[], products: Product[])
   const costById = new Map<string, number>()
   products.forEach(p => costById.set(p.id, p.cost || 0))
 
+  const valid = orders.filter(o => o.status !== 'cancelled')
   const delivered = orders.filter(o => o.status === 'delivered')
+  const paid = valid.filter(o => o.paymentStatus === 'paid')
   const cancelled = orders.filter(o => o.status === 'cancelled')
   const pending = orders.filter(o => !['delivered', 'cancelled'].includes(o.status))
 
-  const income = delivered.reduce((sum, o) => sum + (o.total || 0), 0)
-  const cogs = delivered.reduce((sum, o) => {
+  const invoiced = delivered.reduce((sum, o) => sum + (o.total || 0), 0)
+  const collected = paid.reduce((sum, o) => sum + (o.total || 0), 0)
+  const income = collected  // cash basis
+
+  const cogs = paid.reduce((sum, o) => {
     const orderCost = (o.items || []).reduce((s, item) => {
       const unitCost = costById.get(item.productId) || 0
       return s + unitCost * item.quantity
     }, 0)
     return sum + orderCost
   }, 0)
+
+  const receivable = valid
+    .filter(o => o.status !== 'pending' && o.paymentStatus !== 'paid' && o.paymentStatus !== 'refunded')
+    .reduce((sum, o) => sum + (o.total || 0), 0)
+
   const opex = expenses.filter(e => e.category !== 'Inventario').reduce((sum, e) => sum + e.amount, 0)
 
   const grossProfit = income - cogs
@@ -55,6 +69,9 @@ function computeStats(orders: Order[], expenses: Expense[], products: Product[])
 
   return {
     income,
+    invoiced,
+    collected,
+    receivable,
     cogs,
     grossProfit,
     opex,
@@ -62,7 +79,8 @@ function computeStats(orders: Order[], expenses: Expense[], products: Product[])
     grossMarginPct: income > 0 ? (grossProfit / income) * 100 : 0,
     netMarginPct: income > 0 ? (netProfit / income) * 100 : 0,
     deliveredCount: delivered.length,
-    avgTicket: delivered.length > 0 ? income / delivered.length : 0,
+    paidCount: paid.length,
+    avgTicket: delivered.length > 0 ? invoiced / delivered.length : 0,
     pendingCount: pending.length,
     pendingRevenue: pending.reduce((s, o) => s + (o.total || 0), 0),
     cancelledCount: cancelled.length,
@@ -287,7 +305,14 @@ export default function FinanceDashboard() {
         <>
           {/* Main KPIs with period-over-period */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <KPICard label="Ingresos" value={fmt(current.income)} sub={`${current.deliveredCount} ventas`} delta={incomeDelta} fmtPct={fmtPct} accent="green" />
+            <KPICard
+              label="Cobrado"
+              value={fmt(current.collected)}
+              sub={current.receivable > 0 ? `facturado ${fmt(current.invoiced)}` : `${current.paidCount} pagos`}
+              delta={incomeDelta}
+              fmtPct={fmtPct}
+              accent="green"
+            />
             <KPICard label="Utilidad neta" value={fmt(current.netProfit)} sub={`margen ${current.netMarginPct.toFixed(1)}%`} delta={netDelta} fmtPct={fmtPct} accent={current.netProfit >= 0 ? 'blue' : 'red'} />
             <KPICard label="Gastos operativos" value={fmt(current.opex)} sub="sin inventario" delta={opexDelta} fmtPct={fmtPct} accent="red" inverted />
             <KPICard label="Ticket promedio" value={fmt(current.avgTicket)} sub="por venta" delta={ticketDelta} fmtPct={fmtPct} accent="gray" />
@@ -308,7 +333,7 @@ export default function FinanceDashboard() {
               <Link to={localePath('/finance/cashflow')} className="text-xs text-blue-500 hover:text-blue-700">Ver detalle →</Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <PnLCell label="Ingresos" value={fmt(current.income)} color="text-green-600" />
+              <PnLCell label="Ingresos (cobrado)" value={fmt(current.collected)} sub={current.invoiced !== current.collected ? `facturado ${fmt(current.invoiced)}` : undefined} color="text-green-600" />
               <PnLCell label="Utilidad bruta" value={fmt(current.grossProfit)} sub={`margen ${current.grossMarginPct.toFixed(1)}%`} color={current.grossProfit >= 0 ? 'text-gray-900' : 'text-red-500'} />
               <PnLCell label="Utilidad neta" value={fmt(current.netProfit)} sub={`margen ${current.netMarginPct.toFixed(1)}%`} color={current.netProfit >= 0 ? 'text-gray-900' : 'text-red-500'} emphasis />
             </div>

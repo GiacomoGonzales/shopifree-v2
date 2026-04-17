@@ -407,13 +407,15 @@ export const orderService = {
     const random = Math.random().toString(36).substring(2, 6).toUpperCase()
     const orderNumber = `ORD-${timestamp.toString(36).toUpperCase().slice(-4)}${random}`
 
+    // Respect explicit status / paymentStatus from caller (e.g. manual sale created as paid+delivered).
+    // Only default to 'pending' if caller didn't specify.
     await setDoc(newDocRef, {
       ...data,
       storeId,
       orderNumber,
-      status: 'pending',
-      paymentStatus: 'pending',
-      createdAt: new Date(),
+      status: data.status || 'pending',
+      paymentStatus: data.paymentStatus || 'pending',
+      createdAt: data.createdAt || new Date(),
       updatedAt: new Date()
     })
     return { id: newDocRef.id, orderNumber }
@@ -422,6 +424,13 @@ export const orderService = {
   async updateStatus(storeId: string, orderId: string, status: Order['status']): Promise<void> {
     await updateDoc(doc(db, 'stores', storeId, 'orders', orderId), {
       status,
+      updatedAt: new Date()
+    })
+  },
+
+  async update(storeId: string, orderId: string, data: Partial<Order>): Promise<void> {
+    await updateDoc(doc(db, 'stores', storeId, 'orders', orderId), {
+      ...data,
       updatedAt: new Date()
     })
   },
