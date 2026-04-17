@@ -100,7 +100,21 @@ platform :ios do
       version_number: ENV["VERSION_NAME"]
     )
 
-    # 6) Build + sign
+    # 6) Force manual code signing with the match profile. Capacitor's generated
+    # Xcode project defaults to automatic signing, which ignores the profile
+    # match just installed and tries to generate its own — impossible in CI
+    # without an Apple ID login.
+    update_code_signing_settings(
+      path: "App.xcodeproj",
+      use_automatic_signing: false,
+      targets: ["App"],
+      bundle_identifier: bundle_id,
+      profile_name: "match AppStore #{bundle_id}",
+      code_sign_identity: "Apple Distribution",
+      team_id: ENV["APPLE_TEAM_ID"]
+    )
+
+    # 7) Build + sign
     build_app(
       scheme: "App",
       workspace: "App.xcworkspace",
@@ -108,7 +122,12 @@ platform :ios do
       configuration: "Release",
       clean: true,
       output_directory: "./build",
-      output_name: "App.ipa"
+      output_name: "App.ipa",
+      export_options: {
+        provisioningProfiles: {
+          bundle_id => "match AppStore #{bundle_id}"
+        }
+      }
     )
 
     # 7) Upload to TestFlight
