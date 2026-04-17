@@ -1,0 +1,161 @@
+name: Build store app (iOS)
+
+# ⚠️  STATUS: scaffold only. Will fail until the following are configured:
+#
+#   GitHub Secrets:
+#     MATCH_GIT_URL              — Private git repo URL hosting encrypted certs/profiles (Fastlane Match)
+#     MATCH_PASSWORD             — Password to decrypt Match certs
+#     MATCH_GIT_BASIC_AUTHORIZATION — base64 of "user:personal-access-token" (if Match repo is GitHub)
+#     APPSTORE_API_KEY_ID        — App Store Connect API Key ID
+#     APPSTORE_API_ISSUER_ID     — App Store Connect API Key Issuer ID
+#     APPSTORE_API_KEY_CONTENT   — base64 of the .p8 private key file
+#     APPLE_TEAM_ID              — Your Apple Developer Team ID (10 chars)
+#     (existing) FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY / FIREBASE_STORAGE_BUCKET
+#
+#   Repo files:
+#     fastlane/Fastfile, fastlane/Appfile, fastlane/Matchfile — stubs present, need customization
+#
+#   Apple setup (done once):
+#     - Apple Developer Program subscription ($99/year)
+#     - App Store Connect account
+#     - Generate an API Key in App Store Connect → Users and Access → Keys
+#     - Create a private git repo to host Match certs
+#     - Run `fastlane match appstore --generate_apple_certs` locally once to seed the Match repo
+#
+# See mobile/IOS-SETUP.md for the full walkthrough.
+
+on:
+  workflow_dispatch:
+    inputs:
+      storeId:
+        description: 'Firestore store ID to build for'
+        required: true
+        type: string
+      buildNumber:
+        description: 'iOS CFBundleVersion (auto-increment if empty)'
+        required: false
+        type: string
+      versionName:
+        description: 'iOS CFBundleShortVersionString (e.g. 1.0.0)'
+        required: false
+        default: '1.0.0'
+        type: string
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Mark Firestore status = running
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/ios-set-build-status.ts running "$RUN_URL"
+
+      - name: Generate white-label config + icons + splash
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/build-config.ts ${{ github.event.inputs.storeId }}
+
+      - name: Build web assets (white-label mode)
+        run: npm run wl:build
+
+      - name: Sync Capacitor → iOS
+        run: npx cap sync ios
+
+      - name: Resolve build number
+        id: versioning
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          INPUT_BUILD_NUMBER: ${{ github.event.inputs.buildNumber }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/ios-resolve-version.ts
+
+      - name: Install Fastlane
+        run: |
+          cd ios/App
+          gem install bundler
+          # Bundler Gemfile optional — direct fastlane install also works:
+          gem install fastlane --no-document
+
+      - name: Decode App Store Connect API key
+        env:
+          APPSTORE_API_KEY_CONTENT: ${{ secrets.APPSTORE_API_KEY_CONTENT }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_API_KEY_CONTENT" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey.p8
+
+      - name: Fastlane match + gym + pilot
+        working-directory: ios/App
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          STORE_ID: ${{ github.event.inputs.storeId }}
+        run: fastlane release
+
+      - name: Locate IPA artifact
+        id: ipa
+        run: |
+          IPA_PATH=$(find ios -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "No IPA produced"
+            exit 1
+          fi
+          echo "path=$IPA_PATH" >> $GITHUB_OUTPUT
+          echo "name=$(basename $IPA_PATH)" >> $GITHUB_OUTPUT
+
+      - name: Upload IPA to Firebase Storage + update Firestore
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          IPA_PATH: ${{ steps.ipa.outputs.path }}
+          BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: npx tsx mobile/ci/ios-upload-artifact.ts
+
+      - name: Upload IPA as workflow artifact (backup)
+        uses: actions/upload-artifact@v4
+        if: success() && steps.ipa.outputs.path != ''
+        with:
+          name: app-ipa-${{ github.event.inputs.storeId }}
+          path: ${{ steps.ipa.outputs.path }}
+          retention-days: 30
+
+      - name: Mark Firestore status = failed (on failure)
+        if: failure()
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/ios-set-build-status.ts failed "$RUN_URL" "Check the Actions log for details"

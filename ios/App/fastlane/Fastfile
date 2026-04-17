@@ -1,0 +1,85 @@
+# Fastfile — white-label iOS release lane for Shopifree store apps.
+#
+# Usage from CI:
+#   fastlane release
+#
+# Expects env vars:
+#   STORE_ID, BUILD_NUMBER, VERSION_NAME
+#   APPSTORE_API_KEY_ID, APPSTORE_API_ISSUER_ID
+#   APPLE_TEAM_ID, MATCH_GIT_URL, MATCH_PASSWORD, MATCH_GIT_BASIC_AUTHORIZATION
+#
+# The App Store Connect API key (.p8) is expected at
+#   ~/.appstoreconnect/private_keys/AuthKey.p8
+# (decoded by the workflow before fastlane runs).
+
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :release do
+    # 1) Authenticate to App Store Connect via API key (no Apple ID/2FA)
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APPSTORE_API_KEY_ID"],
+      issuer_id: ENV["APPSTORE_API_ISSUER_ID"],
+      key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey.p8"),
+      in_house: false
+    )
+
+    # 2) Read the current bundle id from Info.plist (written by Capacitor sync)
+    bundle_id = get_info_plist_value(
+      path: "App/Info.plist",
+      key: "CFBundleIdentifier"
+    )
+    UI.message("Building bundle id: #{bundle_id}")
+
+    # 3) Ensure the app is registered on App Store Connect (creates it if missing)
+    produce(
+      username: "",                 # not used when api_key is set
+      app_identifier: bundle_id,
+      app_name: get_info_plist_value(path: "App/Info.plist", key: "CFBundleDisplayName") || bundle_id,
+      team_id: ENV["APPLE_TEAM_ID"],
+      skip_itc: false,
+      skip_devcenter: false,
+      api_key: api_key
+    )
+
+    # 4) Sync signing certs + provisioning profiles via Match
+    match(
+      type: "appstore",
+      app_identifier: bundle_id,
+      readonly: true,
+      api_key: api_key
+    )
+
+    # 5) Bump build + version
+    increment_build_number(
+      xcodeproj: "App.xcodeproj",
+      build_number: ENV["BUILD_NUMBER"]
+    )
+    increment_version_number(
+      xcodeproj: "App.xcodeproj",
+      version_number: ENV["VERSION_NAME"]
+    )
+
+    # 6) Build + sign
+    build_app(
+      scheme: "App",
+      workspace: "App.xcworkspace",
+      export_method: "app-store",
+      configuration: "Release",
+      clean: true,
+      output_directory: "./build",
+      output_name: "App.ipa"
+    )
+
+    # 7) Upload to TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+end

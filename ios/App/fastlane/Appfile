@@ -1,0 +1,11 @@
+# Fastlane Appfile — resolved at runtime from env vars set by the workflow.
+#
+# IMPORTANT: bundle_id uses STORE_ID to derive a per-store bundle.
+# The build-config.ts script writes the actual applicationId into capacitor.config.ts
+# at build time; this Appfile just picks it up via Capacitor's Info.plist output.
+
+apple_id(ENV["APPLE_ID"]) # optional, used only for some Apple Dev API calls
+team_id(ENV["APPLE_TEAM_ID"])
+itc_team_id(ENV["APPLE_TEAM_ID"])
+
+# app_identifier is read from the built Info.plist by gym/pilot, no need to hardcode

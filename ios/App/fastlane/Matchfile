@@ -1,0 +1,14 @@
+# Fastlane Matchfile — tells `match` where encrypted certs/profiles live.
+#
+# Prereqs:
+#   - Create a PRIVATE git repo (GitHub/GitLab) to hold the encrypted certs.
+#     Name suggestion: "shopifree-ios-certs"
+#   - Run `fastlane match init` locally, set type=git, URL=your private repo.
+#   - Run `fastlane match appstore --generate_apple_certs` once to seed it.
+#
+# In CI, MATCH_GIT_URL + MATCH_PASSWORD + MATCH_GIT_BASIC_AUTHORIZATION handle auth.
+
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+type("appstore")
+readonly(true)

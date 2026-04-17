@@ -701,7 +701,7 @@ export interface StoreAppConfig {
   iosUrl?: string
   pushEnabled: boolean
 
-  // CI build tracking — updated by the GitHub Actions workflow.
+  // CI build tracking (Android) — updated by the GitHub Actions workflow.
   build?: {
     status: 'idle' | 'queued' | 'running' | 'success' | 'failed'
     runId?: string              // GitHub Actions run ID (for log linking)
@@ -714,6 +714,26 @@ export interface StoreAppConfig {
     startedAt?: Date
     finishedAt?: Date
   }
+
+  // CI build tracking (iOS) — parallel structure for iOS .ipa / TestFlight.
+  // Not operative until Apple Developer account + certs + Fastlane Match are configured.
+  buildIos?: {
+    status: 'idle' | 'queued' | 'running' | 'success' | 'failed'
+    runId?: string
+    runUrl?: string
+    artifactUrl?: string         // Signed URL to download IPA
+    artifactName?: string
+    buildNumber?: number         // iOS CFBundleVersion (auto-incrementing)
+    versionName?: string         // iOS CFBundleShortVersionString
+    testflightUrl?: string       // Public TestFlight link once Fastlane uploads it
+    lastError?: string
+    startedAt?: Date
+    finishedAt?: Date
+  }
+
+  // Apple-specific identifiers (required once iOS is configured)
+  iosBundleId?: string           // e.g. "app.shopifree.store.alienstore" (must match Apple Dev portal)
+  iosTeamId?: string             // Your Apple Team ID (10 chars)
 }
 
 export interface PushToken {

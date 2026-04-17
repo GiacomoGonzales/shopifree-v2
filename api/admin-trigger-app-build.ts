@@ -60,12 +60,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin only' })
     }
 
-    const { storeId, versionName, buildNumber } = req.body as {
+    const { storeId, versionName, buildNumber, platform = 'android' } = req.body as {
       storeId?: string
       versionName?: string
       buildNumber?: string
+      platform?: 'android' | 'ios'
     }
     if (!storeId) return res.status(400).json({ error: 'Missing storeId' })
+    if (platform !== 'android' && platform !== 'ios') {
+      return res.status(400).json({ error: 'platform must be "android" or "ios"' })
+    }
 
     // Verify the store exists and has appConfig
     const storeSnap = await getDb().collection('stores').doc(storeId).get()
@@ -82,7 +86,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server misconfig: GITHUB_TOKEN/GITHUB_REPO missing' })
     }
 
-    const dispatchUrl = `https://api.github.com/repos/${ghRepo}/actions/workflows/build-store-app.yml/dispatches`
+    const workflowFile = platform === 'ios' ? 'build-store-app-ios.yml' : 'build-store-app.yml'
+    const dispatchUrl = `https://api.github.com/repos/${ghRepo}/actions/workflows/${workflowFile}/dispatches`
     const ghRes = await fetch(dispatchUrl, {
       method: 'POST',
       headers: {
@@ -107,11 +112,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(502).json({ error: `GitHub API error: ${ghRes.status}`, detail: errText })
     }
 
-    // Mark status = queued
+    // Mark status = queued on the correct platform field
+    const fieldPrefix = platform === 'ios' ? 'appConfig.buildIos' : 'appConfig.build'
     await getDb().collection('stores').doc(storeId).update({
-      'appConfig.build.status': 'queued',
-      'appConfig.build.lastError': FieldValue.delete(),
-      'appConfig.build.startedAt': FieldValue.serverTimestamp(),
+      [`${fieldPrefix}.status`]: 'queued',
+      [`${fieldPrefix}.lastError`]: FieldValue.delete(),
+      [`${fieldPrefix}.startedAt`]: FieldValue.serverTimestamp(),
     })
 
     return res.status(200).json({ ok: true })
