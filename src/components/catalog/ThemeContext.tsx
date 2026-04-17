@@ -1,7 +1,8 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
+import { setPixelDefaultCurrency } from '../../lib/pixels'
 
 /**
  * Theme configuration that each theme provides
@@ -102,6 +103,11 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
       }
     }
   }, [theme, store.themeSettings])
+
+  // Propagate store currency to pixel helpers so tracking events use the right currency
+  useEffect(() => {
+    setPixelDefaultCurrency(store.currency || 'USD')
+  }, [store.currency])
 
   return (
     <ThemeContext.Provider value={{

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import type { Product } from '../types'
 import type { SelectedModifier } from '../components/catalog/business-type'
+import { trackAddToCart, getPixelDefaultCurrency } from '../lib/pixels'
 
 export interface CartItemExtras {
   selectedVariants?: Record<string, string>
@@ -104,6 +105,20 @@ export function useCart() {
 
       return [...currentItems, newItem]
     })
+    // Fire AddToCart pixel event on successful add (not when blocked by stock)
+    if (!blocked) {
+      const unitPrice = extras?.itemPrice || product.price || 0
+      trackAddToCart({
+        currency: getPixelDefaultCurrency(),
+        value: unitPrice,
+        items: [{
+          id: product.id,
+          name: product.name,
+          price: unitPrice,
+          quantity: 1,
+        }],
+      })
+    }
     return !blocked
   }, [])
 

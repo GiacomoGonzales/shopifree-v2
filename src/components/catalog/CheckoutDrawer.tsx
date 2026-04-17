@@ -173,6 +173,25 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     }
   }, [])
 
+  // Fire InitiateCheckout pixel event when the drawer opens with items
+  useEffect(() => {
+    if (items.length === 0) return
+    import('../../lib/pixels').then(({ trackInitiateCheckout }) => {
+      trackInitiateCheckout({
+        currency: store.currency || 'USD',
+        value: totalPrice,
+        items: items.map(it => ({
+          id: it.product.id,
+          name: it.product.name,
+          price: it.itemPrice || it.product.price || 0,
+          quantity: it.quantity,
+        })),
+      })
+    }).catch(() => { /* silent */ })
+    // Fire once on mount — do not retrigger if items mutate mid-checkout
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

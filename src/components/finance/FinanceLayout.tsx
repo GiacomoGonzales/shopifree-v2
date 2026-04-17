@@ -242,20 +242,50 @@ export default function FinanceLayout() {
           >
             <MenuIcon />
           </button>
-          <Link to={localePath('/finance')}>
-            <img src="/newlogo.png" alt="Shopifree" className="h-5" />
-          </Link>
-          <Link to={localePath('/finance/account')} className="w-8 h-8 flex items-center justify-center">
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-lg object-cover" />
-            ) : (
-              <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-[11px] font-medium text-gray-600">
-                  {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
-                </span>
-              </div>
+          <div className="flex items-center gap-1.5">
+            <Link to={localePath('/finance')}>
+              <img src="/newlogo.png" alt="Shopifree" className="h-[26px]" />
+            </Link>
+            {store && (
+              <Link
+                to={localePath('/finance/subscription')}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                  store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
+                  : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                  : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                }`}
+              >
+                {store.plan}
+              </Link>
             )}
-          </Link>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {/* Open storefront */}
+            {store && (
+              <a
+                href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                title={store.customDomain || `${store.subdomain}.shopifree.app`}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+              </a>
+            )}
+            <Link to={localePath('/finance/account')} className="w-8 h-8 flex items-center justify-center">
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-lg object-cover" />
+              ) : (
+                <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="text-[11px] font-medium text-gray-600">
+                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
         </div>
       </div>
 

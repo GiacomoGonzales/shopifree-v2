@@ -84,6 +84,26 @@ export default function PaymentSuccess() {
     // Show success immediately - don't block on Firestore
     setStatus('success')
 
+    // Fire Purchase pixel event — this is where MP/Stripe conversions confirm.
+    // Gated on a session flag to avoid double-firing if the page remounts.
+    const purchaseFiredKey = `pixelPurchaseFired_${data.orderId}`
+    if (!sessionStorage.getItem(purchaseFiredKey) && data.total && data.items?.length) {
+      sessionStorage.setItem(purchaseFiredKey, '1')
+      import('../../lib/pixels').then(({ trackPurchase }) => {
+        trackPurchase({
+          transactionId: data.orderNumber || data.orderId,
+          currency: data.currency || 'USD',
+          value: data.total || 0,
+          items: (data.items || []).map((it, idx) => ({
+            id: `${data.orderId}-${idx}`,
+            name: it.productName,
+            price: it.itemTotal / Math.max(1, it.quantity),
+            quantity: it.quantity,
+          })),
+        })
+      }).catch(() => { /* silent */ })
+    }
+
     // Clean up localStorage
     localStorage.removeItem('pendingOrder')
 

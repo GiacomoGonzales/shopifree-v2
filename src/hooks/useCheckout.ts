@@ -419,8 +419,26 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       updatedAt: new Date()
     }
 
+    // Fire Purchase pixel event for flows that finalize here (whatsapp/transfer).
+    // For mercadopago/stripe we fire it from PaymentSuccess once the gateway confirms.
+    if (paymentMethod === 'whatsapp' || paymentMethod === 'transfer') {
+      import('../lib/pixels').then(({ trackPurchase }) => {
+        trackPurchase({
+          transactionId: orderNumber,
+          currency: store.currency || 'USD',
+          value: orderTotal,
+          items: (orderData.items || []).map(it => ({
+            id: it.productId,
+            name: it.productName,
+            price: it.price,
+            quantity: it.quantity,
+          })),
+        })
+      }).catch(() => { /* silent */ })
+    }
+
     return createdOrder
-  }, [store.id, data, totalPrice, discountAmount, appliedCoupon, createOrderItems])
+  }, [store.id, store.currency, data, totalPrice, discountAmount, appliedCoupon, createOrderItems])
 
   // WhatsApp message translations
   const getMessageLabels = useCallback(() => {

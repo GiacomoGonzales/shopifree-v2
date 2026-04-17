@@ -50,6 +50,24 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
 
   const activeProduct = drawerProduct || product
 
+  // Track ViewContent (Meta/TikTok/GA4) when a product drawer opens
+  useEffect(() => {
+    if (!activeProduct?.id) return
+    // Lazy import to avoid circular deps with ThemeContext
+    import('../../lib/pixels').then(({ trackViewContent }) => {
+      trackViewContent({
+        currency: currency || 'USD',
+        value: activeProduct.price || 0,
+        items: [{
+          id: activeProduct.id,
+          name: activeProduct.name,
+          price: activeProduct.price || 0,
+          quantity: 1,
+        }],
+      })
+    }).catch(() => { /* swallow — pixels never block UI */ })
+  }, [activeProduct?.id, activeProduct?.price, activeProduct?.name, currency])
+
   // Auto-select variants that have only one available option
   useEffect(() => {
     if (!features.showVariants || !activeProduct.variations?.length) return
