@@ -79,11 +79,14 @@ platform :ios do
       UI.message("App record already exists in App Store Connect.")
     end
 
-    # 4) Sync signing certs + provisioning profiles via Match
+    # 4) Sync signing certs + provisioning profiles via Match.
+    # readonly=false so match can create a per-bundle provisioning profile
+    # on first build of each store. The existing distribution cert in the
+    # match repo is reused — match only ever creates missing profiles.
     match(
       type: "appstore",
       app_identifier: bundle_id,
-      readonly: true,
+      readonly: false,
       api_key: api_key
     )
 
