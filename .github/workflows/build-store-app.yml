@@ -93,7 +93,9 @@ jobs:
 
       - name: Build Android App Bundle
         working-directory: android
-        run: ./gradlew bundleRelease --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon
 
       - name: Locate AAB artifact
         id: aab
@@ -120,7 +122,7 @@ jobs:
 
       - name: Upload AAB as workflow artifact (backup)
         uses: actions/upload-artifact@v4
-        if: always()
+        if: success() && steps.aab.outputs.path != ''
         with:
           name: app-bundle-${{ github.event.inputs.storeId }}
           path: ${{ steps.aab.outputs.path }}
