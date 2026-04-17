@@ -81,6 +81,16 @@ jobs:
       - name: Sync Capacitor → iOS
         run: npx cap sync ios
 
+      - name: Read iOS bundle ID + app name from build metadata
+        id: meta
+        run: |
+          BUNDLE_ID=$(node -p "require('./.build-meta.json').appId")
+          APP_NAME=$(node -p "require('./.build-meta.json').appName")
+          echo "bundle_id=$BUNDLE_ID" >> $GITHUB_OUTPUT
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "Bundle ID: $BUNDLE_ID"
+          echo "App name:  $APP_NAME"
+
       - name: Resolve build number
         id: versioning
         env:
@@ -117,6 +127,8 @@ jobs:
           BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
           VERSION_NAME: ${{ github.event.inputs.versionName }}
           STORE_ID: ${{ github.event.inputs.storeId }}
+          BUNDLE_ID: ${{ steps.meta.outputs.bundle_id }}
+          APP_NAME: ${{ steps.meta.outputs.app_name }}
         run: fastlane release
 
       - name: Locate IPA artifact

@@ -29,22 +29,25 @@ platform :ios do
       in_house: false
     )
 
-    # 2) Read the current bundle id from Info.plist (written by Capacitor sync)
-    bundle_id = get_info_plist_value(
-      path: "App/Info.plist",
-      key: "CFBundleIdentifier"
-    )
+    # 2) Bundle id + app name come from the workflow (read from .build-meta.json).
+    # Info.plist still has unexpanded $(PRODUCT_BUNDLE_IDENTIFIER) at this point,
+    # so we can't read it from there — Capacitor writes the real value into
+    # the Xcode project, and Xcode resolves it only at build time.
+    bundle_id = ENV["BUNDLE_ID"]
+    app_name  = ENV["APP_NAME"] || bundle_id
+    UI.user_error!("BUNDLE_ID env var is missing") if bundle_id.nil? || bundle_id.empty?
     UI.message("Building bundle id: #{bundle_id}")
 
-    # 3) Ensure the app is registered on App Store Connect (creates it if missing)
+    # 3) Ensure the app is registered on App Store Connect (creates it if missing).
+    # `produce` doesn't accept an api_key param in this fastlane version, but it
+    # picks up the token set globally by `app_store_connect_api_key` above.
     produce(
-      username: "",                 # not used when api_key is set
       app_identifier: bundle_id,
-      app_name: get_info_plist_value(path: "App/Info.plist", key: "CFBundleDisplayName") || bundle_id,
+      app_name: app_name,
       team_id: ENV["APPLE_TEAM_ID"],
+      itc_team_id: ENV["APPLE_TEAM_ID"],
       skip_itc: false,
-      skip_devcenter: false,
-      api_key: api_key
+      skip_devcenter: false
     )
 
     # 4) Sync signing certs + provisioning profiles via Match

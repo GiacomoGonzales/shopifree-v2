@@ -355,6 +355,10 @@ export default config;
   const envPath = resolve(process.cwd(), '.env.whitelabel')
   writeFileSync(envPath, envContent, 'utf-8')
 
+  // Write build metadata (used by CI workflows to read bundle id + name for signing)
+  const metaPath = resolve(process.cwd(), '.build-meta.json')
+  writeFileSync(metaPath, JSON.stringify({ appId, appName, subdomain }, null, 2), 'utf-8')
+
   // Update Android strings.xml with store name and app ID
   const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
 <resources>
