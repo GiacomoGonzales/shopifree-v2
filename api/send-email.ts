@@ -286,6 +286,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true })
     }
 
+    // App published notification → send to store owner, no dedup
+    if (type === 'app-published') {
+      const { androidUrl } = req.body as { androidUrl?: string }
+      if (!email || !androidUrl) {
+        return res.status(400).json({ error: 'Missing email or androidUrl for app-published' })
+      }
+      const resend = new Resend(apiKey)
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'Giacomo de Shopifree <hola@shopifree.app>'
+      const label = appName || storeName || 'tu tienda'
+      await resend.emails.send({
+        from: fromEmail,
+        to: email,
+        subject: `${label} ya esta en Play Store`,
+        html: `
+          <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+            <h2 style="color: #1e3a5f;">Tu app ya esta publicada</h2>
+            <p>Hola! La app de <strong>${label}</strong> ya esta disponible en Google Play Store.</p>
+            <p style="margin: 24px 0;">
+              <a href="${androidUrl}" style="display: inline-block; padding: 12px 20px; background: #1e3a5f; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">Ver en Play Store</a>
+            </p>
+            <p style="color: #666; font-size: 14px;">Tus clientes ya pueden descargarla. Ahora podes enviarles notificaciones push desde tu panel de Mi App.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 32px;">Gracias por confiar en Shopifree 💙</p>
+          </div>
+        `,
+        text: `Tu app de ${label} ya esta en Play Store: ${androidUrl}`,
+      })
+      return res.status(200).json({ ok: true })
+    }
+
     if (!type || !email || !storeId) {
       return res.status(400).json({ error: 'Missing required fields: type, email, storeId' })
     }

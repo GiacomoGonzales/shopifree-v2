@@ -1,6 +1,10 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+// CI can override versionCode/versionName and signing via gradle.properties.
+def ciVersionCode = (project.hasProperty('APP_VERSION_CODE')) ? project.APP_VERSION_CODE.toInteger() : 1
+def ciVersionName = (project.hasProperty('APP_VERSION_NAME')) ? project.APP_VERSION_NAME : "1.0"
+
 android {
     namespace "app.shopifree.mobile"
     compileSdk rootProject.ext.compileSdkVersion
@@ -8,8 +12,8 @@ android {
         applicationId "app.shopifree.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode ciVersionCode
+        versionName ciVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -19,10 +23,19 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('shopifree-release.jks')
-            storePassword 'shopifree2026'
-            keyAlias 'shopifree'
-            keyPassword 'shopifree2026'
+            // CI build: reads from gradle.properties (populated by the workflow).
+            // Local dev fallback: reuses the original shopifree-release.jks so `cap open android` still works.
+            if (project.hasProperty('RELEASE_STORE_FILE')) {
+                storeFile file(project.RELEASE_STORE_FILE)
+                storePassword project.RELEASE_STORE_PASSWORD
+                keyAlias project.RELEASE_KEY_ALIAS
+                keyPassword project.RELEASE_KEY_PASSWORD
+            } else {
+                storeFile file('shopifree-release.jks')
+                storePassword 'shopifree2026'
+                keyAlias 'shopifree'
+                keyPassword 'shopifree2026'
+            }
         }
     }
     buildTypes {

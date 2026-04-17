@@ -700,6 +700,20 @@ export interface StoreAppConfig {
   androidUrl?: string
   iosUrl?: string
   pushEnabled: boolean
+
+  // CI build tracking — updated by the GitHub Actions workflow.
+  build?: {
+    status: 'idle' | 'queued' | 'running' | 'success' | 'failed'
+    runId?: string              // GitHub Actions run ID (for log linking)
+    runUrl?: string             // Direct URL to the run on github.com
+    artifactUrl?: string        // Signed URL to download AAB (Firebase Storage)
+    artifactName?: string       // e.g. "alienstore-v3.aab"
+    buildNumber?: number        // Android versionCode (auto-incrementing)
+    versionName?: string        // e.g. "1.0.3"
+    lastError?: string
+    startedAt?: Date
+    finishedAt?: Date
+  }
 }
 
 export interface PushToken {

@@ -55,6 +55,7 @@ import AppShell from './components/layout/AppShell'
 
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout'
+import AdminAppBuilds from './pages/admin/AppBuilds'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminStores from './pages/admin/Stores'
 import AdminStoreDetail from './pages/admin/StoreDetail'
@@ -247,6 +248,7 @@ function AppRoutes() {
           <Route path="paid-stores" element={<AdminPaidStores />} />
           <Route path="plans" element={<AdminPlans />} />
           <Route path="feedback" element={<AdminFeedback />} />
+          <Route path="app-builds" element={<AdminAppBuilds />} />
         </Route>
       </Route>
 

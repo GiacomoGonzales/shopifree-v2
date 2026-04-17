@@ -54,6 +54,14 @@ function FeedbackIcon() {
   )
 }
 
+function AppBuildsIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
 
 function MenuIcon() {
   return (
@@ -85,6 +93,7 @@ export default function AdminLayout() {
     { name: 'Pagadas', path: localePath('/admin/paid-stores'), icon: PaidStoresIcon },
     { name: 'Usuarios', path: localePath('/admin/users'), icon: UsersIcon },
     { name: 'Planes', path: localePath('/admin/plans'), icon: PlansIcon },
+    { name: 'App Builds', path: localePath('/admin/app-builds'), icon: AppBuildsIcon },
     { name: 'Feedback', path: localePath('/admin/feedback'), icon: FeedbackIcon },
   ], [localePath])
 
