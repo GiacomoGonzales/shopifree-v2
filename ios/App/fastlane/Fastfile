@@ -38,17 +38,40 @@ platform :ios do
     UI.user_error!("BUNDLE_ID env var is missing") if bundle_id.nil? || bundle_id.empty?
     UI.message("Building bundle id: #{bundle_id}")
 
-    # 3) Ensure the app is registered on App Store Connect (creates it if missing).
-    # `produce` doesn't accept an api_key param in this fastlane version, but it
-    # picks up the token set globally by `app_store_connect_api_key` above.
-    produce(
-      app_identifier: bundle_id,
-      app_name: app_name,
-      team_id: ENV["APPLE_TEAM_ID"],
-      itc_team_id: ENV["APPLE_TEAM_ID"],
-      skip_itc: false,
-      skip_devcenter: false
-    )
+    # 3) Ensure the bundle id is registered in Developer Portal + App Store Connect.
+    # We use Spaceship::ConnectAPI directly (token was set globally in step 1)
+    # because `produce` in this fastlane version still requires an Apple ID
+    # username, which would force interactive 2FA in CI.
+    require "spaceship"
+
+    UI.message("Checking Developer Portal for bundle id: #{bundle_id}")
+    if Spaceship::ConnectAPI::BundleId.find(bundle_id).nil?
+      UI.message("Registering bundle id in Developer Portal…")
+      Spaceship::ConnectAPI::BundleId.create(
+        name: app_name.gsub(/[^a-zA-Z0-9 ]/, "").strip,
+        identifier: bundle_id,
+        platform: "IOS"
+      )
+      UI.success("Bundle id registered: #{bundle_id}")
+    else
+      UI.message("Bundle id already registered.")
+    end
+
+    UI.message("Checking App Store Connect for app: #{bundle_id}")
+    if Spaceship::ConnectAPI::App.find(bundle_id).nil?
+      UI.message("Creating app record in App Store Connect…")
+      Spaceship::ConnectAPI::App.create(
+        name: app_name,
+        version_string: ENV["VERSION_NAME"] || "1.0",
+        sku: bundle_id.gsub(".", "_"),
+        primary_locale: "en-US",
+        bundle_id: bundle_id,
+        platforms: ["IOS"]
+      )
+      UI.success("App record created in App Store Connect: #{app_name}")
+    else
+      UI.message("App record already exists in App Store Connect.")
+    end
 
     # 4) Sync signing certs + provisioning profiles via Match
     match(
