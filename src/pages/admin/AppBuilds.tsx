@@ -271,7 +271,6 @@ export default function AppBuilds() {
                       canMarkPublished={false}
                       isPublished={false}
                       artifactLabel="IPA"
-                      disabledReason="Requiere setup de Apple Developer (ver mobile/IOS-SETUP.md)"
                     />
                   </div>
                 </div>
