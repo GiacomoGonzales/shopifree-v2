@@ -1,0 +1,135 @@
+name: Build main app (iOS)
+
+# Builds the Shopifree platform app itself (bundle app.shopifree.mobile).
+# Not to be confused with build-store-app-ios.yml, which builds per-store
+# white-label catalogs. This one uses the repo's default capacitor.config.ts
+# and ships the full dashboard/admin UI.
+#
+# Trigger: workflow_dispatch (manually, via gh CLI, or from the admin panel).
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildNumber:
+        description: 'iOS CFBundleVersion (auto-increment if empty)'
+        required: false
+        type: string
+      versionName:
+        description: 'iOS CFBundleShortVersionString (e.g. 1.0.0)'
+        required: false
+        default: '1.0.0'
+        type: string
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Mark Firestore status = running
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/main-set-build-status.ts ios running "$RUN_URL"
+
+      - name: Build web assets
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+        run: npm run build
+
+      - name: Sync Capacitor → iOS
+        run: npx cap sync ios
+
+      - name: Resolve build number
+        id: versioning
+        env:
+          INPUT_BUILD_NUMBER: ${{ github.event.inputs.buildNumber }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/main-resolve-version.ts ios
+
+      - name: Install Fastlane
+        run: |
+          cd ios/App
+          gem install bundler
+          gem install fastlane --no-document
+
+      - name: Decode App Store Connect API key
+        env:
+          APPSTORE_API_KEY_CONTENT: ${{ secrets.APPSTORE_API_KEY_CONTENT }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_API_KEY_CONTENT" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey.p8
+
+      - name: Fastlane match + gym + pilot
+        working-directory: ios/App
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          BUNDLE_ID: app.shopifree.mobile
+          APP_NAME: Shopifree
+        run: fastlane release
+
+      - name: Locate IPA artifact
+        id: ipa
+        run: |
+          IPA_PATH=$(find ios -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "No IPA produced"
+            exit 1
+          fi
+          echo "path=$IPA_PATH" >> $GITHUB_OUTPUT
+
+      - name: Upload IPA to Firebase Storage + update Firestore
+        env:
+          ARTIFACT_PATH: ${{ steps.ipa.outputs.path }}
+          BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: npx tsx mobile/ci/main-upload-artifact.ts ios
+
+      - name: Upload IPA as workflow artifact (backup)
+        uses: actions/upload-artifact@v4
+        if: success() && steps.ipa.outputs.path != ''
+        with:
+          name: shopifree-ios-ipa
+          path: ${{ steps.ipa.outputs.path }}
+          retention-days: 30
+
+      - name: Mark Firestore status = failed (on failure)
+        if: failure()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/main-set-build-status.ts ios failed "$RUN_URL" "Check the Actions log for details"

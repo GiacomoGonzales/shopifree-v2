@@ -1,0 +1,134 @@
+name: Build main app (Android)
+
+# Builds the Shopifree platform app itself (applicationId app.shopifree.mobile).
+# Not to be confused with build-store-app.yml, which builds per-store
+# white-label catalogs. This one uses the repo's default capacitor.config.ts
+# and ships the full dashboard/admin UI.
+#
+# Trigger: workflow_dispatch (manually, via gh CLI, or from the admin panel).
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildNumber:
+        description: 'Android versionCode (auto-increment if empty)'
+        required: false
+        type: string
+      versionName:
+        description: 'Android versionName (e.g. 1.0.0)'
+        required: false
+        default: '1.0.0'
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Mark Firestore status = running
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/main-set-build-status.ts android running "$RUN_URL"
+
+      - name: Build web assets
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+        run: npm run build
+
+      - name: Sync Capacitor → Android
+        run: npx cap sync android
+
+      - name: Decode Android keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+
+      - name: Resolve versionCode
+        id: versioning
+        env:
+          INPUT_BUILD_NUMBER: ${{ github.event.inputs.buildNumber }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/main-resolve-version.ts android
+
+      - name: Write android/gradle.properties (signing config)
+        run: |
+          cat >> android/gradle.properties <<EOF
+          RELEASE_STORE_FILE=release.keystore
+          RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+          APP_VERSION_CODE=${{ steps.versioning.outputs.buildNumber }}
+          APP_VERSION_NAME=${{ github.event.inputs.versionName }}
+          EOF
+
+      - name: Build Android App Bundle
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Locate AAB artifact
+        id: aab
+        run: |
+          AAB_PATH=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
+          if [ -z "$AAB_PATH" ]; then
+            echo "No AAB produced"
+            exit 1
+          fi
+          echo "path=$AAB_PATH" >> $GITHUB_OUTPUT
+
+      - name: Upload AAB to Firebase Storage + update Firestore
+        env:
+          ARTIFACT_PATH: ${{ steps.aab.outputs.path }}
+          BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: npx tsx mobile/ci/main-upload-artifact.ts android
+
+      - name: Upload AAB as workflow artifact (backup)
+        uses: actions/upload-artifact@v4
+        if: success() && steps.aab.outputs.path != ''
+        with:
+          name: shopifree-android-aab
+          path: ${{ steps.aab.outputs.path }}
+          retention-days: 30
+
+      - name: Mark Firestore status = failed (on failure)
+        if: failure()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/main-set-build-status.ts android failed "$RUN_URL" "Check the Actions log for details"
