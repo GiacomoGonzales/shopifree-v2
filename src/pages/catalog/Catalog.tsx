@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import StoreSEO from '../../components/seo/StoreSEO'
@@ -137,31 +137,12 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         const storeData = storeSnapshot.docs[0].data() as Store
         const storeId = storeSnapshot.docs[0].id
 
-        // Auto-downgrade expired trials in Firestore.
-        //
-        // `planExpiresAt` is the admin-comp override (set only via the admin panel):
-        //   - field absent (undefined) → never touched by admin → normal trial rules apply
-        //   - null                     → admin comped indefinitely → never downgrade
-        //   - future Date              → admin comped with expiration still in the future → skip
-        //   - past Date                → admin comp expired → fall through to trial downgrade
-        if (storeData.trialEndsAt && !storeData.subscription && (storeData.plan === 'pro' || storeData.plan === 'business')) {
-          const toDate = (d: any): Date =>
-            d instanceof Date ? d
-              : (typeof d === 'object' && d && 'toDate' in d) ? d.toDate()
-              : new Date(d as string)
-
-          const compIsIndefinite = storeData.planExpiresAt === null
-          const compIsActive = storeData.planExpiresAt != null &&
-            toDate(storeData.planExpiresAt).getTime() > Date.now()
-
-          if (!compIsIndefinite && !compIsActive) {
-            const trialEnd = toDate(storeData.trialEndsAt)
-            if (trialEnd.getTime() < Date.now()) {
-              storeData.plan = 'free'
-              updateDoc(doc(db, 'stores', storeId), { plan: 'free', updatedAt: new Date() }).catch(() => {})
-            }
-          }
-        }
+        // Trial expiration is enforced server-side by the scheduled
+        // `expireTrials` Cloud Function (functions/src/index.ts). This catalog
+        // read path no longer mutates the store plan — the previous check
+        // ignored admin-set `planExpiresAt` and silently downgraded comped
+        // stores on every catalog load. Gate UI features through
+        // `getEffectivePlan()` instead.
 
         const fullStore = { ...storeData, id: storeId }
         setStore(fullStore)

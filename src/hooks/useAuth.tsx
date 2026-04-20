@@ -10,8 +10,7 @@ import {
   signInWithCredential
 } from 'firebase/auth'
 import { Capacitor } from '@capacitor/core'
-import { auth, db } from '../lib/firebase'
-import { doc, updateDoc } from 'firebase/firestore'
+import { auth } from '../lib/firebase'
 import { userService, storeService } from '../lib/firebase'
 import type { User, Store } from '../types'
 
@@ -47,35 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let storeData = await storeService.getByOwner(fbUser.uid)
       console.log('storeData loaded:', storeData ? 'found' : 'null')
 
-      // Check if free Pro trial has expired (no Stripe subscription).
-      // Respect `planExpiresAt` — the admin-comp override. See Catalog.tsx for
-      // the same semantics:
-      //   - null        → indefinite admin comp, never downgrade
-      //   - future Date → comp still valid
-      //   - past Date   → comp expired, fall through
-      //   - undefined   → never touched by admin, normal trial rules apply
-      if (storeData && storeData.trialEndsAt && !storeData.subscription) {
-        const toDate = (d: any): Date =>
-          d instanceof Date ? d
-            : (typeof d === 'object' && d && 'toDate' in d) ? d.toDate()
-            : new Date(d as string)
-
-        const compIsIndefinite = storeData.planExpiresAt === null
-        const compIsActive = storeData.planExpiresAt != null &&
-          toDate(storeData.planExpiresAt).getTime() > Date.now()
-
-        if (!compIsIndefinite && !compIsActive) {
-          const trialEnd = toDate(storeData.trialEndsAt)
-          if (trialEnd.getTime() < Date.now() && (storeData.plan === 'pro' || storeData.plan === 'business')) {
-            console.log('Free Pro trial expired, downgrading to free')
-            await updateDoc(doc(db, 'stores', storeData.id), {
-              plan: 'free',
-              updatedAt: new Date()
-            })
-            storeData = { ...storeData, plan: 'free' }
-          }
-        }
-      }
+      // NOTE: Trial expiration is enforced server-side by the scheduled
+      // `expireTrials` Cloud Function (functions/src/index.ts). We used to
+      // duplicate that check here and downgrade on every login, but the
+      // client-side logic ignored `planExpiresAt` and clobbered admin-comped
+      // stores. For the UI, `getEffectivePlan()` already computes the correct
+      // effective plan from the Firestore data without mutating it.
 
       setStore(storeData)
     } catch (error) {
@@ -162,30 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
       let storeData = await storeService.getByOwner(firebaseUser.uid)
 
-      // Check if free Pro trial has expired (no Stripe subscription).
-      // Respect admin-set `planExpiresAt` override — see loadUserData above for the rules.
-      if (storeData && storeData.trialEndsAt && !storeData.subscription) {
-        const toDate = (d: any): Date =>
-          d instanceof Date ? d
-            : (typeof d === 'object' && d && 'toDate' in d) ? d.toDate()
-            : new Date(d as string)
-
-        const compIsIndefinite = storeData.planExpiresAt === null
-        const compIsActive = storeData.planExpiresAt != null &&
-          toDate(storeData.planExpiresAt).getTime() > Date.now()
-
-        if (!compIsIndefinite && !compIsActive) {
-          const trialEnd = toDate(storeData.trialEndsAt)
-          if (trialEnd.getTime() < Date.now() && (storeData.plan === 'pro' || storeData.plan === 'business')) {
-            await updateDoc(doc(db, 'stores', storeData.id), {
-              plan: 'free',
-              updatedAt: new Date()
-            })
-            storeData = { ...storeData, plan: 'free' }
-          }
-        }
-      }
-
+      // Trial expiration is enforced server-side by the scheduled
+      // `expireTrials` Cloud Function — see loadUserData above.
       setStore(storeData)
     }
   }
