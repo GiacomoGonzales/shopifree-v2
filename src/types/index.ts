@@ -43,8 +43,9 @@ export interface Store {
   domainDnsRecords?: DnsRecord[]
 
   // === BRANDING ===
-  logo?: string                 // URL Cloudinary
-  heroImage?: string            // URL Cloudinary - Desktop (1920x600 recomendado)
+  logo?: string                 // URL Cloudinary — square/icon logo (favicon, footer circle, app icon, social share)
+  logoLandscape?: string        // URL Cloudinary — optional horizontal logo with brand name baked in. When present, header uses it and hides the store name text.
+  heroImage?: string            // URL Cloudinary - Desktop (2560x800 recomendado)
   heroImageMobile?: string      // URL Cloudinary - Móvil (1200x800 recomendado, ratio 3:2)
   favicon?: string
 

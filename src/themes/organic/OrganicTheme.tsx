@@ -29,7 +29,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 // Organic colors
@@ -98,7 +98,7 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
 
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
@@ -147,12 +147,10 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
         >
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo && (
-                <div className="w-11 h-11 flex items-center justify-center">
-                  <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
-                </div>
+              {headerLogo && (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               )}
-              {!store.logo && (
+              {!headerLogo && (
                 /* Leaf icon placeholder */
                 <div
                   className="w-11 h-11 rounded-full flex items-center justify-center"
@@ -167,11 +165,6 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
                 {showName && <h1 className="font-organic text-xl md:text-2xl font-bold" style={{ color: '#2D3B2D' }}>
                   {store.name}
                 </h1>}
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs font-medium mt-0.5 font-organic" style={{ color: leafGreen }}>
-                    {store.about.slogan}
-                  </p>
-                )}
               </div>
             </div>
 

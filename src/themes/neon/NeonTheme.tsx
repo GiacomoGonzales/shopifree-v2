@@ -28,7 +28,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 // Neon theme colors
@@ -94,7 +94,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -145,12 +145,10 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
         >
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo && (
-                <div className="w-10 h-10 rounded-lg overflow-hidden neon-box">
-                  <img src={store.logo} alt={store.name} className="w-full h-full object-contain" />
-                </div>
+              {headerLogo && (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               )}
-              {!store.logo && (
+              {!headerLogo && (
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center neon-box"
                   style={{ backgroundColor: `${neonGreen}20` }}

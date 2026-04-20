@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import {
   ThemeProvider,
   ProductGrid,
@@ -89,7 +89,7 @@ interface Props {
 export default function CosmosTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -201,7 +201,7 @@ export default function CosmosTheme({ store, products, categories, onWhatsAppCli
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {store.logo && <img src={store.logo} alt={store.name} className="h-8 w-auto" />}
+                {headerLogo && <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />}
                 {showName && <h1
                   className="text-xl font-bold tracking-wide animate-gradient-text"
                   style={{

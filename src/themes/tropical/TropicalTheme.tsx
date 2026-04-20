@@ -29,7 +29,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 
@@ -84,7 +84,7 @@ interface Props {
 
 export default function TropicalTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -152,8 +152,8 @@ export default function TropicalTheme({ store, products, categories, onWhatsAppC
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {store.logo && (
-                  <img src={store.logo} alt={store.name} className="h-9 w-auto" />
+                {headerLogo && (
+                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
                 )}
                 {showName && (
                   <h1

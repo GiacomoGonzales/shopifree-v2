@@ -18,7 +18,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 
@@ -74,7 +74,7 @@ interface Props {
 
 export default function BoutiqueTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -116,19 +116,16 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
         }`}>
           <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {store.logo ? (
-                <img src={store.logo} alt={store.name} className="h-12 w-12 object-contain rounded-full border-2 border-pink-100" />
+              {headerLogo ? (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div className="h-12 w-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-serif text-xl">{store.name.charAt(0)}</span>
                 </div>
               )}
-              {(!store.logo || showName) && (
+              {(!headerLogo || showName) && (
               <div>
                 <h1 className="font-serif text-xl text-gray-900 tracking-wide">{store.name}</h1>
-                {store.about?.slogan && (
-                  <p className="text-xs text-pink-600 italic">{store.about.slogan}</p>
-                )}
               </div>
               )}
             </div>

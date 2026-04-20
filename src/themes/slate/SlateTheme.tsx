@@ -28,7 +28,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 
@@ -94,7 +94,7 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -154,10 +154,8 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
         >
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
-                </div>
+              {headerLogo ? (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"

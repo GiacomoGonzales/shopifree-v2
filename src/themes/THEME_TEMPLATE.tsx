@@ -25,7 +25,7 @@ import type { Store, Product, Category } from '../types'
 import { formatPrice } from '../lib/currency'
 import { useCart } from '../hooks/useCart'
 import ProductGallery from './shared/ProductGallery'
-import { useLogoOrientation } from './shared/useLogoOrientation'
+import { useHeaderLogo } from './shared/useHeaderLogo'
 import './shared/animations.css'
 
 // =====================================================
@@ -44,7 +44,7 @@ interface Props {
 // =====================================================
 export default function TemplateTheme({ store, products, categories, onWhatsAppClick, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -133,10 +133,10 @@ export default function TemplateTheme({ store, products, categories, onWhatsAppC
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              {store.logo && (
-                <img src={store.logo} alt={store.name} className="h-10 w-auto" />
+              {headerLogo && (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               )}
-              {(!store.logo || showName) && (
+              {(!headerLogo || showName) && (
                 <h1 className="text-xl font-bold" style={{ color: colors.primary }}>{store.name}</h1>
               )}
             </div>

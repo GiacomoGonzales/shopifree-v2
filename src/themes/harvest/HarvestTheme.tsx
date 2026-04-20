@@ -29,7 +29,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 // Harvest colors
@@ -94,7 +94,7 @@ interface Props {
 
 export default function HarvestTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -160,10 +160,8 @@ export default function HarvestTheme({ store, products, categories, onWhatsAppCl
         >
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
-                <div className="w-11 h-11 flex items-center justify-center">
-                  <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
-                </div>
+              {headerLogo ? (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div
                   className="w-11 h-11 rounded-full flex items-center justify-center"
@@ -173,14 +171,9 @@ export default function HarvestTheme({ store, products, categories, onWhatsAppCl
                 </div>
               )}
               <div>
-                {(!store.logo || showName) && <h1 className="font-harvest text-xl md:text-2xl font-bold" style={{ color: darkText }}>
+                {(!headerLogo || showName) && <h1 className="font-harvest text-xl md:text-2xl font-bold" style={{ color: darkText }}>
                   {store.name}
                 </h1>}
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs font-medium mt-0.5 font-harvest-body" style={{ color: olive }}>
-                    {store.about.slogan}
-                  </p>
-                )}
               </div>
             </div>
 

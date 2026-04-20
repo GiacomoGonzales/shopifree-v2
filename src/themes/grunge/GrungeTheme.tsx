@@ -30,7 +30,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 const grungeTheme: ThemeConfig = {
@@ -84,7 +84,7 @@ interface Props {
 
 export default function GrungeTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const t = getThemeTranslations(store.language)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -159,8 +159,8 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {store.logo && (
-                  <img src={store.logo} alt={store.name} className="h-8 w-auto" />
+                {headerLogo && (
+                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
                 )}
                 {showName && <h1
                   className="text-xl font-bold uppercase tracking-wider"

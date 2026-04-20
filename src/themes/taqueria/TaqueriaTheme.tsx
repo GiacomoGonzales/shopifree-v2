@@ -28,7 +28,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 
@@ -98,7 +98,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -147,10 +147,8 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
         >
           <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
-                <div className="w-12 h-12 flex items-center justify-center">
-                  <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
-                </div>
+              {headerLogo ? (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
@@ -164,11 +162,6 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                   <h1 className="font-taqueria text-2xl md:text-3xl font-bold" style={{ color: darkBrown }}>
                     {store.name}
                   </h1>
-                  {store.about?.slogan && !scrolled && (
-                    <p className="text-xs font-taqueria-body font-semibold" style={{ color: orange }}>
-                      {store.about.slogan}
-                    </p>
-                  )}
                 </div>
               )}
             </div>

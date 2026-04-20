@@ -30,7 +30,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 // Neon Cyber theme configuration - Cyberpunk futuristic style
@@ -92,7 +92,7 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
 
   // Neon colors
   const cyan = '#00f0ff'
@@ -163,8 +163,8 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
             <div className="flex items-center justify-between h-16">
               {/* Logo + Name */}
               <div className="flex items-center gap-3">
-                {store.logo && (
-                  <img src={store.logo} alt={store.name} className="h-8 w-auto" />
+                {headerLogo && (
+                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
                 )}
                 {showName && <h1
                   className="text-lg font-bold tracking-wider uppercase"

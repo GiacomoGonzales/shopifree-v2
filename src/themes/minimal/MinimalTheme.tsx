@@ -18,7 +18,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 // Minimal theme configuration
@@ -79,7 +79,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -115,7 +115,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
         }`}>
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo && <img src={store.logo} alt={store.name} className="h-9 w-9 object-contain rounded-lg" />}
+              {headerLogo && <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />}
               {showName && <span className={`font-medium tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}>
                 {store.name}
               </span>}

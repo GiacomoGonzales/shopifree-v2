@@ -20,24 +20,35 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
           {/* Column 1: Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              {store.logo ? (
-                <img src={store.logo} alt={store.name} className="w-12 h-12 object-contain rounded-full" />
+              {store.logoLandscape ? (
+                // Horizontal logo already contains the brand name — render wide, no circle, no name text.
+                <img
+                  src={store.logoLandscape}
+                  alt={store.name}
+                  className="h-12 w-auto max-w-[180px] object-contain"
+                />
               ) : (
-                <div
-                  className="w-12 h-12 flex items-center justify-center"
-                  style={{
-                    backgroundColor: theme.colors.surfaceHover,
-                    borderRadius: theme.radius.full
-                  }}
-                >
-                  <span className="text-lg font-semibold" style={{ color: theme.colors.textMuted }}>
-                    {store.name.charAt(0)}
+                <>
+                  {store.logo ? (
+                    <img src={store.logo} alt={store.name} className="w-12 h-12 object-contain rounded-full" />
+                  ) : (
+                    <div
+                      className="w-12 h-12 flex items-center justify-center"
+                      style={{
+                        backgroundColor: theme.colors.surfaceHover,
+                        borderRadius: theme.radius.full
+                      }}
+                    >
+                      <span className="text-lg font-semibold" style={{ color: theme.colors.textMuted }}>
+                        {store.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <span className="font-semibold text-lg" style={{ color: theme.colors.text }}>
+                    {store.name}
                   </span>
-                </div>
+                </>
               )}
-              <span className="font-semibold text-lg" style={{ color: theme.colors.text }}>
-                {store.name}
-              </span>
             </div>
             {store.about?.description && (
               <p className="text-sm leading-relaxed" style={{ color: theme.colors.textMuted }}>

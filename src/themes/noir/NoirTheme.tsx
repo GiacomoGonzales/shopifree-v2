@@ -32,7 +32,7 @@ import {
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import HeroImg from '../../components/catalog/HeroImg'
 
 const noirTheme: ThemeConfig = {
@@ -95,7 +95,7 @@ export default function NoirTheme({ store, products, categories, onWhatsAppClick
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const heroRef = useRef<HTMLDivElement>(null)
   const heroImgRef = useRef<HTMLImageElement>(null)
   const heroImgMobileRef = useRef<HTMLImageElement>(null)
@@ -171,7 +171,7 @@ export default function NoirTheme({ store, products, categories, onWhatsAppClick
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {store.logo && <img src={store.logo} alt={store.name} className="h-8 w-auto" />}
+                {headerLogo && <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />}
                 {showName && <h1
                   className="text-xl font-semibold tracking-wider"
                   style={{

@@ -28,7 +28,7 @@ import {
   SocialProofToast,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 
@@ -91,7 +91,7 @@ interface Props {
 
 export default function BistroTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -146,21 +146,14 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
         >
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {store.logo && (
-                <div className="w-12 h-12 flex items-center justify-center">
-                  <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
-                </div>
+              {headerLogo && (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               )}
               {showName && (
               <div>
                 <h1 className="font-serif-bistro text-2xl md:text-3xl font-semibold" style={{ color: cream }}>
                   {store.name}
                 </h1>
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs tracking-[0.2em] uppercase mt-0.5" style={{ color: copper }}>
-                    {store.about.slogan}
-                  </p>
-                )}
               </div>
               )}
             </div>

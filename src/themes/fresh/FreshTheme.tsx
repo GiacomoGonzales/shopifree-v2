@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import {
   ThemeProvider,
   ProductGrid,
@@ -82,7 +82,7 @@ interface Props {
 
 export default function FreshTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -124,8 +124,8 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
         }`}>
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
-                <img src={store.logo} alt={store.name} className="h-10 w-10 object-contain rounded-xl" />
+              {headerLogo ? (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div className="h-10 w-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -135,9 +135,6 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
               )}
               <div>
                 {showName && <h1 className="font-semibold text-gray-900">{store.name}</h1>}
-                {store.about?.slogan && (
-                  <p className="text-xs text-emerald-600">{store.about.slogan}</p>
-                )}
               </div>
             </div>
             <button

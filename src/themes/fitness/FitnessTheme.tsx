@@ -12,7 +12,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import {
   ThemeProvider,
   ProductGrid,
@@ -92,7 +92,7 @@ interface Props {
 
 export default function FitnessTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -155,10 +155,8 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
         >
           <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {store.logo ? (
-                <div className="w-12 h-12 flex items-center justify-center">
-                  <img src={store.logo} alt={store.name} className="max-w-full max-h-full object-contain" />
-                </div>
+              {headerLogo ? (
+                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div
                   className="w-12 h-12 flex items-center justify-center"
@@ -171,11 +169,6 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 {showName && <h1 className="font-fitness-heading text-2xl md:text-3xl font-bold uppercase tracking-wider" style={{ color: white }}>
                   {store.name}
                 </h1>}
-                {store.about?.slogan && !scrolled && (
-                  <p className="text-xs font-medium font-fitness-body uppercase tracking-widest" style={{ color: red }}>
-                    {store.about.slogan}
-                  </p>
-                )}
               </div>
             </div>
 

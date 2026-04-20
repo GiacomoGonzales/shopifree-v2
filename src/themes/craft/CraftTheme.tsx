@@ -12,7 +12,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
-import { useLogoOrientation } from '../shared/useLogoOrientation'
+import { useHeaderLogo } from '../shared/useHeaderLogo'
 import {
   ThemeProvider,
   ProductGrid,
@@ -84,7 +84,7 @@ interface Props {
 
 export default function CraftTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { showName } = useLogoOrientation(store.logo)
+  const { src: headerLogo, showName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -142,9 +142,9 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
           <div className="max-w-5xl mx-auto px-5 flex items-center justify-between">
             {/* Logo & Name */}
             <div className="flex items-center gap-3">
-              {store.logo ? (
+              {headerLogo ? (
                 <div className="w-11 h-11 rounded-full overflow-hidden border-2" style={{ borderColor: `${colors.textMuted}30` }}>
-                  <img src={store.logo} alt={store.name} className="w-full h-full object-contain" />
+                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
                 </div>
               ) : (
                 <div
