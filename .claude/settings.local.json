@@ -62,7 +62,8 @@
       "Bash(gh run:*)",
       "Bash(gh repo:*)",
       "Bash(git pull *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(npm run *)"
     ],
     "deny": [],
     "ask": []

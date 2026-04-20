@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
-import { optimizeImage } from '../../utils/cloudinary'
 import {
   ThemeProvider,
   ProductGrid,
