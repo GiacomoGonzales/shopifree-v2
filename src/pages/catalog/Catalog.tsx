@@ -137,16 +137,29 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         const storeData = storeSnapshot.docs[0].data() as Store
         const storeId = storeSnapshot.docs[0].id
 
-        // Auto-downgrade expired trials in Firestore
+        // Auto-downgrade expired trials in Firestore.
+        //
+        // `planExpiresAt` is the admin-comp override (set only via the admin panel):
+        //   - field absent (undefined) → never touched by admin → normal trial rules apply
+        //   - null                     → admin comped indefinitely → never downgrade
+        //   - future Date              → admin comped with expiration still in the future → skip
+        //   - past Date                → admin comp expired → fall through to trial downgrade
         if (storeData.trialEndsAt && !storeData.subscription && (storeData.plan === 'pro' || storeData.plan === 'business')) {
-          const trialEnd = storeData.trialEndsAt instanceof Date
-            ? storeData.trialEndsAt
-            : typeof storeData.trialEndsAt === 'object' && 'toDate' in (storeData.trialEndsAt as any)
-              ? (storeData.trialEndsAt as any).toDate()
-              : new Date(storeData.trialEndsAt as string)
-          if (trialEnd.getTime() < Date.now()) {
-            storeData.plan = 'free'
-            updateDoc(doc(db, 'stores', storeId), { plan: 'free', updatedAt: new Date() }).catch(() => {})
+          const toDate = (d: any): Date =>
+            d instanceof Date ? d
+              : (typeof d === 'object' && d && 'toDate' in d) ? d.toDate()
+              : new Date(d as string)
+
+          const compIsIndefinite = storeData.planExpiresAt === null
+          const compIsActive = storeData.planExpiresAt != null &&
+            toDate(storeData.planExpiresAt).getTime() > Date.now()
+
+          if (!compIsIndefinite && !compIsActive) {
+            const trialEnd = toDate(storeData.trialEndsAt)
+            if (trialEnd.getTime() < Date.now()) {
+              storeData.plan = 'free'
+              updateDoc(doc(db, 'stores', storeId), { plan: 'free', updatedAt: new Date() }).catch(() => {})
+            }
           }
         }
 

@@ -468,6 +468,23 @@ export const expireTrials = functions.pubsub
         continue
       }
 
+      // Skip admin-comped stores (planExpiresAt is set via the admin panel):
+      //   - null          → indefinite comp, never downgrade
+      //   - future Date   → comp still valid
+      //   - absent / past → fall through to the downgrade below
+      const hasCompField = Object.prototype.hasOwnProperty.call(store, 'planExpiresAt')
+      if (hasCompField) {
+        if (store.planExpiresAt === null) {
+          continue // indefinite admin comp
+        }
+        const compEnd = store.planExpiresAt?.toDate
+          ? store.planExpiresAt.toDate()
+          : new Date(store.planExpiresAt)
+        if (compEnd.getTime() > now.getTime()) {
+          continue // comp still valid
+        }
+      }
+
       // Downgrade to free
       batch.update(doc.ref, {
         plan: 'free',

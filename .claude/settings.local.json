@@ -60,7 +60,9 @@
       "Bash(gh secret:*)",
       "Bash(gh workflow:*)",
       "Bash(gh run:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(git pull *)",
+      "Bash(git stash *)"
     ],
     "deny": [],
     "ask": []
