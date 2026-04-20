@@ -31,6 +31,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Harvest colors
 const terracotta = '#C2410C'
@@ -215,8 +216,8 @@ export default function HarvestTheme({ store, products, categories, onWhatsAppCl
             <>
               {/* Mobile Hero */}
               <div className="md:hidden relative max-h-[450px] overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                <HeroImg
+                  src={store.heroImageMobile || store.heroImage}
                   alt=""
                   className="w-full h-auto max-h-[450px] object-cover"
                 />
@@ -237,8 +238,8 @@ export default function HarvestTheme({ store, products, categories, onWhatsAppCl
               </div>
               {/* Desktop Hero */}
               <div className="hidden md:block relative overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                <HeroImg
+                  src={store.heroImage || store.heroImageMobile}
                   alt=""
                   className="w-full aspect-[16/5] object-cover"
                 />

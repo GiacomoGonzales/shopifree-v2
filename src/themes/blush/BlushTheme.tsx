@@ -31,6 +31,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Blush colors
 const rose = '#E11D48'
@@ -217,8 +218,8 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
             <>
               {/* Mobile Hero */}
               <div className="md:hidden relative max-h-[450px] overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                <HeroImg
+                  src={store.heroImageMobile || store.heroImage}
                   alt=""
                   className="w-full h-auto max-h-[450px] object-cover"
                 />
@@ -239,8 +240,8 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
               </div>
               {/* Desktop Hero */}
               <div className="hidden md:block relative overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                <HeroImg
+                  src={store.heroImage || store.heroImageMobile}
                   alt=""
                   className="w-full aspect-[16/5] object-cover"
                 />

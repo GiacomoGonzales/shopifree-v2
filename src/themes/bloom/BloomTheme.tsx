@@ -31,6 +31,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Bloom colors
 const rosePetal = '#F9A8B8'
@@ -222,8 +223,8 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
             <>
               {/* Mobile Hero */}
               <div className="md:hidden relative max-h-[400px] overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                <HeroImg
+                  src={store.heroImageMobile || store.heroImage}
                   alt=""
                   className="w-full h-auto max-h-[400px] object-cover"
                 />
@@ -245,8 +246,8 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
 
               {/* Desktop Hero */}
               <div className="hidden md:block relative overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                <HeroImg
+                  src={store.heroImage || store.heroImageMobile}
                   alt=""
                   className="w-full aspect-[16/5] object-cover"
                 />

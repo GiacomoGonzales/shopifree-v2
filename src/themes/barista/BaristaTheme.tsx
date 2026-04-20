@@ -31,6 +31,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Barista colors
 const coffee = '#6F4E37'
@@ -221,8 +222,8 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
             <>
               {/* Mobile Hero */}
               <div className="md:hidden relative max-h-[400px] overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                <HeroImg
+                  src={store.heroImageMobile || store.heroImage}
                   alt=""
                   className="w-full h-auto max-h-[400px] object-cover"
                 />
@@ -244,8 +245,8 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
 
               {/* Desktop Hero */}
               <div className="hidden md:block relative overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                <HeroImg
+                  src={store.heroImage || store.heroImageMobile}
                   alt=""
                   className="w-full aspect-[16/5] object-cover"
                 />

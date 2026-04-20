@@ -20,6 +20,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Minimal theme configuration
 const minimalTheme: ThemeConfig = {
@@ -142,10 +143,10 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
             {(store.heroImage || store.heroImageMobile) && (
               <>
                 <div className="md:hidden relative overflow-hidden rounded-2xl mb-8 flex justify-center bg-gray-100">
-                  <img src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')} alt="" className="w-full h-auto max-h-[400px] object-contain" />
+                  <HeroImg src={store.heroImageMobile || store.heroImage} alt="" className="w-full h-auto max-h-[400px] object-contain" />
                 </div>
                 <div className="hidden md:block relative overflow-hidden rounded-3xl mb-8">
-                  <img src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')} alt="" className="w-full aspect-[16/5] object-cover" />
+                  <HeroImg src={store.heroImage || store.heroImageMobile} alt="" className="w-full aspect-[16/5] object-cover" />
                 </div>
               </>
             )}

@@ -29,6 +29,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 const vaporTheme: ThemeConfig = {
   colors: {
@@ -205,11 +206,11 @@ export default function VaporTheme({ store, products, categories, onWhatsAppClic
         {(store.heroImage || store.heroImageMobile) ? (
           <section ref={heroRef} className="relative overflow-hidden">
             <div className="md:hidden relative">
-              <img ref={heroImgMobileRef} src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')} alt={store.name} className="w-full h-auto max-h-[400px] object-cover" style={{ filter: 'brightness(0.7) saturate(0.85)' }} />
+              <HeroImg ref={heroImgMobileRef} src={store.heroImageMobile || store.heroImage} alt={store.name} className="w-full h-auto max-h-[400px] object-cover" style={{ filter: 'brightness(0.7) saturate(0.85)' }} />
               <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 25%, ${bg})` }} />
             </div>
             <div className="hidden md:block relative aspect-[16/5] overflow-hidden">
-              <img ref={heroImgRef} src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')} alt={store.name} className="w-full h-full object-cover" style={{ transform: 'scale(1.1)', filter: 'brightness(0.7) saturate(0.85)' }} />
+              <HeroImg ref={heroImgRef} src={store.heroImage || store.heroImageMobile} alt={store.name} className="w-full h-full object-cover" style={{ transform: 'scale(1.1)', filter: 'brightness(0.7) saturate(0.85)' }} />
               <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${bg}50 0%, transparent 30%, transparent 50%, ${bg} 90%)` }} />
             </div>
           </section>

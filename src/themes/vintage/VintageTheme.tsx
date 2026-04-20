@@ -32,6 +32,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Vintage theme configuration - Classic sepia tones with serif typography
 const vintageTheme: ThemeConfig = {
@@ -181,8 +182,8 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
           <section className="relative">
             {/* Mobile Hero */}
             <div className="md:hidden">
-              <img
-                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+              <HeroImg
+                src={store.heroImageMobile || store.heroImage}
                 alt={store.name}
                 className="w-full h-auto max-h-[400px] object-cover"
                 style={{ filter: 'sepia(15%)' }}
@@ -190,8 +191,8 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
             </div>
             {/* Desktop Hero */}
             <div className="hidden md:block aspect-[16/5] overflow-hidden">
-              <img
-                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+              <HeroImg
+                src={store.heroImage || store.heroImageMobile}
                 alt={store.name}
                 className="w-full h-full object-cover"
                 style={{ filter: 'sepia(15%)' }}

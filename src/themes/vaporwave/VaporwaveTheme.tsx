@@ -32,6 +32,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 const vaporwaveTheme: ThemeConfig = {
   colors: {
@@ -224,16 +225,16 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
         {(store.heroImage || store.heroImageMobile) ? (
           <section className="relative">
             <div className="md:hidden relative">
-              <img
-                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+              <HeroImg
+                src={store.heroImageMobile || store.heroImage}
                 alt={store.name}
                 className="w-full h-auto max-h-[400px] object-cover"
               />
               <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${pink}30 0%, transparent 50%, ${cyan}30 100%)` }} />
             </div>
             <div className="hidden md:block relative aspect-[16/5] overflow-hidden">
-              <img
-                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+              <HeroImg
+                src={store.heroImage || store.heroImageMobile}
                 alt={store.name}
                 className="w-full h-full object-cover"
               />

@@ -32,6 +32,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Neon Cyber theme configuration - Cyberpunk futuristic style
 const neonCyberTheme: ThemeConfig = {
@@ -220,8 +221,8 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
           <section className="relative">
             {/* Mobile Hero */}
             <div className="md:hidden relative">
-              <img
-                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+              <HeroImg
+                src={store.heroImageMobile || store.heroImage}
                 alt={store.name}
                 className="w-full h-auto max-h-[400px] object-cover"
               />
@@ -234,8 +235,8 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
             </div>
             {/* Desktop Hero */}
             <div className="hidden md:block relative aspect-[16/5] overflow-hidden">
-              <img
-                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+              <HeroImg
+                src={store.heroImage || store.heroImageMobile}
                 alt={store.name}
                 className="w-full h-full object-cover"
               />

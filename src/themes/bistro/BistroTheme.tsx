@@ -31,6 +31,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
 import '../shared/animations.css'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Bistro colors
 const charcoal = '#1C1917'
@@ -199,8 +200,8 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
             <>
               {/* Mobile Hero */}
               <div className="md:hidden relative max-h-[450px] overflow-hidden" style={{ backgroundColor: darkBrown }}>
-                <img
-                  src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+                <HeroImg
+                  src={store.heroImageMobile || store.heroImage}
                   alt=""
                   className="w-full h-auto max-h-[450px] object-cover opacity-80"
                 />
@@ -219,8 +220,8 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
 
               {/* Desktop Hero */}
               <div className="hidden md:block relative overflow-hidden">
-                <img
-                  src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+                <HeroImg
+                  src={store.heroImage || store.heroImageMobile}
                   alt=""
                   className="w-full aspect-[16/5] object-cover opacity-70"
                 />

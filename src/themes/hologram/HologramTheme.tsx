@@ -29,6 +29,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 const hologramTheme: ThemeConfig = {
   colors: {
@@ -217,11 +218,11 @@ export default function HologramTheme({ store, products, categories, onWhatsAppC
         {(store.heroImage || store.heroImageMobile) ? (
           <section ref={heroRef} className="relative overflow-hidden">
             <div className="md:hidden relative">
-              <img ref={heroImgMobileRef} src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')} alt={store.name} className="w-full h-auto max-h-[400px] object-cover" style={{ filter: 'brightness(0.7) grayscale(0.4) contrast(1.2)' }} />
+              <HeroImg ref={heroImgMobileRef} src={store.heroImageMobile || store.heroImage} alt={store.name} className="w-full h-auto max-h-[400px] object-cover" style={{ filter: 'brightness(0.7) grayscale(0.4) contrast(1.2)' }} />
               <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg})` }} />
             </div>
             <div className="hidden md:block relative aspect-[16/5] overflow-hidden">
-              <img ref={heroImgRef} src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')} alt={store.name} className="w-full h-full object-cover" style={{ transform: 'scale(1.1)', filter: 'brightness(0.7) grayscale(0.4) contrast(1.2)' }} />
+              <HeroImg ref={heroImgRef} src={store.heroImage || store.heroImageMobile} alt={store.name} className="w-full h-full object-cover" style={{ transform: 'scale(1.1)', filter: 'brightness(0.7) grayscale(0.4) contrast(1.2)' }} />
               <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${bg}50 0%, transparent 30%, transparent 60%, ${bg} 100%)` }} />
             </div>
           </section>

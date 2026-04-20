@@ -32,6 +32,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Minimal Tech theme configuration - Apple-inspired minimalism
 const minimalTechTheme: ThemeConfig = {
@@ -191,16 +192,16 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
           <section className="relative bg-[#f5f5f7]">
             {/* Mobile Hero */}
             <div className="md:hidden">
-              <img
-                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+              <HeroImg
+                src={store.heroImageMobile || store.heroImage}
                 alt={store.name}
                 className="w-full h-auto max-h-[400px] object-cover"
               />
             </div>
             {/* Desktop Hero */}
             <div className="hidden md:block">
-              <img
-                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+              <HeroImg
+                src={store.heroImage || store.heroImageMobile}
                 alt={store.name}
                 className="w-full aspect-[16/5] object-cover"
               />

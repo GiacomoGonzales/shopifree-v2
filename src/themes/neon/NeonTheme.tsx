@@ -30,6 +30,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Neon theme colors
 const neonGreen = '#00ff88'
@@ -188,7 +189,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
             <>
               {/* Mobile Hero */}
               <div className="md:hidden relative max-h-[400px] overflow-hidden flex justify-center" style={{ backgroundColor: darkBg }}>
-                <img src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')} alt="" className="w-full h-auto max-h-[400px] object-contain" />
+                <HeroImg src={store.heroImageMobile || store.heroImage} alt="" className="w-full h-auto max-h-[400px] object-contain" />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, ${neonGreen}40 0%, transparent 50%, ${neonCyan}30 100%)` }} />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -198,7 +199,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
               </div>
               {/* Desktop Hero */}
               <div className="hidden md:block relative overflow-hidden">
-                <img src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')} alt="" className="w-full aspect-[16/5] object-cover" />
+                <HeroImg src={store.heroImage || store.heroImageMobile} alt="" className="w-full aspect-[16/5] object-cover" />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, ${neonGreen}40 0%, transparent 50%, ${neonCyan}30 100%)` }} />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
                 <div className="absolute bottom-0 left-0 right-0 p-10">

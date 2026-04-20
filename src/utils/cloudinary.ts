@@ -15,8 +15,15 @@ const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
   thumbnail: { width: 160, height: 160, crop: 'fill' },  // 2x for retina
   card: { width: 600, crop: 'limit' },  // Only limit width, preserve aspect ratio
   gallery: { width: 1000, crop: 'limit' },  // Higher quality for detail view
-  hero: { width: 1600, crop: 'limit' },
+  // Hero: bumped from 1600 to 2560 to cover modern retina desktops.
+  // 1440 CSS px × 2 DPR = 2880; 2560 is a good balance (most common "large desktop" viewport).
+  // Pair with <HeroImg> + srcset to let the browser pick the right width per viewport.
+  hero: { width: 2560, crop: 'limit' },
 }
+
+// Widths used for responsive hero images (srcset). Each gets its own Cloudinary transform.
+// Browser picks closest width based on viewport + DPR.
+const HERO_WIDTHS = [800, 1280, 1920, 2560, 3840]
 
 /**
  * Optimizes a Cloudinary URL by adding transformation parameters
@@ -86,6 +93,29 @@ export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'
   const url2x = url.replace('/upload/', `/upload/${transforms2x}/`)
 
   return `${url1x} 1x, ${url2x} 2x`
+}
+
+/**
+ * Generates a srcset specifically tuned for hero images (5 widths, 800w → 3840w).
+ * The browser picks the best width based on the viewport width and device DPR,
+ * which is crucial for hero images that span the full viewport.
+ *
+ * Usage:
+ *   <img
+ *     src={optimizeImage(url, 'hero')}
+ *     srcSet={getHeroSrcSet(url)}
+ *     sizes="100vw"
+ *   />
+ */
+export function getHeroSrcSet(url: string | undefined): string {
+  if (!url || !url.includes('res.cloudinary.com')) return ''
+  return HERO_WIDTHS
+    .map(w => {
+      const transforms = `c_limit,w_${w},q_auto,f_auto`
+      const transformedUrl = url.replace('/upload/', `/upload/${transforms}/`)
+      return `${transformedUrl} ${w}w`
+    })
+    .join(', ')
 }
 
 /**

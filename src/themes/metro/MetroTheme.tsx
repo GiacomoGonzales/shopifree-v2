@@ -32,6 +32,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useLogoOrientation } from '../shared/useLogoOrientation'
+import HeroImg from '../../components/catalog/HeroImg'
 
 // Metro theme configuration - Flat design with electric blue
 const metroTheme: ThemeConfig = {
@@ -177,16 +178,16 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
           <section className="relative bg-gray-50">
             {/* Mobile Hero */}
             <div className="md:hidden">
-              <img
-                src={optimizeImage(store.heroImageMobile || store.heroImage, 'hero')}
+              <HeroImg
+                src={store.heroImageMobile || store.heroImage}
                 alt={store.name}
                 className="w-full h-auto max-h-[400px] object-cover"
               />
             </div>
             {/* Desktop Hero */}
             <div className="hidden md:block aspect-[16/5] overflow-hidden">
-              <img
-                src={optimizeImage(store.heroImage || store.heroImageMobile, 'hero')}
+              <HeroImg
+                src={store.heroImage || store.heroImageMobile}
                 alt={store.name}
                 className="w-full h-full object-cover"
               />

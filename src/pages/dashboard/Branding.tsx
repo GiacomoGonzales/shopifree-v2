@@ -1943,7 +1943,9 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
     if (aspectRatio === 1) {
       return { width: 512, height: 512 } // Logo
     } else if (aspectRatio > 2) {
-      return { width: 1920, height: Math.round(1920 / aspectRatio) } // Desktop hero (16:5 = 3.2)
+      // Desktop hero (16:5 = 3.2). Bumped 1920 → 2560 to feed the 2560w + 3840w srcset widths
+      // without upscaling, keeping retina desktops sharp.
+      return { width: 2560, height: Math.round(2560 / aspectRatio) }
     } else {
       return { width: 1200, height: Math.round(1200 / aspectRatio) } // Mobile hero (3:2 = 1.5)
     }

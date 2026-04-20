@@ -47,7 +47,20 @@
       "Bash(xargs -I {} basename {})",
       "Bash(npx firebase:*)",
       "Bash(cp \"/c/Users/giaco/Downloads/tienda.png\" \"/c/Users/giaco/shopifree-v2/public/tienda.png\")",
-      "Bash(cp \"/c/Users/giaco/Downloads/finanzas.png\" \"/c/Users/giaco/shopifree-v2/public/finanzas.png\")"
+      "Bash(cp \"/c/Users/giaco/Downloads/finanzas.png\" \"/c/Users/giaco/shopifree-v2/public/finanzas.png\")",
+      "Bash(awk 'NR>=527 && NR<=635' \"C:\\\\Users\\\\giaco\\\\shopifree-v2\\\\src\\\\pages\\\\dashboard\\\\Account.tsx\")",
+      "Read(//tmp/**)",
+      "Bash(git restore:*)",
+      "Bash(awk 'NR<28 || NR>157' \"C:\\\\Users\\\\giaco\\\\shopifree-v2\\\\src\\\\components\\\\dashboard\\\\DashboardLayout.tsx\")",
+      "Bash(cp /tmp/dl.tsx \"C:\\\\Users\\\\giaco\\\\shopifree-v2\\\\src\\\\components\\\\dashboard\\\\DashboardLayout.tsx\")",
+      "Bash(gh auth:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel env:*)",
+      "Bash(python extract-key.py)",
+      "Bash(gh secret:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run:*)",
+      "Bash(gh repo:*)"
     ],
     "deny": [],
     "ask": []
