@@ -98,7 +98,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
           <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerLogo ? (
-                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
               ) : (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"

@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
 import LanguageSelector from '../../components/common/LanguageSelector'
 
-const MIN_SPLASH_MS = 1800
+const MIN_SPLASH_MS = 1200
 
 export default function MobileWelcome() {
   const navigate = useNavigate()
@@ -32,41 +32,28 @@ export default function MobileWelcome() {
       const isNative = Capacitor.isNativePlatform()
 
       if (firebaseUser) {
-        // Authenticated: hide splash over stable white div, then navigate
+        // Authenticated: hide splash, navigate (everything is white — seamless)
         if (isNative) {
           const { SplashScreen } = await import('@capacitor/splash-screen')
           SplashScreen.hide({ fadeOutDuration: 300 })
-
-          // Wait for splash fade to complete over our stable white background
-          await new Promise(r => setTimeout(r, 350))
-
-          // Configure StatusBar after splash is fully gone
-          const { StatusBar, Style } = await import('@capacitor/status-bar')
-          StatusBar.setStyle({ style: Style.Light })
-          StatusBar.setOverlaysWebView({ overlay: true })
         }
 
-        // Now navigate — splash is gone, user sees white then dashboard
         if (store) {
           navigate(localePath('/dashboard'), { replace: true })
         } else {
-          navigate(localePath('/register'), { replace: true })
+          // Native: no register flow in-app, stay at /login.
+          navigate(localePath(isNative ? '/login' : '/register'), { replace: true })
         }
       } else {
-        // Not authenticated: reveal welcome, then hide splash
+        // Not authenticated: reveal welcome first, then fade splash
         setShowContent(true)
 
-        // Small delay so React renders the welcome screen before splash hides
+        // Let React render welcome so the splash fade cross-dissolves over it
         await new Promise(r => setTimeout(r, 50))
 
         if (isNative) {
           const { SplashScreen } = await import('@capacitor/splash-screen')
-          SplashScreen.hide({ fadeOutDuration: 300 })
-
-          // Configure StatusBar after splash starts fading
-          const { StatusBar, Style } = await import('@capacitor/status-bar')
-          StatusBar.setStyle({ style: Style.Dark })
-          StatusBar.setOverlaysWebView({ overlay: true })
+          SplashScreen.hide({ fadeOutDuration: 400 })
         }
       }
     }
@@ -74,96 +61,53 @@ export default function MobileWelcome() {
     setup()
   }, [loading, firebaseUser, store, navigate, localePath])
 
-  // While loading or waiting, render nothing (Capacitor splash covers everything)
+  // While loading or waiting, render white — matches splash background exactly
   if (!showContent) {
     return <div className="fixed inset-0 bg-white" />
   }
 
-  // Welcome screen for unauthenticated users
+  // Welcome screen — logo positioned identically to Login, so navigating between
+  // them is just a cross-fade with no element movement.
   return (
-    <div className="fixed inset-0 bg-[#0a1628] flex flex-col">
-      {/* Background collage */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 grid grid-cols-3 gap-1 opacity-40">
-          <div className="flex flex-col gap-1">
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/alienstore.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/braseria.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/tecnomax.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1 mt-8">
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/braseria.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/tecnomax.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/alienstore.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1 -mt-4">
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/tecnomax.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/alienstore.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <img src="/demos/braseria.jpg" alt="" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1628] via-[#0a1628]/60 to-[#0a1628]" />
+    <div className="fixed inset-0 bg-white flex flex-col animate-[fadeIn_400ms_ease-out]">
+      {/* Top safe area — white, so the status bar reads naturally */}
+      <div style={{ height: 'env(safe-area-inset-top)' }} />
+
+      {/* Language selector (top-right) */}
+      <div className="flex justify-end px-5 pt-3">
+        <LanguageSelector />
       </div>
 
-      {/* Content */}
-      <div className="relative flex-1 flex flex-col justify-between px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
-        <div className="flex-shrink-0 pt-4">
-          <div className="flex items-center justify-center gap-3">
-            <img
-              src="/newlogo.png"
-              alt="Shopifree"
-              className="h-8 brightness-0 invert"
-            />
-            <LanguageSelector variant="dark" />
-          </div>
-        </div>
+      {/* Centered content: logo + tagline */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8">
+        <img
+          src="/icon-512.png"
+          alt="Shopifree"
+          className="w-20 h-20 rounded-[22%] shadow-sm"
+        />
+        <h1 className="mt-8 text-[26px] leading-tight font-semibold text-[#1e3a5f] text-center tracking-tight">
+          {t('mobile.title', { defaultValue: 'Tu tienda, en tu bolsillo' })}
+        </h1>
+        <p className="text-slate-500 text-[15px] text-center mt-3 max-w-[260px] leading-relaxed">
+          {t('mobile.subtitle', { defaultValue: 'Gestioná productos, pedidos y clientes desde donde estés.' })}
+        </p>
+      </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center -mt-8">
-          <h1 className="text-[2rem] leading-tight font-extrabold text-white text-center tracking-tight">
-            {t('mobile.title')}{'\n'}
-            <span className="text-[#38bdf8]">{t('mobile.titleHighlight')}</span>
-          </h1>
-          <p className="text-slate-400 text-[15px] text-center mt-3 max-w-[280px] leading-relaxed">
-            {t('mobile.subtitle')}
-          </p>
-        </div>
+      {/* Bottom CTA + register link */}
+      <div
+        className="flex-shrink-0 px-6 space-y-3"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <button
+          onClick={() => navigate(localePath('/login'))}
+          className="w-full py-[14px] bg-[#1e3a5f] text-white font-semibold text-[15px] rounded-2xl active:scale-[0.98] transition-transform shadow-sm"
+        >
+          {t('mobile.haveAccount', { defaultValue: 'Iniciar sesión' })}
+        </button>
 
-        <div className="flex-shrink-0 space-y-3" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <button
-            onClick={() => navigate(localePath('/register'))}
-            className="w-full py-[14px] bg-[#38bdf8] text-[#0a1628] font-bold text-[15px] rounded-2xl active:scale-[0.98] transition-transform"
-          >
-            {t('mobile.startFree')}
-          </button>
-
-          <button
-            onClick={() => navigate(localePath('/login'))}
-            className="w-full py-[14px] bg-white/10 text-white font-semibold text-[15px] rounded-2xl border border-white/15 active:bg-white/15 transition-colors backdrop-blur-sm"
-          >
-            {t('mobile.haveAccount')}
-          </button>
-
-          <p className="text-center text-[11px] text-slate-500 pt-1">
-            {t('mobile.noCreditCard')}
-          </p>
-        </div>
+        <p className="text-center text-[13px] text-slate-500 leading-snug">
+          {t('mobile.createOnWeb', { defaultValue: '¿No tenés cuenta? Creala en shopifree.app' })}
+        </p>
       </div>
     </div>
   )

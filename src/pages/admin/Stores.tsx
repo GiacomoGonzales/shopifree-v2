@@ -24,22 +24,6 @@ const formatRelativeTime = (date: Date): string => {
   return `Hace ${Math.floor(diffDays / 365)} año${Math.floor(diffDays / 365) > 1 ? 's' : ''}`
 }
 
-const getActivityColor = (date: Date): string => {
-  const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
-  if (diffDays <= 3) return 'text-green-600 bg-green-50'
-  if (diffDays <= 14) return 'text-blue-600 bg-blue-50'
-  if (diffDays <= 30) return 'text-yellow-600 bg-yellow-50'
-  return 'text-red-600 bg-red-50'
-}
-
-const getActivityDot = (date: Date): string => {
-  const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
-  if (diffDays <= 3) return 'bg-green-400'
-  if (diffDays <= 14) return 'bg-blue-400'
-  if (diffDays <= 30) return 'bg-yellow-400'
-  return 'bg-red-400'
-}
-
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: 'Activa',
   past_due: 'Pago pendiente',
@@ -66,22 +50,19 @@ const COLUMNS: { id: string; label: string; alwaysVisible?: boolean }[] = [
 ]
 
 // Helper for expiration date formatting and urgency
-// Handles both Stripe subscriptions AND free trial users (trialEndsAt)
 const getExpirationInfo = (
   periodEnd: Date | null,
   trialEnd: Date | null,
   status?: string,
-  storeTrialEndsAt?: Date | null, // For free trial users without Stripe subscription
-  storePlanExpiresAt?: Date | null // Manual plan expiration set by admin
-): { text: string; color: string; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
+  storeTrialEndsAt?: Date | null,
+  storePlanExpiresAt?: Date | null
+): { text: string; urgent: boolean; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
   const now = new Date()
 
-  // Case 1: User has active Stripe subscription
   const isActive = status === 'active' || status === 'trialing'
   const isStripeTrial = status === 'trialing'
 
   if (isActive) {
-    // For trialing users, show trial end date; for active, show period end
     const date = isStripeTrial && trialEnd ? trialEnd : periodEnd
     if (date) {
       const diffMs = date.getTime() - now.getTime()
@@ -91,24 +72,21 @@ const getExpirationInfo = (
     }
   }
 
-  // Case 2: Manual plan expiration (admin-granted access)
   if (storePlanExpiresAt) {
     const diffMs = storePlanExpiresAt.getTime() - now.getTime()
     const daysLeft = Math.ceil(diffMs / 86400000)
     return formatExpirationResult(daysLeft, storePlanExpiresAt, 'Manual: ', false)
   }
 
-  // Case 3: User on free 14-day trial (no Stripe subscription)
   if (storeTrialEndsAt) {
     const diffMs = storeTrialEndsAt.getTime() - now.getTime()
     const daysLeft = Math.ceil(diffMs / 86400000)
-    // Only show if trial hasn't expired yet (or just expired)
-    if (daysLeft >= -7) { // Show up to 7 days after expiration
+    if (daysLeft >= -7) {
       return formatExpirationResult(daysLeft, storeTrialEndsAt, 'Prueba: ', true)
     }
   }
 
-  return { text: '-', color: 'text-gray-400', daysLeft: Infinity, showExpiration: false, isTrial: false }
+  return { text: '-', urgent: false, daysLeft: Infinity, showExpiration: false, isTrial: false }
 }
 
 const formatExpirationResult = (
@@ -116,26 +94,20 @@ const formatExpirationResult = (
   date: Date,
   prefix: string,
   isTrial: boolean
-): { text: string; color: string; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
+): { text: string; urgent: boolean; daysLeft: number; showExpiration: boolean; isTrial: boolean } => {
   if (daysLeft < 0) {
-    return { text: `${prefix}Vencido`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
+    return { text: `${prefix}Vencido`, urgent: true, daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft === 0) {
-    return { text: `${prefix}Hoy`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
+    return { text: `${prefix}Hoy`, urgent: true, daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft <= 3) {
-    return { text: `${prefix}${daysLeft}d`, color: 'bg-red-100 text-red-700', daysLeft, showExpiration: true, isTrial }
-  }
-  if (daysLeft <= 7) {
-    return { text: `${prefix}${daysLeft}d`, color: 'bg-yellow-100 text-yellow-700', daysLeft, showExpiration: true, isTrial }
-  }
-  if (daysLeft <= 14) {
-    return { text: `${prefix}${daysLeft}d`, color: isTrial ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700', daysLeft, showExpiration: true, isTrial }
+    return { text: `${prefix}${daysLeft}d`, urgent: true, daysLeft, showExpiration: true, isTrial }
   }
   if (daysLeft <= 30) {
-    return { text: `${prefix}${daysLeft}d`, color: 'bg-blue-100 text-blue-700', daysLeft, showExpiration: true, isTrial }
+    return { text: `${prefix}${daysLeft}d`, urgent: false, daysLeft, showExpiration: true, isTrial }
   }
-  return { text: date.toLocaleDateString(), color: 'bg-gray-100 text-gray-600', daysLeft, showExpiration: true, isTrial }
+  return { text: date.toLocaleDateString(), urgent: false, daysLeft, showExpiration: true, isTrial }
 }
 
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
@@ -178,7 +150,6 @@ export default function AdminStores() {
     })
   }
 
-  // Close dropdown on click outside
   useEffect(() => {
     if (!columnsOpen) return
     const handler = (e: MouseEvent) => {
@@ -197,7 +168,6 @@ export default function AdminStores() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
 
-  // Real-time listener for stores (picks up lastOnlineAt changes instantly)
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'stores'),
@@ -221,7 +191,6 @@ export default function AdminStores() {
   const handleSyncSubscription = async (storeId: string) => {
     setSyncingStore(storeId)
     try {
-      // Use production API URL when running locally
       const apiUrl = window.location.hostname === 'localhost'
         ? 'https://shopifree.app/api/sync-subscription'
         : '/api/sync-subscription'
@@ -235,7 +204,6 @@ export default function AdminStores() {
       const data = await response.json()
 
       if (response.ok) {
-        // Update local state
         setStores(prev => prev.map(s =>
           s.id === storeId
             ? {
@@ -261,7 +229,6 @@ export default function AdminStores() {
 
   const openEditPlan = (store: Store & { id: string }) => {
     setEditingStore(store)
-    // Initialize expiration date from existing planExpiresAt
     if (store.planExpiresAt) {
       const d = store.planExpiresAt instanceof Date
         ? store.planExpiresAt
@@ -283,7 +250,6 @@ export default function AdminStores() {
       }
 
       if (newPlan === 'free') {
-        // Free plan doesn't need expiration
         updateData.planExpiresAt = null
       } else if (planExpiresAt) {
         updateData.planExpiresAt = new Date(planExpiresAt + 'T23:59:59')
@@ -324,24 +290,20 @@ export default function AdminStores() {
                            store.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesPlan = filterPlan === 'all' || store.plan === filterPlan
 
-      // Expiration filter - applies to active subscriptions AND free trial users
       let matchesExpiration = true
       if (filterExpiration !== 'all') {
         const isActive = store.subscription?.status === 'active' || store.subscription?.status === 'trialing'
         const expDate = toDate(store.subscription?.currentPeriodEnd)
         const storeTrialEnd = toDate((store as any).trialEndsAt)
 
-        // Determine expiration date: Stripe subscription OR free trial
         let effectiveExpDate: Date | null = null
         if (isActive && expDate) {
           effectiveExpDate = expDate
         } else if (storeTrialEnd && storeTrialEnd.getTime() > Date.now() - 7 * 86400000) {
-          // Include free trial users (up to 7 days after expiration)
           effectiveExpDate = storeTrialEnd
         }
 
         if (!effectiveExpDate) {
-          // No active subscription or trial = only match 'none' filter
           matchesExpiration = filterExpiration === 'none'
         } else {
           const daysLeft = Math.ceil((effectiveExpDate.getTime() - Date.now()) / 86400000)
@@ -383,13 +345,11 @@ export default function AdminStores() {
           comparison = (toDate(a.updatedAt)?.getTime() || 0) - (toDate(b.updatedAt)?.getTime() || 0)
           break
         case 'expiration': {
-          // Consider expiration for active subscriptions AND free trial users
           const getEffectiveExp = (store: Store & { id: string }): number => {
             const isActive = store.subscription?.status === 'active' || store.subscription?.status === 'trialing'
             if (isActive) {
               return toDate(store.subscription?.currentPeriodEnd)?.getTime() || Infinity
             }
-            // Check for free trial (trialEndsAt)
             const trialEnd = toDate((store as any).trialEndsAt)
             if (trialEnd && trialEnd.getTime() > Date.now() - 7 * 86400000) {
               return trialEnd.getTime()
@@ -408,7 +368,6 @@ export default function AdminStores() {
     return result
   }, [stores, searchTerm, filterPlan, filterExpiration, sortField, sortOrder, productCounts])
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, filterPlan, filterExpiration, sortField, sortOrder])
@@ -419,7 +378,6 @@ export default function AdminStores() {
     return filteredStores.slice(start, start + itemsPerPage)
   }, [filteredStores, currentPage, itemsPerPage])
 
-  // Fetch product counts only for visible stores (lazy per page)
   useEffect(() => {
     const missingIds = paginatedStores
       .filter(s => productCounts[s.id] === undefined)
@@ -460,17 +418,17 @@ export default function AdminStores() {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <svg className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
         </svg>
       )
     }
     return sortOrder === 'desc' ? (
-      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-3 h-3 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     ) : (
-      <svg className="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-3 h-3 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
       </svg>
     )
@@ -479,40 +437,38 @@ export default function AdminStores() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500"></div>
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-gray-900" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">Tiendas</h1>
-          <span className="px-2.5 py-1 bg-violet-100 text-violet-700 text-sm font-semibold rounded-full">
-            {stores.length}
-          </span>
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Tiendas</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{stores.length} registradas</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <input
             type="text"
             placeholder="Buscar por nombre o subdominio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white/50 backdrop-blur border border-white/80 rounded-xl focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all text-gray-900 placeholder-gray-400"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 placeholder-gray-400"
           />
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
         <select
           value={filterPlan}
           onChange={(e) => setFilterPlan(e.target.value)}
-          className="px-4 py-2.5 bg-white/50 backdrop-blur border border-white/80 rounded-xl focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all text-gray-900"
+          className="px-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
         >
           <option value="all">Todos los planes</option>
           <option value="free">Free</option>
@@ -522,14 +478,14 @@ export default function AdminStores() {
         <select
           value={filterExpiration}
           onChange={(e) => setFilterExpiration(e.target.value)}
-          className="px-4 py-2.5 bg-white/50 backdrop-blur border border-white/80 rounded-xl focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all text-gray-900"
+          className="px-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
         >
           <option value="all">Todos los vencimientos</option>
-          <option value="expired">⛔ Vencidos</option>
-          <option value="3days">🔴 Vence en 3 días</option>
-          <option value="7days">🟡 Vence en 7 días</option>
-          <option value="14days">🟠 Vence en 14 días</option>
-          <option value="30days">🔵 Vence en 30 días</option>
+          <option value="expired">Vencidos</option>
+          <option value="3days">Vence en 3 días</option>
+          <option value="7days">Vence en 7 días</option>
+          <option value="14days">Vence en 14 días</option>
+          <option value="30days">Vence en 30 días</option>
           <option value="none">Sin suscripción</option>
         </select>
 
@@ -537,25 +493,25 @@ export default function AdminStores() {
         <div className="relative hidden md:block" ref={columnsRef}>
           <button
             onClick={() => setColumnsOpen(o => !o)}
-            className="px-4 py-2.5 bg-white/50 backdrop-blur border border-white/80 rounded-xl hover:bg-white/70 transition-all text-gray-900 text-sm font-medium flex items-center gap-2"
+            className="px-3 py-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2"
           >
             <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
             </svg>
             Columnas
           </button>
           {columnsOpen && (
-            <div className="absolute right-0 top-full mt-2 w-52 bg-white/80 backdrop-blur-xl border border-white/80 rounded-xl shadow-lg shadow-black/10 py-2 z-30">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-30">
               {COLUMNS.filter(c => !c.alwaysVisible).map(col => (
                 <label
                   key={col.id}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-violet-50/50 cursor-pointer transition-colors text-sm text-gray-700"
+                  className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
                 >
                   <input
                     type="checkbox"
                     checked={isVisible(col.id)}
                     onChange={() => toggleColumn(col.id)}
-                    className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500/30"
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                   />
                   {col.label}
                 </label>
@@ -566,93 +522,72 @@ export default function AdminStores() {
       </div>
 
       {/* Stores Table / Cards */}
-      <div className="bg-white/60 backdrop-blur-xl border border-white/80 shadow-lg shadow-black/5 rounded-2xl overflow-hidden">
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
         {/* Desktop table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-white/50 border-b border-white/60">
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
-                  <div className="flex items-center gap-1">
-                    Tienda
-                    <SortIcon field="name" />
-                  </div>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('name')}>
+                  <div className="flex items-center gap-1">Tienda <SortIcon field="name" /></div>
                 </th>
                 {isVisible('subdomain') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('subdomain')}>
-                  <div className="flex items-center gap-1">
-                    Subdominio
-                    <SortIcon field="subdomain" />
-                  </div>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('subdomain')}>
+                  <div className="flex items-center gap-1">Subdominio <SortIcon field="subdomain" /></div>
                 </th>
                 )}
                 {isVisible('country') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">País</th>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">País</th>
                 )}
                 {isVisible('plan') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('plan')}>
-                  <div className="flex items-center gap-1">
-                    Plan
-                    <SortIcon field="plan" />
-                  </div>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('plan')}>
+                  <div className="flex items-center gap-1">Plan <SortIcon field="plan" /></div>
                 </th>
                 )}
                 {isVisible('products') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('products')}>
-                  <div className="flex items-center gap-1">
-                    Productos
-                    <SortIcon field="products" />
-                  </div>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('products')}>
+                  <div className="flex items-center gap-1">Productos <SortIcon field="products" /></div>
                 </th>
                 )}
                 {isVisible('online') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">En línea</th>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">En línea</th>
                 )}
                 {isVisible('activity') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('lastActivity')}>
-                  <div className="flex items-center gap-1">
-                    Actividad
-                    <SortIcon field="lastActivity" />
-                  </div>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('lastActivity')}>
+                  <div className="flex items-center gap-1">Actividad <SortIcon field="lastActivity" /></div>
                 </th>
                 )}
                 {isVisible('subscription') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado Suscripcion</th>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">Suscripción</th>
                 )}
                 {isVisible('expiration') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('expiration')}>
-                  <div className="flex items-center gap-1">
-                    Vencimiento
-                    <SortIcon field="expiration" />
-                  </div>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('expiration')}>
+                  <div className="flex items-center gap-1">Vencimiento <SortIcon field="expiration" /></div>
                 </th>
                 )}
                 {isVisible('createdAt') && (
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('createdAt')}>
-                  <div className="flex items-center gap-1">
-                    Creada
-                    <SortIcon field="createdAt" />
-                  </div>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('createdAt')}>
+                  <div className="flex items-center gap-1">Creada <SortIcon field="createdAt" /></div>
                 </th>
                 )}
-                <th className="text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Acciones</th>
+                <th className="text-left px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedStores.map((store) => (
-                <tr key={store.id} className="border-b border-white/60 hover:bg-white/40 transition-colors">
+                <tr key={store.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       {store.logo ? (
-                        <img src={store.logo} alt={store.name} className="w-7 h-7 rounded-md object-cover ring-1 ring-black/5" />
+                        <img src={store.logo} alt={store.name} className="w-7 h-7 rounded-md object-cover" />
                       ) : (
-                        <div className="w-7 h-7 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-md flex items-center justify-center">
-                          <span className="text-violet-600 font-bold text-xs">{store.name.charAt(0)}</span>
+                        <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center">
+                          <span className="text-gray-600 font-medium text-xs">{store.name.charAt(0)}</span>
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="font-medium text-gray-900 text-sm truncate">{store.name}</p>
-                        <p className="text-[11px] text-gray-400 truncate">{store.whatsapp}</p>
+                        <p className="font-medium text-gray-900 text-[13px] truncate">{store.name}</p>
+                        <p className="text-[11px] text-gray-500 truncate">{store.whatsapp}</p>
                       </div>
                     </div>
                   </td>
@@ -662,19 +597,19 @@ export default function AdminStores() {
                       href={`https://${store.subdomain}.shopifree.app`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-violet-600 hover:text-violet-700 hover:underline text-xs font-medium"
+                      className="text-gray-700 hover:text-gray-900 hover:underline text-[12px] font-medium"
                     >
                       {store.subdomain}
                     </a>
                   </td>
                   )}
                   {isVisible('country') && (
-                  <td className="px-3 py-2 text-sm">
+                  <td className="px-3 py-2 text-[13px]">
                     {(() => {
                       const c = countries.find(c => c.code === store.location?.country)
                       return c ? (
-                        <span className="flex items-center gap-1.5">
-                          <img src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.png`} alt={c.code} className="w-5 h-auto rounded-sm" />
+                        <span className="flex items-center gap-1.5 text-gray-700">
+                          <img src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.png`} alt={c.code} className="w-4 h-auto rounded-sm" />
                           {c.name.es}
                         </span>
                       ) : <span className="text-gray-400">-</span>
@@ -683,23 +618,12 @@ export default function AdminStores() {
                   )}
                   {isVisible('plan') && (
                   <td className="px-3 py-2">
-                    <span className={`px-3 py-1 text-xs rounded-full font-medium capitalize ${
-                      store.plan === 'free' ? 'bg-gray-100/80 text-gray-600' :
-                      store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' :
-                      'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                    }`}>
-                      {store.plan}
-                    </span>
+                    <PlanBadge plan={store.plan} />
                   </td>
                   )}
                   {isVisible('products') && (
                   <td className="px-3 py-2">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${
-                      (productCounts[store.id] || 0) > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400'
-                    }`}>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
+                    <span className="text-[13px] tabular-nums text-gray-900 font-medium">
                       {productCounts[store.id] ?? '...'}
                     </span>
                   </td>
@@ -717,13 +641,13 @@ export default function AdminStores() {
                       if (!lastOnline) return <span className="text-gray-400 text-xs">-</span>
                       const isOnline = Date.now() - lastOnline.getTime() < ONLINE_THRESHOLD_MS
                       return isOnline ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-gray-900">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-900" />
                           En línea
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-gray-50 text-gray-500" title={lastOnline.toLocaleString()}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                        <span className="inline-flex items-center gap-1.5 text-[12px] text-gray-500" title={lastOnline.toLocaleString()}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                           {formatRelativeTime(lastOnline)}
                         </span>
                       )
@@ -740,10 +664,9 @@ export default function AdminStores() {
                         return new Date(d)
                       }
                       const date = toDate(store.updatedAt)
-                      if (!date) return <span className="text-gray-400 text-sm">-</span>
+                      if (!date) return <span className="text-gray-400 text-[12px]">-</span>
                       return (
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${getActivityColor(date)}`} title={date.toLocaleString()}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${getActivityDot(date)}`}></span>
+                        <span className="text-[12px] text-gray-700" title={date.toLocaleString()}>
                           {formatRelativeTime(date)}
                         </span>
                       )
@@ -755,35 +678,29 @@ export default function AdminStores() {
                     <div className="flex items-center gap-2">
                       {store.subscription ? (
                         <>
-                          <span className={`px-3 py-1 text-xs rounded-full font-medium ${
-                            store.subscription.status === 'active' ? 'bg-green-100/80 text-green-700' :
-                            store.subscription.status === 'trialing' ? 'bg-blue-100/80 text-blue-700' :
-                            store.subscription.status === 'past_due' ? 'bg-yellow-100/80 text-yellow-700' :
-                            'bg-red-100/80 text-red-700'
-                          }`}>
+                          <StatusBadge status={store.subscription.status}>
                             {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
-                          </span>
+                          </StatusBadge>
                           <button
                             onClick={() => handleSyncSubscription(store.id)}
                             disabled={syncingStore === store.id}
-                            className="p-1 text-gray-400 hover:text-violet-600 hover:bg-white/50 rounded transition-all disabled:opacity-50"
+                            className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
                             title="Sincronizar con Stripe"
                           >
                             {syncingStore === store.id ? (
-                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                               </svg>
                             ) : (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                               </svg>
                             )}
                           </button>
                         </>
                       ) : (
                         (() => {
-                          // Check for free trial (trialEndsAt)
                           const toDate = (d: any) => {
                             if (!d) return null
                             if (d.toDate) return d.toDate()
@@ -792,12 +709,12 @@ export default function AdminStores() {
                           }
                           const trialEndsAt = toDate((store as any).trialEndsAt)
                           if (trialEndsAt && trialEndsAt.getTime() > Date.now()) {
-                            return <span className="px-3 py-1 text-xs rounded-full font-medium bg-purple-100/80 text-purple-700">Prueba gratuita</span>
+                            return <StatusBadge>Prueba gratuita</StatusBadge>
                           }
                           if (trialEndsAt && trialEndsAt.getTime() <= Date.now()) {
-                            return <span className="px-3 py-1 text-xs rounded-full font-medium bg-red-100/80 text-red-700">Prueba vencida</span>
+                            return <StatusBadge status="expired">Prueba vencida</StatusBadge>
                           }
-                          return <span className="text-gray-400 text-sm">Sin suscripcion</span>
+                          return <span className="text-gray-400 text-[12px]">Sin suscripción</span>
                         })()
                       )}
                     </div>
@@ -817,10 +734,10 @@ export default function AdminStores() {
                       const storeTrialEndsAt = toDate((store as any).trialEndsAt)
                       const storePlanExpiresAt = toDate((store as any).planExpiresAt)
                       const info = getExpirationInfo(periodEnd, trialEnd, store.subscription?.status, storeTrialEndsAt, storePlanExpiresAt)
-                      if (!info.showExpiration) return <span className="text-gray-400 text-xs">-</span>
+                      if (!info.showExpiration) return <span className="text-gray-400 text-[12px]">-</span>
                       return (
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${info.color}`}
+                          className={`text-[12px] tabular-nums ${info.urgent ? 'font-semibold text-gray-900' : 'text-gray-600'}`}
                           title={(info.isTrial ? (trialEnd || storeTrialEndsAt) : periodEnd)?.toLocaleString()}
                         >
                           {info.text}
@@ -830,7 +747,7 @@ export default function AdminStores() {
                   </td>
                   )}
                   {isVisible('createdAt') && (
-                  <td className="px-3 py-2 text-sm text-gray-500">
+                  <td className="px-3 py-2 text-[12px] text-gray-500 tabular-nums">
                     {store.createdAt
                       ? (store.createdAt as any).toDate
                         ? (store.createdAt as any).toDate().toLocaleDateString()
@@ -845,13 +762,13 @@ export default function AdminStores() {
                     <div className="flex items-center gap-1">
                       <Link
                         to={localePath('/admin/stores/' + store.id)}
-                        className="px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-md transition-all"
+                        className="px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                       >
                         Ver
                       </Link>
                       <button
                         onClick={() => openEditPlan(store)}
-                        className="px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 rounded-md transition-all"
+                        className="px-2 py-1 text-[12px] font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
                       >
                         Plan
                       </button>
@@ -864,7 +781,7 @@ export default function AdminStores() {
         </div>
 
         {/* Mobile cards */}
-        <div className="md:hidden divide-y divide-white/60">
+        <div className="md:hidden divide-y divide-gray-100">
           {paginatedStores.map((store) => {
             const toDate = (d: any) => {
               if (!d) return null
@@ -890,39 +807,31 @@ export default function AdminStores() {
               : '-'
 
             return (
-            <div key={store.id} className="p-4 hover:bg-white/40 transition-colors">
-              {/* Header: Logo + Name + Online dot + Plan */}
+            <div key={store.id} className="p-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="relative flex-shrink-0">
                   {store.logo ? (
-                    <img src={store.logo} alt={store.name} className="w-11 h-11 rounded-xl object-cover ring-1 ring-black/5" />
+                    <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-md object-cover" />
                   ) : (
-                    <div className="w-11 h-11 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                      <span className="text-violet-600 font-bold">{store.name.charAt(0)}</span>
+                    <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+                      <span className="text-gray-600 font-medium">{store.name.charAt(0)}</span>
                     </div>
                   )}
-                  {/* Online indicator on avatar */}
                   {lastOnline && (
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-gray-900' : 'bg-gray-300'}`} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-gray-900 truncate">{store.name}</p>
-                    <span className={`px-2.5 py-0.5 text-[11px] rounded-full font-medium capitalize flex-shrink-0 ${
-                      store.plan === 'free' ? 'bg-gray-100/80 text-gray-600' :
-                      store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white' :
-                      'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                    }`}>
-                      {store.plan}
-                    </span>
+                    <p className="font-medium text-gray-900 truncate">{store.name}</p>
+                    <PlanBadge plan={store.plan} />
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <a
                       href={`https://${store.subdomain}.shopifree.app`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-violet-600 hover:text-violet-700 text-xs font-medium"
+                      className="text-gray-600 hover:text-gray-900 text-[12px]"
                     >
                       {store.subdomain}.shopifree.app
                     </a>
@@ -931,15 +840,13 @@ export default function AdminStores() {
                 </div>
               </div>
 
-              {/* Info grid */}
-              <div className="mt-3 ml-[56px] grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
-                {/* Online status */}
-                <div className="flex items-center gap-1.5">
+              <div className="mt-3 ml-[52px] grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">Estado</span>
                   {lastOnline ? (
                     isOnline ? (
-                      <span className="inline-flex items-center gap-1 text-green-700 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                      <span className="inline-flex items-center gap-1 text-gray-900 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-900" />
                         En línea
                       </span>
                     ) : (
@@ -950,79 +857,48 @@ export default function AdminStores() {
                   )}
                 </div>
 
-                {/* Products */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">Prod.</span>
-                  <span className={`font-semibold ${(productCounts[store.id] || 0) > 0 ? 'text-violet-700' : 'text-gray-400'}`}>
+                  <span className="font-medium text-gray-900 tabular-nums">
                     {productCounts[store.id] ?? '...'}
                   </span>
                 </div>
 
-                {/* Activity */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">Actividad</span>
                   {activityDate ? (
-                    <span className={`inline-flex items-center gap-1 font-medium ${getActivityColor(activityDate).replace('bg-', '').split(' ')[0]}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${getActivityDot(activityDate)}`}></span>
-                      {formatRelativeTime(activityDate)}
-                    </span>
+                    <span className="text-gray-700">{formatRelativeTime(activityDate)}</span>
                   ) : (
                     <span className="text-gray-300">-</span>
                   )}
                 </div>
 
-                {/* Country */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">País</span>
                   <span className="text-gray-700">{country?.name.es || '-'}</span>
                 </div>
 
-                {/* Subscription */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">Suscr.</span>
                   {store.subscription ? (
-                    <div className="flex items-center gap-1">
-                      <span className={`px-1.5 py-0.5 rounded-full font-medium ${
-                        store.subscription.status === 'active' ? 'bg-green-100/80 text-green-700' :
-                        store.subscription.status === 'trialing' ? 'bg-blue-100/80 text-blue-700' :
-                        store.subscription.status === 'past_due' ? 'bg-yellow-100/80 text-yellow-700' :
-                        'bg-red-100/80 text-red-700'
-                      }`}>
-                        {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
-                      </span>
-                      <button
-                        onClick={() => handleSyncSubscription(store.id)}
-                        disabled={syncingStore === store.id}
-                        className="p-0.5 text-gray-400 hover:text-violet-600 rounded transition-all disabled:opacity-50"
-                      >
-                        {syncingStore === store.id ? (
-                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
+                    <StatusBadge status={store.subscription.status}>
+                      {SUBSCRIPTION_STATUS_LABELS[store.subscription.status] || store.subscription.status}
+                    </StatusBadge>
                   ) : (
                     storeTrialEndsAt && storeTrialEndsAt.getTime() > Date.now() ? (
-                      <span className="px-1.5 py-0.5 rounded-full font-medium bg-purple-100/80 text-purple-700">Prueba gratuita</span>
+                      <StatusBadge>Prueba</StatusBadge>
                     ) : storeTrialEndsAt ? (
-                      <span className="px-1.5 py-0.5 rounded-full font-medium bg-red-100/80 text-red-700">Prueba vencida</span>
+                      <StatusBadge status="expired">Prueba vencida</StatusBadge>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )
                   )}
                 </div>
 
-                {/* Expiration */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">Vence</span>
                   {expirationInfo.showExpiration ? (
-                    <span className={`px-1.5 py-0.5 rounded-full font-medium ${expirationInfo.color}`}>
+                    <span className={`tabular-nums ${expirationInfo.urgent ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
                       {expirationInfo.text}
                     </span>
                   ) : (
@@ -1030,30 +906,27 @@ export default function AdminStores() {
                   )}
                 </div>
 
-                {/* Created date */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 w-14">Creada</span>
-                  <span className="text-gray-500">{createdDate}</span>
+                  <span className="text-gray-500 tabular-nums">{createdDate}</span>
                 </div>
 
-                {/* WhatsApp */}
-                <div className="flex items-center gap-1.5 col-span-2">
+                <div className="flex items-center gap-2 col-span-2">
                   <span className="text-gray-400 w-14">WhatsApp</span>
                   <span className="text-gray-700">{store.whatsapp || '-'}</span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-2 mt-3 ml-[56px]">
+              <div className="flex items-center justify-end gap-2 mt-3 ml-[52px]">
                 <Link
                   to={localePath('/admin/stores/' + store.id)}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-violet-500 hover:bg-violet-600 rounded-lg transition-all"
+                  className="px-3 py-1.5 text-[12px] font-medium text-white bg-black hover:bg-gray-800 rounded-md transition-colors"
                 >
                   Ver detalle
                 </Link>
                 <button
                   onClick={() => openEditPlan(store)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
+                  className="px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-md transition-colors"
                 >
                   Editar plan
                 </button>
@@ -1064,32 +937,20 @@ export default function AdminStores() {
         </div>
 
         {filteredStores.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-sm text-gray-500">
             No se encontraron tiendas
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-2 border-t border-white/60">
-            <p className="text-sm text-gray-500">
-              Mostrando {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, filteredStores.length)} de {filteredStores.length} tiendas
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-2 border-t border-gray-200 bg-gray-50">
+            <p className="text-[12px] text-gray-500">
+              Mostrando {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, filteredStores.length)} de {filteredStores.length}
             </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                «
-              </button>
-              <button
-                onClick={() => setCurrentPage(p => p - 1)}
-                disabled={currentPage === 1}
-                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                ‹
-              </button>
+            <div className="flex items-center gap-0.5">
+              <PageBtn onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</PageBtn>
+              <PageBtn onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>‹</PageBtn>
               {(() => {
                 const pages: number[] = []
                 let start = Math.max(1, currentPage - 2)
@@ -1100,30 +961,18 @@ export default function AdminStores() {
                   <button
                     key={p}
                     onClick={() => setCurrentPage(p)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                    className={`px-2.5 py-1 text-[12px] font-medium rounded-md transition-colors ${
                       p === currentPage
-                        ? 'bg-violet-500 text-white shadow-sm'
-                        : 'text-gray-600 hover:bg-violet-50'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {p}
                   </button>
                 ))
               })()}
-              <button
-                onClick={() => setCurrentPage(p => p + 1)}
-                disabled={currentPage === totalPages}
-                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                ›
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                »
-              </button>
+              <PageBtn onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>›</PageBtn>
+              <PageBtn onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</PageBtn>
             </div>
           </div>
         )}
@@ -1131,43 +980,44 @@ export default function AdminStores() {
 
       {/* Edit Plan Modal */}
       {editingStore && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/80 backdrop-blur-2xl border border-white/50 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Editar plan: {editingStore.name}
-            </h3>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg border border-gray-200 w-full max-w-md shadow-xl">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900">
+                Editar plan
+              </h3>
+              <p className="text-[12px] text-gray-500 mt-0.5 truncate">{editingStore.name}</p>
+            </div>
 
-            {/* Plan selection */}
-            <div className="space-y-3 mb-4">
+            <div className="px-5 py-4 space-y-2">
               {['free', 'pro', 'business'].map((plan) => (
                 <button
                   key={plan}
                   onClick={() => handleUpdatePlan(editingStore.id, plan as 'free' | 'pro' | 'business')}
                   disabled={saving}
-                  className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
+                  className={`w-full p-3 rounded-md border text-left transition-colors flex items-center justify-between ${
                     editingStore.plan === plan
-                      ? 'border-violet-500 bg-violet-50/50'
-                      : 'border-white/80 hover:border-violet-300 bg-white/40'
+                      ? 'border-gray-900 bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-400 bg-white'
                   }`}
                 >
                   <div>
-                    <p className="font-semibold text-gray-900 capitalize">{plan}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm font-medium text-gray-900 capitalize">{plan}</p>
+                    <p className="text-[12px] text-gray-500">
                       {plan === 'free' ? 'Gratis' : `$${PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES].price}/mes`}
                     </p>
                   </div>
                   {editingStore.plan === plan && (
-                    <span className="px-2.5 py-1 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs rounded-lg font-semibold">
-                      Actual
+                    <span className="px-2 py-0.5 bg-black text-white text-[10px] rounded-sm font-medium tracking-wide">
+                      ACTUAL
                     </span>
                   )}
                 </button>
               ))}
             </div>
 
-            {/* Expiration date */}
-            <div className="mb-6 p-4 rounded-xl bg-amber-50/50 border border-amber-200/50">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <div className="px-5 py-4 border-t border-gray-200 bg-gray-50">
+              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">
                 Fecha de vencimiento del plan
               </label>
               <input
@@ -1175,9 +1025,9 @@ export default function AdminStores() {
                 value={planExpiresAt}
                 onChange={(e) => setPlanExpiresAt(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm bg-white"
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-[11px] text-gray-500 mt-1.5">
                 {planExpiresAt
                   ? `El plan vuelve a Free el ${new Date(planExpiresAt).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })}`
                   : 'Sin fecha = plan permanente (o hasta que Stripe lo gestione)'}
@@ -1185,24 +1035,64 @@ export default function AdminStores() {
               {planExpiresAt && (
                 <button
                   onClick={() => setPlanExpiresAt('')}
-                  className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium"
+                  className="mt-2 text-[11px] text-gray-600 hover:text-gray-900 font-medium underline"
                 >
                   Quitar fecha de vencimiento
                 </button>
               )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="px-5 py-3 border-t border-gray-200 flex justify-end">
               <button
                 onClick={() => setEditingStore(null)}
-                className="flex-1 px-4 py-3 text-gray-700 bg-gray-100/80 rounded-xl hover:bg-gray-200/80 transition-all font-medium"
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors font-medium"
               >
-                Cancelar
+                Cerrar
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+// ──────────────── helpers ────────────────
+
+function PlanBadge({ plan }: { plan?: string }) {
+  const base = 'px-2 py-0.5 text-[10px] rounded-sm font-medium uppercase tracking-wide'
+  if (plan === 'pro') {
+    return <span className={`${base} bg-gray-900 text-white`}>Pro</span>
+  }
+  if (plan === 'business') {
+    return <span className={`${base} bg-black text-white`}>Business</span>
+  }
+  return <span className={`${base} border border-gray-200 text-gray-600`}>Free</span>
+}
+
+function StatusBadge({ children, status }: { children: React.ReactNode; status?: string }) {
+  const urgent = status === 'past_due' || status === 'unpaid' || status === 'canceled' || status === 'incomplete_expired' || status === 'expired'
+  return (
+    <span
+      className={`px-2 py-0.5 text-[11px] rounded-sm font-medium border ${
+        urgent
+          ? 'border-gray-900 bg-gray-900 text-white'
+          : 'border-gray-200 text-gray-700'
+      }`}
+    >
+      {children}
+    </span>
+  )
+}
+
+function PageBtn({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+    >
+      {children}
+    </button>
   )
 }

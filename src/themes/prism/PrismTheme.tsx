@@ -94,7 +94,7 @@ export default function PrismTheme({ store, products, categories, onWhatsAppClic
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
   const heroRef = useRef<HTMLDivElement>(null)
   const heroImgRef = useRef<HTMLImageElement>(null)
   const heroImgMobileRef = useRef<HTMLImageElement>(null)
@@ -158,7 +158,7 @@ export default function PrismTheme({ store, products, categories, onWhatsAppClic
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {headerLogo && <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />}
+                {headerLogo && <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />}
                 {showName && <h1
                   className="text-xl font-bold animate-gradient-text"
                   style={{

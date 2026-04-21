@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../../hooks/useLanguage'
+import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import type { Store } from '../../types'
 
 type BannerType = 'warning' | 'error' | 'info'
@@ -92,11 +93,14 @@ function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, un
 export default function PlanBanner({ store }: { store: Store }) {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
+  const showUpgrade = useShowUpgradeUI()
   const [dismissed, setDismissed] = useState(false)
 
   const banner = useMemo(() => getBannerConfig(store, t), [store, t])
 
-  if (!banner || dismissed) return null
+  // Hide the entire banner on iOS — the CTA leads to upgrade pages
+  // that Apple forbids linking to external payment.
+  if (!banner || dismissed || !showUpgrade) return null
 
   const styles = BANNER_STYLES[banner.type]
 

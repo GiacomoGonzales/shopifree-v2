@@ -92,7 +92,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
 
   // Apple-style colors
   const spaceGray = '#1d1d1f'
@@ -139,7 +139,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
               {/* Logo + Name */}
               <div className="flex items-center gap-3">
                 {headerLogo && (
-                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
                 )}
                 {showName && <h1
                   className="text-lg font-semibold tracking-tight"

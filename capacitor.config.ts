@@ -7,21 +7,22 @@ const config: CapacitorConfig = {
   appId: 'app.shopifree.mobile',
   appName: 'Shopifree',
   webDir: 'dist',
-  backgroundColor: '#1e3a5f',
+  backgroundColor: '#ffffff',
   server: {
     cleartext: true,
     androidScheme: 'https'
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000,
+      launchShowDuration: 1500,
       launchAutoHide: true,
-      backgroundColor: '#1e3a5f',
+      backgroundColor: '#ffffff',
       showSpinner: false,
     },
     StatusBar: {
-      style: 'LIGHT',
-      backgroundColor: '#1e3a5f'
+      style: 'LIGHT',             // dark text on light bg
+      backgroundColor: '#ffffff',
+      overlaysWebView: false
     },
     Keyboard: {
       resize: 'native'

@@ -93,7 +93,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -142,7 +142,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
             <div className="flex items-center gap-3">
               {headerLogo && (
                 <div className="w-12 h-12 rounded-2xl overflow-hidden" style={{ borderColor: pink, borderWidth: '3px', borderStyle: 'solid' }}>
-                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
                 </div>
               )}
               {!headerLogo && (

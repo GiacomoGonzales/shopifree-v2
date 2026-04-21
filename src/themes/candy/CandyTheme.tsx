@@ -85,7 +85,7 @@ interface Props {
 export default function CandyTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -153,7 +153,7 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
                 {headerLogo && (
-                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
                 )}
                 {showName && <h1
                   className="text-xl font-bold"

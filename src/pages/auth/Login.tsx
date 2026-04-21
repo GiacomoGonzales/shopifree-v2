@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import LanguageSelector from '../../components/common/LanguageSelector'
@@ -14,18 +15,20 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login, loginWithGoogle, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const isNative = Capacitor.isNativePlatform()
 
   // Redirect authenticated users
   useEffect(() => {
     if (!authLoading && firebaseUser) {
       if (store) {
         navigate(localePath('/dashboard'))
-      } else {
-        // User has no store, send to register to complete step 2
+      } else if (!isNative) {
+        // Web: send to register to complete step 2
         navigate(localePath('/register'))
       }
+      // Native with no store: stay here. Message shown below prompts web signup.
     }
-  }, [authLoading, firebaseUser, store, navigate, localePath])
+  }, [authLoading, firebaseUser, store, navigate, localePath, isNative])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +37,6 @@ export default function Login() {
 
     try {
       await login(email, password)
-      // useEffect will handle navigation when auth state changes
     } catch (err: unknown) {
       console.error('Login error:', err)
       setError((err as Error).message || t('login.error'))
@@ -47,7 +49,6 @@ export default function Login() {
       setLoading(true)
       setError('')
       await loginWithGoogle()
-      // Keep loading=true — useEffect will handle navigation when auth state updates
     } catch (err: unknown) {
       setError((err as Error).message || t('login.googleError'))
       setLoading(false)
@@ -55,34 +56,47 @@ export default function Login() {
   }
 
   return (
-    <div className="fixed inset-0 bg-white flex flex-col justify-center px-6 sm:px-6 lg:px-8 overflow-y-auto">
+    <div className="fixed inset-0 bg-white flex flex-col overflow-y-auto animate-[fadeIn_300ms_ease-out]">
+      {/* Top safe area — white */}
+      <div style={{ height: 'env(safe-area-inset-top)' }} />
+
+      {/* Header: language selector only (no back button — welcome is underneath via iOS back gesture) */}
+      <div className="flex justify-end px-5 pt-3">
+        <LanguageSelector />
+      </div>
+
       {/* Loading overlay */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin" />
             <p className="text-sm text-[#1e3a5f] font-medium">{t('login.submitting')}</p>
           </div>
         </div>
       )}
 
-      <div className="w-full max-w-md mx-auto">
-        <div className="flex justify-center items-center gap-4 mb-2">
-          <img src="/newlogo.png" alt="Shopifree" className="h-10" />
-          <LanguageSelector />
+      <div className="flex-1 flex flex-col px-6">
+        {/* Logo — same position as MobileWelcome so transition is seamless */}
+        <div className="flex flex-col items-center pt-8">
+          <img
+            src="/icon-512.png"
+            alt="Shopifree"
+            className="w-20 h-20 rounded-[22%] shadow-sm"
+          />
+          <h2 className="mt-6 text-[22px] font-semibold text-[#1e3a5f] tracking-tight">
+            {t('login.title')}
+          </h2>
         </div>
-        <h2 className="mt-6 text-center text-xl font-semibold text-gray-900">
-          {t('login.title')}
-        </h2>
 
-        <div className="mt-8">
+        {/* Form */}
+        <div className="w-full max-w-md mx-auto mt-8 pb-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 {t('login.email')}
@@ -145,12 +159,14 @@ export default function Login() {
             </button>
           </div>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
-            {t('login.noAccount')}{' '}
-            <Link to={localePath('/register')} className="font-semibold text-[#2d6cb5] hover:text-[#38bdf8] transition-colors">
-              {t('login.register')}
-            </Link>
-          </p>
+          {!isNative && (
+            <p className="mt-6 text-center text-sm text-gray-600">
+              {t('login.noAccount')}{' '}
+              <Link to={localePath('/register')} className="font-semibold text-[#2d6cb5] hover:text-[#38bdf8] transition-colors">
+                {t('login.register')}
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

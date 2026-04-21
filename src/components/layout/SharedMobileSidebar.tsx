@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useSidebar } from '../../contexts/SidebarContext'
+import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import ModeSwitcher from '../finance/ModeSwitcher'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
@@ -42,6 +43,7 @@ export default function SharedMobileSidebar() {
   const navigate = useNavigate()
 
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const showUpgrade = useShowUpgradeUI()
   const mode: 'ecommerce' | 'finance' = isFinanceRoute(location.pathname) ? 'finance' : 'ecommerce'
 
   // Close sidebar on actual navigation within the same mode. If the user switches
@@ -84,7 +86,7 @@ export default function SharedMobileSidebar() {
         'separator',
         { name: 'Reportes', href: localePath('/finance/reports'), icon: ReportsIcon },
         'separator',
-        { name: 'Suscripcion', href: localePath('/finance/subscription'), icon: SubscriptionIcon },
+        ...(showUpgrade ? [{ name: 'Suscripcion', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem] : []),
         { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
       ]
       if (isAdmin) items.push({ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon })
@@ -111,7 +113,7 @@ export default function SharedMobileSidebar() {
     ]
     if (isAdmin) items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
     return items
-  }, [mode, t, localePath, isAdmin])
+  }, [mode, t, localePath, isAdmin, showUpgrade])
 
   const isItemActive = (href: string) => {
     const rootDash = localePath('/dashboard')
@@ -200,8 +202,11 @@ export default function SharedMobileSidebar() {
             })}
           </nav>
 
-          {/* User section */}
-          <div className="p-3 border-t border-gray-100">
+          {/* User section — extra bottom padding, respecting iOS home indicator safe area */}
+          <div
+            className="px-3 pt-3 border-t border-gray-100"
+            style={{ paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
+          >
             <div className="flex items-center gap-2.5">
               {user.avatar ? (
                 <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />

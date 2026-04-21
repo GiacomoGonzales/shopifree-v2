@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { usePresence } from '../../hooks/usePresence'
+import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import { useSidebar } from '../../contexts/SidebarContext'
 import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
@@ -13,7 +14,7 @@ import { chatService } from '../../lib/chatService'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
   PaletteIcon, SettingsIcon, GlobeIcon, TagIcon, CreditCardIcon, PhoneIcon,
-  IntegrationsIcon, UserIcon, ChatIcon, MoreIcon,
+  IntegrationsIcon, UserIcon, ChatIcon,
 } from '../layout/sharedIcons'
 
 // Tipos para la navegacion
@@ -46,6 +47,7 @@ export default function DashboardLayout() {
   const { setOpen: setSidebarOpen } = useSidebar()
 
   const isNative = Capacitor.isNativePlatform()
+  const showUpgrade = useShowUpgradeUI()
 
   // Track presence for any user with a store
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
@@ -100,54 +102,6 @@ export default function DashboardLayout() {
     }
     return items
   }, [t, localePath, isAdmin])
-
-  // Bottom tab bar items (first 4 primary + "More")
-  const tabBarItems = useMemo(() => {
-    const items = [
-      { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
-      { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
-      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
-    ]
-    if (isAdmin) {
-      items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
-    } else {
-      items.push({ name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon })
-    }
-    return items
-  }, [t, localePath, isAdmin])
-
-  // "More" sheet items - everything not in the tab bar
-  const moreItems: NavItem[] = useMemo(() => {
-    const items: NavItem[] = [
-      { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
-    ]
-    if (isAdmin) {
-      items.push({ name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon })
-    }
-    items.push(
-      { name: t('nav.appearance'), href: localePath('/dashboard/branding'), icon: PaletteIcon },
-      { name: t('nav.myBusiness'), href: localePath('/dashboard/settings'), icon: SettingsIcon },
-      { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
-      { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
-      { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
-      { name: t('nav.integrations'), href: localePath('/dashboard/integrations'), icon: IntegrationsIcon },
-      { name: t('nav.miApp'), href: localePath('/dashboard/mi-app'), icon: PhoneIcon },
-    )
-    if (isAdmin) {
-      items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
-    }
-    return items
-  }, [t, localePath, isAdmin])
-
-  // Check if current route is in "More" section
-  const isMoreActive = useMemo(() => {
-    const morePath = localePath('/dashboard/more')
-    if (location.pathname === morePath || location.pathname.startsWith(morePath + '/')) return true
-    return moreItems.some(item => {
-      if (item.href === localePath('/dashboard')) return false
-      return location.pathname === item.href || location.pathname.startsWith(item.href + '/')
-    })
-  }, [moreItems, location.pathname, localePath])
 
   // Set dark status bar text for dashboard (white/light background)
   useEffect(() => {
@@ -235,7 +189,7 @@ export default function DashboardLayout() {
       </nav>
 
       {/* User section */}
-      <div className="p-3 border-t border-gray-100">
+      <div className="px-3 pt-3 pb-5 border-t border-gray-100">
         <div className="flex items-center gap-2.5">
           {user.avatar ? (
             <img
@@ -272,125 +226,7 @@ export default function DashboardLayout() {
     </>
   )
 
-  // ==========================================
-  // NATIVE APP LAYOUT (bottom tab bar)
-  // ==========================================
-  if (isNative) {
-    return (
-      <div className="fixed inset-0 flex flex-col bg-white">
-        {/* Native header - compact bar (safe area handled by overlay:false) */}
-        <div className="flex-shrink-0 bg-white border-b border-gray-200/60">
-          <div className="h-11 flex items-center justify-between px-4">
-            {!isAdmin && (
-              <button onClick={() => setChatOpen(true)} className="relative w-8 h-8 flex items-center justify-center">
-                <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
-                {chatUnread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {chatUnread > 9 ? '9+' : chatUnread}
-                  </span>
-                )}
-              </button>
-            )}
-            {isAdmin && <div className="w-8" />}
-            <div className="flex flex-col items-center gap-0.5">
-              <img src="/newlogo.png" alt="Shopifree" className="h-5" />
-              <Link
-                to={localePath('/dashboard/plan')}
-                className={`flex items-center gap-0.5 px-1.5 py-0 rounded-full text-[9px] font-semibold transition-all ${
-                  store?.plan === 'business'
-                    ? 'bg-purple-50 text-purple-600'
-                    : store?.plan === 'pro'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {store?.plan === 'business' ? (
-                  <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                ) : store?.plan === 'pro' ? (
-                  <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                ) : (
-                  <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                )}
-                {store?.plan === 'business' ? t('plan.business') : store?.plan === 'pro' ? t('plan.pro') : t('plan.free')}
-              </Link>
-            </div>
-            <Link to={localePath('/dashboard/account')} className="w-8 h-8 flex items-center justify-center">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />
-              ) : (
-                <div className="w-7 h-7 bg-[#1e3a5f] rounded-full flex items-center justify-center">
-                  <span className="text-xs font-semibold text-white">
-                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </Link>
-          </div>
-        </div>
-
-        {/* Main content - only this area scrolls */}
-        <main className="flex-1 overflow-y-auto overscroll-none bg-[#fafbfc]">
-          <div className="px-4 py-3">
-            {store && <PlanBanner store={store} />}
-            <Outlet />
-          </div>
-        </main>
-
-        {/* Chat modal */}
-        {!isAdmin && <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />}
-
-        {/* Bottom tab bar - part of flex flow */}
-        <div className="flex-shrink-0 bg-white/80 backdrop-blur-lg border-t border-black/[0.08]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="flex items-stretch justify-around h-[52px]">
-            {tabBarItems.map((item) => {
-              const isActive = isItemActive(item.href)
-              const isChatTab = item.href.includes('support-chats')
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
-                    isActive ? 'text-[#007AFF]' : 'text-[#8e8e93]'
-                  }`}
-                >
-                  <item.icon active={isActive} />
-                  <span className={`text-[10px] leading-tight ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    {item.name}
-                  </span>
-                  {isChatTab && totalUnread > 0 && (
-                    <span className="absolute top-0 right-1/4 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {totalUnread > 9 ? '9+' : totalUnread}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-            {/* More tab */}
-            <Link
-              to={localePath('/dashboard/more')}
-              className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
-                isMoreActive ? 'text-[#007AFF]' : 'text-[#8e8e93]'
-              }`}
-            >
-              <MoreIcon active={isMoreActive} />
-              <span className={`text-[10px] leading-tight ${isMoreActive ? 'font-semibold' : 'font-medium'}`}>
-                {t('nav.home') === 'Home' ? 'More' : 'Mas'}
-              </span>
-              {isAdmin && totalUnread > 0 && (
-                <span className="absolute top-0 right-1/4 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {totalUnread > 9 ? '9+' : totalUnread}
-                </span>
-              )}
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ==========================================
-  // WEB LAYOUT (hamburger menu + sidebar)
-  // ==========================================
+  // Native uses the same layout as web mobile (hamburger + lateral sidebar).
   return (
     <div className="min-h-screen bg-[#fafbfc]">
       {/* Mobile header - status bar area + header bar */}
@@ -410,16 +246,28 @@ export default function DashboardLayout() {
               <img src="/newlogo.png" alt="Shopifree" className="h-[26px]" />
             </Link>
             {store && (
-              <Link
-                to={localePath('/finance/subscription')}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
-                  store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
-                  : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
-                  : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                }`}
-              >
-                {store.plan}
-              </Link>
+              showUpgrade ? (
+                <Link
+                  to={localePath('/finance/subscription')}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                    store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
+                    : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  }`}
+                >
+                  {store.plan}
+                </Link>
+              ) : (
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                    store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
+                    : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  }`}
+                >
+                  {store.plan}
+                </span>
+              )
             )}
           </div>
           <div className="flex items-center gap-1.5">

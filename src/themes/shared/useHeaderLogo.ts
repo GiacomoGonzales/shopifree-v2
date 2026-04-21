@@ -1,23 +1,41 @@
 import { useLogoOrientation } from './useLogoOrientation'
 
+type SquareStyle = 'circle' | 'rounded'
+
+interface Options {
+  /**
+   * How opaque square logos should be clipped:
+   * - 'circle'  (default) — rounded-full, like the footer
+   * - 'rounded'           — rounded-xl, for themes with a squared/industrial aesthetic
+   *
+   * Transparent squares and landscape logos ignore this setting (rendered as-is).
+   */
+  squareStyle?: SquareStyle
+}
+
 /**
- * Picks the right logo for a theme header.
+ * Picks the right logo + shape for a theme header.
  *
- * - If `logoLandscape` is uploaded, it wins: used as the header logo AND the
- *   store name text beside it is hidden (the horizontal logo already contains
- *   the brand).
- * - Otherwise falls back to the square `logo` and lets `useLogoOrientation`
- *   auto-detect whether the uploaded image is wide enough to stand alone.
+ * Rules:
+ * - `logoLandscape` uploaded → use it as-is, hide the store name (the horizontal
+ *   logo already contains the brand).
+ * - Square logo, transparent background → render as-is, no clipping (so the
+ *   transparent corners stay transparent).
+ * - Square logo, opaque background → clip per `squareStyle` (circle by default).
+ * - No logo → caller renders its fallback (showName=true).
  *
  * Returns:
- *   - `src`       — URL to render in the header
- *   - `showName`  — whether to render the store name text beside the logo
- *   - `loaded`    — orientation probe finished (matches useLogoOrientation)
+ *   - `src`            — URL to render, or undefined
+ *   - `showName`       — whether to render the store name beside the logo
+ *   - `loaded`         — orientation/transparency probe finished
+ *   - `isLandscape`    — horizontal logo
+ *   - `logoClassName`  — extra class to apply to the <img> (e.g. 'rounded-full')
  */
-export function useHeaderLogo(store: { logo?: string; logoLandscape?: string }) {
-  // Always call the hook so React sees a stable hook order. We detect
-  // orientation on the square logo regardless — cheap, cached, and we need
-  // `loaded` either way for themes that animate on load.
+export function useHeaderLogo(
+  store: { logo?: string; logoLandscape?: string },
+  options: Options = {}
+) {
+  const { squareStyle = 'circle' } = options
   const orient = useLogoOrientation(store.logo)
 
   if (store.logoLandscape) {
@@ -26,7 +44,14 @@ export function useHeaderLogo(store: { logo?: string; logoLandscape?: string }) 
       showName: false,
       loaded: true,
       isLandscape: true as const,
+      logoClassName: '',
     }
+  }
+
+  // Square logos: pick a clip shape, but skip clipping if the logo is transparent.
+  let logoClassName = ''
+  if (!orient.isHorizontal && !orient.isTransparent) {
+    logoClassName = squareStyle === 'rounded' ? 'rounded-xl' : 'rounded-full'
   }
 
   return {
@@ -34,5 +59,6 @@ export function useHeaderLogo(store: { logo?: string; logoLandscape?: string }) 
     showName: orient.showName,
     loaded: orient.loaded,
     isLandscape: false as const,
+    logoClassName,
   }
 }

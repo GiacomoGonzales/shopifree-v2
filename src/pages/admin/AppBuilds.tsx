@@ -33,11 +33,11 @@ interface StoreRow {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  idle:    { label: 'Sin build',    cls: 'bg-gray-100 text-gray-600' },
-  queued:  { label: 'En cola',      cls: 'bg-blue-50 text-blue-600' },
-  running: { label: 'Compilando…',  cls: 'bg-amber-50 text-amber-700' },
-  success: { label: 'Listo',        cls: 'bg-green-50 text-green-700' },
-  failed:  { label: 'Fallo',        cls: 'bg-red-50 text-red-600' },
+  idle:    { label: 'Sin build',   cls: 'border border-gray-200 text-gray-500' },
+  queued:  { label: 'En cola',     cls: 'border border-gray-200 text-gray-700' },
+  running: { label: 'Compilando…', cls: 'border border-gray-300 text-gray-900 font-medium' },
+  success: { label: 'Listo',       cls: 'border border-gray-900 bg-gray-50 text-gray-900 font-medium' },
+  failed:  { label: 'Fallo',       cls: 'border border-gray-900 bg-gray-900 text-white' },
 }
 
 export default function AppBuilds() {
@@ -184,23 +184,23 @@ export default function AppBuilds() {
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="Tiendas con app" value={summary.total} />
-        <StatCard label="Solicitadas" value={summary.requested} highlight={summary.requested > 0 ? 'amber' : undefined} />
-        <StatCard label="Compilando" value={summary.building} highlight={summary.building > 0 ? 'blue' : undefined} />
-        <StatCard label="Listas" value={summary.ready} highlight={summary.ready > 0 ? 'green' : undefined} />
+        <StatCard label="Solicitadas" value={summary.requested} />
+        <StatCard label="Compilando" value={summary.building} />
+        <StatCard label="Listas" value={summary.ready} />
       </div>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-gray-900" />
           </div>
         ) : stores.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">Ninguna tienda tiene app configurada todavia</p>
+            <p className="text-sm text-gray-500">Ninguna tienda tiene app configurada todavía</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-100">
             {stores.map(store => {
               const androidBuild = store.appConfig?.build
               const iosBuild = store.appConfig?.buildIos
@@ -211,15 +211,15 @@ export default function AppBuilds() {
                   {/* Store identity row */}
                   <div className="flex items-center gap-3 min-w-0 mb-3">
                     {store.logo ? (
-                      <img src={store.logo} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                      <img src={store.logo} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-sm font-medium text-gray-400">
+                      <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0 text-sm font-medium text-gray-500">
                         {store.name[0]?.toUpperCase() || '?'}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">{store.name}</p>
-                      <p className="text-xs text-gray-400 truncate">
+                      <p className="text-xs text-gray-500 truncate">
                         {store.appConfig?.appName || store.subdomain}
                       </p>
                     </div>
@@ -228,11 +228,11 @@ export default function AppBuilds() {
                       placeholder="1.0.0"
                       value={versionName[store.id] || ''}
                       onChange={e => setVersionName(prev => ({ ...prev, [store.id]: e.target.value }))}
-                      className="w-20 px-2 py-1 border border-gray-200 rounded-md text-xs flex-shrink-0"
+                      className="w-20 px-2 py-1 border border-gray-200 rounded-md text-xs flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                     />
                     {store.appConfig?.status === 'published' && (
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700 flex-shrink-0">
-                        ✓ En Play Store
+                      <span className="px-2 py-0.5 rounded-sm text-[10px] font-medium tracking-wide uppercase bg-black text-white flex-shrink-0">
+                        Publicada
                       </span>
                     )}
                   </div>
@@ -242,7 +242,7 @@ export default function AppBuilds() {
                     <PlatformRow
                       label="Android"
                       icon={
-                        <svg className="w-3.5 h-3.5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                        <svg className="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4483.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4483.9993.9993 0 .5511-.4483.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1367 1.0989L4.841 5.4467a.4161.4161 0 00-.5676-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3435-4.1021-2.6892-7.5743-6.1185-9.4396" />
                         </svg>
                       }
@@ -259,7 +259,7 @@ export default function AppBuilds() {
                     <PlatformRow
                       label="iOS"
                       icon={
-                        <svg className="w-3.5 h-3.5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                        <svg className="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                         </svg>
                       }
@@ -283,14 +283,14 @@ export default function AppBuilds() {
       {/* Publish modal */}
       {publishingStore && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
           onClick={() => !publishing && setPublishingStore(null)}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md"
+            className="bg-white rounded-lg border border-gray-200 shadow-xl w-full max-w-md"
             onClick={e => e.stopPropagation()}
           >
-            <div className="px-5 py-4 border-b border-gray-100">
+            <div className="px-5 py-4 border-b border-gray-200">
               <h2 className="text-base font-semibold text-gray-900">
                 {publishingStore.appConfig?.status === 'published' ? 'Editar URL de Play Store' : 'Marcar app como publicada'}
               </h2>
@@ -305,9 +305,9 @@ export default function AppBuilds() {
                   value={publishUrl}
                   onChange={e => setPublishUrl(e.target.value)}
                   placeholder="https://play.google.com/store/apps/details?id=..."
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                 />
-                <p className="text-[11px] text-gray-400 mt-1">Copiá el link directo desde Play Console → "Ficha de tienda principal"</p>
+                <p className="text-[11px] text-gray-500 mt-1">Copiá el link directo desde Play Console → "Ficha de tienda principal"</p>
               </div>
 
               <label className="flex items-start gap-2 cursor-pointer">
@@ -315,7 +315,7 @@ export default function AppBuilds() {
                   type="checkbox"
                   checked={publishNotify}
                   onChange={e => setPublishNotify(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded border-gray-300 text-[#1e3a5f] focus:ring-[#1e3a5f]/20"
+                  className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                 />
                 <div className="text-xs">
                   <span className="font-medium text-gray-700">Enviar email al dueño</span>
@@ -324,18 +324,18 @@ export default function AppBuilds() {
               </label>
             </div>
 
-            <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-end gap-2">
+            <div className="px-5 py-3 border-t border-gray-200 flex items-center justify-end gap-2">
               <button
                 onClick={() => setPublishingStore(null)}
                 disabled={publishing}
-                className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={submitPublish}
                 disabled={publishing || !publishUrl.trim()}
-                className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg text-sm font-medium hover:bg-[#2d6cb5] transition-colors disabled:opacity-40"
+                className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-40"
               >
                 {publishing ? 'Guardando…' : 'Confirmar'}
               </button>
@@ -376,18 +376,18 @@ function PlatformRow({
         <span className="font-medium text-gray-700">{label}</span>
       </span>
 
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${badge.cls}`}>
+      <span className={`px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wide ${badge.cls}`}>
         {badge.label}
       </span>
 
       {build?.buildNumber ? (
-        <span className="text-gray-400">v{build.versionName || ''} (#{build.buildNumber})</span>
+        <span className="text-gray-500 text-[11px] tabular-nums">v{build.versionName || ''} (#{build.buildNumber})</span>
       ) : null}
 
       <button
         onClick={onTrigger}
         disabled={isBuilding || triggering || isDisabled}
-        className="px-2.5 py-1 bg-[#1e3a5f] text-white rounded-md text-[11px] font-medium hover:bg-[#2d6cb5] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="px-2.5 py-1 bg-black text-white rounded-md text-[11px] font-medium hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         title={disabledReason}
       >
         {triggering ? 'Encolando…' : isBuilding ? 'Compilando…' : 'Generar'}
@@ -396,7 +396,7 @@ function PlatformRow({
       {canMarkPublished && (
         <button
           onClick={onPublish}
-          className="px-2.5 py-1 bg-green-600 text-white rounded-md text-[11px] font-medium hover:bg-green-700 transition-colors"
+          className="px-2.5 py-1 border border-gray-900 text-gray-900 rounded-md text-[11px] font-medium hover:bg-gray-900 hover:text-white transition-colors"
         >
           Marcar publicada
         </button>
@@ -405,7 +405,7 @@ function PlatformRow({
       {isPublished && (
         <button
           onClick={onPublish}
-          className="px-2.5 py-1 border border-gray-200 text-gray-600 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors"
+          className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors"
         >
           Editar URL
         </button>
@@ -416,7 +416,7 @@ function PlatformRow({
           href={build.artifactUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+          className="text-gray-700 hover:text-gray-900 font-medium inline-flex items-center gap-1 underline underline-offset-2"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -426,28 +426,23 @@ function PlatformRow({
       )}
 
       {build?.runUrl && (
-        <a href={build.runUrl} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-700">
+        <a href={build.runUrl} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-900">
           logs →
         </a>
       )}
 
       {build?.lastError && (
-        <span className="text-red-500 truncate max-w-xs">{build.lastError}</span>
+        <span className="text-gray-900 font-medium truncate max-w-xs">{build.lastError}</span>
       )}
     </div>
   )
 }
 
-function StatCard({ label, value, highlight }: { label: string; value: number; highlight?: 'amber' | 'blue' | 'green' }) {
-  const colorClass =
-    highlight === 'amber' ? 'text-amber-600' :
-    highlight === 'blue' ? 'text-blue-600' :
-    highlight === 'green' ? 'text-green-600' :
-    'text-gray-900'
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
-      <p className={`text-xl font-semibold ${colorClass}`}>{value}</p>
+    <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <p className="text-[11px] text-gray-500 mb-1 uppercase tracking-wide font-medium">{label}</p>
+      <p className="text-xl font-semibold text-gray-900 tabular-nums">{value}</p>
     </div>
   )
 }

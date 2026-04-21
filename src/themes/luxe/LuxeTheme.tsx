@@ -85,7 +85,7 @@ interface Props {
 
 export default function LuxeTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -139,7 +139,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {headerLogo && (
-                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
               )}
               {showName && <h1 className="font-serif-luxe text-2xl md:text-3xl font-semibold tracking-wide" style={{ color: darkBg }}>
                 {store.name}

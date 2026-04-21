@@ -96,7 +96,7 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -157,7 +157,7 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerLogo ? (
-                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
               ) : (
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"

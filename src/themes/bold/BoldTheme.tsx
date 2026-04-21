@@ -83,7 +83,7 @@ interface Props {
 
 export default function BoldTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -141,7 +141,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerLogo && (
-                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
               )}
               {showName && (
               <span className="text-xl md:text-2xl font-black uppercase tracking-tight" style={{ color: accent }}>

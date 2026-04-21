@@ -98,7 +98,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {headerLogo ? (
-                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
               ) : (
                 /* Japanese-style logo placeholder */
                 <div className="w-12 h-12 flex items-center justify-center relative">

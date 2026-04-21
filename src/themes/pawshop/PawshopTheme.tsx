@@ -99,7 +99,7 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
 
   const lang = (store.language as 'es' | 'en' | 'pt') || 'es'
 
@@ -156,7 +156,7 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
           <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerLogo && (
-                <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
               )}
               {!headerLogo && (
                 /* Paw placeholder */

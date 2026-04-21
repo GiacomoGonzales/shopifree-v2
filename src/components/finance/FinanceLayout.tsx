@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useSidebar } from '../../contexts/SidebarContext'
+import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import ModeSwitcher from './ModeSwitcher'
 
 interface NavItem {
@@ -64,6 +65,7 @@ export default function FinanceLayout() {
   // Mobile sidebar state is shared via AppShell's SidebarProvider
   const { setOpen: setSidebarOpen } = useSidebar()
   const isNative = Capacitor.isNativePlatform()
+  const showUpgrade = useShowUpgradeUI()
 
   const navigation: NavElement[] = useMemo(() => [
     { name: 'Resumen', href: localePath('/finance'), icon: DashboardIcon },
@@ -81,10 +83,10 @@ export default function FinanceLayout() {
     'separator',
     { name: 'Reportes', href: localePath('/finance/reports'), icon: ReportsIcon },
     'separator',
-    { name: 'Suscripcion', href: localePath('/finance/subscription'), icon: SubscriptionIcon },
+    ...(showUpgrade ? [{ name: 'Suscripcion', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem] : []),
     { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
     ...(isAdmin ? [{ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon }] : []),
-  ] as NavElement[], [localePath, isAdmin])
+  ] as NavElement[], [localePath, isAdmin, showUpgrade])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,7 +144,7 @@ export default function FinanceLayout() {
       </nav>
 
       {/* User section */}
-      <div className="p-3 border-t border-gray-100">
+      <div className="px-3 pt-3 pb-5 border-t border-gray-100">
         <div className="flex items-center gap-2.5">
           {user.avatar ? (
             <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />
@@ -172,64 +174,7 @@ export default function FinanceLayout() {
     </>
   )
 
-  // ==========================================
-  // NATIVE APP LAYOUT
-  // ==========================================
-  if (isNative) {
-    return (
-      <div className="fixed inset-0 flex flex-col bg-white">
-        <div className="flex-shrink-0 bg-white border-b border-gray-100">
-          <div className="h-11 flex items-center justify-end px-4 gap-2">
-            <ModeSwitcher mode="finance" isAdmin={isAdmin} />
-            <Link to={localePath('/finance')} className="w-8 h-8 flex items-center justify-center">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.firstName || user.email} className="w-8 h-8 rounded-lg object-cover" />
-              ) : (
-                <div className="w-8 h-8 bg-[#1e3a5f] rounded-lg flex items-center justify-center">
-                  <span className="text-[11px] font-medium text-white">
-                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </Link>
-          </div>
-        </div>
-
-        <main className="flex-1 overflow-y-auto overscroll-none bg-[#fafbfc]">
-          <div className="px-4 py-3">
-            <Outlet />
-          </div>
-        </main>
-
-        {/* Bottom tab bar */}
-        <div className="flex-shrink-0 bg-white/80 backdrop-blur-lg border-t border-black/[0.08]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="flex items-stretch justify-around h-[52px]">
-            {navigation.filter((item): item is NavItem => item !== 'separator').map(item => {
-              const isActive = isItemActive(item.href)
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${
-                    isActive ? 'text-[#007AFF]' : 'text-[#8e8e93]'
-                  }`}
-                >
-                  <item.icon active={isActive} />
-                  <span className={`text-[10px] leading-tight ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    {item.name}
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ==========================================
-  // WEB LAYOUT
-  // ==========================================
+  // Native uses the same layout as web mobile (hamburger + lateral sidebar).
   return (
     <div className="min-h-screen bg-[#fafbfc]">
       {/* Mobile header */}
@@ -247,16 +192,28 @@ export default function FinanceLayout() {
               <img src="/newlogo.png" alt="Shopifree" className="h-[26px]" />
             </Link>
             {store && (
-              <Link
-                to={localePath('/finance/subscription')}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
-                  store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
-                  : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
-                  : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                }`}
-              >
-                {store.plan}
-              </Link>
+              showUpgrade ? (
+                <Link
+                  to={localePath('/finance/subscription')}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                    store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
+                    : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  }`}
+                >
+                  {store.plan}
+                </Link>
+              ) : (
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                    store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
+                    : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  }`}
+                >
+                  {store.plan}
+                </span>
+              )
             )}
           </div>
           <div className="flex items-center gap-1.5">

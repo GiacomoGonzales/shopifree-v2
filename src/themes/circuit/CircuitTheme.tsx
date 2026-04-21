@@ -95,7 +95,7 @@ interface Props {
 export default function CircuitTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const t = getThemeTranslations(store.language)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
@@ -177,7 +177,7 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
               {/* Logo + Name */}
               <div className="flex items-center gap-3">
                 {headerLogo && (
-                  <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />
+                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
                 )}
                 {!headerLogo && (
                   <CircuitIcon className="w-7 h-7" style={{ color: electricBlue }} />

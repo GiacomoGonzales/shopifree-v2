@@ -79,7 +79,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -115,7 +115,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
         }`}>
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {headerLogo && <img src={headerLogo} alt={store.name} className="h-12 w-auto max-w-[200px] object-contain" />}
+              {headerLogo && <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />}
               {showName && <span className={`font-medium tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}>
                 {store.name}
               </span>}
