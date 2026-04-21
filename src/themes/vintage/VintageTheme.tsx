@@ -137,7 +137,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
             <div className="flex items-center justify-between h-20">
               <div className="flex items-center gap-3">
                 {headerLogo && (
-                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
+                  <img src={headerLogo} alt={store.name} className={logoClassName} />
                 )}
                 {showName && (
                   <h1 className="text-xl tracking-wide" style={{ color: darkBrown }}>

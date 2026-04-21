@@ -161,7 +161,7 @@ export default function AuraTheme({ store, products, categories, onWhatsAppClick
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {headerLogo ? (
-                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
+                <img src={headerLogo} alt={store.name} className={logoClassName} />
               ) : (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center"

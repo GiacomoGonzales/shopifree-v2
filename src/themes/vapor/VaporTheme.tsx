@@ -161,7 +161,7 @@ export default function VaporTheme({ store, products, categories, onWhatsAppClic
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {headerLogo && <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />}
+                {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
                 {showName && (
                   <h1
                     className="text-xl font-semibold tracking-wide"

@@ -14,22 +14,23 @@ interface Options {
 }
 
 /**
- * Picks the right logo + shape for a theme header.
+ * Picks the right logo + final <img> className for a theme header.
  *
  * Rules:
- * - `logoLandscape` uploaded → use it as-is, hide the store name (the horizontal
- *   logo already contains the brand).
- * - Square logo, transparent background → render as-is, no clipping (so the
- *   transparent corners stay transparent).
- * - Square logo, opaque background → clip per `squareStyle` (circle by default).
- * - No logo → caller renders its fallback (showName=true).
+ * - `logoLandscape` uploaded → wide box (h-12 w-auto max-w-[200px]), no clipping,
+ *   hide the store name text.
+ * - Square logo (opaque or transparent) → forced square box (h-12 w-12) so the
+ *   rounded clip is a true circle even if the source image isn't perfectly 1:1.
+ *   - Opaque square → `rounded-full` or `rounded-xl` per `squareStyle`.
+ *   - Transparent square → no clipping (keeps transparency).
+ * - No logo → caller renders its own fallback.
  *
  * Returns:
  *   - `src`            — URL to render, or undefined
  *   - `showName`       — whether to render the store name beside the logo
  *   - `loaded`         — orientation/transparency probe finished
  *   - `isLandscape`    — horizontal logo
- *   - `logoClassName`  — extra class to apply to the <img> (e.g. 'rounded-full')
+ *   - `logoClassName`  — complete className for the <img> (size + shape)
  */
 export function useHeaderLogo(
   store: { logo?: string; logoLandscape?: string },
@@ -44,14 +45,15 @@ export function useHeaderLogo(
       showName: false,
       loaded: true,
       isLandscape: true as const,
-      logoClassName: '',
+      logoClassName: 'h-12 w-auto max-w-[200px] object-contain',
     }
   }
 
-  // Square logos: pick a clip shape, but skip clipping if the logo is transparent.
-  let logoClassName = ''
+  // Square: forced square box for a true circular clip.
+  const base = 'h-12 w-12 object-contain'
+  let shape = ''
   if (!orient.isHorizontal && !orient.isTransparent) {
-    logoClassName = squareStyle === 'rounded' ? 'rounded-xl' : 'rounded-full'
+    shape = squareStyle === 'rounded' ? 'rounded-xl' : 'rounded-full'
   }
 
   return {
@@ -59,6 +61,6 @@ export function useHeaderLogo(
     showName: orient.showName,
     loaded: orient.loaded,
     isLandscape: false as const,
-    logoClassName,
+    logoClassName: `${base} ${shape}`.trim(),
   }
 }

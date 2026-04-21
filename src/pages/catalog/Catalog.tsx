@@ -5,7 +5,6 @@ import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
 import StoreSEO from '../../components/seo/StoreSEO'
 import { getDeviceType, getReferrer } from '../../utils/deviceDetection'
-import { optimizeImage } from '../../utils/cloudinary'
 import type { Store, Product, Category } from '../../types'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { Capacitor } from '@capacitor/core'
@@ -32,19 +31,18 @@ function setCachedStore(key: string, id: string, logo?: string, name?: string) {
 }
 
 // Simple loader for web (native uses splash screen)
-function StoreLoader({ logo, name }: { logo?: string; name?: string }) {
-  const optimizedLogo = logo ? optimizeImage(logo, 'thumbnail') : undefined
-
+function StoreLoader({ name }: { logo?: string; name?: string }) {
   return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
-      <div className="text-center">
-        {optimizedLogo ? (
-          <img src={optimizedLogo} alt="" className="w-24 h-24 rounded-[22%] object-cover mx-auto" />
-        ) : (
-          <div className="w-24 h-24 rounded-[22%] bg-white/10 mx-auto" />
-        )}
-        {name && <p className="mt-5 text-base font-semibold text-white tracking-wide">{name}</p>}
-      </div>
+    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+      <div
+        className="w-8 h-8 rounded-full border-[2.5px] border-gray-200 border-t-gray-900 animate-spin"
+        aria-label="Cargando"
+      />
+      {name && (
+        <p className="mt-5 text-[13px] font-medium text-gray-500 tracking-wide">
+          {name}
+        </p>
+      )}
     </div>
   )
 }

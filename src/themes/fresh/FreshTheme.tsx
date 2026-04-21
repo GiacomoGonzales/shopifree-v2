@@ -125,7 +125,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerLogo ? (
-                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
+                <img src={headerLogo} alt={store.name} className={logoClassName} />
               ) : (
                 <div className="h-10 w-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

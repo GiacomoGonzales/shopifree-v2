@@ -117,7 +117,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
           <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {headerLogo ? (
-                <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
+                <img src={headerLogo} alt={store.name} className={logoClassName} />
               ) : (
                 <div className="h-12 w-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-serif text-xl">{store.name.charAt(0)}</span>

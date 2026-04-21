@@ -169,7 +169,7 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
                 {headerLogo && (
-                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
+                  <img src={headerLogo} alt={store.name} className={logoClassName} />
                 )}
                 {showName && (
                   <h1

@@ -139,7 +139,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
               {/* Logo + Name */}
               <div className="flex items-center gap-3">
                 {headerLogo && (
-                  <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />
+                  <img src={headerLogo} alt={store.name} className={logoClassName} />
                 )}
                 {showName && <h1
                   className="text-lg font-semibold tracking-tight"

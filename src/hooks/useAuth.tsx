@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   signInWithCredential
 } from 'firebase/auth'
@@ -22,11 +23,31 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string) => Promise<FirebaseUser>
   loginWithGoogle: () => Promise<FirebaseUser>
+  loginWithApple: () => Promise<FirebaseUser>
   logout: () => Promise<void>
   refreshStore: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// ── Apple Sign-In nonce helpers ────────────────────────────────────────
+// Firebase's Apple provider signs the SHA-256 hash of a random nonce
+// into the identity token. We pass the hashed nonce to Apple, then send
+// the RAW nonce alongside the token so Firebase can verify the match.
+
+function generateRawNonce(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
@@ -125,6 +146,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const loginWithApple = async (): Promise<FirebaseUser> => {
+    if (Capacitor.isNativePlatform()) {
+      // Native iOS: Apple Sign-In via Capacitor plugin.
+      // Firebase requires a rawNonce + its SHA-256 hash: Apple signs the
+      // hashed nonce into the identity token, and Firebase validates the
+      // raw nonce against the hash when exchanging the credential.
+      const rawNonce = generateRawNonce()
+      const hashedNonce = await sha256Hex(rawNonce)
+
+      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
+      const result = await SignInWithApple.authorize({
+        clientId: 'app.shopifree.mobile',
+        redirectURI: '', // unused for native
+        scopes: 'email name',
+        state: '',
+        nonce: hashedNonce,
+      })
+
+      const identityToken = result.response.identityToken
+      if (!identityToken) {
+        throw new Error('No identity token received from Apple Sign-In')
+      }
+
+      const provider = new OAuthProvider('apple.com')
+      const credential = provider.credential({
+        idToken: identityToken,
+        rawNonce,
+      })
+      const firebaseResult = await signInWithCredential(auth, credential)
+      return firebaseResult.user
+    } else {
+      // Web: Firebase popup with Apple provider (requires Apple Services ID
+      // configured in Firebase Console → Auth → Apple).
+      const provider = new OAuthProvider('apple.com')
+      provider.addScope('email')
+      provider.addScope('name')
+      const result = await signInWithPopup(auth, provider)
+      return result.user
+    }
+  }
+
   const logout = async () => {
     await signOut(auth)
     setUser(null)
@@ -153,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       loginWithGoogle,
+      loginWithApple,
       logout,
       refreshStore
     }}>

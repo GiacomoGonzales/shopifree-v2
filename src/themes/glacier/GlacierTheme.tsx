@@ -196,7 +196,7 @@ export default function GlacierTheme({ store, products, categories, onWhatsAppCl
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                {headerLogo && <img src={headerLogo} alt={store.name} className={`h-12 w-auto max-w-[200px] object-contain ${logoClassName}`} />}
+                {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
                 {showName && <h1
                   className="text-xl font-light tracking-widest uppercase"
                   style={{ fontFamily: "'Raleway', sans-serif", color: '#0C4A6E', letterSpacing: '0.2em' }}

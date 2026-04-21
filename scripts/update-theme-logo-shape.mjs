@@ -1,29 +1,29 @@
 #!/usr/bin/env node
 /**
- * One-shot codemod: updates every theme file to wire the new `logoClassName`
- * returned by useHeaderLogo onto the header <img>, and sets squareStyle='rounded'
- * on themes with a squared/industrial aesthetic.
+ * Codemod: rewires theme header logos to use the className returned by
+ * useHeaderLogo (size + shape). Themes with a squared/industrial aesthetic
+ * get squareStyle='rounded'.
  *
- * Run once: `node scripts/update-theme-logo-shape.mjs`
+ * Idempotent — safe to re-run.
  */
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 const THEMES_DIR = new URL('../src/themes/', import.meta.url).pathname
 
-// Themes with a squared/industrial/editorial aesthetic — their opaque-square
-// logos get `rounded-xl` instead of circular.
 const ROUNDED_SQUARE_THEMES = new Set([
   'bold', 'brutalist', 'circuit', 'cosmos', 'deco', 'folio', 'grunge',
   'hologram', 'metro', 'midnight', 'minimal', 'minimal-tech', 'neon',
   'neon-cyber', 'noir', 'prism', 'slate', 'vapor', 'vaporwave', 'fitness',
 ])
 
-const IMG_RE = /<img src={headerLogo} alt={store\.name} className="h-12 w-auto max-w-\[200px\] object-contain"\s*\/>/g
-const DESTRUCTURE_RE = /const \{ src: headerLogo, showName \} = useHeaderLogo\(store\)/
+// Matches the current <img> (any variant with hard-coded classes OR the
+// previous template-string form produced by the first run of this codemod).
+const IMG_CURRENT_RE = /<img src={headerLogo} alt={store\.name} className=(?:"h-12 w-auto max-w-\[200px\] object-contain"|{`h-12 w-auto max-w-\[200px\] object-contain \${logoClassName}`})\s*\/>/g
+
+const DESTRUCTURE_RE = /const \{ src: headerLogo, showName(?:, logoClassName)? \} = useHeaderLogo\(store(?:, \{ squareStyle: 'rounded' \})?\)/
 
 let updated = 0
-let skipped = 0
 
 for (const entry of readdirSync(THEMES_DIR)) {
   const themeDir = join(THEMES_DIR, entry)
@@ -39,26 +39,22 @@ for (const entry of readdirSync(THEMES_DIR)) {
 
   const usesRounded = ROUNDED_SQUARE_THEMES.has(entry)
 
-  // 1) Destructure logoClassName + pass squareStyle='rounded' if needed
   const newDestructure = usesRounded
     ? "const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })"
     : "const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)"
   src = src.replace(DESTRUCTURE_RE, newDestructure)
 
-  // 2) Update the <img> to append logoClassName
+  // The new img just uses logoClassName directly (it now carries size + shape).
   src = src.replace(
-    IMG_RE,
-    `<img src={headerLogo} alt={store.name} className={\`h-12 w-auto max-w-[200px] object-contain \${logoClassName}\`} />`
+    IMG_CURRENT_RE,
+    `<img src={headerLogo} alt={store.name} className={logoClassName} />`
   )
 
-  if (src === original) {
-    skipped++
-    continue
-  }
+  if (src === original) continue
 
   writeFileSync(path, src, 'utf8')
   updated++
   console.log(`  ✓ ${entry}${usesRounded ? '  (rounded-xl)' : ''}`)
 }
 
-console.log(`\nUpdated ${updated} themes, skipped ${skipped}.`)
+console.log(`\nUpdated ${updated} themes.`)
