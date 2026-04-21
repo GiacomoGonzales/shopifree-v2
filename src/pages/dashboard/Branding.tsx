@@ -778,7 +778,7 @@ export default function Branding() {
               </div>
               <p className="text-sm text-gray-600 mb-6">{t('branding.layout.subtitle')}</p>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {([
                   { id: 'grid' as const, icon: (
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
