@@ -62,18 +62,25 @@ function hexToRgba(hex: string) {
 async function generateIcons(logoUrl: string, bgColor: string) {
   console.log(`\n  Generating icons from logo: ${logoUrl}`)
   const logoBuffer = await downloadImage(logoUrl)
+
+  // Trim transparent/uniform edges so margins are consistent regardless of how
+  // the source logo was exported (some come tight, some come with padding)
+  const trimmedLogo = await sharp(logoBuffer)
+    .trim({ threshold: 10 })
+    .toBuffer()
+
   const bg = hexToRgba(bgColor)
   const resDir = resolve(process.cwd(), 'android/app/src/main/res')
 
   for (const density of ANDROID_DENSITIES) {
     const dir = resolve(resDir, density.name)
 
-    // --- ic_launcher.png (square legacy icon) ---
+    // --- ic_launcher.png (square legacy icon) — logo ~60% of canvas ---
     const lSize = density.launcher
-    const lPad = Math.round(lSize * 0.15)
+    const lPad = Math.round(lSize * 0.20)
     const lLogoSize = lSize - lPad * 2
 
-    const lLogo = await sharp(logoBuffer)
+    const lLogo = await sharp(trimmedLogo)
       .resize(lLogoSize, lLogoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .toBuffer()
 
@@ -96,13 +103,13 @@ async function generateIcons(logoUrl: string, bgColor: string) {
       .png()
       .toFile(resolve(dir, 'ic_launcher_round.png'))
 
-    // --- ic_launcher_foreground.png (adaptive icon foreground, 108dp canvas) ---
+    // --- ic_launcher_foreground.png (adaptive icon, 108dp canvas) ---
+    // Logo ~48% of canvas — sits well inside the 66dp safe zone with breathing
+    // room so launcher masks (circle, squircle, squareish) don't crop visually
     const fgSize = density.foreground
-    const safeZone = Math.round(fgSize * 0.66) // inner 66% is visible safe zone
-    const fgLogoPad = Math.round(safeZone * 0.1)
-    const fgLogoSize = safeZone - fgLogoPad * 2
+    const fgLogoSize = Math.round(fgSize * 0.48)
 
-    const fgLogo = await sharp(logoBuffer)
+    const fgLogo = await sharp(trimmedLogo)
       .resize(fgLogoSize, fgLogoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .toBuffer()
 
@@ -136,11 +143,11 @@ async function generateIcons(logoUrl: string, bgColor: string) {
 `
   writeFileSync(resolve(resDir, 'drawable/ic_launcher_background.xml'), bgDrawableXml, 'utf-8')
 
-  // iOS icon (1024×1024)
+  // iOS icon (1024×1024) — logo ~62% of canvas, matching typical App Store icon density
   const iosDir = resolve(process.cwd(), 'ios/App/App/Assets.xcassets/AppIcon.appiconset')
   if (existsSync(iosDir)) {
-    const iosLogoSize = Math.round(1024 * 0.7)
-    const iosLogo = await sharp(logoBuffer)
+    const iosLogoSize = Math.round(1024 * 0.62)
+    const iosLogo = await sharp(trimmedLogo)
       .resize(iosLogoSize, iosLogoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .toBuffer()
 
