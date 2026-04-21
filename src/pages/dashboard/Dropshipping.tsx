@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService, storage } from '../../lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
@@ -1043,15 +1044,17 @@ export default function Dropshipping() {
             <div className="bg-gray-50 rounded-xl p-5 text-center space-y-3">
               <p className="text-sm font-medium text-gray-900">Importar productos requiere el plan Business</p>
               <p className="text-xs text-gray-500">Explora el catalogo. Para importar, actualiza a Business.</p>
-              <Link
-                to={localePath('/dashboard/plan')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
-              >
-                Ver planes
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
+              {!Capacitor.isNativePlatform() && (
+                <Link
+                  to={localePath('/dashboard/plan')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+                >
+                  Ver planes
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              )}
             </div>
           ) : hasPrintfulToken ? (
             <button
@@ -1435,15 +1438,17 @@ export default function Dropshipping() {
               <p className="text-xs text-gray-500">
                 Explora todos los productos que quieras. Para importarlos a tu tienda, actualiza a Business.
               </p>
-              <Link
-                to={localePath('/dashboard/plan')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
-              >
-                Ver planes
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
+              {!Capacitor.isNativePlatform() && (
+                <Link
+                  to={localePath('/dashboard/plan')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+                >
+                  Ver planes
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              )}
             </div>
           ) : hasCJKey ? (
             <button

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { doc, updateDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { Link } from 'react-router-dom'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -274,15 +275,17 @@ export default function MiApp() {
             ))}
           </div>
 
-          <Link
-            to={localePath('/dashboard/plan') + '?upgrade=business'}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-200 self-start"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            {t('miApp.upgradeToBusiness')}
-          </Link>
+          {!Capacitor.isNativePlatform() && (
+            <Link
+              to={localePath('/dashboard/plan') + '?upgrade=business'}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-200 self-start"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              {t('miApp.upgradeToBusiness')}
+            </Link>
+          )}
         </div>
         </div>
       </div>

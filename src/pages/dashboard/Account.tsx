@@ -410,51 +410,63 @@ export default function Account() {
           </div>
         </div>
 
-        {/* My Plan — compact card linking to the dedicated Subscription page */}
-        <Link
-          to={localePath('/finance/subscription')}
-          className="block bg-white rounded-xl border border-gray-200/60 p-5 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all group"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                currentPlan === 'free' ? 'bg-gray-100'
-                : currentPlan === 'pro' ? 'bg-[#1e3a5f]'
-                : 'bg-gradient-to-br from-purple-500 to-purple-700'
-              }`}>
-                {currentPlan === 'free' ? (
-                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-[11px] text-gray-400 uppercase tracking-wider">{t('plan.current')}</p>
-                  {hasActiveSubscription && (
-                    <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
-                      {t('subscription.status.active')}
-                    </span>
+        {/* My Plan — compact card. On iOS it's informational only (no link
+            to subscription page) to comply with App Store Guideline 3.1.1. */}
+        {(() => {
+          const PlanCardContent = (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  currentPlan === 'free' ? 'bg-gray-100'
+                  : currentPlan === 'pro' ? 'bg-[#1e3a5f]'
+                  : 'bg-gradient-to-br from-purple-500 to-purple-700'
+                }`}>
+                  {currentPlan === 'free' ? (
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
                   )}
                 </div>
-                <h2 className="text-lg font-semibold text-[#1e3a5f] truncate">{planInfo.name}</h2>
-                <p className="text-xs text-gray-500 truncate">{t(`plan.${currentPlan}Description`)}</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[11px] text-gray-400 uppercase tracking-wider">{t('plan.current')}</p>
+                    {hasActiveSubscription && (
+                      <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
+                        {t('subscription.status.active')}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-lg font-semibold text-[#1e3a5f] truncate">{planInfo.name}</h2>
+                  <p className="text-xs text-gray-500 truncate">{t(`plan.${currentPlan}Description`)}</p>
+                </div>
               </div>
+              {!Capacitor.isNativePlatform() && (
+                <div className="flex items-center gap-1 text-sm font-medium text-[#2d6cb5] group-hover:text-[#1e3a5f] flex-shrink-0 whitespace-nowrap">
+                  {currentPlan === 'free' ? 'Suscribirme' : t('subscription.changePlan')}
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </div>
+              )}
             </div>
-            {!Capacitor.isNativePlatform() && (
-              <div className="flex items-center gap-1 text-sm font-medium text-[#2d6cb5] group-hover:text-[#1e3a5f] flex-shrink-0 whitespace-nowrap">
-                {currentPlan === 'free' ? 'Suscribirme' : t('subscription.changePlan')}
-                <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                </svg>
-              </div>
-            )}
-          </div>
-        </Link>
+          )
+          return Capacitor.isNativePlatform() ? (
+            <div className="bg-white rounded-xl border border-gray-200/60 p-5 shadow-sm">
+              {PlanCardContent}
+            </div>
+          ) : (
+            <Link
+              to={localePath('/finance/subscription')}
+              className="block bg-white rounded-xl border border-gray-200/60 p-5 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all group"
+            >
+              {PlanCardContent}
+            </Link>
+          )
+        })()}
 
 
         {/* Security & Danger Zone */}

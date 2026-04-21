@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type JSX } from 'react'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
@@ -870,7 +871,7 @@ export default function Branding() {
               </div>
 
               {/* Upgrade prompt for free plan */}
-              {store.plan === 'free' && (
+              {store.plan === 'free' && !Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
                   <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -975,7 +976,7 @@ export default function Branding() {
               </div>
 
               {/* Upgrade prompt for free plan */}
-              {store.plan === 'free' && (
+              {store.plan === 'free' && !Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
                   <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1066,7 +1067,7 @@ export default function Branding() {
                 })}
               </div>
 
-              {store.plan === 'free' && (
+              {store.plan === 'free' && !Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
                   <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1165,7 +1166,7 @@ export default function Branding() {
                 </div>
 
                 {/* Upgrade prompt for free plan */}
-                {store.plan === 'free' && (
+                {store.plan === 'free' && !Capacitor.isNativePlatform() && (
                   <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
                     <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1654,7 +1655,7 @@ export default function Branding() {
             </div>
 
             {/* Upgrade prompt (free only) */}
-            {store.plan === 'free' && (
+            {store.plan === 'free' && !Capacitor.isNativePlatform() && (
               <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-6">
                 <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
