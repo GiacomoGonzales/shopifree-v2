@@ -459,31 +459,27 @@ export default function Account() {
 
         {/* Security & Danger Zone */}
         <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-4">
             {/* Change Password */}
             <div className="flex-1 sm:border-r sm:border-gray-200/60 sm:pr-6">
               {isGoogleUser ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
-                    <p className="text-sm text-gray-500">{t('account.security.googleAccount')}</p>
-                  </div>
+                <div>
+                  <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">{t('account.security.googleAccount')}</p>
                   <button
                     onClick={() => setShowUnlinkGoogle(true)}
-                    className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium flex-shrink-0"
+                    className="mt-3 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
                   >
                     {t('account.security.unlinkGoogle')}
                   </button>
                 </div>
               ) : !showPasswordForm ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
-                    <p className="text-sm text-gray-500">{t('account.security.subtitle')}</p>
-                  </div>
+                <div>
+                  <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">{t('account.security.subtitle')}</p>
                   <button
                     onClick={() => setShowPasswordForm(true)}
-                    className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                    className="mt-3 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
                   >
                     {t('common.edit')}
                   </button>
@@ -541,14 +537,12 @@ export default function Account() {
             {/* Cancel subscription moved to /finance/subscription (dedicated Subscription page) */}
 
             {/* Delete Catalog */}
-            <div className="flex-1 flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-red-600">{t('account.danger.deleteCatalog')}</h3>
-                <p className="text-sm text-gray-500">{t('account.danger.description')}</p>
-              </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-red-600">{t('account.danger.deleteCatalog')}</h3>
+              <p className="text-sm text-gray-500 mt-0.5">{t('account.danger.description')}</p>
               <button
                 onClick={() => setShowDeleteCatalog(true)}
-                className="px-4 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
+                className="mt-3 px-4 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
               >
                 {t('common.delete')}
               </button>
