@@ -36,7 +36,7 @@ export default function DashboardHome() {
   const [feedbackSending, setFeedbackSending] = useState(false)
   const [feedbackSent, setFeedbackSent] = useState(false)
   const [feedbackExpanded, setFeedbackExpanded] = useState(false)
-  const [plansComparisonExpanded, setPlansComparisonExpanded] = useState(false)
+  const [expandedPlanRows, setExpandedPlanRows] = useState<Record<string, boolean>>({})
 
   // Load persisted onboarding state
   useEffect(() => {
@@ -992,93 +992,110 @@ export default function DashboardHome() {
         )
       })()}
 
-      {/* Plan features comparison — collapsible. Hidden on native mobile like the pricing grid. */}
+      {/* Per-plan collapsible rows — one dropdown per plan, each expands to show its features.
+          Hidden on native mobile like the pricing grid. */}
       {!Capacitor.isNativePlatform() && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setPlansComparisonExpanded(v => !v)}
-            className="w-full flex items-center gap-3 p-4 sm:p-5 text-left hover:bg-gray-50 transition-colors"
-            aria-expanded={plansComparisonExpanded}
-          >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#38bdf8]/20 to-[#2d6cb5]/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-[#1e3a5f] text-sm">
-                {t('home.plansCompareTitle', 'Qué incluye cada plan')}
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5 truncate">
-                {t('home.plansCompareDesc', 'Compará Free, Pro y Business')}
-              </p>
-            </div>
-            <svg
-              className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${plansComparisonExpanded ? 'rotate-180' : ''}`}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+        <div className="space-y-2">
+          {(['free', 'pro', 'business'] as const).map(planId => {
+            const feat = PLAN_FEATURES[planId]
+            const isCurrent = store?.plan === planId
+            const isHighlighted = planId === 'pro'
+            const expanded = !!expandedPlanRows[planId]
+            const toggle = () => setExpandedPlanRows(prev => ({ ...prev, [planId]: !prev[planId] }))
 
-          {plansComparisonExpanded && (
-            <div className="px-4 sm:px-5 pb-4 sm:pb-5 border-t border-gray-100 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {(['free', 'pro', 'business'] as const).map(planId => {
-                  const feat = PLAN_FEATURES[planId]
-                  const isCurrent = store?.plan === planId
-                  const isHighlighted = planId === 'pro'
-
-                  return (
-                    <div
-                      key={planId}
-                      className={`rounded-xl p-4 border-2 ${
-                        isHighlighted
-                          ? 'border-[#2d6cb5] bg-gradient-to-b from-[#f0f7ff] to-white'
-                          : 'border-gray-200/60 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-bold text-[#1e3a5f]">{feat.name}</h4>
-                        {isCurrent && (
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded-full">
-                            {t('plan.buttons.current')}
-                          </span>
-                        )}
-                        {!isCurrent && isHighlighted && (
-                          <span className="px-2 py-0.5 bg-[#1e3a5f] text-white text-[10px] font-semibold rounded-full">
-                            {t('plan.badge.popular')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-2xl font-bold text-[#1e3a5f] mb-0.5">
-                        {feat.price === 0 ? t('plan.badge.free') : `$${feat.price}`}
-                        {feat.price > 0 && (
-                          <span className="text-xs font-normal text-gray-500 ml-1">{t('plan.billing.perMonth')}</span>
-                        )}
-                      </p>
-                      {feat.price > 0 && (
-                        <p className="text-xs text-gray-500 mb-3">
-                          ${feat.priceYearly}{t('plan.billing.perYear')}
-                        </p>
+            return (
+              <div
+                key={planId}
+                className={`bg-white rounded-xl border overflow-hidden ${
+                  isHighlighted ? 'border-[#2d6cb5]/40' : 'border-gray-200'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={toggle}
+                  className="w-full flex items-center gap-3 p-4 sm:p-5 text-left hover:bg-gray-50 transition-colors"
+                  aria-expanded={expanded}
+                >
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    planId === 'free'
+                      ? 'bg-gray-100'
+                      : planId === 'pro'
+                      ? 'bg-gradient-to-br from-[#38bdf8]/20 to-[#2d6cb5]/20'
+                      : 'bg-gradient-to-br from-amber-100 to-orange-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${
+                      planId === 'free' ? 'text-gray-500' : planId === 'pro' ? 'text-[#2d6cb5]' : 'text-amber-600'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      {planId === 'free' && (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       )}
-                      <ul className="space-y-2 mt-3">
-                        {feat.features.map((feature, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs">
-                            <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="text-gray-700">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      {planId === 'pro' && (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      )}
+                      {planId === 'business' && (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      )}
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-[#1e3a5f] text-sm">{feat.name}</h3>
+                      {isCurrent && (
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded-full">
+                          {t('plan.buttons.current')}
+                        </span>
+                      )}
+                      {!isCurrent && isHighlighted && (
+                        <span className="px-2 py-0.5 bg-[#1e3a5f] text-white text-[10px] font-semibold rounded-full">
+                          {t('plan.badge.popular')}
+                        </span>
+                      )}
                     </div>
-                  )
-                })}
+                    <p className="text-xs text-gray-500 mt-0.5 truncate">
+                      {feat.price === 0 ? t('plan.badge.free') : `$${feat.price}${t('plan.billing.perMonth')} · $${feat.priceYearly}${t('plan.billing.perYear')}`}
+                    </p>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {expanded && (
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 border-t border-gray-100 pt-4">
+                    <ul className="space-y-2">
+                      {feat.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-gray-700">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {!isCurrent && planId !== 'free' && (
+                      <div className="mt-4 flex gap-2">
+                        <Link
+                          to={localePath(`/dashboard/plan?upgrade=${planId}&billing=monthly`)}
+                          className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-[#f0f7ff] text-[#1e3a5f] hover:bg-[#e0efff] transition-all"
+                        >
+                          {t('plan.billing.monthly')} · ${feat.price}
+                        </Link>
+                        <Link
+                          to={localePath(`/dashboard/plan?upgrade=${planId}&billing=yearly`)}
+                          className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] transition-all"
+                        >
+                          {t('plan.billing.yearly')} · ${feat.priceYearly}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )
+          })}
         </div>
       )}
     </div>

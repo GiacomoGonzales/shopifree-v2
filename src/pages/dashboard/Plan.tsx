@@ -143,15 +143,30 @@ export default function Plan() {
 
   const currentPlan = store?.plan || 'free'
   const hasActiveSubscription = store?.subscription?.status === 'active' || store?.subscription?.status === 'trialing'
-  const isTrialing = store?.subscription?.status === 'trialing'
+  const stripeIsTrialing = store?.subscription?.status === 'trialing'
   const isNative = Capacitor.isNativePlatform()
 
-  // Calculate trial days remaining
+  // Signup-time trial (stored on the store document, no Stripe subscription yet).
+  const signupTrialEnd = (() => {
+    if (!store?.trialEndsAt || store?.subscription) return null
+    const raw = store.trialEndsAt as Date | string | { toDate: () => Date }
+    const d = raw instanceof Date
+      ? raw
+      : typeof raw === 'object' && raw && 'toDate' in raw
+        ? raw.toDate()
+        : new Date(raw as string)
+    return d.getTime() > Date.now() ? d : null
+  })()
+
+  const isTrialing = stripeIsTrialing || signupTrialEnd !== null
+  const effectiveTrialEnd: Date | null =
+    stripeIsTrialing && store?.subscription?.trialEnd
+      ? new Date(store.subscription.trialEnd)
+      : signupTrialEnd
+
   const trialDaysLeft = (() => {
-    if (!isTrialing || !store?.subscription?.trialEnd) return 0
-    const now = new Date()
-    const trialEnd = new Date(store.subscription.trialEnd)
-    return Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    if (!effectiveTrialEnd) return 0
+    return Math.max(0, Math.ceil((effectiveTrialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
   })()
 
   // 50% discount qualification: trialing with <=5 days left, OR free plan with expired trial
@@ -208,7 +223,7 @@ export default function Plan() {
               </div>
             </div>
 
-            {isTrialing && store?.subscription?.trialEnd && (
+            {isTrialing && effectiveTrialEnd && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
@@ -219,7 +234,7 @@ export default function Plan() {
                   </span>
                 </div>
                 <p className="text-xs text-amber-600">
-                  {t('plan.trial.endsAt', { date: new Date(store.subscription.trialEnd).toLocaleDateString() })}
+                  {t('plan.trial.endsAt', { date: effectiveTrialEnd.toLocaleDateString() })}
                 </p>
               </div>
             )}
