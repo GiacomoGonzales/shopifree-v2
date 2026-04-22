@@ -604,7 +604,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
       // Show confirmation
       setStep('confirmation')
-      onOrderComplete?.(createdOrder)
+      // Don't call onOrderComplete here — the themes wire it to clearCart +
+      // close-drawer, which would dismiss the confirmation screen. Stripe/Brick
+      // flows do the same: onOrderComplete fires from handleBackToStore when the
+      // user taps "Volver a la tienda".
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating order')
     } finally {
