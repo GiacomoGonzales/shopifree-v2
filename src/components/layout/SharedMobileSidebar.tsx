@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useSidebar } from '../../contexts/SidebarContext'
 import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
+import { useNewOrdersCount } from '../../hooks/useNewOrdersCount'
 import ModeSwitcher from '../finance/ModeSwitcher'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
@@ -21,6 +22,7 @@ interface NavItem {
   name: string
   href: string
   icon: (props: { active?: boolean }) => JSX.Element
+  badge?: number
 }
 type NavElement = NavItem | 'separator'
 
@@ -37,7 +39,8 @@ function isFinanceRoute(pathname: string): boolean {
 export default function SharedMobileSidebar() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
-  const { user, firebaseUser, logout } = useAuth()
+  const { user, firebaseUser, store, logout } = useAuth()
+  const newOrders = useNewOrdersCount(store?.id)
   const { open, setOpen } = useSidebar()
   const location = useLocation()
   const navigate = useNavigate()
@@ -97,7 +100,7 @@ export default function SharedMobileSidebar() {
       { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
       { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
       { name: 'Dropshipping', href: localePath('/dashboard/dropshipping'), icon: DropshippingIcon },
-      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
+      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon, badge: newOrders },
       { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
       { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
       'separator',
@@ -113,7 +116,7 @@ export default function SharedMobileSidebar() {
     ]
     if (isAdmin) items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
     return items
-  }, [mode, t, localePath, isAdmin, showUpgrade])
+  }, [mode, t, localePath, isAdmin, showUpgrade, newOrders])
 
   const isItemActive = (href: string) => {
     const rootDash = localePath('/dashboard')
@@ -197,6 +200,13 @@ export default function SharedMobileSidebar() {
                   {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-gray-900 rounded-r-full" />}
                   <item.icon active={active} />
                   <span className="flex-1">{item.name}</span>
+                  {item.badge && item.badge > 0 && (
+                    <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
+                      active ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}

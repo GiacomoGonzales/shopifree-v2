@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { usePresence } from '../../hooks/usePresence'
 import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
+import { useNewOrdersCount } from '../../hooks/useNewOrdersCount'
 import { useSidebar } from '../../contexts/SidebarContext'
 import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
@@ -22,6 +23,7 @@ interface NavItem {
   name: string
   href: string
   icon: (props: { active?: boolean }) => JSX.Element
+  badge?: number
 }
 
 type NavElement = NavItem | 'separator'
@@ -52,6 +54,7 @@ export default function DashboardLayout() {
   // Track presence for any user with a store
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
   usePresence(store?.id)
+  const newOrders = useNewOrdersCount(store?.id)
   const [totalUnread, setTotalUnread] = useState(0)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatUnread, setChatUnread] = useState(0)
@@ -83,7 +86,7 @@ export default function DashboardLayout() {
       { name: t('nav.home'), href: localePath('/dashboard'), icon: HomeIcon },
       { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
       { name: 'Dropshipping', href: localePath('/dashboard/dropshipping'), icon: DropshippingIcon },
-      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon },
+      { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon, badge: newOrders },
       { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
       { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
       'separator',
@@ -101,7 +104,7 @@ export default function DashboardLayout() {
       items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
     }
     return items
-  }, [t, localePath, isAdmin])
+  }, [t, localePath, isAdmin, newOrders])
 
   // Set dark status bar text for dashboard (white/light background)
   useEffect(() => {
@@ -181,6 +184,13 @@ export default function DashboardLayout() {
                   isActive ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
                 }`}>
                   {totalUnread > 9 ? '9+' : totalUnread}
+                </span>
+              )}
+              {!isChatItem && item.badge && item.badge > 0 && (
+                <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
+                  isActive ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
+                }`}>
+                  {item.badge > 9 ? '9+' : item.badge}
                 </span>
               )}
             </Link>

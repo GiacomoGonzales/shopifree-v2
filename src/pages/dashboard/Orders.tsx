@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { orderService } from '../../lib/firebase'
+import { markOrdersAsSeen } from '../../hooks/useNewOrdersCount'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { apiUrl } from '../../utils/apiBase'
@@ -81,6 +82,11 @@ export default function Orders() {
 
   const lang = i18n.language?.startsWith('es') ? 'es' : 'en'
   const currencySymbol = getCurrencySymbol(store?.currency || 'USD')
+
+  // Clear the "new orders" badge as soon as the user opens this page.
+  useEffect(() => {
+    if (store?.id) markOrdersAsSeen(store.id)
+  }, [store?.id])
 
   useEffect(() => {
     const fetchOrders = async () => {
