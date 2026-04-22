@@ -597,15 +597,14 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const message = encodeURIComponent(buildWhatsAppMessage(createdOrder))
       const waUrl = `https://wa.me/${phone}?text=${message}`
 
-      // Save for confirmation page button (backup)
+      // Stash the wa.me URL so the OrderConfirmation screen's "Enviar por WhatsApp"
+      // button opens the chat. We intentionally DO NOT auto-redirect here — the user
+      // sees the full order summary first and taps the button when ready.
       setWhatsappUrl(waUrl)
 
       // Show confirmation
       setStep('confirmation')
       onOrderComplete?.(createdOrder)
-
-      // Open WhatsApp directly using location.href (doesn't get blocked like window.open)
-      window.location.href = waUrl
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating order')
     } finally {
