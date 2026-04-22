@@ -120,13 +120,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await stripe.subscriptions.cancel(sub.id, { prorate: true })
       }
     }
-    // Also cancel trialing subscriptions
+    // Also cancel trialing subscriptions — and remember the trial_end so we can preserve it
+    // when the user confirms the SAME plan they're trialing (no trial loss on "pay now").
+    let preserveTrialEnd: number | undefined
     const trialingSubscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: 'trialing'
     })
     for (const sub of trialingSubscriptions.data) {
       if (sub.metadata.storeId === storeId) {
+        // Same plan family → keep the remaining trial days on the new subscription
+        // so the user isn't charged immediately for confirming their card.
+        if (sub.metadata.plan === plan && sub.trial_end && sub.trial_end > Math.floor(Date.now() / 1000)) {
+          preserveTrialEnd = sub.trial_end
+          console.log(`Preserving trial_end ${sub.trial_end} from trialing subscription ${sub.id}`)
+        }
         console.log(`Canceling trialing subscription ${sub.id} for store ${storeId} before creating new one`)
         await stripe.subscriptions.cancel(sub.id)
       }
@@ -178,12 +186,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? {
             discounts: [{ coupon: couponId }],
             subscription_data: {
-              metadata: { storeId, userId, plan }
+              metadata: { storeId, userId, plan },
+              ...(preserveTrialEnd && { trial_end: preserveTrialEnd })
             }
           }
         : {
             subscription_data: {
-              metadata: { storeId, userId, plan }
+              metadata: { storeId, userId, plan },
+              ...(preserveTrialEnd && { trial_end: preserveTrialEnd })
             }
           }
       )

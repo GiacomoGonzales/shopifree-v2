@@ -214,9 +214,9 @@ export default function Register() {
       const phoneCode = phoneCodeByCountry[country] || '+1'
       const fullWhatsapp = `${phoneCode}${whatsapp}`
 
-      // 14-day free Pro trial for new users (no credit card required)
+      // 7-day free Pro trial for new users (no credit card required)
       const trialEndsAt = new Date()
-      trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7)
 
       await storeService.create(storeId, {
         id: storeId,

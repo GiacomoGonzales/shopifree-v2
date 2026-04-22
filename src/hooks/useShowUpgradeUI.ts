@@ -1,8 +1,8 @@
 import { Capacitor } from '@capacitor/core'
 
-// Hide all pricing / upgrade / "buy plan" UI on iOS native, where Apple
-// forbids linking to external payment (App Store Guideline 3.1.1).
-// Returns false on iOS, true everywhere else (web + Android for now).
+// Hide all pricing / upgrade / "buy plan" UI on every native mobile build
+// (iOS forbids external payment links per App Store Guideline 3.1.1; we keep
+// Android aligned so the experience is consistent). Payments only on the web.
 export function useShowUpgradeUI() {
-  return Capacitor.getPlatform() !== 'ios'
+  return !Capacitor.isNativePlatform()
 }

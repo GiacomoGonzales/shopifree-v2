@@ -5,12 +5,18 @@ import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
-import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
+import { PLAN_FEATURES, STRIPE_PRICES, type PlanType } from '../../lib/stripe'
 
-const plans: { id: PlanType; popular?: boolean }[] = [
-  { id: 'free' },
-  { id: 'pro', popular: true },
-  { id: 'business' }
+type BillingCycle = 'monthly' | 'yearly'
+
+// 4 paid options shown in a 2x2 grid: Pro Monthly / Pro Yearly / Business Monthly / Business Yearly.
+// The user explicitly asked to drop the monthly/yearly toggle (not everyone found it) and show
+// every option side by side.
+const paidOptions: { id: Exclude<PlanType, 'free'>; billing: BillingCycle; popular?: boolean }[] = [
+  { id: 'pro', billing: 'monthly', popular: true },
+  { id: 'pro', billing: 'yearly' },
+  { id: 'business', billing: 'monthly' },
+  { id: 'business', billing: 'yearly' }
 ]
 
 export default function Plan() {
@@ -24,18 +30,17 @@ export default function Plan() {
   // Canonical self-path — preserves whether we're under /dashboard/plan or /finance/subscription
   const selfPath = location.pathname
   const [loading, setLoading] = useState(false)
-  const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly')
-  const [processingPlan, setProcessingPlan] = useState<string | null>(null)
+  const [processingKey, setProcessingKey] = useState<string | null>(null)
   const toastShownRef = useRef(false)
   const upgradeTriggeredRef = useRef(false)
 
   // Auto-trigger upgrade when coming from MiApp with ?upgrade=business
   useEffect(() => {
-    const upgradePlan = searchParams.get('upgrade') as PlanType | null
+    const upgradePlan = searchParams.get('upgrade') as Exclude<PlanType, 'free'> | null
     if (upgradePlan && !upgradeTriggeredRef.current && store && user && firebaseUser) {
       upgradeTriggeredRef.current = true
       navigate(selfPath, { replace: true })
-      handleSelectPlan(upgradePlan)
+      handleSelectPlan(upgradePlan, 'monthly')
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, store, user, firebaseUser])
@@ -57,18 +62,14 @@ export default function Plan() {
     }
   }, [searchParams, showToast, refreshStore, navigate, t, localePath])
 
-  const handleSelectPlan = async (planId: PlanType) => {
+  const handleSelectPlan = async (planId: Exclude<PlanType, 'free'>, billing: BillingCycle) => {
     if (!store || !user || !firebaseUser) {
       showToast(t('plan.toast.storeNotFound'), 'error')
       return
     }
 
-    if (planId === 'free') {
-      showToast(t('plan.toast.alreadyFree'), 'info')
-      return
-    }
-
-    setProcessingPlan(planId)
+    const key = `${planId}_${billing}`
+    setProcessingKey(key)
     setLoading(true)
 
     try {
@@ -82,10 +83,10 @@ export default function Plan() {
           body: JSON.stringify({
             storeId: store.id,
             plan: planId,
-            billing: selectedBilling,
+            billing,
             userId: firebaseUser.uid,
             email: firebaseUser.email,
-            ...(showDiscount && { applyDiscount: true })
+            ...(qualifiesForDiscount && billing === 'monthly' && { applyDiscount: true })
           })
         }
       )
@@ -105,7 +106,7 @@ export default function Plan() {
       showToast(t('plan.toast.paymentError'), 'error')
     } finally {
       setLoading(false)
-      setProcessingPlan(null)
+      setProcessingKey(null)
     }
   }
 
@@ -159,10 +160,17 @@ export default function Plan() {
     if (currentPlan === 'free' && store?.trialEndsAt && !isTrialing) return true
     return false
   })()
-  // Only apply discount to monthly billing
-  const showDiscount = qualifiesForDiscount && selectedBilling === 'monthly'
 
-  // On iOS native, redirect to dashboard (Apple requires IAP, not available yet)
+  // Derive current billing cycle from the subscription's Stripe priceId
+  const currentBilling: BillingCycle | null = (() => {
+    const priceId = store?.subscription?.stripePriceId
+    if (!priceId) return null
+    if (priceId === STRIPE_PRICES.pro.yearly || priceId === STRIPE_PRICES.business.yearly) return 'yearly'
+    if (priceId === STRIPE_PRICES.pro.monthly || priceId === STRIPE_PRICES.business.monthly) return 'monthly'
+    return null
+  })()
+
+  // Subscriptions only on web — iOS + Android mobile builds redirect to dashboard.
   useEffect(() => {
     if (isNative) {
       navigate(localePath('/dashboard'), { replace: true })
@@ -174,35 +182,9 @@ export default function Plan() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('plan.title')}</h1>
-          <p className="text-gray-600 mt-1">{t('plan.subtitle')}</p>
-        </div>
-        {/* Billing toggle */}
-        <div className="bg-gray-100 p-1 rounded-xl flex w-fit">
-          <button
-            onClick={() => setSelectedBilling('monthly')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-              selectedBilling === 'monthly'
-                ? 'bg-white text-[#1e3a5f] shadow-sm'
-                : 'text-gray-600 hover:text-[#1e3a5f]'
-            }`}
-          >
-            {t('plan.billing.monthly')}
-          </button>
-          <button
-            onClick={() => setSelectedBilling('yearly')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-              selectedBilling === 'yearly'
-                ? 'bg-white text-[#1e3a5f] shadow-sm'
-                : 'text-gray-600 hover:text-[#1e3a5f]'
-            }`}
-          >
-            {t('plan.billing.yearly')}
-            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">{t('plan.billing.discount')}</span>
-          </button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-xl font-semibold text-gray-900">{t('plan.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('plan.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -288,24 +270,23 @@ export default function Plan() {
           </div>
         </div>
 
-        {/* Right Column - Plans */}
+        {/* Right Column - 4 paid options in a 2x2 grid */}
         <div className="lg:col-span-2">
-          <div className={`grid grid-cols-1 ${currentPlan === 'free' || currentPlan === 'pro' ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
-            {plans.filter(({ id }) => {
-              // Users on free/pro (including trial) can only see Free and Pro plans
-              if ((currentPlan === 'free' || currentPlan === 'pro') && id === 'business') return false
-              return true
-            }).map(({ id: planId, popular: isPopular }) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {paidOptions.map(({ id: planId, billing, popular: isPopular }) => {
               const plan = PLAN_FEATURES[planId]
-              const isCurrentPlan = planId === currentPlan
-              const price = selectedBilling === 'yearly' ? plan.priceYearly : plan.price
-              const isProcessing = processingPlan === planId
-              const hasDiscount = showDiscount && price > 0
+              const price = billing === 'yearly' ? plan.priceYearly : plan.price
+              const key = `${planId}_${billing}`
+              const isProcessing = processingKey === key
+              // This card represents the user's current plan+billing combo — disable it.
+              const isCurrentCard = planId === currentPlan && billing === currentBilling && hasActiveSubscription
+              const hasDiscount = qualifiesForDiscount && billing === 'monthly'
               const discountedPrice = hasDiscount ? Math.round(price * 0.5) : price
+              const monthlyEquivalent = billing === 'yearly' ? (price / 12).toFixed(2) : null
 
               return (
                 <div
-                  key={planId}
+                  key={key}
                   className={`relative bg-white rounded-xl border-2 p-5 shadow-sm transition-all ${
                     isPopular
                       ? 'border-[#2d6cb5] shadow-lg shadow-[#2d6cb5]/10'
@@ -321,8 +302,10 @@ export default function Plan() {
                   )}
 
                   <div className="text-center mb-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      <h3 className="text-lg font-bold text-[#1e3a5f]">
+                        {plan.name} {billing === 'yearly' ? t('plan.billing.yearly') : t('plan.billing.monthly')}
+                      </h3>
                       {hasDiscount && (
                         <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full animate-pulse">
                           {t('plan.discount.badge')}
@@ -330,9 +313,7 @@ export default function Plan() {
                       )}
                     </div>
                     <div className="mt-3">
-                      {price === 0 ? (
-                        <span className="text-3xl font-bold text-[#1e3a5f]">{t('plan.badge.free')}</span>
-                      ) : hasDiscount ? (
+                      {hasDiscount ? (
                         <>
                           <span className="text-lg text-gray-400 line-through mr-1">${price}</span>
                           <span className="text-3xl font-bold text-green-600">${discountedPrice}</span>
@@ -341,7 +322,9 @@ export default function Plan() {
                       ) : (
                         <>
                           <span className="text-3xl font-bold text-[#1e3a5f]">${price}</span>
-                          <span className="text-gray-500 text-sm">{selectedBilling === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}</span>
+                          <span className="text-gray-500 text-sm">
+                            {billing === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}
+                          </span>
                         </>
                       )}
                     </div>
@@ -350,14 +333,9 @@ export default function Plan() {
                         {t('plan.discount.appliedNote')}
                       </p>
                     )}
-                    {!hasDiscount && selectedBilling === 'yearly' && price > 0 && (
+                    {billing === 'yearly' && !hasDiscount && monthlyEquivalent && (
                       <p className="text-xs text-green-600 mt-1">
-                        {t('plan.billing.savings', { amount: ((plan.price * 12) - plan.priceYearly).toFixed(0) })}
-                      </p>
-                    )}
-                    {!hasDiscount && price > 0 && currentPlan === 'free' && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {t('plan.trial.subtitle')} ${price}{selectedBilling === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}
+                        ≈ ${monthlyEquivalent}{t('plan.billing.perMonth')} · {t('plan.billing.savings', { amount: ((plan.price * 12) - plan.priceYearly).toFixed(0) })}
                       </p>
                     )}
                   </div>
@@ -374,10 +352,10 @@ export default function Plan() {
                   </ul>
 
                   <button
-                    onClick={() => handleSelectPlan(planId)}
-                    disabled={(isCurrentPlan && !isTrialing) || loading || planId === 'free'}
+                    onClick={() => handleSelectPlan(planId, billing)}
+                    disabled={isCurrentCard || loading}
                     className={`w-full py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm ${
-                      (isCurrentPlan && !isTrialing) || planId === 'free'
+                      isCurrentCard
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : isPopular
                         ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
@@ -389,15 +367,11 @@ export default function Plan() {
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                         {t('plan.buttons.processing')}
                       </>
-                    ) : isCurrentPlan && !isTrialing ? (
+                    ) : isCurrentCard ? (
                       t('plan.buttons.current')
-                    ) : isCurrentPlan && isTrialing ? (
-                      t('plan.trial.subscribe', 'Suscribirme')
-                    ) : planId === 'free' ? (
-                      t('plan.buttons.free')
                     ) : hasDiscount ? (
                       t('plan.discount.getDiscount')
-                    ) : currentPlan === 'free' ? (
+                    ) : currentPlan === 'free' && !hasActiveSubscription ? (
                       t('plan.trial.startTrial')
                     ) : (
                       t('plan.buttons.upgrade')

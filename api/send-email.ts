@@ -29,8 +29,8 @@ type EmailTemplate = { subject: string; html: string; text: string }
 function getWelcomeEmail(storeName: string, subdomain: string, lang: string): EmailTemplate {
   const isEn = lang === 'en'
   const text = isEn
-    ? `Hi!\n\n${storeName} is online and ready to receive orders.\n\nHere are your next steps:\n\n1. Add your first products — just a photo, name, and price.\n2. Share your store link: https://${subdomain}.shopifree.app\n3. Your customers will order from the catalog and you'll receive it on WhatsApp.\n\nYour account includes a 14-day Pro trial with all features.\n\nGo to your dashboard:\nhttps://shopifree.app/dashboard\n\nIf you have any questions, just reply to this email.\n\n— Shopifree`
-    : `Hola!\n\n${storeName} ya esta online y lista para recibir pedidos.\n\nEstos son tus siguientes pasos:\n\n1. Agrega tus primeros productos — solo foto, nombre y precio.\n2. Comparte el link de tu tienda: https://${subdomain}.shopifree.app\n3. Tus clientes piden desde el catalogo y te llega al WhatsApp.\n\nTu cuenta incluye 14 dias de prueba Pro con todas las funciones.\n\nIr a tu panel:\nhttps://shopifree.app/dashboard\n\nSi tenes alguna duda, responde este email.\n\n— Shopifree`
+    ? `Hi!\n\n${storeName} is online and ready to receive orders.\n\nHere are your next steps:\n\n1. Add your first products — just a photo, name, and price.\n2. Share your store link: https://${subdomain}.shopifree.app\n3. Your customers will order from the catalog and you'll receive it on WhatsApp.\n\nYour account includes a 7-day Pro trial with all features.\n\nGo to your dashboard:\nhttps://shopifree.app/dashboard\n\nIf you have any questions, just reply to this email.\n\n— Shopifree`
+    : `Hola!\n\n${storeName} ya esta online y lista para recibir pedidos.\n\nEstos son tus siguientes pasos:\n\n1. Agrega tus primeros productos — solo foto, nombre y precio.\n2. Comparte el link de tu tienda: https://${subdomain}.shopifree.app\n3. Tus clientes piden desde el catalogo y te llega al WhatsApp.\n\nTu cuenta incluye 7 dias de prueba Pro con todas las funciones.\n\nIr a tu panel:\nhttps://shopifree.app/dashboard\n\nSi tenes alguna duda, responde este email.\n\n— Shopifree`
   return {
     subject: isEn
       ? `${storeName} is live — next steps`
@@ -50,7 +50,7 @@ function getWelcomeEmail(storeName: string, subdomain: string, lang: string): Em
     <strong>2.</strong> ${isEn ? 'Share your store link:' : 'Comparte el link de tu tienda:'} <a href="https://${subdomain}.shopifree.app" style="color:#2563eb">${subdomain}.shopifree.app</a><br>
     <strong>3.</strong> ${isEn ? 'Your customers will order from the catalog and you\'ll receive it on WhatsApp.' : 'Tus clientes piden desde el catalogo y te llega al WhatsApp.'}
   </p>
-  <p>${isEn ? 'Your account includes a 14-day Pro trial with all features.' : 'Tu cuenta incluye 14 dias de prueba Pro con todas las funciones.'}</p>
+  <p>${isEn ? 'Your account includes a 7-day Pro trial with all features.' : 'Tu cuenta incluye 7 dias de prueba Pro con todas las funciones.'}</p>
   <p><a href="https://shopifree.app/dashboard" style="color:#2563eb">${isEn ? 'Go to your dashboard' : 'Ir a tu panel'}</a></p>
   <p>${isEn ? 'If you have any questions, just reply to this email.' : 'Si tenes alguna duda, responde este email.'}</p>
   <p style="color:#999;margin-top:32px;font-size:12px">— Shopifree</p>
