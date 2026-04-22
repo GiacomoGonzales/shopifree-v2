@@ -34,13 +34,14 @@ export default function Plan() {
   const toastShownRef = useRef(false)
   const upgradeTriggeredRef = useRef(false)
 
-  // Auto-trigger upgrade when coming from MiApp with ?upgrade=business
+  // Auto-trigger upgrade when coming from another page with ?upgrade=<plan>&billing=<cycle>
   useEffect(() => {
     const upgradePlan = searchParams.get('upgrade') as Exclude<PlanType, 'free'> | null
+    const upgradeBilling: BillingCycle = searchParams.get('billing') === 'yearly' ? 'yearly' : 'monthly'
     if (upgradePlan && !upgradeTriggeredRef.current && store && user && firebaseUser) {
       upgradeTriggeredRef.current = true
       navigate(selfPath, { replace: true })
-      handleSelectPlan(upgradePlan, 'monthly')
+      handleSelectPlan(upgradePlan, upgradeBilling)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, store, user, firebaseUser])

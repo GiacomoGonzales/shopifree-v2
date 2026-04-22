@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, analyticsService, categoryService, orderService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
-import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
+import { PLAN_FEATURES, STRIPE_PRICES, type PlanType } from '../../lib/stripe'
 import { themes } from '../../themes'
 import { getThemeComponent } from '../../themes/components'
 import type { Product, Category } from '../../types'
@@ -876,25 +876,104 @@ export default function DashboardHome() {
         )}
       </div>
 
-      {/* Upgrade banner - hidden on native iOS, on trial, or on paid plans */}
-      {!Capacitor.isNativePlatform() && !isOnTrial && store?.plan === 'free' && (
-        <div className="bg-[#1e3a5f] rounded-xl p-4 sm:p-6 text-white">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h3 className="font-bold text-lg">{t('home.upgradeTitle')}</h3>
-              <p className="text-white/80 mt-1 text-sm sm:text-base">
-                {t('home.upgradeDesc')}
-              </p>
+      {/* Plans mini-grid — 4 quick-pay cards. Hidden on native mobile (payments are web-only)
+          and when the user is already on Business Annual (no upsell path left). */}
+      {!Capacitor.isNativePlatform() && !(store?.plan === 'business' && (() => {
+        const pid = store?.subscription?.stripePriceId
+        return pid === STRIPE_PRICES.business.yearly
+      })()) && (() => {
+        const currentPriceId = store?.subscription?.stripePriceId
+        const isActive = store?.subscription?.status === 'active' || store?.subscription?.status === 'trialing'
+        const options: { id: Exclude<PlanType, 'free'>; billing: 'monthly' | 'yearly'; popular?: boolean }[] = [
+          { id: 'pro', billing: 'monthly', popular: true },
+          { id: 'pro', billing: 'yearly' },
+          { id: 'business', billing: 'monthly' },
+          { id: 'business', billing: 'yearly' },
+        ]
+
+        return (
+          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('home.plansTitle', 'Planes y precios')}</h2>
+                <p className="text-sm text-gray-600 mt-0.5">{t('home.plansDesc', 'Elegí el plan que mejor se adapta a tu negocio')}</p>
+              </div>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="hidden sm:inline text-sm text-[#2d6cb5] hover:text-[#1e3a5f] font-medium"
+              >
+                {t('home.viewAllPlans', 'Ver todos →')}
+              </Link>
             </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {options.map(({ id, billing, popular }) => {
+                const feat = PLAN_FEATURES[id]
+                const price = billing === 'yearly' ? feat.priceYearly : feat.price
+                const priceId = STRIPE_PRICES[id]?.[billing]
+                const isCurrent = isActive && priceId && currentPriceId === priceId
+                const monthlyEq = billing === 'yearly' ? (price / 12).toFixed(2) : null
+
+                const inner = (
+                  <>
+                    {popular && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-[#1e3a5f] text-white text-[10px] font-bold rounded-full whitespace-nowrap">
+                        {t('plan.badge.popular')}
+                      </span>
+                    )}
+                    <p className="text-xs font-semibold text-[#1e3a5f] mb-1">
+                      {feat.name} {billing === 'yearly' ? t('plan.billing.yearly') : t('plan.billing.monthly')}
+                    </p>
+                    <p className="text-xl font-bold text-[#1e3a5f] leading-none">${price}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      {billing === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}
+                    </p>
+                    {monthlyEq && (
+                      <p className="text-[10px] text-green-600 font-medium mt-1">≈ ${monthlyEq}{t('plan.billing.perMonth')}</p>
+                    )}
+                    <div className={`mt-2 text-center text-xs font-semibold py-1.5 rounded-lg ${
+                      isCurrent
+                        ? 'bg-gray-100 text-gray-400'
+                        : popular
+                        ? 'bg-[#1e3a5f] text-white'
+                        : 'bg-[#f0f7ff] text-[#1e3a5f]'
+                    }`}>
+                      {isCurrent ? t('plan.buttons.current') : t('plan.buttons.upgrade')}
+                    </div>
+                  </>
+                )
+
+                if (isCurrent) {
+                  return (
+                    <div key={`${id}_${billing}`} className="relative bg-gray-50 border border-gray-200 rounded-lg p-3 opacity-70">
+                      {inner}
+                    </div>
+                  )
+                }
+
+                return (
+                  <Link
+                    key={`${id}_${billing}`}
+                    to={localePath(`/dashboard/plan?upgrade=${id}&billing=${billing}`)}
+                    className={`relative block bg-white border rounded-lg p-3 transition-all hover:shadow-md ${
+                      popular ? 'border-[#2d6cb5] shadow-sm shadow-[#2d6cb5]/10' : 'border-gray-200/60 hover:border-[#38bdf8]/50'
+                    }`}
+                  >
+                    {inner}
+                  </Link>
+                )
+              })}
+            </div>
+
             <Link
               to={localePath('/dashboard/plan')}
-              className="px-6 py-3 bg-white text-[#1e3a5f] rounded-xl hover:bg-white/90 transition font-semibold shadow-lg text-center sm:flex-shrink-0"
+              className="block sm:hidden mt-3 text-center text-sm text-[#2d6cb5] hover:text-[#1e3a5f] font-medium"
             >
-              {t('home.viewPlans')}
+              {t('home.viewAllPlans', 'Ver todos →')}
             </Link>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
 
       {/* Theme Preview Modal */}
