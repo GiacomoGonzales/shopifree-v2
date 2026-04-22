@@ -202,7 +202,7 @@ export default function Plan() {
               <div>
                 <p className="text-sm text-gray-600">{t('plan.current')}</p>
                 <p className="font-bold text-[#1e3a5f] text-lg capitalize">
-                  {PLAN_FEATURES[currentPlan].name}
+                  {PLAN_FEATURES[currentPlan].name}{isTrialing ? ' Trial' : ''}
                 </p>
               </div>
             </div>
@@ -245,6 +245,23 @@ export default function Plan() {
               </button>
             )}
           </div>
+
+          {/* Downgrade to Free — only shown when the user has a paid subscription to cancel */}
+          {hasActiveSubscription && (
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+              <h3 className="font-semibold text-[#1e3a5f] mb-1">{PLAN_FEATURES.free.name}</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {PLAN_FEATURES.free.features.slice(0, 2).join(' · ')}
+              </p>
+              <button
+                onClick={handleManageSubscription}
+                disabled={loading}
+                className="w-full px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50"
+              >
+                {t('plan.buttons.downgrade')}
+              </button>
+            </div>
+          )}
 
           {/* Support */}
           <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
@@ -371,8 +388,6 @@ export default function Plan() {
                       t('plan.buttons.current')
                     ) : hasDiscount ? (
                       t('plan.discount.getDiscount')
-                    ) : currentPlan === 'free' && !hasActiveSubscription ? (
-                      t('plan.trial.startTrial')
                     ) : (
                       t('plan.buttons.upgrade')
                     )}

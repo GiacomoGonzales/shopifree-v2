@@ -774,8 +774,9 @@
     "buttons": {
       "current": "Current plan",
       "free": "Free",
-      "upgrade": "Upgrade",
-      "processing": "Processing..."
+      "upgrade": "Subscribe",
+      "processing": "Processing...",
+      "downgrade": "Switch to Free"
     },
     "badge": {
       "popular": "Popular",

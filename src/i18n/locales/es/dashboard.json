@@ -775,8 +775,9 @@
     "buttons": {
       "current": "Plan actual",
       "free": "Gratuito",
-      "upgrade": "Mejorar",
-      "processing": "Procesando..."
+      "upgrade": "Contratar",
+      "processing": "Procesando...",
+      "downgrade": "Bajar a Gratis"
     },
     "badge": {
       "popular": "Popular",
