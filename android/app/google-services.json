@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "610784604338-880ooonrnj3rh1g65kc0fpvvcjbr0a5q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.shopifree.mobile",
+            "certificate_hash": "7d399647a547e9b58ee35cdc31944ffd626e78ca"
+          }
+        },
+        {
           "client_id": "610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com",
           "client_type": 3
         }

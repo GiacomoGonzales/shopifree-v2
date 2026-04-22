@@ -13,7 +13,7 @@ import { resolve } from 'path'
 import sharp from 'sharp'
 
 const LOGO_PATH = resolve(process.cwd(), 'public/icon-512.png')
-const BG_COLOR = '#1e3a5f'
+const BG_COLOR = '#ffffff'
 
 const ANDROID_DENSITIES = [
   { name: 'mipmap-mdpi',    launcher: 48,  foreground: 108 },
@@ -113,6 +113,18 @@ async function main() {
 </vector>
 `
   writeFileSync(resolve(resDir, 'drawable/ic_launcher_background.xml'), bgDrawableXml, 'utf-8')
+
+  const splashIconSize = 432
+  const splashLogoSize = Math.round(splashIconSize * 0.65)
+  const splashLogo = await sharp(trimmedLogo)
+    .resize(splashLogoSize, splashLogoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .toBuffer()
+
+  await sharp({ create: { width: splashIconSize, height: splashIconSize, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: splashLogo, gravity: 'centre' }])
+    .png()
+    .toFile(resolve(resDir, 'drawable/ic_splash_icon.png'))
+  console.log(`  ✓ Android splash icon (${splashIconSize}px, transparent bg)`)
 
   const iosDir = resolve(process.cwd(), 'ios/App/App/Assets.xcassets/AppIcon.appiconset')
   if (existsSync(iosDir)) {

@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (Capacitor.isNativePlatform()) {
       import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
         GoogleAuth.initialize({
-          clientId: '610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com',
+          clientId: '610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com',
           scopes: ['profile', 'email'],
           grantOfflineAccess: true
         })
