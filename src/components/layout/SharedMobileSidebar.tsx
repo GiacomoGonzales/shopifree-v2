@@ -200,11 +200,11 @@ export default function SharedMobileSidebar() {
                   {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-gray-900 rounded-r-full" />}
                   <item.icon active={active} />
                   <span className="flex-1">{item.name}</span>
-                  {item.badge && item.badge > 0 && (
+                  {(item.badge ?? 0) > 0 && (
                     <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
                       active ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
                     }`}>
-                      {item.badge > 9 ? '9+' : item.badge}
+                      {(item.badge ?? 0) > 9 ? '9+' : item.badge}
                     </span>
                   )}
                 </Link>
