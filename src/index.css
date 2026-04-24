@@ -63,6 +63,15 @@ body.native-app {
   background-color: #ffffff;
 }
 
+/* iOS auto-zooms any focused input whose computed font-size is < 16px.
+   Force 16px on form fields inside the native shell so focus doesn't
+   trigger the zoom. Tailwind's text-sm (14px) is the usual culprit. */
+body.native-app input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+body.native-app textarea,
+body.native-app select {
+  font-size: 16px !important;
+}
+
 html:has(body.native-app) {
   background-color: #ffffff;
 }
