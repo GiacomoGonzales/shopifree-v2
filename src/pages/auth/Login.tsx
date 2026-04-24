@@ -15,7 +15,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login, loginWithGoogle, loginWithApple, firebaseUser, store, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const isNative = Capacitor.isNativePlatform()
   const isIOS = Capacitor.getPlatform() === 'ios'
 
   // Redirect authenticated users. Native users without a store go to /register
