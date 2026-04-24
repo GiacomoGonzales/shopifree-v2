@@ -18,18 +18,19 @@ export default function Login() {
   const isNative = Capacitor.isNativePlatform()
   const isIOS = Capacitor.getPlatform() === 'ios'
 
-  // Redirect authenticated users
+  // Redirect authenticated users. Native users without a store go to /register
+  // so they can finish signing up in-app (Register handles "authenticated but
+  // no store" by advancing to step 2). Previously native users landed here
+  // with no way forward, which Apple reviewers hit as a stuck spinner — 2.1(a).
   useEffect(() => {
     if (!authLoading && firebaseUser) {
       if (store) {
         navigate(localePath('/dashboard'))
-      } else if (!isNative) {
-        // Web: send to register to complete step 2
+      } else {
         navigate(localePath('/register'))
       }
-      // Native with no store: stay here. Message shown below prompts web signup.
     }
-  }, [authLoading, firebaseUser, store, navigate, localePath, isNative])
+  }, [authLoading, firebaseUser, store, navigate, localePath])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,34 +42,35 @@ export default function Login() {
     } catch (err: unknown) {
       console.error('Login error:', err)
       setError((err as Error).message || t('login.error'))
+    } finally {
       setLoading(false)
     }
   }
 
   const handleGoogleLogin = async () => {
+    setError('')
+    setLoading(true)
     try {
-      setLoading(true)
-      setError('')
       await loginWithGoogle()
     } catch (err: unknown) {
       setError((err as Error).message || t('login.googleError'))
+    } finally {
       setLoading(false)
     }
   }
 
   const handleAppleLogin = async () => {
+    setError('')
+    setLoading(true)
     try {
-      setLoading(true)
-      setError('')
       await loginWithApple()
     } catch (err: unknown) {
       // Apple's cancel error code — silently dismiss, not a real error.
       const msg = (err as Error).message || ''
-      if (msg.includes('1001') || msg.toLowerCase().includes('cancel')) {
-        setLoading(false)
-        return
+      if (!(msg.includes('1001') || msg.toLowerCase().includes('cancel'))) {
+        setError(msg || t('login.appleError', { defaultValue: 'Error al iniciar sesión con Apple' }))
       }
-      setError(msg || t('login.appleError', { defaultValue: 'Error al iniciar sesión con Apple' }))
+    } finally {
       setLoading(false)
     }
   }
@@ -191,14 +193,12 @@ export default function Login() {
             </button>
           </div>
 
-          {!isNative && (
-            <p className="mt-6 text-center text-sm text-gray-600">
-              {t('login.noAccount')}{' '}
-              <Link to={localePath('/register')} className="font-semibold text-[#2d6cb5] hover:text-[#38bdf8] transition-colors">
-                {t('login.register')}
-              </Link>
-            </p>
-          )}
+          <p className="mt-6 text-center text-sm text-gray-600">
+            {t('login.noAccount')}{' '}
+            <Link to={localePath('/register')} className="font-semibold text-[#2d6cb5] hover:text-[#38bdf8] transition-colors">
+              {t('login.register')}
+            </Link>
+          </p>
         </div>
       </div>
     </div>
