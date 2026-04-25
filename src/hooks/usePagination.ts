@@ -67,31 +67,47 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
   }, [totalPages])
 
   // Scroll to products section after page change renders (classic pagination).
-  // Double rAF + small fallback timeout so the new layout has settled before we
-  // measure — without this, scrolling from the footer back up sometimes lands
-  // at the wrong spot or doesn't fire at all on slower devices.
+  // We walk up the DOM from the products container to find the *actual* scroll
+  // parent — a plain window.scrollTo doesn't help when the catalog renders
+  // inside a fullscreen ThemePreviewModal (its own overflow:auto wrapper) or
+  // inside the native app's #root container. Double rAF lets the new page lay
+  // out before we measure.
   useEffect(() => {
     if (type !== 'classic' || !shouldScrollRef.current) return
     shouldScrollRef.current = false
 
-    const doScroll = () => {
-      const isNative = document.body.classList.contains('native-app')
-      const scrollContainer = isNative ? document.getElementById('root') : null
-      const offset = 100 // clearance for sticky header + category nav
-
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        if (scrollContainer) {
-          const top = rect.top + scrollContainer.scrollTop - offset
-          scrollContainer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
-        } else {
-          const top = rect.top + window.scrollY - offset
-          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+    const findScrollParent = (node: HTMLElement | null): HTMLElement | Window => {
+      let parent: HTMLElement | null = node?.parentElement ?? null
+      while (parent && parent !== document.body && parent !== document.documentElement) {
+        const style = window.getComputedStyle(parent)
+        const overflowY = style.overflowY
+        if ((overflowY === 'auto' || overflowY === 'scroll') && parent.scrollHeight > parent.clientHeight) {
+          return parent
         }
+        parent = parent.parentElement
+      }
+      return window
+    }
+
+    const doScroll = () => {
+      const offset = 100 // clearance for sticky header + category nav
+      const node = containerRef.current
+      if (!node) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+
+      const scrollParent = findScrollParent(node)
+      const rect = node.getBoundingClientRect()
+
+      if (scrollParent === window) {
+        const top = rect.top + window.scrollY - offset
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
       } else {
-        // Fallback: at least take the user to the top of the page.
-        if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
-        else window.scrollTo({ top: 0, behavior: 'smooth' })
+        const el = scrollParent as HTMLElement
+        const elRect = el.getBoundingClientRect()
+        const top = rect.top - elRect.top + el.scrollTop - offset
+        el.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
       }
     }
 
