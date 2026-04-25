@@ -143,35 +143,52 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
       >
         <AnnouncementBar />
 
-        {/* Top issue strip */}
-        <div className="border-b border-black">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-1.5 flex items-center justify-between text-[10px] tracking-[0.2em] uppercase">
+        {/* Slim sticky bar — always visible, keeps CategoryNav close to the top
+            when scrolling. The big masthead below stays static so it doesn't
+            push the category bar halfway down the viewport. */}
+        <header
+          className="sticky top-0 z-50 transition-colors"
+          style={{
+            backgroundColor: scrolled ? 'rgba(244,239,227,0.95)' : '#F4EFE3',
+            backdropFilter: scrolled ? 'blur(8px)' : 'none',
+            borderBottom: '1px solid #1B1610',
+          }}
+        >
+          <div className="max-w-7xl mx-auto px-4 md:px-6 h-12 flex items-center justify-between text-[10px] tracking-[0.2em] uppercase">
             <span>{`VOL. ${volume}`}</span>
-            <span className="hidden md:inline">{issueDate}</span>
-            <span>{`No. ${issueNo}`}</span>
-          </div>
-        </div>
-
-        {/* Masthead header */}
-        <header className={`${scrolled ? 'bg-[#F4EFE3]/95 backdrop-blur sticky top-0 z-50' : ''} transition-colors`}>
-          <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6 pb-4">
-            {/* Mini bar with cart */}
-            <div className="flex items-center justify-between mb-3 text-[10px] tracking-[0.25em] uppercase">
-              <span style={{ color: '#5A4F40' }}>{store.language === 'en' ? 'EST. ' : 'FUNDADO '}{(today.getFullYear() - 1).toString()}</span>
+            <span className="hidden md:inline" style={{ color: '#5A4F40' }}>{issueDate}</span>
+            <div className="flex items-center gap-3">
+              {showName && (
+                <span className="hidden sm:inline" style={{ fontFamily: "'Old Standard TT', serif", textTransform: 'none', letterSpacing: 'normal', fontSize: '0.9rem', fontWeight: 700 }}>
+                  {store.name}
+                </span>
+              )}
               <button onClick={() => setIsCartOpen(true)} className="hover:underline underline-offset-4">
-                {(store.language === 'en' ? 'Bag' : 'Bolsa').toUpperCase()} ({totalItems})
+                {(store.language === 'en' ? 'Bag' : 'Bolsa')} ({totalItems})
               </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Masthead — large, static (not sticky) so it scrolls away naturally. */}
+        <section>
+          <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6 pb-4">
+            {/* Issue meta line */}
+            <div className="flex items-center justify-between mb-3 text-[10px] tracking-[0.25em] uppercase" style={{ color: '#5A4F40' }}>
+              <span>{store.language === 'en' ? 'EST. ' : 'FUNDADO '}{(today.getFullYear() - 1).toString()}</span>
+              <span className="md:hidden">{`No. ${issueNo}`}</span>
+              <span className="hidden md:inline">{issueDate}</span>
             </div>
 
             {/* Double rule */}
             <div className="border-t-2 border-b border-black mb-4" style={{ borderTopWidth: 4 }} />
 
             {/* Title */}
-            <div className="flex items-center justify-center gap-4">
-              {headerLogo && <img src={headerLogo} alt={store.name} className="h-10 md:h-14 w-auto object-contain" />}
+            <div className="flex items-center justify-center gap-3 md:gap-4">
+              {headerLogo && <img src={headerLogo} alt={store.name} className="h-9 md:h-14 w-auto object-contain" />}
               {showName && (
                 <h1
-                  className="text-center text-4xl md:text-7xl lg:text-8xl leading-none tracking-tight"
+                  className="text-center text-3xl sm:text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight"
                   style={{ fontFamily: "'Old Standard TT', serif", fontWeight: 700, color: '#1B1610' }}
                 >
                   {store.name}
@@ -182,7 +199,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
             {/* Subtitle / motto */}
             {store.about?.slogan && (
               <p
-                className="text-center mt-3 text-sm md:text-base italic"
+                className="text-center mt-3 text-xs md:text-base italic px-2"
                 style={{ fontFamily: "'Old Standard TT', serif", color: '#5A4F40' }}
               >
                 &mdash; {store.about.slogan} &mdash;
@@ -192,7 +209,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
             {/* Double rule below */}
             <div className="border-t border-b-2 border-black mt-4" style={{ borderBottomWidth: 4 }} />
           </div>
-        </header>
+        </section>
 
         {/* Hero — feature article */}
         <section className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-14">
@@ -212,10 +229,9 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
               <div className="mt-4 columns-1 sm:columns-2 gap-6 text-sm md:text-base leading-relaxed" style={{ color: '#1B1610' }}>
                 <p>
                   <span
-                    className="float-left mr-2 mt-1"
+                    className="float-left mr-2 mt-1 text-[2.75rem] md:text-[4rem]"
                     style={{
                       fontFamily: "'Old Standard TT', serif",
-                      fontSize: '4rem',
                       lineHeight: '0.85',
                       fontWeight: 700,
                       color: '#7A1F1F',
@@ -256,12 +272,12 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
 
         {/* Section header with double rule */}
         <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6">
-          <div className="border-t-2 border-b border-black py-3 flex items-center justify-between" style={{ borderTopWidth: 4 }}>
-            <span className="text-xs tracking-[0.3em] uppercase">{store.language === 'en' ? '▶ Classifieds' : '▶ Anuncios'}</span>
-            <span className="text-xs tracking-[0.3em] uppercase italic" style={{ fontFamily: "'Old Standard TT', serif", color: '#7A1F1F' }}>
+          <div className="border-t-2 border-b border-black py-3 flex items-center justify-between gap-3" style={{ borderTopWidth: 4 }}>
+            <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase">{store.language === 'en' ? 'Classifieds' : 'Anuncios'}</span>
+            <span className="hidden md:inline text-xs tracking-[0.3em] uppercase italic" style={{ fontFamily: "'Old Standard TT', serif", color: '#7A1F1F' }}>
               {store.language === 'en' ? 'Wares & Notices' : 'Mercaderias y avisos'}
             </span>
-            <span className="text-xs tracking-[0.3em] uppercase">{filteredProducts.length} {store.language === 'en' ? 'items' : 'piezas'}</span>
+            <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase">{filteredProducts.length} {store.language === 'en' ? 'items' : 'piezas'}</span>
           </div>
         </div>
 
