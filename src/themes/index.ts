@@ -976,6 +976,66 @@ export const themes: Theme[] = [
       background: '#E8DBB8',
       accent: '#9B2D2D'
     }
+  },
+  {
+    id: 'terminal',
+    name: 'Terminal',
+    description: 'Pantalla CLI verde fosforescente sobre negro estilo Unix 80s. Cursor parpadeante, prompt $, ASCII en separadores y scanlines sutiles. Ideal para dev tools, ciber security y productos de codigo.',
+    thumbnail: '/themes/terminal.png',
+    category: 'tech',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#7CFFB2',
+      background: '#020A04',
+      accent: '#FFB800'
+    }
+  },
+  {
+    id: 'watercolor',
+    name: 'Watercolor',
+    description: 'Acuarela y tinta sobre papel suave. Manchas de color difuminadas, brush strokes y tipografia Cormorant italica. Sin bordes duros. Ideal para bodas, eventos, florerias y cosmetica artesanal.',
+    thumbnail: '/themes/watercolor.png',
+    category: 'cosmetics',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#C97A8E',
+      background: '#FCFAF5',
+      accent: '#7DA8B2'
+    }
+  },
+  {
+    id: 'diner',
+    name: 'Diner',
+    description: 'Diner americano 50s con piso ajedrezado, neon "OPEN" parpadeante y letrero script estilo malt-shop. Tipografia Lobster + Bebas Neue. Ideal para hamburguesas, milkshakes, retro Americana y candy stores.',
+    thumbnail: '/themes/diner.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#D7263D',
+      background: '#FFF8E8',
+      accent: '#2EC4B6'
+    }
+  },
+  {
+    id: 'bauhaus',
+    name: 'Bauhaus',
+    description: 'Geometria primaria pura: circulo + cuadrado + triangulo en rojo/amarillo/azul/negro. Composicion mondrianesca en hero, tipografia Inter Tight. Ideal para diseno, mobiliario contemporaneo y objetos de autor.',
+    thumbnail: '/themes/bauhaus.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#0E0E0E',
+      background: '#FFFFFF',
+      accent: '#E63E3E'
+    }
   }
 ]
 
