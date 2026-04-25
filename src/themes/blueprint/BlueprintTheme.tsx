@@ -173,7 +173,7 @@ export default function BlueprintTheme({ store, products, categories, onWhatsApp
         >
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {headerLogo && <img src={headerLogo} alt={store.name} className="h-9 w-auto object-contain" style={{ filter: 'brightness(0) invert(1)' }} />}
+              {headerLogo && <img src={headerLogo} alt={store.name} className="h-9 w-auto object-contain" />}
               {showName && (
                 <span
                   className="text-base md:text-lg font-medium tracking-wider"
