@@ -882,6 +882,14 @@
         "name": "Conekta",
         "description": "Pasarela de pagos México"
       },
+      "payu": {
+        "name": "PayU LATAM",
+        "description": "Multi-país: AR, BR, CL, CO, MX, PA, PE"
+      },
+      "kushki": {
+        "name": "Kushki",
+        "description": "Multi-país andino: EC, CO, CL, PE, MX"
+      },
       "transfer": {
         "name": "Transferencia bancaria",
         "description": "Deposito directo a tu cuenta"

@@ -881,6 +881,14 @@
         "name": "Conekta",
         "description": "Payment gateway Mexico"
       },
+      "payu": {
+        "name": "PayU LATAM",
+        "description": "Multi-country: AR, BR, CL, CO, MX, PA, PE"
+      },
+      "kushki": {
+        "name": "Kushki",
+        "description": "Andean multi-country: EC, CO, CL, PE, MX"
+      },
       "transfer": {
         "name": "Bank Transfer",
         "description": "Direct deposit to your account"

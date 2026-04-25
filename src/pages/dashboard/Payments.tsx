@@ -444,6 +444,12 @@ export default function Payments() {
                 { name: t('payments.comingSoon.wompi.name'), desc: t('payments.comingSoon.wompi.description'), color: '#00C389' },
                 { name: t('payments.comingSoon.culqi.name'), desc: t('payments.comingSoon.culqi.description'), color: '#00A19B' },
                 { name: t('payments.comingSoon.conekta.name'), desc: t('payments.comingSoon.conekta.description'), color: '#0D1E3D' },
+                { name: t('payments.comingSoon.payu.name'), desc: t('payments.comingSoon.payu.description'), color: '#A6C307', icon: (
+                  <span className="text-white font-extrabold text-sm tracking-tight">payU</span>
+                )},
+                { name: t('payments.comingSoon.kushki.name'), desc: t('payments.comingSoon.kushki.description'), color: '#0D2E3F', icon: (
+                  <span className="text-white font-extrabold text-base">K</span>
+                )},
                 { name: t('payments.comingSoon.transfer.name'), desc: t('payments.comingSoon.transfer.description'), color: '#374151', icon: (
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
