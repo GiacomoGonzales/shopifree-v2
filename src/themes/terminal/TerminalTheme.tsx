@@ -139,7 +139,7 @@ export default function TerminalTheme({ store, products, categories, onWhatsAppC
       `}</style>
 
       <div
-        className="min-h-screen relative terminal-scanlines"
+        className="min-h-screen relative terminal-scanlines overflow-x-hidden"
         style={{
           backgroundColor: '#020A04',
           backgroundImage: `radial-gradient(ellipse at 50% 0%, rgba(124,255,178,0.06) 0%, transparent 60%)`,
@@ -197,9 +197,19 @@ export default function TerminalTheme({ store, products, categories, onWhatsAppC
         {/* Hero — ascii / cli */}
         <section className="relative py-12 md:py-20">
           <div className="max-w-5xl mx-auto px-4 md:px-6">
-            <pre className="text-xs md:text-sm leading-relaxed mb-6" style={{ color: '#3A8A55' }}>{`+----------------------------------------------------------+
-| > welcome ${slug}@v1                                       |
-+----------------------------------------------------------+`}</pre>
+            {/* Welcome box — using CSS borders instead of fixed-width ASCII so it
+                scales with the viewport and doesn't push horizontal scroll. */}
+            <div
+              className="inline-block mb-6 px-3 py-1.5 max-w-full"
+              style={{
+                border: '1px dashed rgba(124,255,178,0.45)',
+                color: '#3A8A55',
+              }}
+            >
+              <span className="text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis block max-w-full">
+                &gt; welcome {slug}@v1
+              </span>
+            </div>
             <p className="text-sm md:text-base mb-2" style={{ color: '#3A8A55' }}>
               <span style={{ color: '#FFB800' }}>$</span> cat /etc/motd
             </p>
