@@ -90,7 +90,7 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
     }
 
     const doScroll = () => {
-      const offset = 100 // clearance for sticky header + category nav
+      const offset = 160 // clearance for sticky header + category nav (≈ header 50-60 + nav 50 + gap 50)
       const node = containerRef.current
       if (!node) {
         window.scrollTo({ top: 0, behavior: 'smooth' })
