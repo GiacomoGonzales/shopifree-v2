@@ -85,7 +85,7 @@ interface Props {
 
 export default function AtelierTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { src: headerLogo, showName } = useHeaderLogo(store, { squareStyle: 'rounded' })
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -133,23 +133,47 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
           </div>
         </div>
 
-        {/* Header — centered gallery name */}
+        {/* Header — gallery name. Mobile keeps the standard "logo+name | cart"
+            split; desktop preserves the curatorial centered layout. */}
         <header className={`sticky top-0 z-50 transition-colors ${scrolled ? 'bg-[#F5F1E8]/95 backdrop-blur' : 'bg-[#F5F1E8]'}`} style={{ borderTop: '1px solid rgba(26,24,20,0.18)', borderBottom: '1px solid rgba(26,24,20,0.18)' }}>
           <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-3 items-center h-16 md:h-20">
+            {/* Mobile */}
+            <div className="md:hidden h-16 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
+                {showName && (
+                  <h1
+                    className="text-xl tracking-wide"
+                    style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1A1814' }}
+                  >
+                    {store.name}
+                  </h1>
+                )}
+              </div>
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="text-xs md:text-sm tracking-[0.25em] uppercase justify-self-start hover:underline underline-offset-4"
+                className="text-xs tracking-[0.25em] uppercase hover:underline underline-offset-4"
+                style={{ color: '#1A1814' }}
+              >
+                {(store.language === 'en' ? 'Bag' : 'Bolsa')} ({totalItems})
+              </button>
+            </div>
+
+            {/* Desktop */}
+            <div className="hidden md:grid grid-cols-3 items-center h-20">
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="text-sm tracking-[0.25em] uppercase justify-self-start hover:underline underline-offset-4"
                 style={{ color: '#1A1814' }}
               >
                 {(store.language === 'en' ? 'Bag' : 'Bolsa')} ({totalItems})
               </button>
 
               <div className="flex items-center justify-center gap-3">
-                {headerLogo && <img src={headerLogo} alt={store.name} className="h-10 w-auto object-contain" />}
+                {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
                 {showName && (
                   <h1
-                    className="text-2xl md:text-3xl tracking-wide"
+                    className="text-3xl tracking-wide"
                     style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1A1814' }}
                   >
                     {store.name}
@@ -157,7 +181,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
                 )}
               </div>
 
-              <div className="hidden md:block justify-self-end">
+              <div className="justify-self-end">
                 {store.instagram && (
                   <a
                     href={`https://instagram.com/${store.instagram.replace('@', '')}`}
