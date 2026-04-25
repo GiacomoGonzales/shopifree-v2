@@ -856,6 +856,66 @@ export const themes: Theme[] = [
       background: '#0E2A47',
       accent: '#7DD3FC'
     }
+  },
+  {
+    id: 'comic',
+    name: 'Comic',
+    description: 'Pagina de comic book con paneles, halftone, speech bubbles y burst KAPOW. Tipografia Bangers + amarillo/rojo/azul. Ideal para juguetes, coleccionables, comics y merchandise joven.',
+    thumbnail: '/themes/comic.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#E63946',
+      background: '#FFF6D9',
+      accent: '#1D4ED8'
+    }
+  },
+  {
+    id: 'atelier',
+    name: 'Atelier',
+    description: 'Galeria de arte curada con paredes crema, mucho espacio negativo, tipografia serif italic y plaquita museografica. Ideal para arte, joyeria de autor, escultura y antiguedades.',
+    thumbnail: '/themes/atelier.png',
+    category: 'services',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#1A1814',
+      background: '#F5F1E8',
+      accent: '#A48B58'
+    }
+  },
+  {
+    id: 'botanical',
+    name: 'Botanical',
+    description: 'Lamina botanica vintage con hojas dibujadas a mano, sello latino y paleta sage/cream/terracota. Ideal para cosmetica natural, herboristeria, te y jardineria.',
+    thumbnail: '/themes/botanical.png',
+    category: 'cosmetics',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#5C7754',
+      background: '#F2EBDA',
+      accent: '#B8694A'
+    }
+  },
+  {
+    id: 'vinyl',
+    name: 'Vinyl',
+    description: 'Tienda de discos nocturna con turntable girando, tracklist y soundwave. Negro + cobre, tipografia Bebas Neue. Ideal para musica, audio, instrumentos e hifi.',
+    thumbnail: '/themes/vinyl.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#D4A04A',
+      background: '#0E0B08',
+      accent: '#A65A2A'
+    }
   }
 ]
 
