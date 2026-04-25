@@ -84,7 +84,7 @@ interface Props {
 
 export default function PaperCutTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
-  const { src: headerLogo, showName } = useHeaderLogo(store)
+  const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -132,7 +132,7 @@ export default function PaperCutTheme({ store, products, categories, onWhatsAppC
         >
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {headerLogo && <img src={headerLogo} alt={store.name} className="h-10 w-auto object-contain" />}
+              {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
               {showName && (
                 <h1
                   className="text-2xl md:text-3xl"
