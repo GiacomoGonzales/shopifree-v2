@@ -66,26 +66,45 @@ export function usePagination<T>({ items, type }: UsePaginationOptions<T>): UseP
     shouldScrollRef.current = true
   }, [totalPages])
 
-  // Scroll to products section after page change renders (classic pagination)
+  // Scroll to products section after page change renders (classic pagination).
+  // Double rAF + small fallback timeout so the new layout has settled before we
+  // measure — without this, scrolling from the footer back up sometimes lands
+  // at the wrong spot or doesn't fire at all on slower devices.
   useEffect(() => {
-    if (type === 'classic' && shouldScrollRef.current) {
-      shouldScrollRef.current = false
-      requestAnimationFrame(() => {
-        if (containerRef.current) {
-          const offset = 170
-          // In native app, body is position:fixed and #root is the scroll container
-          const scrollContainer = document.getElementById('root')
-          const isNativeScroll = scrollContainer && document.body.classList.contains('native-app')
+    if (type !== 'classic' || !shouldScrollRef.current) return
+    shouldScrollRef.current = false
 
-          if (isNativeScroll) {
-            const top = containerRef.current.getBoundingClientRect().top + scrollContainer.scrollTop - offset
-            scrollContainer.scrollTo({ top, behavior: 'smooth' })
-          } else {
-            const top = containerRef.current.getBoundingClientRect().top + window.scrollY - offset
-            window.scrollTo({ top, behavior: 'smooth' })
-          }
+    const doScroll = () => {
+      const isNative = document.body.classList.contains('native-app')
+      const scrollContainer = isNative ? document.getElementById('root') : null
+      const offset = 100 // clearance for sticky header + category nav
+
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect()
+        if (scrollContainer) {
+          const top = rect.top + scrollContainer.scrollTop - offset
+          scrollContainer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+        } else {
+          const top = rect.top + window.scrollY - offset
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
         }
-      })
+      } else {
+        // Fallback: at least take the user to the top of the page.
+        if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
+        else window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+
+    // Wait two frames so the new page's items have rendered and the layout
+    // is stable before we measure container position.
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(doScroll)
+      ;(window as unknown as { __pgRaf2?: number }).__pgRaf2 = raf2
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      const raf2 = (window as unknown as { __pgRaf2?: number }).__pgRaf2
+      if (raf2) cancelAnimationFrame(raf2)
     }
   }, [currentPage, type])
 
