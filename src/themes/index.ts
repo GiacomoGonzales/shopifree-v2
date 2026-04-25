@@ -916,6 +916,66 @@ export const themes: Theme[] = [
       background: '#0E0B08',
       accent: '#A65A2A'
     }
+  },
+  {
+    id: 'gazette',
+    name: 'Gazette',
+    description: 'Periodico clasico con masthead grande, columnas serif, dropcap y fecha de edicion. Distinto de Editorial: aqui es gaceta diaria. Ideal para sastreria, cafe/te, anticuarios y mens-wear vintage.',
+    thumbnail: '/themes/gazette.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#1B1610',
+      background: '#F4EFE3',
+      accent: '#7A1F1F'
+    }
+  },
+  {
+    id: 'papercut',
+    name: 'Paper Cut',
+    description: 'Capas de papel troquelado estilo Eric Carle / Ghibli. Hero con paisaje paper-cut, sombras suaves entre capas, paleta crema/sun/sage. Ideal para jugueteria, ropa infantil, eco-friendly y papeleria.',
+    thumbnail: '/themes/papercut.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#E07856',
+      background: '#FFF6E5',
+      accent: '#85A572'
+    }
+  },
+  {
+    id: 'zine',
+    name: 'Zine',
+    description: 'Fanzine punk fotocopiado con tipografia ransom-note (letras mezcladas), cinta scotch, alto contraste B&N y acento rojo. Ideal para indie fashion, music merch, marcas activistas y streetwear.',
+    thumbnail: '/themes/zine.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#0A0A0A',
+      background: '#EFEDE6',
+      accent: '#E11414'
+    }
+  },
+  {
+    id: 'cartography',
+    name: 'Cartography',
+    description: 'Mapa antiguo de explorador con papiro sepia, rosa de los vientos, sello de cera y "X marks the spot". Tipografia IM Fell English. Ideal para viajes, gourmet de exportacion, libros y bebidas espirituosas.',
+    thumbnail: '/themes/cartography.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#5C3A1E',
+      background: '#E8DBB8',
+      accent: '#9B2D2D'
+    }
   }
 ]
 
