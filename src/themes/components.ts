@@ -54,6 +54,10 @@ import VelvetTheme from './velvet/VelvetTheme'
 import HologramTheme from './hologram/HologramTheme'
 import VaporTheme from './vapor/VaporTheme'
 import MirageTheme from './mirage/MirageTheme'
+import EditorialTheme from './editorial/EditorialTheme'
+import ArcadeTheme from './arcade/ArcadeTheme'
+import PolaroidTheme from './polaroid/PolaroidTheme'
+import BlueprintTheme from './blueprint/BlueprintTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -110,10 +114,14 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   hologram: HologramTheme,
   vapor: VaporTheme,
   mirage: MirageTheme,
+  editorial: EditorialTheme,
+  arcade: ArcadeTheme,
+  polaroid: PolaroidTheme,
+  blueprint: BlueprintTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme, VaporwaveTheme, CandyTheme, BrutalistTheme, MidnightTheme, TropicalTheme, GrungeTheme, AuroraThemePremium, PrismTheme, NoirTheme, BarbershopTheme, SerenityTheme, FolioTheme, CosmosTheme, LiquidTheme, GlacierTheme, VelvetTheme, HologramTheme, VaporTheme, MirageTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme, VaporwaveTheme, CandyTheme, BrutalistTheme, MidnightTheme, TropicalTheme, GrungeTheme, AuroraThemePremium, PrismTheme, NoirTheme, BarbershopTheme, SerenityTheme, FolioTheme, CosmosTheme, LiquidTheme, GlacierTheme, VelvetTheme, HologramTheme, VaporTheme, MirageTheme, EditorialTheme, ArcadeTheme, PolaroidTheme, BlueprintTheme }

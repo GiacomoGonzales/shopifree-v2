@@ -796,6 +796,66 @@ export const themes: Theme[] = [
       background: '#1A0E08',
       accent: '#EF4444'
     }
+  },
+  {
+    id: 'editorial',
+    name: 'Editorial',
+    description: 'Estilo revista de moda con tipografia serif gigante y mucho espacio negativo. Layout magazine. Ideal para moda, fotografia y curaduria.',
+    thumbnail: '/themes/editorial.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#0A0A0A',
+      background: '#FAFAF7',
+      accent: '#C8102E'
+    }
+  },
+  {
+    id: 'arcade',
+    name: 'Arcade',
+    description: 'Cabina arcade ochentera con pixel art, scanlines CRT y neon brillante. Marquee animada y SCORE como contador. Ideal para gaming, merch y coleccionables retro.',
+    thumbnail: '/themes/arcade.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#FF00C8',
+      background: '#0A0014',
+      accent: '#00FFE5'
+    }
+  },
+  {
+    id: 'polaroid',
+    name: 'Polaroid',
+    description: 'Tablero de corcho con fotos polaroid pegadas, washi tape y tipografia escrita a mano. Ideal para arte, manualidades, regalos y productos artesanales.',
+    thumbnail: '/themes/polaroid.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#A0522D',
+      background: '#E8DCC4',
+      accent: '#5C8A6A'
+    }
+  },
+  {
+    id: 'blueprint',
+    name: 'Blueprint',
+    description: 'Plano tecnico de arquitecto: lineas finas blancas sobre azul, cuadricula, cotas y tipografia monospace. Ideal para muebles, electronica, herramientas y diseno.',
+    thumbnail: '/themes/blueprint.png',
+    category: 'tech',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-04-25'),
+    colors: {
+      primary: '#FFFFFF',
+      background: '#0E2A47',
+      accent: '#7DD3FC'
+    }
   }
 ]
 
