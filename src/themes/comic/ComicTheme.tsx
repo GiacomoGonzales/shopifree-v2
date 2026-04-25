@@ -118,7 +118,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
       <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
 
       <div
-        className="min-h-screen relative"
+        className="min-h-screen relative overflow-x-hidden"
         style={{
           backgroundColor: '#FFF6D9',
           backgroundImage: `radial-gradient(circle, rgba(15,15,15,0.08) 1px, transparent 1.5px)`,
@@ -180,18 +180,15 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
                 boxShadow: '10px 10px 0 0 #0F0F0F',
               }}
             >
-              {/* Burst badge */}
+              {/* Burst badge — kept inside the hero on mobile so it doesn't push horizontal scroll. */}
               <div
-                className="absolute -top-6 -right-6 md:-top-10 md:-right-10 z-10 flex items-center justify-center text-center"
+                className="absolute top-3 right-3 md:-top-10 md:-right-10 z-10 flex items-center justify-center text-center w-20 h-20 md:w-[120px] md:h-[120px] text-base md:text-2xl"
                 style={{
-                  width: '120px',
-                  height: '120px',
                   background: '#FFE600',
                   color: '#0F0F0F',
                   fontFamily: "'Bangers', sans-serif",
-                  fontSize: '1.5rem',
                   letterSpacing: '0.05em',
-                  border: '4px solid #0F0F0F',
+                  border: '3px solid #0F0F0F',
                   clipPath: 'polygon(50% 0%, 60% 18%, 80% 5%, 75% 25%, 95% 22%, 80% 40%, 100% 50%, 80% 60%, 95% 78%, 75% 75%, 80% 95%, 60% 82%, 50% 100%, 40% 82%, 20% 95%, 25% 75%, 5% 78%, 20% 60%, 0% 50%, 20% 40%, 5% 22%, 25% 25%, 20% 5%, 40% 18%)',
                   transform: 'rotate(-12deg)',
                 }}
