@@ -67,16 +67,20 @@ export function markOrdersAsSeen(storeId: string) {
 // on this device. Resets when markOrdersAsSeen() is called from Orders.tsx.
 export function useNewOrdersCount(storeId: string | undefined): number {
   const [count, setCount] = useState(0)
-  const [seenAt, setSeenAt] = useState<Date>(() => storeId ? readSeenAt(storeId) : new Date(0))
+  // Bumped whenever the user visits Orders, to force the snapshot listener to
+  // re-read the latest cutoff from localStorage. Reading inside the effect
+  // (instead of holding seenAt in state) avoids a brief flash of "all orders"
+  // on first mount, when storeId arrives async and the listener would otherwise
+  // be created with the default 1970 cutoff before state catches up.
+  const [seenVersion, setSeenVersion] = useState(0)
   // null = before first snapshot; used to suppress the chime on initial page load.
   const prevCountRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!storeId) return
-    setSeenAt(readSeenAt(storeId))
     const onSeen = (e: Event) => {
       const detail = (e as CustomEvent).detail as { storeId?: string } | undefined
-      if (detail?.storeId === storeId) setSeenAt(readSeenAt(storeId))
+      if (detail?.storeId === storeId) setSeenVersion(v => v + 1)
     }
     window.addEventListener('shopifree:ordersSeen', onSeen)
     return () => window.removeEventListener('shopifree:ordersSeen', onSeen)
@@ -84,6 +88,7 @@ export function useNewOrdersCount(storeId: string | undefined): number {
 
   useEffect(() => {
     if (!storeId) return
+    const seenAt = readSeenAt(storeId)
     // Reset the "last seen count" when the cutoff changes so the first
     // snapshot under the new cutoff is treated as the baseline, not a surge.
     prevCountRef.current = null
@@ -101,7 +106,7 @@ export function useNewOrdersCount(storeId: string | undefined): number {
       () => setCount(0)
     )
     return unsub
-  }, [storeId, seenAt])
+  }, [storeId, seenVersion])
 
   return count
 }
