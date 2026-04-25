@@ -518,9 +518,18 @@ export default function Branding() {
             { key: 'specialized', label: t('branding.theme.categories.specialized') || 'Especializado', desc: t('branding.theme.categoryDesc.specialized'), categories: ['tech', 'cosmetics', 'grocery', 'pets'] },
             { key: 'premium', label: 'Premium', desc: 'Temas con efectos exclusivos y animaciones avanzadas', categories: ['__premium__'] },
           ] as const).map((group) => {
-            const groupThemes = group.key === 'premium'
+            const filtered = group.key === 'premium'
               ? themes.filter(th => th.isPremium)
               : themes.filter(th => !th.isPremium && (group.categories as readonly string[]).includes(th.category))
+            // Newest first; in the "all" carousel keep Minimal pinned at the
+            // start so the default theme stays one tap away.
+            const sorted = [...filtered].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            const groupThemes = group.key === 'all'
+              ? [
+                  ...sorted.filter(th => th.id === 'minimal'),
+                  ...sorted.filter(th => th.id !== 'minimal'),
+                ]
+              : sorted
             if (groupThemes.length === 0) return null
             const scrollKey = group.key
             return (
