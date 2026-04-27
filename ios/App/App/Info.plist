@@ -54,5 +54,11 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Shopifree needs camera access so you can take a photo for your profile picture, store logo, products, or chat replies.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Shopifree needs photo library access so you can pick existing pictures for your profile, store logo, products, or chat replies.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Shopifree may save shared images to your photo library.</string>
 </dict>
 </plist>
