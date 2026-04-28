@@ -101,19 +101,25 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     [activeProduct, selectedVariants],
   )
 
-  // Gallery images: when the combination has its own image, lead with it
-  // so the customer sees the variant they selected.
+  // Gallery images = ALL product images + every variant image, deduped.
+  // Order: product images first (preserved), then any variant images that
+  // aren't already in the gallery. This way the gallery is stable across
+  // variant selections — we never re-mount or reorder; we only scroll to the
+  // selected variant's image via `activeImage`.
   const galleryImages = useMemo(() => {
     const productImages = activeProduct.images?.length
       ? activeProduct.images
       : (activeProduct.image ? [activeProduct.image] : [])
-    if (selectedCombination?.image) {
-      // Avoid duplicates if the variant image is also in the gallery
-      const rest = productImages.filter(img => img !== selectedCombination.image)
-      return [selectedCombination.image, ...rest]
+    const seen = new Set(productImages)
+    const variantImages: string[] = []
+    for (const c of activeProduct.combinations || []) {
+      if (c.image && !seen.has(c.image)) {
+        seen.add(c.image)
+        variantImages.push(c.image)
+      }
     }
-    return productImages
-  }, [activeProduct.images, activeProduct.image, selectedCombination?.image])
+    return [...productImages, ...variantImages]
+  }, [activeProduct.images, activeProduct.image, activeProduct.combinations])
 
   const handleModifiersChange = useCallback((selected: SelectedModifier[], extra: number) => {
     setSelectedModifiers(selected)
@@ -261,6 +267,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
               images={galleryImages}
               productName={activeProduct.name}
               variant={theme.effects.darkMode ? 'dark' : 'light'}
+              activeImage={selectedCombination?.image}
             />
 
             {hasDiscount && (

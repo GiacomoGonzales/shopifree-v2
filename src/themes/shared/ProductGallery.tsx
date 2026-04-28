@@ -5,9 +5,16 @@ interface ProductGalleryProps {
   images: string[]
   productName: string
   variant?: 'light' | 'dark'
+  /**
+   * Optionally drives which image is shown. When the URL changes (e.g. the
+   * customer picks a variant whose image is in this gallery), the gallery
+   * scrolls smoothly to that image instead of re-mounting. Thumbnails stay
+   * visible so the customer can keep navigating manually.
+   */
+  activeImage?: string | null
 }
 
-export default function ProductGallery({ images, productName, variant = 'light' }: ProductGalleryProps) {
+export default function ProductGallery({ images, productName, variant = 'light', activeImage }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -41,6 +48,20 @@ export default function ProductGallery({ images, productName, variant = 'light' 
       behavior: 'smooth'
     })
   }
+
+  // External-control: when `activeImage` changes (e.g. variant selection),
+  // smooth-scroll the carousel to that image if it's part of the gallery.
+  useEffect(() => {
+    if (!activeImage) return
+    const idx = images.indexOf(activeImage)
+    if (idx === -1 || idx === activeIndex) return
+    // Defer to next tick so the DOM has rendered any new thumbnails before scrolling.
+    const id = requestAnimationFrame(() => scrollToImage(idx))
+    return () => cancelAnimationFrame(id)
+    // We intentionally only depend on activeImage — re-scrolling on every
+    // images change would fight the user's manual scroll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeImage])
 
   // If only one image, show it with taller aspect ratio on mobile
   if (images.length <= 1) {
