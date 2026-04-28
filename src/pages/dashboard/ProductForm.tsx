@@ -12,6 +12,7 @@ import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
 import { getVideoThumbnail } from '../../utils/cloudinary'
 import { formatPrice } from '../../lib/currency'
+import { stripUndefined } from '../../lib/firestoreUtils'
 import type { Category, ModifierGroup, ProductVariation } from '../../types'
 import {
   ModifiersSection,
@@ -436,6 +437,15 @@ export default function ProductForm() {
         ? minVariantPrice
         : parseFloat(price)
 
+      // Submit button gates this, but defend against NaN slipping through
+      // (e.g. variants with no prices set + empty base price). Firestore would
+      // reject the write and we'd lose the upload progress for nothing.
+      if (!Number.isFinite(finalPrice)) {
+        showToast(t('productForm.validation.required'), 'error')
+        setSaving(false)
+        return
+      }
+
       // Build product data dynamically to avoid undefined values (Firebase rejects them)
       const productData: Record<string, unknown> = {
         name,
@@ -563,18 +573,29 @@ export default function ProductForm() {
         productData.petAge = petAge
       }
 
+      // Defensive: Firestore rejects writes containing `undefined` anywhere in
+      // the payload. The advanced-variant modal (image/cost/barcode) can leave
+      // optional fields as `undefined` when the user clears an input, and the
+      // spread-based combination assembly above doesn't filter them out. We
+      // recursively strip undefined values so optional fields just disappear
+      // (which is what Firestore expects) instead of crashing the save.
+      const cleanProductData = stripUndefined(productData)
+
       if (isEditing && productId) {
-        await productService.update(store.id, productId, productData as Parameters<typeof productService.update>[2])
+        await productService.update(store.id, productId, cleanProductData as Parameters<typeof productService.update>[2])
         showToast(t('productForm.updated'), 'success')
       } else {
-        await productService.create(store.id, productData as Parameters<typeof productService.create>[1])
+        await productService.create(store.id, cleanProductData as Parameters<typeof productService.create>[1])
         showToast(t('productForm.created'), 'success')
       }
 
       navigate(localePath('/dashboard/products'))
     } catch (error) {
       console.error('Error saving product:', error)
-      showToast(t('productForm.saveError'), 'error')
+      // Surface the real cause in the toast so issues like network errors,
+      // permissions, or stray invalid fields are diagnosable from the UI.
+      const detail = error instanceof Error ? error.message : null
+      showToast(detail ? `${t('productForm.saveError')}: ${detail}` : t('productForm.saveError'), 'error')
     } finally {
       setSaving(false)
     }
