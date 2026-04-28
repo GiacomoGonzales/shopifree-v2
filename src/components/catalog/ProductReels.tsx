@@ -3,6 +3,7 @@ import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
 import { optimizeImage, optimizeReelVideo } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
+import { useBusinessType } from '../../hooks/useBusinessType'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { getCatalogProducts } from './catalogProducts'
 import type { CartItemExtras } from './ProductDrawer'
@@ -17,7 +18,17 @@ interface ProductReelsProps {
 
 export default function ProductReels({ initialProduct, onClose, onAddToCart, onOpenDrawer, onProductChange }: ProductReelsProps) {
   const { theme, currency, language } = useTheme()
+  const { features } = useBusinessType()
   const t = getThemeTranslations(language)
+
+  // Mirrors ProductDrawer.canAddToCart and ProductCard.requiresSelection: a
+  // product needs the customer to make a choice before it can hit the cart
+  // when it has variants OR has at least one required modifier group.
+  const productRequiresSelection = (p: Product) => {
+    if (features.showVariants && (p.variations?.length ?? 0) > 0) return true
+    if (features.showModifiers && p.modifierGroups?.some(g => g.required)) return true
+    return false
+  }
 
   const products = useMemo(() => {
     const catalog = getCatalogProducts()
@@ -434,6 +445,12 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const justAddedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleAddToCart = (product: Product) => {
+    // Defensive: never quick-add a product that requires selection — open the
+    // drawer instead so the customer can pick variants/required modifiers.
+    if (productRequiresSelection(product)) {
+      onOpenDrawer?.(product)
+      return
+    }
     const extras: CartItemExtras = { itemPrice: product.price }
     onAddToCart(product, extras)
     setToast(t.addedToCart)
@@ -588,18 +605,36 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
             <div className="flex gap-3">
               {(() => {
                 const isJustAdded = justAddedId === product.id
+                const needsSelection = productRequiresSelection(product)
+                // When the product has variants or required modifiers, the
+                // primary CTA opens the drawer so the customer can pick
+                // before adding to the cart. Otherwise it's a true quick-add.
+                const handleClick = () => {
+                  if (needsSelection) {
+                    onOpenDrawer?.(product)
+                  } else {
+                    handleAddToCart(product)
+                  }
+                }
+                const ctaLabel = needsSelection
+                  ? (language === 'en' ? 'Choose options' : language === 'pt' ? 'Escolher opcoes' : 'Elegir opciones')
+                  : (isJustAdded ? t.addedToCart : t.addToCart)
                 return (
                   <button
-                    onClick={() => handleAddToCart(product)}
+                    onClick={handleClick}
                     className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.96]"
                     style={{
-                      backgroundColor: isJustAdded ? 'transparent' : theme.colors.primary,
-                      color: isJustAdded ? theme.colors.primary : theme.colors.textInverted,
-                      border: isJustAdded ? `2px solid ${theme.colors.primary}` : '2px solid transparent',
+                      backgroundColor: isJustAdded && !needsSelection ? 'transparent' : theme.colors.primary,
+                      color: isJustAdded && !needsSelection ? theme.colors.primary : theme.colors.textInverted,
+                      border: isJustAdded && !needsSelection ? `2px solid ${theme.colors.primary}` : '2px solid transparent',
                       transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
                     }}
                   >
-                    {isJustAdded ? (
+                    {needsSelection ? (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M7 12h10M10 18h4" />
+                      </svg>
+                    ) : isJustAdded ? (
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -608,7 +643,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
                     )}
-                    {isJustAdded ? t.addedToCart : t.addToCart}
+                    {ctaLabel}
                   </button>
                 )
               })()}
