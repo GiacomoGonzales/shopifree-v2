@@ -345,6 +345,73 @@
     "updated": "Producto actualizado",
     "saveError": "Error al guardar el producto",
     "limitReached": "Has alcanzado el límite de productos",
+    "optional": "Opcional",
+    "validation": {
+      "missing_one": "Falta {{count}} campo",
+      "missing_other": "Faltan {{count}} campos",
+      "ready": "Listo para guardar",
+      "required": "Este campo es obligatorio"
+    },
+    "pricing": {
+      "title": "Precios",
+      "salePrice": "Precio de venta",
+      "comparePrice": "Precio anterior",
+      "comparePriceHint": "Aparecerá tachado junto al precio actual",
+      "cost": "Costo",
+      "costHint": "No se muestra en la tienda. Sirve para calcular tu margen."
+    },
+    "catalog": {
+      "title": "Catalogación",
+      "categoryPlaceholder": "Sin categoría",
+      "brandPlaceholder": "Nike, Adidas..."
+    },
+    "rubro": {
+      "title": "Detalles para tu rubro",
+      "subtitle": "Campos específicos para {{type}}",
+      "food": "Alimentos",
+      "fashion": "Moda",
+      "grocery": "Abarrotes",
+      "cosmetics": "Cosméticos",
+      "tech": "Tecnología",
+      "pets": "Mascotas",
+      "craft": "Artesanías",
+      "general": "General"
+    },
+    "stockManaged": {
+      "title": "Stock actual",
+      "subtitle": "Para ajustar el stock, ve a Inventario",
+      "cta": "Ir a Inventario"
+    },
+    "stockByVariant": {
+      "title": "Stock por variante",
+      "hint": "Cada combinación gestiona su propio stock. Configúralo en la sección Variantes."
+    },
+    "skuByVariant": {
+      "title": "SKU y código por variante",
+      "hint": "Cada combinación tiene su propio SKU. Configúralos en la sección Variantes."
+    },
+    "variantAdvanced": {
+      "openCta": "Avanzado",
+      "title": "Configuración avanzada",
+      "subtitle": "Configura todos los detalles para esta variante",
+      "image": "Imagen de la variante",
+      "imageHint": "Si no tiene imagen, se usará la del producto.",
+      "uploadImage": "Subir imagen",
+      "removeImage": "Eliminar",
+      "sku": "SKU",
+      "barcode": "Código de barras",
+      "price": "Precio",
+      "priceHint": "Si lo dejas vacío, usa el precio del producto",
+      "cost": "Costo",
+      "costHint": "No se muestra en la tienda",
+      "stock": "Stock",
+      "available": "Disponible para venta",
+      "unavailable": "Inactiva",
+      "uploading": "Subiendo...",
+      "uploadError": "Error al subir la imagen",
+      "close": "Listo"
+    },
+    "hiddenWarning": "Producto oculto del catálogo",
     "photos": {
       "title": "Fotos del producto",
       "count": "{{count}}/{{max}} imágenes",
@@ -372,6 +439,9 @@
       "namePlaceholder": "Ej: Torta de chocolate",
       "price": "Precio",
       "comparePrice": "Precio anterior",
+      "pricedByVariants": "Precios por variante",
+      "pricedByVariantsHint": "Cada variante tiene su propio precio. Edítalos en la sección Variantes.",
+      "priceFrom": "Desde {{price}}",
       "description": "Descripción",
       "descriptionPlaceholder": "Describe tu producto...",
       "category": "Categoría",

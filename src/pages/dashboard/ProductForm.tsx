@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast'
 import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
 import { getVideoThumbnail } from '../../utils/cloudinary'
+import { formatPrice } from '../../lib/currency'
 import type { Category, ModifierGroup, ProductVariation } from '../../types'
 import {
   ModifiersSection,
@@ -21,6 +22,7 @@ import {
   SpecsSection,
   WarrantySection,
   PetTypeSection,
+  CollapsibleCard,
 } from '../../components/dashboard/product-form'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
@@ -47,6 +49,10 @@ export default function ProductForm() {
   // === CAMPOS BÁSICOS ===
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  // Tracks which required fields have been blurred at least once, so we only
+  // surface inline errors after the user interacts (avoids yelling on first paint).
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const markTouched = (field: string) => setTouched(t => ({ ...t, [field]: true }))
   const [description, setDescription] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [video, setVideo] = useState<string | null>(null)
@@ -113,6 +119,29 @@ export default function ProductForm() {
   // Get business type features
   const businessType = normalizeBusinessType(store?.businessType)
   const features = getBusinessTypeFeatures(businessType)
+
+  // Variant pricing: when combinations exist, the product is priced per-variant.
+  // Hide the global price/comparePrice fields and show a "From X" summary instead.
+  const hasVariantsWithPricing = features.showVariants && combinations.length > 0
+  const variantBasePrice = price ? parseFloat(price) : undefined
+  const variantPrices = hasVariantsWithPricing
+    ? combinations
+        .map(c => (typeof c.price === 'number' ? c.price : variantBasePrice))
+        .filter((p): p is number => typeof p === 'number' && !isNaN(p) && p > 0)
+    : []
+  const minVariantPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : undefined
+  const storeCurrency = store?.currency || 'USD'
+
+  // Inline field errors. We surface the message under the field once the user has
+  // blurred (touched) it, and we surface the aggregate count in the sticky bar.
+  const fieldErrors: Record<string, string | null> = {
+    name: !name.trim() ? t('productForm.validation.required') : null,
+    price: (!price && !hasVariantsWithPricing) ? t('productForm.validation.required') : null,
+  }
+  const validationErrors: string[] = []
+  if (fieldErrors.name) validationErrors.push(t('productForm.basic.name'))
+  if (fieldErrors.price) validationErrors.push(t('productForm.basic.price'))
+  const isNative = Capacitor.isNativePlatform()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -401,11 +430,17 @@ export default function ProductForm() {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
 
+      // When the product is priced per-variant, use the lowest variant price as the
+      // canonical product price (used for catalog display and "from" pricing).
+      const finalPrice = hasVariantsWithPricing && minVariantPrice !== undefined
+        ? minVariantPrice
+        : parseFloat(price)
+
       // Build product data dynamically to avoid undefined values (Firebase rejects them)
       const productData: Record<string, unknown> = {
         name,
         slug,
-        price: parseFloat(price),
+        price: finalPrice,
         active,
         trackStock,
         featured,
@@ -425,7 +460,8 @@ export default function ProductForm() {
         productData.video = null
       }
       if (categoryId) productData.categoryId = categoryId
-      if (comparePrice) productData.comparePrice = parseFloat(comparePrice)
+      // Skip the global comparePrice when the product is priced per-variant.
+      if (comparePrice && !hasVariantsWithPricing) productData.comparePrice = parseFloat(comparePrice)
       if (cost) productData.cost = parseFloat(cost)
       if (sku) productData.sku = sku
       if (barcode) productData.barcode = barcode
@@ -590,32 +626,13 @@ export default function ProductForm() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {isEditing ? t('productForm.editTitle') : t('productForm.newTitle')}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {isEditing ? t('productForm.editDescription') : t('productForm.newDescription')}
-          </p>
-        </div>
-        {!Capacitor.isNativePlatform() && (
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate(localePath('/dashboard/products'))}
-              className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
-            >
-              {t('productForm.cancel')}
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={saving || !name || !price}
-              className="px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
-            >
-              {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
-            </button>
-          </div>
-        )}
+      <div className="mb-8">
+        <h1 className="text-xl font-semibold text-gray-900">
+          {isEditing ? t('productForm.editTitle') : t('productForm.newTitle')}
+        </h1>
+        <p className="text-gray-600 mt-1">
+          {isEditing ? t('productForm.editDescription') : t('productForm.newDescription')}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -894,45 +911,17 @@ export default function ProductForm() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    onBlur={() => markTouched('name')}
                     placeholder={t('productForm.basic.namePlaceholder')}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    aria-invalid={touched.name && !!fieldErrors.name}
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 transition-all ${
+                      touched.name && fieldErrors.name
+                        ? 'border-red-300 focus:ring-red-100 focus:border-red-400'
+                        : 'border-gray-200 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40'
+                    }`}
                   />
-                </div>
-
-                {/* Price & Compare Price */}
-                <div className={features.showComparePrice ? "grid grid-cols-2 gap-4" : ""}>
-                  <div>
-                    <label htmlFor="price" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                      {t('productForm.basic.price')} *
-                    </label>
-                    <input
-                      id="price"
-                      type="number"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
-                    />
-                  </div>
-                  {features.showComparePrice && (
-                    <div>
-                      <label htmlFor="comparePrice" className="block text-sm font-medium text-[#1e3a5f] mb-1">
-                        {t('productForm.basic.comparePrice')}
-                      </label>
-                      <input
-                        id="comparePrice"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={comparePrice}
-                        onChange={(e) => setComparePrice(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
-                      />
-                    </div>
+                  {touched.name && fieldErrors.name && (
+                    <p className="text-xs text-red-600 mt-1">{fieldErrors.name}</p>
                   )}
                 </div>
 
@@ -953,10 +942,117 @@ export default function ProductForm() {
               </div>
             </div>
 
-            {/* Organization - Category & Tags (always show if categories exist or tags enabled) */}
-            {(categories.length > 0 || features.showTags) && (
+            {/* Pricing — unified card: Price + Compare + Cost.
+                Replaced by a "priced by variants" summary when combinations exist. */}
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.pricing.title')}</h2>
+              {hasVariantsWithPricing ? (
+                <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#1e3a5f]">
+                        {t('productForm.basic.pricedByVariants')}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {t('productForm.basic.pricedByVariantsHint')}
+                      </p>
+                    </div>
+                    {minVariantPrice !== undefined && (
+                      <span className="shrink-0 text-sm font-semibold text-[#1e3a5f] whitespace-nowrap">
+                        {t('productForm.basic.priceFrom', { price: formatPrice(minVariantPrice, storeCurrency) })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className={features.showComparePrice ? 'grid grid-cols-2 gap-4' : ''}>
+                    <div>
+                      <label htmlFor="price" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {t('productForm.pricing.salePrice')} *
+                      </label>
+                      <input
+                        id="price"
+                        type="number"
+                        required
+                        min="0"
+                        step="0.01"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        onBlur={() => markTouched('price')}
+                        placeholder="0.00"
+                        aria-invalid={touched.price && !!fieldErrors.price}
+                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 transition-all ${
+                          touched.price && fieldErrors.price
+                            ? 'border-red-300 focus:ring-red-100 focus:border-red-400'
+                            : 'border-gray-200 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40'
+                        }`}
+                      />
+                      {touched.price && fieldErrors.price && (
+                        <p className="text-xs text-red-600 mt-1">{fieldErrors.price}</p>
+                      )}
+                    </div>
+                    {features.showComparePrice && (
+                      <div>
+                        <label htmlFor="comparePrice" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                          {t('productForm.pricing.comparePrice')}
+                        </label>
+                        <input
+                          id="comparePrice"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={comparePrice}
+                          onChange={(e) => setComparePrice(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">{t('productForm.pricing.comparePriceHint')}</p>
+                      </div>
+                    )}
+                  </div>
+                  {features.showCost && (
+                    <div>
+                      <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {t('productForm.pricing.cost')}
+                      </label>
+                      <input
+                        id="cost"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={cost}
+                        onChange={(e) => setCost(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">{t('productForm.pricing.costHint')}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Variants — first-class section, in left column right after pricing
+                because variant prices override the global price. */}
+            {features.showVariants && (
+              <div className="bg-white rounded-xl border border-gray-200/60 p-5">
+                <VariationsSection
+                  variations={variations}
+                  onChange={setVariations}
+                  combinations={combinations}
+                  onCombinationsChange={setCombinations}
+                  trackStock={trackStock}
+                  basePrice={price ? parseFloat(price) : undefined}
+                  isEditing={!!isEditing}
+                />
+              </div>
+            )}
+
+            {/* Catalog — Category + Brand + Tags (was: Organization + Brand). */}
+            {(categories.length > 0 || features.showBrand || features.showTags) && (
               <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.title')}</h2>
+                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.catalog.title')}</h2>
                 <div className="space-y-4">
                   {/* Category */}
                   {categories.length > 0 && (
@@ -977,6 +1073,22 @@ export default function ProductForm() {
                       </select>
                     </div>
                   )}
+                  {/* Brand (compact, no longer its own card) */}
+                  {features.showBrand && (
+                    <div>
+                      <label htmlFor="brand" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        {t('productForm.organization.brand')}
+                      </label>
+                      <input
+                        id="brand"
+                        type="text"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        placeholder={t('productForm.catalog.brandPlaceholder')}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                      />
+                    </div>
+                  )}
                   {/* Tags */}
                   {features.showTags && (
                     <div>
@@ -987,7 +1099,7 @@ export default function ProductForm() {
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
                         placeholder={t('productForm.organization.tagsPlaceholder')}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                       />
                       <p className="text-xs text-gray-400 mt-1">{t('productForm.organization.tagsHint')}</p>
                     </div>
@@ -995,6 +1107,69 @@ export default function ProductForm() {
                 </div>
               </div>
             )}
+
+            {/* Industry-specific details — grouped into a single collapsible card.
+                Auto-opens when there is already content in any of the inner sections. */}
+            {(features.showModifiers || features.showPrepTime || features.showServiceDuration ||
+              features.showCustomOrder || features.showLimitedStock || features.showSpecs ||
+              features.showWarranty || features.showPetType) && (() => {
+                const hasIndustryData = !!(
+                  modifierGroups.length > 0 ||
+                  prepTime ||
+                  duration ||
+                  customizable || customizationInstructions || availableQuantity !== undefined ||
+                  specs.length > 0 ||
+                  warranty ||
+                  model ||
+                  petType || petAge
+                )
+                const businessKey = (businessType || 'general') as string
+                const businessLabel = t(`productForm.rubro.${businessKey}`, { defaultValue: businessKey })
+                return (
+                  <CollapsibleCard
+                    title={t('productForm.rubro.title')}
+                    description={t('productForm.rubro.subtitle', { type: businessLabel })}
+                    badge={businessLabel}
+                    defaultOpen={hasIndustryData}
+                  >
+                    <div className="space-y-6">
+                      {features.showModifiers && (
+                        <ModifiersSection modifierGroups={modifierGroups} onChange={setModifierGroups} />
+                      )}
+                      {features.showPrepTime && (
+                        <PrepTimeSection prepTime={prepTime} onChange={setPrepTime} />
+                      )}
+                      {features.showServiceDuration && (
+                        <DurationSection duration={duration} onChange={setDuration} />
+                      )}
+                      {(features.showCustomOrder || features.showLimitedStock) && (
+                        <CustomOrderSection
+                          customizable={customizable}
+                          customizationInstructions={customizationInstructions}
+                          availableQuantity={availableQuantity}
+                          onCustomizableChange={setCustomizable}
+                          onInstructionsChange={setCustomizationInstructions}
+                          onQuantityChange={setAvailableQuantity}
+                        />
+                      )}
+                      {features.showSpecs && (
+                        <SpecsSection specs={specs} model={model} onChange={setSpecs} onModelChange={setModel} />
+                      )}
+                      {features.showWarranty && (
+                        <WarrantySection warranty={warranty} onChange={setWarranty} />
+                      )}
+                      {features.showPetType && (
+                        <PetTypeSection
+                          petType={petType}
+                          petAge={petAge}
+                          onPetTypeChange={setPetType}
+                          onPetAgeChange={setPetAge}
+                        />
+                      )}
+                    </div>
+                  </CollapsibleCard>
+                )
+              })()}
 
           </div>
 
@@ -1036,107 +1211,18 @@ export default function ProductForm() {
               </div>
             </div>
 
-            {/* === BUSINESS TYPE SPECIFIC SECTIONS === */}
-
-            {/* Food: Modifiers */}
-            {features.showModifiers && (
-              <ModifiersSection
-                modifierGroups={modifierGroups}
-                onChange={setModifierGroups}
-              />
-            )}
-
-            {/* Food: Prep Time */}
-            {features.showPrepTime && (
-              <PrepTimeSection
-                prepTime={prepTime}
-                onChange={setPrepTime}
-              />
-            )}
-
-            {/* Variations moved inside Inventory block below */}
-
-            {/* Beauty: Duration */}
-            {features.showServiceDuration && (
-              <DurationSection
-                duration={duration}
-                onChange={setDuration}
-              />
-            )}
-
-            {/* Craft: Custom Order */}
-            {(features.showCustomOrder || features.showLimitedStock) && (
-              <CustomOrderSection
-                customizable={customizable}
-                customizationInstructions={customizationInstructions}
-                availableQuantity={availableQuantity}
-                onCustomizableChange={setCustomizable}
-                onInstructionsChange={setCustomizationInstructions}
-                onQuantityChange={setAvailableQuantity}
-              />
-            )}
-
-            {/* Tech: Specs */}
-            {features.showSpecs && (
-              <SpecsSection
-                specs={specs}
-                model={model}
-                onChange={setSpecs}
-                onModelChange={setModel}
-              />
-            )}
-
-            {/* Tech: Warranty */}
-            {features.showWarranty && (
-              <WarrantySection
-                warranty={warranty}
-                onChange={setWarranty}
-              />
-            )}
-
-            {/* Pets: Pet Type */}
-            {features.showPetType && (
-              <PetTypeSection
-                petType={petType}
-                petAge={petAge}
-                onPetTypeChange={setPetType}
-                onPetAgeChange={setPetAge}
-              />
-            )}
-            {/* Inventory + Variants — unified block */}
-            {(features.showSku || features.showBarcode || features.showStock || features.showCost || features.showVariants) && (
+            {/* Inventory — Track stock toggle, SKU, Barcode + initial stock and warehouse.
+                Cost moved to the Pricing card. Brand moved to the Catalog card.
+                When editing, the stock fields are replaced by a link to the Inventory page,
+                which is the source of truth once the product exists. */}
+            {(features.showSku || features.showBarcode || features.showStock) && (
               <div className="bg-white rounded-xl border border-gray-200/60 p-5 space-y-4">
                 <h2 className="text-sm font-medium text-gray-900">{t('productForm.inventory.title')}</h2>
 
-                {/* SKU, Barcode, Cost */}
-                <div className="grid grid-cols-2 gap-3">
-                  {features.showSku && (
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">SKU</label>
-                      <input type="text" value={sku} onChange={e => setSku(e.target.value)} placeholder="ABC-123"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                    </div>
-                  )}
-                  {features.showBarcode && (
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Codigo de barras</label>
-                      <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} placeholder="7501234567890"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                    </div>
-                  )}
-                  {features.showCost && (
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Costo (no visible)</label>
-                      <input type="number" min="0" step="0.01" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Track Stock toggle */}
+                {/* Track Stock toggle — moved to the top so it gates everything below it */}
                 {features.showStock && (
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700">Controlar stock</span>
+                    <span className="text-sm text-gray-700">{t('productForm.inventory.trackStock')}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={trackStock} onChange={e => setTrackStock(e.target.checked)} className="sr-only peer" />
                       <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]" />
@@ -1144,82 +1230,103 @@ export default function ProductForm() {
                   </div>
                 )}
 
+                {/* SKU + Barcode — when variants exist, deferred to per-combination fields
+                    in VariationsSection (combo.sku / combo.barcode). */}
+                {(features.showSku || features.showBarcode) && (
+                  combinations.length > 0 ? (
+                    <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 p-3">
+                      <p className="text-sm font-medium text-[#1e3a5f]">{t('productForm.skuByVariant.title')}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{t('productForm.skuByVariant.hint')}</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {features.showSku && (
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.sku')}</label>
+                          <input type="text" value={sku} onChange={e => setSku(e.target.value)} placeholder="ABC-123"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        </div>
+                      )}
+                      {features.showBarcode && (
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.barcode')}</label>
+                          <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} placeholder="7501234567890"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
+
                 {/* Stock fields when trackStock is on */}
                 {trackStock && (
                   <>
-                    {!isEditing && warehouses.length > 0 && (
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Almacen destino</label>
-                        <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
-                          {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
-                        </select>
-                      </div>
-                    )}
-
+                    {/* When variants exist with stock control, defer to the Variants section */}
                     {combinations.length > 0 ? (
-                      <p className="text-xs text-gray-400">
-                        {isEditing ? 'Stock por combinacion (se gestiona desde Inventario)' : 'Stock inicial por combinacion (abajo)'}
-                        {' — '}{combinations.reduce((s, c) => s + c.stock, 0)} uds total
-                      </p>
+                      <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 p-3">
+                        <p className="text-sm font-medium text-[#1e3a5f]">{t('productForm.stockByVariant.title')}</p>
+                        <p className="text-xs text-gray-600 mt-0.5">{t('productForm.stockByVariant.hint')}</p>
+                        <p className="text-[11px] text-gray-500 mt-2 tabular-nums">
+                          Total: {combinations.reduce((s, c) => s + c.stock, 0)} uds
+                        </p>
+                      </div>
                     ) : isEditing ? (
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-600">Stock actual</span>
-                        <span className="text-sm font-medium text-gray-900">{stock || 0} uds</span>
+                      // Editing a simple product → stock is managed from the Inventory page,
+                      // which is the source of truth (purchases, transfers, adjustments...).
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">{t('productForm.stockManaged.title')}</span>
+                          <span className="text-sm font-semibold text-gray-900 tabular-nums">{stock || 0} uds</span>
+                        </div>
+                        <p className="text-xs text-gray-500">{t('productForm.stockManaged.subtitle')}</p>
+                        <button
+                          type="button"
+                          onClick={() => navigate(localePath('/finance/inventory'))}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-[#1e3a5f] hover:text-[#2d6cb5]"
+                        >
+                          {t('productForm.stockManaged.cta')}
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-gray-500 mb-1 block">Stock inicial</label>
-                          <input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} placeholder="0"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                      <>
+                        {warehouses.length > 0 && (
+                          <div>
+                            <label className="text-xs text-gray-500 mb-1 block">Almacén destino</label>
+                            <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                              {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
+                            </select>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.stock')}</label>
+                            <input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} placeholder="0"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.lowStockAlert')}</label>
+                            <input type="number" min="0" value={lowStockAlert} onChange={e => setLowStockAlert(e.target.value)} placeholder="5"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-xs text-gray-500 mb-1 block">Alerta bajo stock</label>
-                          <input type="number" min="0" value={lowStockAlert} onChange={e => setLowStockAlert(e.target.value)} placeholder="5"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                        </div>
-                      </div>
+                      </>
                     )}
                   </>
                 )}
-
-                {/* Variants + Combinations inside inventory */}
-                {features.showVariants && (
-                  <VariationsSection
-                    variations={variations}
-                    onChange={setVariations}
-                    combinations={combinations}
-                    onCombinationsChange={setCombinations}
-                    trackStock={trackStock}
-                    basePrice={price ? parseFloat(price) : undefined}
-                    isEditing={!!isEditing}
-                  />
-                )}
               </div>
             )}
 
-            {/* Brand - only show if enabled */}
-            {features.showBrand && (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.organization.brand')}</h2>
-                <div>
-                  <input
-                    id="brand"
-                    type="text"
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                    placeholder={t('productForm.organization.brandPlaceholder')}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Shipping - only show if enabled */}
+            {/* Shipping - collapsed by default; auto-opens when there are values */}
             {features.showShipping && (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.shipping.title')}</h2>
+              <CollapsibleCard
+                title={t('productForm.shipping.title')}
+                badge={t('productForm.optional')}
+                defaultOpen={!!(weight || length || width || height)}
+              >
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="weight" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.weight')}</label>
@@ -1270,30 +1377,68 @@ export default function ProductForm() {
                     />
                   </div>
                 </div>
-              </div>
+              </CollapsibleCard>
             )}
           </div>
         </div>
       </form>
 
-      {/* Native: sticky bottom action bar */}
-      {Capacitor.isNativePlatform() && (
-        <div className="sticky bottom-0 -mx-4 mt-4 bg-white border-t border-gray-200/60 px-4 py-3 flex gap-3">
-          <button
-            onClick={() => navigate(localePath('/dashboard/products'))}
-            className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
-          >
-            {t('productForm.cancel')}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving || !name || !price}
-            className="flex-1 px-4 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
-          >
-            {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
-          </button>
+      {/* Sticky save bar — universal (web + native). Replaces both the header buttons
+          and the native-only action bar with a single, always-visible action area
+          that includes a live validation summary. */}
+      <div
+        className="sticky bottom-0 -mx-4 sm:-mx-6 lg:-mx-8 mt-6 bg-white/95 backdrop-blur border-t border-gray-200/80 px-4 sm:px-6 lg:px-8 py-3 z-20"
+        style={isNative ? { paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' } : undefined}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          {/* Validation summary + hidden warning */}
+          <div className="flex items-center gap-3 text-sm min-w-0 flex-wrap">
+            {validationErrors.length > 0 ? (
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 text-xs font-semibold shrink-0">!</span>
+                <span className="text-gray-700 truncate">
+                  <span className="font-medium text-red-600">
+                    {t('productForm.validation.missing', { count: validationErrors.length })}:
+                  </span>{' '}
+                  <span className="text-gray-600">{validationErrors.join(', ')}</span>
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 text-xs font-semibold shrink-0">✓</span>
+                <span className="text-gray-600">{t('productForm.validation.ready')}</span>
+              </div>
+            )}
+            {!active && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+                {t('productForm.hiddenWarning')}
+              </span>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3 sm:shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate(localePath('/dashboard/products'))}
+              className="flex-1 sm:flex-none px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+            >
+              {t('productForm.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving || validationErrors.length > 0}
+              className="flex-1 sm:flex-none px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm text-sm"
+            >
+              {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Orphan stock dialog — shown when adding variants to a product that had stock */}
       {orphanDialog && (

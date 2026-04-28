@@ -344,6 +344,73 @@
     "updated": "Product updated",
     "saveError": "Error saving product",
     "limitReached": "You have reached the product limit",
+    "optional": "Optional",
+    "validation": {
+      "missing_one": "{{count}} field missing",
+      "missing_other": "{{count}} fields missing",
+      "ready": "Ready to save",
+      "required": "This field is required"
+    },
+    "pricing": {
+      "title": "Pricing",
+      "salePrice": "Sale price",
+      "comparePrice": "Compare price",
+      "comparePriceHint": "Shown crossed out next to the current price",
+      "cost": "Cost",
+      "costHint": "Not shown in your store. Used to calculate margins."
+    },
+    "catalog": {
+      "title": "Catalog",
+      "categoryPlaceholder": "No category",
+      "brandPlaceholder": "Nike, Adidas..."
+    },
+    "rubro": {
+      "title": "Industry details",
+      "subtitle": "Fields specific to {{type}}",
+      "food": "Food",
+      "fashion": "Fashion",
+      "grocery": "Grocery",
+      "cosmetics": "Cosmetics",
+      "tech": "Tech",
+      "pets": "Pets",
+      "craft": "Craft",
+      "general": "General"
+    },
+    "stockManaged": {
+      "title": "Current stock",
+      "subtitle": "To adjust stock, go to Inventory",
+      "cta": "Go to Inventory"
+    },
+    "stockByVariant": {
+      "title": "Stock per variant",
+      "hint": "Each combination manages its own stock. Configure it in the Variants section."
+    },
+    "skuByVariant": {
+      "title": "SKU and barcode per variant",
+      "hint": "Each combination has its own SKU. Configure them in the Variants section."
+    },
+    "variantAdvanced": {
+      "openCta": "Advanced",
+      "title": "Advanced settings",
+      "subtitle": "Configure all the details for this variant",
+      "image": "Variant image",
+      "imageHint": "If empty, the product image is used.",
+      "uploadImage": "Upload image",
+      "removeImage": "Remove",
+      "sku": "SKU",
+      "barcode": "Barcode",
+      "price": "Price",
+      "priceHint": "Leave empty to use the product price",
+      "cost": "Cost",
+      "costHint": "Not shown in the store",
+      "stock": "Stock",
+      "available": "Available for sale",
+      "unavailable": "Inactive",
+      "uploading": "Uploading...",
+      "uploadError": "Error uploading image",
+      "close": "Done"
+    },
+    "hiddenWarning": "Product is hidden from the catalog",
     "photos": {
       "title": "Product photos",
       "count": "{{count}}/{{max}} images",
@@ -371,6 +438,9 @@
       "namePlaceholder": "E.g.: Chocolate cake",
       "price": "Price",
       "comparePrice": "Compare price",
+      "pricedByVariants": "Pricing per variant",
+      "pricedByVariantsHint": "Each variant has its own price. Edit them in the Variants section.",
+      "priceFrom": "From {{price}}",
       "description": "Description",
       "descriptionPlaceholder": "Describe your product...",
       "category": "Category",
