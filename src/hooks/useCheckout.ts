@@ -6,6 +6,7 @@ import { orderService, couponService, productService, db } from '../lib/firebase
 import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
+import { findCombination, getDisplayImage, getDisplayPrice } from '../lib/variants'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'stripe' | 'confirmation'
 
@@ -232,21 +233,36 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   // Convert cart items to order items (removing undefined values for Firestore)
   const createOrderItems = useCallback((): OrderItem[] => {
     return items.map(item => {
+      // Resolve the actual price the customer is paying for THIS line. When a
+      // variant combination is selected, its price wins (variant pricing); the
+      // legacy product price is the fallback. This is the source of truth for
+      // the order — `item.itemPrice` already reflects this from the drawer,
+      // but we recompute here defensively in case anything bypassed the drawer.
+      const variantPrice = getDisplayPrice(item.product, item.selectedVariants)
+      // Image: prefer variant-specific image when present
+      const lineImage = getDisplayImage(item.product, item.selectedVariants)
+      // Combination metadata: track which exact variant was sold for fulfillment
+      const combo = findCombination(item.product, item.selectedVariants)
+
       const orderItem: OrderItem = {
         productId: item.product.id,
         productName: item.product.name,
-        price: item.product.price,
+        price: variantPrice,
         quantity: item.quantity,
-        itemTotal: item.itemPrice * item.quantity
+        itemTotal: item.itemPrice * item.quantity,
       }
 
-      // Only add optional fields if they have values
-      if (item.product.image) {
-        orderItem.productImage = item.product.image
+      if (lineImage) {
+        orderItem.productImage = lineImage
       }
 
       if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
         orderItem.selectedVariations = Object.entries(item.selectedVariants).map(([name, value]) => ({ name, value }))
+      }
+
+      if (combo) {
+        orderItem.combinationId = combo.id
+        if (combo.sku) orderItem.combinationSku = combo.sku
       }
 
       if (item.selectedModifiers && item.selectedModifiers.length > 0) {
@@ -339,9 +355,15 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       orderData.notes = data.delivery.observations
     }
 
-    // Validate stock before creating the order
+    // Validate stock before creating the order. Three paths, in order of
+    // preference, mirroring the rest of the system:
+    //   (a) Modern: product has combinations[] → check + decrement combo stock.
+    //   (b) Legacy variant: product has variations[].options[].stock but no
+    //       combinations → check + decrement option-level stock.
+    //   (c) Simple: product.stock for products without variants.
     const stockItems: { productId: string; quantity: number; name: string }[] = []
     const variantStockUpdates: { productId: string; variationName: string; optionValue: string; quantity: number; productName: string }[] = []
+    const combinationStockUpdates: { productId: string; combinationId: string; quantity: number }[] = []
 
     for (const item of items) {
       if (!item.product.trackStock) continue
@@ -349,7 +371,28 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       const freshProduct = await productService.get(store.id, item.product.id)
       if (!freshProduct || !freshProduct.trackStock) continue
 
-      // Check variant-level stock first
+      // (a) Modern: combinations[]
+      if (item.selectedVariants && freshProduct.combinations?.length) {
+        const combo = findCombination(freshProduct, item.selectedVariants)
+        if (!combo) {
+          throw new Error(`stockInsufficient:${item.product.name}:0`)
+        }
+        if (!combo.available) {
+          throw new Error(`stockInsufficient:${item.product.name}:0`)
+        }
+        if (combo.stock < item.quantity) {
+          const variantLabel = Object.values(item.selectedVariants).join(' / ')
+          throw new Error(`stockInsufficient:${item.product.name} (${variantLabel}):${combo.stock}`)
+        }
+        combinationStockUpdates.push({
+          productId: item.product.id,
+          combinationId: combo.id,
+          quantity: item.quantity,
+        })
+        continue
+      }
+
+      // (b) Legacy variant-level stock
       if (item.selectedVariants && freshProduct.variations?.length) {
         let hasVariantStock = false
         for (const [varName, varValue] of Object.entries(item.selectedVariants)) {
@@ -372,7 +415,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         if (hasVariantStock) continue
       }
 
-      // Fallback to product-level stock
+      // (c) Simple product
       if (typeof freshProduct.stock === 'number') {
         if (freshProduct.stock < item.quantity) {
           throw new Error(`stockInsufficient:${item.product.name}:${freshProduct.stock}`)
@@ -383,12 +426,20 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-    // Decrement product-level stock
+    // Decrement product-level stock (simple products)
     if (stockItems.length > 0) {
       productService.decrementStock(store.id, stockItems).catch(() => {})
     }
 
-    // Decrement variant-level stock
+    // Decrement combination-level stock (modern variant model). This also
+    // recomputes product.stock and warehouseStock from the combinations so
+    // the dashboard inventory view stays consistent.
+    if (combinationStockUpdates.length > 0) {
+      productService.decrementCombinationStock(store.id, combinationStockUpdates).catch(() => {})
+    }
+
+    // Decrement legacy option-level stock (only for products that haven't
+    // been migrated to combinations[]).
     if (variantStockUpdates.length > 0) {
       productService.decrementVariantStock(store.id, variantStockUpdates).catch(() => {})
     }

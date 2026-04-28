@@ -1,15 +1,18 @@
 import { useTheme } from '../ThemeContext'
-import type { ProductVariation } from '../../../types'
+import type { Product, ProductVariation } from '../../../types'
 import { getThemeTranslations } from '../../../themes/shared/translations'
+import { isOptionAvailable } from '../../../lib/variants'
 
 interface VariantSelectorProps {
   variations: ProductVariation[]
   selected: Record<string, string>  // { variationName: selectedValue }
   onChange: (selected: Record<string, string>) => void
   trackStock?: boolean
+  /** Full product, used to look up combinations[] for accurate availability. */
+  product?: Product
 }
 
-export default function VariantSelector({ variations, selected, onChange, trackStock }: VariantSelectorProps) {
+export default function VariantSelector({ variations, selected, onChange, trackStock, product }: VariantSelectorProps) {
   const { theme, language } = useTheme()
   const t = getThemeTranslations(language)
 
@@ -56,7 +59,13 @@ export default function VariantSelector({ variations, selected, onChange, trackS
               return availableOptions.map(option => {
                 const isSelected = selected[variation.name] === option.value
                 const colorValue = allHaveColor ? getColorValue(option.value) : null
-                const variantOutOfStock = trackStock && typeof option.stock === 'number' && option.stock <= 0
+                // When we have the full product, use combinations[] to determine
+                // whether picking this option still leads to a reachable, in-stock
+                // combination. Falls back to legacy option.stock automatically when
+                // the product has no combinations[].
+                const variantOutOfStock = product
+                  ? !isOptionAvailable(product, selected, variation.name, option.value, trackStock)
+                  : (trackStock && typeof option.stock === 'number' && option.stock <= 0)
 
                 if (colorValue) {
                   return (

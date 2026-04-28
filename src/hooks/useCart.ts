@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import type { Product } from '../types'
 import type { SelectedModifier } from '../components/catalog/business-type'
 import { trackAddToCart, getPixelDefaultCurrency } from '../lib/pixels'
+import { getStockForSelection } from '../lib/variants'
 
 export interface CartItemExtras {
   selectedVariants?: Record<string, string>
@@ -59,24 +60,11 @@ export function useCart() {
         return currentKey === itemKey
       })
 
-      // Check stock limit (variant-level first, then product-level)
+      // Check stock limit — uses combinations[] when available, falls back to
+      // legacy option-level / product-level stock for older products.
       if (product.trackStock) {
         const currentQty = existingIndex !== -1 ? currentItems[existingIndex].quantity : 0
-        let stockLimit: number | undefined
-
-        if (extras?.selectedVariants && product.variations?.length) {
-          for (const [varName, varValue] of Object.entries(extras.selectedVariants)) {
-            const variation = product.variations.find(v => v.name === varName)
-            const option = variation?.options.find(o => o.value === varValue)
-            if (option && typeof option.stock === 'number') {
-              stockLimit = stockLimit === undefined ? option.stock : Math.min(stockLimit, option.stock)
-            }
-          }
-        }
-
-        if (stockLimit === undefined && typeof product.stock === 'number') {
-          stockLimit = product.stock
-        }
+        const stockLimit = getStockForSelection(product, extras?.selectedVariants)
 
         if (stockLimit !== undefined && currentQty + 1 > stockLimit) {
           blocked = true
@@ -136,22 +124,7 @@ export function useCart() {
       currentItems.map((item, i) => {
         if (i !== index) return item
         if (item.product.trackStock) {
-          let stockLimit: number | undefined
-
-          if (item.selectedVariants && item.product.variations?.length) {
-            for (const [varName, varValue] of Object.entries(item.selectedVariants)) {
-              const variation = item.product.variations.find(v => v.name === varName)
-              const option = variation?.options.find(o => o.value === varValue)
-              if (option && typeof option.stock === 'number') {
-                stockLimit = stockLimit === undefined ? option.stock : Math.min(stockLimit, option.stock)
-              }
-            }
-          }
-
-          if (stockLimit === undefined && typeof item.product.stock === 'number') {
-            stockLimit = item.product.stock
-          }
-
+          const stockLimit = getStockForSelection(item.product, item.selectedVariants)
           if (stockLimit !== undefined && quantity > stockLimit) {
             blocked = true
             return item

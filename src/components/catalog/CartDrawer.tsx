@@ -3,6 +3,7 @@ import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { getDisplayImage } from '../../lib/variants'
 import FreeShippingProgress from './FreeShippingProgress'
 
 interface CartDrawerProps {
@@ -92,7 +93,11 @@ export default function CartDrawer({
             </div>
           ) : (
             <div className="space-y-5">
-              {items.map((item, index) => (
+              {items.map((item, index) => {
+                // Per-line image: prefer the variant's own image when the customer
+                // picked a specific combination; fall back to the product image.
+                const lineImage = getDisplayImage(item.product, item.selectedVariants)
+                return (
                 <div key={`${item.product.id}-${index}`} className="flex gap-4">
                   <div
                     className="w-20 h-20 overflow-hidden flex-shrink-0"
@@ -101,9 +106,9 @@ export default function CartDrawer({
                       backgroundColor: theme.colors.surfaceHover
                     }}
                   >
-                    {item.product.image ? (
+                    {lineImage ? (
                       <img
-                        src={optimizeImage(item.product.image, 'card')}
+                        src={optimizeImage(lineImage, 'card')}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                       />
@@ -198,7 +203,8 @@ export default function CartDrawer({
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

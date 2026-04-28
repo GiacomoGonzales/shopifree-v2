@@ -562,6 +562,12 @@ export interface OrderItem {
     }[]
   }[]
   itemTotal: number
+  // Variant combination tracking — when the line corresponds to a specific
+  // VariantCombination (modern model), we record its id and sku so the
+  // backoffice can match the order to the inventoried combination for
+  // fulfillment, restocks, and analytics.
+  combinationId?: string
+  combinationSku?: string
   // Dropshipping
   cjProductId?: string            // Set if this item is from CJ Dropshipping
   printfulProductId?: number      // Set if this item is from Printful

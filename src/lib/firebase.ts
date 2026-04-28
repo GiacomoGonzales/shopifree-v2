@@ -276,6 +276,66 @@ export const productService = {
     }
   },
 
+  // Modern path: decrement stock at the combinations[] level, the source of truth
+  // used by the dashboard inventory, purchases, and production flows. Also keeps
+  // product.stock in sync (= sum of combinations) so listings stay accurate.
+  async decrementCombinationStock(
+    storeId: string,
+    updates: { productId: string; combinationId: string; quantity: number; warehouseId?: string }[],
+  ): Promise<void> {
+    const byProduct = new Map<string, typeof updates>()
+    for (const u of updates) {
+      const list = byProduct.get(u.productId) || []
+      list.push(u)
+      byProduct.set(u.productId, list)
+    }
+
+    for (const [productId, productUpdates] of byProduct) {
+      const ref = doc(db, 'stores', storeId, 'products', productId)
+      const snap = await getDoc(ref)
+      if (!snap.exists()) continue
+
+      const data = snap.data()
+      const combinations = (data.combinations || []) as Array<{
+        id: string
+        stock: number
+        warehouseStock?: Record<string, number>
+      }>
+      if (combinations.length === 0) continue
+
+      for (const update of productUpdates) {
+        const combo = combinations.find(c => c.id === update.combinationId)
+        if (!combo) continue
+        combo.stock = Math.max(0, (combo.stock || 0) - update.quantity)
+        if (update.warehouseId && combo.warehouseStock) {
+          const cur = combo.warehouseStock[update.warehouseId] || 0
+          combo.warehouseStock[update.warehouseId] = Math.max(0, cur - update.quantity)
+        }
+      }
+
+      // Recompute product-level totals from combinations (single source of truth)
+      const totalStock = combinations.reduce((sum, c) => sum + (c.stock || 0), 0)
+      const newWarehouseStock: Record<string, number> = {}
+      for (const c of combinations) {
+        if (c.warehouseStock) {
+          for (const [wid, qty] of Object.entries(c.warehouseStock)) {
+            newWarehouseStock[wid] = (newWarehouseStock[wid] || 0) + (qty || 0)
+          }
+        }
+      }
+
+      const patch: Record<string, unknown> = {
+        combinations,
+        stock: totalStock,
+        updatedAt: new Date(),
+      }
+      if (Object.keys(newWarehouseStock).length > 0) {
+        patch.warehouseStock = newWarehouseStock
+      }
+      await updateDoc(ref, patch)
+    }
+  },
+
   async restoreVariantStock(storeId: string, updates: { productId: string; variationName: string; optionValue: string; quantity: number }[]): Promise<void> {
     const byProduct = new Map<string, typeof updates>()
     for (const u of updates) {

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
+import { findCombination, getDisplayPrice, getStockForSelection } from '../../lib/variants'
 import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import ProductGallery from '../../themes/shared/ProductGallery'
@@ -85,9 +86,34 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     }
   }, [activeProduct.variations, features.showVariants])
 
-  const totalPrice = useMemo(() => {
-    return activeProduct.price + modifiersExtra
-  }, [activeProduct.price, modifiersExtra])
+  // Base unit price reflects the selected variant when one is fully chosen.
+  // Falls back to product.price for simple products or partial selections.
+  const unitPrice = useMemo(
+    () => getDisplayPrice(activeProduct, selectedVariants),
+    [activeProduct, selectedVariants],
+  )
+
+  const totalPrice = useMemo(() => unitPrice + modifiersExtra, [unitPrice, modifiersExtra])
+
+  // The selected combination (if any) drives image swap and stock checks.
+  const selectedCombination = useMemo(
+    () => findCombination(activeProduct, selectedVariants),
+    [activeProduct, selectedVariants],
+  )
+
+  // Gallery images: when the combination has its own image, lead with it
+  // so the customer sees the variant they selected.
+  const galleryImages = useMemo(() => {
+    const productImages = activeProduct.images?.length
+      ? activeProduct.images
+      : (activeProduct.image ? [activeProduct.image] : [])
+    if (selectedCombination?.image) {
+      // Avoid duplicates if the variant image is also in the gallery
+      const rest = productImages.filter(img => img !== selectedCombination.image)
+      return [selectedCombination.image, ...rest]
+    }
+    return productImages
+  }, [activeProduct.images, activeProduct.image, selectedCombination?.image])
 
   const handleModifiersChange = useCallback((selected: SelectedModifier[], extra: number) => {
     setSelectedModifiers(selected)
@@ -144,11 +170,22 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
     }
   }
 
-  const hasDiscount = activeProduct.comparePrice && activeProduct.comparePrice > activeProduct.price
+  // Compare price uses the unit price (variant or product). If no variant is
+  // selected, this still reflects the product baseline. The compare price
+  // itself is a product-level field (no per-variant compare price in the model).
+  const hasDiscount = activeProduct.comparePrice && activeProduct.comparePrice > unitPrice
   const discountPercent = hasDiscount
-    ? Math.round((1 - activeProduct.price / activeProduct.comparePrice!) * 100)
+    ? Math.round((1 - unitPrice / activeProduct.comparePrice!) * 100)
     : 0
-  const isOutOfStock = activeProduct.trackStock && typeof activeProduct.stock === 'number' && activeProduct.stock <= 0
+
+  // Out-of-stock: when a combination is selected, defer to its stock; otherwise
+  // use product.stock for simple products. For products with variants where no
+  // selection was made yet, isOutOfStock stays false (the user must still pick).
+  const stockForSelection = getStockForSelection(activeProduct, selectedVariants)
+  const isOutOfStock = !!activeProduct.trackStock
+    && typeof stockForSelection === 'number'
+    && stockForSelection <= 0
+    && (!!selectedCombination || !activeProduct.variations?.length)
 
   const handleAddToCart = () => {
     if (requiresSelection && !canAddToCart) {
@@ -221,7 +258,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
           {/* Image Gallery */}
           <div className="relative">
             <ProductGallery
-              images={activeProduct.images?.length ? activeProduct.images : (activeProduct.image ? [activeProduct.image] : [])}
+              images={galleryImages}
               productName={activeProduct.name}
               variant={theme.effects.darkMode ? 'dark' : 'light'}
             />
@@ -326,7 +363,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                   className="text-xl line-through"
                   style={{ color: theme.colors.textMuted }}
                 >
-                  {formatPrice(hasDiscount ? activeProduct.comparePrice! : activeProduct.price, currency)}
+                  {formatPrice(hasDiscount ? activeProduct.comparePrice! : unitPrice, currency)}
                 </span>
               )}
             </div>
@@ -354,6 +391,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                   selected={selectedVariants}
                   onChange={setSelectedVariants}
                   trackStock={activeProduct.trackStock}
+                  product={activeProduct}
                 />
               </div>
             )}
