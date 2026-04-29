@@ -138,7 +138,7 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
       <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
       <div
-        className="min-h-screen relative overflow-hidden"
+        className="min-h-screen relative"
         style={{
           backgroundColor: '#FCFAF5',
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.7' /%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.45 0 0 0 0 0.40 0 0 0 0.05 0' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E")`,
@@ -146,10 +146,15 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
           color: '#3D2F2A',
         }}
       >
-        {/* Background watercolor stains */}
-        <WatercolorBlob color="#F4C7D0" className="absolute -top-20 -left-32 w-[600px] h-[600px] opacity-50 pointer-events-none" />
-        <WatercolorBlob color="#C8DDE2" className="absolute top-[20%] -right-40 w-[600px] h-[600px] opacity-40 pointer-events-none" />
-        <WatercolorBlob color="#F2D8B8" className="absolute top-[60%] -left-20 w-[500px] h-[500px] opacity-35 pointer-events-none" />
+        {/* Background watercolor stains — contained in their own absolute layer
+            with overflow-hidden so the off-screen halves are clipped without
+            having to put `overflow-hidden` on the root wrapper (which would
+            break the sticky header). */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <WatercolorBlob color="#F4C7D0" className="absolute -top-20 -left-32 w-[600px] h-[600px] opacity-50" />
+          <WatercolorBlob color="#C8DDE2" className="absolute top-[20%] -right-40 w-[600px] h-[600px] opacity-40" />
+          <WatercolorBlob color="#F2D8B8" className="absolute top-[60%] -left-20 w-[500px] h-[500px] opacity-35" />
+        </div>
 
         <AnnouncementBar />
 

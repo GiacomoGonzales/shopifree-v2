@@ -139,7 +139,7 @@ export default function TerminalTheme({ store, products, categories, onWhatsAppC
       `}</style>
 
       <div
-        className="min-h-screen relative terminal-scanlines overflow-x-hidden"
+        className="min-h-screen relative terminal-scanlines"
         style={{
           backgroundColor: '#020A04',
           backgroundImage: `radial-gradient(ellipse at 50% 0%, rgba(124,255,178,0.06) 0%, transparent 60%)`,

@@ -118,7 +118,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
       <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
 
       <div
-        className="min-h-screen relative overflow-x-hidden"
+        className="min-h-screen relative"
         style={{
           backgroundColor: '#FFF6D9',
           backgroundImage: `radial-gradient(circle, rgba(15,15,15,0.08) 1px, transparent 1.5px)`,
@@ -170,8 +170,10 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
           </div>
         </header>
 
-        {/* Hero panel */}
-        <section className="relative py-10 md:py-16">
+        {/* Hero panel — overflow-hidden contains the burst badge that overshoots
+            on desktop (md:-top-10 md:-right-10). Previously `overflow-x-hidden`
+            lived on the root wrapper, which broke the sticky header. */}
+        <section className="relative py-10 md:py-16 overflow-x-clip">
           <div className="max-w-6xl mx-auto px-4 md:px-6">
             <div
               className="relative bg-white p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10"
