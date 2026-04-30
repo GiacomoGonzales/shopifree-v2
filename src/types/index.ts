@@ -741,6 +741,18 @@ export interface StoreAppConfig {
   // Apple-specific identifiers (required once iOS is configured)
   iosBundleId?: string           // e.g. "app.shopifree.store.alienstore" (must match Apple Dev portal)
   iosTeamId?: string             // Your Apple Team ID (10 chars)
+
+  // Email addresses the merchant wants enrolled as Play Store / App Store
+  // internal testers for their app. Collected here so the platform operator
+  // can paste them straight into Play Console's Internal testing track when
+  // submitting the app — saves the round-trip of asking for them on WhatsApp.
+  // Everything else Play Console asks (contact email, phone, description,
+  // website) is auto-derived from the store profile.
+  publishInfo?: StoreAppPublishInfo
+}
+
+export interface StoreAppPublishInfo {
+  testers: string[]  // gmail-compatible addresses; one per Internal-testing seat
 }
 
 export interface PushToken {

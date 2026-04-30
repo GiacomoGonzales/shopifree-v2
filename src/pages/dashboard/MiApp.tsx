@@ -7,7 +7,7 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { useLanguage } from '../../hooks/useLanguage'
-import type { StoreAppConfig } from '../../types'
+import type { StoreAppConfig, StoreAppPublishInfo } from '../../types'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -28,6 +28,15 @@ const PUSH_TEMPLATES = [
 
 const STATUS_STEPS = ['none', 'requested', 'building', 'published'] as const
 
+// Loose RFC-5322-ish; good enough to catch typos before hitting Play Console.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Google Play policy for personal developer accounts created after Nov 2023:
+// at least 12 unique testers in a closed-testing track, opted-in for at least
+// 14 continuous days, before the app can be promoted to production. We bake
+// the minimum into the UI so merchants know exactly how many emails to give us.
+const REQUIRED_TESTERS = 12
+
 export default function MiApp() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser, store } = useAuth()
@@ -43,6 +52,11 @@ export default function MiApp() {
   const [saving, setSaving] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [uploadingIcon, setUploadingIcon] = useState(false)
+
+  // Tester emails to enroll in Play Console's Internal testing track.
+  // Collected here once so the operator doesn't chase the merchant for them.
+  const [testers, setTesters] = useState<string[]>([])
+  const [testerInput, setTesterInput] = useState('')
 
   // Push notification state
   const [pushTitle, setPushTitle] = useState('')
@@ -63,6 +77,7 @@ export default function MiApp() {
       setPrimaryColor(cfg.primaryColor || '#1e3a5f')
       setSecondaryColor(cfg.secondaryColor || '#38bdf8')
       setSplashColor(cfg.splashColor || '#ffffff')
+      setTesters(cfg.publishInfo?.testers || [])
     } else if (store) {
       setAppName(store.name || '')
       setPrimaryColor(store.themeSettings?.primaryColor || '#1e3a5f')
@@ -112,11 +127,36 @@ export default function MiApp() {
     }
   }
 
+  const buildPublishInfo = (): StoreAppPublishInfo | undefined =>
+    testers.length > 0 ? { testers } : undefined
+
+  // Add a tester email after light validation. De-duplicates and ignores
+  // empty input so the merchant can mash Enter without messing up the list.
+  const handleAddTester = () => {
+    const value = testerInput.trim().toLowerCase()
+    if (!value) return
+    if (!EMAIL_RE.test(value)) {
+      showToast(t('miApp.publishInfo.invalidEmail'), 'error')
+      return
+    }
+    if (testers.includes(value)) {
+      setTesterInput('')
+      return
+    }
+    setTesters([...testers, value])
+    setTesterInput('')
+  }
+
+  const handleRemoveTester = (email: string) => {
+    setTesters(testers.filter(e => e !== email))
+  }
+
   // Save app config
   const handleSaveConfig = async () => {
     if (!store || !firebaseUser) return
     setSaving(true)
     try {
+      const publishInfo = buildPublishInfo()
       const config: StoreAppConfig = {
         appName: appName || store.name,
         icon: icon || undefined,
@@ -129,6 +169,7 @@ export default function MiApp() {
         ...(appConfig?.publishedAt && { publishedAt: appConfig.publishedAt }),
         ...(appConfig?.androidUrl && { androidUrl: appConfig.androidUrl }),
         ...(appConfig?.iosUrl && { iosUrl: appConfig.iosUrl }),
+        ...(publishInfo && { publishInfo }),
       }
       await updateDoc(doc(db, 'stores', store.id), { appConfig: config })
       showToast(t('miApp.toast.saved'))
@@ -144,10 +185,12 @@ export default function MiApp() {
     if (!store || !firebaseUser) return
     setRequesting(true)
     try {
+      const publishInfo = buildPublishInfo()
       await updateDoc(doc(db, 'stores', store.id), {
         'appConfig.status': 'requested',
         'appConfig.requestedAt': new Date(),
         'appConfig.appName': appName || store.name,
+        ...(publishInfo && { 'appConfig.publishInfo': publishInfo }),
       })
 
       // Notify admin via email
@@ -160,6 +203,7 @@ export default function MiApp() {
           storeName: store.name,
           subdomain: store.subdomain,
           appName: appName || store.name,
+          publishInfo,
         })
       }).catch(() => {}) // fire-and-forget
 
@@ -435,8 +479,109 @@ export default function MiApp() {
             </div>
           </div>
 
+          {/* Tester emails for Play Store closed testing — 12 required by
+              Google policy, 14-day testing window before production. */}
+          <div className="pt-4 mt-4 border-t border-gray-200/60">
+            <h3 className="text-base font-semibold text-gray-900">{t('miApp.publishInfo.title')}</h3>
+            <p className="mt-1 text-xs text-gray-500">
+              {t('miApp.publishInfo.subtitle', { count: REQUIRED_TESTERS })}
+            </p>
+
+            {/* Highlight the two hard requirements so they don't get missed */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200/60 rounded-lg">
+                <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="text-xs text-amber-900">
+                  {t('miApp.publishInfo.requirement12', { count: REQUIRED_TESTERS })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200/60 rounded-lg">
+                <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-amber-900">
+                  {t('miApp.publishInfo.requirement14Days')}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={testerInput}
+                  onChange={(e) => setTesterInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddTester()
+                    }
+                  }}
+                  placeholder={t('miApp.publishInfo.testerPlaceholder')}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTester}
+                  className="px-4 py-2 bg-[#1e3a5f] text-white rounded-xl text-sm font-semibold hover:bg-[#2d6cb5] transition-all"
+                >
+                  {t('miApp.publishInfo.addTester')}
+                </button>
+              </div>
+
+              {/* Counter + progress bar */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className={testers.length >= REQUIRED_TESTERS ? 'text-green-700 font-medium' : 'text-gray-500'}>
+                    {testers.length >= REQUIRED_TESTERS
+                      ? t('miApp.publishInfo.counterMet', { count: testers.length })
+                      : t('miApp.publishInfo.counter', { count: testers.length, required: REQUIRED_TESTERS })}
+                  </span>
+                  {testers.length < REQUIRED_TESTERS && (
+                    <span className="text-gray-400">
+                      {t('miApp.publishInfo.missing', { count: REQUIRED_TESTERS - testers.length })}
+                    </span>
+                  )}
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all ${testers.length >= REQUIRED_TESTERS ? 'bg-green-500' : 'bg-[#1e3a5f]'}`}
+                    style={{ width: `${Math.min(100, (testers.length / REQUIRED_TESTERS) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {testers.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {testers.map(email => (
+                    <li
+                      key={email}
+                      className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 rounded-lg"
+                    >
+                      <span className="text-sm text-gray-700 truncate">{email}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTester(email)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        aria-label={t('miApp.publishInfo.removeTester')}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-gray-400 italic">{t('miApp.publishInfo.empty')}</p>
+              )}
+            </div>
+          </div>
+
           {/* Save + Request */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t border-gray-200/60">
             <button
               onClick={handleSaveConfig}
               disabled={saving}
@@ -445,13 +590,23 @@ export default function MiApp() {
               {saving ? t('miApp.config.saving') : t('miApp.config.save')}
             </button>
             {currentStatus === 'none' && (
-              <button
-                onClick={handleRequest}
-                disabled={requesting || !appName.trim()}
-                className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
-              >
-                {requesting ? t('miApp.status.requesting') : t('miApp.status.request')}
-              </button>
+              <>
+                <button
+                  onClick={handleRequest}
+                  disabled={requesting || !appName.trim() || testers.length < REQUIRED_TESTERS}
+                  className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  {requesting ? t('miApp.status.requesting') : t('miApp.status.request')}
+                </button>
+                {testers.length < REQUIRED_TESTERS && (
+                  <p className="basis-full text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
+                    {t('miApp.publishInfo.needMoreTesters', {
+                      count: REQUIRED_TESTERS - testers.length,
+                      required: REQUIRED_TESTERS,
+                    })}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

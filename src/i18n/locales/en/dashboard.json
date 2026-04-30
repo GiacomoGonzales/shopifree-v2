@@ -1245,6 +1245,21 @@
       "saving": "Saving...",
       "saved": "Configuration saved"
     },
+    "publishInfo": {
+      "title": "Tester emails",
+      "subtitle": "Before your app is visible to everyone on the Play Store, Google requires a closed testing phase. We need {{count}} Gmail emails (yours, your team's, family, friends) who'll keep the app installed and test it for 14 continuous days. Only after that we can publish it to the public.",
+      "requirement12": "At least {{count}} unique Gmail emails",
+      "requirement14Days": "They must keep it installed for 14 days",
+      "testerPlaceholder": "example@gmail.com",
+      "addTester": "Add",
+      "removeTester": "Remove",
+      "empty": "No emails added yet.",
+      "invalidEmail": "That email doesn't look valid.",
+      "counter": "{{count}} of {{required}} emails added",
+      "counterMet": "{{count}} emails added — ready",
+      "missing": "{{count}} missing",
+      "needMoreTesters": "You need {{count}} more emails to reach Google's minimum of {{required}}. Add them before requesting publication."
+    },
     "status": {
       "title": "App status",
       "none": "Not requested",
