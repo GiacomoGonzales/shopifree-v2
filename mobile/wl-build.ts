@@ -102,18 +102,21 @@ async function main() {
     }
 
     if (platform === 'android') {
-      step('4/4 Gradle: assembleRelease')
+      step('4/4 Gradle: bundleRelease (AAB for Play Store)')
       const isWin = process.platform === 'win32'
-      const gradleCmd = isWin ? 'gradlew.bat' : './gradlew'
-      const gradle = spawnSync(gradleCmd, ['assembleRelease'], {
+      // Windows cmd.exe doesn't search cwd for unqualified commands, so
+      // prefix with `.\` to invoke the wrapper from inside android/. On
+      // Unix `./gradlew` already resolves correctly under the same cwd.
+      const gradleCmd = isWin ? '.\\gradlew.bat' : './gradlew'
+      const gradle = spawnSync(gradleCmd, ['bundleRelease'], {
         cwd: resolve('android'),
         stdio: 'inherit',
         shell: isWin,
       })
       buildCode = gradle.status ?? 1
-      if (buildCode !== 0) throw new Error('gradle assembleRelease failed')
-      console.log('\n✓ AAB ready: android/app/build/outputs/apk/release/app-release.apk')
-      console.log('  (or .aab under bundle/release/ if assembleRelease was assembleBundleRelease)')
+      if (buildCode !== 0) throw new Error('gradle bundleRelease failed')
+      console.log('\n✓ AAB ready: android/app/build/outputs/bundle/release/app-release.aab')
+      console.log('  Sign + upload to Google Play Console.')
     } else if (platform === 'ios') {
       console.log('\n✓ iOS project synced. Next:')
       console.log('  cd ios && fastlane build    # or open in Xcode')
