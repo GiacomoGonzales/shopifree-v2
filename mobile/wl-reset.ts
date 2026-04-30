@@ -31,7 +31,11 @@ function main() {
   })
 
   if (tracked.length > 0) {
-    run(`git restore -- ${tracked.map(f => `"${f}"`).join(' ')}`)
+    // --staged + --worktree restores BOTH the index and the working tree, so
+    // an `npm run wl:reset` after a `git add android/...` still leaves a clean
+    // diff. With only `git restore --` the index keeps the staged change and
+    // the pre-commit hook would still flag it.
+    run(`git restore --staged --worktree -- ${tracked.map(f => `"${f}"`).join(' ')}`)
     console.log(`✓ Restored ${tracked.length} branding files to Shopifree main`)
   }
 
