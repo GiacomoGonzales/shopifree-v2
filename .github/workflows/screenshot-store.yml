@@ -1,0 +1,83 @@
+name: Screenshot store (phone)
+
+# Triggered manually (or by the admin API) for a specific store.
+# Captures phone-shape screenshots of the public storefront and uploads
+# them to Firebase Storage so the operator can drop them straight into
+# the Play Console "Phone screenshots" field.
+
+on:
+  workflow_dispatch:
+    inputs:
+      storeId:
+        description: 'Firestore store ID to screenshot'
+        required: true
+        type: string
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Mark Firestore status = running
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: |
+          npx tsx -e "
+          import { FieldValue } from 'firebase-admin/firestore'
+          import { getDb } from './mobile/ci/firebase-admin'
+          await getDb().collection('stores').doc(process.env.STORE_ID).update({
+            'appConfig.screenshots.status': 'running',
+            'appConfig.screenshots.runUrl': process.env.RUN_URL,
+            'appConfig.screenshots.lastError': FieldValue.delete(),
+          })
+          "
+
+      - name: Capture + upload screenshots
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: npx tsx mobile/ci/screenshot-store.ts
+
+      - name: Mark Firestore status = failed (on failure)
+        if: failure()
+        env:
+          STORE_ID: ${{ github.event.inputs.storeId }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: |
+          npx tsx -e "
+          import { getDb } from './mobile/ci/firebase-admin'
+          await getDb().collection('stores').doc(process.env.STORE_ID).update({
+            'appConfig.screenshots.status': 'failed',
+            'appConfig.screenshots.lastError': 'Workflow failed — check logs',
+            'appConfig.screenshots.runUrl': process.env.RUN_URL,
+          })
+          "

@@ -38,6 +38,13 @@ interface StoreRow {
     publishInfo?: {
       testers: string[]
     }
+    screenshots?: {
+      status?: 'idle' | 'queued' | 'running' | 'success' | 'failed'
+      urls?: string[]
+      generatedAt?: Timestamp | Date
+      runUrl?: string
+      lastError?: string
+    }
   }
 }
 
@@ -115,6 +122,27 @@ export default function AppBuilds() {
     return () => { unsubs.forEach(u => u()) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stores.length])
+
+  const triggerScreenshot = async (storeId: string) => {
+    if (!firebaseUser) return
+    try {
+      const token = await firebaseUser.getIdToken()
+      const res = await fetch(apiUrl('/api/admin-trigger-screenshot'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ storeId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error')
+      showToast('Generando capturas en GitHub Actions (~3 min)', 'success')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      showToast(`Error: ${msg}`, 'error')
+    }
+  }
 
   const triggerBuild = async (store: StoreRow, platform: 'android' | 'ios' = 'android') => {
     if (!firebaseUser) return
@@ -394,6 +422,7 @@ export default function AppBuilds() {
           copiedField={copiedField}
           onCopy={copyToClipboard}
           onClose={() => setViewingStore(null)}
+          onTriggerScreenshot={() => triggerScreenshot(viewingStore.id)}
         />
       )}
     </div>
@@ -405,6 +434,7 @@ interface DetailsModalProps {
   copiedField: string | null
   onCopy: (text: string, field: string) => void
   onClose: () => void
+  onTriggerScreenshot: () => void
 }
 
 // Inject sizing transforms after `/upload/` so a Cloudinary-hosted icon is
@@ -457,7 +487,7 @@ function cloudinaryFeatureGraphic(
   return url.replace('/image/upload/', `/image/upload/c_pad,w_1024,h_500,b_${bg},f_png/`)
 }
 
-function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps) {
+function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot }: DetailsModalProps) {
   const testers = store.appConfig?.publishInfo?.testers ?? []
   const appIcon = store.appConfig?.icon
   const appName = store.appConfig?.appName || store.name
@@ -468,6 +498,9 @@ function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps
     store.appConfig?.primaryColor,
     store.appConfig?.splashColor,
   )
+  const screenshots = store.appConfig?.screenshots
+  const screenshotsStatus = screenshots?.status || 'idle'
+  const screenshotsBusy = screenshotsStatus === 'queued' || screenshotsStatus === 'running'
 
   return (
     <div
@@ -601,6 +634,78 @@ function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps
             <DetailRow label="Nombre" value={store.name} field="contactName" copied={copiedField === 'contactName'} onCopy={onCopy} />
             <DetailRow label="Email" value={store.email || '—'} field="contactEmail" copied={copiedField === 'contactEmail'} onCopy={onCopy} disabled={!store.email} />
             <DetailRow label="Teléfono / WhatsApp" value={store.whatsapp || '—'} field="contactPhone" copied={copiedField === 'contactPhone'} onCopy={onCopy} disabled={!store.whatsapp} />
+          </section>
+
+          {/* Phone screenshots — auto-generated from the storefront */}
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                Capturas de pantalla (1080×2400)
+              </h3>
+              <button
+                type="button"
+                onClick={onTriggerScreenshot}
+                disabled={screenshotsBusy}
+                className="px-2.5 py-1 bg-gray-900 text-white rounded-md text-[11px] font-medium hover:bg-gray-800 transition-colors disabled:opacity-40 inline-flex items-center gap-1"
+              >
+                {screenshotsBusy ? (
+                  <>
+                    <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                    </svg>
+                    Generando…
+                  </>
+                ) : screenshots?.urls?.length ? 'Regenerar' : 'Generar capturas'}
+              </button>
+            </div>
+
+            {screenshotsStatus === 'failed' && screenshots?.lastError && (
+              <p className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1.5 mb-2">
+                Falló: {screenshots.lastError}
+                {screenshots.runUrl && (
+                  <>
+                    {' · '}
+                    <a href={screenshots.runUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                      ver logs
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
+
+            {screenshots?.urls && screenshots.urls.length > 0 ? (
+              <div className="grid grid-cols-4 gap-2">
+                {screenshots.urls.map((url, idx) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="relative aspect-[9/20] bg-gray-100 rounded-md overflow-hidden border border-gray-200 hover:border-gray-400 transition-colors group"
+                    title={`Captura ${idx + 1} — click para descargar`}
+                  >
+                    <img src={url} alt={`Captura ${idx + 1}`} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : screenshotsStatus === 'idle' ? (
+              <p className="text-xs text-gray-400 italic">
+                Aún no se generaron. Click en "Generar capturas" — corre Playwright en GitHub Actions sobre la tienda en vivo (~3 min).
+              </p>
+            ) : null}
+
+            {screenshots?.urls && screenshots.urls.length > 0 && (
+              <p className="mt-2 text-[11px] text-gray-500">
+                {screenshots.urls.length} capturas listas. Click en cada una para descargar — sube en Play Console → Ficha de tienda → Capturas de pantalla de teléfono.
+              </p>
+            )}
           </section>
 
           {/* Testers */}
