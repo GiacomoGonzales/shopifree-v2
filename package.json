@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "prepare": "node mobile/setup-hooks.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "cap:sync": "npx cap sync",
@@ -16,9 +17,12 @@
     "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
     "app:config": "npx tsx mobile/build-config.ts",
     "wl:config": "npx tsx mobile/build-config.ts",
+    "wl:reset": "npx tsx mobile/wl-reset.ts",
+    "wl": "npx tsx mobile/wl-build.ts",
     "wl:build": "npx vite build --mode whitelabel",
     "wl:android": "npm run wl:build && npx cap sync android",
-    "wl:ios": "npm run wl:build && npx cap sync ios"
+    "wl:ios": "npm run wl:build && npx cap sync ios",
+    "build:main": "npm run build && npx cap sync"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

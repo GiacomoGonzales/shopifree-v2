@@ -1,11 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Auto-generated config for store: Amaranto women (KnQKQDeBFLPPpLx1kar7jcSTzRt2)
-// Generated at: 2026-04-30T00:20:47.567Z
+// Shopifree Platform App - default config
+// For white-label store builds, use: npx tsx mobile/build-config.ts <storeId>
 
 const config: CapacitorConfig = {
-  appId: 'app.shopifree.store.amarantowomen',
-  appName: 'Amaranto Women',
+  appId: 'app.shopifree.mobile',
+  appName: 'Shopifree',
   webDir: 'dist',
   backgroundColor: '#ffffff',
   server: {

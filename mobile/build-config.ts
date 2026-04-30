@@ -143,6 +143,42 @@ async function generateIcons(logoUrl: string, bgColor: string) {
 `
   writeFileSync(resolve(resDir, 'drawable/ic_launcher_background.xml'), bgDrawableXml, 'utf-8')
 
+  // ic_splash_icon.png — Android 12+ system splash icon (windowSplashScreenAnimatedIcon).
+  // This is the FIRST splash users see, before Capacitor's SplashScreen plugin runs.
+  // Without regenerating it per-tenant, the user sees a brief flash of the previous
+  // store's logo before the configured Amaranto/etc. splash takes over ("double splash").
+  // Canvas is 432×432 (the xxxhdpi-equivalent reference size). Android renders the inner
+  // 288dp portion of this asset 1:1 inside the splash icon container, so a logo at N%
+  // of the 432px canvas appears at N×432/screen_dp percent of screen width. With the
+  // logo at 32% of canvas (~138dp), it lands at ~33% of a 411dp screen — matching the
+  // React overlay's `width: 32%` so the system splash → overlay handoff has no size
+  // jump. Anything bigger (we used to ship 44%) makes the system splash visibly larger
+  // than the overlay and the user sees the logo "shrink" mid-launch.
+  const splashIconSize = 432
+  const splashIconLogoSize = Math.round(splashIconSize * 0.32)
+  const splashIconLogo = await sharp(trimmedLogo)
+    .resize(splashIconLogoSize, splashIconLogoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .toBuffer()
+  await sharp({ create: { width: splashIconSize, height: splashIconSize, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: splashIconLogo, gravity: 'centre' }])
+    .png()
+    .toFile(resolve(resDir, 'drawable/ic_splash_icon.png'))
+  console.log(`    ✓ drawable/ic_splash_icon.png (Android 12+ system splash)`)
+
+  // public/whitelabel-splash-logo.png — same trimmed logo on a transparent canvas,
+  // served from the WebView so the React splash overlay (Catalog.tsx) can render
+  // pixel-identical content as the system splash. Without this, the overlay loads
+  // the original Cloudinary URL — which often has asymmetric transparent padding —
+  // and shows a visibly smaller logo than the system splash.
+  const publicDir = resolve(process.cwd(), 'public')
+  if (existsSync(publicDir)) {
+    await sharp(trimmedLogo)
+      .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toFile(resolve(publicDir, 'whitelabel-splash-logo.png'))
+    console.log(`    ✓ public/whitelabel-splash-logo.png (React splash overlay)`)
+  }
+
   // iOS icon (1024×1024) — logo ~62% of canvas, matching typical App Store icon density
   const iosDir = resolve(process.cwd(), 'ios/App/App/Assets.xcassets/AppIcon.appiconset')
   if (existsSync(iosDir)) {
@@ -303,7 +339,14 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1500,
+      // Disabled: Android 12+ forces a system splash via Theme.SplashScreen
+      // anyway, and stacking Capacitor's splash on top of it causes a visible
+      // "double flash" (system splash → Capacitor splash → app content). With
+      // duration 0 the WebView paints as soon as it's ready, right after the
+      // system splash hands off. The same logo is rendered as a React overlay
+      // by main-whitelabel.tsx during initial load, so the crossfade still
+      // lands on matching content.
+      launchShowDuration: 0,
       launchAutoHide: true,
       backgroundColor: '${splashColor}',
       showSpinner: false,
@@ -365,6 +408,33 @@ export default config;
 `
   const stringsPath = resolve(process.cwd(), 'android/app/src/main/res/values/strings.xml')
   writeFileSync(stringsPath, stringsXml, 'utf-8')
+
+  // Write per-tenant Gradle properties so the Android build picks up the
+  // store-specific applicationId. Without this, every white-label AAB would
+  // ship with the main Shopifree applicationId and collide with it on Play
+  // Console (and on the user's device). build.gradle reads APP_ID from this
+  // file at the start of the android{} block. The file is gitignored so each
+  // build run produces a fresh value without polluting source control.
+  const whitelabelPropsPath = resolve(process.cwd(), 'android/app/whitelabel.properties')
+  writeFileSync(whitelabelPropsPath, `APP_ID=${appId}\n`, 'utf-8')
+  console.log(`  ✓ android/app/whitelabel.properties → APP_ID=${appId}`)
+
+  // styles.xml: keep the launch theme structure intact and only swap the
+  // windowSplashScreenBackground hex so the Android 12+ system splash matches
+  // the per-tenant splash color. Hardcoding it here would mean every build
+  // shows the previous store's color for the brief moment before Capacitor's
+  // SplashScreen plugin takes over.
+  const stylesPath = resolve(process.cwd(), 'android/app/src/main/res/values/styles.xml')
+  if (existsSync(stylesPath)) {
+    const { readFileSync } = await import('fs')
+    let styles = readFileSync(stylesPath, 'utf-8')
+    styles = styles.replace(
+      /(<item name="windowSplashScreenBackground">)#[0-9a-fA-F]{6,8}(<\/item>)/,
+      `$1${splashColor}$2`
+    )
+    writeFileSync(stylesPath, styles, 'utf-8')
+    console.log(`  ✓ Android styles.xml windowSplashScreenBackground → ${splashColor}`)
+  }
 
   // Update iOS Info.plist with the store's display name. Without this, the
   // home-screen label stays as whatever was last committed (e.g. "Shopifree").

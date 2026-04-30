@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Repo-managed git pre-commit hook.
+#
+# Activated automatically by `npm install` (see package.json `prepare`),
+# which sets `git config core.hooksPath .githooks` for this clone.
+#
+# All hooks live under .githooks/ so they are versioned with the code and
+# travel with the repo across Windows + Mac without per-machine setup.
+
+set -e
+
+# Block commits that include white-label per-tenant artifacts. Logic lives
+# in TS so it shares the file list with `wl:reset` and `wl-build`.
+exec npx --no-install tsx mobile/wl-precommit-check.ts

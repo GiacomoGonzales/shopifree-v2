@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Amaranto Women</string>
-    <string name="title_activity_main">Amaranto Women</string>
-    <string name="package_name">app.shopifree.store.amarantowomen</string>
-    <string name="custom_url_scheme">app.shopifree.store.amarantowomen</string>
+    <string name="app_name">Shopifree</string>
+    <string name="title_activity_main">Shopifree</string>
+    <string name="package_name">app.shopifree.mobile</string>
+    <string name="custom_url_scheme">app.shopifree.mobile</string>
 </resources>

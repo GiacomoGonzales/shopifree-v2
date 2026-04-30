@@ -56,7 +56,15 @@ function StoreLoader({ name }: { logo?: string; name?: string }) {
 // theme has actually painted, so the only thing the user perceives is the
 // logo gracefully disappearing into the catalog.
 const SPLASH_COLOR = (import.meta.env.VITE_SPLASH_COLOR as string) || '#ffffff'
-const SPLASH_LOGO_URL = (import.meta.env.VITE_STORE_LOGO_URL as string) || ''
+// Prefer the locally-bundled `whitelabel-splash-logo.png` (written by
+// build-config.ts from the same trimmed source as the system splash icon) so
+// the overlay shows pixel-identical content. Fall back to the raw Cloudinary
+// URL only if the local asset is missing — that path keeps a visible "logo
+// shrink" between system splash and overlay because the raw upload may have
+// asymmetric transparent padding.
+const SPLASH_LOGO_URL =
+  (import.meta.env.VITE_WHITELABEL ? '/whitelabel-splash-logo.png' : '') ||
+  (import.meta.env.VITE_STORE_LOGO_URL as string) || ''
 
 function NativeSplashOverlay({
   logo,
