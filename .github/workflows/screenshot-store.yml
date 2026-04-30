@@ -37,21 +37,12 @@ jobs:
       - name: Mark Firestore status = running
         env:
           STORE_ID: ${{ github.event.inputs.storeId }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
           FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-        run: |
-          npx tsx -e "
-          import { FieldValue } from 'firebase-admin/firestore'
-          import { getDb } from './mobile/ci/firebase-admin'
-          await getDb().collection('stores').doc(process.env.STORE_ID).update({
-            'appConfig.screenshots.status': 'running',
-            'appConfig.screenshots.runUrl': process.env.RUN_URL,
-            'appConfig.screenshots.lastError': FieldValue.delete(),
-          })
-          "
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: npx tsx mobile/ci/screenshot-set-status.ts running "$RUN_URL"
 
       - name: Capture + upload screenshots
         env:
@@ -67,17 +58,9 @@ jobs:
         if: failure()
         env:
           STORE_ID: ${{ github.event.inputs.storeId }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
           FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-        run: |
-          npx tsx -e "
-          import { getDb } from './mobile/ci/firebase-admin'
-          await getDb().collection('stores').doc(process.env.STORE_ID).update({
-            'appConfig.screenshots.status': 'failed',
-            'appConfig.screenshots.lastError': 'Workflow failed — check logs',
-            'appConfig.screenshots.runUrl': process.env.RUN_URL,
-          })
-          "
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: npx tsx mobile/ci/screenshot-set-status.ts failed "$RUN_URL" "Workflow failed — check logs"

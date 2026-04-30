@@ -515,7 +515,12 @@ function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot
   )
   const screenshots = store.appConfig?.screenshots
   const screenshotsStatus = screenshots?.status || 'idle'
-  const screenshotsBusy = screenshotsStatus === 'queued' || screenshotsStatus === 'running'
+  // Only `running` blocks retry: a workflow is genuinely executing right
+  // now and a parallel one would race. `queued` can outlive the actual
+  // workflow run when the dispatch was lost (Vercel deploy mid-click,
+  // workflow died before its first status write, etc.) — allow retry so
+  // the operator isn't stuck forever waiting on a dead run.
+  const screenshotsBusy = screenshotsStatus === 'running'
 
   return (
     <div
