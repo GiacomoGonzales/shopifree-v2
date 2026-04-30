@@ -63,7 +63,9 @@
       "Bash(gh repo:*)",
       "Bash(git pull *)",
       "Bash(git stash *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(git reset *)",
+      "Bash(export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8)"
     ],
     "deny": [],
     "ask": []
