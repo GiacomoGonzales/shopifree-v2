@@ -72,7 +72,12 @@ export default function AppBuilds() {
 
   // Details modal — surfaces everything needed to register the app on Play
   // Console without bouncing between Firestore and the merchant's WhatsApp.
-  const [viewingStore, setViewingStore] = useState<StoreRow | null>(null)
+  // Track only the id; the live store record is derived from `stores` so
+  // when the Firestore snapshot listener updates (e.g. screenshots finish
+  // uploading and `appConfig.screenshots.urls` lands), the open modal
+  // re-renders with the fresh data automatically.
+  const [viewingStoreId, setViewingStoreId] = useState<string | null>(null)
+  const viewingStore = viewingStoreId ? stores.find(s => s.id === viewingStoreId) ?? null : null
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const copyToClipboard = async (text: string, field: string) => {
@@ -287,7 +292,7 @@ export default function AppBuilds() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setViewingStore(store)}
+                      onClick={() => setViewingStoreId(store.id)}
                       className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors flex-shrink-0 inline-flex items-center gap-1"
                       title="Ver datos de Play Console (ícono, contacto, testers)"
                     >
@@ -431,7 +436,7 @@ export default function AppBuilds() {
           store={viewingStore}
           copiedField={copiedField}
           onCopy={copyToClipboard}
-          onClose={() => setViewingStore(null)}
+          onClose={() => setViewingStoreId(null)}
           onTriggerScreenshot={() => triggerScreenshot(viewingStore.id)}
         />
       )}
