@@ -162,76 +162,50 @@ async function generateIcons(logoUrl: string, bgColor: string) {
   console.log(`    ✓ Background color: ${bgColor}`)
 }
 
-// Build a splash image: rounded logo centered + store name below it
+// Build a splash image: a centered logo on a solid background. Kept
+// deliberately minimal — no text, no rounded card — so the splash reads as a
+// single calm brand moment instead of a full screen with hierarchy.
 async function buildSplashImage(
   logoBuffer: Buffer,
   bg: { r: number; g: number; b: number; alpha: number },
-  bgColor: string,
-  storeName: string,
+  _bgColor: string,
+  _storeName: string,
   width: number,
   height: number,
 ): Promise<Buffer> {
-  const isPortrait = height > width
   const shortSide = Math.min(width, height)
 
-  // Logo size: 28% of short side
-  const logoSize = Math.round(shortSide * 0.28)
-  const borderRadius = Math.round(logoSize * 0.22)
+  // Logo at ~18% of the short side. After scaleAspectFill on a portrait phone
+  // (image is square; phone is taller than wide) the logo ends up at roughly
+  // 32-35% of screen width — the proportion Apple uses for system splashes.
+  const logoSize = Math.round(shortSide * 0.18)
 
-  // Resize logo
   const resizedLogo = await sharp(logoBuffer)
     .resize(logoSize, logoSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .toBuffer()
-
-  // Create rounded corners mask
-  const roundedMask = Buffer.from(
-    `<svg width="${logoSize}" height="${logoSize}">
-      <rect x="0" y="0" width="${logoSize}" height="${logoSize}" rx="${borderRadius}" ry="${borderRadius}" fill="white"/>
-    </svg>`
-  )
-
-  // Apply rounded corners to logo
-  const roundedLogo = await sharp(resizedLogo)
-    .composite([{ input: roundedMask, blend: 'dest-in' }])
     .png()
     .toBuffer()
 
-  // Text color: white on dark bg, dark on light bg
-  const brightness = (bg.r * 299 + bg.g * 587 + bg.b * 114) / 1000
-  const textColor = brightness < 128 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
-  const subtextColor = brightness < 128 ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)'
-
-  // Font size relative to logo size
-  const nameFontSize = Math.round(logoSize * 0.22)
-
-  // Text SVG: store name only
-  const escapedName = storeName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const textBlockHeight = nameFontSize + Math.round(logoSize * 0.04)
-  const textSvg = Buffer.from(
-    `<svg width="${width}" height="${textBlockHeight}">
-      <text x="50%" y="${nameFontSize}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${nameFontSize}" font-weight="600" fill="${textColor}" letter-spacing="1">${escapedName}</text>
-    </svg>`
-  )
-
-  // Calculate vertical positioning: logo + gap + text centered in the image
-  const gap = Math.round(logoSize * 0.2)
-  const totalContentHeight = logoSize + gap + textBlockHeight
-  const topOffset = Math.round((height - totalContentHeight) / 2)
+  const topOffset = Math.round((height - logoSize) / 2)
   const logoLeft = Math.round((width - logoSize) / 2)
 
-  // Compose everything
   return sharp({ create: { width, height, channels: 4, background: bg } })
-    .composite([
-      { input: roundedLogo, top: topOffset, left: logoLeft },
-      { input: textSvg, top: topOffset + logoSize + gap, left: 0 },
-    ])
+    .composite([{ input: resizedLogo, top: topOffset, left: logoLeft }])
     .png()
     .toBuffer()
 }
 
 async function generateSplashScreens(logoUrl: string, bgColor: string, storeName: string) {
   console.log(`\n  Generating splash screens...`)
-  const logoBuffer = await downloadImage(logoUrl)
+  const rawLogoBuffer = await downloadImage(logoUrl)
+
+  // Trim transparent/uniform edges before compositing so the logo lands at the
+  // exact geometric center of the splash. Source PNGs from Cloudinary often
+  // have asymmetric padding that otherwise shifts the visible logo off-center
+  // (this was the cause of the "splash pushed down/sideways" reports).
+  const logoBuffer = await sharp(rawLogoBuffer)
+    .trim({ threshold: 10 })
+    .toBuffer()
+
   const bg = hexToRgba(bgColor)
   const resDir = resolve(process.cwd(), 'android/app/src/main/res')
 
@@ -307,7 +281,12 @@ async function main() {
   const appId = `app.shopifree.store.${subdomain.replace(/[^a-z0-9]/gi, '')}`
   const appName = appConfig.appName || store.name || 'Store'
   const splashColor = appConfig.splashColor || '#ffffff'
+  const splashBg = hexToRgba(splashColor)
 
+  // capacitor.config: identical to the working main Shopifree app config —
+  // same SplashScreen + StatusBar settings — with only appId/appName/colors
+  // swapped per store. This keeps the launch behavior exactly the same as the
+  // main app (which the user has confirmed works smoothly).
   const configContent = `import type { CapacitorConfig } from '@capacitor/cli';
 
 // Auto-generated config for store: ${store.name} (${storeId})
@@ -324,14 +303,15 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 10000,
-      launchAutoHide: false,
+      launchShowDuration: 1500,
+      launchAutoHide: true,
       backgroundColor: '${splashColor}',
       showSpinner: false,
     },
     StatusBar: {
-      style: 'LIGHT',
-      backgroundColor: '${splashColor}'
+      style: 'LIGHT',             // dark text on light bg
+      backgroundColor: '${splashColor}',
+      overlaysWebView: false
     },
     Keyboard: {
       resize: 'native'
@@ -357,8 +337,16 @@ export default config;
   const outPath = resolve(process.cwd(), 'capacitor.config.ts')
   writeFileSync(outPath, configContent, 'utf-8')
 
-  // Write .env.whitelabel for Vite white-label build
-  const envContent = `VITE_WHITELABEL=true\nVITE_STORE_SUBDOMAIN=${subdomain}\n`
+  // Write .env.whitelabel for Vite white-label build.
+  // VITE_SPLASH_COLOR is consumed by main-whitelabel.tsx so the body bg, the
+  // native loading fallback, and the StatusBar all match the LaunchScreen
+  // color — without that, the native splash fades into a screen of a different
+  // color and the user sees a visible flash mid-launch.
+  // VITE_STORE_LOGO_URL is the same logo baked into the splash image; the
+  // Catalog renders it in a React overlay at the same position so the native
+  // splash crossfade lands on pixel-identical content (no logo jump).
+  const logoLine = store.logo ? `\nVITE_STORE_LOGO_URL=${store.logo}` : ''
+  const envContent = `VITE_WHITELABEL=true\nVITE_STORE_SUBDOMAIN=${subdomain}\nVITE_SPLASH_COLOR=${splashColor}${logoLine}\n`
   const envPath = resolve(process.cwd(), '.env.whitelabel')
   writeFileSync(envPath, envContent, 'utf-8')
 
@@ -377,6 +365,73 @@ export default config;
 `
   const stringsPath = resolve(process.cwd(), 'android/app/src/main/res/values/strings.xml')
   writeFileSync(stringsPath, stringsXml, 'utf-8')
+
+  // Update iOS Info.plist with the store's display name. Without this, the
+  // home-screen label stays as whatever was last committed (e.g. "Shopifree").
+  // CFBundleName references $(PRODUCT_NAME) so it's set by the Xcode project's
+  // build settings — Fastlane handles that on CI; for local builds the name
+  // shown on the home screen is CFBundleDisplayName, which we patch here.
+  // We also pin UIStatusBarStyle + UIViewControllerBasedStatusBarAppearance
+  // so the status bar text color matches the splash from the very first frame
+  // (otherwise iOS shows the default light-content style during LaunchScreen
+  // and the user sees the bar "appear" the moment Capacitor reconfigures it).
+  const infoPlistPath = resolve(process.cwd(), 'ios/App/App/Info.plist')
+  if (existsSync(infoPlistPath)) {
+    const escapedAppName = appName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const splashIsDark =
+      (splashBg.r * 299 + splashBg.g * 587 + splashBg.b * 114) / 1000 < 128
+    const statusBarStyle = splashIsDark
+      ? 'UIStatusBarStyleLightContent'
+      : 'UIStatusBarStyleDarkContent'
+    const { readFileSync } = await import('fs')
+    let plist = readFileSync(infoPlistPath, 'utf-8')
+    plist = plist.replace(
+      /(<key>CFBundleDisplayName<\/key>\s*<string>)[^<]*(<\/string>)/,
+      `$1${escapedAppName}$2`
+    )
+    // UIViewControllerBasedStatusBarAppearance → false so Info.plist controls
+    // the launch-time status bar style.
+    plist = plist.replace(
+      /(<key>UIViewControllerBasedStatusBarAppearance<\/key>\s*)<true\/>/,
+      `$1<false/>`
+    )
+    // UIStatusBarStyle: replace if present, otherwise insert before </dict>.
+    if (/<key>UIStatusBarStyle<\/key>/.test(plist)) {
+      plist = plist.replace(
+        /(<key>UIStatusBarStyle<\/key>\s*<string>)[^<]*(<\/string>)/,
+        `$1${statusBarStyle}$2`
+      )
+    } else {
+      plist = plist.replace(
+        /<\/dict>\s*<\/plist>/,
+        `\t<key>UIStatusBarStyle</key>\n\t<string>${statusBarStyle}</string>\n</dict>\n</plist>`
+      )
+    }
+    writeFileSync(infoPlistPath, plist, 'utf-8')
+    console.log(`  ✓ iOS Info.plist CFBundleDisplayName → "${appName}"`)
+    console.log(`  ✓ iOS Info.plist UIStatusBarStyle → ${statusBarStyle}`)
+  }
+
+  // LaunchScreen.storyboard: keep the exact structure that ships with the
+  // main Shopifree app (which the user has confirmed renders smoothly), only
+  // swap the view's backgroundColor to splashColor. No structural rewrites,
+  // no AppDelegate changes — anything fancier has caused regressions.
+  const splashRgb01 = {
+    r: (splashBg.r / 255).toFixed(6),
+    g: (splashBg.g / 255).toFixed(6),
+    b: (splashBg.b / 255).toFixed(6),
+  }
+  const launchScreenPath = resolve(process.cwd(), 'ios/App/App/Base.lproj/LaunchScreen.storyboard')
+  if (existsSync(launchScreenPath)) {
+    const { readFileSync } = await import('fs')
+    let storyboard = readFileSync(launchScreenPath, 'utf-8')
+    storyboard = storyboard.replace(
+      /<color key="backgroundColor"[^/]*\/>/,
+      `<color key="backgroundColor" red="${splashRgb01.r}" green="${splashRgb01.g}" blue="${splashRgb01.b}" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>`
+    )
+    writeFileSync(launchScreenPath, storyboard, 'utf-8')
+    console.log(`  ✓ LaunchScreen.storyboard background → ${splashColor}`)
+  }
 
   // Generate app icons and splash screens from store logo
   const logoUrl = store.logo

@@ -47,6 +47,59 @@ function StoreLoader({ name }: { logo?: string; name?: string }) {
   )
 }
 
+// Mirrors the iOS LaunchScreen / Android splash drawable inside React. We use
+// `position: fixed; inset: 0` (covers the full viewport including the safe
+// area) and center the logo at viewport center — same geometry as the
+// storyboard's scaleAspectFill. While this overlay is mounted, the native
+// splash can hide instantly: the user sees identical pixels underneath, so
+// there is no visible "splash → app" jump. We then fade the overlay once the
+// theme has actually painted, so the only thing the user perceives is the
+// logo gracefully disappearing into the catalog.
+const SPLASH_COLOR = (import.meta.env.VITE_SPLASH_COLOR as string) || '#ffffff'
+const SPLASH_LOGO_URL = (import.meta.env.VITE_STORE_LOGO_URL as string) || ''
+
+function NativeSplashOverlay({
+  logo,
+  fading,
+  onDone,
+}: {
+  logo?: string
+  fading: boolean
+  onDone: () => void
+}) {
+  return (
+    <div
+      onTransitionEnd={(e) => {
+        if (e.propertyName === 'opacity' && fading) onDone()
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: SPLASH_COLOR,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        opacity: fading ? 0 : 1,
+        transition: 'opacity 500ms ease-out',
+        pointerEvents: 'none',
+      }}
+    >
+      {logo && (
+        <img
+          src={logo}
+          alt=""
+          style={{
+            width: '32%',
+            maxWidth: 240,
+            objectFit: 'contain',
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
 export default function Catalog({ subdomainStore, customDomain, productSlug: productSlugProp }: CatalogProps) {
   const { storeSlug, productSlug: productSlugParam } = useParams<{ storeSlug: string; productSlug: string }>()
   const productSlug = productSlugProp || productSlugParam
@@ -214,16 +267,46 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
         console.error('Error loading store:', error)
       } finally {
         setLoading(false)
-        if (Capacitor.isNativePlatform()) {
-          import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-            SplashScreen.hide({ fadeOutDuration: 300 })
-          }).catch(() => {})
-        }
       }
     }
 
     loadAll()
   }, [slug, customDomain, cacheKey])
+
+  // React-side splash overlay state. The flow is:
+  //   1. Mount overlay immediately on native (matches the LaunchScreen pixels).
+  //   2. As soon as the React tree paints, hide the native splash with a short
+  //      crossfade — the overlay covers any seam, so the user sees no jump.
+  //   3. Once the theme has rendered, start the overlay fade-out.
+  //   4. transitionend → unmount the overlay; catalog is now fully visible.
+  const [splashFading, setSplashFading] = useState(false)
+  const [splashGone, setSplashGone] = useState(!Capacitor.isNativePlatform())
+  const splashLogo = SPLASH_LOGO_URL || cached?.logo || store?.logo
+
+  // Hide the native iOS/Android splash as soon as our React overlay has
+  // painted at least one frame — anything earlier risks a black webview gap.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    let cancelled = false
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (cancelled) return
+        import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+          SplashScreen.hide({ fadeOutDuration: 200 })
+        }).catch(() => {})
+      })
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  // Fade the React overlay only after the theme has actually committed —
+  // otherwise the user sees the overlay disappear into an unpainted webview.
+  useEffect(() => {
+    if (loading || !store || !Capacitor.isNativePlatform() || splashGone) return
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setSplashFading(true))
+    })
+  }, [loading, store, splashGone])
 
   // Store not found
   if (!store && !loading) {
@@ -248,17 +331,15 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
     )
   }
 
-  // Loading state
-  if (loading || !store) {
-    // Native: empty div (splash covers everything)
-    // Web: show loader
-    return Capacitor.isNativePlatform()
-      ? <div style={{ background: '#000' }} />
-      : <StoreLoader logo={cached?.logo} name={cached?.name} />
+  // Loading state on web. Native loading is covered by the splash overlay
+  // rendered below.
+  if ((loading || !store) && !Capacitor.isNativePlatform()) {
+    return <StoreLoader logo={cached?.logo} name={cached?.name} />
   }
 
-  // Get the theme component based on store's themeId
-  const ThemeComponent = getThemeComponent(store.themeId || 'minimal')
+  // Get the theme component (only when store is ready). The splash overlay is
+  // rendered alongside so it can fade out smoothly once the theme paints.
+  const ThemeComponent = store ? getThemeComponent(store.themeId || 'minimal') : null
 
   // Find initial product from URL slug (for /p/:productSlug routes)
   const initialProduct = productSlug
@@ -267,16 +348,28 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
 
   return (
     <>
-      <StoreSEO store={store} products={products} categories={categories} product={initialProduct} />
-      <ThemeComponent
-        store={store}
-        products={products}
-        categories={categories}
-        onWhatsAppClick={handleWhatsAppClick}
-        onProductView={handleProductView}
-        onCartAdd={handleCartAdd}
-        initialProduct={initialProduct}
-      />
+      {store && ThemeComponent && (
+        <>
+          <StoreSEO store={store} products={products} categories={categories} product={initialProduct} />
+          <ThemeComponent
+            store={store}
+            products={products}
+            categories={categories}
+            onWhatsAppClick={handleWhatsAppClick}
+            onProductView={handleProductView}
+            onCartAdd={handleCartAdd}
+            initialProduct={initialProduct}
+          />
+        </>
+      )}
+      {!splashGone && Capacitor.isNativePlatform() && (
+        <NativeSplashOverlay
+          key="native-splash"
+          logo={splashLogo}
+          fading={splashFading}
+          onDone={() => setSplashGone(true)}
+        />
+      )}
     </>
   )
 }
