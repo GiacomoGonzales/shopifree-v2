@@ -27,6 +27,9 @@ interface StoreRow {
   appConfig?: {
     appName?: string
     icon?: string        // 1024x1024 logo uploaded specifically for the app
+    primaryColor?: string
+    secondaryColor?: string
+    splashColor?: string
     status?: 'none' | 'requested' | 'building' | 'published'
     androidUrl?: string
     publishedAt?: Timestamp | Date
@@ -414,12 +417,57 @@ function cloudinary512(url: string): string {
   return url.replace('/image/upload/', '/image/upload/c_pad,b_transparent,w_512,h_512,f_png/')
 }
 
+// Normalize a hex color to Cloudinary's `rgb:RRGGBB` format. Strips the
+// leading `#`, expands shorthand (#abc → aabbcc), pads/truncates to six
+// chars, and falls back to a neutral dark slate when the input is missing
+// or malformed so the transform URL is always valid.
+function toCloudinaryRgb(hex: string | undefined, fallback: string): string {
+  const raw = (hex ?? fallback).replace('#', '').trim()
+  let normalized = raw
+  if (raw.length === 3) {
+    normalized = raw.split('').map(c => c + c).join('')
+  }
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    normalized = fallback.replace('#', '')
+  }
+  return `rgb:${normalized.toLowerCase()}`
+}
+
+// Build a 1024×500 Play Store feature graphic from the merchant's app icon
+// and brand color, server-side via Cloudinary. The icon is square (~1024×
+// 1024); `c_pad,w_1024,h_500,b_<brand>` scales it to fit the 500px height
+// (yielding 500×500 centered) and pads the remaining 524px of width with
+// the brand color, so the result reads as "logo on brand-colored banner."
+// Picks primaryColor over splashColor (splash is usually white and would
+// flatten the whole banner). Returns null when we lack either input.
+function cloudinaryFeatureGraphic(
+  url: string | undefined,
+  primaryColor: string | undefined,
+  splashColor: string | undefined,
+): string | null {
+  if (!url || !url.includes('/image/upload/')) return null
+  // Prefer primaryColor; fall back to splashColor only if primary is the
+  // generic Shopifree default. Final fallback is the same dark slate.
+  const FALLBACK = '#1e3a5f'
+  const isShopifreeDefault = (primaryColor || '').toLowerCase() === FALLBACK
+  const chosen = isShopifreeDefault && splashColor && splashColor.toLowerCase() !== '#ffffff'
+    ? splashColor
+    : (primaryColor || splashColor || FALLBACK)
+  const bg = toCloudinaryRgb(chosen, FALLBACK)
+  return url.replace('/image/upload/', `/image/upload/c_pad,w_1024,h_500,b_${bg},f_png/`)
+}
+
 function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps) {
   const testers = store.appConfig?.publishInfo?.testers ?? []
   const appIcon = store.appConfig?.icon
   const appName = store.appConfig?.appName || store.name
   const packageName = `app.shopifree.store.${store.subdomain.replace(/[^a-z0-9]/gi, '')}`
   const icon512 = appIcon ? cloudinary512(appIcon) : null
+  const featureGraphic = cloudinaryFeatureGraphic(
+    appIcon,
+    store.appConfig?.primaryColor,
+    store.appConfig?.splashColor,
+  )
 
   return (
     <div
@@ -491,6 +539,51 @@ function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps
               </div>
             ) : (
               <p className="text-xs text-gray-400 italic">No subió ícono. Cae al logo general de la tienda al construir el AAB.</p>
+            )}
+          </section>
+
+          {/* Feature graphic — auto-generated banner for Play Store listing */}
+          <section>
+            <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">
+              Gráfico de funciones (1024×500)
+            </h3>
+            {featureGraphic ? (
+              <div className="space-y-2">
+                <a
+                  href={featureGraphic}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors"
+                >
+                  <img
+                    src={featureGraphic}
+                    alt={`${appName} — Gráfico de funciones`}
+                    className="w-full h-auto block"
+                    style={{ aspectRatio: '1024 / 500' }}
+                  />
+                </a>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] text-gray-500">
+                    Generado del ícono + color de marca. Sube en Play Console → Ficha de tienda → Gráfico de funciones.
+                  </p>
+                  <a
+                    href={featureGraphic}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-900 text-white rounded-md text-[11px] font-medium hover:bg-gray-800 transition-colors flex-shrink-0"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Descargar
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic">
+                No hay ícono cargado, no puedo generar el gráfico automáticamente.
+              </p>
             )}
           </section>
 
