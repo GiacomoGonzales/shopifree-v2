@@ -135,8 +135,18 @@ export default function AppBuilds() {
         },
         body: JSON.stringify({ storeId }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error')
+      // Some failure modes (mid-deploy 404, edge timeouts, the function
+      // crashing before responding) come back with an empty body that
+      // .json() chokes on. Read once as text and try to parse — fall back
+      // to status text so the toast still says something useful.
+      const raw = await res.text()
+      let data: { error?: string; ok?: boolean } = {}
+      try {
+        if (raw) data = JSON.parse(raw)
+      } catch {
+        // non-JSON body (HTML 404, empty, etc.) — leave data as {}
+      }
+      if (!res.ok) throw new Error(data.error || res.statusText || `HTTP ${res.status}`)
       showToast('Generando capturas en GitHub Actions (~3 min)', 'success')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
