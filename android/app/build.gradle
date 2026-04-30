@@ -5,11 +5,22 @@ apply plugin: 'kotlin-android'
 def ciVersionCode = (project.hasProperty('APP_VERSION_CODE')) ? project.APP_VERSION_CODE.toInteger() : 1
 def ciVersionName = (project.hasProperty('APP_VERSION_NAME')) ? project.APP_VERSION_NAME : "1.0"
 
+// White-label builds: mobile/build-config.ts writes whitelabel.properties with
+// the store-specific APP_ID. Falls back to the main Shopifree id when absent
+// so the default app keeps building cleanly.
+def whitelabelAppId = "app.shopifree.mobile"
+def whitelabelPropsFile = file('whitelabel.properties')
+if (whitelabelPropsFile.exists()) {
+    def whitelabelProps = new Properties()
+    whitelabelPropsFile.withInputStream { whitelabelProps.load(it) }
+    whitelabelAppId = whitelabelProps.getProperty('APP_ID', whitelabelAppId)
+}
+
 android {
     namespace "app.shopifree.mobile"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.shopifree.mobile"
+        applicationId whitelabelAppId
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode ciVersionCode
@@ -77,10 +88,17 @@ configurations.all {
 
 apply from: 'capacitor.build.gradle'
 
+// google-services.json is registered for the main Shopifree package only.
+// For white-label builds (different applicationId) the plugin would fail
+// because the JSON has no matching client. Skip it in that case — push
+// notifications and native Google Sign-in won't work for those builds until
+// each white-label package is registered in the Firebase Console.
 try {
     def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
+    if (servicesJSON.text && servicesJSON.text.contains("\"package_name\": \"${whitelabelAppId}\"")) {
         apply plugin: 'com.google.gms.google-services'
+    } else {
+        logger.lifecycle("Skipping google-services plugin: applicationId '${whitelabelAppId}' is not registered in google-services.json")
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
