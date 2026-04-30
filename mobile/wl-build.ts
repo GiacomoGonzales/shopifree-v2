@@ -20,17 +20,22 @@
 import { spawn, spawnSync } from 'child_process'
 import { resolve } from 'path'
 
-type Platform = 'android' | 'ios' | 'sync'
+type Platform = 'android' | 'android-install' | 'ios' | 'sync'
 
 const storeId = process.argv[2]
 const platform = (process.argv[3] || 'sync') as Platform
+const ALL: Platform[] = ['android', 'android-install', 'ios', 'sync']
 
 if (!storeId) {
-  console.error('Usage: npx tsx mobile/wl-build.ts <storeId> [android|ios|sync]')
+  console.error('Usage: npx tsx mobile/wl-build.ts <storeId> [android|android-install|ios|sync]')
+  console.error('  android         → AAB for Play Console (signed release)')
+  console.error('  android-install → APK for adb install on a connected device (release-signed)')
+  console.error('  ios             → cap sync ios (build with fastlane / Xcode)')
+  console.error('  sync            → just generate config + cap sync (no native build)')
   process.exit(1)
 }
-if (!['android', 'ios', 'sync'].includes(platform)) {
-  console.error(`Unknown platform "${platform}". Use android, ios, or sync.`)
+if (!ALL.includes(platform)) {
+  console.error(`Unknown platform "${platform}". Use one of: ${ALL.join(', ')}.`)
   process.exit(1)
 }
 
@@ -90,7 +95,7 @@ async function main() {
     const web = await runStreaming('npx', ['vite', 'build', '--mode', 'whitelabel'])
     if (web !== 0) throw new Error('vite build failed')
 
-    if (platform === 'sync' || platform === 'android') {
+    if (platform === 'sync' || platform === 'android' || platform === 'android-install') {
       step('3/4 Capacitor sync → Android')
       const sync = await runStreaming('npx', ['cap', 'sync', 'android'])
       if (sync !== 0) throw new Error('cap sync android failed')
@@ -101,13 +106,14 @@ async function main() {
       if (sync !== 0) throw new Error('cap sync ios failed')
     }
 
+    const isWin = process.platform === 'win32'
+    // Windows cmd.exe doesn't search cwd for unqualified commands, so
+    // prefix with `.\` to invoke the wrapper from inside android/. On
+    // Unix `./gradlew` already resolves correctly under the same cwd.
+    const gradleCmd = isWin ? '.\\gradlew.bat' : './gradlew'
+
     if (platform === 'android') {
       step('4/4 Gradle: bundleRelease (AAB for Play Store)')
-      const isWin = process.platform === 'win32'
-      // Windows cmd.exe doesn't search cwd for unqualified commands, so
-      // prefix with `.\` to invoke the wrapper from inside android/. On
-      // Unix `./gradlew` already resolves correctly under the same cwd.
-      const gradleCmd = isWin ? '.\\gradlew.bat' : './gradlew'
       const gradle = spawnSync(gradleCmd, ['bundleRelease'], {
         cwd: resolve('android'),
         stdio: 'inherit',
@@ -117,6 +123,32 @@ async function main() {
       if (buildCode !== 0) throw new Error('gradle bundleRelease failed')
       console.log('\n✓ AAB ready: android/app/build/outputs/bundle/release/app-release.aab')
       console.log('  Sign + upload to Google Play Console.')
+    } else if (platform === 'android-install') {
+      step('4/5 Gradle: assembleRelease (APK for direct install)')
+      const gradle = spawnSync(gradleCmd, ['assembleRelease'], {
+        cwd: resolve('android'),
+        stdio: 'inherit',
+        shell: isWin,
+      })
+      buildCode = gradle.status ?? 1
+      if (buildCode !== 0) throw new Error('gradle assembleRelease failed')
+
+      step('5/5 adb install -r → connected device')
+      const apk = resolve('android/app/build/outputs/apk/release/app-release.apk')
+      const adb = spawnSync('adb', ['install', '-r', apk], {
+        stdio: 'inherit',
+        shell: isWin,
+      })
+      if (adb.status !== 0) {
+        // Don't throw — the build succeeded, only the convenience install
+        // failed (e.g. USB-install gate on MIUI). User can retry adb manually.
+        console.error('\n⚠ adb install failed (you may need to approve on the device)')
+        console.error(`  APK is at: ${apk}`)
+        console.error(`  Retry: adb install -r "${apk}"`)
+      } else {
+        console.log('\n✓ Installed on connected device.')
+        console.log(`  APK kept at: ${apk}`)
+      }
     } else if (platform === 'ios') {
       console.log('\n✓ iOS project synced. Next:')
       console.log('  cd ios && fastlane build    # or open in Xcode')
