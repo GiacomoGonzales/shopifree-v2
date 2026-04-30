@@ -9,6 +9,14 @@ export function usePushNotifications(storeId?: string) {
     // Only run on native platforms
     if (!Capacitor.isNativePlatform() || !storeId || registered.current) return
 
+    // White-label builds run with a per-store applicationId that's not yet
+    // registered in google-services.json, so the FCM plugin is skipped at
+    // build time. Calling PushNotifications.register() under that condition
+    // throws "Default FirebaseApp is not initialized" natively and kills the
+    // process before Capacitor can surface the error to JS. Skip setup until
+    // each white-label package has its own Firebase configuration.
+    if (import.meta.env.VITE_WHITELABEL === 'true') return
+
     let cleanup: (() => void) | undefined
 
     async function setup() {
