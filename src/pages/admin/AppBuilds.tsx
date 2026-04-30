@@ -22,13 +22,19 @@ interface StoreRow {
   name: string
   subdomain: string
   logo?: string
+  email?: string         // store-level contact email
+  whatsapp?: string      // store-level contact phone
   appConfig?: {
     appName?: string
+    icon?: string        // 1024x1024 logo uploaded specifically for the app
     status?: 'none' | 'requested' | 'building' | 'published'
     androidUrl?: string
     publishedAt?: Timestamp | Date
     build?: BuildInfo      // Android
     buildIos?: BuildInfo   // iOS
+    publishInfo?: {
+      testers: string[]
+    }
   }
 }
 
@@ -53,6 +59,21 @@ export default function AppBuilds() {
   const [publishUrl, setPublishUrl] = useState('')
   const [publishNotify, setPublishNotify] = useState(true)
   const [publishing, setPublishing] = useState(false)
+
+  // Details modal — surfaces everything needed to register the app on Play
+  // Console without bouncing between Firestore and the merchant's WhatsApp.
+  const [viewingStore, setViewingStore] = useState<StoreRow | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 1500)
+    } catch {
+      showToast('No pude copiar al portapapeles', 'error')
+    }
+  }
 
   // Initial load — get all stores with appConfig set
   useEffect(() => {
@@ -223,6 +244,22 @@ export default function AppBuilds() {
                         {store.appConfig?.appName || store.subdomain}
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setViewingStore(store)}
+                      className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors flex-shrink-0 inline-flex items-center gap-1"
+                      title="Ver datos de Play Console (ícono, contacto, testers)"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Datos
+                      {(store.appConfig?.publishInfo?.testers?.length ?? 0) > 0 && (
+                        <span className="ml-0.5 px-1.5 py-0.5 bg-gray-900 text-white text-[10px] rounded-full tabular-nums">
+                          {store.appConfig?.publishInfo?.testers?.length}
+                        </span>
+                      )}
+                    </button>
                     <input
                       type="text"
                       placeholder="1.0.0"
@@ -343,6 +380,220 @@ export default function AppBuilds() {
           </div>
         </div>
       )}
+
+      {/* Datos para Play Console — read-only modal with everything the
+          operator pastes into Play Console when registering / submitting
+          the white-label app. Testers list has a copy-to-clipboard so 12
+          emails go in with one click instead of 12 paste actions. */}
+      {viewingStore && (
+        <DetailsModal
+          store={viewingStore}
+          copiedField={copiedField}
+          onCopy={copyToClipboard}
+          onClose={() => setViewingStore(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+interface DetailsModalProps {
+  store: StoreRow
+  copiedField: string | null
+  onCopy: (text: string, field: string) => void
+  onClose: () => void
+}
+
+function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps) {
+  const testers = store.appConfig?.publishInfo?.testers ?? []
+  const appIcon = store.appConfig?.icon
+  const appName = store.appConfig?.appName || store.name
+  const packageName = `app.shopifree.store.${store.subdomain.replace(/[^a-z0-9]/gi, '')}`
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg border border-gray-200 shadow-xl w-full max-w-lg my-8"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-gray-900 truncate">Datos para Play Console</h2>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">{store.name}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-900 flex-shrink-0 ml-4"
+            aria-label="Cerrar"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-5 py-5 space-y-5">
+          {/* App icon */}
+          <section>
+            <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Ícono de la app</h3>
+            {appIcon ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={appIcon}
+                  alt={appName}
+                  className="w-20 h-20 rounded-xl object-cover border border-gray-200 flex-shrink-0"
+                />
+                <div className="min-w-0">
+                  <a
+                    href={appIcon}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-gray-900 text-gray-900 rounded-md text-[11px] font-medium hover:bg-gray-900 hover:text-white transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Descargar
+                  </a>
+                  <p className="text-[11px] text-gray-500 mt-1.5">Sube este archivo en Play Console → Ficha de tienda principal → Ícono.</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic">No subió ícono. Cae al logo general de la tienda al construir el AAB.</p>
+            )}
+          </section>
+
+          {/* Identity */}
+          <section>
+            <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">App</h3>
+            <DetailRow label="Nombre" value={appName} field="appName" copied={copiedField === 'appName'} onCopy={onCopy} />
+            <DetailRow label="Package name" value={packageName} field="packageName" copied={copiedField === 'packageName'} onCopy={onCopy} mono />
+            <DetailRow label="Subdominio" value={store.subdomain} field="subdomain" copied={copiedField === 'subdomain'} onCopy={onCopy} mono />
+          </section>
+
+          {/* Contact */}
+          <section>
+            <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Contacto del dueño</h3>
+            <DetailRow label="Nombre" value={store.name} field="contactName" copied={copiedField === 'contactName'} onCopy={onCopy} />
+            <DetailRow label="Email" value={store.email || '—'} field="contactEmail" copied={copiedField === 'contactEmail'} onCopy={onCopy} disabled={!store.email} />
+            <DetailRow label="Teléfono / WhatsApp" value={store.whatsapp || '—'} field="contactPhone" copied={copiedField === 'contactPhone'} onCopy={onCopy} disabled={!store.whatsapp} />
+          </section>
+
+          {/* Testers */}
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                Testers ({testers.length})
+              </h3>
+              {testers.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onCopy(testers.join(', '), 'allTesters')}
+                  className="px-2 py-0.5 text-[11px] text-gray-700 hover:text-gray-900 font-medium inline-flex items-center gap-1"
+                >
+                  {copiedField === 'allTesters' ? (
+                    <>
+                      <svg className="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      Copiar todos
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            {testers.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">El dueño aún no agregó correos de testers.</p>
+            ) : (
+              <ul className="space-y-1">
+                {testers.map(email => (
+                  <li
+                    key={email}
+                    className="flex items-center justify-between gap-2 px-3 py-1.5 bg-gray-50 rounded-md"
+                  >
+                    <span className="text-xs text-gray-700 truncate font-mono">{email}</span>
+                    <button
+                      type="button"
+                      onClick={() => onCopy(email, `tester-${email}`)}
+                      className="text-gray-400 hover:text-gray-900 flex-shrink-0"
+                      title="Copiar correo"
+                    >
+                      {copiedField === `tester-${email}` ? (
+                        <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <div className="px-5 py-3 border-t border-gray-200 flex items-center justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface DetailRowProps {
+  label: string
+  value: string
+  field: string
+  copied: boolean
+  onCopy: (text: string, field: string) => void
+  mono?: boolean
+  disabled?: boolean
+}
+
+function DetailRow({ label, value, field, copied, onCopy, mono, disabled }: DetailRowProps) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-gray-100 last:border-0">
+      <span className="text-xs text-gray-500 flex-shrink-0">{label}</span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className={`text-xs text-gray-900 truncate ${mono ? 'font-mono' : ''}`}>{value}</span>
+        {!disabled && (
+          <button
+            type="button"
+            onClick={() => onCopy(value, field)}
+            className="text-gray-400 hover:text-gray-900 flex-shrink-0"
+            title="Copiar"
+          >
+            {copied ? (
+              <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
