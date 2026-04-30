@@ -404,11 +404,22 @@ interface DetailsModalProps {
   onClose: () => void
 }
 
+// Inject sizing transforms after `/upload/` so a Cloudinary-hosted icon is
+// served as a 512×512 PNG with transparent padding (`c_pad,b_transparent`)
+// — exactly what Play Console asks for in Store listing → Icon. `f_png`
+// forces the format regardless of the source extension. Returns the input
+// unchanged if it isn't a Cloudinary URL.
+function cloudinary512(url: string): string {
+  if (!url.includes('/image/upload/')) return url
+  return url.replace('/image/upload/', '/image/upload/c_pad,b_transparent,w_512,h_512,f_png/')
+}
+
 function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps) {
   const testers = store.appConfig?.publishInfo?.testers ?? []
   const appIcon = store.appConfig?.icon
   const appName = store.appConfig?.appName || store.name
   const packageName = `app.shopifree.store.${store.subdomain.replace(/[^a-z0-9]/gi, '')}`
+  const icon512 = appIcon ? cloudinary512(appIcon) : null
 
   return (
     <div
@@ -446,20 +457,36 @@ function DetailsModal({ store, copiedField, onCopy, onClose }: DetailsModalProps
                   alt={appName}
                   className="w-20 h-20 rounded-xl object-cover border border-gray-200 flex-shrink-0"
                 />
-                <div className="min-w-0">
-                  <a
-                    href={appIcon}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-gray-900 text-gray-900 rounded-md text-[11px] font-medium hover:bg-gray-900 hover:text-white transition-colors"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
-                    Descargar
-                  </a>
-                  <p className="text-[11px] text-gray-500 mt-1.5">Sube este archivo en Play Console → Ficha de tienda principal → Ícono.</p>
+                <div className="min-w-0 space-y-1.5">
+                  <div className="flex flex-wrap gap-1.5">
+                    {icon512 && (
+                      <a
+                        href={icon512}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-900 text-white rounded-md text-[11px] font-medium hover:bg-gray-800 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        512×512 PNG
+                      </a>
+                    )}
+                    <a
+                      href={appIcon}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                      Original
+                    </a>
+                  </div>
+                  <p className="text-[11px] text-gray-500">El 512×512 PNG es el que pide Play Console en Ficha de tienda → Ícono.</p>
                 </div>
               </div>
             ) : (
