@@ -951,7 +951,11 @@
       "validating": "Validating with PayPal…",
       "missingCreds": "Paste Client ID and Secret before validating.",
       "invalidCreds": "PayPal rejected the credentials. Make sure they belong to the correct environment (Sandbox vs Live) and that the app exists.",
-      "validationFailed": "PayPal didn't validate the credentials. Check them before enabling."
+      "validationFailed": "PayPal didn't validate the credentials. Check them before enabling.",
+      "currencyNoteTitle": "PayPal doesn't accept {{currency}}, so you'll receive payments in USD.",
+      "currencyNoteBody": "Your prices keep showing in {{currency}} to your customers. When someone pays via PayPal we automatically convert at the day's rate and send the order to PayPal in USD. The buyer sees the converted USD amount at PayPal checkout, and you receive USD in your PayPal account.",
+      "currencyNoteRecommend": "Recommendation: set your PayPal Business account's primary currency to USD. That way PayPal won't apply another conversion (and fee) when receiving the funds.",
+      "currencySupportedNote": "PayPal accepts {{currency}} directly. Customers pay in {{currency}}, you receive in {{currency}} — no conversion in between."
     },
     "comingSoon": {
       "title": "Coming Soon",

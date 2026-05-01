@@ -118,23 +118,10 @@ export async function validateMerchantCredentials(creds: MerchantCredentials): P
   }
 }
 
-/**
- * The (small) set of currencies PayPal will accept on /v2/checkout/orders.
- * Anything else has to be converted to USD before submission. Source:
- * https://developer.paypal.com/docs/integration/direct/rest/currency-codes/
- *
- * Notable LatAm absences: PEN, COP, ARS, CLP, BOB, UYU. MXN and BRL ARE
- * supported. We default-convert everything not on this list to USD.
- */
-const PAYPAL_SUPPORTED_CURRENCIES = new Set([
-  'AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS',
-  'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'RUB',
-  'SGD', 'SEK', 'CHF', 'THB', 'USD',
-])
-
-export function isPayPalSupportedCurrency(code: string): boolean {
-  return PAYPAL_SUPPORTED_CURRENCIES.has(code.toUpperCase())
-}
+// Re-exported from paypal-currencies.ts so api routes can import this in
+// one go. The list itself lives there because it's also imported by the
+// React dashboard, which can't depend on this Node-typed module.
+export { isPayPalSupportedCurrency } from './paypal-currencies'
 
 interface CachedRate { rate: number; expiresAt: number }
 const rateCache = new Map<string, CachedRate>()

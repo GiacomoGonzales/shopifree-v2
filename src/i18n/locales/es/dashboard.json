@@ -952,7 +952,11 @@
       "validating": "Validando con PayPal…",
       "missingCreds": "Pega Client ID y Secret antes de validar.",
       "invalidCreds": "PayPal rechazó las credenciales. Verifica que sean del entorno correcto (Sandbox vs Live) y que la app exista.",
-      "validationFailed": "PayPal no validó las credenciales. Revisa los datos antes de activar."
+      "validationFailed": "PayPal no validó las credenciales. Revisa los datos antes de activar.",
+      "currencyNoteTitle": "PayPal no acepta {{currency}}, así que recibirás los pagos en USD.",
+      "currencyNoteBody": "Tus precios siguen mostrándose en {{currency}} a tus clientes. Cuando alguien paga con PayPal, convertimos automáticamente al tipo de cambio del día y le enviamos la orden a PayPal en USD. El comprador ve el monto convertido en USD al pagar, y tú recibes USD en tu cuenta PayPal.",
+      "currencyNoteRecommend": "Recomendación: configura tu cuenta PayPal Business con USD como moneda principal. Así evitas que PayPal te haga otra conversión adicional al recibir y te cobre comisión por eso.",
+      "currencySupportedNote": "PayPal acepta {{currency}} directamente. Tus clientes pagan en {{currency}}, tú recibes en {{currency}}, sin conversiones."
     },
     "comingSoon": {
       "title": "Proximamente",

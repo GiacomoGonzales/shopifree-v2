@@ -4,6 +4,7 @@ import { db } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
 import { useTranslation } from 'react-i18next'
 import { apiUrl } from '../../utils/apiBase'
+import { isPayPalSupportedCurrency } from '../../lib/paypal-currencies'
 import type { Store } from '../../types'
 
 interface Props {
@@ -153,6 +154,31 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
 
       {enabled && (
         <div className="space-y-4 pt-4 mt-4 border-t border-gray-200/60">
+          {/* Currency-aware info banner. PayPal only accepts ~25 currencies;
+              for everything else (most LatAm: PEN, COP, ARS, CLP, DOP, etc.)
+              we auto-convert to USD via a daily ECB rate before sending the
+              order to PayPal. The merchant should know they'll receive USD
+              in their PayPal account regardless of their store's currency. */}
+          {!isPayPalSupportedCurrency(store.currency || 'USD') ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-2">
+              <p className="text-xs text-blue-900 font-medium">
+                {t('payments.paypal.currencyNoteTitle', { currency: store.currency || 'USD' })}
+              </p>
+              <p className="text-xs text-blue-800 leading-relaxed">
+                {t('payments.paypal.currencyNoteBody', { currency: store.currency || 'USD' })}
+              </p>
+              <p className="text-xs text-blue-800 leading-relaxed">
+                <strong>{t('payments.paypal.currencyNoteRecommend')}</strong>
+              </p>
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+              <p className="text-xs text-green-900">
+                {t('payments.paypal.currencySupportedNote', { currency: store.currency || 'USD' })}
+              </p>
+            </div>
+          )}
+
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
             <p className="text-xs text-amber-800">
               <strong>{t('payments.paypal.important')}</strong> {t('payments.paypal.needAccount')}{' '}
