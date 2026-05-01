@@ -171,16 +171,25 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       updatedAt: new Date(),
     }, { merge: true })
   } else {
-    // canceled / incomplete_expired — sub is dead. Drop to free.
-    // (customer.subscription.deleted is the canonical signal for this; this
-    // branch handles edge cases like incomplete_expired arriving as updated.)
-    console.log(`Store ${storeId} → plan=free, status=${status} (sub terminal)`)
-    await getDb().collection('stores').doc(storeId).set({
-      plan: 'free',
-      planExpiresAt: null,
-      subscription: subscriptionPayload,
-      updatedAt: new Date(),
-    }, { merge: true })
+    // canceled / incomplete_expired — sub is dead. Drop to free, UNLESS the
+    // store has a manualRestoration with restoredUntil still in the future:
+    // those are operator-restored stores (e.g. Pez Cultivo) where Stripe
+    // re-emitting a cancellation event would wipe the recovered paid period.
+    if (await hasActiveManualRestoration(storeId)) {
+      console.log(`Store ${storeId} → keeping plan, status=${status} (active manualRestoration)`)
+      await getDb().collection('stores').doc(storeId).set({
+        subscription: subscriptionPayload,
+        updatedAt: new Date(),
+      }, { merge: true })
+    } else {
+      console.log(`Store ${storeId} → plan=free, status=${status} (sub terminal)`)
+      await getDb().collection('stores').doc(storeId).set({
+        plan: 'free',
+        planExpiresAt: null,
+        subscription: subscriptionPayload,
+        updatedAt: new Date(),
+      }, { merge: true })
+    }
   }
 
   // After confirming a fresh active subscription, retire any sibling subs the
@@ -253,6 +262,19 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     return
   }
 
+  // Same protection as in handleSubscriptionUpdate: an operator-restored
+  // store (manualRestoration.restoredUntil in the future) should not get
+  // wiped by an idempotent re-emission of the cancellation event.
+  if (await hasActiveManualRestoration(storeId)) {
+    console.log(`Sub ${subscription.id} canceled but manualRestoration active for ${storeId} — keeping plan`)
+    await getDb().collection('stores').doc(storeId).update({
+      'subscription.status': 'canceled',
+      'subscription.cancelAtPeriodEnd': subscription.cancel_at_period_end ?? false,
+      updatedAt: new Date()
+    })
+    return
+  }
+
   await getDb().collection('stores').doc(storeId).update({
     plan: 'free',
     planExpiresAt: null,
@@ -262,6 +284,27 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
   })
 
   console.log(`Store ${storeId} subscription canceled, downgraded to free`)
+}
+
+// True when the store has a manualRestoration field with a restoredUntil
+// timestamp still in the future — i.e. an operator manually granted them
+// paid time that should outlive any subsequent Stripe webhook chatter.
+async function hasActiveManualRestoration(storeId: string): Promise<boolean> {
+  try {
+    const snap = await getDb().collection('stores').doc(storeId).get()
+    if (!snap.exists) return false
+    const data = snap.data() as { manualRestoration?: { restoredUntil?: { toDate: () => Date } | Date | string } } | undefined
+    const ru = data?.manualRestoration?.restoredUntil
+    if (!ru) return false
+    const until = ru instanceof Date
+      ? ru
+      : typeof ru === 'object' && 'toDate' in ru
+        ? ru.toDate()
+        : new Date(ru as string)
+    return until.getTime() > Date.now()
+  } catch {
+    return false
+  }
 }
 
 async function handleInvoiceFailed(invoice: Stripe.Invoice) {
