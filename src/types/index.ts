@@ -220,6 +220,26 @@ export interface StorePayments {
     secretKey?: string
     testMode: boolean
   }
+  paypal?: StorePaymentsPayPal
+}
+
+// PayPal connection state for a single merchant. Populated by the
+// PayPal Commerce Platform onboarding flow ("Connect with PayPal" button)
+// rather than by the merchant typing credentials — Shopifree acts as the
+// Partner and the merchant grants permission via OAuth. None of these
+// fields are typed by hand; they all come from the Partner Referrals
+// callback / merchant-status API.
+export interface StorePaymentsPayPal {
+  enabled: boolean              // toggle the merchant flips after onboarding
+  sandbox: boolean              // true while testing, false once live
+  merchantId?: string           // PayPal merchant id of the SELLER (not Shopifree)
+  trackingId?: string           // unique-per-store nonce used when generating the onboarding link
+  onboardingStatus?: 'pending' | 'connected' | 'limited' | 'revoked'
+  paymentsReceivable?: boolean  // PayPal flag — false means the merchant can't yet receive payments
+  primaryEmailConfirmed?: boolean
+  permissionsGranted?: string[] // scope codes (e.g. PAYMENT, REFUND, PARTNER_FEE)
+  connectedAt?: Date
+  lastCheckedAt?: Date          // last time we polled merchant-status to refresh the above
 }
 
 export interface StoreSubscription {
@@ -528,7 +548,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 
   // Pago
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer' | 'cash' | 'card' | 'other'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer' | 'cash' | 'card' | 'other'
   paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded'
   paymentId?: string            // ID de MercadoPago
   paidAt?: Date                 // When payment was confirmed (marks real income for cash flow)

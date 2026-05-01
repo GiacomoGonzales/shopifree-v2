@@ -934,12 +934,29 @@
       "proOnly": "La pasarela de pago está disponible desde el plan Pro. Acepta pagos con tarjeta internacionalmente.",
       "upgradeToPro": "Actualizar a Pro"
     },
+    "paypal": {
+      "title": "PayPal",
+      "description": "Acepta pagos con PayPal o tarjeta. Conexión en 1 minuto, sin pegar credenciales.",
+      "connect": "Conectar PayPal",
+      "reconnect": "Reconectar PayPal",
+      "redirecting": "Redirigiendo a PayPal…",
+      "sandbox": "Modo Sandbox",
+      "sandboxDescription": "Prueba sin cobrar dinero real (entorno de pruebas de PayPal).",
+      "merchantId": "Merchant ID",
+      "environment": "Entorno",
+      "statusConnected": "Conectada",
+      "statusLimited": "Limitada",
+      "statusPending": "Pendiente",
+      "statusRevoked": "Desconectada",
+      "statusProcessing": "Procesando…",
+      "limitedHint": "Tu cuenta de PayPal aún no puede recibir pagos. Confirma tu correo electrónico en PayPal y verifica los datos de tu negocio.",
+      "connected": "PayPal conectado correctamente",
+      "limited": "PayPal conectado pero todavía no puede recibir pagos. Verifica tu cuenta en PayPal.",
+      "pending": "PayPal está procesando tu conexión.",
+      "callbackMissing": "PayPal redirigió sin la información esperada. Intenta conectar de nuevo."
+    },
     "comingSoon": {
       "title": "Proximamente",
-      "paypal": {
-        "name": "PayPal",
-        "description": "Popular en USA y Europa"
-      },
       "wompi": {
         "name": "Wompi",
         "description": "Pasarela de pagos Colombia y Centroamérica"

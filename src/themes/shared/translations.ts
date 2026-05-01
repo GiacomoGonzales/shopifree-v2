@@ -87,11 +87,13 @@ export interface ThemeTranslations {
   payViaWhatsApp: string
   payViaMercadoPago: string
   payViaStripe: string
+  payViaPayPal: string
   payViaTransfer: string
   whatsappPaymentDesc: string
   mercadopagoPaymentDesc: string
   mercadopagoPaymentDescPE: string
   stripePaymentDesc: string
+  paypalPaymentDesc: string
   transferPaymentDesc: string
 
   // Order confirmation
@@ -324,11 +326,13 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     payViaWhatsApp: 'Coordinar por WhatsApp',
     payViaMercadoPago: 'Pagar con MercadoPago',
     payViaStripe: 'Pagar con Stripe',
+    payViaPayPal: 'Pagar con PayPal',
     payViaTransfer: 'Transferencia bancaria',
     whatsappPaymentDesc: 'Te contactaremos para coordinar',
     mercadopagoPaymentDesc: 'Pago seguro con tarjeta o efectivo',
     mercadopagoPaymentDescPE: 'Pago seguro con tarjeta, efectivo o Yape',
     stripePaymentDesc: 'Pago seguro con tarjeta',
+    paypalPaymentDesc: 'Pago seguro con tu cuenta PayPal o tarjeta',
     transferPaymentDesc: 'Transferencia a cuenta bancaria',
 
     // Order confirmation
@@ -560,11 +564,13 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     payViaWhatsApp: 'Coordinate via WhatsApp',
     payViaMercadoPago: 'Pay with MercadoPago',
     payViaStripe: 'Pay with Stripe',
+    payViaPayPal: 'Pay with PayPal',
     payViaTransfer: 'Bank transfer',
     whatsappPaymentDesc: 'We will contact you to coordinate',
     mercadopagoPaymentDesc: 'Secure payment with card or cash',
     mercadopagoPaymentDescPE: 'Secure payment with card, cash or Yape',
     stripePaymentDesc: 'Secure card payment',
+    paypalPaymentDesc: 'Secure payment with your PayPal account or card',
     transferPaymentDesc: 'Transfer to bank account',
 
     // Order confirmation
@@ -796,11 +802,13 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     payViaWhatsApp: 'Combinar pelo WhatsApp',
     payViaMercadoPago: 'Pagar com MercadoPago',
     payViaStripe: 'Pagar com Stripe',
+    payViaPayPal: 'Pagar com PayPal',
     payViaTransfer: 'Transferencia bancaria',
     whatsappPaymentDesc: 'Entraremos em contato para combinar',
     mercadopagoPaymentDesc: 'Pagamento seguro com cartao ou dinheiro',
     mercadopagoPaymentDescPE: 'Pagamento seguro com cartao, dinheiro ou Yape',
     stripePaymentDesc: 'Pagamento seguro com cartao',
+    paypalPaymentDesc: 'Pagamento seguro com sua conta PayPal ou cartao',
     transferPaymentDesc: 'Transferencia para conta bancaria',
 
     // Order confirmation

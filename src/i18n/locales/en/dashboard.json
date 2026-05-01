@@ -933,12 +933,29 @@
       "proOnly": "Payment gateway is available from the Pro plan. Accept international card payments.",
       "upgradeToPro": "Upgrade to Pro"
     },
+    "paypal": {
+      "title": "PayPal",
+      "description": "Accept PayPal and card payments. Connect in under a minute — no credentials to copy/paste.",
+      "connect": "Connect PayPal",
+      "reconnect": "Reconnect PayPal",
+      "redirecting": "Redirecting to PayPal…",
+      "sandbox": "Sandbox mode",
+      "sandboxDescription": "Test without charging real money (PayPal's sandbox environment).",
+      "merchantId": "Merchant ID",
+      "environment": "Environment",
+      "statusConnected": "Connected",
+      "statusLimited": "Limited",
+      "statusPending": "Pending",
+      "statusRevoked": "Disconnected",
+      "statusProcessing": "Processing…",
+      "limitedHint": "Your PayPal account can't receive payments yet. Confirm your email in PayPal and verify your business information.",
+      "connected": "PayPal connected successfully",
+      "limited": "PayPal connected but can't yet receive payments. Verify your account on PayPal.",
+      "pending": "PayPal is processing your connection.",
+      "callbackMissing": "PayPal redirected without the expected info. Try connecting again."
+    },
     "comingSoon": {
       "title": "Coming Soon",
-      "paypal": {
-        "name": "PayPal",
-        "description": "Popular in USA and Europe"
-      },
       "wompi": {
         "name": "Wompi",
         "description": "Payment gateway Colombia & Central America"

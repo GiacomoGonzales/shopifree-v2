@@ -3,7 +3,7 @@ import { useTheme } from '../ThemeContext'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 
-type PaymentMethod = 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'
+type PaymentMethod = 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
 
 interface Props {
   store: Store
@@ -29,8 +29,12 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
   const hasWhatsApp = store.payments?.whatsapp?.enabled ?? true
   const hasMercadoPago = store.payments?.mercadopago?.enabled
   const hasStripe = store.payments?.stripe?.enabled
+  // Only surface PayPal once the merchant is fully connected AND PayPal
+  // confirms they can receive payments — a "limited" merchant would error
+  // at capture time, so we hide the option entirely until PayPal clears them.
+  const hasPayPal = !!(store.payments?.paypal?.enabled && store.payments?.paypal?.merchantId && store.payments?.paypal?.paymentsReceivable)
 
-  const firstAvailable: PaymentMethod = hasWhatsApp ? 'whatsapp' : hasMercadoPago ? 'mercadopago' : hasStripe ? 'stripe' : 'whatsapp'
+  const firstAvailable: PaymentMethod = hasWhatsApp ? 'whatsapp' : hasMercadoPago ? 'mercadopago' : hasStripe ? 'stripe' : hasPayPal ? 'paypal' : 'whatsapp'
   const [selected, setSelected] = useState<PaymentMethod>(firstAvailable)
 
   useImperativeHandle(ref, () => ({
@@ -157,6 +161,20 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
             }
             title={t.payViaStripe}
             description={t.stripePaymentDesc}
+          />
+        )}
+
+        {/* PayPal - if connected and able to receive payments */}
+        {hasPayPal && (
+          <PaymentOption
+            value="paypal"
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#003087' }}>
+                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
+              </svg>
+            }
+            title={t.payViaPayPal}
+            description={t.paypalPaymentDesc}
           />
         )}
       </div>

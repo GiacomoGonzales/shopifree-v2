@@ -9,6 +9,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { getEffectivePlan } from '../../lib/stripe'
 import { hasGateway } from '../../data/states'
+import PayPalConnect from '../../components/dashboard/PayPalConnect'
 import type { Store } from '../../types'
 
 export default function Payments() {
@@ -292,6 +293,23 @@ export default function Payments() {
             </div>
           ) : null}
 
+          {/* PayPal — OAuth-based "Connect with PayPal" via Commerce Platform.
+              Available in every country (PayPal supports 200+), gated only on
+              Pro plan like the other paid gateways. */}
+          {isPro && store && (
+            <PayPalConnect
+              store={store as Store & { id: string }}
+              onUpdate={() => {
+                // Re-fetch the store so the new payments.paypal state appears
+                if (firebaseUser) {
+                  // The dashboard subscribes to its own auth context's store;
+                  // the simplest refresh is a re-render via state bump.
+                  setStore(prev => prev ? { ...prev } : prev)
+                }
+              }}
+            />
+          )}
+
           {/* Stripe - Only for countries with Stripe */}
           {hasStripeAvailable && isPro ? (
             <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
@@ -436,11 +454,7 @@ export default function Payments() {
 
             <div className="space-y-3">
               {[
-                { name: t('payments.comingSoon.paypal.name'), desc: t('payments.comingSoon.paypal.description'), color: '#003087', icon: (
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.397 4.403-1.01 6.914-5.44 6.914h-2.19c-.524 0-.968.382-1.05.9l-1.63 10.342a.534.534 0 0 0 .527.618h3.065c.458 0 .85-.336.922-.788l.038-.194.73-4.622.047-.254c.072-.452.464-.788.922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.489-4.641z"/>
-                  </svg>
-                )},
+                // PayPal moved out of "coming soon" — see PayPalConnect block above.
                 { name: t('payments.comingSoon.wompi.name'), desc: t('payments.comingSoon.wompi.description'), color: '#00C389' },
                 { name: t('payments.comingSoon.culqi.name'), desc: t('payments.comingSoon.culqi.description'), color: '#00A19B' },
                 { name: t('payments.comingSoon.conekta.name'), desc: t('payments.comingSoon.conekta.description'), color: '#0D1E3D' },

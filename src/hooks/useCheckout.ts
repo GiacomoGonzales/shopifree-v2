@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 import { findCombination, getDisplayImage, getDisplayPrice } from '../lib/variants'
+import { apiUrl } from '../utils/apiBase'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'stripe' | 'confirmation'
 
@@ -108,7 +109,7 @@ export interface DeliveryData {
 export interface CheckoutData {
   customer?: CustomerData
   delivery?: DeliveryData
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
 }
 
 interface UseCheckoutOptions {
@@ -284,7 +285,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   }, [items])
 
   // Create order in Firestore
-  const createOrder = useCallback(async (paymentMethod: 'whatsapp' | 'mercadopago' | 'stripe' | 'transfer'): Promise<Order> => {
+  const createOrder = useCallback(async (paymentMethod: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'): Promise<Order> => {
     if (!data.customer || !data.delivery) {
       throw new Error('Missing customer or delivery data')
     }
@@ -741,6 +742,81 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     }
   }, [store, items, data.customer, data.delivery, createOrder])
 
+  // Process PayPal payment — creates the order on Shopifree, calls our
+  // serverless route to open a PayPal Order on the merchant's behalf, then
+  // redirects the buyer to PayPal's approve URL. PayPal redirects back to
+  // /payment/success?paypal=1&orderId=...&storeId=... where PaymentSuccess
+  // calls /api/process-paypal-payment to capture the funds.
+  const processPayPal = useCallback(async () => {
+    if (!store.payments?.paypal?.enabled) {
+      setError('PayPal no está habilitado')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const createdOrder = await createOrder('paypal')
+      setOrder(createdOrder)
+      if (data.customer && data.delivery) {
+        saveCustomerData(store.id, data.customer, data.delivery)
+      }
+
+      const ppItems = items.map((item, index) => ({
+        name: item.product.name || `item-${index}`,
+        quantity: item.quantity,
+        unit_price: item.itemPrice,
+      }))
+
+      const res = await fetch(apiUrl('/api/create-paypal-order'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: store.id,
+          orderId: createdOrder.id,
+          orderNumber: createdOrder.orderNumber,
+          items: ppItems,
+          total: createdOrder.total,
+          currency: store.currency || 'USD',
+          origin: window.location.origin,
+        }),
+      })
+      const text = await res.text()
+      const json = text ? JSON.parse(text) : {}
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`)
+      if (!json.approveUrl) throw new Error('PayPal did not return an approve URL')
+
+      // Save pendingOrder so the return page can re-hydrate state if the
+      // merchant uses a custom domain or the buyer's session is lost.
+      localStorage.setItem('pendingOrder', JSON.stringify({
+        orderId: createdOrder.id,
+        storeId: store.id,
+        orderNumber: createdOrder.orderNumber,
+        paypalOrderId: json.paypalOrderId,
+        language: store.language || 'es',
+        storeName: store.name,
+        storeWhatsapp: store.whatsapp,
+        storeSubdomain: store.subdomain,
+        currency: store.currency || 'USD',
+        customer: data.customer,
+        deliveryMethod: data.delivery?.method,
+        deliveryAddress: data.delivery?.address,
+        observations: data.delivery?.observations,
+        items: createdOrder.items,
+        subtotal: createdOrder.subtotal,
+        shippingCost: createdOrder.shippingCost || 0,
+        total: createdOrder.total,
+        paymentMethod: 'paypal',
+      }))
+
+      window.location.href = json.approveUrl
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error processing PayPal payment')
+      setLoading(false)
+    }
+  }, [store, items, data.customer, data.delivery, createOrder])
+
   // Redirect to Checkout Pro (used as fallback)
   const redirectToCheckoutPro = useCallback(async (existingOrder?: Order) => {
     const orderToUse = existingOrder || order
@@ -1002,6 +1078,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     processStripe,
     processStripePaymentComplete,
     processTransfer,
+    processPayPal,
     processBrickPayment,
     fallbackToCheckoutPro
   }

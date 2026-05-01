@@ -26,6 +26,10 @@ interface PendingOrderData {
   subtotal?: number
   shippingCost?: number
   total?: number
+  // Set by useCheckout.processPayPal so the success page can call capture
+  // even when PayPal's `?token=...` param is missing or filtered.
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
+  paypalOrderId?: string
 }
 
 function getCurrencySymbol(currency: string): string {
@@ -107,20 +111,43 @@ export default function PaymentSuccess() {
     // Clean up localStorage
     localStorage.removeItem('pendingOrder')
 
-    // Confirm order via server-side API (uses Admin SDK to bypass security rules)
-    const paymentId = searchParams.get('payment_id')
-    const paymentStatus = searchParams.get('status')
-    if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
-      fetch(apiUrl('/api/process-mp-payment'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'confirm',
-          storeId: data.storeId,
-          orderId: data.orderId,
-          paymentId
-        })
-      }).catch(err => console.warn('Order confirmation failed (webhook will handle it):', err))
+    // Capture path branches by gateway. We detect PayPal by either the
+    // explicit ?paypal=1 flag we add on the return URL or the `token`
+    // query param PayPal appends (PayPal Order id). MP uses ?status=approved.
+    const paypalFlag = searchParams.get('paypal') === '1'
+    const paypalToken = searchParams.get('token') // PayPal-set on approve return
+    const isPayPalReturn = paypalFlag || (!!paypalToken && data.paymentMethod === 'paypal')
+
+    if (isPayPalReturn && data.orderId && data.storeId) {
+      const paypalOrderId = paypalToken || data.paypalOrderId
+      if (paypalOrderId) {
+        fetch(apiUrl('/api/process-paypal-payment'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'capture',
+            storeId: data.storeId,
+            orderId: data.orderId,
+            paypalOrderId,
+          }),
+        }).catch(err => console.warn('PayPal capture failed (webhook will handle it):', err))
+      }
+    } else {
+      // MercadoPago / generic case
+      const paymentId = searchParams.get('payment_id')
+      const paymentStatus = searchParams.get('status')
+      if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
+        fetch(apiUrl('/api/process-mp-payment'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'confirm',
+            storeId: data.storeId,
+            orderId: data.orderId,
+            paymentId
+          })
+        }).catch(err => console.warn('Order confirmation failed (webhook will handle it):', err))
+      }
     }
   }, [searchParams])
 
