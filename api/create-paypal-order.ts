@@ -103,6 +103,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       orderNumber: String(orderNumber ?? ''),
     }).toString()
 
+    // PayPal validates that breakdown components sum exactly to amount.value
+    // and item_total equals the sum of (unit_amount × quantity) for the items
+    // array. The frontend sends `total` already inclusive of shipping, so we
+    // have to back out shipping = total - itemSubtotal to keep the math
+    // balanced. Round to 2 decimals to dodge JS float drift; any leftover
+    // cent gets folded into shipping so the totals line up.
+    const round2 = (n: number) => Math.round(n * 100) / 100
+    const itemSubtotal = round2(items.reduce((sum, it) => sum + it.unit_price * it.quantity, 0))
+    const shippingAmount = round2(Math.max(0, total - itemSubtotal))
+
     const order = await paypalFetch<PayPalOrder>(creds, '/v2/checkout/orders', {
       method: 'POST',
       paypalRequestId: `${storeId}:${orderId}`,
@@ -118,15 +128,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             breakdown: {
               item_total: {
                 currency_code: currency,
-                value: total.toFixed(2),
+                value: itemSubtotal.toFixed(2),
               },
+              ...(shippingAmount > 0 && {
+                shipping: {
+                  currency_code: currency,
+                  value: shippingAmount.toFixed(2),
+                },
+              }),
             },
           },
           items: items.slice(0, 100).map(it => ({
             name: (it.name || 'Item').slice(0, 127),
             quantity: String(it.quantity),
             unit_amount: {
-              currency_code: it.currency || currency,
+              currency_code: currency,  // force store currency, ignore per-item override
               value: it.unit_price.toFixed(2),
             },
           })),
