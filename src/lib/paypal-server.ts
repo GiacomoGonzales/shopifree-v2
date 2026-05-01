@@ -140,10 +140,11 @@ interface CachedRate { rate: number; expiresAt: number }
 const rateCache = new Map<string, CachedRate>()
 
 /**
- * Fetch a conversion rate via Frankfurter (free, no API key, ECB-sourced
- * rates updated daily). 12-hour in-memory cache per function instance —
- * rates are end-of-day, so a 12h staleness window is fine and saves a
- * round trip on hot paths.
+ * Fetch a conversion rate via open.er-api.com (free, no API key, daily
+ * updates, supports ~160 currencies including LatAm ones like PEN, COP,
+ * ARS, CLP, etc. that ECB-only providers miss). 12-hour in-memory cache
+ * per function instance — rates are end-of-day so a 12h staleness window
+ * is fine.
  *
  * Throws on network error so the caller can fall back to refusing the
  * payment rather than charging the wrong amount silently.
@@ -157,9 +158,10 @@ export async function getConversionRate(from: string, to: string): Promise<numbe
   const cached = rateCache.get(key)
   if (cached && cached.expiresAt > now) return cached.rate
 
-  const res = await fetch(`https://api.frankfurter.app/latest?from=${f}&to=${t}`)
+  const res = await fetch(`https://open.er-api.com/v6/latest/${f}`)
   if (!res.ok) throw new Error(`Conversion rate fetch failed (${res.status}) for ${f}→${t}`)
-  const json = await res.json() as { rates?: Record<string, number> }
+  const json = await res.json() as { result?: string; rates?: Record<string, number>; 'error-type'?: string }
+  if (json.result !== 'success') throw new Error(`Rate provider rejected ${f}: ${json['error-type'] || 'unknown'}`)
   const rate = json.rates?.[t]
   if (typeof rate !== 'number') throw new Error(`No ${f}→${t} rate in response`)
   rateCache.set(key, { rate, expiresAt: now + 12 * 60 * 60 * 1000 })
