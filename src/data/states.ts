@@ -165,17 +165,49 @@ export const cityLabel: Record<string, { es: string; en: string; pt: string }> =
 export type PaymentGateway = 'mercadopago' | 'stripe' | 'none'
 
 export const paymentGatewaysByCountry: Record<string, PaymentGateway[]> = {
-  // MercadoPago countries
+  // MercadoPago-only countries (Stripe not officially available)
   PE: ['mercadopago'],
   AR: ['mercadopago'],
   CL: ['mercadopago'],
   CO: ['mercadopago'],
-  MX: ['mercadopago'],
-  BR: ['mercadopago'],
   UY: ['mercadopago'],
-  // Stripe countries
+  // Countries where both MercadoPago and Stripe operate — the merchant picks
+  MX: ['mercadopago', 'stripe'],
+  BR: ['mercadopago', 'stripe'],
+  // Stripe-only countries (Stripe's officially supported markets)
+  // North America
   US: ['stripe'],
+  CA: ['stripe'],
+  // Europe
   ES: ['stripe'],
+  GB: ['stripe'],
+  IE: ['stripe'],
+  FR: ['stripe'],
+  DE: ['stripe'],
+  IT: ['stripe'],
+  NL: ['stripe'],
+  BE: ['stripe'],
+  AT: ['stripe'],
+  CH: ['stripe'],
+  DK: ['stripe'],
+  SE: ['stripe'],
+  NO: ['stripe'],
+  FI: ['stripe'],
+  PT: ['stripe'],
+  PL: ['stripe'],
+  LU: ['stripe'],
+  CZ: ['stripe'],
+  GR: ['stripe'],
+  // Asia-Pacific
+  AU: ['stripe'],
+  NZ: ['stripe'],
+  SG: ['stripe'],
+  HK: ['stripe'],
+  JP: ['stripe'],
+  MY: ['stripe'],
+  IN: ['stripe'],
+  // Middle East
+  AE: ['stripe'],
 }
 
 export function getAvailableGateways(countryCode: string): PaymentGateway[] {
