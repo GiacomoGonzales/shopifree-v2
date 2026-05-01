@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { paypalFetch, type PayPalEnv } from '../src/lib/paypal-server'
+import { paypalFetch, type PayPalEnv } from '../src/lib/paypal-server.js'
 
 /**
  * Creates a PayPal order on behalf of a connected merchant. Called by the
@@ -77,6 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const storeSnap = await db.collection('stores').doc(storeId).get()
     if (!storeSnap.exists) return res.status(404).json({ error: 'Store not found' })
     const store = storeSnap.data() as {
+      name?: string
       payments?: {
         paypal?: {
           enabled?: boolean
@@ -141,7 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           cancel_url: `${baseOrigin}/payment/failure?${params}`,
           user_action: 'PAY_NOW',
           shipping_preference: 'NO_SHIPPING',
-          brand_name: store.name as unknown as string || 'Shopifree',
+          brand_name: store.name || 'Shopifree',
         },
       },
     })
