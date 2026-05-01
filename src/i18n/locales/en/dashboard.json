@@ -1310,6 +1310,7 @@
     "cancelAtPeriodEnd": "Your plan cancels on {{date}}. Renew to keep your features.",
     "pastDue": "Your payment failed. Update your payment method to avoid losing access.",
     "trialExpired": "Your free trial has ended. Upgrade your plan to unlock all features.",
+    "subscriptionEnded": "Your subscription ended. Renew your plan to get the Pro features back.",
     "upgrade": "Upgrade plan",
     "renew": "Renew",
     "updatePayment": "Update payment"

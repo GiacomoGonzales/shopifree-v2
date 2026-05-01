@@ -105,6 +105,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
+// Subscription statuses that should keep the merchant on a paid plan: active
+// renewals (active) and Stripe-side trials (trialing) are obvious; past_due,
+// unpaid, and incomplete are dunning/in-flight states where Stripe hasn't
+// given up yet and the merchant must not be locked out preemptively. The
+// previous version flipped plan='free' for any non-{active,trialing} status,
+// which prematurely downgraded customers whose card simply failed on renewal —
+// they would lose access on day 1 of past_due even though they had paid time
+// remaining and Stripe was still retrying.
+const KEEP_PAID_STATUSES = new Set<Stripe.Subscription.Status>([
+  'active', 'trialing', 'past_due', 'unpaid', 'incomplete',
+])
+
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const { storeId } = subscription.metadata || {}
 
@@ -114,15 +126,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   }
 
   const priceId = subscription.items.data[0]?.price.id
-
-  // IMPORTANT: Only give paid plan if subscription is active or trialing
-  // past_due, canceled, unpaid, incomplete, incomplete_expired = downgrade to free
-  const isActive = subscription.status === 'active' || subscription.status === 'trialing'
-  const plan = isActive ? getPlanFromPrice(priceId) : 'free'
-
+  const status = subscription.status
   const item = subscription.items.data[0]
-  console.log(`Updating store ${storeId} with plan ${plan} (status: ${subscription.status}), priceId: ${priceId}`)
-  console.log(`Subscription data: period_end=${item?.current_period_end}, period_start=${item?.current_period_start}`)
 
   // Safely convert timestamps (moved to item level in Stripe API 2025+)
   const periodEnd = item?.current_period_end
@@ -131,28 +136,89 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const periodStart = item?.current_period_start
     ? new Date(Number(item.current_period_start) * 1000)
     : null
-
   const trialEnd = subscription.trial_end
     ? new Date(Number(subscription.trial_end) * 1000)
     : null
 
-  await getDb().collection('stores').doc(storeId).set({
-    plan,
-    planExpiresAt: periodEnd,
-    subscription: {
-      stripeCustomerId: subscription.customer as string,
-      stripeSubscriptionId: subscription.id,
-      stripePriceId: priceId,
-      status: subscription.status,
-      currentPeriodStart: periodStart,
-      currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-      ...(trialEnd && { trialEnd })
-    },
-    updatedAt: new Date()
-  }, { merge: true })
+  const subscriptionPayload = {
+    stripeCustomerId: subscription.customer as string,
+    stripeSubscriptionId: subscription.id,
+    stripePriceId: priceId,
+    status,
+    currentPeriodStart: periodStart,
+    currentPeriodEnd: periodEnd,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+    ...(trialEnd && { trialEnd })
+  }
 
-  console.log(`Store ${storeId} subscription updated to ${plan}`)
+  if (status === 'active' || status === 'trialing') {
+    // Healthy state — write everything including plan + new period end.
+    const plan = getPlanFromPrice(priceId)
+    console.log(`Store ${storeId} → plan=${plan}, status=${status}, periodEnd=${periodEnd?.toISOString()}`)
+    await getDb().collection('stores').doc(storeId).set({
+      plan,
+      planExpiresAt: periodEnd,
+      subscription: subscriptionPayload,
+      updatedAt: new Date(),
+    }, { merge: true })
+  } else if (KEEP_PAID_STATUSES.has(status)) {
+    // past_due / unpaid / incomplete — Stripe still trying. Keep whatever
+    // plan + planExpiresAt we already had so the merchant doesn't lose the
+    // service they paid for. We only refresh the subscription state fields.
+    console.log(`Store ${storeId} → keeping current plan, status=${status} (Stripe in dunning)`)
+    await getDb().collection('stores').doc(storeId).set({
+      subscription: subscriptionPayload,
+      updatedAt: new Date(),
+    }, { merge: true })
+  } else {
+    // canceled / incomplete_expired — sub is dead. Drop to free.
+    // (customer.subscription.deleted is the canonical signal for this; this
+    // branch handles edge cases like incomplete_expired arriving as updated.)
+    console.log(`Store ${storeId} → plan=free, status=${status} (sub terminal)`)
+    await getDb().collection('stores').doc(storeId).set({
+      plan: 'free',
+      planExpiresAt: null,
+      subscription: subscriptionPayload,
+      updatedAt: new Date(),
+    }, { merge: true })
+  }
+
+  // After confirming a fresh active subscription, retire any sibling subs the
+  // same store may have left over from an upgrade flow. The cleanup used to
+  // live in create-checkout BEFORE the new sub was confirmed, which left
+  // customers without service if they abandoned the flow. Doing it here
+  // means the old sub is only canceled once Stripe has accepted payment for
+  // the new one. `prorate: true` issues a credit for the unused old time.
+  if (status === 'active') {
+    await retireSiblingSubscriptions(subscription)
+  }
+}
+
+async function retireSiblingSubscriptions(activeSub: Stripe.Subscription) {
+  const { storeId } = activeSub.metadata || {}
+  if (!storeId) return
+
+  const customerId = activeSub.customer as string
+  let listed: Stripe.ApiList<Stripe.Subscription>
+  try {
+    listed = await getStripe().subscriptions.list({ customer: customerId, limit: 20 })
+  } catch (err) {
+    console.error(`retireSiblingSubscriptions: list failed for ${customerId}`, err)
+    return
+  }
+
+  for (const sibling of listed.data) {
+    if (sibling.id === activeSub.id) continue
+    if (sibling.metadata.storeId !== storeId) continue
+    if (sibling.status === 'canceled' || sibling.status === 'incomplete_expired') continue
+
+    console.log(`Retiring sibling sub ${sibling.id} (status=${sibling.status}) for store ${storeId}; replaced by ${activeSub.id}`)
+    try {
+      await getStripe().subscriptions.cancel(sibling.id, { prorate: true })
+    } catch (err) {
+      console.error(`Failed to cancel sibling ${sibling.id}:`, err)
+    }
+  }
 }
 
 async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
@@ -163,11 +229,35 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     return
   }
 
+  // If a replacement subscription is already active for the same store, this
+  // cancel is part of an upgrade flow (we just cancelled the old sub from
+  // retireSiblingSubscriptions). Don't downgrade plan to free — the
+  // replacement's handleSubscriptionUpdate already wrote plan=pro/business.
+  // Webhook ordering between created/active and deleted is not guaranteed,
+  // so we re-check here defensively.
+  const customerId = subscription.customer as string
+  let replacement: Stripe.Subscription | undefined
+  try {
+    const others = await getStripe().subscriptions.list({
+      customer: customerId,
+      status: 'active',
+      limit: 10,
+    })
+    replacement = others.data.find(s => s.id !== subscription.id && s.metadata.storeId === storeId)
+  } catch (err) {
+    console.error('handleSubscriptionCanceled: list failed', err)
+  }
+
+  if (replacement) {
+    console.log(`Sub ${subscription.id} canceled but replacement ${replacement.id} active for store ${storeId} — keeping plan`)
+    return
+  }
+
   await getDb().collection('stores').doc(storeId).update({
     plan: 'free',
     planExpiresAt: null,
     'subscription.status': 'canceled',
-    'subscription.cancelAtPeriodEnd': true,
+    'subscription.cancelAtPeriodEnd': subscription.cancel_at_period_end ?? false,
     updatedAt: new Date()
   })
 

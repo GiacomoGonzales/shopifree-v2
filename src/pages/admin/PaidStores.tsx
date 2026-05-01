@@ -209,8 +209,20 @@ export default function PaidStores() {
               <div className="divide-y divide-gray-100">
                 {filteredStores.map(store => {
                   const sub = store.subscription
-                  const periodEnd = toDate(sub?.currentPeriodEnd)
-                  const daysLeft = Math.ceil((periodEnd.getTime() - Date.now()) / 86400000)
+                  // Prefer planExpiresAt (canonical "until when do they have
+                  // access") over Stripe's currentPeriodEnd. They diverge for
+                  // restored stores: a customer whose sub Stripe canceled but
+                  // who paid through e.g. May 23 has planExpiresAt=May 23 and
+                  // currentPeriodEnd=null.
+                  const accessUntil = (() => {
+                    if (store.planExpiresAt) return toDate(store.planExpiresAt)
+                    if (sub?.currentPeriodEnd) return toDate(sub.currentPeriodEnd)
+                    return null
+                  })()
+                  const daysLeft = accessUntil
+                    ? Math.ceil((accessUntil.getTime() - Date.now()) / 86400000)
+                    : null
+                  const stillHasAccess = accessUntil !== null && accessUntil.getTime() > Date.now()
                   const status = sub?.status || 'unknown'
 
                   return (
@@ -249,16 +261,30 @@ export default function PaidStores() {
                                 Stripe: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] text-gray-700">{sub.stripeCustomerId}</code>
                               </span>
                             )}
-                            {(status === 'active' || status === 'trialing') && (
+                            {/* Active / trialing → straight "Vence: X". Canceled or
+                                past_due but still in their paid period → "Acceso hasta X"
+                                so the operator knows the customer keeps service even
+                                with a non-active Stripe status (e.g. restored stores). */}
+                            {accessUntil && (status === 'active' || status === 'trialing') && (
                               <span>
-                                Vence: <span className={daysLeft <= 7 ? 'text-gray-900 font-medium' : 'text-gray-700'}>
-                                  {periodEnd.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  {daysLeft > 0 && ` (${daysLeft}d)`}
+                                Vence: <span className={daysLeft !== null && daysLeft <= 7 ? 'text-gray-900 font-medium' : 'text-gray-700'}>
+                                  {accessUntil.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  {daysLeft !== null && daysLeft > 0 && ` (${daysLeft}d)`}
                                 </span>
                               </span>
                             )}
-                            {sub?.cancelAtPeriodEnd && (
-                              <span className="font-medium text-gray-900">Cancela al vencer</span>
+                            {accessUntil && stillHasAccess && (status === 'canceled' || status === 'past_due') && (
+                              <span className="font-medium text-gray-900">
+                                Acceso hasta {accessUntil.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                {daysLeft !== null && daysLeft > 0 && ` (${daysLeft}d)`}
+                              </span>
+                            )}
+                            {/* "Cancela al vencer" only meaningful while sub is still
+                                active and the cancel is scheduled. After it's already
+                                canceled the access-until line above conveys what's
+                                left, and the badge already says "Cancelada". */}
+                            {status === 'active' && sub?.cancelAtPeriodEnd && (
+                              <span className="text-gray-700">Cancela al vencer</span>
                             )}
                           </div>
                         </div>

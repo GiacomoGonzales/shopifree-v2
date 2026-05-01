@@ -39,9 +39,16 @@ const BANNER_STYLES: Record<BannerType, { bg: string; border: string; text: stri
 
 function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, unknown>) => string): BannerConfig | null {
   const now = new Date()
+  const sub = store.subscription
+  // A merchant has paid in the past as soon as Stripe ever wrote a sub id
+  // for their store — this is what distinguishes "trial expired" from
+  // "subscription ended", which previously surfaced the same misleading
+  // "Tu prueba gratuita ha terminado" banner to paying customers whose
+  // sub had been canceled.
+  const everPaid = !!sub?.stripeSubscriptionId
 
-  // 1. Subscription past_due (payment failed)
-  if (store.subscription?.status === 'past_due') {
+  // 1. Payment failed mid-renewal — keep merchant aware before Stripe gives up.
+  if (sub?.status === 'past_due') {
     return {
       type: 'error',
       message: t('planBanner.pastDue'),
@@ -49,21 +56,32 @@ function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, un
     }
   }
 
-  // 2. Subscription canceled but still active (cancelAtPeriodEnd)
-  if (store.subscription?.cancelAtPeriodEnd && store.subscription?.status === 'active') {
-    const endDate = store.subscription.currentPeriodEnd instanceof Date
-      ? store.subscription.currentPeriodEnd
-      : new Date(store.subscription.currentPeriodEnd)
-    const formatted = endDate.toLocaleDateString()
+  // 2. Scheduled to cancel at period end — still active right now, but warn.
+  if (sub?.cancelAtPeriodEnd && sub?.status === 'active' && sub?.currentPeriodEnd) {
+    const endDate = sub.currentPeriodEnd instanceof Date
+      ? sub.currentPeriodEnd
+      : new Date(sub.currentPeriodEnd)
     return {
       type: 'warning',
-      message: t('planBanner.cancelAtPeriodEnd', { date: formatted }),
+      message: t('planBanner.cancelAtPeriodEnd', { date: endDate.toLocaleDateString() }),
       action: t('planBanner.renew'),
     }
   }
 
-  // 3. Trial expiring soon (≤5 days left)
-  if (store.trialEndsAt) {
+  // 3. Subscription terminated (canceled/incomplete_expired) and merchant
+  // dropped to free — distinct copy from the trial-expired case so paid
+  // customers don't see "Tu prueba gratuita ha terminado".
+  if (everPaid && store.plan === 'free' &&
+      (sub?.status === 'canceled' || sub?.status === 'incomplete_expired')) {
+    return {
+      type: 'info',
+      message: t('planBanner.subscriptionEnded'),
+      action: t('planBanner.renew'),
+    }
+  }
+
+  // 4. Free trial winding down (≤5 days left).
+  if (store.trialEndsAt && !everPaid) {
     const trialEnd = store.trialEndsAt instanceof Date
       ? store.trialEndsAt
       : new Date(store.trialEndsAt)
@@ -77,7 +95,7 @@ function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, un
       }
     }
 
-    // 4. Trial expired, now on free plan
+    // 5. Trial expired without ever paying, now on free plan.
     if (daysLeft <= 0 && store.plan === 'free') {
       return {
         type: 'info',

@@ -108,35 +108,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // Cancel any existing active subscriptions for this customer to prevent double charges
-    const existingSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'active'
-    })
-    for (const sub of existingSubscriptions.data) {
-      // Only cancel subscriptions for the same store
-      if (sub.metadata.storeId === storeId) {
-        console.log(`Canceling existing subscription ${sub.id} for store ${storeId} before creating new one`)
-        await stripe.subscriptions.cancel(sub.id, { prorate: true })
-      }
-    }
-    // Also cancel trialing subscriptions — and remember the trial_end so we can preserve it
-    // when the user confirms the SAME plan they're trialing (no trial loss on "pay now").
+    // Detect active and trialing subscriptions but DO NOT cancel them here.
+    // The previous version canceled them immediately to "prevent double
+    // charges", but that left customers stranded if they abandoned the new
+    // checkout — old sub gone, new sub never created, plan dropped to free,
+    // paid days lost. Now the cleanup happens in the webhook
+    // (retireSiblingSubscriptions) once the new sub is confirmed active.
+    //
+    // The one thing we still need from the old code is `preserveTrialEnd`:
+    // if the customer is currently in a trialing subscription for the SAME
+    // plan and clicks "Pay now to confirm", we hand the remaining trial
+    // days to the new subscription so they're not charged immediately. The
+    // sibling cancel still happens — just later, in the webhook.
     let preserveTrialEnd: number | undefined
     const trialingSubscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: 'trialing'
     })
     for (const sub of trialingSubscriptions.data) {
-      if (sub.metadata.storeId === storeId) {
-        // Same plan family → keep the remaining trial days on the new subscription
-        // so the user isn't charged immediately for confirming their card.
-        if (sub.metadata.plan === plan && sub.trial_end && sub.trial_end > Math.floor(Date.now() / 1000)) {
-          preserveTrialEnd = sub.trial_end
-          console.log(`Preserving trial_end ${sub.trial_end} from trialing subscription ${sub.id}`)
-        }
-        console.log(`Canceling trialing subscription ${sub.id} for store ${storeId} before creating new one`)
-        await stripe.subscriptions.cancel(sub.id)
+      if (sub.metadata.storeId === storeId &&
+          sub.metadata.plan === plan &&
+          sub.trial_end && sub.trial_end > Math.floor(Date.now() / 1000)) {
+        preserveTrialEnd = sub.trial_end
+        console.log(`Preserving trial_end ${sub.trial_end} from trialing subscription ${sub.id}`)
+        break
       }
     }
 
