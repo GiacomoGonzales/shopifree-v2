@@ -117,3 +117,51 @@ export async function validateMerchantCredentials(creds: MerchantCredentials): P
     return err instanceof Error ? err.message : 'Unknown PayPal error'
   }
 }
+
+/**
+ * The (small) set of currencies PayPal will accept on /v2/checkout/orders.
+ * Anything else has to be converted to USD before submission. Source:
+ * https://developer.paypal.com/docs/integration/direct/rest/currency-codes/
+ *
+ * Notable LatAm absences: PEN, COP, ARS, CLP, BOB, UYU. MXN and BRL ARE
+ * supported. We default-convert everything not on this list to USD.
+ */
+const PAYPAL_SUPPORTED_CURRENCIES = new Set([
+  'AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 'HUF', 'ILS',
+  'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 'PHP', 'PLN', 'GBP', 'RUB',
+  'SGD', 'SEK', 'CHF', 'THB', 'USD',
+])
+
+export function isPayPalSupportedCurrency(code: string): boolean {
+  return PAYPAL_SUPPORTED_CURRENCIES.has(code.toUpperCase())
+}
+
+interface CachedRate { rate: number; expiresAt: number }
+const rateCache = new Map<string, CachedRate>()
+
+/**
+ * Fetch a conversion rate via Frankfurter (free, no API key, ECB-sourced
+ * rates updated daily). 12-hour in-memory cache per function instance —
+ * rates are end-of-day, so a 12h staleness window is fine and saves a
+ * round trip on hot paths.
+ *
+ * Throws on network error so the caller can fall back to refusing the
+ * payment rather than charging the wrong amount silently.
+ */
+export async function getConversionRate(from: string, to: string): Promise<number> {
+  const f = from.toUpperCase()
+  const t = to.toUpperCase()
+  if (f === t) return 1
+  const key = `${f}->${t}`
+  const now = Date.now()
+  const cached = rateCache.get(key)
+  if (cached && cached.expiresAt > now) return cached.rate
+
+  const res = await fetch(`https://api.frankfurter.app/latest?from=${f}&to=${t}`)
+  if (!res.ok) throw new Error(`Conversion rate fetch failed (${res.status}) for ${f}→${t}`)
+  const json = await res.json() as { rates?: Record<string, number> }
+  const rate = json.rates?.[t]
+  if (typeof rate !== 'number') throw new Error(`No ${f}→${t} rate in response`)
+  rateCache.set(key, { rate, expiresAt: now + 12 * 60 * 60 * 1000 })
+  return rate
+}

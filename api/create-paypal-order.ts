@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { paypalFetch, type MerchantCredentials } from '../src/lib/paypal-server.js'
+import { paypalFetch, isPayPalSupportedCurrency, getConversionRate, type MerchantCredentials } from '../src/lib/paypal-server.js'
 
 /**
  * Creates a PayPal order using the merchant's own credentials. Called by the
@@ -103,6 +103,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       orderNumber: String(orderNumber ?? ''),
     }).toString()
 
+    // PayPal only accepts a fixed set of currencies for /v2/checkout/orders.
+    // Most LatAm currencies (PEN, COP, ARS, CLP, etc.) aren't on the list, so
+    // we transparently convert to USD using ECB rates from Frankfurter when
+    // needed. The Firestore order keeps its original currency for our books.
+    let payCurrency = currency
+    let payTotal = total
+    let payItems = items
+    if (!isPayPalSupportedCurrency(currency)) {
+      try {
+        const rate = await getConversionRate(currency, 'USD')
+        payCurrency = 'USD'
+        payTotal = total * rate
+        payItems = items.map(it => ({ ...it, unit_price: it.unit_price * rate }))
+        console.log(`[paypal] converting ${currency}→USD at rate ${rate} (total ${total} → $${payTotal.toFixed(2)})`)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown'
+        return res.status(502).json({ error: `Cannot convert ${currency} to USD for PayPal: ${msg}` })
+      }
+    }
+
     // PayPal validates that breakdown components sum exactly to amount.value
     // and item_total equals the sum of (unit_amount × quantity) for the items
     // array. The frontend sends `total` already inclusive of shipping, so we
@@ -110,8 +130,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // balanced. Round to 2 decimals to dodge JS float drift; any leftover
     // cent gets folded into shipping so the totals line up.
     const round2 = (n: number) => Math.round(n * 100) / 100
-    const itemSubtotal = round2(items.reduce((sum, it) => sum + it.unit_price * it.quantity, 0))
-    const shippingAmount = round2(Math.max(0, total - itemSubtotal))
+    const grandTotal = round2(payTotal)
+    const itemSubtotal = round2(payItems.reduce((sum, it) => sum + it.unit_price * it.quantity, 0))
+    const shippingAmount = round2(Math.max(0, grandTotal - itemSubtotal))
 
     const order = await paypalFetch<PayPalOrder>(creds, '/v2/checkout/orders', {
       method: 'POST',
@@ -123,26 +144,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           custom_id: orderId,
           invoice_id: String(orderNumber ?? orderId),
           amount: {
-            currency_code: currency,
-            value: total.toFixed(2),
+            currency_code: payCurrency,
+            value: grandTotal.toFixed(2),
             breakdown: {
               item_total: {
-                currency_code: currency,
+                currency_code: payCurrency,
                 value: itemSubtotal.toFixed(2),
               },
               ...(shippingAmount > 0 && {
                 shipping: {
-                  currency_code: currency,
+                  currency_code: payCurrency,
                   value: shippingAmount.toFixed(2),
                 },
               }),
             },
           },
-          items: items.slice(0, 100).map(it => ({
+          items: payItems.slice(0, 100).map(it => ({
             name: (it.name || 'Item').slice(0, 127),
             quantity: String(it.quantity),
             unit_amount: {
-              currency_code: currency,  // force store currency, ignore per-item override
+              currency_code: payCurrency,
               value: it.unit_price.toFixed(2),
             },
           })),
