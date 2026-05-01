@@ -121,7 +121,7 @@ export async function validateMerchantCredentials(creds: MerchantCredentials): P
 // Re-exported from paypal-currencies.ts so api routes can import this in
 // one go. The list itself lives there because it's also imported by the
 // React dashboard, which can't depend on this Node-typed module.
-export { isPayPalSupportedCurrency } from './paypal-currencies'
+export { isPayPalSupportedCurrency } from './paypal-currencies.js'
 
 interface CachedRate { rate: number; expiresAt: number }
 const rateCache = new Map<string, CachedRate>()
