@@ -226,7 +226,19 @@ export interface StoreSubscription {
   stripeCustomerId: string      // cus_xxx
   stripeSubscriptionId: string  // sub_xxx
   stripePriceId: string         // price_xxx
-  status: 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing'
+  // Mirrors Stripe's full subscription.status enum. The previous narrower
+  // union elided incomplete / incomplete_expired / paused, which broke the
+  // PlanBanner's terminal-state check at compile time. See
+  // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
+  status:
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'unpaid'
+    | 'trialing'
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'paused'
   currentPeriodStart: Date
   currentPeriodEnd: Date
   cancelAtPeriodEnd: boolean

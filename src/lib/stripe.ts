@@ -162,7 +162,19 @@ export function getRemainingCategories(plan: PlanType, currentCategoryCount: num
 // SUBSCRIPTION STATUS HELPERS
 // ============================================
 
-type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing'
+// Kept in sync with StoreSubscription.status in src/types/index.ts — both
+// must reflect Stripe's full subscription.status enum so the type system
+// catches references to in-flight states (incomplete, incomplete_expired)
+// when callers branch on terminal cases.
+type SubscriptionStatus =
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'unpaid'
+  | 'trialing'
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'paused'
 
 interface StoreForPlanCheck {
   plan: PlanType
