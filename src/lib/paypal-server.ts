@@ -1,7 +1,12 @@
+/// <reference types="node" />
+
 /**
- * Shared PayPal helpers for Vercel API routes. Lives in `api/` (rather than
- * `src/lib/`) so it's bundled with the serverless functions, but underscored
- * so Vercel doesn't expose it as its own endpoint.
+ * Shared PayPal helpers for Vercel API routes. Server-only — uses Node's
+ * `process.env` and `Buffer`. Lives under `src/lib/` (instead of `api/_lib/`)
+ * because Vercel's @vercel/node builder strips files in underscore-prefixed
+ * directories from the deployment, breaking imports at runtime. The
+ * triple-slash node reference above grants this file Node typings even
+ * though tsconfig.app.json's global `types` array only has vite/client.
  *
  * Supports two environments:
  *   sandbox  → https://api-m.sandbox.paypal.com  (Partner uses *_SANDBOX env vars)

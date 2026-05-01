@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
-import { paypalFetch, type PayPalEnv } from './_lib/paypal-server'
+import { paypalFetch, type PayPalEnv } from '../src/lib/paypal-server'
 
 /**
  * Step 2 of the "Connect with PayPal" flow. Called by the dashboard after
