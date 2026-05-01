@@ -223,23 +223,17 @@ export interface StorePayments {
   paypal?: StorePaymentsPayPal
 }
 
-// PayPal connection state for a single merchant. Populated by the
-// PayPal Commerce Platform onboarding flow ("Connect with PayPal" button)
-// rather than by the merchant typing credentials — Shopifree acts as the
-// Partner and the merchant grants permission via OAuth. None of these
-// fields are typed by hand; they all come from the Partner Referrals
-// callback / merchant-status API.
+// PayPal connection state — Standard Checkout flavor. The merchant pastes
+// their own PayPal app's Client ID + Secret in the dashboard; we
+// authenticate as them directly. Same shape as MercadoPago/Stripe in this
+// project: a small flat record of credentials + an enabled toggle.
 export interface StorePaymentsPayPal {
-  enabled: boolean              // toggle the merchant flips after onboarding
-  sandbox: boolean              // true while testing, false once live
-  merchantId?: string           // PayPal merchant id of the SELLER (not Shopifree)
-  trackingId?: string           // unique-per-store nonce used when generating the onboarding link
-  onboardingStatus?: 'pending' | 'connected' | 'limited' | 'revoked'
-  paymentsReceivable?: boolean  // PayPal flag — false means the merchant can't yet receive payments
-  primaryEmailConfirmed?: boolean
-  permissionsGranted?: string[] // scope codes (e.g. PAYMENT, REFUND, PARTNER_FEE)
-  connectedAt?: Date
-  lastCheckedAt?: Date          // last time we polled merchant-status to refresh the above
+  enabled: boolean
+  sandbox: boolean              // true while merchant tests against sandbox.paypal.com
+  clientId?: string             // from developer.paypal.com → Apps & Credentials
+  clientSecret?: string         // encrypted at rest by Firestore
+  webhookId?: string            // optional, for future webhook signature verification
+  validatedAt?: Date            // set by /api/paypal-validate when credentials passed the OAuth handshake
 }
 
 export interface StoreSubscription {

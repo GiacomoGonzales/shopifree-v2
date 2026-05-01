@@ -1,22 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { paypalFetch, type PayPalEnv } from '../src/lib/paypal-server.js'
+import { paypalFetch, type MerchantCredentials } from '../src/lib/paypal-server.js'
 
 /**
- * Captures a PayPal order after the customer approved it on PayPal's site
- * and got redirected back to /payment/success. Idempotent against the
- * webhook (whichever runs first wins; the second is a no-op once the
- * Firestore order is already 'paid').
+ * Captures a PayPal order using the merchant's credentials, after the buyer
+ * approved on PayPal's site and got redirected back to /payment/success.
+ * Idempotent against the webhook (whichever runs first wins).
  *
  * Body: { storeId, orderId, paypalOrderId, action: 'capture' | 'verify' }
- *
- *   capture → calls /v2/checkout/orders/{id}/capture (the actual payment).
- *   verify  → just reads /v2/checkout/orders/{id} to confirm status.
- *
- * No auth — public storefront. Tied to a specific store + Firestore order
- * by id; the route validates the paypalOrderId belongs to that order
- * before mutating anything.
  */
 
 if (!getApps().length) {
@@ -67,33 +59,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const storeSnap = await db.collection('stores').doc(storeId).get()
     if (!storeSnap.exists) return res.status(404).json({ error: 'Store not found' })
     const store = storeSnap.data() as {
-      payments?: { paypal?: { sandbox?: boolean; merchantId?: string } }
+      payments?: {
+        paypal?: {
+          sandbox?: boolean
+          clientId?: string
+          clientSecret?: string
+        }
+      }
     }
     const pp = store.payments?.paypal
-    if (!pp?.merchantId) {
-      return res.status(400).json({ error: 'Store does not have PayPal connected' })
+    if (!pp?.clientId || !pp?.clientSecret) {
+      return res.status(400).json({ error: 'Store does not have PayPal configured' })
     }
 
-    const env: PayPalEnv = pp.sandbox ? 'sandbox' : 'live'
+    const creds: MerchantCredentials = {
+      clientId: pp.clientId,
+      secret: pp.clientSecret,
+      env: pp.sandbox ? 'sandbox' : 'live',
+    }
     const orderRef = db.collection('stores').doc(storeId).collection('orders').doc(orderId)
     const orderSnap = await orderRef.get()
     if (!orderSnap.exists) return res.status(404).json({ error: 'Order not found' })
     const orderData = orderSnap.data() as { paymentStatus?: string }
 
-    // Idempotency: if the webhook already marked it paid, just confirm.
     if (orderData.paymentStatus === 'paid') {
       return res.status(200).json({ ok: true, alreadyPaid: true })
     }
 
     let response: PayPalCaptureResponse
     if (action === 'verify') {
-      response = await paypalFetch<PayPalCaptureResponse>(env, `/v2/checkout/orders/${paypalOrderId}`, {
-        sellerMerchantId: pp.merchantId,
-      })
+      response = await paypalFetch<PayPalCaptureResponse>(creds, `/v2/checkout/orders/${paypalOrderId}`)
     } else {
-      response = await paypalFetch<PayPalCaptureResponse>(env, `/v2/checkout/orders/${paypalOrderId}/capture`, {
+      response = await paypalFetch<PayPalCaptureResponse>(creds, `/v2/checkout/orders/${paypalOrderId}/capture`, {
         method: 'POST',
-        sellerMerchantId: pp.merchantId,
         paypalRequestId: `${storeId}:${orderId}:capture`,
       })
     }

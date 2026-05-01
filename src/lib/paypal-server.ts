@@ -1,81 +1,53 @@
 /// <reference types="node" />
 
 /**
- * Shared PayPal helpers for Vercel API routes. Server-only — uses Node's
- * `process.env` and `Buffer`. Lives under `src/lib/` (instead of `api/_lib/`)
- * because Vercel's @vercel/node builder strips files in underscore-prefixed
- * directories from the deployment, breaking imports at runtime. The
- * triple-slash node reference above grants this file Node typings even
- * though tsconfig.app.json's global `types` array only has vite/client.
+ * PayPal helpers — Standard Checkout (per-merchant credentials) flavor.
  *
- * Supports two environments:
- *   sandbox  → https://api-m.sandbox.paypal.com  (Partner uses *_SANDBOX env vars)
- *   live     → https://api-m.paypal.com         (Partner uses *_LIVE env vars,
- *                                                added once Partner Program approves)
+ * Each merchant stores their own PayPal Business app's clientId + secret on
+ * the store doc; these helpers authenticate with those credentials directly,
+ * so PayPal sees us acting AS the merchant — no Partner Referrals, no
+ * PayPal-Auth-Assertion. The trade-off vs the Partner Commerce Platform
+ * flow is UX (merchants paste credentials instead of clicking "Connect"),
+ * not capability — Standard Checkout supports the same Orders v2 + Capture
+ * + Refund + Webhooks endpoints.
  *
- * The "Partner" credentials identify Shopifree to PayPal. The "merchant id" of
- * the seller is then passed in PayPal-Auth-Assertion headers when calling APIs
- * on behalf of that seller (e.g. creating an order on their PayPal account).
+ * This file is bundled into Vercel functions via vercel.json
+ * `functions["api/**\/*.ts"].includeFiles = "src/lib/**"`. ESM imports must
+ * include the `.js` extension at the call site (TypeScript resolves the .ts
+ * source by stripping it).
  */
 
 export type PayPalEnv = 'sandbox' | 'live'
 
-interface PartnerCredentials {
+export interface MerchantCredentials {
   clientId: string
   secret: string
-  merchantId: string  // Shopifree's PayPal merchant id (the platform itself)
-  baseUrl: string
+  env: PayPalEnv
 }
 
-export function getPartnerCredentials(env: PayPalEnv): PartnerCredentials {
-  const isLive = env === 'live'
-  const clientId = isLive
-    ? process.env.PAYPAL_PARTNER_CLIENT_ID_LIVE
-    : process.env.PAYPAL_PARTNER_CLIENT_ID_SANDBOX
-  const secret = isLive
-    ? process.env.PAYPAL_PARTNER_SECRET_LIVE
-    : process.env.PAYPAL_PARTNER_SECRET_SANDBOX
-  const merchantId = isLive
-    ? process.env.PAYPAL_PARTNER_MERCHANT_ID_LIVE
-    : process.env.PAYPAL_PARTNER_MERCHANT_ID_SANDBOX
-
-  if (!clientId || !secret || !merchantId) {
-    throw new Error(
-      `Missing PayPal partner credentials for env=${env}. Set PAYPAL_PARTNER_{CLIENT_ID,SECRET,MERCHANT_ID}_${isLive ? 'LIVE' : 'SANDBOX'}.`
-    )
-  }
-
-  return {
-    clientId,
-    secret,
-    merchantId,
-    baseUrl: isLive ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com',
-  }
+export function paypalBaseUrl(env: PayPalEnv): string {
+  return env === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'
 }
 
 interface CachedToken {
   accessToken: string
   expiresAt: number
 }
-const tokenCache: Partial<Record<PayPalEnv, CachedToken>> = {}
+// Cache key = `${env}:${clientId}` so merchants don't share tokens. Tokens
+// are scoped to an app, so cross-merchant pollution would break otherwise.
+// Each Vercel function instance has its own cache; cold starts re-fetch.
+const tokenCache = new Map<string, CachedToken>()
 
-/**
- * Get an OAuth access token for the Partner. Cached in-memory per
- * environment with a 60-second buffer before the actual expiry to avoid
- * mid-request expirations under load. Each Vercel function instance has
- * its own cache; cold starts re-fetch a fresh token (acceptable — the
- * token endpoint is cheap and rate limits are generous).
- */
-export async function getPartnerAccessToken(env: PayPalEnv): Promise<string> {
+export async function getMerchantAccessToken(creds: MerchantCredentials): Promise<string> {
+  const key = `${creds.env}:${creds.clientId}`
   const now = Date.now()
-  const cached = tokenCache[env]
+  const cached = tokenCache.get(key)
   if (cached && cached.expiresAt > now + 60_000) {
     return cached.accessToken
   }
 
-  const { clientId, secret, baseUrl } = getPartnerCredentials(env)
-  const auth = Buffer.from(`${clientId}:${secret}`).toString('base64')
-  const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
+  const auth = Buffer.from(`${creds.clientId}:${creds.secret}`).toString('base64')
+  const res = await fetch(`${paypalBaseUrl(creds.env)}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${auth}`,
@@ -89,62 +61,37 @@ export async function getPartnerAccessToken(env: PayPalEnv): Promise<string> {
     throw new Error(`PayPal OAuth failed (${res.status}): ${text}`)
   }
   const json = await res.json() as { access_token: string; expires_in: number }
-  tokenCache[env] = {
+  tokenCache.set(key, {
     accessToken: json.access_token,
     expiresAt: now + json.expires_in * 1000,
-  }
+  })
   return json.access_token
 }
 
 /**
- * Build the PayPal-Auth-Assertion header that authorizes Shopifree to make
- * an API call ON BEHALF OF a connected merchant. PayPal accepts this in lieu
- * of forwarding the merchant's own access token. Format: a JWT-like blob
- * (base64-encoded JSON, unsigned algorithm — PayPal docs explicitly accept
- * this for merchants who consented during onboarding).
- *
- * https://developer.paypal.com/api/rest/requests/#paypal-auth-assertion
- */
-export function buildAuthAssertion(env: PayPalEnv, sellerMerchantId: string): string {
-  const { clientId } = getPartnerCredentials(env)
-  const header = Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url')
-  const payload = Buffer.from(JSON.stringify({
-    iss: clientId,
-    payer_id: sellerMerchantId,
-  })).toString('base64url')
-  return `${header}.${payload}.`
-}
-
-/**
- * Wrapper around fetch() that authenticates as the Partner and (optionally)
- * acts on behalf of a specific merchant. Throws with the response body on
- * non-2xx so callers don't have to manually check res.ok.
+ * Authenticated fetch against the PayPal REST API using a single merchant's
+ * credentials. Throws with the response body on non-2xx so callers don't have
+ * to manually check res.ok.
  */
 export async function paypalFetch<T = unknown>(
-  env: PayPalEnv,
+  creds: MerchantCredentials,
   path: string,
   init: {
     method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
     body?: unknown
-    sellerMerchantId?: string  // when set, adds PayPal-Auth-Assertion
-    paypalRequestId?: string   // optional idempotency key
+    paypalRequestId?: string  // optional idempotency key
   } = {},
 ): Promise<T> {
-  const { baseUrl } = getPartnerCredentials(env)
-  const accessToken = await getPartnerAccessToken(env)
-
+  const accessToken = await getMerchantAccessToken(creds)
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
-  }
-  if (init.sellerMerchantId) {
-    headers['PayPal-Auth-Assertion'] = buildAuthAssertion(env, init.sellerMerchantId)
   }
   if (init.paypalRequestId) {
     headers['PayPal-Request-Id'] = init.paypalRequestId
   }
 
-  const res = await fetch(`${baseUrl}${path}`, {
+  const res = await fetch(`${paypalBaseUrl(creds.env)}${path}`, {
     method: init.method ?? 'GET',
     headers,
     body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
@@ -154,7 +101,19 @@ export async function paypalFetch<T = unknown>(
     const text = await res.text()
     throw new Error(`PayPal ${init.method ?? 'GET'} ${path} failed (${res.status}): ${text}`)
   }
-  // 204 No Content
   if (res.status === 204) return {} as T
   return await res.json() as T
+}
+
+/**
+ * Sanity-check a merchant's credentials by hitting the OAuth endpoint.
+ * Returns null on success or a human-readable reason on failure.
+ */
+export async function validateMerchantCredentials(creds: MerchantCredentials): Promise<string | null> {
+  try {
+    await getMerchantAccessToken(creds)
+    return null
+  } catch (err) {
+    return err instanceof Error ? err.message : 'Unknown PayPal error'
+  }
 }

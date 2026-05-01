@@ -29,10 +29,11 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
   const hasWhatsApp = store.payments?.whatsapp?.enabled ?? true
   const hasMercadoPago = store.payments?.mercadopago?.enabled
   const hasStripe = store.payments?.stripe?.enabled
-  // Only surface PayPal once the merchant is fully connected AND PayPal
-  // confirms they can receive payments — a "limited" merchant would error
-  // at capture time, so we hide the option entirely until PayPal clears them.
-  const hasPayPal = !!(store.payments?.paypal?.enabled && store.payments?.paypal?.merchantId && store.payments?.paypal?.paymentsReceivable)
+  // Surface PayPal whenever the merchant has both credentials set AND the
+  // toggle on. We trust their save step to have validated against PayPal
+  // already; the worst case (creds revoked since save) is a 401 on capture
+  // which the success page surfaces as a paid=false error.
+  const hasPayPal = !!(store.payments?.paypal?.enabled && store.payments?.paypal?.clientId && store.payments?.paypal?.clientSecret)
 
   const firstAvailable: PaymentMethod = hasWhatsApp ? 'whatsapp' : hasMercadoPago ? 'mercadopago' : hasStripe ? 'stripe' : hasPayPal ? 'paypal' : 'whatsapp'
   const [selected, setSelected] = useState<PaymentMethod>(firstAvailable)

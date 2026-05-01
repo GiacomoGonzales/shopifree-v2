@@ -1,25 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { paypalFetch, type PayPalEnv } from '../src/lib/paypal-server.js'
+import { paypalFetch, type MerchantCredentials } from '../src/lib/paypal-server.js'
 
 /**
- * Creates a PayPal order on behalf of a connected merchant. Called by the
- * storefront's checkout when the customer picks PayPal as the payment
- * method. Returns a redirect URL to PayPal where the customer approves
- * the payment.
+ * Creates a PayPal order using the merchant's own credentials. Called by the
+ * storefront's checkout when the customer picks PayPal. Returns the approval
+ * URL the customer is redirected to.
  *
  * Body: {
  *   storeId, orderId, orderNumber,
  *   items: [{ name, quantity, unit_price, currency }],
  *   total: number,
  *   currency: string,
- *   payer?: { email?, name? },
  *   origin: string
  * }
- *
- * No auth — this is the public storefront. The route only acts on stores
- * that have a connected PayPal merchant (validated against Firestore).
  */
 
 if (!getApps().length) {
@@ -82,24 +77,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         paypal?: {
           enabled?: boolean
           sandbox?: boolean
-          merchantId?: string
-          paymentsReceivable?: boolean
+          clientId?: string
+          clientSecret?: string
         }
       }
     }
     const pp = store.payments?.paypal
-    if (!pp?.enabled || !pp?.merchantId) {
-      return res.status(400).json({ error: 'Store does not have PayPal connected' })
-    }
-    if (!pp.paymentsReceivable) {
-      return res.status(400).json({ error: 'Connected merchant cannot yet receive payments — verify their PayPal account' })
+    if (!pp?.enabled || !pp?.clientId || !pp?.clientSecret) {
+      return res.status(400).json({ error: 'Store does not have PayPal configured' })
     }
 
-    const env: PayPalEnv = pp.sandbox ? 'sandbox' : 'live'
+    const creds: MerchantCredentials = {
+      clientId: pp.clientId,
+      secret: pp.clientSecret,
+      env: pp.sandbox ? 'sandbox' : 'live',
+    }
     const baseOrigin = origin || 'https://shopifree.app'
 
-    // Encode order metadata in the return URL so the success page can
-    // confirm the right Firestore order without a session cookie.
+    // Encode order metadata in the return URL so the success page can confirm
+    // the right Firestore order without a session cookie.
     const params = new URLSearchParams({
       paypal: '1',
       orderId,
@@ -107,9 +103,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       orderNumber: String(orderNumber ?? ''),
     }).toString()
 
-    const order = await paypalFetch<PayPalOrder>(env, '/v2/checkout/orders', {
+    const order = await paypalFetch<PayPalOrder>(creds, '/v2/checkout/orders', {
       method: 'POST',
-      sellerMerchantId: pp.merchantId,
       paypalRequestId: `${storeId}:${orderId}`,
       body: {
         intent: 'CAPTURE',
@@ -135,7 +130,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               value: it.unit_price.toFixed(2),
             },
           })),
-          payee: { merchant_id: pp.merchantId },
         }],
         application_context: {
           return_url: `${baseOrigin}/payment/success?${params}`,
