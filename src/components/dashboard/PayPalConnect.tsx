@@ -130,10 +130,8 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
   return (
     <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-[#003087]/20 flex-shrink-0" style={{ backgroundColor: '#003087' }}>
-          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.397 4.403-1.01 6.914-5.44 6.914h-2.19c-.524 0-.968.382-1.05.9l-1.63 10.342a.534.534 0 0 0 .527.618h3.065c.458 0 .85-.336.922-.788l.038-.194.73-4.622.047-.254c.072-.452.464-.788.922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.489-4.641z" />
-          </svg>
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-[#003087]/20 flex-shrink-0 bg-white border border-gray-100">
+          <img src="/paypal-logo.svg" alt="PayPal" className="w-7 h-7 object-contain" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">

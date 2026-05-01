@@ -170,12 +170,11 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
           <PaymentOption
             value="paypal"
             icon={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#003087' }}>
-                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
-              </svg>
+              <img src="/paypal-logo.svg" alt="PayPal" className="w-7 h-7 object-contain" />
             }
             title={t.payViaPayPal}
             description={t.paypalPaymentDesc}
+            customIconStyle="rounded-xl overflow-hidden bg-white shadow-sm flex items-center justify-center"
           />
         )}
       </div>
