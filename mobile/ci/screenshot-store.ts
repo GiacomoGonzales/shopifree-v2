@@ -17,9 +17,23 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { getDb, getBucket } from './firebase-admin'
 
 const VIEWPORT = { width: 1080, height: 2400 }
-const NAV_TIMEOUT = 45_000
-const SETTLE_MS = 2_500    // Let lazy-loaded images + theme animations finish
-const SIGNED_URL_DAYS = 30 // Operator may revisit a Play Console draft
+const NAV_TIMEOUT = 30_000   // domcontentloaded → fires almost immediately
+const SELECTOR_TIMEOUT = 20_000
+const RENDER_MS = 3_000      // After header lands, give the catalog/theme a beat to lazy-load images
+const SIGNED_URL_DAYS = 30   // Operator may revisit a Play Console draft
+
+// Open the storefront and wait until the page is *visually* ready.
+// `networkidle` is a trap for shopifree: the SPA keeps issuing background
+// fetches (analytics, lazy product chunks, prefetches) so the network never
+// settles within 45 seconds. Use `domcontentloaded` — which fires when the
+// HTML is parsed — then wait for the theme's <header> to appear. The brief
+// fixed sleep afterwards is to let lazy-loaded images render before we
+// snapshot, otherwise the screenshot catches a half-painted catalog.
+async function loadStorefront(page: Page, baseUrl: string): Promise<void> {
+  await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT })
+  await page.waitForSelector('header', { timeout: SELECTOR_TIMEOUT, state: 'attached' })
+  await page.waitForTimeout(RENDER_MS)
+}
 
 interface Shot {
   filename: string
@@ -32,41 +46,57 @@ const SHOTS: Shot[] = [
     filename: '01-home-top.png',
     description: 'Home — hero + categories visible',
     setup: async (page, baseUrl) => {
-      await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT })
-      await page.waitForTimeout(SETTLE_MS)
+      await loadStorefront(page, baseUrl)
       await page.evaluate(() => window.scrollTo(0, 0))
     },
   },
   {
     filename: '02-home-products.png',
     description: 'Home — products grid scrolled into view',
-    setup: async (page) => {
+    setup: async (page, baseUrl) => {
+      // Each shot runs in a fresh context, so we have to navigate from
+      // scratch — the page is `about:blank` until the first `goto`. The
+      // earlier version skipped this and produced a white screenshot.
+      await loadStorefront(page, baseUrl)
       await page.evaluate(() => window.scrollBy(0, window.innerHeight))
-      await page.waitForTimeout(1500)
+      await page.waitForTimeout(1_500)
     },
   },
   {
     filename: '03-product-detail.png',
     description: 'First product detail page',
     setup: async (page, baseUrl) => {
-      await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT })
-      await page.waitForTimeout(SETTLE_MS)
-      const productLink = page.locator('a[href*="/p/"]').first()
-      const count = await productLink.count()
-      if (count === 0) throw new Error('No product link found on home')
-      await productLink.click()
-      await page.waitForLoadState('networkidle', { timeout: NAV_TIMEOUT })
-      await page.waitForTimeout(SETTLE_MS)
+      await loadStorefront(page, baseUrl)
+      // Try a few fallback selectors — different themes wrap product cards
+      // in slightly different anchor structures.
+      const selectors = ['a[href*="/p/"]', 'a[href*="/producto/"]', 'a[href*="/product/"]']
+      let clicked = false
+      for (const sel of selectors) {
+        const link = page.locator(sel).first()
+        if ((await link.count()) > 0) {
+          await link.scrollIntoViewIfNeeded()
+          await link.click()
+          clicked = true
+          break
+        }
+      }
+      if (!clicked) throw new Error('No product link found on home (tried /p/, /producto/, /product/)')
+      // Wait for navigation + a product image to land before snapshotting
+      await page.waitForLoadState('domcontentloaded', { timeout: NAV_TIMEOUT })
+      await page.waitForSelector('main img, article img, [class*="product"] img', {
+        timeout: SELECTOR_TIMEOUT,
+        state: 'attached',
+      }).catch(() => { /* not all themes match, fall back to a fixed wait */ })
+      await page.waitForTimeout(RENDER_MS)
     },
   },
   {
     filename: '04-home-footer.png',
     description: 'Home — bottom of page (footer + contact)',
     setup: async (page, baseUrl) => {
-      await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT })
-      await page.waitForTimeout(SETTLE_MS)
+      await loadStorefront(page, baseUrl)
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-      await page.waitForTimeout(1500)
+      await page.waitForTimeout(1_500)
     },
   },
 ]
