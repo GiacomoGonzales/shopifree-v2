@@ -64,8 +64,17 @@
       "Bash(git pull *)",
       "Bash(git stash *)",
       "Bash(npm run *)",
-      "Bash(git reset *)",
-      "Bash(export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8)"
+      "Bash(adb devices *)",
+      "Bash(./gradlew :app:tasks --quiet)",
+      "Bash(./gradlew :app:dependencies --configuration debugRuntimeClasspath --quiet)",
+      "Bash(./gradlew :app:assembleDebug)",
+      "Bash(./gradlew :app:assembleDebug --info)",
+      "Bash(\"/c/Users/giaco/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat *)",
+      "Bash(./gradlew :app:assembleDebug --rerun-tasks)",
+      "Bash(\"/c/Users/giaco/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell *)",
+      "PowerShell($file = Get-Item \"android/app/src/main/res/drawable/ic_splash_icon.png\"; Write-Host \"Size: $\\($file.Length\\) bytes\"; $bytes = [System.IO.File]::ReadAllBytes\\($file.FullName\\); if \\($bytes[0] -eq 0x89 -and $bytes[1] -eq 0x50\\) { $w = [BitConverter]::ToInt32\\($bytes[19..16], 0\\); $h = [BitConverter]::ToInt32\\($bytes[23..20], 0\\); Write-Host \"PNG dimensions: ${w}x${h}\" })",
+      "Bash(\"/c/Users/giaco/AppData/Local/Android/Sdk/platform-tools/adb.exe\" uninstall *)",
+      "Bash(\"/c/Users/giaco/AppData/Local/Android/Sdk/platform-tools/adb.exe\" install *)"
     ],
     "deny": [],
     "ask": []
