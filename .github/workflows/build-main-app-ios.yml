@@ -29,6 +29,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Apple now rejects uploads built with anything older than the iOS 26
+      # SDK / Xcode 26. macos-latest still defaults to Xcode 16.4, so we pin
+      # explicitly. Bump this when Apple raises the floor again.
+      - name: Select Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
