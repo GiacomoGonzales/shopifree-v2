@@ -9,10 +9,18 @@ import { db } from './firebase'
 export interface ChatMessage {
   id: string
   text: string
-  imageUrl?: string
+  // One or more image attachments. Wire format on Firestore is `imageUrls`
+  // (array). Older messages written with the legacy single `imageUrl`
+  // field are normalized into a 1-element array on read so consumers
+  // never have to branch on the storage format.
+  imageUrls?: string[]
   senderId: string
   senderType: 'user' | 'admin' | 'assistant'
   createdAt: Date
+  // True while the local Firestore write has been queued but the server
+  // hasn't confirmed it yet. Drives the "enviando" visual cue in the
+  // chat UI until the round-trip completes.
+  pending?: boolean
 }
 
 export interface Chat {
@@ -101,7 +109,7 @@ export const chatService = {
   },
 
   // Send a message
-  async sendMessage(chatId: string, text: string, senderId: string, senderType: 'user' | 'admin', imageUrl?: string) {
+  async sendMessage(chatId: string, text: string, senderId: string, senderType: 'user' | 'admin', imageUrls?: string[]) {
     const messagesRef = collection(db, 'chats', chatId, 'messages')
     const msgData: Record<string, unknown> = {
       text,
@@ -109,7 +117,7 @@ export const chatService = {
       senderType,
       createdAt: serverTimestamp(),
     }
-    if (imageUrl) msgData.imageUrl = imageUrl
+    if (imageUrls && imageUrls.length > 0) msgData.imageUrls = imageUrls
     await addDoc(messagesRef, msgData)
 
     // Update chat metadata
@@ -147,21 +155,32 @@ export const chatService = {
     })
   },
 
-  // Subscribe to messages in real-time
+  // Subscribe to messages in real-time. We pass `includeMetadataChanges`
+  // so the listener also fires when a pending write is acknowledged by
+  // the server (i.e. when `hasPendingWrites` flips false) — without it,
+  // we'd see the message appear locally with `pending: true` and never
+  // get the follow-up update that flips it to false.
   subscribeToMessages(chatId: string, callback: (messages: ChatMessage[]) => void): Unsubscribe {
     const messagesRef = collection(db, 'chats', chatId, 'messages')
     const q = query(messagesRef, orderBy('createdAt', 'asc'))
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
       const messages: ChatMessage[] = snapshot.docs.map(doc => {
         const data = doc.data()
+        // Normalize legacy single-image messages into the array shape so
+        // renderers always read `imageUrls` regardless of when the doc
+        // was written.
+        const imageUrls: string[] | undefined = Array.isArray(data.imageUrls) && data.imageUrls.length > 0
+          ? data.imageUrls
+          : (data.imageUrl ? [data.imageUrl] : undefined)
         return {
           id: doc.id,
           text: data.text,
-          imageUrl: data.imageUrl,
+          imageUrls,
           senderId: data.senderId,
           senderType: data.senderType,
           createdAt: data.createdAt?.toDate?.() || new Date(),
+          pending: doc.metadata.hasPendingWrites,
         }
       })
       callback(messages)
@@ -179,6 +198,25 @@ export const chatService = {
         .map(doc => docToChat(doc))
       callback(chats)
     })
+  },
+
+  // One-shot fetch of recently closed chats (for the admin "Cerrados"
+  // filter). Closed chats accumulate forever, so we cap at the most
+  // recent N — the admin can search within this window. Not realtime:
+  // closed chats don't change much, and a stale view for a few seconds
+  // after a close is acceptable.
+  async getClosedChats(maxResults = 50): Promise<Chat[]> {
+    const chatsRef = collection(db, 'chats')
+    const q = query(
+      chatsRef,
+      where('status', '==', 'closed'),
+      orderBy('lastMessageAt', 'desc'),
+      limit(maxResults),
+    )
+    const snap = await getDocs(q)
+    return snap.docs
+      .filter(d => d.data().lastMessage)
+      .map(d => docToChat(d))
   },
 
   // Subscribe to unread count for a store's active chat (for user bubble badge)
