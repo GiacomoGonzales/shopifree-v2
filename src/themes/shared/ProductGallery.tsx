@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage, getGallerySrcSet } from '../../utils/cloudinary'
+
+// Sizes attribute matches the gallery layout: full viewport on mobile,
+// roughly half the viewport on desktop where the page splits into a
+// gallery column and a product info column.
+const GALLERY_SIZES = '(max-width: 768px) 100vw, 600px'
 
 interface ProductGalleryProps {
   images: string[]
@@ -71,6 +76,8 @@ export default function ProductGallery({ images, productName, variant = 'light',
         {images[0] ? (
           <img
             src={optimizeImage(images[0], 'gallery')}
+            srcSet={getGallerySrcSet(images[0])}
+            sizes={GALLERY_SIZES}
             alt={productName}
             className="w-full h-full object-contain"
           />
@@ -108,6 +115,8 @@ export default function ProductGallery({ images, productName, variant = 'light',
           >
             <img
               src={optimizeImage(image, 'gallery')}
+              srcSet={getGallerySrcSet(image)}
+              sizes={GALLERY_SIZES}
               alt={`${productName} - ${index + 1}`}
               className="w-full h-full object-contain"
               loading={index === 0 ? 'eager' : 'lazy'}

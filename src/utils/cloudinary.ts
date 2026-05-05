@@ -25,6 +25,11 @@ const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
 // Browser picks closest width based on viewport + DPR.
 const HERO_WIDTHS = [800, 1280, 1920, 2560, 3840]
 
+// Widths for the product gallery on the detail page. Smaller than hero widths
+// because the gallery is constrained on desktop (typically 50-60% of viewport)
+// and full-width on mobile.
+const GALLERY_WIDTHS = [400, 700, 1000, 1500]
+
 /**
  * Optimizes a Cloudinary URL by adding transformation parameters
  * - Converts to WebP/AVIF automatically based on browser support
@@ -110,6 +115,25 @@ export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'
 export function getHeroSrcSet(url: string | undefined): string {
   if (!url || !url.includes('res.cloudinary.com')) return ''
   return HERO_WIDTHS
+    .map(w => {
+      const transforms = `c_limit,w_${w},q_auto,f_auto`
+      const transformedUrl = url.replace('/upload/', `/upload/${transforms}/`)
+      return `${transformedUrl} ${w}w`
+    })
+    .join(', ')
+}
+
+/**
+ * Generates a srcset for the product gallery (4 widths, 400w → 1500w).
+ * Pair with sizes="(max-width: 768px) 100vw, 600px" so the browser picks
+ * roughly 400-700w on phones, 1000w on tablets, and 1500w on retina desktops.
+ *
+ * Without this, every viewport loads the same 1000px image, which is
+ * wasteful on small phones and slightly undersized on retina desktops.
+ */
+export function getGallerySrcSet(url: string | undefined): string {
+  if (!url || !url.includes('res.cloudinary.com')) return ''
+  return GALLERY_WIDTHS
     .map(w => {
       const transforms = `c_limit,w_${w},q_auto,f_auto`
       const transformedUrl = url.replace('/upload/', `/upload/${transforms}/`)

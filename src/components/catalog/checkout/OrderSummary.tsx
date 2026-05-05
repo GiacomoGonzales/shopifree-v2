@@ -4,6 +4,7 @@ import type { CartItem } from '../../../hooks/useCart'
 import type { Coupon } from '../../../types'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import { formatPrice } from '../../../lib/currency'
+import { optimizeImage } from '../../../utils/cloudinary'
 
 interface Props {
   items: CartItem[]
@@ -105,9 +106,10 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, disc
                   style={{ borderRadius: theme.radius.sm }}
                 >
                   <img
-                    src={item.product.image}
+                    src={optimizeImage(item.product.image, 'thumbnail')}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
               )}
