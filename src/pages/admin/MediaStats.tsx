@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { Store, Product } from '../../types'
 
@@ -36,6 +37,35 @@ interface MediaStats {
   perCountry: CountryMedia[]
   loadedAt: number
   durationMs: number
+}
+
+// Response from /api/admin-cloudinary-stats
+interface CloudinaryStats {
+  usage: {
+    plan: string | null
+    last_updated: string | null
+    storage_bytes: number
+    bandwidth_bytes_this_month: number
+    bandwidth_limit_bytes: number | null
+    transformations_this_month: number
+    transformations_limit: number | null
+    total_objects: number
+    credits_used: number | null
+    credits_limit: number | null
+  }
+  formatBreakdown: Record<string, { count: number; bytes: number }>
+  counts: {
+    images: number
+    videos: number
+    truncated: boolean
+  }
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 ** 2) return `${(n / 1024).toFixed(1)} KB`
+  if (n < 1024 ** 3) return `${(n / 1024 ** 2).toFixed(1)} MB`
+  return `${(n / 1024 ** 3).toFixed(2)} GB`
 }
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -96,11 +126,18 @@ type SortKey = 'videos' | 'images' | 'products'
 
 export default function AdminMediaStats() {
   const { localePath } = useLanguage()
+  const { firebaseUser } = useAuth()
   const [stats, setStats] = useState<MediaStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [error, setError] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortKey>('videos')
+
+  // Cloudinary stats load separately so the page renders Firestore counts
+  // immediately without waiting on the slower Cloudinary API listing.
+  const [cloudStats, setCloudStats] = useState<CloudinaryStats | null>(null)
+  const [cloudLoading, setCloudLoading] = useState(true)
+  const [cloudError, setCloudError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -202,6 +239,38 @@ export default function AdminMediaStats() {
     return () => { cancelled = true }
   }, [])
 
+  // Fetch real Cloudinary usage + format breakdown from the admin API. Runs
+  // in parallel with the Firestore aggregation above; the page shows Firestore
+  // numbers as soon as they arrive without waiting on the Cloudinary listing.
+  useEffect(() => {
+    if (!firebaseUser) return
+    let cancelled = false
+
+    const fetchCloudStats = async () => {
+      setCloudLoading(true)
+      setCloudError(null)
+      try {
+        const token = await firebaseUser.getIdToken()
+        const r = await fetch('/api/admin-cloudinary-stats', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!r.ok) {
+          const data = await r.json().catch(() => ({}))
+          throw new Error(data.error || `HTTP ${r.status}`)
+        }
+        const data = await r.json() as CloudinaryStats
+        if (!cancelled) setCloudStats(data)
+      } catch (err) {
+        if (!cancelled) setCloudError(err instanceof Error ? err.message : 'Error desconocido')
+      } finally {
+        if (!cancelled) setCloudLoading(false)
+      }
+    }
+
+    fetchCloudStats()
+    return () => { cancelled = true }
+  }, [firebaseUser])
+
   const sortedStores = stats ? [...stats.perStore].sort((a, b) => {
     if (sortBy === 'videos') return b.videoCount - a.videoCount
     if (sortBy === 'images') return b.imageCount - a.imageCount
@@ -263,12 +332,127 @@ export default function AdminMediaStats() {
         <StatCard label="Tiendas con media" value={stats.storesWithMedia} sub={`de ${stats.totalStores}`} />
       </div>
 
-      {/* Cloudinary cost notice */}
+      {/* Real Cloudinary usage — bytes, bandwidth, format breakdown */}
+      <div className="border border-gray-200 rounded-lg">
+        <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-sm font-medium text-gray-900">Storage real (Cloudinary)</h2>
+          {cloudStats?.usage.last_updated && (
+            <p className="text-[11px] text-gray-400 tabular-nums">
+              Actualizado: {cloudStats.usage.last_updated}
+              {cloudStats.usage.plan && ` · Plan ${cloudStats.usage.plan}`}
+            </p>
+          )}
+        </div>
+
+        {cloudLoading && (
+          <div className="p-8 flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-200 border-t-gray-900" />
+            <p className="text-[11px] text-gray-500">Consultando API de Cloudinary...</p>
+          </div>
+        )}
+
+        {cloudError && (
+          <div className="p-5 border-b border-gray-200 bg-red-50">
+            <p className="text-[12px] text-red-900">
+              <strong>Error:</strong> {cloudError}
+            </p>
+            <p className="text-[11px] text-red-700 mt-1">
+              Verifica que las env vars <code>CLOUDINARY_API_KEY</code> y{' '}
+              <code>CLOUDINARY_API_SECRET</code> esten configuradas en Vercel y en{' '}
+              <code>.env.local</code>.
+            </p>
+          </div>
+        )}
+
+        {cloudStats && (
+          <>
+            <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-b border-gray-100">
+              <StatCard
+                label="Storage usado"
+                value={cloudStats.usage.storage_bytes}
+                formatter="bytes"
+              />
+              <StatCard
+                label="Bandwidth (mes)"
+                value={cloudStats.usage.bandwidth_bytes_this_month}
+                formatter="bytes"
+                sub={cloudStats.usage.bandwidth_limit_bytes ? `de ${formatBytes(cloudStats.usage.bandwidth_limit_bytes)}` : undefined}
+              />
+              <StatCard
+                label="Transformaciones"
+                value={cloudStats.usage.transformations_this_month}
+                sub={cloudStats.usage.transformations_limit ? `de ${cloudStats.usage.transformations_limit.toLocaleString()}` : undefined}
+              />
+              <StatCard
+                label="Assets totales"
+                value={cloudStats.usage.total_objects}
+                sub={cloudStats.counts.truncated ? '(parcial)' : undefined}
+              />
+            </div>
+
+            {/* Format breakdown */}
+            {Object.keys(cloudStats.formatBreakdown).length > 0 && (() => {
+              const totalBytes = Object.values(cloudStats.formatBreakdown).reduce((s, f) => s + f.bytes, 0) || 1
+              const sortedFormats = Object.entries(cloudStats.formatBreakdown)
+                .sort((a, b) => b[1].bytes - a[1].bytes)
+
+              return (
+                <div className="p-5">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-3">
+                    Bytes por formato
+                  </p>
+                  <div className="space-y-3">
+                    {sortedFormats.map(([fmt, data]) => {
+                      const percentage = (data.bytes / totalBytes) * 100
+                      const isOptimized = fmt === 'webp' || fmt === 'avif'
+                      return (
+                        <div key={fmt}>
+                          <div className="flex justify-between text-[13px] mb-1">
+                            <span className="text-gray-700 font-medium uppercase">
+                              {fmt}
+                              {isOptimized && (
+                                <span className="ml-1.5 text-[10px] font-normal text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+                                  optimizado
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-medium text-gray-900 tabular-nums">
+                              {formatBytes(data.bytes)}
+                              <span className="text-gray-400 ml-1">
+                                · {data.count.toLocaleString()} archivos ({percentage.toFixed(1)}%)
+                              </span>
+                            </span>
+                          </div>
+                          <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${isOptimized ? 'bg-green-600' : 'bg-gray-900'}`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {cloudStats.counts.truncated && (
+                    <p className="text-[11px] text-gray-500 mt-3">
+                      Listado truncado a {cloudStats.counts.images.toLocaleString()} imgs +{' '}
+                      {cloudStats.counts.videos.toLocaleString()} videos. La API admin de Cloudinary
+                      tiene limites de paginacion.
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
+          </>
+        )}
+      </div>
+
+      {/* Firestore reference notice */}
       <div className="border border-gray-200 rounded-lg px-5 py-3 bg-gray-50">
         <p className="text-[12px] text-gray-600 leading-relaxed">
-          <strong className="text-gray-900">Nota:</strong> estos numeros son referencias en Firestore (cuantos
-          productos tienen video/imagen). Para ver bytes y bandwidth real se requiere integrar la API de
-          Cloudinary (proximo paso).
+          <strong className="text-gray-900">Nota:</strong> los datos de arriba son storage real
+          de Cloudinary. Las tablas de abajo son referencias en Firestore (cuantos productos
+          tienen video/imagen). El bandwidth por tienda no es exponible por la API de Cloudinary.
         </p>
       </div>
 
@@ -393,12 +577,23 @@ export default function AdminMediaStats() {
   )
 }
 
-function StatCard({ label, value, sub }: { label: string; value: number; sub?: string }) {
+function StatCard({
+  label,
+  value,
+  sub,
+  formatter,
+}: {
+  label: string
+  value: number
+  sub?: string
+  formatter?: 'bytes' | 'count'
+}) {
+  const display = formatter === 'bytes' ? formatBytes(value) : value.toLocaleString()
   return (
     <div className="border border-gray-200 rounded-lg p-4">
       <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{label}</p>
       <div className="flex items-baseline gap-2 mt-1">
-        <p className="text-2xl font-semibold text-gray-900 tabular-nums">{value.toLocaleString()}</p>
+        <p className="text-2xl font-semibold text-gray-900 tabular-nums">{display}</p>
         {sub && <p className="text-[11px] text-gray-400 tabular-nums">{sub}</p>}
       </div>
     </div>
