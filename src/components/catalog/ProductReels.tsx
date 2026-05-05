@@ -1,7 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
-import { optimizeImage, optimizeReelVideo } from '../../utils/cloudinary'
+import { optimizeImage, optimizeReelVideo, optimizeReelVideoHLS } from '../../utils/cloudinary'
+import ReelVideo from './ReelVideo'
 import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import { getThemeTranslations } from '../../themes/shared/translations'
@@ -44,6 +45,14 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   const [toast, setToast] = useState<string | null>(null)
   const [holding, setHolding] = useState(false)
   const [justAddedId, setJustAddedId] = useState<string | null>(null)
+
+  // Audio: reels start muted (browser autoplay policy) and the user toggles
+  // sound via the speaker button. Preference is per-session so it doesn't
+  // surprise the user on a fresh visit.
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return sessionStorage.getItem('reels-muted') !== 'false'
+  })
 
   // Video refs
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
@@ -184,6 +193,17 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
     pendingIndex.current = targetIndex
     applyTransform(direction * window.innerHeight, true)
   }, [currentIndex, applyTransform])
+
+  // Mute toggle — applies immediately to all mounted videos so the change is
+  // instant for the current reel without waiting for a re-render.
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev
+      try { sessionStorage.setItem('reels-muted', String(next)) } catch { /* private mode */ }
+      videoRefs.current.forEach(v => { v.muted = next })
+      return next
+    })
+  }, [])
 
   // Navigation helpers
   const goToNext = useCallback(() => {
@@ -483,9 +503,15 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
         <div className="relative w-full h-full overflow-hidden bg-black">
           {product.video ? (
             <>
-              {/* Video layer — loads behind poster */}
-              <video
-                ref={(el) => {
+              {/* Video layer — loads behind poster. ReelVideo handles HLS
+                  adaptive bitrate via hls.js (Chrome/Edge/Firefox) or native
+                  Safari/iOS support, falling back to MP4 if neither works. */}
+              <ReelVideo
+                hlsUrl={optimizeReelVideoHLS(product.video)}
+                fallbackUrl={optimizeReelVideo(product.video)}
+                isCurrent={position === 'current'}
+                isMuted={isMuted}
+                videoRefCallback={(el) => {
                   const key = `${product.id}-${position}`
                   if (el) {
                     videoRefs.current.set(key, el)
@@ -493,12 +519,6 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
                     videoRefs.current.delete(key)
                   }
                 }}
-                src={optimizeReelVideo(product.video)}
-                autoPlay={position === 'current'}
-                muted
-                loop
-                playsInline
-                preload={position === 'current' ? 'auto' : 'metadata'}
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ zIndex: 1 }}
                 onPlaying={() => {
@@ -710,10 +730,31 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
           </svg>
         </button>
 
-        <div className="pointer-events-none px-3 py-1.5 rounded-full text-xs font-semibold text-white/90 tracking-wide"
-          style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-        >
-          {t.productCounter.replace('{{current}}', String(currentIndex + 1)).replace('{{total}}', String(products.length))}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleMute}
+            aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
+            className="pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+            style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+          >
+            {isMuted ? (
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 9l4 4m0-4l-4 4" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728" />
+              </svg>
+            )}
+          </button>
+
+          <div className="pointer-events-none px-3 py-1.5 rounded-full text-xs font-semibold text-white/90 tracking-wide"
+            style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+          >
+            {t.productCounter.replace('{{current}}', String(currentIndex + 1)).replace('{{total}}', String(products.length))}
+          </div>
         </div>
       </div>
 

@@ -123,12 +123,46 @@ export function getHeroSrcSet(url: string | undefined): string {
  * - Crops to 9:16 using c_fill with auto gravity (focuses on content)
  * - Compresses with auto quality
  * - Converts square/horizontal videos to vertical fullscreen
+ *
+ * This is the fallback for browsers without HLS support. Prefer
+ * optimizeReelVideoHLS when you can use adaptive bitrate streaming.
  */
 export function optimizeReelVideo(videoUrl: string | undefined | null): string {
   if (!videoUrl) return ''
   if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
-  const transforms = 'c_fill,w_720,h_1280,g_center,q_auto'
+  const transforms = 'c_fill,w_720,h_1280,g_center,q_auto:eco,f_auto'
   return videoUrl.replace('/upload/', `/upload/${transforms}/`)
+}
+
+/**
+ * Returns an HLS (.m3u8) Cloudinary URL for adaptive bitrate streaming.
+ * The player downloads only the chunks it needs for the current playback
+ * position, instead of the full mp4. Combined with `sp_hd` we cap renditions
+ * at 720p, which matches our 9:16 crop and prevents wasted bandwidth on big
+ * displays.
+ *
+ * Cost note: the FIRST request to this URL triggers a one-time HLS conversion
+ * on Cloudinary's side (uses transformation credits). Subsequent requests are
+ * served from cache. With ~120 videos in the platform, the one-time cost is
+ * trivial (<1 credit total).
+ *
+ * Native HLS support: iOS Safari, macOS Safari (set src on <video> directly).
+ * For Chrome/Edge/Firefox, use hls.js to attach the manifest to the video.
+ */
+export function optimizeReelVideoHLS(videoUrl: string | undefined | null): string {
+  if (!videoUrl) return ''
+  if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
+  // Crop first, then sp_full_hd generates renditions up to 1080p tall.
+  // For our 720x1280 source the max rendition is ~608x1080 (capped to 1080
+  // in the longer dimension while preserving aspect), which is sharper than
+  // sp_hd's max of ~405x720. Custom profiles tuned for portrait video would
+  // be ideal but require creating one in the Cloudinary dashboard; sp_full_hd
+  // is the best built-in profile for 9:16 reels.
+  const transforms = 'c_fill,w_720,h_1280,g_center/sp_full_hd'
+  const withTransforms = videoUrl.replace('/upload/', `/upload/${transforms}/`)
+  // Replace source extension with .m3u8 — Cloudinary uses the URL extension
+  // to decide the output container.
+  return withTransforms.replace(/\.(mp4|webm|mov|avi|m4v)$/i, '.m3u8')
 }
 
 /**
