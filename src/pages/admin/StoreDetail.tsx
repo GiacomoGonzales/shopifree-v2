@@ -103,21 +103,34 @@ export default function StoreDetail() {
         startDate.setDate(startDate.getDate() - 29)
         startDate.setHours(0, 0, 0, 0)
 
-        const [products, categories, orders, analytics] = await Promise.all([
+        // allSettled instead of all so a permission error on one collection
+        // (e.g. analytics for a store the admin can't read yet) doesn't
+        // wipe out the products/categories counts that did load.
+        const [productsRes, categoriesRes, ordersRes, analyticsRes] = await Promise.allSettled([
           productService.getAll(storeId),
           categoryService.getAll(storeId),
           orderService.getAll(storeId, 9999),
           analyticsService.getFullAnalytics(storeId, startDate, endDate)
         ])
 
-        setTotalProducts(products.length)
-        setTotalCategories(categories.length)
-        setAllOrders(orders)
-        setSummary(analytics.summary)
-        setDailyStats(analytics.dailyStats)
-        setTopProducts(analytics.topProducts)
-        setDeviceStats(analytics.deviceStats)
-        setReferrerStats(analytics.referrerStats)
+        if (productsRes.status === 'fulfilled') setTotalProducts(productsRes.value.length)
+        else console.warn('Products load failed:', productsRes.reason)
+
+        if (categoriesRes.status === 'fulfilled') setTotalCategories(categoriesRes.value.length)
+        else console.warn('Categories load failed:', categoriesRes.reason)
+
+        if (ordersRes.status === 'fulfilled') setAllOrders(ordersRes.value)
+        else console.warn('Orders load failed:', ordersRes.reason)
+
+        if (analyticsRes.status === 'fulfilled') {
+          setSummary(analyticsRes.value.summary)
+          setDailyStats(analyticsRes.value.dailyStats)
+          setTopProducts(analyticsRes.value.topProducts)
+          setDeviceStats(analyticsRes.value.deviceStats)
+          setReferrerStats(analyticsRes.value.referrerStats)
+        } else {
+          console.warn('Analytics load failed:', analyticsRes.reason)
+        }
       } catch (error) {
         console.error('Error loading store detail:', error)
       } finally {
