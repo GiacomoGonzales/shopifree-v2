@@ -1298,7 +1298,9 @@
       "title": "Links de descarga",
       "playStore": "Google Play Store",
       "appStore": "Apple App Store",
-      "noLinks": "Los links estarán disponibles cuando tu app sea publicada"
+      "noLinks": "Los links estarán disponibles cuando tu app sea publicada",
+      "scanToDownload": "Escaneá este QR con el celular para descargar",
+      "downloadQr": "Descargar QR"
     },
     "push": {
       "title": "Notificaciones Push",

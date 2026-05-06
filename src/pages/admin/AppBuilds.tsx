@@ -32,6 +32,7 @@ interface StoreRow {
     splashColor?: string
     status?: 'none' | 'requested' | 'building' | 'published'
     androidUrl?: string
+    iosUrl?: string
     publishedAt?: Timestamp | Date
     build?: BuildInfo      // Android
     buildIos?: BuildInfo   // iOS
@@ -64,9 +65,11 @@ export default function AppBuilds() {
   const [triggeringId, setTriggeringId] = useState<string | null>(null)
   const [versionName, setVersionName] = useState<Record<string, string>>({})
 
-  // Publish modal state
+  // Publish modal state — handles both Android and iOS URLs in one place so
+  // the operator can paste either or both without juggling two modals.
   const [publishingStore, setPublishingStore] = useState<StoreRow | null>(null)
-  const [publishUrl, setPublishUrl] = useState('')
+  const [publishAndroidUrl, setPublishAndroidUrl] = useState('')
+  const [publishIosUrl, setPublishIosUrl] = useState('')
   const [publishNotify, setPublishNotify] = useState(true)
   const [publishing, setPublishing] = useState(false)
 
@@ -189,14 +192,17 @@ export default function AppBuilds() {
 
   const openPublishModal = (store: StoreRow) => {
     setPublishingStore(store)
-    setPublishUrl(store.appConfig?.androidUrl || '')
+    setPublishAndroidUrl(store.appConfig?.androidUrl || '')
+    setPublishIosUrl(store.appConfig?.iosUrl || '')
     setPublishNotify(true)
   }
 
   const submitPublish = async () => {
     if (!firebaseUser || !publishingStore) return
-    if (!publishUrl.trim()) {
-      showToast('Pegá el URL de Play Store', 'error')
+    const android = publishAndroidUrl.trim()
+    const ios = publishIosUrl.trim()
+    if (!android && !ios) {
+      showToast('Pegá al menos un URL (Play Store o App Store)', 'error')
       return
     }
     setPublishing(true)
@@ -210,7 +216,8 @@ export default function AppBuilds() {
         },
         body: JSON.stringify({
           storeId: publishingStore.id,
-          androidUrl: publishUrl.trim(),
+          ...(android && { androidUrl: android }),
+          ...(ios && { iosUrl: ios }),
           notifyOwner: publishNotify,
         }),
       })
@@ -218,7 +225,8 @@ export default function AppBuilds() {
       if (!res.ok) throw new Error(data.error || 'Error')
       showToast(`${publishingStore.name} marcada como publicada`, 'success')
       setPublishingStore(null)
-      setPublishUrl('')
+      setPublishAndroidUrl('')
+      setPublishIosUrl('')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
       showToast(`Error: ${msg}`, 'error')
@@ -334,9 +342,15 @@ export default function AppBuilds() {
                       triggering={triggeringId === `${store.id}-android`}
                       onTrigger={() => triggerBuild(store, 'android')}
                       onPublish={() => openPublishModal(store)}
-                      canMarkPublished={androidStatus === 'success' && store.appConfig?.status !== 'published'}
-                      isPublished={store.appConfig?.status === 'published'}
+                      // Allow marking as published independent of the build's
+                      // status: GitHub Actions artifacts expire (~90 days), so
+                      // a build that ran months ago and is no longer downloadable
+                      // shouldn't block the operator from pasting the Play Store
+                      // link the merchant ended up with.
+                      canMarkPublished={!store.appConfig?.androidUrl}
+                      isPublished={!!store.appConfig?.androidUrl}
                       artifactLabel="AAB"
+                      publishedUrl={store.appConfig?.androidUrl}
                     />
 
                     <PlatformRow
@@ -350,10 +364,11 @@ export default function AppBuilds() {
                       status={iosStatus}
                       triggering={triggeringId === `${store.id}-ios`}
                       onTrigger={() => triggerBuild(store, 'ios')}
-                      onPublish={() => { /* iOS publish flow to be added */ }}
-                      canMarkPublished={false}
-                      isPublished={false}
+                      onPublish={() => openPublishModal(store)}
+                      canMarkPublished={!store.appConfig?.iosUrl}
+                      isPublished={!!store.appConfig?.iosUrl}
                       artifactLabel="IPA"
+                      publishedUrl={store.appConfig?.iosUrl}
                     />
                   </div>
                 </div>
@@ -363,7 +378,9 @@ export default function AppBuilds() {
         )}
       </div>
 
-      {/* Publish modal */}
+      {/* Publish modal — single modal handles both Play Store and App Store
+          URLs. Each field is independent: paste one or both, edit either
+          later without touching the other. */}
       {publishingStore && (
         <div
           className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
@@ -375,23 +392,39 @@ export default function AppBuilds() {
           >
             <div className="px-5 py-4 border-b border-gray-200">
               <h2 className="text-base font-semibold text-gray-900">
-                {publishingStore.appConfig?.status === 'published' ? 'Editar URL de Play Store' : 'Marcar app como publicada'}
+                URLs de descarga
               </h2>
               <p className="text-xs text-gray-500 mt-0.5 truncate">{publishingStore.name}</p>
             </div>
 
-            <div className="px-5 py-4 space-y-3">
+            <div className="px-5 py-4 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">URL de Play Store</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">URL de Play Store (Android)</label>
                 <input
                   type="url"
-                  value={publishUrl}
-                  onChange={e => setPublishUrl(e.target.value)}
+                  value={publishAndroidUrl}
+                  onChange={e => setPublishAndroidUrl(e.target.value)}
                   placeholder="https://play.google.com/store/apps/details?id=..."
                   className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                 />
-                <p className="text-[11px] text-gray-500 mt-1">Copiá el link directo desde Play Console → "Ficha de tienda principal"</p>
+                <p className="text-[11px] text-gray-500 mt-1">Copiá desde Play Console → Ficha de tienda principal</p>
               </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">URL de App Store (iOS)</label>
+                <input
+                  type="url"
+                  value={publishIosUrl}
+                  onChange={e => setPublishIosUrl(e.target.value)}
+                  placeholder="https://apps.apple.com/app/id..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">Copiá desde App Store Connect → My Apps → URL pública</p>
+              </div>
+
+              <p className="text-[11px] text-gray-500">
+                Al menos un URL es obligatorio. Podés dejar el otro en blanco si la app aún no está en esa tienda.
+              </p>
 
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
@@ -402,7 +435,7 @@ export default function AppBuilds() {
                 />
                 <div className="text-xs">
                   <span className="font-medium text-gray-700">Enviar email al dueño</span>
-                  <p className="text-gray-500">Le llega un aviso con el link de Play Store.</p>
+                  <p className="text-gray-500">Le llega un aviso con los links de descarga.</p>
                 </div>
               </label>
             </div>
@@ -417,10 +450,10 @@ export default function AppBuilds() {
               </button>
               <button
                 onClick={submitPublish}
-                disabled={publishing || !publishUrl.trim()}
+                disabled={publishing || (!publishAndroidUrl.trim() && !publishIosUrl.trim())}
                 className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-40"
               >
-                {publishing ? 'Guardando…' : 'Confirmar'}
+                {publishing ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
           </div>
@@ -855,11 +888,12 @@ interface PlatformRowProps {
   isPublished: boolean
   artifactLabel: string
   disabledReason?: string
+  publishedUrl?: string  // Play Store / App Store URL once the merchant published the app
 }
 
 function PlatformRow({
   label, icon, build, status, triggering, onTrigger, onPublish,
-  canMarkPublished, isPublished, artifactLabel, disabledReason,
+  canMarkPublished, isPublished, artifactLabel, disabledReason, publishedUrl,
 }: PlatformRowProps) {
   const badge = STATUS_LABELS[status] || STATUS_LABELS.idle
   const isBuilding = status === 'queued' || status === 'running'
@@ -894,7 +928,7 @@ function PlatformRow({
           onClick={onPublish}
           className="px-2.5 py-1 border border-gray-900 text-gray-900 rounded-md text-[11px] font-medium hover:bg-gray-900 hover:text-white transition-colors"
         >
-          Marcar publicada
+          Agregar URL
         </button>
       )}
 
@@ -905,6 +939,21 @@ function PlatformRow({
         >
           Editar URL
         </button>
+      )}
+
+      {publishedUrl && (
+        <a
+          href={publishedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-700 hover:text-gray-900 inline-flex items-center gap-1 underline underline-offset-2 truncate max-w-[200px]"
+          title={publishedUrl}
+        >
+          <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+          Ver en {label === 'Android' ? 'Play Store' : 'App Store'}
+        </a>
       )}
 
       {build?.artifactUrl && (

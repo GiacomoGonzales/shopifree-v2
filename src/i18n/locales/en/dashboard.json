@@ -1297,7 +1297,9 @@
       "title": "Download links",
       "playStore": "Google Play Store",
       "appStore": "Apple App Store",
-      "noLinks": "Links will be available when your app is published"
+      "noLinks": "Links will be available when your app is published",
+      "scanToDownload": "Scan this QR with your phone to download",
+      "downloadQr": "Download QR"
     },
     "push": {
       "title": "Push Notifications",

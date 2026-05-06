@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { doc, updateDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { Link } from 'react-router-dom'
+import { QRCodeCanvas } from 'qrcode.react'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
@@ -612,55 +613,43 @@ export default function MiApp() {
         </div>
       </div>
 
-      {/* Download links (when published) */}
+      {/* Download links + QR codes (when published) */}
       {currentStatus === 'published' && (
         <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900">{t('miApp.links.title')}</h2>
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 grid sm:grid-cols-2 gap-3">
             {appConfig?.androidUrl ? (
-              <a
-                href={appConfig.androidUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
-              >
-                <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+              <DownloadCard
+                url={appConfig.androidUrl}
+                label={t('miApp.links.playStore')}
+                qrFilenameSlug={`${(appName || store?.subdomain || 'app').toLowerCase().replace(/[^a-z0-9]/g, '-')}-android`}
+                accentColor="#16a34a"
+                scanLabel={t('miApp.links.scanToDownload')}
+                downloadQrLabel={t('miApp.links.downloadQr')}
+                icon={
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.523 2.294l-1.907 3.302A9.953 9.953 0 0012.002 4.5c-1.327 0-2.588.259-3.744.726L6.35 1.924a.5.5 0 00-.866.5l1.893 3.278A9.972 9.972 0 002.5 14h19a9.972 9.972 0 00-4.877-8.298l1.893-3.278a.5.5 0 00-.866-.5h-.127zM8.5 11a1 1 0 110-2 1 1 0 010 2zm7 0a1 1 0 110-2 1 1 0 010 2z"/>
                   </svg>
-                </div>
-                <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-900">{t('miApp.links.playStore')}</span>
-                  <p className="text-xs text-gray-400 truncate">{appConfig.androidUrl}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
+                }
+              />
             ) : null}
             {appConfig?.iosUrl ? (
-              <a
-                href={appConfig.iosUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
-              >
-                <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center">
+              <DownloadCard
+                url={appConfig.iosUrl}
+                label={t('miApp.links.appStore')}
+                qrFilenameSlug={`${(appName || store?.subdomain || 'app').toLowerCase().replace(/[^a-z0-9]/g, '-')}-ios`}
+                accentColor="#1f2937"
+                scanLabel={t('miApp.links.scanToDownload')}
+                downloadQrLabel={t('miApp.links.downloadQr')}
+                icon={
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                   </svg>
-                </div>
-                <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-900">{t('miApp.links.appStore')}</span>
-                  <p className="text-xs text-gray-400 truncate">{appConfig.iosUrl}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
+                }
+              />
             ) : null}
             {!appConfig?.androidUrl && !appConfig?.iosUrl && (
-              <p className="text-sm text-gray-400 py-2">{t('miApp.links.noLinks')}</p>
+              <p className="text-sm text-gray-400 py-2 sm:col-span-2">{t('miApp.links.noLinks')}</p>
             )}
           </div>
         </div>
@@ -759,6 +748,82 @@ export default function MiApp() {
         {history.length === 0 && (
           <p className="mt-4 text-sm text-gray-400">{t('miApp.push.noHistory')}</p>
         )}
+      </div>
+    </div>
+  )
+}
+
+interface DownloadCardProps {
+  url: string
+  label: string
+  qrFilenameSlug: string
+  accentColor: string
+  scanLabel: string
+  downloadQrLabel: string
+  icon: React.ReactNode
+}
+
+/**
+ * Card that combines the store-link button and a downloadable QR code so
+ * merchants can paste either the URL or the QR onto flyers / social posts
+ * without leaving the dashboard. The QR is rendered as a canvas (rather
+ * than SVG) so toDataURL gives us a PNG download in one click.
+ */
+function DownloadCard({ url, label, qrFilenameSlug, accentColor, scanLabel, downloadQrLabel, icon }: DownloadCardProps) {
+  // We render qrcode.react's canvas inside this div and then read it back
+  // for downloads. Querying for the canvas at click time avoids ref-
+  // forwarding edge cases between qrcode.react versions.
+  const qrContainerRef = useRef<HTMLDivElement>(null)
+
+  const handleDownloadQr = () => {
+    const canvas = qrContainerRef.current?.querySelector('canvas')
+    if (!canvas) return
+    const link = document.createElement('a')
+    link.href = canvas.toDataURL('image/png')
+    link.download = `${qrFilenameSlug}.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+      >
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: accentColor }}
+        >
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-medium text-gray-900 block">{label}</span>
+          <p className="text-xs text-gray-400 truncate">{url}</p>
+        </div>
+        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+
+      <div className="flex flex-col items-center gap-2 pt-3 border-t border-gray-200/60">
+        <div ref={qrContainerRef} className="bg-white p-2 rounded-lg">
+          <QRCodeCanvas value={url} size={144} level="M" includeMargin={false} />
+        </div>
+        <p className="text-[11px] text-gray-500 text-center px-2">{scanLabel}</p>
+        <button
+          type="button"
+          onClick={handleDownloadQr}
+          className="text-xs font-medium text-gray-700 hover:text-gray-900 inline-flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          {downloadQrLabel}
+        </button>
       </div>
     </div>
   )

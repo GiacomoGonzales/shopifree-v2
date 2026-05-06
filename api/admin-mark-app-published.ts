@@ -4,10 +4,21 @@ import { getFirestore, Firestore, FieldValue } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
 /**
- * Admin-only endpoint: marks a store's app as published, stores the Play Store
- * URL in appConfig.androidUrl, and optionally fires an email to the store owner.
+ * Admin-only endpoint: marks a store's app as published, stores the public
+ * Play Store and/or App Store URLs on appConfig, and optionally fires an
+ * email to the store owner.
  *
- * Body: { storeId: string, androidUrl: string, notifyOwner?: boolean }
+ * Body: {
+ *   storeId: string,
+ *   androidUrl?: string,    // play.google.com URL — optional, but at least
+ *   iosUrl?: string,        // apps.apple.com URL — one of these required
+ *   notifyOwner?: boolean
+ * }
+ *
+ * Either URL alone is enough — Android-only and iOS-only stores are real,
+ * and editing one URL later (e.g. Apple approval comes through after Play)
+ * shouldn't require re-pasting the other.
+ *
  * Auth: Firebase ID token (Authorization: Bearer <token>). Caller must be admin.
  */
 
@@ -48,6 +59,19 @@ function isValidPlayStoreUrl(url: string): boolean {
   }
 }
 
+function isValidAppStoreUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    // apps.apple.com is the canonical Apple URL host. Some old links still
+    // use itunes.apple.com (Apple redirects them) — accept both.
+    return u.hostname === 'apps.apple.com'
+      || u.hostname === 'itunes.apple.com'
+      || u.hostname.endsWith('.apps.apple.com')
+  } catch {
+    return false
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res)
   if (req.method === 'OPTIONS') return res.status(200).end()
@@ -65,14 +89,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin only' })
     }
 
-    const { storeId, androidUrl, notifyOwner } = req.body as {
+    const { storeId, androidUrl, iosUrl, notifyOwner } = req.body as {
       storeId?: string
       androidUrl?: string
+      iosUrl?: string
       notifyOwner?: boolean
     }
     if (!storeId) return res.status(400).json({ error: 'Missing storeId' })
-    if (!androidUrl || !isValidPlayStoreUrl(androidUrl)) {
+
+    // At least one URL must be provided — there's nothing to publish otherwise.
+    if (!androidUrl && !iosUrl) {
+      return res.status(400).json({ error: 'Provide at least one of androidUrl or iosUrl' })
+    }
+    if (androidUrl && !isValidPlayStoreUrl(androidUrl)) {
       return res.status(400).json({ error: 'androidUrl must be a valid play.google.com URL' })
+    }
+    if (iosUrl && !isValidAppStoreUrl(iosUrl)) {
+      return res.status(400).json({ error: 'iosUrl must be a valid apps.apple.com URL' })
     }
 
     const storeRef = getDb().collection('stores').doc(storeId)
@@ -86,12 +119,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       appConfig?: { appName?: string }
     }
 
-    // Update Firestore
-    await storeRef.update({
+    // Build update — only touch the URLs that were sent so editing one
+    // doesn't clobber the other. publishedAt stamps the most recent change.
+    const updates: Record<string, unknown> = {
       'appConfig.status': 'published',
-      'appConfig.androidUrl': androidUrl,
       'appConfig.publishedAt': FieldValue.serverTimestamp(),
-    })
+    }
+    if (androidUrl) updates['appConfig.androidUrl'] = androidUrl
+    if (iosUrl) updates['appConfig.iosUrl'] = iosUrl
+    await storeRef.update(updates)
 
     // Notify owner (fire-and-forget via send-email endpoint)
     if (notifyOwner) {
@@ -124,7 +160,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             storeName: storeData.name,
             subdomain: storeData.subdomain,
             appName: storeData.appConfig?.appName || storeData.name,
-            androidUrl,
+            ...(androidUrl && { androidUrl }),
+            ...(iosUrl && { iosUrl }),
           }),
         }).catch(() => { /* fire-and-forget */ })
       }
