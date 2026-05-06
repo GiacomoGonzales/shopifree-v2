@@ -1299,7 +1299,11 @@
       "appStore": "Apple App Store",
       "noLinks": "Links will be available when your app is published",
       "scanToDownload": "Scan this QR with your phone to download",
-      "downloadQr": "Download QR"
+      "downloadQr": "Download QR",
+      "androidTestingTitle": "Your Android app is in closed testing",
+      "androidTestingBody": "Google Play requires at least 12 testers to install your app from this link and keep it on their phones for 14 continuous days before promoting to production. Share the link and QR with your testers.",
+      "androidTestingTesters": "{{count}} of 12 testers",
+      "androidTestingPlayBadge": "IN TESTING"
     },
     "push": {
       "title": "Push Notifications",

@@ -35,6 +35,7 @@ interface StoreRow {
     status?: 'none' | 'requested' | 'building' | 'published'
     androidUrl?: string
     iosUrl?: string
+    androidIsTesting?: boolean
     publishedAt?: Timestamp | Date
     build?: BuildInfo      // Android
     buildIos?: BuildInfo   // iOS
@@ -73,6 +74,7 @@ export default function AppBuilds() {
   const [publishingStore, setPublishingStore] = useState<StoreRow | null>(null)
   const [publishAndroidUrl, setPublishAndroidUrl] = useState('')
   const [publishIosUrl, setPublishIosUrl] = useState('')
+  const [publishAndroidIsTesting, setPublishAndroidIsTesting] = useState(true)
   const [publishNotify, setPublishNotify] = useState(true)
   const [publishing, setPublishing] = useState(false)
 
@@ -197,6 +199,12 @@ export default function AppBuilds() {
     setPublishingStore(store)
     setPublishAndroidUrl(store.appConfig?.androidUrl || '')
     setPublishIosUrl(store.appConfig?.iosUrl || '')
+    // Default to testing=true on first publish (most apps start in closed
+    // testing). Otherwise reflect the saved flag so the operator only
+    // has to toggle it off when promoting to production.
+    setPublishAndroidIsTesting(
+      store.appConfig?.androidIsTesting ?? !store.appConfig?.androidUrl
+    )
     setPublishNotify(true)
   }
 
@@ -221,6 +229,9 @@ export default function AppBuilds() {
           storeId: publishingStore.id,
           ...(android && { androidUrl: android }),
           ...(ios && { iosUrl: ios }),
+          // Always send the testing flag so toggling it off (production
+          // promotion) actually persists, even when the URL doesn't change.
+          androidIsTesting: !!android && publishAndroidIsTesting,
           notifyOwner: publishNotify,
         }),
       })
@@ -422,6 +433,23 @@ export default function AppBuilds() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                 />
                 <p className="text-[11px] text-gray-500 mt-1">Copiá desde Play Console → Ficha de tienda principal</p>
+
+                {publishAndroidUrl.trim() && (
+                  <label className="flex items-start gap-2 mt-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={publishAndroidIsTesting}
+                      onChange={e => setPublishAndroidIsTesting(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
+                    <div className="text-[11px]">
+                      <span className="font-medium text-gray-700">URL de testing cerrado</span>
+                      <p className="text-gray-500">
+                        Si la app sigue en closed testing (12 testers × 14 dias antes de producción), dejá esto marcado. Al merchant le aparece una guía explicando qué hacer con el link. Desmarcá cuando ya sea URL pública.
+                      </p>
+                    </div>
+                  </label>
+                )}
               </div>
 
               <div>

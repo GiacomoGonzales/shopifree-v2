@@ -732,6 +732,10 @@ export interface StoreAppConfig {
   publishedAt?: Date
   androidUrl?: string
   iosUrl?: string
+  // True while the Android URL points to a closed testing track (Play Console
+  // requires 12+ testers active for 14 continuous days before promotion).
+  // Drives a contextual banner in the merchant's "Mi App" view.
+  androidIsTesting?: boolean
   pushEnabled: boolean
 
   // CI build tracking (Android) — updated by the GitHub Actions workflow.

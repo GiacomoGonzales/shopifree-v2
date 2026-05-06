@@ -89,10 +89,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin only' })
     }
 
-    const { storeId, androidUrl, iosUrl, notifyOwner } = req.body as {
+    const { storeId, androidUrl, iosUrl, androidIsTesting, notifyOwner } = req.body as {
       storeId?: string
       androidUrl?: string
       iosUrl?: string
+      androidIsTesting?: boolean
       notifyOwner?: boolean
     }
     if (!storeId) return res.status(400).json({ error: 'Missing storeId' })
@@ -127,6 +128,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (androidUrl) updates['appConfig.androidUrl'] = androidUrl
     if (iosUrl) updates['appConfig.iosUrl'] = iosUrl
+    // androidIsTesting is sent every time so the merchant can flip it
+    // off when the app graduates to production. Only persist if Android
+    // URL is being set in this request OR was already set, to avoid
+    // creating a stale flag without a URL to qualify.
+    if (typeof androidIsTesting === 'boolean') {
+      updates['appConfig.androidIsTesting'] = androidIsTesting
+    }
     await storeRef.update(updates)
 
     // Notify owner (fire-and-forget via send-email endpoint)

@@ -1300,7 +1300,11 @@
       "appStore": "Apple App Store",
       "noLinks": "Los links estarán disponibles cuando tu app sea publicada",
       "scanToDownload": "Escaneá este QR con el celular para descargar",
-      "downloadQr": "Descargar QR"
+      "downloadQr": "Descargar QR",
+      "androidTestingTitle": "Tu app de Android está en pruebas cerradas",
+      "androidTestingBody": "Google Play exige que al menos 12 testers instalen tu app desde este link y la mantengan en su celular durante 14 días continuos antes de publicarla a producción. Compartí el link y el QR con tus testers.",
+      "androidTestingTesters": "{{count}} de 12 testers",
+      "androidTestingPlayBadge": "EN PRUEBAS"
     },
     "push": {
       "title": "Notificaciones Push",

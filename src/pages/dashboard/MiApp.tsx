@@ -617,6 +617,27 @@ export default function MiApp() {
       {currentStatus === 'published' && (
         <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900">{t('miApp.links.title')}</h2>
+
+          {/* Closed-testing banner — Google Play policy requires 12 testers
+              for 14 continuous days before production. Surfaces the rule
+              right next to the testing URL so the merchant knows what to do. */}
+          {appConfig?.androidIsTesting && appConfig?.androidUrl && (
+            <div className="mt-4 border border-amber-200 bg-amber-50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-amber-900">{t('miApp.links.androidTestingTitle')}</p>
+                  <p className="text-xs text-amber-800 mt-1">{t('miApp.links.androidTestingBody')}</p>
+                  <p className="text-[11px] font-medium text-amber-900 mt-2 tabular-nums">
+                    {t('miApp.links.androidTestingTesters', { count: testers.length })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 grid sm:grid-cols-2 gap-3">
             {appConfig?.androidUrl ? (
               <AppDownloadCard
