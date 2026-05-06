@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { collection, getDocs, onSnapshot, query, where, type Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
 
@@ -59,6 +61,7 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 
 export default function AppBuilds() {
   const { firebaseUser } = useAuth()
+  const { localePath } = useLanguage()
   const { showToast } = useToast()
   const [stores, setStores] = useState<StoreRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -298,6 +301,17 @@ export default function AppBuilds() {
                         {store.appConfig?.appName || store.subdomain}
                       </p>
                     </div>
+                    <Link
+                      to={localePath(`/admin/stores/${store.id}/app-preview`)}
+                      className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors flex-shrink-0 inline-flex items-center gap-1"
+                      title="Ver como se ve esta seccion en el dashboard del dueno"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Vista previa
+                    </Link>
                     <button
                       type="button"
                       onClick={() => setViewingStoreId(store.id)}

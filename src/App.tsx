@@ -64,6 +64,7 @@ import AdminPlans from './pages/admin/Plans'
 import AdminPaidStores from './pages/admin/PaidStores'
 import AdminFeedback from './pages/admin/Feedback'
 import AdminMediaStats from './pages/admin/MediaStats'
+import AdminStoreAppPreview from './pages/admin/StoreAppPreview'
 
 // Payment Pages
 import PaymentSuccess from './pages/payment/PaymentSuccess'
@@ -250,6 +251,7 @@ function AppRoutes() {
           <Route path="plans" element={<AdminPlans />} />
           <Route path="feedback" element={<AdminFeedback />} />
           <Route path="app-builds" element={<AdminAppBuilds />} />
+          <Route path="stores/:storeId/app-preview" element={<AdminStoreAppPreview />} />
           <Route path="media" element={<AdminMediaStats />} />
         </Route>
       </Route>
