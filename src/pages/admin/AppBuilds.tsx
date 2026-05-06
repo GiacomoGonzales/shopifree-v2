@@ -296,9 +296,9 @@ export default function AppBuilds() {
               const androidStatus = androidBuild?.status || 'idle'
               const iosStatus = iosBuild?.status || 'idle'
               return (
-                <div key={store.id} className="px-4 py-3">
-                  {/* Store identity row */}
-                  <div className="flex items-center gap-3 min-w-0 mb-3">
+                <div key={store.id} className="px-3 sm:px-4 py-3 sm:py-4">
+                  {/* Store identity — logo + name + status badge */}
+                  <div className="flex items-start gap-3 min-w-0 mb-3">
                     {store.logo ? (
                       <img src={store.logo} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                     ) : (
@@ -312,9 +312,20 @@ export default function AppBuilds() {
                         {store.appConfig?.appName || store.subdomain}
                       </p>
                     </div>
+                    {store.appConfig?.status === 'published' && (
+                      <span className="px-2 py-0.5 rounded-sm text-[10px] font-medium tracking-wide uppercase bg-black text-white flex-shrink-0">
+                        Publicada
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action row — Vista previa, Datos, version input. Wraps
+                      onto its own line so mobile doesn't crush the identity
+                      row with five competing controls. */}
+                  <div className="flex flex-wrap items-center gap-2 mb-3 sm:pl-[52px]">
                     <Link
                       to={localePath(`/admin/stores/${store.id}/app-preview`)}
-                      className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors flex-shrink-0 inline-flex items-center gap-1"
+                      className="px-2.5 py-1.5 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors inline-flex items-center gap-1"
                       title="Ver como se ve esta seccion en el dashboard del dueno"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -326,7 +337,7 @@ export default function AppBuilds() {
                     <button
                       type="button"
                       onClick={() => setViewingStoreId(store.id)}
-                      className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors flex-shrink-0 inline-flex items-center gap-1"
+                      className="px-2.5 py-1.5 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors inline-flex items-center gap-1"
                       title="Ver datos de Play Console (ícono, contacto, testers)"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -339,22 +350,21 @@ export default function AppBuilds() {
                         </span>
                       )}
                     </button>
-                    <input
-                      type="text"
-                      placeholder="1.0.0"
-                      value={versionName[store.id] || ''}
-                      onChange={e => setVersionName(prev => ({ ...prev, [store.id]: e.target.value }))}
-                      className="w-20 px-2 py-1 border border-gray-200 rounded-md text-xs flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
-                    />
-                    {store.appConfig?.status === 'published' && (
-                      <span className="px-2 py-0.5 rounded-sm text-[10px] font-medium tracking-wide uppercase bg-black text-white flex-shrink-0">
-                        Publicada
-                      </span>
-                    )}
+                    <div className="inline-flex items-center gap-1.5 ml-auto">
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wide">v</label>
+                      <input
+                        type="text"
+                        placeholder="1.0.0"
+                        value={versionName[store.id] || ''}
+                        onChange={e => setVersionName(prev => ({ ...prev, [store.id]: e.target.value }))}
+                        className="w-16 px-2 py-1 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                      />
+                    </div>
                   </div>
 
-                  {/* Platform rows: Android + iOS */}
-                  <div className="pl-[52px] space-y-2">
+                  {/* Platform rows: Android + iOS — indent only on desktop
+                      so the rows don't waste 52px of mobile real estate. */}
+                  <div className="space-y-3 sm:space-y-2 sm:pl-[52px]">
                     <PlatformRow
                       label="Android"
                       icon={
@@ -942,84 +952,91 @@ function PlatformRow({
   const isDisabled = !!disabledReason
 
   return (
-    <div className="flex items-center gap-2 text-xs flex-wrap">
-      <span className="inline-flex items-center gap-1.5 min-w-[60px]">
-        {icon}
-        <span className="font-medium text-gray-700">{label}</span>
-      </span>
+    <div className="text-xs">
+      {/* Status row — icon + label + status badge + build version. Always
+          on its own line so the merchant's status reads at a glance even
+          when actions stack below on a narrow screen. */}
+      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+        <span className="inline-flex items-center gap-1.5">
+          {icon}
+          <span className="font-medium text-gray-700">{label}</span>
+        </span>
+        <span className={`px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wide ${badge.cls}`}>
+          {badge.label}
+        </span>
+        {build?.buildNumber ? (
+          <span className="text-gray-500 text-[11px] tabular-nums">v{build.versionName || ''} (#{build.buildNumber})</span>
+        ) : null}
+      </div>
 
-      <span className={`px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wide ${badge.cls}`}>
-        {badge.label}
-      </span>
-
-      {build?.buildNumber ? (
-        <span className="text-gray-500 text-[11px] tabular-nums">v{build.versionName || ''} (#{build.buildNumber})</span>
-      ) : null}
-
-      <button
-        onClick={onTrigger}
-        disabled={isBuilding || triggering || isDisabled}
-        className="px-2.5 py-1 bg-black text-white rounded-md text-[11px] font-medium hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        title={disabledReason}
-      >
-        {triggering ? 'Encolando…' : isBuilding ? 'Compilando…' : 'Generar'}
-      </button>
-
-      {canMarkPublished && (
+      {/* Actions row — bigger touch targets on mobile, wraps naturally. */}
+      <div className="flex items-center gap-2 flex-wrap">
         <button
-          onClick={onPublish}
-          className="px-2.5 py-1 border border-gray-900 text-gray-900 rounded-md text-[11px] font-medium hover:bg-gray-900 hover:text-white transition-colors"
+          onClick={onTrigger}
+          disabled={isBuilding || triggering || isDisabled}
+          className="px-3 py-1.5 bg-black text-white rounded-md text-[11px] font-medium hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          title={disabledReason}
         >
-          Agregar URL
+          {triggering ? 'Encolando…' : isBuilding ? 'Compilando…' : 'Generar'}
         </button>
-      )}
 
-      {isPublished && (
-        <button
-          onClick={onPublish}
-          className="px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors"
-        >
-          Editar URL
-        </button>
-      )}
+        {canMarkPublished && (
+          <button
+            onClick={onPublish}
+            className="px-3 py-1.5 border border-gray-900 text-gray-900 rounded-md text-[11px] font-medium hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            Agregar URL
+          </button>
+        )}
 
+        {isPublished && (
+          <button
+            onClick={onPublish}
+            className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium hover:bg-gray-50 transition-colors"
+          >
+            Editar URL
+          </button>
+        )}
+
+        {build?.artifactUrl && (
+          <a
+            href={build.artifactUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2 py-1.5 text-gray-700 hover:text-gray-900 font-medium inline-flex items-center gap-1 underline underline-offset-2"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            {artifactLabel}
+          </a>
+        )}
+
+        {build?.runUrl && (
+          <a href={build.runUrl} target="_blank" rel="noopener noreferrer" className="px-2 py-1.5 text-gray-500 hover:text-gray-900">
+            logs →
+          </a>
+        )}
+      </div>
+
+      {/* URL link — separate row so long URLs don't wrap mid-button-row. */}
       {publishedUrl && (
         <a
           href={publishedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-700 hover:text-gray-900 inline-flex items-center gap-1 underline underline-offset-2 truncate max-w-[200px]"
+          className="text-gray-700 hover:text-gray-900 inline-flex items-center gap-1 underline underline-offset-2 mt-2 max-w-full"
           title={publishedUrl}
         >
           <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>
-          Ver en {label === 'Android' ? 'Play Store' : 'App Store'}
-        </a>
-      )}
-
-      {build?.artifactUrl && (
-        <a
-          href={build.artifactUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-700 hover:text-gray-900 font-medium inline-flex items-center gap-1 underline underline-offset-2"
-        >
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Descargar {artifactLabel}
-        </a>
-      )}
-
-      {build?.runUrl && (
-        <a href={build.runUrl} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-900">
-          logs →
+          <span className="truncate">Ver en {label === 'Android' ? 'Play Store' : 'App Store'}</span>
         </a>
       )}
 
       {build?.lastError && (
-        <span className="text-gray-900 font-medium truncate max-w-xs">{build.lastError}</span>
+        <p className="text-gray-900 font-medium mt-2 break-words">{build.lastError}</p>
       )}
     </div>
   )
