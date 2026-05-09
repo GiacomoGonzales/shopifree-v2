@@ -1023,6 +1023,11 @@
       "description": "Verifica la propiedad de tu sitio para monitorear tu presencia en Google.",
       "label": "Código de verificación",
       "placeholder": "Pega el contenido de la meta tag"
+    },
+    "customHeadHtml": {
+      "title": "Código personalizado en <head>",
+      "description": "Pega aquí cualquier etiqueta HTML que necesites en el <head> de tu tienda: validación de SSL, scripts de verificación, analítica externa, etc.",
+      "label": "HTML / scripts"
     }
   },
   "coupons": {

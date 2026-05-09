@@ -20,6 +20,7 @@ export default function Integrations() {
   const [googleSearchConsole, setGoogleSearchConsole] = useState('')
   const [cjApiKey, setCjApiKey] = useState('')
   const [printfulToken, setPrintfulToken] = useState('')
+  const [customHeadHtml, setCustomHeadHtml] = useState('')
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -41,6 +42,7 @@ export default function Integrations() {
             setGoogleSearchConsole(storeData.integrations.googleSearchConsole || '')
             setCjApiKey(storeData.integrations.cjApiKey || '')
             setPrintfulToken(storeData.integrations.printfulToken || '')
+            setCustomHeadHtml(storeData.integrations.customHeadHtml || '')
           }
         }
       } catch (error) {
@@ -66,6 +68,7 @@ export default function Integrations() {
           googleSearchConsole: googleSearchConsole.trim() || null,
           cjApiKey: cjApiKey.trim() || null,
           printfulToken: printfulToken.trim() || null,
+          customHeadHtml: customHeadHtml.trim() || null,
         },
         updatedAt: new Date()
       })
@@ -177,6 +180,22 @@ export default function Integrations() {
         </svg>
       ),
     },
+    {
+      key: 'customHeadHtml',
+      title: t('integrations.customHeadHtml.title'),
+      description: t('integrations.customHeadHtml.description'),
+      label: t('integrations.customHeadHtml.label'),
+      placeholder: '<meta name="example-site-verification" content="abc123" />\n<!-- O un script de validación SSL, etc. -->',
+      value: customHeadHtml,
+      onChange: setCustomHeadHtml,
+      color: '#475569',
+      multiline: true,
+      icon: (
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      ),
+    },
   ]
 
   return (
@@ -215,13 +234,23 @@ export default function Integrations() {
 
             <div className="mt-4 pt-4 border-t border-gray-200/60">
               <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{card.label}</label>
-              <input
-                type="text"
-                value={card.value}
-                onChange={(e) => card.onChange(e.target.value)}
-                placeholder={card.placeholder}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
-              />
+              {card.multiline ? (
+                <textarea
+                  value={card.value}
+                  onChange={(e) => card.onChange(e.target.value)}
+                  placeholder={card.placeholder}
+                  rows={6}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm resize-y"
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={card.value}
+                  onChange={(e) => card.onChange(e.target.value)}
+                  placeholder={card.placeholder}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
+                />
+              )}
             </div>
           </div>
         ))}

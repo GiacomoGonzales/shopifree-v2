@@ -202,6 +202,7 @@ export interface StoreIntegrations {
   googleSearchConsole?: string // verification code
   cjApiKey?: string           // CJ Dropshipping API key
   printfulToken?: string      // Printful API private token
+  customHeadHtml?: string     // Raw HTML/scripts injected verbatim into the storefront <head> (SSL validators, custom analytics, etc.)
 }
 
 export interface StorePayments {

@@ -1022,6 +1022,11 @@
       "description": "Verify site ownership to monitor your presence on Google.",
       "label": "Verification code",
       "placeholder": "Paste the meta tag content"
+    },
+    "customHeadHtml": {
+      "title": "Custom <head> code",
+      "description": "Paste any HTML tags you need in your store's <head>: SSL validation, verification scripts, external analytics, etc.",
+      "label": "HTML / scripts"
     }
   },
   "coupons": {

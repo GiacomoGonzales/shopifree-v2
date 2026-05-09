@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { useCustomHeadHtml } from '../../hooks/useCustomHeadHtml'
 
 interface PendingOrder {
   orderId: string
@@ -10,6 +11,7 @@ interface PendingOrder {
   orderNumber: string
   language?: string
   storeSubdomain?: string
+  customHeadHtml?: string
 }
 
 function recoverOrderData(searchParams: URLSearchParams): PendingOrder | null {
@@ -31,6 +33,8 @@ export default function PaymentFailure() {
   const [searchParams] = useSearchParams()
   const [pendingOrder] = useState<PendingOrder | null>(() => recoverOrderData(searchParams))
   const markedRef = useRef(false)
+
+  useCustomHeadHtml(pendingOrder?.customHeadHtml)
 
   // Mark the order as payment failed (fallback in case webhook doesn't arrive)
   useEffect(() => {

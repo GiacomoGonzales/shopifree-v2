@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
+import { useCustomHeadHtml } from '../../hooks/useCustomHeadHtml'
 import type { Store, Product, Category } from '../../types'
 
 interface StoreSEOProps {
@@ -105,6 +106,9 @@ export default function StoreSEO({ store, products, categories, product }: Store
       updateFavicon(store.logo)
     }
   }, [store.logo])
+
+  // Inject merchant-provided custom <head> HTML (SSL validators, custom analytics, etc.)
+  useCustomHeadHtml(store.integrations?.customHeadHtml)
 
   // Build the store URL
   const storeUrl = store.customDomain

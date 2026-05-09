@@ -726,7 +726,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
           items: createdOrder.items,
           subtotal: createdOrder.subtotal,
           shippingCost: createdOrder.shippingCost || 0,
-          total: createdOrder.total
+          total: createdOrder.total,
+          customHeadHtml: store.integrations?.customHeadHtml,
         }))
 
         setLoading(false)
@@ -808,6 +809,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         shippingCost: createdOrder.shippingCost || 0,
         total: createdOrder.total,
         paymentMethod: 'paypal',
+        customHeadHtml: store.integrations?.customHeadHtml,
       }))
 
       window.location.href = json.approveUrl
@@ -864,7 +866,8 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         items: orderToUse.items,
         subtotal: orderToUse.subtotal,
         shippingCost: orderToUse.shippingCost || 0,
-        total: orderToUse.total
+        total: orderToUse.total,
+        customHeadHtml: store.integrations?.customHeadHtml,
       }))
 
       // Redirect to MercadoPago

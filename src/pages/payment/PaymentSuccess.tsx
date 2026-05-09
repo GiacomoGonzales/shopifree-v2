@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { apiUrl } from '../../utils/apiBase'
+import { useCustomHeadHtml } from '../../hooks/useCustomHeadHtml'
 
 interface PendingOrderData {
   orderId: string
@@ -30,6 +31,7 @@ interface PendingOrderData {
   // even when PayPal's `?token=...` param is missing or filtered.
   paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
   paypalOrderId?: string
+  customHeadHtml?: string
 }
 
 function getCurrencySymbol(currency: string): string {
@@ -70,6 +72,8 @@ export default function PaymentSuccess() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [orderData, setOrderData] = useState<PendingOrderData | null>(null)
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
+
+  useCustomHeadHtml(orderData?.customHeadHtml)
 
   useEffect(() => {
     const data = recoverOrderData(searchParams)
