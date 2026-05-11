@@ -29,7 +29,7 @@ interface PendingOrderData {
   total?: number
   // Set by useCheckout.processPayPal so the success page can call capture
   // even when PayPal's `?token=...` param is missing or filtered.
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas' | 'transfer'
   paypalOrderId?: string
   customHeadHtml?: string
   customBodyHtml?: string
