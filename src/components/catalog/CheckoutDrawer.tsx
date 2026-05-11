@@ -124,7 +124,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
   const t = getThemeTranslations(store.language)
 
   // Track selected payment method for dynamic button text
-  const [selectedPayment, setSelectedPayment] = useState<'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'>('whatsapp')
+  const [selectedPayment, setSelectedPayment] = useState<'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas' | 'transfer'>('whatsapp')
 
   // Form refs
   const customerFormRef = useRef<CustomerFormRef>(null)
@@ -154,6 +154,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     processWhatsApp,
     processMercadoPago,
     processPayPal,
+    processGoCuotas,
     processStripe,
     processStripePaymentComplete,
     processTransfer,
@@ -243,7 +244,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     }
   }, [order, onOrderComplete, onClose])
 
-  const handlePaymentSubmit = useCallback((method: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer') => {
+  const handlePaymentSubmit = useCallback((method: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas' | 'transfer') => {
     switch (method) {
       case 'whatsapp':
         processWhatsApp()
@@ -257,11 +258,14 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
       case 'paypal':
         processPayPal()
         break
+      case 'gocuotas':
+        processGoCuotas()
+        break
       case 'transfer':
         processTransfer()
         break
     }
-  }, [processWhatsApp, processMercadoPago, processStripe, processPayPal, processTransfer])
+  }, [processWhatsApp, processMercadoPago, processStripe, processPayPal, processGoCuotas, processTransfer])
 
   // Handle continue button click
   const handleContinue = useCallback(() => {

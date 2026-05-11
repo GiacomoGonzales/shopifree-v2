@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { apiUrl } from '../../utils/apiBase'
-import { useCustomHeadHtml } from '../../hooks/useCustomHeadHtml'
+import { useCustomHeadHtml, useCustomBodyHtml } from '../../hooks/useCustomHeadHtml'
 
 interface PendingOrderData {
   orderId: string
@@ -32,6 +32,7 @@ interface PendingOrderData {
   paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
   paypalOrderId?: string
   customHeadHtml?: string
+  customBodyHtml?: string
 }
 
 function getCurrencySymbol(currency: string): string {
@@ -74,6 +75,7 @@ export default function PaymentSuccess() {
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
 
   useCustomHeadHtml(orderData?.customHeadHtml)
+  useCustomBodyHtml(orderData?.customBodyHtml)
 
   useEffect(() => {
     const data = recoverOrderData(searchParams)
@@ -326,11 +328,20 @@ function buildWhatsAppUrl(whatsapp: string, data: PendingOrderData): string {
   const sym = getCurrencySymbol(currency)
   const lang = data.language || 'es'
 
+  const gatewayName =
+    data.paymentMethod === 'paypal' ? 'PayPal'
+    : data.paymentMethod === 'stripe' ? 'Stripe'
+    : data.paymentMethod === 'gocuotas' ? 'Go Cuotas'
+    : 'MercadoPago'
+  const paidViaLabel = lang === 'en' ? `Paid via ${gatewayName}`
+    : lang === 'pt' ? `Pago com ${gatewayName}`
+    : `Pagado con ${gatewayName}`
+
   const labels = lang === 'en'
-    ? { paid: 'PAID', order: 'Order', customer: 'Customer', phone: 'Phone', delivery: 'Delivery', pickup: 'Store pickup', homeDelivery: 'Home delivery', ref: 'Ref', items: 'Items', subtotal: 'Subtotal', shipping: 'Shipping', total: 'Total', notes: 'Notes', paidVia: 'Paid via MercadoPago' }
+    ? { paid: 'PAID', order: 'Order', customer: 'Customer', phone: 'Phone', delivery: 'Delivery', pickup: 'Store pickup', homeDelivery: 'Home delivery', ref: 'Ref', items: 'Items', subtotal: 'Subtotal', shipping: 'Shipping', total: 'Total', notes: 'Notes', paidVia: paidViaLabel }
     : lang === 'pt'
-    ? { paid: 'PAGO', order: 'Pedido', customer: 'Cliente', phone: 'Telefone', delivery: 'Entrega', pickup: 'Retirar na loja', homeDelivery: 'Entrega em domicilio', ref: 'Referencia', items: 'Itens', subtotal: 'Subtotal', shipping: 'Frete', total: 'Total', notes: 'Observacoes', paidVia: 'Pago com MercadoPago' }
-    : { paid: 'PAGADO', order: 'Pedido', customer: 'Cliente', phone: 'Tel', delivery: 'Entrega', pickup: 'Retiro en tienda', homeDelivery: 'Delivery', ref: 'Ref', items: 'Productos', subtotal: 'Subtotal', shipping: 'Envio', total: 'Total', notes: 'Notas', paidVia: 'Pagado con MercadoPago' }
+    ? { paid: 'PAGO', order: 'Pedido', customer: 'Cliente', phone: 'Telefone', delivery: 'Entrega', pickup: 'Retirar na loja', homeDelivery: 'Entrega em domicilio', ref: 'Referencia', items: 'Itens', subtotal: 'Subtotal', shipping: 'Frete', total: 'Total', notes: 'Observacoes', paidVia: paidViaLabel }
+    : { paid: 'PAGADO', order: 'Pedido', customer: 'Cliente', phone: 'Tel', delivery: 'Entrega', pickup: 'Retiro en tienda', homeDelivery: 'Delivery', ref: 'Ref', items: 'Productos', subtotal: 'Subtotal', shipping: 'Envio', total: 'Total', notes: 'Notas', paidVia: paidViaLabel }
 
   let msg = `*${labels.order} ${data.orderNumber}*\n`
   msg += `*${labels.paidVia}*\n\n`

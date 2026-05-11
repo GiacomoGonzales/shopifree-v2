@@ -285,7 +285,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   }, [items])
 
   // Create order in Firestore
-  const createOrder = useCallback(async (paymentMethod: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'): Promise<Order> => {
+  const createOrder = useCallback(async (paymentMethod: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas' | 'transfer'): Promise<Order> => {
     if (!data.customer || !data.delivery) {
       throw new Error('Missing customer or delivery data')
     }
@@ -728,6 +728,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
           shippingCost: createdOrder.shippingCost || 0,
           total: createdOrder.total,
           customHeadHtml: store.integrations?.customHeadHtml,
+          customBodyHtml: store.integrations?.customBodyHtml,
         }))
 
         setLoading(false)
@@ -810,11 +811,80 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         total: createdOrder.total,
         paymentMethod: 'paypal',
         customHeadHtml: store.integrations?.customHeadHtml,
+        customBodyHtml: store.integrations?.customBodyHtml,
       }))
 
       window.location.href = json.approveUrl
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error processing PayPal payment')
+      setLoading(false)
+    }
+  }, [store, items, data.customer, data.delivery, createOrder])
+
+  // Process Go Cuotas payment — creates the Shopifree order, asks our backend
+  // to authenticate against Go Cuotas and create a checkout, then redirects
+  // the buyer to the url_init returned by Go Cuotas. After payment Go Cuotas
+  // redirects back to /payment/success?gocuotas=1 (or /failure) and fires
+  // /api/gocuotas-webhook to confirm the order server-side.
+  const processGoCuotas = useCallback(async () => {
+    if (!store.payments?.gocuotas?.enabled) {
+      setError('Go Cuotas no esta habilitado')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const createdOrder = await createOrder('gocuotas')
+      setOrder(createdOrder)
+      if (data.customer && data.delivery) {
+        saveCustomerData(store.id, data.customer, data.delivery)
+      }
+
+      const res = await fetch(apiUrl('/api/create-gocuotas-checkout'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: store.id,
+          orderId: createdOrder.id,
+          orderNumber: createdOrder.orderNumber,
+          amount: createdOrder.total,
+          customerEmail: data.customer?.email,
+          customerPhone: data.customer?.phone,
+          origin: window.location.origin,
+        }),
+      })
+      const text = await res.text()
+      const json = text ? JSON.parse(text) : {}
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`)
+      if (!json.url_init) throw new Error('Go Cuotas did not return a redirect URL')
+
+      localStorage.setItem('pendingOrder', JSON.stringify({
+        orderId: createdOrder.id,
+        storeId: store.id,
+        orderNumber: createdOrder.orderNumber,
+        language: store.language || 'es',
+        storeName: store.name,
+        storeWhatsapp: store.whatsapp,
+        storeSubdomain: store.subdomain,
+        currency: store.currency || 'USD',
+        customer: data.customer,
+        deliveryMethod: data.delivery?.method,
+        deliveryAddress: data.delivery?.address,
+        observations: data.delivery?.observations,
+        items: createdOrder.items,
+        subtotal: createdOrder.subtotal,
+        shippingCost: createdOrder.shippingCost || 0,
+        total: createdOrder.total,
+        paymentMethod: 'gocuotas',
+        customHeadHtml: store.integrations?.customHeadHtml,
+        customBodyHtml: store.integrations?.customBodyHtml,
+      }))
+
+      window.location.href = json.url_init
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error processing Go Cuotas payment')
       setLoading(false)
     }
   }, [store, items, data.customer, data.delivery, createOrder])
@@ -868,6 +938,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         shippingCost: orderToUse.shippingCost || 0,
         total: orderToUse.total,
         customHeadHtml: store.integrations?.customHeadHtml,
+        customBodyHtml: store.integrations?.customBodyHtml,
       }))
 
       // Redirect to MercadoPago
@@ -1082,6 +1153,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     processStripePaymentComplete,
     processTransfer,
     processPayPal,
+    processGoCuotas,
     processBrickPayment,
     fallbackToCheckoutPro
   }

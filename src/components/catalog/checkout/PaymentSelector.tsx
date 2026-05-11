@@ -3,7 +3,7 @@ import { useTheme } from '../ThemeContext'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 
-type PaymentMethod = 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer'
+type PaymentMethod = 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas' | 'transfer'
 
 interface Props {
   store: Store
@@ -34,8 +34,15 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
   // already; the worst case (creds revoked since save) is a 401 on capture
   // which the success page surfaces as a paid=false error.
   const hasPayPal = !!(store.payments?.paypal?.enabled && store.payments?.paypal?.clientId && store.payments?.paypal?.clientSecret)
+  // Go Cuotas — only surfaces in Argentine stores with credentials configured.
+  const hasGoCuotas = !!(
+    store.payments?.gocuotas?.enabled &&
+    store.payments?.gocuotas?.email &&
+    store.payments?.gocuotas?.password &&
+    store.location?.country?.toUpperCase() === 'AR'
+  )
 
-  const firstAvailable: PaymentMethod = hasWhatsApp ? 'whatsapp' : hasMercadoPago ? 'mercadopago' : hasStripe ? 'stripe' : hasPayPal ? 'paypal' : 'whatsapp'
+  const firstAvailable: PaymentMethod = hasWhatsApp ? 'whatsapp' : hasMercadoPago ? 'mercadopago' : hasStripe ? 'stripe' : hasPayPal ? 'paypal' : hasGoCuotas ? 'gocuotas' : 'whatsapp'
   const [selected, setSelected] = useState<PaymentMethod>(firstAvailable)
 
   useImperativeHandle(ref, () => ({
@@ -175,6 +182,19 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
             title={t.payViaPayPal}
             description={t.paypalPaymentDesc}
             customIconStyle="rounded-xl overflow-hidden bg-white shadow-sm flex items-center justify-center"
+          />
+        )}
+
+        {/* Go Cuotas - Argentine "buy now, pay later" */}
+        {hasGoCuotas && (
+          <PaymentOption
+            value="gocuotas"
+            icon={
+              <span className="text-white font-extrabold text-xs tracking-tight">GO</span>
+            }
+            title="Pagar con Go Cuotas"
+            description="Cuotas sin tarjeta (solo Argentina)"
+            customIconStyle="rounded-xl shadow-sm bg-[#FF1F6D]"
           />
         )}
       </div>

@@ -203,6 +203,7 @@ export interface StoreIntegrations {
   cjApiKey?: string           // CJ Dropshipping API key
   printfulToken?: string      // Printful API private token
   customHeadHtml?: string     // Raw HTML/scripts injected verbatim into the storefront <head> (SSL validators, custom analytics, etc.)
+  customBodyHtml?: string     // Raw HTML/scripts injected verbatim before </body> (visual badges like TrustLogo, chat widgets, etc.)
 }
 
 export interface StorePayments {
@@ -222,6 +223,18 @@ export interface StorePayments {
     testMode: boolean
   }
   paypal?: StorePaymentsPayPal
+  gocuotas?: StorePaymentsGoCuotas
+}
+
+// Go Cuotas — Argentine "buy now, pay later" gateway. Uses API REDIRECT V1
+// (see https://gocuotas-api.stoplight.io/docs/gocuotas). Authentication is
+// email + password → token, then POST /checkouts to get a url_init to redirect
+// the buyer. Country-gated to Argentina (no other markets supported).
+export interface StorePaymentsGoCuotas {
+  enabled: boolean
+  sandbox: boolean              // true → uses sandbox.gocuotas.com instead of www.gocuotas.com
+  email?: string                // merchant's GOcuotas account email
+  password?: string             // merchant's GOcuotas password (server-side only, never sent to client)
 }
 
 // PayPal connection state — Standard Checkout flavor. The merchant pastes
@@ -543,7 +556,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 
   // Pago
-  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'transfer' | 'cash' | 'card' | 'other'
+  paymentMethod?: 'whatsapp' | 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas' | 'transfer' | 'cash' | 'card' | 'other'
   paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded'
   paymentId?: string            // ID de MercadoPago
   paidAt?: Date                 // When payment was confirmed (marks real income for cash flow)

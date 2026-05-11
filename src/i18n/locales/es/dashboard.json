@@ -1025,9 +1025,12 @@
       "placeholder": "Pega el contenido de la meta tag"
     },
     "customHeadHtml": {
-      "title": "Código personalizado en <head>",
-      "description": "Pega aquí cualquier etiqueta HTML que necesites en el <head> de tu tienda: validación de SSL, scripts de verificación, analítica externa, etc.",
-      "label": "HTML / scripts"
+      "title": "Código HTML personalizado",
+      "description": "Pegá aquí etiquetas HTML para integrar servicios externos: validación SSL, badges de seguridad, scripts de tracking, chat widgets, etc.",
+      "label": "HTML / scripts",
+      "headLabel": "Código en <head>",
+      "bodyLabel": "Código antes de </body>",
+      "warning": "Si pegás código con errores tu tienda puede dejar de cargar. Si eso pasa, borrá el campo y guardá los cambios para volver a la normalidad."
     }
   },
   "coupons": {

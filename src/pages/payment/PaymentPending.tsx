@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { apiUrl } from '../../utils/apiBase'
-import { useCustomHeadHtml } from '../../hooks/useCustomHeadHtml'
+import { useCustomHeadHtml, useCustomBodyHtml } from '../../hooks/useCustomHeadHtml'
 
 interface PendingOrder {
   orderId: string
@@ -11,6 +11,7 @@ interface PendingOrder {
   language?: string
   storeSubdomain?: string
   customHeadHtml?: string
+  customBodyHtml?: string
 }
 
 function recoverOrderData(searchParams: URLSearchParams): PendingOrder | null {
@@ -34,6 +35,7 @@ export default function PaymentPending() {
   const [language, setLanguage] = useState<string>(orderData?.language || 'es')
 
   useCustomHeadHtml(orderData?.customHeadHtml)
+  useCustomBodyHtml(orderData?.customBodyHtml)
 
   useEffect(() => {
     if (!orderData) return

@@ -36,6 +36,12 @@ export default function Payments() {
   const [stripeSecretKey, setStripeSecretKey] = useState('')
   const [stripeTestMode, setStripeTestMode] = useState(true)
 
+  // Go Cuotas settings (Argentina-only)
+  const [gcEnabled, setGcEnabled] = useState(false)
+  const [gcEmail, setGcEmail] = useState('')
+  const [gcPassword, setGcPassword] = useState('')
+  const [gcSandbox, setGcSandbox] = useState(true)
+
   useEffect(() => {
     const fetchStore = async () => {
       if (!firebaseUser) return
@@ -63,6 +69,13 @@ export default function Payments() {
             setStripePublishableKey(storeData.payments.stripe.publishableKey || '')
             setStripeSecretKey(storeData.payments.stripe.secretKey || '')
             setStripeTestMode(storeData.payments.stripe.testMode ?? true)
+          }
+
+          if (storeData.payments?.gocuotas) {
+            setGcEnabled(storeData.payments.gocuotas.enabled || false)
+            setGcEmail(storeData.payments.gocuotas.email || '')
+            setGcPassword(storeData.payments.gocuotas.password || '')
+            setGcSandbox(storeData.payments.gocuotas.sandbox ?? true)
           }
         }
       } catch (error) {
@@ -96,6 +109,12 @@ export default function Payments() {
             publishableKey: stripePublishableKey || null,
             secretKey: stripeSecretKey || null,
             testMode: stripeTestMode
+          },
+          gocuotas: {
+            enabled: gcEnabled,
+            email: gcEmail.trim() || null,
+            password: gcPassword || null,
+            sandbox: gcSandbox
           }
         },
         updatedAt: new Date()
@@ -113,7 +132,8 @@ export default function Payments() {
   const storeCountry = store?.location?.country?.toUpperCase() || ''
   const hasMercadoPagoAvailable = hasGateway(storeCountry, 'mercadopago')
   const hasStripeAvailable = hasGateway(storeCountry, 'stripe')
-  const hasNoGateway = !hasMercadoPagoAvailable && !hasStripeAvailable
+  const hasGoCuotasAvailable = storeCountry === 'AR'  // Argentina-only gateway
+  const hasNoGateway = !hasMercadoPagoAvailable && !hasStripeAvailable && !hasGoCuotasAvailable
   const isPro = store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business')
 
   if (loading) {
@@ -413,6 +433,115 @@ export default function Payments() {
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#635bff] rounded-lg font-semibold text-sm hover:bg-[#f0eeff] transition-all"
                   >
                     {t('payments.stripe.upgradeToPro')}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Go Cuotas — Argentina-only "buy now, pay later" gateway */}
+          {hasGoCuotasAvailable && isPro ? (
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0" style={{ backgroundColor: '#FF1F6D', boxShadow: '0 4px 14px rgba(255, 31, 109, 0.25)' }}>
+                  <span className="text-white font-extrabold text-base tracking-tight">GO</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-[#1e3a5f]">Go Cuotas</h2>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={gcEnabled}
+                        onChange={(e) => setGcEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#FF1F6D] peer-checked:to-[#FF4F8C]"></div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Permite a tus clientes pagar en cuotas sin tarjeta. Disponible solo en Argentina.
+                  </p>
+                </div>
+              </div>
+
+              {gcEnabled && (
+                <div className="space-y-4 pt-4 mt-4 border-t border-gray-200/60">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p className="text-xs text-amber-800">
+                      <strong>Importante:</strong> Necesitas una cuenta de comercio en Go Cuotas. <a href="https://www.gocuotas.com" target="_blank" rel="noopener noreferrer" className="underline">Registrate gratis</a> y usa el mismo email y contrasena con los que ingresas a tu panel de Go Cuotas.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Email del comercio</label>
+                      <input
+                        type="email"
+                        value={gcEmail}
+                        onChange={(e) => setGcEmail(e.target.value)}
+                        placeholder="comercio@ejemplo.com"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Contrasena</label>
+                      <input
+                        type="password"
+                        value={gcPassword}
+                        onChange={(e) => setGcPassword(e.target.value)}
+                        placeholder="Tu contrasena de Go Cuotas"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-[#fff5f9] rounded-xl">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={gcSandbox}
+                        onChange={(e) => setGcSandbox(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                    <div>
+                      <span className="text-sm font-medium text-[#1e3a5f]">Modo sandbox</span>
+                      <p className="text-xs text-gray-500">Activado para probar sin cobros reales (sandbox.gocuotas.com)</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : hasGoCuotasAvailable ? (
+            <div className="bg-gradient-to-br from-[#FF1F6D] to-[#FF4F8C] rounded-xl p-6 shadow-sm text-white">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/20">
+                  <span className="text-white font-extrabold text-base tracking-tight">GO</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold">Go Cuotas</h2>
+                  <p className="text-sm text-white/80 mt-1">
+                    Permite a tus clientes pagar en cuotas sin tarjeta.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-4 bg-white/10 rounded-xl">
+                <p className="text-sm text-white/90 mb-3">
+                  Disponible para suscriptores Pro o Business.
+                </p>
+                {!Capacitor.isNativePlatform() && (
+                  <Link
+                    to={localePath('/dashboard/plan')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#FF1F6D] rounded-lg font-semibold text-sm hover:bg-white/90 transition-all"
+                  >
+                    Actualizar a Pro
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>

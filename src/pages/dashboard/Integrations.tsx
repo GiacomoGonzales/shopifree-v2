@@ -21,6 +21,7 @@ export default function Integrations() {
   const [cjApiKey, setCjApiKey] = useState('')
   const [printfulToken, setPrintfulToken] = useState('')
   const [customHeadHtml, setCustomHeadHtml] = useState('')
+  const [customBodyHtml, setCustomBodyHtml] = useState('')
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -43,6 +44,7 @@ export default function Integrations() {
             setCjApiKey(storeData.integrations.cjApiKey || '')
             setPrintfulToken(storeData.integrations.printfulToken || '')
             setCustomHeadHtml(storeData.integrations.customHeadHtml || '')
+            setCustomBodyHtml(storeData.integrations.customBodyHtml || '')
           }
         }
       } catch (error) {
@@ -69,6 +71,7 @@ export default function Integrations() {
           cjApiKey: cjApiKey.trim() || null,
           printfulToken: printfulToken.trim() || null,
           customHeadHtml: customHeadHtml.trim() || null,
+          customBodyHtml: customBodyHtml.trim() || null,
         },
         updatedAt: new Date()
       })
@@ -180,22 +183,6 @@ export default function Integrations() {
         </svg>
       ),
     },
-    {
-      key: 'customHeadHtml',
-      title: t('integrations.customHeadHtml.title'),
-      description: t('integrations.customHeadHtml.description'),
-      label: t('integrations.customHeadHtml.label'),
-      placeholder: '<meta name="example-site-verification" content="abc123" />\n<!-- O un script de validación SSL, etc. -->',
-      value: customHeadHtml,
-      onChange: setCustomHeadHtml,
-      color: '#475569',
-      multiline: true,
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      ),
-    },
   ]
 
   return (
@@ -254,6 +241,55 @@ export default function Integrations() {
             </div>
           </div>
         ))}
+
+        {/* Código HTML personalizado — head + body */}
+        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+              style={{ backgroundColor: '#475569', boxShadow: '0 4px 14px #47556933' }}
+            >
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('integrations.customHeadHtml.title')}</h2>
+              <p className="text-sm text-gray-600 mt-1">{t('integrations.customHeadHtml.description')}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-gray-200/60 space-y-4">
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-xs text-amber-800">{t('integrations.customHeadHtml.warning')}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('integrations.customHeadHtml.headLabel')}</label>
+              <textarea
+                value={customHeadHtml}
+                onChange={(e) => setCustomHeadHtml(e.target.value)}
+                placeholder={'<meta name="example-site-verification" content="abc123" />'}
+                rows={6}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm resize-y"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('integrations.customHeadHtml.bodyLabel')}</label>
+              <textarea
+                value={customBodyHtml}
+                onChange={(e) => setCustomBodyHtml(e.target.value)}
+                placeholder={'<script type="text/javascript">TrustLogo("...", "...", "...")</script>'}
+                rows={6}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm resize-y"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

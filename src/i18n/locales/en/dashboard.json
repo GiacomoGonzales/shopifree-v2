@@ -1024,9 +1024,12 @@
       "placeholder": "Paste the meta tag content"
     },
     "customHeadHtml": {
-      "title": "Custom <head> code",
-      "description": "Paste any HTML tags you need in your store's <head>: SSL validation, verification scripts, external analytics, etc.",
-      "label": "HTML / scripts"
+      "title": "Custom HTML code",
+      "description": "Paste HTML tags to integrate external services: SSL validation, security badges, tracking scripts, chat widgets, etc.",
+      "label": "HTML / scripts",
+      "headLabel": "Code in <head>",
+      "bodyLabel": "Code before </body>",
+      "warning": "If you paste broken code, your store may stop loading. If that happens, clear the field and save to restore your store."
     }
   },
   "coupons": {
