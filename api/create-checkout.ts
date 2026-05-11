@@ -108,35 +108,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // Detect active and trialing subscriptions but DO NOT cancel them here.
-    // The previous version canceled them immediately to "prevent double
-    // charges", but that left customers stranded if they abandoned the new
-    // checkout — old sub gone, new sub never created, plan dropped to free,
-    // paid days lost. Now the cleanup happens in the webhook
-    // (retireSiblingSubscriptions) once the new sub is confirmed active.
+    // We do NOT cancel existing subs here. Sibling cleanup happens in the
+    // webhook (retireSiblingSubscriptions) once the new sub is confirmed
+    // active — so an abandoned checkout doesn't strand the customer on
+    // free plan with paid days lost.
     //
-    // The one thing we still need from the old code is `preserveTrialEnd`:
-    // if the customer is currently in a trialing subscription for the SAME
-    // plan and clicks "Pay now to confirm", we hand the remaining trial
-    // days to the new subscription so they're not charged immediately. The
-    // sibling cancel still happens — just later, in the webhook.
-    let preserveTrialEnd: number | undefined
-    const trialingSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'trialing'
-    })
-    for (const sub of trialingSubscriptions.data) {
-      if (sub.metadata.storeId === storeId &&
-          sub.metadata.plan === plan &&
-          sub.trial_end && sub.trial_end > Math.floor(Date.now() / 1000)) {
-        preserveTrialEnd = sub.trial_end
-        console.log(`Preserving trial_end ${sub.trial_end} from trialing subscription ${sub.id}`)
-        break
-      }
-    }
+    // Stripe trials are intentionally disabled platform-wide (the 7-day
+    // grace period lives in Firestore `trialEndsAt`, not Stripe). When
+    // a merchant clicks Subscribe, they pay immediately. `trial_period_days: 0`
+    // below is a defensive override in case anyone re-introduces a default
+    // trial at the Price level or via Stripe Dashboard settings — the new
+    // sub will still start active with the first invoice billed now.
 
     // Get origin for redirect URLs
     const origin = req.headers.origin || 'https://shopifree.app'
+
+    // ── Duplicate-sub guard (Capa 3) ───────────────────────────────
+    // If the customer already has a live subscription for this store
+    // (active, past_due, trialing, incomplete), do NOT create a new
+    // one. Stripe webhook → retireSiblingSubscriptions ends up
+    // cancelling the older one with prorate, which generates credits
+    // and confuses the billing trail (this is exactly the SKEENS
+    // pattern: every month a new sub, old one cancelled, credit
+    // accumulating). Redirect them to the Billing Portal so they
+    // can update payment method, cancel, or switch plan on the
+    // EXISTING sub — no duplicate created.
+    const liveStatuses: Stripe.Subscription.Status[] = ['active', 'past_due', 'trialing', 'incomplete']
+    const existingSubs = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'all',
+      limit: 20
+    })
+    const liveSubForStore = existingSubs.data.find(s =>
+      s.metadata.storeId === storeId && liveStatuses.includes(s.status)
+    )
+    if (liveSubForStore) {
+      console.log(`[create-checkout] Customer ${customerId} already has live sub ${liveSubForStore.id} (status=${liveSubForStore.status}) for store ${storeId} — redirecting to Billing Portal instead of creating duplicate`)
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${origin}/dashboard/plan`
+      })
+      return res.status(200).json({ url: portal.url, redirectedToPortal: true })
+    }
 
     // Handle 50% first month discount (only for monthly billing)
     const useDiscount = applyDiscount && billing === 'monthly'
@@ -182,13 +195,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             discounts: [{ coupon: couponId }],
             subscription_data: {
               metadata: { storeId, userId, plan },
-              ...(preserveTrialEnd && { trial_end: preserveTrialEnd })
+              trial_period_days: 0
             }
           }
         : {
             subscription_data: {
               metadata: { storeId, userId, plan },
-              ...(preserveTrialEnd && { trial_end: preserveTrialEnd })
+              trial_period_days: 0
             }
           }
       )

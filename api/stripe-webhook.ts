@@ -125,6 +125,31 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     return
   }
 
+  // ── Trial killer (Capa 2) ──────────────────────────────────────────
+  // Our pricing model has no Stripe trial — the 7-day grace lives in
+  // Firestore `trialEndsAt`. If a subscription arrives with `trial_end`
+  // in the future, it came from somewhere we don't control: Price-level
+  // defaults configured in the Stripe Dashboard, Smart Retries extending
+  // a failed renewal, a manual edit in Stripe Dashboard, etc.
+  //
+  // We end the trial immediately so the merchant gets billed for the
+  // current period instead of riding a free month. This is the
+  // backstop — even if every other defense fails, this catches it
+  // because Stripe webhooks fire on every subscription state change.
+  const nowSec = Math.floor(Date.now() / 1000)
+  if (subscription.trial_end && subscription.trial_end > nowSec && subscription.status !== 'canceled') {
+    console.warn(`[trial-killer] Sub ${subscription.id} arrived with trial_end=${subscription.trial_end} — ending now`)
+    try {
+      const updated = await getStripe().subscriptions.update(subscription.id, { trial_end: 'now' })
+      // Reload local state from the updated sub so the rest of the handler
+      // writes the post-trial values to Firestore.
+      subscription = updated
+    } catch (err) {
+      console.error(`[trial-killer] Failed to end trial on ${subscription.id}:`, err)
+      // Don't bail — continue with the original sub so we at least sync state.
+    }
+  }
+
   const priceId = subscription.items.data[0]?.price.id
   const status = subscription.status
   const item = subscription.items.data[0]
