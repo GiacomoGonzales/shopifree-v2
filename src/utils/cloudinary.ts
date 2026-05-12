@@ -3,7 +3,7 @@
  * Transforms Cloudinary URLs to include optimization parameters
  */
 
-type ImageSize = 'thumbnail' | 'card' | 'gallery' | 'hero'
+type ImageSize = 'thumbnail' | 'category' | 'card' | 'gallery' | 'hero'
 
 interface SizeConfig {
   width: number
@@ -13,6 +13,11 @@ interface SizeConfig {
 
 const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
   thumbnail: { width: 160, height: 160, crop: 'fill' },  // 2x for retina
+  // `category`: square cover crop used by CategoryCarousel variants in the
+  // storefront. 320px covers the largest CSS render (~160px for circle/square)
+  // at 2x DPR. Pair with getImageSrcSet(url, 'category') so the browser can
+  // serve a 640px file on retina screens without us hardcoding HTML width.
+  category: { width: 320, height: 320, crop: 'fill' },
   card: { width: 600, crop: 'limit' },  // Only limit width, preserve aspect ratio
   gallery: { width: 1000, crop: 'limit' },  // Higher quality for detail view
   // Hero: bumped from 1600 to 2560 to cover modern retina desktops.
