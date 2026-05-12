@@ -12,7 +12,13 @@ import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, getEffectivePlan, PLAN_FEATURES } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
+import { optimizeImage } from '../../utils/cloudinary'
 import type { Product, Category } from '../../types'
+
+// Constraints for the category image upload. Mirrors the rules we use for
+// product / logo / hero uploads so merchants get a consistent message.
+const CATEGORY_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+const CATEGORY_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 function SortableProductCard({ product, children }: { product: Product; children: (dragHandleProps: { attributes: ReturnType<typeof useSortable>['attributes']; listeners: ReturnType<typeof useSortable>['listeners']; isDragging: boolean }) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id })
@@ -65,9 +71,12 @@ export default function Products() {
   // Category management
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryImage, setNewCategoryImage] = useState<string | undefined>(undefined)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [openCategoryMenu, setOpenCategoryMenu] = useState<string | null>(null)
   const [savingCategory, setSavingCategory] = useState(false)
+  const [uploadingCategoryImage, setUploadingCategoryImage] = useState(false)
+  const categoryImageInputRef = useRef<HTMLInputElement>(null)
 
   // Limit warning modal
   const [showLimitModal, setShowLimitModal] = useState(false)
@@ -116,7 +125,43 @@ export default function Products() {
     }
     setEditingCategory(null)
     setNewCategoryName('')
+    setNewCategoryImage(undefined)
     setShowCategoryModal(true)
+  }
+
+  const handleCategoryImageUpload = async (file: File) => {
+    if (!CATEGORY_IMAGE_TYPES.includes(file.type)) {
+      showToast(t('products.categories.imageBadType', { defaultValue: 'Formato no soportado. Usa JPG, PNG o WebP.' }), 'error')
+      return
+    }
+    if (file.size > CATEGORY_IMAGE_MAX_BYTES) {
+      showToast(t('products.categories.imageTooLarge', { defaultValue: 'La imagen debe pesar menos de 2 MB' }), 'error')
+      return
+    }
+
+    setUploadingCategoryImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+      formData.append('folder', 'shopifree/categories')
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: formData }
+      )
+      if (!response.ok) throw new Error('Cloudinary upload failed')
+      const data = await response.json()
+      // Stage the URL — it only persists to Firestore when the user clicks Save.
+      // If they cancel, the upload is orphaned in Cloudinary (small storage
+      // cost, no broken state).
+      setNewCategoryImage(data.secure_url as string)
+    } catch (error) {
+      console.error('Error uploading category image:', error)
+      showToast(t('products.categories.imageError', { defaultValue: 'Error al subir imagen' }), 'error')
+    } finally {
+      setUploadingCategoryImage(false)
+    }
   }
 
   // Drag & drop reorder
@@ -300,13 +345,17 @@ export default function Products() {
         .replace(/^-|-$/g, '')
 
       if (editingCategory) {
+        // `image: null` clears the field in Firestore when the user removed
+        // the existing image. The Category type declares `image?: string`,
+        // hence the cast — `null` is a Firestore value, not a TS type.
         await categoryService.update(store.id, editingCategory.id, {
           name: newCategoryName.trim(),
-          slug
+          slug,
+          image: (newCategoryImage ?? null) as unknown as string | undefined
         })
         setCategories(categories.map(c =>
           c.id === editingCategory.id
-            ? { ...c, name: newCategoryName.trim(), slug }
+            ? { ...c, name: newCategoryName.trim(), slug, image: newCategoryImage }
             : c
         ))
         showToast(t('products.categories.updated'), 'success')
@@ -314,13 +363,15 @@ export default function Products() {
         const categoryId = await categoryService.create(store.id, {
           name: newCategoryName.trim(),
           slug,
-          order: categories.length
+          order: categories.length,
+          image: newCategoryImage
         })
         setCategories([...categories, {
           id: categoryId,
           storeId: store.id,
           name: newCategoryName.trim(),
           slug,
+          image: newCategoryImage,
           order: categories.length,
           active: true,
           createdAt: new Date(),
@@ -331,6 +382,7 @@ export default function Products() {
 
       setShowCategoryModal(false)
       setNewCategoryName('')
+      setNewCategoryImage(undefined)
       setEditingCategory(null)
     } catch (error) {
       console.error('Error saving category:', error)
@@ -360,6 +412,7 @@ export default function Products() {
   const openEditCategory = (category: Category) => {
     setEditingCategory(category)
     setNewCategoryName(category.name)
+    setNewCategoryImage(category.image)
     setShowCategoryModal(true)
   }
 
@@ -866,6 +919,78 @@ export default function Products() {
               {editingCategory ? t('products.categories.editTitle') : t('products.categories.newTitle')}
             </h3>
             <form onSubmit={handleSaveCategory}>
+              {/* Image picker — optional. Square crop applied at render time
+                  by Cloudinary, so any uploaded image works. The thumbnail
+                  shows what's currently staged (existing for edit, fresh
+                  for new). */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 group">
+                  {newCategoryImage ? (
+                    <>
+                      <img
+                        src={optimizeImage(newCategoryImage, 'thumbnail')}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => categoryImageInputRef.current?.click()}
+                        className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center"
+                        title={t('products.categories.changeImage', { defaultValue: 'Cambiar imagen' })}
+                      >
+                        {uploadingCategoryImage ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setNewCategoryImage(undefined) }}
+                        className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-bl-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                        title={t('products.categories.removeImage', { defaultValue: 'Quitar imagen' })}
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => categoryImageInputRef.current?.click()}
+                      className="w-full h-full bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                      title={t('products.categories.uploadImage', { defaultValue: 'Subir imagen' })}
+                    >
+                      {uploadingCategoryImage ? (
+                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+                  <input
+                    ref={categoryImageInputRef}
+                    type="file"
+                    accept={CATEGORY_IMAGE_TYPES.join(',')}
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleCategoryImageUpload(file)
+                      e.target.value = ''
+                    }}
+                  />
+                </div>
+                <div className="flex-1 text-xs text-gray-500 pt-1 leading-relaxed">
+                  <p className="font-medium text-gray-700 mb-0.5">{t('products.categories.imageLabel', { defaultValue: 'Imagen (opcional)' })}</p>
+                  <p>{t('products.categories.imageHelp', { defaultValue: 'Cuadrada idealmente. JPG, PNG o WebP, máx 2 MB. Próximamente aparecerá en tu tienda.' })}</p>
+                </div>
+              </div>
+
               <input
                 type="text"
                 value={newCategoryName}
@@ -880,6 +1005,7 @@ export default function Products() {
                   onClick={() => {
                     setShowCategoryModal(false)
                     setNewCategoryName('')
+                    setNewCategoryImage(undefined)
                     setEditingCategory(null)
                   }}
                   className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
@@ -888,7 +1014,7 @@ export default function Products() {
                 </button>
                 <button
                   type="submit"
-                  disabled={!newCategoryName.trim() || savingCategory}
+                  disabled={!newCategoryName.trim() || savingCategory || uploadingCategoryImage}
                   className="flex-1 px-4 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-medium disabled:opacity-50"
                 >
                   {savingCategory ? t('products.categories.saving') : t('products.categories.save')}
