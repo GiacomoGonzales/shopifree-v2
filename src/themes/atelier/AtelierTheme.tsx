@@ -249,6 +249,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
           onCategoryChange={setActiveCategory}
           products={products}
           onSelectProduct={handleSelectProduct}
+          variant="square"
         />
 
         <main className="max-w-7xl mx-auto px-4 md:px-6 pt-6 pb-16 md:pb-28">

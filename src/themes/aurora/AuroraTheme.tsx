@@ -241,7 +241,7 @@ export default function AuroraTheme({ store, products, categories, onWhatsAppCli
 
         <TrustBar />
         <FlashSaleBar />
-        <CategoryCarousel categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} products={products} onSelectProduct={handleSelectProduct} />
+        <CategoryCarousel categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} products={products} onSelectProduct={handleSelectProduct} variant="circle" />
 
         <main className="py-10 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">

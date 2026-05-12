@@ -251,6 +251,7 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
           onCategoryChange={setActiveCategory}
           products={products}
           onSelectProduct={handleSelectProduct}
+          variant="tile"
         />
 
         <main className="max-w-7xl mx-auto px-4 md:px-6 pt-6 pb-16 md:pb-24">
