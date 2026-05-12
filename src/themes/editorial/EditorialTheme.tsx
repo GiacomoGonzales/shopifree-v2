@@ -15,7 +15,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -245,7 +245,7 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
           </div>
         </div>
 
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

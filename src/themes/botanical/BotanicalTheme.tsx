@@ -20,7 +20,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -261,7 +261,7 @@ export default function BotanicalTheme({ store, products, categories, onWhatsApp
           </p>
         </div>
 
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

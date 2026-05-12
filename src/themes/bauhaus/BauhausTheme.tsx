@@ -19,7 +19,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -262,7 +262,7 @@ export default function BauhausTheme({ store, products, categories, onWhatsAppCl
           <span className="text-xs uppercase tracking-widest font-bold">{filteredProducts.length}</span>
         </div>
 
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

@@ -18,7 +18,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -143,7 +143,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
       >
         <AnnouncementBar />
 
-        {/* Slim sticky bar — always visible, keeps CategoryNav close to the top
+        {/* Slim sticky bar — always visible, keeps CategoryCarousel close to the top
             when scrolling. The big masthead below stays static so it doesn't
             push the category bar halfway down the viewport. */}
         <header
@@ -281,7 +281,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
           </div>
         </div>
 
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

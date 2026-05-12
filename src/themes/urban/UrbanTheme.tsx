@@ -18,7 +18,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -237,7 +237,7 @@ export default function UrbanTheme({ store, products, categories, onWhatsAppClic
         <FlashSaleBar />
 
         {/* Categories */}
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

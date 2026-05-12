@@ -19,7 +19,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -272,7 +272,7 @@ export default function ArcadeTheme({ store, products, categories, onWhatsAppCli
           <div className="h-px flex-1" style={{ backgroundImage: 'linear-gradient(90deg, #FF00C8 0%, transparent 100%)' }} />
         </div>
 
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

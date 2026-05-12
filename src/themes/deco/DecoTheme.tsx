@@ -19,7 +19,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -322,7 +322,7 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
         <FlashSaleBar />
 
         {/* Categories */}
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

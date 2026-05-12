@@ -20,7 +20,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -280,7 +280,7 @@ export default function DinerTheme({ store, products, categories, onWhatsAppClic
           <div className="h-1 flex-1 bg-[#1A0F0A]" />
         </div>
 
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

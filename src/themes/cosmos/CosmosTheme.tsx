@@ -17,7 +17,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -290,7 +290,7 @@ export default function CosmosTheme({ store, products, categories, onWhatsAppCli
           <div className="absolute inset-x-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${cyan}40, ${purple}40, transparent)` }} />
         </div>
 
-        <CategoryNav categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} products={products} onSelectProduct={handleSelectProduct} />
+        <CategoryCarousel categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} products={products} onSelectProduct={handleSelectProduct} />
 
         <main className="py-10 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">

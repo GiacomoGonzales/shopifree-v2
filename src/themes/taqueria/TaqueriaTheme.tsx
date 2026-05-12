@@ -18,7 +18,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -306,7 +306,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
         <FlashSaleBar />
 
         {/* Categories */}
-        <CategoryNav
+        <CategoryCarousel
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}

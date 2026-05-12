@@ -20,7 +20,7 @@ import {
   ProductDrawer,
   CartDrawer,
   CartBar,
-  CategoryNav,
+  CategoryCarousel,
   WhatsAppButton,
   StoreFooter,
   CheckoutDrawer,
@@ -231,7 +231,7 @@ export default function PrismTheme({ store, products, categories, onWhatsAppClic
 
         <TrustBar />
         <FlashSaleBar />
-        <CategoryNav categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} products={products} onSelectProduct={handleSelectProduct} />
+        <CategoryCarousel categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} products={products} onSelectProduct={handleSelectProduct} />
 
         <main className="py-10 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
