@@ -15,6 +15,17 @@ import { auth } from '../lib/firebase'
 import { userService, storeService } from '../lib/firebase'
 import type { User, Store } from '../types'
 
+// ── Google / Apple OAuth client IDs ─────────────────────────────────────
+// iOS-specific Google client ID — matches the REVERSED_CLIENT_ID URL
+// scheme registered in ios/App/App/Info.plist and GoogleService-Info.plist.
+const GOOGLE_IOS_CLIENT_ID =
+  '610784604338-79a7qucapsm5bddqg1u2ndbkvaeutif7.apps.googleusercontent.com'
+// Server (web) client ID — Firebase Auth uses this to verify the idToken.
+const GOOGLE_SERVER_CLIENT_ID =
+  '610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com'
+// Apple Services ID (bundle id used as audience on iOS).
+const APPLE_CLIENT_ID = 'app.shopifree.mobile'
+
 interface AuthContextType {
   firebaseUser: FirebaseUser | null
   user: User | null
@@ -80,14 +91,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Initialize Google Auth plugin on native platforms
+  // Initialize the Capgo Social Login plugin on native platforms.
+  // We replaced the abandoned @codetrix-studio plugin (last release May 2024)
+  // because it crashed on iPhone 17 Pro Max + iOS 26 during Apple review.
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
-        GoogleAuth.initialize({
-          clientId: '610784604338-jn860v33lmt7urrlfd0gge96ihufra51.apps.googleusercontent.com',
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: true
+      import('@capgo/capacitor-social-login').then(({ SocialLogin }) => {
+        SocialLogin.initialize({
+          google: {
+            iOSClientId: GOOGLE_IOS_CLIENT_ID,
+            iOSServerClientId: GOOGLE_SERVER_CLIENT_ID,
+            webClientId: GOOGLE_SERVER_CLIENT_ID,
+            mode: 'online',
+          },
+          apple: {
+            clientId: APPLE_CLIENT_ID,
+            redirectUrl: '', // empty string = native iOS flow, no redirect
+          },
+        }).catch((err) => {
+          console.error('[useAuth] SocialLogin.initialize failed:', err)
         })
       })
     }
@@ -122,21 +144,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = async (): Promise<FirebaseUser> => {
     if (Capacitor.isNativePlatform()) {
-      // Native iOS/Android: use Capacitor Google Auth plugin
-      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth')
-      const googleUser = await GoogleAuth.signIn()
-      console.log('Google Sign-In result keys:', Object.keys(googleUser))
-      const idToken = googleUser.authentication?.idToken || (googleUser as any).idToken
-      const accessToken = googleUser.authentication?.accessToken
+      // Native iOS/Android: use the Capgo Social Login plugin.
+      const { SocialLogin } = await import('@capgo/capacitor-social-login')
+      const response = await SocialLogin.login({
+        provider: 'google',
+        options: { scopes: ['email', 'profile'] },
+      })
+
+      if (response.provider !== 'google' || response.result.responseType !== 'online') {
+        throw new Error('Unexpected Google Sign-In response')
+      }
+
+      const idToken = response.result.idToken
+      const accessToken = response.result.accessToken?.token
       if (!idToken) {
         throw new Error('No idToken received from Google Sign-In')
       }
-      console.log('Tokens found, signing into Firebase...')
-      // Use both idToken and accessToken to avoid nonce verification hang
+
+      // Pass both tokens to Firebase to avoid the nonce verification hang
+      // some Firebase versions exhibit with id-token-only credentials.
       const credential = GoogleAuthProvider.credential(idToken, accessToken)
-      console.log('Credential created, calling signInWithCredential...')
       const result = await signInWithCredential(auth, credential)
-      console.log('Firebase sign-in success:', result.user.uid, result.user.email)
       return result.user
     } else {
       // Web: use Firebase popup
@@ -148,23 +176,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithApple = async (): Promise<FirebaseUser> => {
     if (Capacitor.isNativePlatform()) {
-      // Native iOS: Apple Sign-In via Capacitor plugin.
+      // Native iOS: Apple Sign-In via Capgo Social Login.
       // Firebase requires a rawNonce + its SHA-256 hash: Apple signs the
       // hashed nonce into the identity token, and Firebase validates the
       // raw nonce against the hash when exchanging the credential.
       const rawNonce = generateRawNonce()
       const hashedNonce = await sha256Hex(rawNonce)
 
-      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
-      const result = await SignInWithApple.authorize({
-        clientId: 'app.shopifree.mobile',
-        redirectURI: '', // unused for native
-        scopes: 'email name',
-        state: '',
-        nonce: hashedNonce,
+      const { SocialLogin } = await import('@capgo/capacitor-social-login')
+      const response = await SocialLogin.login({
+        provider: 'apple',
+        options: {
+          scopes: ['email', 'name'],
+          nonce: hashedNonce,
+        },
       })
 
-      const identityToken = result.response.identityToken
+      if (response.provider !== 'apple') {
+        throw new Error('Unexpected Apple Sign-In response')
+      }
+
+      const identityToken = response.result.idToken
       if (!identityToken) {
         throw new Error('No identity token received from Apple Sign-In')
       }

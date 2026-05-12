@@ -1,17 +1,20 @@
 PODS:
-  - AppAuth (1.7.6):
-    - AppAuth/Core (= 1.7.6)
-    - AppAuth/ExternalUserAgent (= 1.7.6)
-  - AppAuth/Core (1.7.6)
-  - AppAuth/ExternalUserAgent (1.7.6):
+  - Alamofire (5.10.2)
+  - AppAuth (2.0.0):
+    - AppAuth/Core (= 2.0.0)
+    - AppAuth/ExternalUserAgent (= 2.0.0)
+  - AppAuth/Core (2.0.0)
+  - AppAuth/ExternalUserAgent (2.0.0):
     - AppAuth/Core
+  - AppCheckCore (11.2.0):
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
   - Capacitor (8.0.1):
     - CapacitorCordova
   - CapacitorApp (8.0.0):
     - Capacitor
   - CapacitorBrowser (8.0.1):
-    - Capacitor
-  - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
   - CapacitorCordova (8.0.1)
   - CapacitorFilesystem (8.1.0):
@@ -29,24 +32,35 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (8.0.0):
     - Capacitor
-  - CodetrixStudioCapacitorGoogleAuth (0.0.1):
+  - CapgoCapacitorSocialLogin (8.3.22):
+    - Alamofire (~> 5.10.2)
     - Capacitor
-    - GoogleSignIn (~> 6.2.4)
-  - GoogleSignIn (6.2.4):
-    - AppAuth (~> 1.5)
-    - GTMAppAuth (~> 1.3)
-    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
-  - GTMAppAuth (1.3.1):
-    - AppAuth/Core (~> 1.6)
-    - GTMSessionFetcher/Core (< 3.0, >= 1.5)
-  - GTMSessionFetcher/Core (2.3.0)
+    - GoogleSignIn (~> 9.0.0)
+  - GoogleSignIn (9.0.0):
+    - AppAuth (~> 2.0)
+    - AppCheckCore (~> 11.0)
+    - GTMAppAuth (~> 5.0)
+    - GTMSessionFetcher/Core (~> 3.3)
+  - GoogleUtilities/Environment (8.1.0):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/UserDefaults (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMAppAuth (5.0.0):
+    - AppAuth/Core (~> 2.0)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
+  - GTMSessionFetcher/Core (3.5.0)
   - IONFilesystemLib (1.1.0)
+  - PromisesObjC (2.4.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
-  - "CapacitorCommunityAppleSignIn (from `../../node_modules/@capacitor-community/apple-sign-in`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
@@ -55,15 +69,19 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
-  - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
+  - "CapgoCapacitorSocialLogin (from `../../node_modules/@capgo/capacitor-social-login`)"
 
 SPEC REPOS:
   trunk:
+    - Alamofire
     - AppAuth
+    - AppCheckCore
     - GoogleSignIn
+    - GoogleUtilities
     - GTMAppAuth
     - GTMSessionFetcher
     - IONFilesystemLib
+    - PromisesObjC
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -72,8 +90,6 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorBrowser:
     :path: "../../node_modules/@capacitor/browser"
-  CapacitorCommunityAppleSignIn:
-    :path: "../../node_modules/@capacitor-community/apple-sign-in"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorFilesystem:
@@ -90,15 +106,16 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
-  CodetrixStudioCapacitorGoogleAuth:
-    :path: "../../node_modules/@codetrix-studio/capacitor-google-auth"
+  CapgoCapacitorSocialLogin:
+    :path: "../../node_modules/@capgo/capacitor-social-login"
 
 SPEC CHECKSUMS:
-  AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
+  Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
+  AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
+  AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
   Capacitor: ff35b0f66370b84aa238251b35b91886a3207c16
   CapacitorApp: 3963a84197280757b84f126afd1520a85ae3b092
   CapacitorBrowser: e72e572d5dbdbb854fda5950586a2451e981f2d6
-  CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
   CapacitorCordova: 0d65b9bb74e995dcecb9463f34f1af2aba6f955c
   CapacitorFilesystem: a957d4a4b6860844c4eba5bf441607a5166f92a7
   CapacitorHaptics: 2079d9fa04c5a71e18663b4722323c304c58245c
@@ -107,12 +124,14 @@ SPEC CHECKSUMS:
   CapacitorShare: 12f1d192170cbcf9f108fd675ac8e343761a4638
   CapacitorSplashScreen: 422880d7117605c30699eb4b21644b62db42e86c
   CapacitorStatusBar: 312e2e67928dfe9514c4a8916a1fd610552f5f35
-  CodetrixStudioCapacitorGoogleAuth: 9dcfabfb7dd804ad6231a1513bc6e81e620cbec6
-  GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
-  GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
-  GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
+  CapgoCapacitorSocialLogin: e43c447873f2a9bab61431abfab206d7ec53ce57
+  GoogleSignIn: c7f09cfbc85a1abf69187be091997c317cc33b77
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   IONFilesystemLib: 50b9a0f3052a9b40b9bedb43f328a8fe222f9f87
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
 
-PODFILE CHECKSUM: da9533d90af1ac463f635908b097b0995a098cc3
+PODFILE CHECKSUM: 501659c25af3a47462441bf828d60db0bfc1de74
 
 COCOAPODS: 1.16.2

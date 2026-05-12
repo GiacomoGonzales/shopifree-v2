@@ -29,6 +29,17 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
+    },
+    SocialLogin: {
+      // Only ship the providers we actually use. Setting facebook/twitter
+      // to false makes the @capgo/capacitor-social-login plugin exclude
+      // those native SDKs from the build, shrinking the iOS app size.
+      providers: {
+        google: true,
+        apple: true,
+        facebook: false,
+        twitter: false
+      }
     }
   },
   ios: {
