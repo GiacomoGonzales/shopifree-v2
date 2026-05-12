@@ -115,25 +115,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     //
     // Stripe trials are intentionally disabled platform-wide (the 7-day
     // grace period lives in Firestore `trialEndsAt`, not Stripe). When
-    // a merchant clicks Subscribe, they pay immediately. `trial_period_days: 0`
-    // below is a defensive override in case anyone re-introduces a default
-    // trial at the Price level or via Stripe Dashboard settings — the new
-    // sub will still start active with the first invoice billed now.
+    // a merchant clicks Subscribe, they pay immediately.
+    //
+    // NOTE on trial overrides: we do NOT pass `trial_period_days: 0` here.
+    // For checkout.sessions.create, Stripe REJECTS 0 (it requires >= 1) —
+    // unlike subscriptions.create, where 0 is valid and means "no trial".
+    // The defensive backstop lives in the webhook (handleSubscriptionUpdate
+    // → trial killer): if any sub arrives with trial_end in the future,
+    // we immediately set trial_end='now'. That catches Price-level default
+    // trials, Smart Retries, manual Dashboard edits, etc.
 
     // Get origin for redirect URLs
     const origin = req.headers.origin || 'https://shopifree.app'
 
     // ── Duplicate-sub guard (Capa 3) ───────────────────────────────
-    // If the customer already has a live subscription for this store
-    // (active, past_due, trialing, incomplete), do NOT create a new
-    // one. Stripe webhook → retireSiblingSubscriptions ends up
-    // cancelling the older one with prorate, which generates credits
-    // and confuses the billing trail (this is exactly the SKEENS
-    // pattern: every month a new sub, old one cancelled, credit
-    // accumulating). Redirect them to the Billing Portal so they
-    // can update payment method, cancel, or switch plan on the
-    // EXISTING sub — no duplicate created.
-    const liveStatuses: Stripe.Subscription.Status[] = ['active', 'past_due', 'trialing', 'incomplete']
+    // If the customer already has a LIVE subscription for this store
+    // (active, past_due, trialing), do NOT create a new one. Sibling
+    // cancellation in the webhook generates prorated credits that
+    // confuse the billing trail (the SKEENS pattern: every month a
+    // new sub, old one cancelled, credit accumulating). Redirect them
+    // to the Billing Portal so they manage the EXISTING sub.
+    //
+    // We deliberately EXCLUDE `incomplete` here. An incomplete sub
+    // is the result of a failed/abandoned first payment, and Stripe
+    // keeps it around for up to 23h before auto-expiring. Blocking
+    // on `incomplete` means a merchant whose card declines once
+    // can't retry for ~a day, which broke real merchants the day
+    // Layer 3 shipped. Better UX: let them start a fresh checkout —
+    // the orphan incomplete sub will expire on its own.
+    const liveStatuses: Stripe.Subscription.Status[] = ['active', 'past_due', 'trialing']
     const existingSubs = await stripe.subscriptions.list({
       customer: customerId,
       status: 'all',
@@ -194,14 +204,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? {
             discounts: [{ coupon: couponId }],
             subscription_data: {
-              metadata: { storeId, userId, plan },
-              trial_period_days: 0
+              metadata: { storeId, userId, plan }
             }
           }
         : {
             subscription_data: {
-              metadata: { storeId, userId, plan },
-              trial_period_days: 0
+              metadata: { storeId, userId, plan }
             }
           }
       )
