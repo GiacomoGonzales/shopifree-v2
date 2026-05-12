@@ -190,11 +190,11 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
           <PaymentOption
             value="gocuotas"
             icon={
-              <span className="text-white font-extrabold text-xs tracking-tight">GO</span>
+              <img src="/gocuotas-logo.png" alt="Go Cuotas" className="w-full h-full object-cover" />
             }
             title="Pagar con Go Cuotas"
             description="Cuotas sin tarjeta (solo Argentina)"
-            customIconStyle="rounded-xl shadow-sm bg-[#FF1F6D]"
+            customIconStyle="rounded-xl overflow-hidden shadow-sm"
           />
         )}
       </div>

@@ -446,8 +446,8 @@ export default function Payments() {
           {hasGoCuotasAvailable && isPro ? (
             <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0" style={{ backgroundColor: '#FF1F6D', boxShadow: '0 4px 14px rgba(255, 31, 109, 0.25)' }}>
-                  <span className="text-white font-extrabold text-base tracking-tight">GO</span>
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-lg" style={{ boxShadow: '0 4px 14px rgba(255, 31, 109, 0.25)' }}>
+                  <img src="/gocuotas-logo.png" alt="Go Cuotas" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
@@ -522,8 +522,8 @@ export default function Payments() {
           ) : hasGoCuotasAvailable ? (
             <div className="bg-gradient-to-br from-[#FF1F6D] to-[#FF4F8C] rounded-xl p-6 shadow-sm text-white">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/20">
-                  <span className="text-white font-extrabold text-base tracking-tight">GO</span>
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-white/20">
+                  <img src="/gocuotas-logo.png" alt="Go Cuotas" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold">Go Cuotas</h2>
