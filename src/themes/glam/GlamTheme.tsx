@@ -308,6 +308,7 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
           onCategoryChange={setActiveCategory}
           products={products}
           onSelectProduct={handleSelectProduct}
+          variant="circle"
         />
 
         {/* Products */}

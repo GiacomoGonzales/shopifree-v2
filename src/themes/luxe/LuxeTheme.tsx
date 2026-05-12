@@ -204,6 +204,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
           onCategoryChange={setActiveCategory}
           products={products}
           onSelectProduct={handleSelectProduct}
+          variant="tile"
         />
 
         {/* Products */}

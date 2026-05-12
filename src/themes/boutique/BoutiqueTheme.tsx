@@ -213,6 +213,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
           onCategoryChange={setActiveCategory}
           products={products}
           onSelectProduct={handleSelectProduct}
+          variant="square"
         />
 
         {/* Products - Using shared component */}
