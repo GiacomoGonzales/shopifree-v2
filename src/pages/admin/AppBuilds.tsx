@@ -592,6 +592,7 @@ function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot
   const appIcon = store.appConfig?.icon
   const appName = store.appConfig?.appName || store.name
   const packageName = `app.shopifree.store.${store.subdomain.replace(/[^a-z0-9]/gi, '')}`
+  const privacyUrl = `https://${store.subdomain}.shopifree.app/privacy`
   const icon512 = appIcon ? cloudinary512(appIcon) : null
   const featureGraphic = cloudinaryFeatureGraphic(
     appIcon,
@@ -731,6 +732,8 @@ function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot
             <DetailRow label="Nombre" value={appName} field="appName" copied={copiedField === 'appName'} onCopy={onCopy} />
             <DetailRow label="Package name" value={packageName} field="packageName" copied={copiedField === 'packageName'} onCopy={onCopy} mono />
             <DetailRow label="Subdominio" value={store.subdomain} field="subdomain" copied={copiedField === 'subdomain'} onCopy={onCopy} mono />
+            <DetailRow label="Política de privacidad" value={privacyUrl} field="privacyUrl" copied={copiedField === 'privacyUrl'} onCopy={onCopy} mono />
+            <p className="text-[11px] text-gray-500 mt-1.5">Pegá este URL en Play Console → Política de privacidad.</p>
           </section>
 
           {/* Contact */}
