@@ -136,7 +136,7 @@ interface FilterPanelProps {
   availableFilters: AvailableFilters
   activeFilters: ActiveFilters
   onFilterChange: <K extends keyof ActiveFilters>(key: K, value: ActiveFilters[K]) => void
-  onVariationChange: (variationName: string, value: string | null) => void
+  onVariationChange: (variationName: string, value: string) => void
   onClear: () => void
   hasActiveFilters: boolean
   language?: string
