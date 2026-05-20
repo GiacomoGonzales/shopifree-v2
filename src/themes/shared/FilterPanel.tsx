@@ -87,7 +87,7 @@ function FilterDropdownButton({
       >
         <span>
           {label}
-          {isActive && <span className="opacity-90">: {activeLabel}</span>}
+          {isActive && <span className="opacity-90">{activeLabel}</span>}
         </span>
         <svg
           className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -109,6 +109,18 @@ function FilterDropdownButton({
       )}
     </div>
   )
+}
+
+/**
+ * Formatea el sufijo del boton segun cuantos valores estan activos:
+ * - 0 → null (boton inactivo, sin sufijo)
+ * - 1 → ": Rojo" (muestra el valor)
+ * - 2+ → " (3)" (muestra el count, mas compacto)
+ */
+function formatActiveSuffix(values: string[]): string | null {
+  if (values.length === 0) return null
+  if (values.length === 1) return `: ${values[0]}`
+  return ` (${values.length})`
 }
 
 interface FilterPanelColors {
@@ -204,12 +216,13 @@ export default function FilterPanel({
     onFilterChange('priceMax', Number.isFinite(max as number) ? (max as number) : null)
   }
 
-  // Etiqueta del filtro de precio cuando esta activo: "$20 – $50", "Desde $20", "Hasta $50"
+  // Etiqueta del filtro de precio cuando esta activo. Incluye el prefijo (":")
+  // porque el FilterDropdownButton renderiza activeLabel tal cual sin agregar formato.
   const priceActiveLabel = (() => {
     const { priceMin, priceMax } = activeFilters
-    if (priceMin !== null && priceMax !== null) return `${priceMin}–${priceMax}`
-    if (priceMin !== null) return `≥ ${priceMin}`
-    if (priceMax !== null) return `≤ ${priceMax}`
+    if (priceMin !== null && priceMax !== null) return `: ${priceMin}–${priceMax}`
+    if (priceMin !== null) return `: ≥ ${priceMin}`
+    if (priceMax !== null) return `: ≤ ${priceMax}`
     return null
   })()
 
@@ -245,9 +258,9 @@ export default function FilterPanel({
       ref={rootRef}
       className={`flex flex-wrap items-center gap-2 ${className}`}
     >
-      {/* Variaciones (Color, Talla, etc.) */}
+      {/* Variaciones (Color, Talla, etc.) — multi-select */}
       {availableFilters.variations.map(variation => {
-        const activeValue = activeFilters.variations[variation.name] ?? null
+        const activeValues = activeFilters.variations[variation.name] ?? []
         const key = `variation:${variation.name}`
         return (
           <FilterDropdownButton
@@ -255,7 +268,7 @@ export default function FilterPanel({
             isOpen={openKey === key}
             onToggle={toggleDropdown(key)}
             label={variation.name}
-            activeLabel={activeValue}
+            activeLabel={formatActiveSuffix(activeValues)}
             textColor={textColor}
             bgColor={bgColor}
             borderColor={borderColor}
@@ -263,13 +276,13 @@ export default function FilterPanel({
           >
             <div className="flex flex-wrap gap-1.5">
               {variation.values.map(value => {
-                const isActive = activeValue === value
+                const isActive = activeValues.includes(value)
                 return (
                   <OptionChip
                     key={value}
                     label={value}
                     active={isActive}
-                    onClick={() => onVariationChange(variation.name, isActive ? null : value)}
+                    onClick={() => onVariationChange(variation.name, value)}
                   />
                 )
               })}
@@ -278,13 +291,13 @@ export default function FilterPanel({
         )
       })}
 
-      {/* Marca */}
+      {/* Marca — multi-select */}
       {availableFilters.brands.length > 0 && (
         <FilterDropdownButton
           isOpen={openKey === 'brand'}
           onToggle={toggleDropdown('brand')}
           label={t.filterBrand}
-          activeLabel={activeFilters.brand}
+          activeLabel={formatActiveSuffix(activeFilters.brand)}
           textColor={textColor}
           bgColor={bgColor}
           borderColor={borderColor}
@@ -292,13 +305,18 @@ export default function FilterPanel({
         >
           <div className="flex flex-wrap gap-1.5">
             {availableFilters.brands.map(brand => {
-              const isActive = activeFilters.brand === brand
+              const isActive = activeFilters.brand.includes(brand)
               return (
                 <OptionChip
                   key={brand}
                   label={brand}
                   active={isActive}
-                  onClick={() => onFilterChange('brand', isActive ? null : brand)}
+                  onClick={() => {
+                    const next = isActive
+                      ? activeFilters.brand.filter(b => b !== brand)
+                      : [...activeFilters.brand, brand]
+                    onFilterChange('brand', next)
+                  }}
                 />
               )
             })}

@@ -43,16 +43,16 @@ import type { Product, Category } from '../../types'
 export type SortBy = 'featured' | 'newest' | 'price-asc' | 'price-desc' | 'name-asc'
 
 export interface ActiveFilters {
-  /** ID de categoria seleccionada, o null para "Todos" */
+  /** ID de categoria seleccionada, o null para "Todos". Sigue siendo single-select porque la navegacion por categoria es jerarquica. */
   categoryId: string | null
-  /** Marca seleccionada, o null para todas */
-  brand: string | null
+  /** Marcas seleccionadas. Array vacio = todas las marcas. Multi-select: el producto debe matchear ALGUNA marca del array. */
+  brand: string[]
   /** Precio minimo, o null si no se filtra */
   priceMin: number | null
   /** Precio maximo, o null si no se filtra */
   priceMax: number | null
-  /** Variantes seleccionadas: { "Color": "Rojo", "Talla": "M" } */
-  variations: Record<string, string>
+  /** Variantes seleccionadas: { "Color": ["Rojo", "Azul"], "Talla": ["M", "L"] }. Multi-select: producto debe matchear ALGUN valor por cada variacion (OR dentro), Y todas las variaciones activas (AND entre). */
+  variations: Record<string, string[]>
 }
 
 export interface VariationFilter {
@@ -78,8 +78,8 @@ export interface UseProductFiltersResult {
   availableFilters: AvailableFilters
   activeFilters: ActiveFilters
   setFilter: <K extends keyof ActiveFilters>(key: K, value: ActiveFilters[K]) => void
-  /** Helper especifico para variaciones, mas comodo desde la UI */
-  setVariationFilter: (variationName: string, value: string | null) => void
+  /** Toggle de un valor dentro de una variacion. Si el valor ya esta en el array lo saca; si no lo agrega. */
+  setVariationFilter: (variationName: string, value: string) => void
   clearFilters: () => void
   hasActiveFilters: boolean
   sortBy: SortBy
@@ -109,7 +109,7 @@ const MIN_DISTINCT_VALUES = 2
 
 const INITIAL_FILTERS: ActiveFilters = {
   categoryId: null,
-  brand: null,
+  brand: [],
   priceMin: null,
   priceMax: null,
   variations: {},
@@ -215,9 +215,9 @@ export function useProductFilters(
         return false
       }
 
-      // Marca
-      if (activeFilters.brand && p.brand !== activeFilters.brand) {
-        return false
+      // Marca: si hay marcas seleccionadas, el producto debe matchear ALGUNA (OR)
+      if (activeFilters.brand.length > 0) {
+        if (!p.brand || !activeFilters.brand.includes(p.brand)) return false
       }
 
       // Precio min
@@ -230,19 +230,22 @@ export function useProductFilters(
         return false
       }
 
-      // Variaciones: cada variacion activa debe matchear en alguna variant del producto
-      for (const [variationName, requiredValue] of Object.entries(activeFilters.variations)) {
-        if (!requiredValue) continue
+      // Variaciones: OR dentro de cada variacion (cualquier color seleccionado matchea),
+      // AND entre variaciones distintas (debe matchear color Y talla).
+      for (const [variationName, requiredValues] of Object.entries(activeFilters.variations)) {
+        if (!requiredValues || requiredValues.length === 0) continue
 
-        const hasInLegacy = p.variations?.some(
-          v => v.name === variationName && v.options?.some(o => o.value === requiredValue && o.available !== false)
-        )
+        const matchesSomeValue = requiredValues.some(requiredValue => {
+          const hasInLegacy = p.variations?.some(
+            v => v.name === variationName && v.options?.some(o => o.value === requiredValue && o.available !== false)
+          )
+          const hasInCombinations = p.combinations?.some(
+            c => c.options?.[variationName] === requiredValue && c.available !== false
+          )
+          return hasInLegacy || hasInCombinations
+        })
 
-        const hasInCombinations = p.combinations?.some(
-          c => c.options?.[variationName] === requiredValue && c.available !== false
-        )
-
-        if (!hasInLegacy && !hasInCombinations) return false
+        if (!matchesSomeValue) return false
       }
 
       return true
@@ -296,15 +299,22 @@ export function useProductFilters(
     []
   )
 
-  const setVariationFilter = useCallback((variationName: string, value: string | null) => {
+  // Toggle: si el valor ya esta seleccionado lo saca; si no, lo agrega.
+  // Si el array queda vacio, eliminamos la key entera (estado mas limpio).
+  const setVariationFilter = useCallback((variationName: string, value: string) => {
     setActiveFilters(prev => {
-      const next = { ...prev.variations }
-      if (value === null) {
-        delete next[variationName]
+      const current = prev.variations[variationName] ?? []
+      const next = current.includes(value)
+        ? current.filter(v => v !== value)
+        : [...current, value]
+
+      const newVariations = { ...prev.variations }
+      if (next.length === 0) {
+        delete newVariations[variationName]
       } else {
-        next[variationName] = value
+        newVariations[variationName] = next
       }
-      return { ...prev, variations: next }
+      return { ...prev, variations: newVariations }
     })
   }, [])
 
@@ -317,7 +327,7 @@ export function useProductFilters(
   // ---------------------------------------------------
   const hasActiveFilters =
     activeFilters.categoryId !== null ||
-    activeFilters.brand !== null ||
+    activeFilters.brand.length > 0 ||
     activeFilters.priceMin !== null ||
     activeFilters.priceMax !== null ||
     Object.keys(activeFilters.variations).length > 0
