@@ -23,6 +23,88 @@ import { useState, useRef, useEffect, type ReactNode } from 'react'
 import type { AvailableFilters, ActiveFilters } from './useProductFilters'
 import { getThemeTranslations } from './translations'
 
+// =====================================================
+// FilterDropdownButton — un boton + panel flotante.
+// Top-level (no inline en FilterPanel) para que useRef +
+// useEffect mantengan estado entre renders del padre.
+// =====================================================
+function FilterDropdownButton({
+  isOpen,
+  onToggle,
+  label,
+  activeLabel,
+  textColor,
+  bgColor,
+  borderColor,
+  primaryColor,
+  children,
+}: {
+  isOpen: boolean
+  onToggle: () => void
+  label: string
+  activeLabel: string | null
+  textColor: string
+  bgColor: string
+  borderColor: string
+  primaryColor: string
+  children: ReactNode
+}) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [alignRight, setAlignRight] = useState(false)
+  const isActive = activeLabel !== null
+
+  // Smart positioning: si abrir hacia la derecha se sale del viewport,
+  // alinear el panel al borde derecho del boton. Evita scroll horizontal
+  // en mobile cuando un filtro esta cerca del borde derecho.
+  useEffect(() => {
+    if (!isOpen || !buttonRef.current) return
+    const rect = buttonRef.current.getBoundingClientRect()
+    const dropdownEstimatedWidth = 240
+    const margin = 16
+    setAlignRight(rect.left + dropdownEstimatedWidth > window.innerWidth - margin)
+  }, [isOpen])
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors hover:opacity-80"
+        style={{
+          color: isActive ? '#ffffff' : textColor,
+          backgroundColor: isActive ? primaryColor : bgColor,
+          borderColor: isActive ? primaryColor : borderColor,
+        }}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+      >
+        <span>
+          {label}
+          {isActive && <span className="opacity-90">: {activeLabel}</span>}
+        </span>
+        <svg
+          className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div
+          className={`absolute mt-2 min-w-[220px] max-w-[calc(100vw-2rem)] max-h-[60vh] overflow-y-auto p-3 rounded-xl border shadow-xl z-30 ${alignRight ? 'right-0' : 'left-0'}`}
+          style={{ borderColor, backgroundColor: bgColor }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface FilterPanelColors {
   text?: string
   textMuted?: string
@@ -122,61 +204,8 @@ export default function FilterPanel({
     return null
   })()
 
-  // ---------------------------------------------------
-  // Boton + panel flotante (un solo dropdown)
-  // ---------------------------------------------------
-  const Dropdown = ({
-    dropdownKey,
-    label,
-    activeLabel,
-    children,
-  }: {
-    dropdownKey: string
-    label: string
-    activeLabel: string | null
-    children: ReactNode
-  }) => {
-    const isOpen = openKey === dropdownKey
-    const isActive = activeLabel !== null
-    return (
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpenKey(isOpen ? null : dropdownKey)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors hover:opacity-80"
-          style={{
-            color: isActive ? '#ffffff' : textColor,
-            backgroundColor: isActive ? primaryColor : bgColor,
-            borderColor: isActive ? primaryColor : borderColor,
-          }}
-          aria-haspopup="true"
-          aria-expanded={isOpen}
-        >
-          <span>
-            {label}
-            {isActive && <span className="opacity-90">: {activeLabel}</span>}
-          </span>
-          <svg
-            className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {isOpen && (
-          <div
-            className="absolute left-0 mt-2 min-w-[220px] max-w-[320px] p-3 rounded-xl border shadow-xl z-30"
-            style={{ borderColor, backgroundColor: bgColor }}
-          >
-            {children}
-          </div>
-        )}
-      </div>
-    )
-  }
+  // Helper: convierte una dropdownKey en el handler toggle
+  const toggleDropdown = (key: string) => () => setOpenKey(openKey === key ? null : key)
 
   // Chip seleccionable dentro de un dropdown
   const OptionChip = ({
@@ -210,12 +239,18 @@ export default function FilterPanel({
       {/* Variaciones (Color, Talla, etc.) */}
       {availableFilters.variations.map(variation => {
         const activeValue = activeFilters.variations[variation.name] ?? null
+        const key = `variation:${variation.name}`
         return (
-          <Dropdown
+          <FilterDropdownButton
             key={variation.name}
-            dropdownKey={`variation:${variation.name}`}
+            isOpen={openKey === key}
+            onToggle={toggleDropdown(key)}
             label={variation.name}
             activeLabel={activeValue}
+            textColor={textColor}
+            bgColor={bgColor}
+            borderColor={borderColor}
+            primaryColor={primaryColor}
           >
             <div className="flex flex-wrap gap-1.5">
               {variation.values.map(value => {
@@ -230,16 +265,21 @@ export default function FilterPanel({
                 )
               })}
             </div>
-          </Dropdown>
+          </FilterDropdownButton>
         )
       })}
 
       {/* Marca */}
       {availableFilters.brands.length > 0 && (
-        <Dropdown
-          dropdownKey="brand"
+        <FilterDropdownButton
+          isOpen={openKey === 'brand'}
+          onToggle={toggleDropdown('brand')}
           label={t.filterBrand}
           activeLabel={activeFilters.brand}
+          textColor={textColor}
+          bgColor={bgColor}
+          borderColor={borderColor}
+          primaryColor={primaryColor}
         >
           <div className="flex flex-wrap gap-1.5">
             {availableFilters.brands.map(brand => {
@@ -254,15 +294,20 @@ export default function FilterPanel({
               )
             })}
           </div>
-        </Dropdown>
+        </FilterDropdownButton>
       )}
 
       {/* Precio */}
       {availableFilters.priceRange && (
-        <Dropdown
-          dropdownKey="price"
+        <FilterDropdownButton
+          isOpen={openKey === 'price'}
+          onToggle={toggleDropdown('price')}
           label={t.filterPrice}
           activeLabel={priceActiveLabel}
+          textColor={textColor}
+          bgColor={bgColor}
+          borderColor={borderColor}
+          primaryColor={primaryColor}
         >
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -298,7 +343,7 @@ export default function FilterPanel({
               {availableFilters.priceRange.min} – {availableFilters.priceRange.max}
             </p>
           </div>
-        </Dropdown>
+        </FilterDropdownButton>
       )}
 
       {/* Limpiar todo */}
