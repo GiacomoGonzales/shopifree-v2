@@ -159,16 +159,19 @@ export default function FilterPanel({
     setPriceMaxInput(activeFilters.priceMax?.toString() ?? '')
   }, [activeFilters.priceMin, activeFilters.priceMax])
 
-  // Cerrar al hacer click fuera del panel
+  // Cerrar al tocar/click fuera del panel.
+  // Usamos `pointerdown` (no `mousedown`) porque en touch devices
+  // mousedown no se dispara confiablemente — pointerdown unifica
+  // mouse + touch + pen en un solo evento.
   useEffect(() => {
     if (!openKey) return
-    const onMouseDown = (e: MouseEvent) => {
+    const onPointerDown = (e: PointerEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         setOpenKey(null)
       }
     }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [openKey])
 
   const textColor = colors?.text ?? '#111827'

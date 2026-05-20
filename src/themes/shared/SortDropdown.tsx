@@ -42,15 +42,16 @@ export default function SortDropdown({
   const [isOpen, setIsOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Cerrar al hacer click afuera
+  // Cerrar al tocar/click afuera. pointerdown unifica mouse + touch,
+  // mousedown solo no se dispara confiablemente en mobile.
   useEffect(() => {
-    const onClickOutside = (e: MouseEvent) => {
+    const onPointerDown = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setIsOpen(false)
       }
     }
-    if (isOpen) document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
+    if (isOpen) document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [isOpen])
 
   const options: Array<{ value: SortBy; label: string }> = [
