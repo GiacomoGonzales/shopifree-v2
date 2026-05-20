@@ -143,6 +143,21 @@ export default function CategoryCarousel({
     scrollRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
   }
 
+  // Cuando el usuario cambia de categoria, llevarlo arriba del area de
+  // productos si estaba scrolleado abajo. Sin esto, si esta cerca del
+  // footer de "Polos" y selecciona "Pantalones", ve directamente el
+  // footer de la categoria nueva en vez de los primeros productos.
+  // Solo scrollea si esta debajo del area — si esta arriba (viendo el
+  // hero) lo dejamos donde esta.
+  const handleCategoryChange = (categoryId: string | null) => {
+    onCategoryChange(categoryId)
+    if (!navRef.current) return
+    const targetY = Math.max(0, navRef.current.offsetTop - (headerHeight ?? 0))
+    if (window.scrollY > targetY + 4) {
+      window.scrollTo({ top: targetY, behavior: 'smooth' })
+    }
+  }
+
   const hasSearch = products && onSelectProduct
   if (categories.length === 0 && !hasSearch) return null
 
@@ -242,7 +257,7 @@ export default function CategoryCarousel({
                   isAll
                   isActive={!activeCategory}
                   name={t.all}
-                  onClick={() => onCategoryChange(null)}
+                  onClick={() => handleCategoryChange(null)}
                   theme={theme}
                 />
 
@@ -253,7 +268,7 @@ export default function CategoryCarousel({
                     isActive={activeCategory === cat.id}
                     name={cat.name}
                     image={cat.image}
-                    onClick={() => onCategoryChange(cat.id)}
+                    onClick={() => handleCategoryChange(cat.id)}
                     theme={theme}
                   />
                 ))}
