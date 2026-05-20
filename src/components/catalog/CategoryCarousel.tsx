@@ -87,8 +87,13 @@ export default function CategoryCarousel({
   const { theme, language } = useTheme()
   const t = getThemeTranslations(language)
   const navRef = useRef<HTMLElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [headerHeight, setHeaderHeight] = useState<number | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  // Visibilidad de las flechas de scroll (solo desktop). Se calcula segun
+  // si hay contenido recortado a izquierda/derecha del viewport del row.
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
 
   // Auto-detect the header height (same approach as CategoryNav). Keeps the
   // sticky offset in sync if the header shrinks on scroll.
@@ -110,6 +115,33 @@ export default function CategoryCarousel({
       clearInterval(interval)
     }
   }, [])
+
+  // Tracking de overflow horizontal para mostrar/ocultar las flechas.
+  // ResizeObserver cubre el caso donde las categorias cargan async
+  // y el contenido cambia despues del primer mount.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const update = () => {
+      const tolerance = 2 // margen contra errores de subpixel
+      setCanScrollLeft(el.scrollLeft > tolerance)
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - tolerance)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => {
+      el.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      observer.disconnect()
+    }
+  }, [categories.length])
+
+  const scrollByDelta = (delta: number) => {
+    scrollRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
+  }
 
   const hasSearch = products && onSelectProduct
   if (categories.length === 0 && !hasSearch) return null
@@ -134,8 +166,51 @@ export default function CategoryCarousel({
           borderBottom: `1px solid ${theme.colors.border}`
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <div className={`flex md:[justify-content:safe_center] gap-2 ${verticalPadding} overflow-x-auto scrollbar-hide -mx-4 md:mx-0`}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 relative">
+          {/* Flecha izquierda (solo desktop). Aparece cuando hay contenido
+              scrolleado a la izquierda. Usa los colores del tema asi se
+              integra con el resto del header/nav sin importar dark o light. */}
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scrollByDelta(-220)}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-90"
+              style={{
+                backgroundColor: theme.colors.background,
+                color: theme.colors.text,
+                boxShadow: `0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px ${theme.colors.border}`,
+              }}
+              aria-label="Scroll categories left"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Flecha derecha (solo desktop) — gemela de la izquierda */}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scrollByDelta(220)}
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-90"
+              style={{
+                backgroundColor: theme.colors.background,
+                color: theme.colors.text,
+                boxShadow: `0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px ${theme.colors.border}`,
+              }}
+              aria-label="Scroll categories right"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+
+          <div
+            ref={scrollRef}
+            className={`flex md:[justify-content:safe_center] gap-2 ${verticalPadding} overflow-x-auto scrollbar-hide -mx-4 md:mx-0`}
+          >
             <div className="w-3 flex-shrink-0 md:hidden" aria-hidden="true" />
 
             {/* Search icon — same affordance as CategoryNav. Aligned to the
