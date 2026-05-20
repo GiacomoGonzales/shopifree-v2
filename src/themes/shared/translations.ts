@@ -193,6 +193,25 @@ export interface ThemeTranslations {
   previousPage: string
   nextPage: string
 
+  // Sort + Filter (catalog discovery)
+  sortBy: string                // "Ordenar por" / "Sort by"
+  sortFeatured: string          // "Destacados" / "Featured" — default order
+  sortNewest: string            // "Mas nuevos" / "Newest"
+  sortPriceAsc: string          // "Menor precio" / "Price: low to high"
+  sortPriceDesc: string         // "Mayor precio" / "Price: high to low"
+  sortNameAsc: string           // "Nombre (A-Z)" / "Name (A-Z)"
+  filters: string               // "Filtros" / "Filters"
+  filterShow: string            // "Mostrar filtros" / "Show filters"
+  filterHide: string            // "Ocultar" / "Hide"
+  filterClear: string           // "Limpiar todo" / "Clear all"
+  filterApply: string           // "Aplicar" / "Apply"
+  filterPrice: string           // "Precio" / "Price"
+  filterBrand: string           // "Marca" / "Brand"
+  priceFrom: string             // "Desde" / "From"
+  priceTo: string               // "Hasta" / "To"
+  resultsCount: string          // "{n} productos" / "{n} products"
+  noResultsFiltered: string     // "No hay productos que coincidan" / "No matching products"
+
   // WhatsApp message parts
   waGreeting: string
   waOrderNumber: string
@@ -432,6 +451,25 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     previousPage: 'Anterior',
     nextPage: 'Siguiente',
 
+    // Sort + Filter
+    sortBy: 'Ordenar por',
+    sortFeatured: 'Destacados',
+    sortNewest: 'Mas nuevos',
+    sortPriceAsc: 'Menor precio',
+    sortPriceDesc: 'Mayor precio',
+    sortNameAsc: 'Nombre (A-Z)',
+    filters: 'Filtros',
+    filterShow: 'Mostrar filtros',
+    filterHide: 'Ocultar',
+    filterClear: 'Limpiar todo',
+    filterApply: 'Aplicar',
+    filterPrice: 'Precio',
+    filterBrand: 'Marca',
+    priceFrom: 'Desde',
+    priceTo: 'Hasta',
+    resultsCount: '{n} productos',
+    noResultsFiltered: 'No hay productos que coincidan con los filtros',
+
     // WhatsApp message parts
     waGreeting: 'Hola! Acabo de realizar un pedido',
     waOrderNumber: 'Pedido',
@@ -670,6 +708,25 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     previousPage: 'Previous',
     nextPage: 'Next',
 
+    // Sort + Filter
+    sortBy: 'Sort by',
+    sortFeatured: 'Featured',
+    sortNewest: 'Newest',
+    sortPriceAsc: 'Price: low to high',
+    sortPriceDesc: 'Price: high to low',
+    sortNameAsc: 'Name (A-Z)',
+    filters: 'Filters',
+    filterShow: 'Show filters',
+    filterHide: 'Hide',
+    filterClear: 'Clear all',
+    filterApply: 'Apply',
+    filterPrice: 'Price',
+    filterBrand: 'Brand',
+    priceFrom: 'From',
+    priceTo: 'To',
+    resultsCount: '{n} products',
+    noResultsFiltered: 'No products match the selected filters',
+
     // WhatsApp message parts
     waGreeting: 'Hi! I just placed an order',
     waOrderNumber: 'Order',
@@ -907,6 +964,25 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     showingProducts: 'Mostrando {{shown}} de {{total}} produtos',
     previousPage: 'Anterior',
     nextPage: 'Proximo',
+
+    // Sort + Filter
+    sortBy: 'Ordenar por',
+    sortFeatured: 'Destaques',
+    sortNewest: 'Mais novos',
+    sortPriceAsc: 'Menor preco',
+    sortPriceDesc: 'Maior preco',
+    sortNameAsc: 'Nome (A-Z)',
+    filters: 'Filtros',
+    filterShow: 'Mostrar filtros',
+    filterHide: 'Ocultar',
+    filterClear: 'Limpar tudo',
+    filterApply: 'Aplicar',
+    filterPrice: 'Preco',
+    filterBrand: 'Marca',
+    priceFrom: 'De',
+    priceTo: 'Ate',
+    resultsCount: '{n} produtos',
+    noResultsFiltered: 'Nenhum produto corresponde aos filtros',
 
     // WhatsApp message parts
     waGreeting: 'Ola! Acabei de fazer um pedido',

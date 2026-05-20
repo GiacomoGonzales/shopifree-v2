@@ -9,7 +9,7 @@
  * - Ideal para: Restaurantes finos, wine bars, bistros, alta cocina
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import {
@@ -31,6 +31,9 @@ import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
+import { useProductFilters } from '../shared/useProductFilters'
+import SortDropdown from '../shared/SortDropdown'
+import FilterPanel from '../shared/FilterPanel'
 
 // Bistro colors
 const charcoal = '#1C1917'
@@ -92,7 +95,18 @@ interface Props {
 export default function BistroTheme({ store, products, categories, onWhatsAppClick, onProductView, onCartAdd, initialProduct }: Props) {
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  // Hook compartido: maneja categoria + sort + filtros (precio, marca, variantes).
+  const {
+    filteredProducts,
+    availableFilters,
+    activeFilters,
+    setFilter,
+    setVariationFilter,
+    clearFilters,
+    hasActiveFilters,
+    sortBy,
+    setSortBy,
+  } = useProductFilters(products, categories)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -105,12 +119,6 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const filteredProducts = useMemo(() => {
-    return activeCategory
-      ? products.filter(p => p.categoryId === activeCategory)
-      : products
-  }, [products, activeCategory])
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product)
@@ -294,14 +302,47 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
         {/* Categories */}
         <CategoryCarousel
           categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
+          activeCategory={activeFilters.categoryId}
+          onCategoryChange={(id) => setFilter('categoryId', id)}
           products={products}
           onSelectProduct={handleSelectProduct}
         />
 
         {/* Products */}
         <main className="max-w-6xl mx-auto px-4 md:px-6 py-12 md:py-16" style={{ backgroundColor: charcoal }}>
+          {/* Discovery bar: filtros + ordenamiento. FilterPanel solo se renderiza si hay filtros relevantes (auto-deteccion). */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <FilterPanel
+              availableFilters={availableFilters}
+              activeFilters={activeFilters}
+              onFilterChange={setFilter}
+              onVariationChange={setVariationFilter}
+              onClear={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+              language={store.language}
+              currency={store.currency}
+              colors={{
+                text: bistroTheme.colors.text,
+                textMuted: bistroTheme.colors.textMuted,
+                border: bistroTheme.colors.border,
+                background: bistroTheme.colors.background,
+                primary: bistroTheme.colors.primary,
+                surface: bistroTheme.colors.surfaceHover,
+              }}
+            />
+            <SortDropdown
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              language={store.language}
+              colors={{
+                text: bistroTheme.colors.text,
+                border: bistroTheme.colors.border,
+                background: bistroTheme.colors.background,
+                primary: bistroTheme.colors.primary,
+              }}
+              className="ml-auto"
+            />
+          </div>
           <ProductGrid
             products={filteredProducts}
             onSelectProduct={handleSelectProduct}

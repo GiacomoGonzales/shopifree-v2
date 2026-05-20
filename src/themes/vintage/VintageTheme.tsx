@@ -9,7 +9,7 @@
  * - Ideal para: Antiguedades, ropa vintage, productos artesanales, cafeterias
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
@@ -32,6 +32,9 @@ import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
+import { useProductFilters } from '../shared/useProductFilters'
+import SortDropdown from '../shared/SortDropdown'
+import FilterPanel from '../shared/FilterPanel'
 
 // Vintage theme configuration - Classic sepia tones with serif typography
 const vintageTheme: ThemeConfig = {
@@ -87,7 +90,20 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
   const { items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart } = useCart()
   const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store)
   const t = getThemeTranslations(store.language)
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+
+  // Hook compartido: maneja categoria + sort + filtros (precio, marca, variantes).
+  const {
+    filteredProducts,
+    availableFilters,
+    activeFilters,
+    setFilter,
+    setVariationFilter,
+    clearFilters,
+    hasActiveFilters,
+    sortBy,
+    setSortBy,
+  } = useProductFilters(products, categories)
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialProduct || null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -105,12 +121,6 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const filteredProducts = useMemo(() => {
-    return activeCategory
-      ? products.filter(p => p.categoryId === activeCategory)
-      : products
-  }, [products, activeCategory])
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product)
@@ -246,8 +256,8 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
         {/* Categories */}
         <CategoryCarousel
           categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
+          activeCategory={activeFilters.categoryId}
+          onCategoryChange={(id) => setFilter('categoryId', id)}
           products={products}
           onSelectProduct={handleSelectProduct}
         />
@@ -255,6 +265,39 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
         {/* Products */}
         <main className="py-10" style={{ backgroundColor: cream }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            {/* Discovery bar: filtros + ordenamiento. FilterPanel solo se renderiza si hay filtros relevantes (auto-deteccion). */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <FilterPanel
+                availableFilters={availableFilters}
+                activeFilters={activeFilters}
+                onFilterChange={setFilter}
+                onVariationChange={setVariationFilter}
+                onClear={clearFilters}
+                hasActiveFilters={hasActiveFilters}
+                language={store.language}
+                currency={store.currency}
+                colors={{
+                  text: vintageTheme.colors.text,
+                  textMuted: vintageTheme.colors.textMuted,
+                  border: vintageTheme.colors.border,
+                  background: vintageTheme.colors.background,
+                  primary: vintageTheme.colors.primary,
+                  surface: vintageTheme.colors.surfaceHover,
+                }}
+              />
+              <SortDropdown
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                language={store.language}
+                colors={{
+                  text: vintageTheme.colors.text,
+                  border: vintageTheme.colors.border,
+                  background: vintageTheme.colors.background,
+                  primary: vintageTheme.colors.primary,
+                }}
+                className="ml-auto"
+              />
+            </div>
             <ProductGrid
               products={filteredProducts}
               onSelectProduct={handleSelectProduct}
