@@ -1035,9 +1035,9 @@ export default function Orders() {
                 <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{t('orders.items')}</h4>
                 <div className="bg-gray-50 rounded-xl divide-y divide-gray-100 max-h-48 overflow-y-auto">
                   {selectedOrder.items?.map((item, index) => (
-                    <div key={index} className="px-4 py-3 flex justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
+                    <div key={index} className="px-4 py-3 flex justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-gray-900">{item.productName}</p>
                           {item.cjProductId && (
                             <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-semibold rounded">CJ</span>
@@ -1046,9 +1046,19 @@ export default function Orders() {
                             <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded">Printful</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">x{item.quantity}</p>
+                        {item.selectedVariations && item.selectedVariations.length > 0 && (
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            {item.selectedVariations.map(v => `${v.name}: ${v.value}`).join(' · ')}
+                          </p>
+                        )}
+                        {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            + {item.selectedModifiers.flatMap(m => m.options.map(o => o.name)).join(', ')}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-500 mt-0.5">x{item.quantity}</p>
                       </div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 whitespace-nowrap">
                         {currencySymbol}{(item.itemTotal || item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
