@@ -10,6 +10,7 @@ import { useNewOrdersCount } from '../../hooks/useNewOrdersCount'
 import { useSidebar } from '../../contexts/SidebarContext'
 import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
+import SetupAlerts from './SetupAlerts'
 import ModeSwitcher from '../finance/ModeSwitcher'
 import { chatService } from '../../lib/chatService'
 import {
@@ -402,6 +403,7 @@ export default function DashboardLayout() {
         )}
         <div className="p-4 sm:p-6 lg:pt-5 lg:pb-8 lg:px-8">
           {store && <PlanBanner store={store} />}
+          {store && <SetupAlerts store={store} />}
           <Outlet />
         </div>
       </main>

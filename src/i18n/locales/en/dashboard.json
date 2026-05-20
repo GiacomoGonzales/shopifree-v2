@@ -1349,6 +1349,14 @@
     "renew": "Renew",
     "updatePayment": "Update payment"
   },
+  "setupAlerts": {
+    "noWhatsapp": "Your WhatsApp number isn't configured yet. Customers need it to send you orders.",
+    "appNoLogo": "Your app is pending publication. You need to upload your store logo.",
+    "appNoIcon": "Your app is pending publication. You need to upload the app icon.",
+    "setupNow": "Set up",
+    "uploadLogo": "Upload logo",
+    "uploadIcon": "Upload icon"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

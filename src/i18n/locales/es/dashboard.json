@@ -1350,6 +1350,14 @@
     "renew": "Renovar",
     "updatePayment": "Actualizar pago"
   },
+  "setupAlerts": {
+    "noWhatsapp": "Falta configurar tu número de WhatsApp. Los clientes lo necesitan para enviarte pedidos.",
+    "appNoLogo": "Tu app está pendiente de publicación. Falta subir el logo de tu tienda.",
+    "appNoIcon": "Tu app está pendiente de publicación. Falta subir el ícono de la app.",
+    "setupNow": "Configurar",
+    "uploadLogo": "Subir logo",
+    "uploadIcon": "Subir ícono"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
