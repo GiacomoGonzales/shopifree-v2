@@ -19,7 +19,7 @@
  * fuerte pueden pasar sus colores o envolverlo.
  */
 
-import { useState, useRef, useEffect, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react'
 import type { AvailableFilters, ActiveFilters } from './useProductFilters'
 import { getThemeTranslations } from './translations'
 
@@ -56,13 +56,19 @@ function FilterDropdownButton({
   // Smart positioning: si abrir hacia la derecha se sale del viewport,
   // alinear el panel al borde derecho del boton. Evita scroll horizontal
   // en mobile cuando un filtro esta cerca del borde derecho.
-  useEffect(() => {
+  //
+  // useLayoutEffect (no useEffect) + activeLabel en deps porque al
+  // seleccionar un valor el boton se ensancha ("Marca" → "Marca: X"),
+  // el flex-wrap reflowea y el boton puede saltar a otra fila. Necesitamos
+  // recomputar la alineacion antes del paint, no despues, para evitar
+  // un flash con el panel fuera de pantalla.
+  useLayoutEffect(() => {
     if (!isOpen || !buttonRef.current) return
     const rect = buttonRef.current.getBoundingClientRect()
     const dropdownEstimatedWidth = 240
     const margin = 16
     setAlignRight(rect.left + dropdownEstimatedWidth > window.innerWidth - margin)
-  }, [isOpen])
+  }, [isOpen, activeLabel])
 
   return (
     <div className="relative">
