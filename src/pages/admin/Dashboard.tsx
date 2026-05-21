@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
+import { collection, getDocs } from 'firebase/firestore'
+import { db, auth } from '../../lib/firebase'
 import { useLanguage } from '../../hooks/useLanguage'
+import { apiUrl } from '../../utils/apiBase'
 import type { Store } from '../../types'
 
 interface Stats {
@@ -15,7 +16,22 @@ interface Stats {
   }
   countryDistribution: { code: string; count: number }[]
   recentStores: (Store & { id: string })[]
-  appRequests: (Store & { id: string })[]
+}
+
+interface RankingEntry {
+  id: string
+  name: string
+  subdomain: string
+  logo?: string
+  plan?: string
+  value: number
+}
+
+interface Rankings {
+  topByViews: RankingEntry[]
+  topByOrders: RankingEntry[]
+  topByRevenue: RankingEntry[]
+  topByWhatsApp: RankingEntry[]
 }
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -55,62 +71,30 @@ export default function AdminDashboard() {
   const { localePath } = useLanguage()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [updatingApp, setUpdatingApp] = useState<string | null>(null)
-  const [appUrls, setAppUrls] = useState<Record<string, { android: string; ios: string }>>({})
-
-  const updateAppStatus = async (storeId: string, status: string) => {
-    setUpdatingApp(storeId)
-    try {
-      const updates: Record<string, unknown> = { 'appConfig.status': status }
-      if (status === 'published') {
-        updates['appConfig.publishedAt'] = new Date()
-        const urls = appUrls[storeId]
-        if (urls?.android) updates['appConfig.androidUrl'] = urls.android
-        if (urls?.ios) updates['appConfig.iosUrl'] = urls.ios
-      }
-      await updateDoc(doc(db, 'stores', storeId), updates)
-      // Update local state
-      setStats(prev => prev ? {
-        ...prev,
-        appRequests: status === 'published'
-          ? prev.appRequests.filter(s => s.id !== storeId)
-          : prev.appRequests.map(s => s.id === storeId ? { ...s, appConfig: { ...s.appConfig!, status: status as 'requested' | 'building' } } : s)
-      } : prev)
-    } catch (err) {
-      console.error('Error updating app status:', err)
-    } finally {
-      setUpdatingApp(null)
-    }
-  }
+  // Rankings se fetchean en paralelo a las stats principales via endpoint
+  // dedicado (/api/admin-rankings) que agrega collectionGroup queries
+  // server-side. Es independiente del loading de stats — si tarda mas el
+  // ranking, el dashboard se renderiza con un placeholder.
+  const [rankings, setRankings] = useState<Rankings | null>(null)
+  const [rankingsLoading, setRankingsLoading] = useState(true)
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Get all stores
         const storesSnapshot = await getDocs(collection(db, 'stores'))
         const stores = storesSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as (Store & { id: string })[]
 
-        // Get all users
         const usersSnapshot = await getDocs(collection(db, 'users'))
 
-        // Calculate plan distribution
-        const planDistribution = {
-          free: 0,
-          pro: 0,
-          business: 0
-        }
-
+        const planDistribution = { free: 0, pro: 0, business: 0 }
         stores.forEach(store => {
           const plan = store.plan as keyof typeof planDistribution
-          if (planDistribution[plan] !== undefined) {
-            planDistribution[plan]++
-          }
+          if (planDistribution[plan] !== undefined) planDistribution[plan]++
         })
 
-        // Calculate country distribution
         const countryCounts: Record<string, number> = {}
         stores.forEach(store => {
           const code = store.location?.country || 'N/A'
@@ -120,21 +104,15 @@ export default function AdminDashboard() {
           .map(([code, count]) => ({ code, count }))
           .sort((a, b) => b.count - a.count)
 
-        // Get recent stores (last 5)
-        const toDate = (d: any) => {
+        const toDate = (d: unknown) => {
           if (!d) return new Date(0)
-          if (d.toDate) return d.toDate()
+          if (typeof d === 'object' && d !== null && 'toDate' in d) return (d as { toDate: () => Date }).toDate()
           if (d instanceof Date) return d
-          return new Date(d)
+          return new Date(d as string)
         }
         const recentStores = stores
           .sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
           .slice(0, 5)
-
-        // App publication requests (requested or building)
-        const appRequests = stores
-          .filter(s => s.appConfig?.status === 'requested' || s.appConfig?.status === 'building')
-          .sort((a, b) => toDate(b.appConfig?.requestedAt).getTime() - toDate(a.appConfig?.requestedAt).getTime())
 
         setStats({
           totalStores: stores.length,
@@ -142,7 +120,6 @@ export default function AdminDashboard() {
           planDistribution,
           countryDistribution,
           recentStores,
-          appRequests
         })
       } catch (error) {
         console.error('Error fetching stats:', error)
@@ -152,6 +129,28 @@ export default function AdminDashboard() {
     }
 
     fetchStats()
+  }, [])
+
+  useEffect(() => {
+    const fetchRankings = async () => {
+      if (!auth.currentUser) return
+      try {
+        const token = await auth.currentUser.getIdToken()
+        const res = await fetch(apiUrl('/api/admin-rankings'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) throw new Error('Failed to fetch rankings')
+        const data = (await res.json()) as Rankings
+        setRankings(data)
+      } catch (error) {
+        console.error('Error fetching rankings:', error)
+      } finally {
+        setRankingsLoading(false)
+      }
+    }
+
+    fetchRankings()
   }, [])
 
   if (loading) {
@@ -170,110 +169,54 @@ export default function AdminDashboard() {
         <p className="text-sm text-gray-500 mt-0.5">Vista general de la plataforma</p>
       </div>
 
-      {/* App Publication Requests */}
-      {stats?.appRequests && stats.appRequests.length > 0 && (
-        <div className="border border-gray-200 rounded-lg">
-          <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-900">
-              Solicitudes de app
-            </h2>
-            <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-sm">
-              {stats.appRequests.length}
-            </span>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {stats.appRequests.map((store) => (
-              <div key={store.id} className="px-5 py-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {store.appConfig?.icon ? (
-                      <img src={store.appConfig.icon} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
-                    ) : store.logo ? (
-                      <img src={store.logo} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
-                        <span className="text-gray-600 font-medium text-sm">{store.name.charAt(0)}</span>
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{store.appConfig?.appName || store.name}</p>
-                      <p className="text-[11px] text-gray-500 truncate">{store.subdomain}.shopifree.app · {store.id}</p>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 text-[11px] rounded-sm font-medium border border-gray-200 text-gray-700 flex-shrink-0">
-                    {store.appConfig?.status === 'requested' ? 'Solicitada' : 'En construccion'}
-                  </span>
-                </div>
-
-                {/* Colors preview */}
-                {store.appConfig && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: store.appConfig.primaryColor }} title="Primary" />
-                    <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: store.appConfig.secondaryColor }} title="Secondary" />
-                    <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: store.appConfig.splashColor }} title="Splash" />
-                    <span className="text-[11px] text-gray-500 ml-1">Plan: {store.plan}</span>
-                  </div>
-                )}
-
-                {/* URL inputs for publishing */}
-                {store.appConfig?.status === 'building' && (
-                  <div className="space-y-2 mb-3">
-                    <input
-                      type="text"
-                      placeholder="Play Store URL"
-                      value={appUrls[store.id]?.android || ''}
-                      onChange={(e) => setAppUrls(prev => ({ ...prev, [store.id]: { ...prev[store.id], android: e.target.value, ios: prev[store.id]?.ios || '' } }))}
-                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-900"
-                    />
-                    <input
-                      type="text"
-                      placeholder="App Store URL"
-                      value={appUrls[store.id]?.ios || ''}
-                      onChange={(e) => setAppUrls(prev => ({ ...prev, [store.id]: { android: prev[store.id]?.android || '', ios: e.target.value } }))}
-                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-900"
-                    />
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                <div className="flex gap-2">
-                  {store.appConfig?.status === 'requested' && (
-                    <button
-                      onClick={() => updateAppStatus(store.id, 'building')}
-                      disabled={updatingApp === store.id}
-                      className="px-3 py-1.5 bg-black text-white text-xs font-medium rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50"
-                    >
-                      {updatingApp === store.id ? '...' : 'Marcar en construccion'}
-                    </button>
-                  )}
-                  {store.appConfig?.status === 'building' && (
-                    <button
-                      onClick={() => updateAppStatus(store.id, 'published')}
-                      disabled={updatingApp === store.id}
-                      className="px-3 py-1.5 bg-black text-white text-xs font-medium rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50"
-                    >
-                      {updatingApp === store.id ? '...' : 'Marcar como publicada'}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => navigator.clipboard.writeText(store.id)}
-                    className="px-3 py-1.5 border border-gray-200 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    Copiar ID
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Tiendas totales" value={stats?.totalStores || 0} />
         <StatCard label="Usuarios totales" value={stats?.totalUsers || 0} />
         <StatCard label="Planes Pro" value={stats?.planDistribution.pro || 0} />
         <StatCard label="Planes Business" value={stats?.planDistribution.business || 0} />
+      </div>
+
+      {/* Top Rankings — 4 listas paralelas con los top performers por metrica. */}
+      <div>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="text-sm font-medium text-gray-900">Top tiendas</h2>
+          <span className="text-[11px] text-gray-500">Acumulado total</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <RankingCard
+            title="Mas visitadas"
+            subtitle="Page views totales"
+            entries={rankings?.topByViews}
+            loading={rankingsLoading}
+            localePath={localePath}
+            formatValue={v => v.toLocaleString('es')}
+          />
+          <RankingCard
+            title="Mas pedidos"
+            subtitle="Pedidos no cancelados"
+            entries={rankings?.topByOrders}
+            loading={rankingsLoading}
+            localePath={localePath}
+            formatValue={v => v.toLocaleString('es')}
+          />
+          <RankingCard
+            title="Mas generado"
+            subtitle="Suma de pedidos (gross)"
+            entries={rankings?.topByRevenue}
+            loading={rankingsLoading}
+            localePath={localePath}
+            formatValue={v => `$${v.toFixed(0)}`}
+          />
+          <RankingCard
+            title="Mas clicks WhatsApp"
+            subtitle="Engagement con vendedor"
+            entries={rankings?.topByWhatsApp}
+            loading={rankingsLoading}
+            localePath={localePath}
+            formatValue={v => v.toLocaleString('es')}
+          />
+        </div>
       </div>
 
       {/* Country Distribution */}
@@ -299,10 +242,7 @@ export default function AdminDashboard() {
                         <span className="font-medium text-gray-900 shrink-0 ml-2 tabular-nums">{count} <span className="text-gray-400">({percentage}%)</span></span>
                       </div>
                       <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gray-900 transition-all"
-                          style={{ width: `${percentage}%` }}
-                        />
+                        <div className="h-full rounded-full bg-gray-900 transition-all" style={{ width: `${percentage}%` }} />
                       </div>
                     </div>
                   </div>
@@ -334,10 +274,7 @@ export default function AdminDashboard() {
                     <span className="font-medium text-gray-900 tabular-nums">{count} <span className="text-gray-400">({percentage}%)</span></span>
                   </div>
                   <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gray-900 transition-all"
-                      style={{ width: `${percentage}%` }}
-                    />
+                    <div className="h-full rounded-full bg-gray-900 transition-all" style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
               )
@@ -389,6 +326,64 @@ function StatCard({ label, value }: { label: string; value: number }) {
     <div className="border border-gray-200 rounded-lg p-4">
       <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{label}</p>
       <p className="text-2xl font-semibold text-gray-900 mt-1 tabular-nums">{value}</p>
+    </div>
+  )
+}
+
+function RankingCard({
+  title,
+  subtitle,
+  entries,
+  loading,
+  localePath,
+  formatValue,
+}: {
+  title: string
+  subtitle: string
+  entries: RankingEntry[] | undefined
+  loading: boolean
+  localePath: (path: string) => string
+  formatValue: (v: number) => string
+}) {
+  return (
+    <div className="border border-gray-200 rounded-lg">
+      <div className="px-5 py-3 border-b border-gray-200">
+        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+        <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {loading ? (
+          <div className="px-5 py-6 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-200 border-t-gray-900" />
+          </div>
+        ) : !entries || entries.length === 0 ? (
+          <p className="text-[13px] text-gray-500 text-center py-6">Sin datos todavia</p>
+        ) : (
+          entries.map((entry, idx) => (
+            <Link
+              key={entry.id}
+              to={localePath(`/admin/stores/${entry.id}`)}
+              className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-[11px] font-medium text-gray-400 tabular-nums w-4">{idx + 1}</span>
+              {entry.logo ? (
+                <img src={entry.logo} alt="" className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                  <span className="text-gray-600 font-medium text-[11px]">{entry.name.charAt(0)}</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-gray-900 truncate">{entry.name}</p>
+                <p className="text-[10px] text-gray-500 truncate">{entry.subdomain}.shopifree.app</p>
+              </div>
+              <span className="text-[13px] font-semibold text-gray-900 tabular-nums flex-shrink-0">
+                {formatValue(entry.value)}
+              </span>
+            </Link>
+          ))
+        )}
+      </div>
     </div>
   )
 }
