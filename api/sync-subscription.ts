@@ -193,6 +193,38 @@ async function handleListPayments(req: VercelRequest, res: VercelResponse) {
   })
 }
 
+// POST /api/sync-subscription { action: 'payments-total' } - Aggregate sum of
+// ALL paid invoices (not just the loaded page). Uses Stripe auto-pagination to
+// walk every paid invoice, so the response is the true running total — the same
+// number you'd see in Stripe Dashboard's Revenue view, in cents → dollars.
+//
+// Admin-only. Cost: one Stripe page call per ~100 invoices. Acceptable for an
+// admin tool that's hit infrequently. If the volume grows past ~1000 invoices
+// we should denormalize this into a Firestore counter updated by webhook.
+async function handlePaymentsTotal(req: VercelRequest, res: VercelResponse) {
+  const isAdmin = await verifyAdmin(req)
+  if (!isAdmin) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+
+  const stripe = getStripe()
+
+  let totalAmount = 0
+  let totalCount = 0
+
+  // autoPagingEach handles pagination transparently — keeps fetching pages of
+  // 100 until Stripe says has_more=false. amount_paid is in cents.
+  for await (const inv of stripe.invoices.list({ status: 'paid', limit: 100 })) {
+    totalAmount += inv.amount_paid / 100
+    totalCount += 1
+  }
+
+  return res.status(200).json({
+    totalAmount,
+    totalCount,
+  })
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -214,8 +246,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return await handleSync(req, res)
     } else if (action === 'list-payments') {
       return await handleListPayments(req, res)
+    } else if (action === 'payments-total') {
+      return await handlePaymentsTotal(req, res)
     } else {
-      return res.status(400).json({ error: 'Invalid action. Use "sync" or "list-payments"' })
+      return res.status(400).json({ error: 'Invalid action. Use "sync", "list-payments", or "payments-total"' })
     }
   } catch (error) {
     console.error('Error in sync-subscription:', error)

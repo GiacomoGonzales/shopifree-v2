@@ -57,6 +57,13 @@ export default function PaidStores() {
   const [paymentsLastId, setPaymentsLastId] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
 
+  // Total recaudado real (todas las invoices pagadas en Stripe, no solo las
+  // cargadas en memoria). Se fetchea una sola vez al entrar al tab via la
+  // accion 'payments-total' del backend, que agrega via auto-pagination.
+  const [paymentsTotalAmount, setPaymentsTotalAmount] = useState<number | null>(null)
+  const [paymentsTotalCount, setPaymentsTotalCount] = useState<number | null>(null)
+  const [totalLoading, setTotalLoading] = useState(false)
+
   useEffect(() => {
     const fetchPaidStores = async () => {
       try {
@@ -141,12 +148,41 @@ export default function PaidStores() {
     }
   }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch del total real (todas las invoices, no solo las cargadas). Se hace en
+  // paralelo al primer fetchPayments para no bloquear el render de la lista.
+  // Una sola vez por sesion — admin no necesita refresh constante.
+  const fetchPaymentsTotal = async () => {
+    if (!auth.currentUser || paymentsTotalAmount !== null || totalLoading) return
+    setTotalLoading(true)
+    try {
+      const token = await auth.currentUser.getIdToken()
+      const res = await fetch(apiUrl('/api/sync-subscription'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'payments-total' }),
+      })
+      if (!res.ok) throw new Error('Failed to fetch total')
+      const data = await res.json()
+      setPaymentsTotalAmount(data.totalAmount)
+      setPaymentsTotalCount(data.totalCount)
+    } catch (error) {
+      console.error('Error fetching payments total:', error)
+    } finally {
+      setTotalLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (tab === 'payments' && paymentsTotalAmount === null && !totalLoading) {
+      fetchPaymentsTotal()
+    }
+  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const filteredStores = filter === 'all'
     ? stores
     : stores.filter(s => s.subscription?.status === filter)
 
   const totalActive = stores.filter(s => s.subscription?.status === 'active' || s.subscription?.status === 'trialing').length
-  const totalPaymentsAmount = payments.reduce((sum, p) => sum + p.amount, 0)
 
   if (loading) {
     return (
@@ -324,14 +360,24 @@ export default function PaidStores() {
       {/* === PAYMENTS TAB === */}
       {tab === 'payments' && (
         <div className="space-y-4">
-          {/* Total collected */}
-          {payments.length > 0 && (
+          {/* Total collected — total REAL de todas las invoices pagadas en
+              Stripe, no solo las cargadas. Si todavia no llego el fetch,
+              mostramos placeholder en lugar de un numero confuso. */}
+          {(payments.length > 0 || totalLoading) && (
             <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Total recaudado (cargado)</p>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Total recaudado</p>
               <p className="text-2xl font-semibold text-gray-900 mt-1 tabular-nums">
-                ${totalPaymentsAmount.toFixed(2)} <span className="text-sm font-normal text-gray-500">USD</span>
+                {paymentsTotalAmount !== null ? (
+                  <>
+                    ${paymentsTotalAmount.toFixed(2)} <span className="text-sm font-normal text-gray-500">USD</span>
+                  </>
+                ) : (
+                  <span className="text-gray-400">Calculando...</span>
+                )}
               </p>
-              <p className="text-xs text-gray-500 mt-1">{payments.length} pagos registrados</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {paymentsTotalCount !== null ? `${paymentsTotalCount} pagos en total` : `${payments.length} cargados`}
+              </p>
             </div>
           )}
 
