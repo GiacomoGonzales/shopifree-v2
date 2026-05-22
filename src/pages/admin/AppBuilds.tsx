@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs, onSnapshot, query, where, type Timestamp } from 'firebase/firestore'
+import { collection, doc, getDocs, onSnapshot, query, updateDoc, where, type Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -261,6 +261,46 @@ export default function AppBuilds() {
     return { total: stores.length, requested, building, ready, failed }
   }, [stores])
 
+  // Filtro de visibilidad: ocultamos stores que tienen appConfig pero no estan
+  // en un estado "activo" — esto incluye solicitudes descartadas (status='none'
+  // sin builds ni URLs) y stores que solo configuraron colores pero nunca
+  // pidieron publicacion. Asi el listado no se llena de ruido.
+  // Mostramos si: esta en proceso (requested/building/published) O ya tiene
+  // un build/IPA generado O ya tiene URL en alguna store.
+  const visibleStores = useMemo(() => {
+    return stores.filter(s => {
+      const status = s.appConfig?.status
+      if (status === 'requested' || status === 'building' || status === 'published') return true
+      if (s.appConfig?.build?.status === 'success') return true
+      if (s.appConfig?.buildIos?.status === 'success') return true
+      if (s.appConfig?.androidUrl || s.appConfig?.iosUrl) return true
+      return false
+    })
+  }, [stores])
+
+  // Descartar una solicitud: resetea appConfig.status a 'none' para que (a)
+  // el listado del admin la oculte (gracias al filtro de arriba) y (b) el
+  // dueño pueda volver a pedirla cuando quiera desde su dashboard, sin
+  // perder los colores/nombre que ya habia configurado.
+  const discardRequest = async (store: StoreRow) => {
+    const ok = window.confirm(
+      `Descartar solicitud de "${store.name}"?\n\n` +
+      `El dueño podra volver a pedirla cuando quiera. La configuracion (colores, nombre, ícono) se conserva.`
+    )
+    if (!ok) return
+    try {
+      await updateDoc(doc(db, 'stores', store.id), {
+        'appConfig.status': 'none',
+      })
+      showToast(`Solicitud de "${store.name}" descartada`, 'success')
+      // No hace falta tocar el estado local: el onSnapshot listener actualiza
+      // store.appConfig.status y el filtro visibleStores se recomputa solo.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      showToast(`Error: ${msg}`, 'error')
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div>
@@ -284,13 +324,17 @@ export default function AppBuilds() {
           <div className="flex items-center justify-center py-16">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-gray-900" />
           </div>
-        ) : stores.length === 0 ? (
+        ) : visibleStores.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-500">Ninguna tienda tiene app configurada todavía</p>
+            <p className="text-sm text-gray-500">
+              {stores.length === 0
+                ? 'Ninguna tienda tiene app configurada todavía'
+                : 'No hay solicitudes activas, builds en curso ni apps publicadas'}
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {stores.map(store => {
+            {visibleStores.map(store => {
               const androidBuild = store.appConfig?.build
               const iosBuild = store.appConfig?.buildIos
               const androidStatus = androidBuild?.status || 'idle'
@@ -350,6 +394,19 @@ export default function AppBuilds() {
                         </span>
                       )}
                     </button>
+                    {store.appConfig?.status === 'requested' && (
+                      <button
+                        type="button"
+                        onClick={() => discardRequest(store)}
+                        className="px-2.5 py-1.5 border border-gray-200 text-gray-500 rounded-md text-[11px] font-medium hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-colors inline-flex items-center gap-1"
+                        title="Descartar esta solicitud — el dueño podrá volver a pedirla"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Descartar
+                      </button>
+                    )}
                     <div className="inline-flex items-center gap-1.5 ml-auto">
                       <label className="text-[10px] text-gray-500 uppercase tracking-wide">v</label>
                       <input
