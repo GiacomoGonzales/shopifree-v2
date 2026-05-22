@@ -264,53 +264,59 @@ export default function AppBuilds() {
     return { total: stores.length, requested, building, ready, failed }
   }, [stores])
 
-  // Filtro de visibilidad. Por defecto ocultamos stores que tienen appConfig
-  // pero no estan en un estado "activo" — incluye solicitudes descartadas
-  // (status='none' sin builds ni URLs) y stores que solo configuraron colores
-  // pero nunca pidieron publicacion. Toggle "Todas" desactiva el filtro para
-  // poder recuperar una descartada por error o auditar el universo entero.
+  // Filtro de visibilidad. "Activas" muestra solo lo que esta en proceso
+  // (solicitado / compilando / publicado). "Todas" muestra el universo
+  // entero — util para recuperar una descartada o auditar configs viejas.
+  //
+  // Nota: usamos SOLO appConfig.status como criterio (no builds ni URLs)
+  // para que la accion "Descartar" funcione universalmente. Si una app
+  // tiene status='none' (descartada) pero builds o URLs, queda oculta
+  // en "Activas" pero accesible en "Todas". Mas claro que mezclar
+  // criterios.
+  const isActiveStatus = (s: StoreRow) => {
+    const status = s.appConfig?.status
+    return status === 'requested' || status === 'building' || status === 'published'
+  }
+
   const visibleStores = useMemo(() => {
     if (listFilter === 'all') return stores
-    return stores.filter(s => {
-      const status = s.appConfig?.status
-      if (status === 'requested' || status === 'building' || status === 'published') return true
-      if (s.appConfig?.build?.status === 'success') return true
-      if (s.appConfig?.buildIos?.status === 'success') return true
-      if (s.appConfig?.androidUrl || s.appConfig?.iosUrl) return true
-      return false
-    })
+    return stores.filter(isActiveStatus)
   }, [stores, listFilter])
 
   // Conteos independientes del filtro actual — necesarios para los badges de
   // los botones, que siempre tienen que mostrar cuanto hay de cada lado.
-  const activeCount = useMemo(() => {
-    return stores.filter(s => {
-      const status = s.appConfig?.status
-      if (status === 'requested' || status === 'building' || status === 'published') return true
-      if (s.appConfig?.build?.status === 'success') return true
-      if (s.appConfig?.buildIos?.status === 'success') return true
-      if (s.appConfig?.androidUrl || s.appConfig?.iosUrl) return true
-      return false
-    }).length
-  }, [stores])
+  const activeCount = useMemo(() => stores.filter(isActiveStatus).length, [stores])
 
-  // Descartar una solicitud: resetea appConfig.status a 'none' para que (a)
-  // el listado del admin la oculte (gracias al filtro de arriba) y (b) el
-  // dueño pueda volver a pedirla cuando quiera desde su dashboard, sin
-  // perder los colores/nombre que ya habia configurado.
+  // Descartar una app: resetea appConfig.status a 'none'. Como el filtro de
+  // visibilidad solo mira status, esto la saca del listado "Activas". El
+  // dueño puede volver a pedirla — la configuracion (colores, nombre, icono),
+  // los builds previos y las URLs de la store quedan intactos por si los
+  // necesita despues. Solo cambia el "estado en proceso".
   const discardRequest = async (store: StoreRow) => {
-    const ok = window.confirm(
-      `Descartar solicitud de "${store.name}"?\n\n` +
-      `El dueño podra volver a pedirla cuando quiera. La configuracion (colores, nombre, ícono) se conserva.`
-    )
-    if (!ok) return
+    const status = store.appConfig?.status
+    let message: string
+    if (status === 'requested') {
+      message = `Descartar solicitud de "${store.name}"?\n\n` +
+        `El dueño podra volver a pedirla cuando quiera. La configuracion (colores, nombre, ícono) se conserva.`
+    } else if (status === 'building') {
+      message = `Descartar "${store.name}" (esta en construccion)?\n\n` +
+        `Se quita del listado pero los builds en curso siguen su flujo. Si necesitas cortarlos, hazlo desde GitHub Actions.`
+    } else if (status === 'published') {
+      message = `Descartar "${store.name}" (esta PUBLICADA)?\n\n` +
+        `Solo la quitamos del listado del admin. La app sigue activa en Play Store / App Store con sus URLs intactas — esto no la baja de las stores.`
+    } else {
+      message = `Descartar "${store.name}"?\n\n` +
+        `Se quita del listado. La configuracion y builds previos se conservan.`
+    }
+
+    if (!window.confirm(message)) return
     try {
       await updateDoc(doc(db, 'stores', store.id), {
         'appConfig.status': 'none',
       })
-      showToast(`Solicitud de "${store.name}" descartada`, 'success')
-      // No hace falta tocar el estado local: el onSnapshot listener actualiza
-      // store.appConfig.status y el filtro visibleStores se recomputa solo.
+      showToast(`"${store.name}" descartada`, 'success')
+      // El onSnapshot listener actualiza appConfig.status y el filtro
+      // visibleStores se recomputa solo.
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
       showToast(`Error: ${msg}`, 'error')
@@ -429,12 +435,15 @@ export default function AppBuilds() {
                         </span>
                       )}
                     </button>
-                    {store.appConfig?.status === 'requested' && (
+                    {/* Descartar — disponible en cualquier estado activo. La saca
+                        del listado dejando todos los datos (config, builds, URLs)
+                        intactos por si despues hay que recuperar algo. */}
+                    {isActiveStatus(store) && (
                       <button
                         type="button"
                         onClick={() => discardRequest(store)}
                         className="px-2.5 py-1.5 border border-gray-200 text-gray-500 rounded-md text-[11px] font-medium hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-colors inline-flex items-center gap-1"
-                        title="Descartar esta solicitud — el dueño podrá volver a pedirla"
+                        title="Descartar esta app del listado del admin"
                       >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
