@@ -1,25 +1,32 @@
 /**
  * POST /api/admin-rankings — Top stores rankings for the admin Dashboard.
  *
- * Admin-only. Aggregates four lifetime metrics across all stores in one call:
- *   - topByViews:    page_view analytics events per store
- *   - topByOrders:   non-cancelled orders count per store
- *   - topByRevenue:  sum(order.total) of non-cancelled orders per store
- *   - topByWhatsApp: whatsapp_click analytics events per store
+ * Admin-only. Returns top-5 stores per metric (lifetime):
+ *   - topByViews:    page_view analytics count
+ *   - topByOrders:   non-cancelled orders count
+ *   - topByRevenue:  sum(order.total) of non-cancelled orders
+ *   - topByWhatsApp: whatsapp_click analytics count
  *
- * Uses Firestore collectionGroup queries to scan all stores' subcollections
- * in 3 parallel reads (orders, page_view analytics, whatsapp_click analytics),
- * then aggregates in memory by storeId (extracted from doc.ref.parent.parent.id).
+ * Strategy: PER-STORE aggregation, not collectionGroup. We tried collectionGroup
+ * scans first but they don't scale — with 300+ stores the function timed out
+ * trying to download every analytics event across the platform. count() runs
+ * server-side in Firestore and returns a single int, so each metric is cheap
+ * regardless of how many events a store has.
  *
- * Cost: one full scan per metric on every call. Fine for an admin tool that
- * loads at most a few times per session. If volume grows past ~500K analytics
- * docs, switch to time-windowed queries (last 90 days) + composite index on
- * (type, timestamp), or denormalize per-store counters updated by webhook.
+ * Concurrency is capped at 20 parallel store-fetches so we don't open hundreds
+ * of sockets to Firestore at once.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+
+// Vercel function config — give us a 60s budget. Default is 10s on Hobby
+// which is too short for 300+ stores. 60s is the cap on Hobby; Pro can go
+// higher if we ever need it.
+export const config = {
+  maxDuration: 60,
+}
 
 let db: Firestore
 
@@ -64,7 +71,74 @@ interface StoreMeta {
   plan?: string
 }
 
+interface StoreMetrics {
+  views: number
+  whatsapp: number
+  orders: number
+  revenue: number
+}
+
 const TOP_N = 5
+const CONCURRENCY = 20
+
+/**
+ * Worker pool: process items with at most `limit` running at once.
+ * Returns results in same order as input.
+ */
+async function mapConcurrent<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let cursor = 0
+  async function worker() {
+    while (cursor < items.length) {
+      const idx = cursor++
+      try {
+        results[idx] = await fn(items[idx])
+      } catch (err) {
+        // Don't let one store's failure tank the whole ranking. Log and
+        // fill with empty metrics so the sort just buries it.
+        console.error(`[admin-rankings] failed store at idx ${idx}:`, err)
+        results[idx] = { views: 0, whatsapp: 0, orders: 0, revenue: 0 } as R
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return results
+}
+
+async function getStoreMetrics(storeId: string): Promise<StoreMetrics> {
+  const firestore = getDb()
+  const storeRef = firestore.collection('stores').doc(storeId)
+
+  // 3 queries en paralelo por tienda:
+  //   - count() de page_view (server-side, no descarga docs)
+  //   - count() de whatsapp_click (idem)
+  //   - get() de orders (necesitamos los docs para sumar revenue)
+  const [viewsAgg, waAgg, ordersSnap] = await Promise.all([
+    storeRef.collection('analytics').where('type', '==', 'page_view').count().get(),
+    storeRef.collection('analytics').where('type', '==', 'whatsapp_click').count().get(),
+    storeRef.collection('orders').get(),
+  ])
+
+  let orderCount = 0
+  let revenue = 0
+  ordersSnap.forEach(doc => {
+    const data = doc.data()
+    if (data.status === 'cancelled') return
+    orderCount++
+    revenue += Number(data.total) || 0
+  })
+
+  return {
+    views: viewsAgg.data().count,
+    whatsapp: waAgg.data().count,
+    orders: orderCount,
+    revenue,
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -78,83 +152,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: 'Forbidden' })
   }
 
+  const startedAt = Date.now()
   try {
     const firestore = getDb()
 
-    // 3 queries en paralelo (stores meta + 2 collectionGroup scans).
-    // Nota: NO usamos .where('type', '==', X) en analytics porque collectionGroup
-    // queries con where() requieren un indice explicito en firestore.indexes.json.
-    // Hacer un scan completo y filtrar por type en codigo es mas barato que
-    // mantener indices + es 1 round-trip menos que dos queries separadas.
-    const [storesSnap, ordersSnap, analyticsSnap] = await Promise.all([
-      firestore.collection('stores').get(),
-      firestore.collectionGroup('orders').get(),
-      firestore.collectionGroup('analytics').get(),
-    ])
-
-    // Tabla de metadata: storeId → datos basicos para renderizar
-    const storeMeta: Record<string, StoreMeta> = {}
-    storesSnap.forEach(doc => {
-      const data = doc.data()
-      storeMeta[doc.id] = {
-        id: doc.id,
+    // Step 1: get all stores
+    const storesSnap = await firestore.collection('stores').get()
+    const stores: StoreMeta[] = storesSnap.docs.map(d => {
+      const data = d.data()
+      return {
+        id: d.id,
         name: data.name || 'Sin nombre',
         subdomain: data.subdomain || '',
         logo: data.logo,
         plan: data.plan,
       }
     })
+    console.log(`[admin-rankings] ${stores.length} stores fetched in ${Date.now() - startedAt}ms`)
 
-    // Orders: ignoramos cancelados, sumamos count + revenue por store.
-    // El storeId se extrae del path: stores/{storeId}/orders/{orderId}
-    const orderStats: Record<string, { count: number; revenue: number }> = {}
-    ordersSnap.forEach(doc => {
-      const data = doc.data()
-      if (data.status === 'cancelled') return
-      const storeId = doc.ref.parent.parent?.id
-      if (!storeId) return
-      if (!orderStats[storeId]) orderStats[storeId] = { count: 0, revenue: 0 }
-      orderStats[storeId].count++
-      orderStats[storeId].revenue += Number(data.total) || 0
-    })
+    // Step 2: per-store metrics in parallel with concurrency cap
+    const metricsStarted = Date.now()
+    const allMetrics = await mapConcurrent(stores, CONCURRENCY, s => getStoreMetrics(s.id))
+    console.log(`[admin-rankings] metrics for ${stores.length} stores in ${Date.now() - metricsStarted}ms`)
 
-    // Analytics: una sola pasada, despachamos por event type a su contador.
-    const viewStats: Record<string, number> = {}
-    const waStats: Record<string, number> = {}
-    analyticsSnap.forEach(doc => {
-      const storeId = doc.ref.parent.parent?.id
-      if (!storeId) return
-      const type = doc.data().type
-      if (type === 'page_view') {
-        viewStats[storeId] = (viewStats[storeId] || 0) + 1
-      } else if (type === 'whatsapp_click') {
-        waStats[storeId] = (waStats[storeId] || 0) + 1
-      }
-    })
+    // Step 3: build top-N rankings per metric
+    const enriched = stores.map((s, i) => ({ ...s, ...allMetrics[i] }))
 
-    // Helper: convertir un stats object en un ranking ordenado top-N
-    const buildRanking = <T extends Record<string, number | { count: number; revenue: number }>>(
-      stats: T,
-      valueFn: (v: T[string]) => number
-    ) =>
-      Object.entries(stats)
-        .map(([storeId, v]) => ({
-          ...storeMeta[storeId],
-          value: valueFn(v as T[string]),
-        }))
-        .filter(s => s.id && s.value > 0)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, TOP_N)
+    const topByViews = enriched
+      .filter(s => s.views > 0)
+      .sort((a, b) => b.views - a.views)
+      .slice(0, TOP_N)
+      .map(({ id, name, subdomain, logo, plan, views }) => ({ id, name, subdomain, logo, plan, value: views }))
+
+    const topByOrders = enriched
+      .filter(s => s.orders > 0)
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, TOP_N)
+      .map(({ id, name, subdomain, logo, plan, orders }) => ({ id, name, subdomain, logo, plan, value: orders }))
+
+    const topByRevenue = enriched
+      .filter(s => s.revenue > 0)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, TOP_N)
+      .map(({ id, name, subdomain, logo, plan, revenue }) => ({ id, name, subdomain, logo, plan, value: revenue }))
+
+    const topByWhatsApp = enriched
+      .filter(s => s.whatsapp > 0)
+      .sort((a, b) => b.whatsapp - a.whatsapp)
+      .slice(0, TOP_N)
+      .map(({ id, name, subdomain, logo, plan, whatsapp }) => ({ id, name, subdomain, logo, plan, value: whatsapp }))
+
+    console.log(`[admin-rankings] total time: ${Date.now() - startedAt}ms`)
 
     return res.status(200).json({
-      topByViews: buildRanking(viewStats, v => v as number),
-      topByOrders: buildRanking(orderStats, v => (v as { count: number }).count),
-      topByRevenue: buildRanking(orderStats, v => (v as { revenue: number }).revenue),
-      topByWhatsApp: buildRanking(waStats, v => v as number),
+      topByViews,
+      topByOrders,
+      topByRevenue,
+      topByWhatsApp,
     })
   } catch (error) {
-    console.error('Error in admin-rankings:', error)
+    console.error('[admin-rankings] error after', Date.now() - startedAt, 'ms:', error)
     const err = error as Error
-    return res.status(500).json({ error: 'Internal server error', details: err.message })
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: err.message,
+      stack: err.stack,
+    })
   }
 }
