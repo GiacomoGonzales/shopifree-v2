@@ -68,9 +68,13 @@ export default function AppBuilds() {
   const [loading, setLoading] = useState(true)
   const [triggeringId, setTriggeringId] = useState<string | null>(null)
   const [versionName, setVersionName] = useState<Record<string, string>>({})
-  // 'active' = solo en proceso (default). 'all' = incluye descartadas y
-  // configs sin solicitud — util para recuperar una descartada por accidente.
-  const [listFilter, setListFilter] = useState<'active' | 'all'>('active')
+  // Tres filtros mutuamente excluyentes:
+  //  - 'active'    (default): solo lo que requiere accion del admin —
+  //                solicitudes pendientes y builds en curso.
+  //  - 'completed': apps que ya estan publicadas en Play Store / App Store.
+  //                Trabajo terminado, ya no hace falta verlas todos los dias.
+  //  - 'all':      universo entero incluyendo descartadas y configs viejas.
+  const [listFilter, setListFilter] = useState<'active' | 'completed' | 'all'>('active')
 
   // Publish modal state — handles both Android and iOS URLs in one place so
   // the operator can paste either or both without juggling two modals.
@@ -264,28 +268,29 @@ export default function AppBuilds() {
     return { total: stores.length, requested, building, ready, failed }
   }, [stores])
 
-  // Filtro de visibilidad. "Activas" muestra solo lo que esta en proceso
-  // (solicitado / compilando / publicado). "Todas" muestra el universo
-  // entero — util para recuperar una descartada o auditar configs viejas.
-  //
-  // Nota: usamos SOLO appConfig.status como criterio (no builds ni URLs)
-  // para que la accion "Descartar" funcione universalmente. Si una app
-  // tiene status='none' (descartada) pero builds o URLs, queda oculta
-  // en "Activas" pero accesible en "Todas". Mas claro que mezclar
-  // criterios.
+  // Predicados de estado. Solo miramos appConfig.status (no builds ni URLs)
+  // para que la accion "Descartar" funcione universalmente — al setear
+  // status='none' la app desaparece de "Activas" y "Completadas" pero queda
+  // accesible en "Todas" con sus datos intactos por si hay que recuperarla.
   const isActiveStatus = (s: StoreRow) => {
     const status = s.appConfig?.status
-    return status === 'requested' || status === 'building' || status === 'published'
+    return status === 'requested' || status === 'building'
   }
+  const isCompletedStatus = (s: StoreRow) => s.appConfig?.status === 'published'
+  // Cualquier estado "vivo" (activa o completada) puede descartarse. El que
+  // ya tiene status='none' no se muestra el boton porque ya esta fuera.
+  const canBeDiscarded = (s: StoreRow) => isActiveStatus(s) || isCompletedStatus(s)
 
   const visibleStores = useMemo(() => {
     if (listFilter === 'all') return stores
+    if (listFilter === 'completed') return stores.filter(isCompletedStatus)
     return stores.filter(isActiveStatus)
   }, [stores, listFilter])
 
   // Conteos independientes del filtro actual — necesarios para los badges de
   // los botones, que siempre tienen que mostrar cuanto hay de cada lado.
   const activeCount = useMemo(() => stores.filter(isActiveStatus).length, [stores])
+  const completedCount = useMemo(() => stores.filter(isCompletedStatus).length, [stores])
 
   // Descartar una app: resetea appConfig.status a 'none'. Como el filtro de
   // visibilidad solo mira status, esto la saca del listado "Activas". El
@@ -340,11 +345,12 @@ export default function AppBuilds() {
         <StatCard label="Listas" value={summary.ready} />
       </div>
 
-      {/* Filtro de listado: por defecto solo activas (lo que esta en proceso).
-          "Todas" muestra el universo entero, util para recuperar una solicitud
-          descartada por error o auditar configs incompletas. */}
+      {/* Filtro de listado:
+            - Activas: solicitudes + builds en curso. Lo que requiere accion.
+            - Completadas: ya publicadas en stores. Trabajo terminado.
+            - Todas: incluye descartadas y configs incompletas. */}
       <div className="flex gap-1.5 flex-wrap">
-        {(['active', 'all'] as const).map(f => (
+        {(['active', 'completed', 'all'] as const).map(f => (
           <button
             key={f}
             onClick={() => setListFilter(f)}
@@ -354,7 +360,11 @@ export default function AppBuilds() {
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            {f === 'active' ? `Activas (${activeCount})` : `Todas (${stores.length})`}
+            {f === 'active'
+              ? `Activas (${activeCount})`
+              : f === 'completed'
+                ? `Completadas (${completedCount})`
+                : `Todas (${stores.length})`}
           </button>
         ))}
       </div>
@@ -370,7 +380,11 @@ export default function AppBuilds() {
             <p className="text-sm text-gray-500">
               {stores.length === 0
                 ? 'Ninguna tienda tiene app configurada todavía'
-                : 'No hay solicitudes activas, builds en curso ni apps publicadas'}
+                : listFilter === 'active'
+                  ? 'No hay solicitudes activas ni builds en curso'
+                  : listFilter === 'completed'
+                    ? 'Ninguna app publicada todavía'
+                    : 'Ninguna tienda tiene app configurada todavía'}
             </p>
           </div>
         ) : (
@@ -435,10 +449,11 @@ export default function AppBuilds() {
                         </span>
                       )}
                     </button>
-                    {/* Descartar — disponible en cualquier estado activo. La saca
-                        del listado dejando todos los datos (config, builds, URLs)
-                        intactos por si despues hay que recuperar algo. */}
-                    {isActiveStatus(store) && (
+                    {/* Descartar — disponible en cualquier estado vivo (activa o
+                        completada). La saca del listado dejando todos los datos
+                        (config, builds, URLs) intactos por si despues hay que
+                        recuperar algo. */}
+                    {canBeDiscarded(store) && (
                       <button
                         type="button"
                         onClick={() => discardRequest(store)}
