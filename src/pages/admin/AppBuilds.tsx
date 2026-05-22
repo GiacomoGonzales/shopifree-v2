@@ -68,6 +68,9 @@ export default function AppBuilds() {
   const [loading, setLoading] = useState(true)
   const [triggeringId, setTriggeringId] = useState<string | null>(null)
   const [versionName, setVersionName] = useState<Record<string, string>>({})
+  // 'active' = solo en proceso (default). 'all' = incluye descartadas y
+  // configs sin solicitud — util para recuperar una descartada por accidente.
+  const [listFilter, setListFilter] = useState<'active' | 'all'>('active')
 
   // Publish modal state — handles both Android and iOS URLs in one place so
   // the operator can paste either or both without juggling two modals.
@@ -261,13 +264,13 @@ export default function AppBuilds() {
     return { total: stores.length, requested, building, ready, failed }
   }, [stores])
 
-  // Filtro de visibilidad: ocultamos stores que tienen appConfig pero no estan
-  // en un estado "activo" — esto incluye solicitudes descartadas (status='none'
-  // sin builds ni URLs) y stores que solo configuraron colores pero nunca
-  // pidieron publicacion. Asi el listado no se llena de ruido.
-  // Mostramos si: esta en proceso (requested/building/published) O ya tiene
-  // un build/IPA generado O ya tiene URL en alguna store.
+  // Filtro de visibilidad. Por defecto ocultamos stores que tienen appConfig
+  // pero no estan en un estado "activo" — incluye solicitudes descartadas
+  // (status='none' sin builds ni URLs) y stores que solo configuraron colores
+  // pero nunca pidieron publicacion. Toggle "Todas" desactiva el filtro para
+  // poder recuperar una descartada por error o auditar el universo entero.
   const visibleStores = useMemo(() => {
+    if (listFilter === 'all') return stores
     return stores.filter(s => {
       const status = s.appConfig?.status
       if (status === 'requested' || status === 'building' || status === 'published') return true
@@ -276,6 +279,19 @@ export default function AppBuilds() {
       if (s.appConfig?.androidUrl || s.appConfig?.iosUrl) return true
       return false
     })
+  }, [stores, listFilter])
+
+  // Conteos independientes del filtro actual — necesarios para los badges de
+  // los botones, que siempre tienen que mostrar cuanto hay de cada lado.
+  const activeCount = useMemo(() => {
+    return stores.filter(s => {
+      const status = s.appConfig?.status
+      if (status === 'requested' || status === 'building' || status === 'published') return true
+      if (s.appConfig?.build?.status === 'success') return true
+      if (s.appConfig?.buildIos?.status === 'success') return true
+      if (s.appConfig?.androidUrl || s.appConfig?.iosUrl) return true
+      return false
+    }).length
   }, [stores])
 
   // Descartar una solicitud: resetea appConfig.status a 'none' para que (a)
@@ -316,6 +332,25 @@ export default function AppBuilds() {
         <StatCard label="Solicitadas" value={summary.requested} />
         <StatCard label="Compilando" value={summary.building} />
         <StatCard label="Listas" value={summary.ready} />
+      </div>
+
+      {/* Filtro de listado: por defecto solo activas (lo que esta en proceso).
+          "Todas" muestra el universo entero, util para recuperar una solicitud
+          descartada por error o auditar configs incompletas. */}
+      <div className="flex gap-1.5 flex-wrap">
+        {(['active', 'all'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setListFilter(f)}
+            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+              listFilter === f
+                ? 'bg-gray-900 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            {f === 'active' ? `Activas (${activeCount})` : `Todas (${stores.length})`}
+          </button>
+        ))}
       </div>
 
       {/* List */}
