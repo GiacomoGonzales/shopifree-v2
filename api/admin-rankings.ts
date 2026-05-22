@@ -81,12 +81,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const firestore = getDb()
 
-    // 4 queries en paralelo (stores meta + 3 collectionGroup scans)
-    const [storesSnap, ordersSnap, viewsSnap, waSnap] = await Promise.all([
+    // 3 queries en paralelo (stores meta + 2 collectionGroup scans).
+    // Nota: NO usamos .where('type', '==', X) en analytics porque collectionGroup
+    // queries con where() requieren un indice explicito en firestore.indexes.json.
+    // Hacer un scan completo y filtrar por type en codigo es mas barato que
+    // mantener indices + es 1 round-trip menos que dos queries separadas.
+    const [storesSnap, ordersSnap, analyticsSnap] = await Promise.all([
       firestore.collection('stores').get(),
       firestore.collectionGroup('orders').get(),
-      firestore.collectionGroup('analytics').where('type', '==', 'page_view').get(),
-      firestore.collectionGroup('analytics').where('type', '==', 'whatsapp_click').get(),
+      firestore.collectionGroup('analytics').get(),
     ])
 
     // Tabla de metadata: storeId → datos basicos para renderizar
@@ -115,20 +118,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       orderStats[storeId].revenue += Number(data.total) || 0
     })
 
-    // Views por store
+    // Analytics: una sola pasada, despachamos por event type a su contador.
     const viewStats: Record<string, number> = {}
-    viewsSnap.forEach(doc => {
-      const storeId = doc.ref.parent.parent?.id
-      if (!storeId) return
-      viewStats[storeId] = (viewStats[storeId] || 0) + 1
-    })
-
-    // WhatsApp clicks por store
     const waStats: Record<string, number> = {}
-    waSnap.forEach(doc => {
+    analyticsSnap.forEach(doc => {
       const storeId = doc.ref.parent.parent?.id
       if (!storeId) return
-      waStats[storeId] = (waStats[storeId] || 0) + 1
+      const type = doc.data().type
+      if (type === 'page_view') {
+        viewStats[storeId] = (viewStats[storeId] || 0) + 1
+      } else if (type === 'whatsapp_click') {
+        waStats[storeId] = (waStats[storeId] || 0) + 1
+      }
     })
 
     // Helper: convertir un stats object en un ranking ordenado top-N
