@@ -50,6 +50,11 @@ export default function ProductForm() {
   // === CAMPOS BÁSICOS ===
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  // True when the product is managed by an external system via /api/v1.
+  // Drives a banner + disabled <fieldset> so the merchant can see the
+  // data but cannot edit it from Shopifree (the source system is the
+  // canonical source of truth).
+  const [isApiManaged, setIsApiManaged] = useState(false)
   // Tracks which required fields have been blurred at least once, so we only
   // surface inline errors after the user interacts (avoids yelling on first paint).
   const [touched, setTouched] = useState<Record<string, boolean>>({})
@@ -179,6 +184,7 @@ export default function ProductForm() {
             setVideo(productData.video || null)
             setCategoryId(productData.categoryId || '')
             setActive(productData.active)
+            setIsApiManaged(productData.externalSource === 'api')
 
             // Avanzados
             setComparePrice(productData.comparePrice?.toString() || '')
@@ -656,7 +662,30 @@ export default function ProductForm() {
         </p>
       </div>
 
+      {/* Banner: producto manejado por integracion externa via API. Toda la
+          edicion esta deshabilitada — la fuente de verdad esta en el sistema
+          externo. El merchant puede ver los datos para confirmar pero no
+          tocarlos desde aca. */}
+      {isApiManaged && (
+        <div className="mb-4 border border-blue-200 bg-blue-50 rounded-xl px-4 py-3 flex items-start gap-3">
+          <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="text-sm text-blue-900">
+            <p className="font-medium mb-0.5">Producto gestionado externamente</p>
+            <p className="text-blue-800">
+              Este producto se sincroniza automáticamente desde tu sistema conectado por API.
+              Editalo desde allí — los cambios hechos acá no se guardarán.
+            </p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
+        {/* fieldset con disabled propaga el atributo a TODOS los form controls
+            internos (inputs, selects, textareas, botones). className="contents"
+            elimina el layout del fieldset para no romper el grid. */}
+        <fieldset disabled={isApiManaged} className="contents">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Basic Info */}
@@ -1402,6 +1431,7 @@ export default function ProductForm() {
             )}
           </div>
         </div>
+        </fieldset>
       </form>
 
       {/* Sticky save bar — universal (web + native). Replaces both the header buttons
@@ -1452,8 +1482,9 @@ export default function ProductForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={saving || validationErrors.length > 0}
+              disabled={saving || validationErrors.length > 0 || isApiManaged}
               className="flex-1 sm:flex-none px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm text-sm"
+              title={isApiManaged ? 'Producto gestionado externamente — editalo desde el sistema conectado' : undefined}
             >
               {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
             </button>

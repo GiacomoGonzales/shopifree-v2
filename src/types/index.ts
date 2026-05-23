@@ -402,6 +402,14 @@ export interface Product {
   printfulProductId?: number      // Printful sync product ID
   printfulVariants?: PrintfulVariantMap[]  // Maps variant combos to Printful variant IDs
 
+  // === EXTERNAL API ===
+  // Set when the product was created/managed via the public API (Cobrify or
+  // other ERP/POS integration). When this is set, the dashboard product
+  // editor goes read-only and the source system is the canonical source of
+  // truth for price/stock/etc. — see /api/v1/products.
+  externalSource?: 'api'          // Currently only 'api' (the public API).
+  externalId?: string             // Source system's stable ID for this product
+
   // === ESTADO ===
   active: boolean
   featured?: boolean
