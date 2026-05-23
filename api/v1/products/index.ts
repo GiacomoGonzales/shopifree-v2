@@ -1,5 +1,11 @@
 /**
- * POST /api/v1/products — Bulk upsert products from an external system.
+ * POST   /api/v1/products              — Bulk upsert products
+ * DELETE /api/v1/products?externalId=X — Remove one product (query param,
+ *   not path param, because Vercel's nested dynamic routes [foo].ts
+ *   under a folder that also has index.ts were falling through to the
+ *   SPA fallback. Keeping both verbs in one file dodges that quirk.)
+ *
+ * --- POST body ---
  *
  * Body:
  * {
@@ -175,12 +181,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST' && req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
 
   try {
     const storeId = await verifyApiKey(req)
     if (!storeId) return res.status(401).json({ error: 'Invalid or missing API key' })
 
+    // ─────────── DELETE /api/v1/products?externalId=xxx ───────────
+    // Removes an API-managed product. Safety check: only deletes if the
+    // stored doc has externalSource === 'api' — prevents wiping a merchant's
+    // manually-created product whose ID happens to collide with the
+    // deterministic `api_${id}` pattern.
+    if (req.method === 'DELETE') {
+      const externalId = req.query.externalId
+      if (!externalId || typeof externalId !== 'string') {
+        return res.status(400).json({ error: 'externalId query param is required' })
+      }
+      const docId = safeDocId(externalId)
+      const docRef = getDb().collection('stores').doc(storeId).collection('products').doc(docId)
+      const snap = await docRef.get()
+      if (!snap.exists || snap.data()?.externalSource !== 'api') {
+        return res.status(404).json({ error: 'Not found' })
+      }
+      await docRef.delete()
+      return res.status(200).json({ deleted: true })
+    }
+
+    // ─────────────── POST /api/v1/products (bulk upsert) ───────────────
     const body = req.body || {}
     const incoming: IncomingProduct[] = Array.isArray(body.products) ? body.products : []
     if (incoming.length === 0) {
