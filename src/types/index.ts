@@ -110,6 +110,19 @@ export interface Store {
   // === APP MÓVIL ===
   appConfig?: StoreAppConfig
 
+  // === API ACCESS ===
+  // Public API key for third-party integrations (Cobrify, custom POS/ERP,
+  // etc.) to push products and pull orders. Only the hash is stored — the
+  // plain key is shown to the merchant once at generation and never again.
+  // Regenerating destroys the old hash and replaces it (one active key per
+  // store). See api/_shared/api-auth.ts for verification flow.
+  apiKey?: {
+    hash: string             // SHA-256 hex of the plain key
+    prefix: string           // first 12 chars (e.g. "sfk_a1b2c3") for display
+    createdAt: Date
+    lastUsedAt?: Date | null
+  }
+
   // === PLAN & SUBSCRIPTION ===
   plan: 'free' | 'pro' | 'business'
   planExpiresAt?: Date

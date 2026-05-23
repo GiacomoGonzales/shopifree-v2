@@ -97,6 +97,7 @@ export default function DashboardLayout() {
       { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
       { name: t('nav.integrations'), href: localePath('/dashboard/integrations'), icon: IntegrationsIcon },
+      { name: t('nav.api'), href: localePath('/dashboard/api'), icon: IntegrationsIcon },
       { name: t('nav.miApp'), href: localePath('/dashboard/mi-app'), icon: PhoneIcon },
       'separator',
       { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },

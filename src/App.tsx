@@ -22,6 +22,7 @@ import Account from './pages/dashboard/Account'
 import Domain from './pages/dashboard/Domain'
 import Payments from './pages/dashboard/Payments'
 import Integrations from './pages/dashboard/Integrations'
+import ApiAccess from './pages/dashboard/ApiAccess'
 import Coupons from './pages/dashboard/Coupons'
 import Plan from './pages/dashboard/Plan'
 import Analytics from './pages/dashboard/Analytics'
@@ -204,6 +205,7 @@ function AppRoutes() {
             <Route path="domain" element={<Domain />} />
             <Route path="payments" element={<Payments />} />
             <Route path="integrations" element={<Integrations />} />
+            <Route path="api" element={<ApiAccess />} />
             <Route path="mi-app" element={<MiApp />} />
             <Route path="coupons" element={<Coupons />} />
             <Route path="dropshipping" element={<Dropshipping />} />
