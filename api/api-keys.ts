@@ -15,18 +15,53 @@
  *
  * Generate response (plain key shown ONLY here, never again):
  *   { plainKey: "sfk_...", prefix: "sfk_a1b2c3", createdAt: "..." }
+ *
+ * Crypto utilities live inline rather than in a shared file because Vercel
+ * treats every .ts under api/ as its own function — even _shared/ folders.
+ * Inlining matches the existing pattern (sync-subscription.ts) and avoids
+ * FUNCTION_INVOCATION_FAILED on cold start.
  */
 
+import { createHash, randomBytes } from 'crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { FieldValue } from 'firebase-admin/firestore'
-import { generateApiKey, getDb } from './_shared/api-auth'
+import { initializeApp, cert, getApps } from 'firebase-admin/app'
+import { getFirestore, Firestore, FieldValue } from 'firebase-admin/firestore'
+
+let db: Firestore
+
+function getDb(): Firestore {
+  if (!db) {
+    if (!getApps().length) {
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+      })
+    }
+    db = getFirestore()
+  }
+  return db
+}
+
+const KEY_PREFIX = 'sfk_'
+const KEY_ENTROPY_BYTES = 32 // 256 bits → 64 hex chars
+
+function generateApiKey(): { plain: string; hash: string; prefix: string } {
+  const random = randomBytes(KEY_ENTROPY_BYTES).toString('hex')
+  const plain = `${KEY_PREFIX}${random}`
+  const hash = createHash('sha256').update(plain).digest('hex')
+  const prefix = plain.slice(0, 12)
+  return { plain, hash, prefix }
+}
 
 async function verifyOwnerAndGetStoreId(req: VercelRequest): Promise<string | null> {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return null
   try {
     const token = authHeader.slice('Bearer '.length).trim()
-    // Ensure Firebase Admin is initialized before importing getAuth
     getDb()
     const { getAuth } = await import('firebase-admin/auth')
     const decoded = await getAuth().verifyIdToken(token)
