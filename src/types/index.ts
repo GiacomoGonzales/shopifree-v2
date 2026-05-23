@@ -599,6 +599,14 @@ export interface Order {
   fulfillmentStatus?: 'none' | 'submitted' | 'shipped' | 'delivered' | 'failed'
   fulfillmentError?: string
 
+  // External API integration (Cobrify, custom ERP/POS, etc). Set when the
+  // external system pulled this order via GET /api/v1/orders and POSTed
+  // back to /api/v1/orders to confirm it created the corresponding invoice
+  // / sale on its side. See api/v1/orders/index.ts.
+  externalSource?: 'api'
+  externalInvoiceId?: string      // ID of the matching record in the external system
+  externalSyncedAt?: Date
+
   createdAt: Date
   updatedAt: Date
 }
