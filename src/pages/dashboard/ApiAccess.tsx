@@ -244,9 +244,8 @@ export default function ApiAccess() {
           rel="noopener noreferrer"
           className="text-gray-900 underline hover:no-underline"
         >
-          api-docs
+          shopifree.app/api-docs
         </a>
-        {' '}(próximamente)
       </div>
 
       {/* One-time plain key modal */}

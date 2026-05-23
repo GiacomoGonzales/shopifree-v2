@@ -23,6 +23,7 @@ import Domain from './pages/dashboard/Domain'
 import Payments from './pages/dashboard/Payments'
 import Integrations from './pages/dashboard/Integrations'
 import ApiAccess from './pages/dashboard/ApiAccess'
+import ApiDocs from './pages/ApiDocs'
 import Coupons from './pages/dashboard/Coupons'
 import Plan from './pages/dashboard/Plan'
 import Analytics from './pages/dashboard/Analytics'
@@ -173,6 +174,9 @@ function AppRoutes() {
       {/* Public catalog (no language prefix) */}
       <Route path="/c/:storeSlug/p/:productSlug" element={<Catalog />} />
       <Route path="/c/:storeSlug" element={<Catalog />} />
+
+      {/* Public API docs — no language prefix, no auth required */}
+      <Route path="/api-docs" element={<ApiDocs />} />
 
       {/* Language-prefixed routes */}
       <Route path="/:lang" element={<LanguageLayout />}>
