@@ -76,7 +76,10 @@
       "Bash(\"/c/Users/giaco/AppData/Local/Android/Sdk/platform-tools/adb.exe\" uninstall *)",
       "Bash(\"/c/Users/giaco/AppData/Local/Android/Sdk/platform-tools/adb.exe\" install *)",
       "Bash(rm api/v1/products/[externalId].ts)",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(awk 'NR>=1140 && NR<=1250' /Users/valeryrutte/Desktop/Shopifree/shopifree-v2/src/pages/dashboard/Orders.tsx)",
+      "Bash(awk 'NR>=1240 && NR<=1265' /Users/valeryrutte/Desktop/Shopifree/shopifree-v2/src/pages/dashboard/ProductForm.tsx)",
+      "Bash(awk '/^\\\\/Users.*shopifree/{f=$0; getline; if\\($0~/error|warning/\\) print f\"\\\\n\"$0}')"
     ],
     "deny": [],
     "ask": []
