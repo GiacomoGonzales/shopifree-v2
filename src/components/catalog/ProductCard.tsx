@@ -39,12 +39,24 @@ export default function ProductCard({ product, onSelect, onQuickAdd, variant = '
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.comparePrice!) * 100)
     : 0
-  const isOutOfStock = product.trackStock && typeof product.stock === 'number' && product.stock <= 0
+
+  // When a product has variant combinations, availability must be derived
+  // from the SUM of combination stocks — not product.stock alone, which can
+  // drift out of sync (e.g. when only the legacy variant model was decremented
+  // before this fix, or after a partial write). Falling back to product.stock
+  // keeps simple (no-variant) products working.
+  const totalCombinationStock = product.combinations?.length
+    ? product.combinations.reduce((s, c) => s + (c.stock ?? 0), 0)
+    : null
+  const effectiveStock = totalCombinationStock !== null
+    ? totalCombinationStock
+    : (typeof product.stock === 'number' ? product.stock : null)
+  const isOutOfStock = product.trackStock === true && effectiveStock !== null && effectiveStock <= 0
 
   // Low-stock badge — only shown when the store enables it in catalogSettings.
   const showLowStockBadge = store?.catalogSettings?.showLowStockBadge === true
   const lowStockThreshold = store?.catalogSettings?.lowStockThreshold ?? 5
-  const currentStock = typeof product.stock === 'number' ? product.stock : 0
+  const currentStock = effectiveStock ?? 0
   const isLowStock = showLowStockBadge
     && product.trackStock === true
     && !isOutOfStock

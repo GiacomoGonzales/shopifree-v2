@@ -16,7 +16,7 @@ import { chatService } from '../../lib/chatService'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
   PaletteIcon, SettingsIcon, GlobeIcon, TagIcon, CreditCardIcon, PhoneIcon,
-  IntegrationsIcon, UserIcon, ChatIcon,
+  IntegrationsIcon, UserIcon, ChatIcon, HelpIcon,
 } from '../layout/sharedIcons'
 
 // Tipos para la navegacion
@@ -100,6 +100,7 @@ export default function DashboardLayout() {
       { name: t('nav.api'), href: localePath('/dashboard/api'), icon: IntegrationsIcon },
       { name: t('nav.miApp'), href: localePath('/dashboard/mi-app'), icon: PhoneIcon },
       'separator',
+      { name: t('nav.help', { defaultValue: 'Ayuda' }), href: localePath('/dashboard/help'), icon: HelpIcon },
       { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
     ]
     if (isAdmin) {

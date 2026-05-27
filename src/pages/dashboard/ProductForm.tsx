@@ -8,6 +8,7 @@ import { productService, categoryService, db } from '../../lib/firebase'
 import { collection, query, orderBy, getDocs } from 'firebase/firestore'
 import type { Warehouse } from '../../types'
 import { useToast } from '../../components/ui/Toast'
+import HelpTip from '../../components/ui/HelpTip'
 import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
 import { getVideoThumbnail } from '../../utils/cloudinary'
@@ -74,6 +75,14 @@ export default function ProductForm() {
   const [stock, setStock] = useState('')
   const [trackStock, setTrackStock] = useState(false)
   const [lowStockAlert, setLowStockAlert] = useState('')
+
+  // Inline "+ Nueva categoría" — lets the merchant create a category without
+  // leaving the product form. Before, the category dropdown was hidden when
+  // the store had zero categories, forcing the merchant to navigate to
+  // Products → Categorías → back. That was a top fricción reported by users.
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [savingNewCategory, setSavingNewCategory] = useState(false)
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('')
   const [brand, setBrand] = useState('')
@@ -388,6 +397,51 @@ export default function ProductForm() {
   }
 
   const handleRemoveVideo = () => setVideo(null)
+
+  // Create a category inline from the product form. Reuses the same slug
+  // logic and order convention used by the Products page so the new category
+  // shows up there too. On success, the dropdown selects the new category
+  // automatically — so the merchant can keep going without context switch.
+  const handleCreateCategoryInline = async () => {
+    if (!store || !newCategoryName.trim() || savingNewCategory) return
+    setSavingNewCategory(true)
+    try {
+      const slug = newCategoryName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+      const newId = await categoryService.create(store.id, {
+        name: newCategoryName.trim(),
+        slug,
+        order: categories.length,
+      })
+
+      const newCat = {
+        id: newId,
+        storeId: store.id,
+        name: newCategoryName.trim(),
+        slug,
+        order: categories.length,
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Category
+      setCategories([...categories, newCat])
+      setCategoryId(newId)
+      setNewCategoryName('')
+      setCreatingCategory(false)
+      showToast(t('products.categories.created'), 'success')
+    } catch (err) {
+      console.error('Inline category creation failed:', err)
+      showToast(t('products.categories.saveError'), 'error')
+    } finally {
+      setSavingNewCategory(false)
+    }
+  }
 
   const handleSubmit = async (
     e: React.FormEvent | null,
@@ -1099,17 +1153,61 @@ export default function ProductForm() {
               </div>
             )}
 
-            {/* Catalog — Category + Brand + Tags (was: Organization + Brand). */}
-            {(categories.length > 0 || features.showBrand || features.showTags) && (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            {/* Catalog — Category + Brand + Tags. Category is always shown
+                (even when the store has zero categories) so the merchant can
+                create one inline without leaving the form. */}
+            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.catalog.title')}</h2>
                 <div className="space-y-4">
-                  {/* Category */}
-                  {categories.length > 0 && (
-                    <div>
-                      <label htmlFor="category" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                  {/* Category — always visible, with inline create */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label htmlFor="category" className="block text-sm font-medium text-[#1e3a5f]">
                         {t('productForm.basic.category')}
                       </label>
+                      {!creatingCategory && (
+                        <button
+                          type="button"
+                          onClick={() => setCreatingCategory(true)}
+                          className="text-xs font-medium text-[#2d6cb5] hover:text-[#1e3a5f]"
+                        >
+                          + {t('products.categories.new', { defaultValue: 'Nueva' })}
+                        </button>
+                      )}
+                    </div>
+                    {creatingCategory ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          autoFocus
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); handleCreateCategoryInline() }
+                            if (e.key === 'Escape') { setCreatingCategory(false); setNewCategoryName('') }
+                          }}
+                          placeholder={t('products.categories.namePlaceholder', { defaultValue: 'Nombre de la categoría' })}
+                          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateCategoryInline}
+                          disabled={!newCategoryName.trim() || savingNewCategory}
+                          className="px-4 py-2.5 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-50"
+                        >
+                          {savingNewCategory
+                            ? t('products.categories.saving', { defaultValue: 'Guardando...' })
+                            : t('products.categories.save', { defaultValue: 'Guardar' })}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setCreatingCategory(false); setNewCategoryName('') }}
+                          className="px-3 py-2.5 text-gray-500 hover:text-gray-700 text-sm"
+                        >
+                          {t('products.categories.cancel', { defaultValue: 'Cancelar' })}
+                        </button>
+                      </div>
+                    ) : (
                       <select
                         id="category"
                         value={categoryId}
@@ -1121,8 +1219,8 @@ export default function ProductForm() {
                           <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
                       </select>
-                    </div>
-                  )}
+                    )}
+                  </div>
                   {/* Brand (compact, no longer its own card) */}
                   {features.showBrand && (
                     <div>
@@ -1156,7 +1254,6 @@ export default function ProductForm() {
                   )}
                 </div>
               </div>
-            )}
 
             {/* Industry-specific details — grouped into a single collapsible card.
                 Auto-opens when there is already content in any of the inner sections. */}
@@ -1272,7 +1369,13 @@ export default function ProductForm() {
                 {/* Track Stock toggle — moved to the top so it gates everything below it */}
                 {features.showStock && (
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700">{t('productForm.inventory.trackStock')}</span>
+                    <span className="text-sm text-gray-700 inline-flex items-center gap-1.5">
+                      {t('productForm.inventory.trackStock')}
+                      <HelpTip
+                        text="Activa esto si quieres llevar control de unidades por producto o por variante (talla/color). Cuando se vende, el stock baja solo. Si lo dejas desactivado, el producto se vende sin límite."
+                        learnMoreHref={localePath('/dashboard/help#modificar-stock')}
+                      />
+                    </span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={trackStock} onChange={e => setTrackStock(e.target.checked)} className="sr-only peer" />
                       <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]" />

@@ -31,6 +31,7 @@ import Orders from './pages/dashboard/Orders'
 import Customers from './pages/dashboard/Customers'
 import SupportChats from './pages/dashboard/SupportChats'
 import MoreMenu from './pages/dashboard/MoreMenu'
+import Help from './pages/dashboard/Help'
 import MiApp from './pages/dashboard/MiApp'
 import Dropshipping from './pages/dashboard/Dropshipping'
 import Catalog from './pages/catalog/Catalog'
@@ -218,6 +219,7 @@ function AppRoutes() {
             <Route path="plan" element={<Plan />} />
             <Route path="support-chats" element={<SupportChats />} />
             <Route path="more" element={<MoreMenu />} />
+            <Route path="help" element={<Help />} />
             <Route path="subscription" element={<Navigate to="account" replace />} />
           </Route>
 

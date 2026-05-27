@@ -75,6 +75,12 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
   // Notes
   const [notes, setNotes] = useState('')
 
+  // Test mode — when true, the order is created with isTest:true so it can
+  // be hidden from the default Orders view and excluded from stats. Stock
+  // is NOT decremented for test orders, so the merchant can probe the
+  // checkout / payment flow without polluting real inventory.
+  const [isTest, setIsTest] = useState(false)
+
   const [saving, setSaving] = useState(false)
 
   // Load products when opening
@@ -102,6 +108,7 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
     setInitialStatus('delivered_paid')
     setDiscountAmount('')
     setNotes('')
+    setIsTest(false)
     setVariantPickerProduct(null)
     setVariantSearch('')
   }, [open])
@@ -249,32 +256,38 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
       if (notes.trim()) orderData.notes = notes.trim()
       if (paymentStatus === 'paid') orderData.paidAt = new Date()
       if (paymentStatus === 'paid' && paymentNote.trim()) orderData.paymentNote = paymentNote.trim()
+      if (isTest) orderData.isTest = true
 
-      // Decrement stock if product is tracked (mirror the storefront flow)
+      // Decrement stock if product is tracked (mirror the storefront flow).
+      // Test orders SKIP stock decrements — the whole point of marking an
+      // order as a test is to probe the flow without polluting inventory.
       const stockItems: { productId: string; quantity: number }[] = []
       const variantStockUpdates: { productId: string; variationName: string; optionValue: string; quantity: number }[] = []
       const combinationUpdates: { productId: string; comboId: string; quantity: number }[] = []
 
-      for (const it of activeItems) {
-        if (!it.trackStock) continue
-        if (it._comboId) {
-          // Combination case — manual update after order creation
-          combinationUpdates.push({ productId: it.productId, comboId: it._comboId, quantity: it.quantity })
-        } else if (it.variationName && it.optionValue) {
-          variantStockUpdates.push({
-            productId: it.productId,
-            variationName: it.variationName,
-            optionValue: it.optionValue,
-            quantity: it.quantity,
-          })
-        } else {
-          stockItems.push({ productId: it.productId, quantity: it.quantity })
+      if (!isTest) {
+        for (const it of activeItems) {
+          if (!it.trackStock) continue
+          if (it._comboId) {
+            // Combination case — manual update after order creation
+            combinationUpdates.push({ productId: it.productId, comboId: it._comboId, quantity: it.quantity })
+          } else if (it.variationName && it.optionValue) {
+            variantStockUpdates.push({
+              productId: it.productId,
+              variationName: it.variationName,
+              optionValue: it.optionValue,
+              quantity: it.quantity,
+            })
+          } else {
+            stockItems.push({ productId: it.productId, quantity: it.quantity })
+          }
         }
       }
 
       const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-      // Stock decrements (fire-and-forget — don't block UI if they fail)
+      // Stock decrements (fire-and-forget — don't block UI if they fail).
+      // All three lists are empty when isTest is true, so these no-op.
       if (stockItems.length > 0) productService.decrementStock(store.id, stockItems).catch(() => {})
       if (variantStockUpdates.length > 0) productService.decrementVariantStock(store.id, variantStockUpdates).catch(() => {})
       // Combination stock update — use productService.update-like approach
@@ -316,8 +329,9 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
       if (orderData.notes) created.notes = orderData.notes
       if (orderData.paidAt) created.paidAt = orderData.paidAt
       if (orderData.paymentNote) created.paymentNote = orderData.paymentNote
+      if (isTest) created.isTest = true
 
-      showToast('Venta registrada', 'success')
+      showToast(isTest ? 'Venta de prueba registrada' : 'Venta registrada', 'success')
       onCreated(created)
       onClose()
     } catch (err) {
@@ -587,6 +601,26 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
                 className="w-full mt-2 px-3 py-2 border border-gray-200 rounded-lg text-sm"
               />
             )}
+          </section>
+
+          {/* Test order toggle — marks the order as a probe so it doesn't
+              count in stats, doesn't decrement stock, and is hidden from the
+              default Orders view. */}
+          <section>
+            <label className="flex items-start gap-3 p-3 border border-amber-200 bg-amber-50/60 rounded-lg cursor-pointer hover:bg-amber-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={isTest}
+                onChange={e => setIsTest(e.target.checked)}
+                className="mt-0.5 w-4 h-4 text-amber-600 rounded focus:ring-amber-400 focus:ring-2"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-900">Es una venta de prueba</p>
+                <p className="text-[11px] text-amber-700 mt-0.5">
+                  No descuenta stock, no cuenta en estadísticas, y queda oculta por defecto. Útil para probar el flujo sin ensuciar tu inventario o ingresos.
+                </p>
+              </div>
+            </label>
           </section>
         </div>
 

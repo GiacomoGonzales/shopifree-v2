@@ -13,6 +13,7 @@
     "payments": "Pagos",
     "coupons": "Cupones",
     "myAccount": "Mi Cuenta",
+    "help": "Ayuda",
     "miApp": "Mi App",
     "plan": "Plan",
     "logout": "Cerrar sesión"
@@ -204,6 +205,13 @@
     "showingResults": "Mostrando {{count}} de {{total}} pedidos",
     "noResults": "Sin resultados",
     "tryDifferentFilters": "Intenta con otros filtros o términos de búsqueda",
+    "hideTestOrders": "Ocultar pedidos de prueba",
+    "testBadge": "Prueba",
+    "deleteOrder": "Eliminar pedido",
+    "deleting": "Eliminando...",
+    "deleted": "Pedido eliminado",
+    "deleteError": "Error al eliminar el pedido",
+    "confirmDelete": "¿Eliminar este pedido? Esta acción no se puede deshacer.",
     "pagination": "{{start}}-{{end}} de {{total}}",
     "customerInfo": "Información del cliente",
     "name": "Nombre",
@@ -331,6 +339,20 @@
       "categories": "Has alcanzado el límite de categorías",
       "upgrade": "Actualizar a Pro - ${{price}}/mes",
       "close": "Cerrar"
+    },
+    "stockEdit": {
+      "button": "Stock",
+      "title": "Editar stock",
+      "warehouse": "Almacén",
+      "default": "por defecto",
+      "warehouseHint": "Los cambios afectan solo a este almacén. El stock de otros almacenes se conserva.",
+      "combination": "Combinación",
+      "qty": "Cantidad",
+      "newTotal": "Nuevo stock total",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "movementReason": "Edición rápida desde Productos"
     }
   },
   "productForm": {

@@ -427,22 +427,34 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-    // Decrement product-level stock (simple products)
-    if (stockItems.length > 0) {
-      productService.decrementStock(store.id, stockItems).catch(() => {})
-    }
-
-    // Decrement combination-level stock (modern variant model). This also
-    // recomputes product.stock and warehouseStock from the combinations so
-    // the dashboard inventory view stays consistent.
-    if (combinationStockUpdates.length > 0) {
-      productService.decrementCombinationStock(store.id, combinationStockUpdates).catch(() => {})
-    }
-
-    // Decrement legacy option-level stock (only for products that haven't
-    // been migrated to combinations[]).
-    if (variantStockUpdates.length > 0) {
-      productService.decrementVariantStock(store.id, variantStockUpdates).catch(() => {})
+    // Decrement stock SEQUENTIALLY (not fire-and-forget) so a failure in any
+    // one write surfaces in logs instead of silently corrupting inventory.
+    // The previous implementation ran three .catch(() => {}) in parallel —
+    // that's what caused the "agotado at random hours" bug: one write would
+    // win the race and leave product.stock / combinations[].stock /
+    // variations[].options[].stock out of sync, which then propagates to the
+    // public ProductCard and Dashboard inventory.
+    //
+    // We swallow the final error (don't re-throw) because the order is
+    // already persisted — failing the checkout for the customer at this
+    // point would be worse than logging.
+    try {
+      // Combination-level stock (modern variant model). This also recomputes
+      // product.stock and warehouseStock from the combinations.
+      if (combinationStockUpdates.length > 0) {
+        await productService.decrementCombinationStock(store.id, combinationStockUpdates)
+      }
+      // Legacy option-level stock (products not yet migrated to combinations[]).
+      // After the firebase.ts fix, this also keeps product.stock in sync.
+      if (variantStockUpdates.length > 0) {
+        await productService.decrementVariantStock(store.id, variantStockUpdates)
+      }
+      // Product-level stock (simple products, no variants).
+      if (stockItems.length > 0) {
+        await productService.decrementStock(store.id, stockItems)
+      }
+    } catch (stockErr) {
+      console.error('[checkout] stock decrement failed for order', orderId, stockErr)
     }
 
     // Increment coupon uses after successful order creation

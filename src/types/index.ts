@@ -586,6 +586,7 @@ export interface Order {
   // Origen del pedido (para distinguir ventas online vs manuales)
   channel?: 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'
   manual?: boolean              // true if created from Dashboard (Nueva venta), false/undefined if from storefront
+  isTest?: boolean              // true if the merchant marked this as a test order; hidden from the default Orders view and excluded from stats. Test orders also skip stock decrements.
 
   // Notas
   notes?: string

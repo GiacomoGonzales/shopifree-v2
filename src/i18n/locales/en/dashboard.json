@@ -13,6 +13,7 @@
     "payments": "Payments",
     "coupons": "Coupons",
     "myAccount": "My Account",
+    "help": "Help",
     "miApp": "My App",
     "plan": "Plan",
     "logout": "Logout"
@@ -217,6 +218,13 @@
     "showingResults": "Showing {{count}} of {{total}} orders",
     "noResults": "No results",
     "tryDifferentFilters": "Try different filters or search terms",
+    "hideTestOrders": "Hide test orders",
+    "testBadge": "Test",
+    "deleteOrder": "Delete order",
+    "deleting": "Deleting...",
+    "deleted": "Order deleted",
+    "deleteError": "Could not delete the order",
+    "confirmDelete": "Delete this order? This cannot be undone.",
     "pagination": "{{start}}-{{end}} of {{total}}",
     "empty": {
       "title": "No orders",
@@ -330,6 +338,20 @@
       "categories": "You have reached the category limit",
       "upgrade": "Upgrade to Pro - ${{price}}/mo",
       "close": "Close"
+    },
+    "stockEdit": {
+      "button": "Stock",
+      "title": "Edit stock",
+      "warehouse": "Warehouse",
+      "default": "default",
+      "warehouseHint": "Changes affect this warehouse only. Stock in other warehouses is preserved.",
+      "combination": "Combination",
+      "qty": "Quantity",
+      "newTotal": "New total stock",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "movementReason": "Quick edit from Products"
     }
   },
   "productForm": {

@@ -264,15 +264,27 @@ export const productService = {
       const variations = data.variations as Array<{ id: string; name: string; options: Array<{ id: string; value: string; stock?: number; available: boolean; image?: string }> }>
       if (!variations) continue
 
+      // Track total decrement so product.stock stays in sync. Legacy variants
+      // don't have combinations[], so we can't recompute as a sum — we
+      // decrement by the same total quantity that was sold.
+      let totalDecrement = 0
       for (const update of productUpdates) {
         const variation = variations.find(v => v.name === update.variationName)
         const option = variation?.options.find(o => o.value === update.optionValue)
         if (option && typeof option.stock === 'number') {
           option.stock = Math.max(0, option.stock - update.quantity)
         }
+        totalDecrement += update.quantity
       }
 
-      await updateDoc(ref, { variations, updatedAt: new Date() })
+      // Keep product.stock in sync. Without this, ProductCard ("agotado")
+      // and ProductDrawer drift apart: the listing keeps showing the old
+      // total even though the variant has run out — or vice versa.
+      const patch: Record<string, unknown> = { variations, updatedAt: new Date() }
+      if (typeof data.stock === 'number' && totalDecrement > 0) {
+        patch.stock = Math.max(0, data.stock - totalDecrement)
+      }
+      await updateDoc(ref, patch)
     }
   },
 
@@ -353,15 +365,23 @@ export const productService = {
       const variations = data.variations as Array<{ id: string; name: string; options: Array<{ id: string; value: string; stock?: number; available: boolean; image?: string }> }>
       if (!variations) continue
 
+      let totalRestore = 0
       for (const update of productUpdates) {
         const variation = variations.find(v => v.name === update.variationName)
         const option = variation?.options.find(o => o.value === update.optionValue)
         if (option && typeof option.stock === 'number') {
           option.stock += update.quantity
         }
+        totalRestore += update.quantity
       }
 
-      await updateDoc(ref, { variations, updatedAt: new Date() })
+      // Mirror decrementVariantStock: restore product.stock when an order is
+      // cancelled/refunded so listings stop showing "agotado" incorrectly.
+      const patch: Record<string, unknown> = { variations, updatedAt: new Date() }
+      if (typeof data.stock === 'number' && totalRestore > 0) {
+        patch.stock = data.stock + totalRestore
+      }
+      await updateDoc(ref, patch)
     }
   }
 }

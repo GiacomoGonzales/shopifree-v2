@@ -12,6 +12,7 @@ import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, getEffectivePlan, PLAN_FEATURES } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
+import StockEditModal from '../../components/dashboard/StockEditModal'
 import { optimizeImage } from '../../utils/cloudinary'
 import type { Product, Category } from '../../types'
 
@@ -60,7 +61,7 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 export default function Products() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
-  const { store } = useAuth()
+  const { store, firebaseUser } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
@@ -84,6 +85,11 @@ export default function Products() {
 
   // Import modals
   const [showImportModal, setShowImportModal] = useState(false)
+
+  // Quick stock edit modal — opened from the per-product "Stock" button so
+  // merchants can change variant quantities without going to Finance →
+  // Purchases or Finance → Inventory.
+  const [stockEditingProduct, setStockEditingProduct] = useState<Product | null>(null)
 
   // Close category menu when clicking outside
   useEffect(() => {
@@ -895,6 +901,15 @@ export default function Products() {
                         >
                           {t('products.edit')}
                         </Link>
+                        {product.trackStock && (
+                          <button
+                            onClick={() => setStockEditingProduct(product)}
+                            className="px-3 py-2 text-xs font-medium text-[#1e3a5f] bg-amber-50 hover:bg-amber-100 rounded-lg transition-all"
+                            title={t('products.stockEdit.title', { defaultValue: 'Editar stock' })}
+                          >
+                            {t('products.stockEdit.button', { defaultValue: 'Stock' })}
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
                           className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
@@ -909,6 +924,21 @@ export default function Products() {
             </div>
           </SortableContext>
         </DndContext>
+      )}
+
+      {/* Quick stock edit modal (variants + warehouses) */}
+      {stockEditingProduct && store && firebaseUser && (
+        <StockEditModal
+          storeId={store.id}
+          userId={firebaseUser.uid}
+          product={stockEditingProduct}
+          onClose={() => setStockEditingProduct(null)}
+          onSaved={updated => {
+            // Update the local list so the new stock totals show up
+            // immediately without refetching from Firestore.
+            setProducts(prev => prev.map(p => (p.id === updated.id ? updated : p)))
+          }}
+        />
       )}
 
       {/* Category Modal */}

@@ -7,6 +7,7 @@ import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { apiUrl } from '../../utils/apiBase'
 import NewSaleModal from '../../components/dashboard/NewSaleModal'
+import HelpTip from '../../components/ui/HelpTip'
 import type { Order } from '../../types'
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
@@ -64,6 +65,12 @@ export default function Orders() {
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all')
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all')
   const [showFilters, setShowFilters] = useState(false)
+  // Hide test orders by default so the merchant's normal view shows only
+  // real sales. When false, test orders re-appear in the listing AND in
+  // counts/stats — useful for cleaning them up.
+  const [hideTestOrders, setHideTestOrders] = useState(true)
+  // Delete confirmation
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null)
 
   // Payment action states
   const [markingPaid, setMarkingPaid] = useState(false)
@@ -115,8 +122,13 @@ export default function Orders() {
     order.paymentStatus !== 'failed' &&
     order.status === 'pending'
 
-  // Real orders = exclude abandoned carts
-  const realOrders = useMemo(() => orders.filter(o => !isAbandonedCart(o)), [orders])
+  // Real orders = exclude abandoned carts AND (by default) test orders.
+  // Toggling hideTestOrders=false in the filter panel brings test orders
+  // back into view so they can be cleaned up or audited.
+  const realOrders = useMemo(
+    () => orders.filter(o => !isAbandonedCart(o) && (!hideTestOrders || !o.isTest)),
+    [orders, hideTestOrders]
+  )
 
   // Calculate stats (only real orders)
   const stats = useMemo(() => {
@@ -243,6 +255,27 @@ export default function Orders() {
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, filterStatus, dateFilter, paymentFilter, sortField, sortOrder])
+
+  // Permanently delete an order. Used mainly to clean up test orders the
+  // merchant created while probing the checkout flow. The Firestore rule
+  // already allows the store owner to delete orders, only the UI was
+  // missing — that's what produced the "no me deja borrar" complaint.
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!store) return
+    if (!confirm(t('orders.confirmDelete', { defaultValue: '¿Eliminar este pedido? Esta acción no se puede deshacer.' }))) return
+    setDeletingOrderId(orderId)
+    try {
+      await orderService.delete(store.id, orderId)
+      setOrders(prev => prev.filter(o => o.id !== orderId))
+      if (selectedOrder?.id === orderId) setSelectedOrder(null)
+      showToast(t('orders.deleted', { defaultValue: 'Pedido eliminado' }), 'success')
+    } catch (err) {
+      console.error('Error deleting order:', err)
+      showToast(t('orders.deleteError', { defaultValue: 'Error al eliminar el pedido' }), 'error')
+    } finally {
+      setDeletingOrderId(null)
+    }
+  }
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     if (!store) return
@@ -634,6 +667,24 @@ export default function Orders() {
             </div>
           </div>
 
+          {/* Test orders toggle — separate row so it stays visible even
+              when no other filters are active. */}
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hideTestOrders}
+                onChange={e => setHideTestOrders(e.target.checked)}
+                className="w-4 h-4 text-amber-600 rounded focus:ring-amber-400 focus:ring-2"
+              />
+              <span>{t('orders.hideTestOrders', { defaultValue: 'Ocultar pedidos de prueba' })}</span>
+              <HelpTip
+                text="Al crear una venta manual puedes marcarla como 'de prueba'. Esas no descuentan stock, no cuentan en estadísticas, y se ocultan aquí por defecto. Desmarca esta casilla para verlas y eliminarlas."
+                learnMoreHref="/es/dashboard/help#pedidos-prueba"
+              />
+            </label>
+          </div>
+
           {activeFiltersCount > 0 && (
             <button
               onClick={() => { setDateFilter('all'); setPaymentFilter('all') }}
@@ -760,7 +811,14 @@ export default function Orders() {
                 {paginatedOrders.map(order => (
                   <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-3">
-                      <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
+                        {order.isTest && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                            {t('orders.testBadge', { defaultValue: 'Prueba' })}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3">
                       <div>
@@ -826,8 +884,13 @@ export default function Orders() {
                 onClick={() => setSelectedOrder(order)}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
+                    {order.isTest && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                        {t('orders.testBadge', { defaultValue: 'Prueba' })}
+                      </span>
+                    )}
                     {order.channel && order.channel !== 'online' && (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">
                         {CHANNEL_LABELS[order.channel]}
@@ -1306,6 +1369,29 @@ export default function Orders() {
                   {t('orders.contactWhatsApp')}
                 </a>
               )}
+
+              {/* Delete order — visible only after the modal is open so it
+                  doesn't crowd the list. Uses a quieter style so it doesn't
+                  compete with the primary actions above. */}
+              <button
+                onClick={() => handleDeleteOrder(selectedOrder.id)}
+                disabled={deletingOrderId === selectedOrder.id}
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50"
+              >
+                {deletingOrderId === selectedOrder.id ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                    {t('orders.deleting', { defaultValue: 'Eliminando...' })}
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                    </svg>
+                    {t('orders.deleteOrder', { defaultValue: 'Eliminar pedido' })}
+                  </>
+                )}
+              </button>
             </div>
 
           </div>

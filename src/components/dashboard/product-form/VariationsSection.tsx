@@ -263,7 +263,9 @@ export default function VariationsSection({
           </div>
 
           {isEditing && trackStock && (
-            <p className="text-[11px] text-gray-400">El stock se gestiona desde Inventario, Compras o Produccion</p>
+            <p className="text-[11px] text-gray-400">
+              También puedes ajustar stock desde el botón "Stock" en el listado de Productos o desde Inventario.
+            </p>
           )}
           {!trackStock && (
             <p className="text-[11px] text-gray-400 italic">
@@ -317,8 +319,8 @@ export default function VariationsSection({
                         onChange={e => updateCombination(combo.id, { price: e.target.value ? Number(e.target.value) : undefined })}
                         className="px-2 py-1.5 border border-gray-200 rounded-md text-xs text-right" />
                     </div>
-                    {!isEditing && trackStock && (
-                      <input type="number" min="0" value={combo.stock || ''} placeholder="Stock inicial"
+                    {trackStock && (
+                      <input type="number" min="0" value={combo.stock || ''} placeholder={isEditing ? 'Stock' : 'Stock inicial'}
                         onChange={e => updateCombination(combo.id, { stock: Number(e.target.value) || 0 })}
                         className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-xs text-right" />
                     )}
@@ -355,13 +357,14 @@ export default function VariationsSection({
                     </div>
                     {trackStock && (
                       <div className="col-span-2 text-right">
-                        {isEditing ? (
-                          <p className="text-xs text-gray-500 tabular-nums pr-1">{combo.stock}</p>
-                        ) : (
-                          <input type="number" min="0" value={combo.stock || ''}
-                            onChange={e => updateCombination(combo.id, { stock: Number(e.target.value) || 0 })}
-                            className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                        )}
+                        {/* Always editable — including for existing products. The previous
+                            read-only "<p>" forced merchants to leave the form for Inventory,
+                            which was a top fricción ("haz todo desde aquí"). The save flow
+                            already persists combinations[] back to Firestore and recomputes
+                            product.stock from the sum, so editing here is safe. */}
+                        <input type="number" min="0" value={combo.stock || ''}
+                          onChange={e => updateCombination(combo.id, { stock: Number(e.target.value) || 0 })}
+                          className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                       </div>
                     )}
                     <div className="col-span-2 flex justify-end items-center gap-2">
