@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core'
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore'
 import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, linkWithCredential, unlink, updatePassword, verifyBeforeUpdateEmail, deleteUser } from 'firebase/auth'
 import { db } from '../../lib/firebase'
+import { apiUrl } from '../../utils/apiBase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
@@ -253,6 +254,24 @@ export default function Account() {
     setDeletingCatalog(true)
     try {
       if (store?.id) {
+        // Cancel the Stripe subscription BEFORE deleting anything. If we skip
+        // this, the subscription stays alive in Stripe, later goes past_due,
+        // and the subscription.updated webhook re-creates the store doc via a
+        // merge set() — resurrecting a nameless "zombie" store. Abort the whole
+        // deletion if the cancel call fails so we never delete docs while
+        // leaving a billable sub behind.
+        if (store.subscription?.stripeSubscriptionId) {
+          const token = await firebaseUser.getIdToken()
+          const res = await fetch(apiUrl('/api/sync-subscription'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ action: 'cancel', storeId: store.id }),
+          })
+          if (!res.ok) {
+            throw new Error(`Failed to cancel subscription (${res.status})`)
+          }
+        }
+
         // Delete all products
         const productsRef = collection(db, 'stores', store.id, 'products')
         const productsSnap = await getDocs(productsRef)
@@ -277,11 +296,35 @@ export default function Account() {
       // Delete the user document
       await deleteDoc(doc(db, 'users', firebaseUser.uid))
 
-      // Delete Firebase Auth account and sign out
+      // Delete Firebase Auth account. deleteUser throws auth/requires-recent-
+      // login when the session is old; the old code swallowed that, leaving a
+      // zombie Auth account with no store/user doc behind it. Re-authenticate
+      // and retry so the account is actually removed.
       try {
         await deleteUser(firebaseUser)
-      } catch {
-        // If deleteUser fails (requires recent auth), just logout
+      } catch (err) {
+        const code = (err as { code?: string })?.code
+        if (code === 'auth/requires-recent-login') {
+          try {
+            if (isGoogleUser) {
+              await reauthenticateWithPopup(firebaseUser, new GoogleAuthProvider())
+            } else {
+              const pwd = window.prompt(t('account.danger.reauthPrompt'))
+              if (!pwd) throw err
+              const cred = EmailAuthProvider.credential(firebaseUser.email || '', pwd)
+              await reauthenticateWithCredential(firebaseUser, cred)
+            }
+            await deleteUser(firebaseUser)
+          } catch (retryErr) {
+            // Data is already gone; surface that the login still exists so the
+            // user can finish removal rather than silently leaving it orphaned.
+            console.error('deleteUser failed after reauth:', retryErr)
+            showToast(t('account.danger.authLeftover'), 'error')
+          }
+        } else {
+          console.error('deleteUser failed:', err)
+          showToast(t('account.delete.authLeftover'), 'error')
+        }
       }
       await logout()
     } catch (error) {

@@ -233,7 +233,7 @@ export default function StoreDetail() {
             <img src={store.logo} alt={store.name} className="w-14 h-14 rounded-md object-cover flex-shrink-0" />
           ) : (
             <div className="w-14 h-14 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
-              <span className="text-xl text-gray-600 font-medium">{store.name.charAt(0)}</span>
+              <span className="text-xl text-gray-600 font-medium">{store.name?.charAt(0) || '?'}</span>
             </div>
           )}
           <div className="flex-1 min-w-0">

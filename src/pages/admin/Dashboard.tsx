@@ -298,7 +298,7 @@ export default function AdminDashboard() {
                     <img src={store.logo} alt={store.name} className="w-9 h-9 rounded-md object-cover flex-shrink-0" />
                   ) : (
                     <div className="w-9 h-9 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-600 font-medium text-sm">{store.name.charAt(0)}</span>
+                      <span className="text-gray-600 font-medium text-sm">{store.name?.charAt(0) || '?'}</span>
                     </div>
                   )}
                   <div className="min-w-0">
@@ -370,7 +370,7 @@ function RankingCard({
                 <img src={entry.logo} alt="" className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
               ) : (
                 <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
-                  <span className="text-gray-600 font-medium text-[11px]">{entry.name.charAt(0)}</span>
+                  <span className="text-gray-600 font-medium text-[11px]">{entry.name?.charAt(0) || '?'}</span>
                 </div>
               )}
               <div className="flex-1 min-w-0">

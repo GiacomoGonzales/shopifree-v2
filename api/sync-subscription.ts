@@ -59,6 +59,67 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   }
 }
 
+// Resolve the authenticated caller's uid + email from the Bearer token.
+async function getCaller(req: VercelRequest): Promise<{ uid: string; email: string | null } | null> {
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith('Bearer ')) return null
+  try {
+    const token = authHeader.split('Bearer ')[1]
+    getDb()
+    const { getAuth } = await import('firebase-admin/auth')
+    const decoded = await getAuth().verifyIdToken(token)
+    return { uid: decoded.uid, email: decoded.email || null }
+  } catch (err) {
+    console.error('[getCaller] Error:', err)
+    return null
+  }
+}
+
+// POST /api/sync-subscription { action: 'cancel', storeId } - Cancel a store's
+// Stripe subscription. Used by the account-deletion flow so a deleted store
+// can't be resurrected by later past_due webhooks. Authorized for the store
+// owner (store doc id === owner uid) or an admin.
+async function handleCancel(req: VercelRequest, res: VercelResponse) {
+  const { storeId } = req.body
+  if (!storeId) {
+    return res.status(400).json({ error: 'storeId is required' })
+  }
+
+  const caller = await getCaller(req)
+  if (!caller) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+  const isOwner = caller.uid === storeId
+  const isAdmin = ADMIN_EMAILS.includes(caller.email || '')
+  if (!isOwner && !isAdmin) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+
+  const storeDoc = await getDb().collection('stores').doc(storeId).get()
+  if (!storeDoc.exists) {
+    return res.status(404).json({ error: 'Store not found' })
+  }
+
+  const subscriptionId = storeDoc.data()?.subscription?.stripeSubscriptionId
+  if (!subscriptionId) {
+    // Nothing to cancel — treat as success so callers can proceed.
+    return res.status(200).json({ success: true, canceled: false, message: 'No subscription to cancel' })
+  }
+
+  try {
+    await getStripe().subscriptions.cancel(subscriptionId)
+  } catch (err) {
+    const e = err as Stripe.errors.StripeError
+    // Already-canceled / not-found subs are fine for our purposes.
+    if (e?.code === 'resource_missing') {
+      return res.status(200).json({ success: true, canceled: false, message: 'Subscription already gone' })
+    }
+    throw err
+  }
+
+  return res.status(200).json({ success: true, canceled: true, subscriptionId })
+}
+
 // POST /api/sync-subscription { action: 'sync', storeId } - Sync subscription from Stripe
 async function handleSync(req: VercelRequest, res: VercelResponse) {
   const { storeId } = req.body
@@ -244,12 +305,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Default action is 'sync' for backwards compatibility
     if (!action || action === 'sync') {
       return await handleSync(req, res)
+    } else if (action === 'cancel') {
+      return await handleCancel(req, res)
     } else if (action === 'list-payments') {
       return await handleListPayments(req, res)
     } else if (action === 'payments-total') {
       return await handlePaymentsTotal(req, res)
     } else {
-      return res.status(400).json({ error: 'Invalid action. Use "sync", "list-payments", or "payments-total"' })
+      return res.status(400).json({ error: 'Invalid action. Use "sync", "cancel", "list-payments", or "payments-total"' })
     }
   } catch (error) {
     console.error('Error in sync-subscription:', error)

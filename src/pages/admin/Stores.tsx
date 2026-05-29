@@ -286,8 +286,8 @@ export default function AdminStores() {
     }
 
     let result = stores.filter(store => {
-      const matchesSearch = store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           store.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSearch = (store.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (store.subdomain || '').toLowerCase().includes(searchTerm.toLowerCase())
       const matchesPlan = filterPlan === 'all' || store.plan === filterPlan
 
       let matchesExpiration = true
@@ -582,7 +582,7 @@ export default function AdminStores() {
                         <img src={store.logo} alt={store.name} className="w-7 h-7 rounded-md object-cover" />
                       ) : (
                         <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center">
-                          <span className="text-gray-600 font-medium text-xs">{store.name.charAt(0)}</span>
+                          <span className="text-gray-600 font-medium text-xs">{store.name?.charAt(0) || '?'}</span>
                         </div>
                       )}
                       <div className="min-w-0">
@@ -814,7 +814,7 @@ export default function AdminStores() {
                     <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-md object-cover" />
                   ) : (
                     <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
-                      <span className="text-gray-600 font-medium">{store.name.charAt(0)}</span>
+                      <span className="text-gray-600 font-medium">{store.name?.charAt(0) || '?'}</span>
                     </div>
                   )}
                   {lastOnline && (

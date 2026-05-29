@@ -1210,7 +1210,9 @@
       "typeToConfirm": "Escribe ELIMINAR para confirmar",
       "deleting": "Eliminando...",
       "confirmDelete": "Eliminar todo y cerrar sesión",
-      "catalogDeleted": "Cuenta eliminada correctamente"
+      "catalogDeleted": "Cuenta eliminada correctamente",
+      "reauthPrompt": "Por seguridad, ingresa tu contraseña para confirmar la eliminación de tu cuenta.",
+      "authLeftover": "Tus datos se eliminaron, pero no pudimos cerrar tu cuenta de acceso. Vuelve a iniciar sesión e inténtalo de nuevo."
     }
   },
   "subscription": {

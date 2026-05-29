@@ -268,7 +268,7 @@ export default function PaidStores() {
                           <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-md object-cover shrink-0" />
                         ) : (
                           <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center shrink-0">
-                            <span className="text-gray-600 font-medium">{store.name.charAt(0)}</span>
+                            <span className="text-gray-600 font-medium">{store.name?.charAt(0) || '?'}</span>
                           </div>
                         )}
 

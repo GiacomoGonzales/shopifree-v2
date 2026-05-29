@@ -211,7 +211,7 @@ export default function AdminPlans() {
                             <img src={store.logo} alt="" className="w-7 h-7 rounded-md object-cover" />
                           ) : (
                             <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-[12px] font-medium text-gray-600">
-                              {store.name.charAt(0)}
+                              {store.name?.charAt(0) || '?'}
                             </div>
                           )}
                           <span className="font-medium text-gray-900 text-[13px]">{store.name}</span>
@@ -257,7 +257,7 @@ export default function AdminPlans() {
                       <img src={store.logo} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
                     ) : (
                       <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-600 flex-shrink-0">
-                        {store.name.charAt(0)}
+                        {store.name?.charAt(0) || '?'}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">

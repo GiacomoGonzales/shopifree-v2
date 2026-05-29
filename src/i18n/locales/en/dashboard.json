@@ -1209,7 +1209,9 @@
       "typeToConfirm": "Type ELIMINAR to confirm",
       "deleting": "Deleting...",
       "confirmDelete": "Delete all and sign out",
-      "catalogDeleted": "Account deleted successfully"
+      "catalogDeleted": "Account deleted successfully",
+      "reauthPrompt": "For your security, enter your password to confirm deleting your account.",
+      "authLeftover": "Your data was deleted, but we couldn't close your login account. Please sign in again and retry."
     }
   },
   "subscription": {
