@@ -211,6 +211,7 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
           quantity: it.quantity,
           itemTotal: it.unitPrice * it.quantity,
         }
+        if (it.image) base.productImage = it.image
         if (it.variationName && it.optionValue) {
           base.selectedVariations = [{ name: it.variationName, value: it.optionValue }]
         }

@@ -1098,7 +1098,20 @@ export default function Orders() {
                 <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{t('orders.items')}</h4>
                 <div className="bg-gray-50 rounded-xl divide-y divide-gray-100 max-h-48 overflow-y-auto">
                   {selectedOrder.items?.map((item, index) => (
-                    <div key={index} className="px-4 py-3 flex justify-between gap-3">
+                    <div key={index} className="px-4 py-3 flex items-start gap-3">
+                      {item.productImage ? (
+                        <img
+                          src={item.productImage}
+                          alt={item.productName}
+                          className="w-12 h-12 rounded-lg object-cover bg-gray-100 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                          <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-gray-900">{item.productName}</p>
