@@ -91,6 +91,12 @@ export default function Products() {
   // Purchases or Finance → Inventory.
   const [stockEditingProduct, setStockEditingProduct] = useState<Product | null>(null)
 
+  // Per-product actions menu (kebab ⋮). Merchants couldn't find the delete
+  // action — one reported "hay que tocar una esquina para poder borrar" after
+  // confusing the drag handle with a menu — so all actions now live behind an
+  // explicit three-dots menu.
+  const [openProductMenu, setOpenProductMenu] = useState<string | null>(null)
+
   // Close category menu when clicking outside
   useEffect(() => {
     if (!openCategoryMenu) return
@@ -98,6 +104,14 @@ export default function Products() {
     document.addEventListener('click', handleClick)
     return () => document.removeEventListener('click', handleClick)
   }, [openCategoryMenu])
+
+  // Close product menu when clicking outside
+  useEffect(() => {
+    if (!openProductMenu) return
+    const handleClick = () => setOpenProductMenu(null)
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openProductMenu])
 
   // Plan limits - use effective plan (considers subscription status)
   const plan = store ? getEffectivePlan(store) : 'free'
@@ -827,9 +841,47 @@ export default function Products() {
                             <circle cx="15" cy="18" r="1.5" />
                           </svg>
                         </button>
-                        {isReordering && (
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#2d6cb5]"></div>
-                        )}
+                        <div className="relative flex items-center gap-1">
+                          {isReordering && (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#2d6cb5]"></div>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenProductMenu(openProductMenu === product.id ? null : product.id)
+                            }}
+                            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-lg leading-none"
+                            aria-label={t('products.actions', { defaultValue: 'Acciones' })}
+                          >
+                            ⋮
+                          </button>
+
+                          {openProductMenu === product.id && (
+                            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200/60 z-20 min-w-[140px]">
+                              <Link
+                                to={localePath(`/dashboard/products/${product.id}`)}
+                                onClick={(e) => { e.stopPropagation(); setOpenProductMenu(null) }}
+                                className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                              >
+                                {t('products.edit')}
+                              </Link>
+                              {product.trackStock && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOpenProductMenu(null); setStockEditingProduct(product) }}
+                                  className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
+                                >
+                                  {t('products.stockEdit.button', { defaultValue: 'Stock' })}
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setOpenProductMenu(null); handleDeleteProduct(product.id) }}
+                                className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
+                              >
+                                {t('products.delete')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Image section */}
@@ -893,30 +945,6 @@ export default function Products() {
                           )}
                         </div>
                       </Link>
-
-                      <div className="px-4 pb-4 flex flex-wrap gap-2">
-                        <Link
-                          to={localePath(`/dashboard/products/${product.id}`)}
-                          className="grow basis-[calc(50%-0.25rem)] md:basis-0 px-2 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center whitespace-nowrap"
-                        >
-                          {t('products.edit')}
-                        </Link>
-                        {product.trackStock && (
-                          <button
-                            onClick={() => setStockEditingProduct(product)}
-                            className="grow basis-[calc(50%-0.25rem)] md:basis-0 px-2 py-2 text-xs font-medium text-[#1e3a5f] bg-amber-50 hover:bg-amber-100 rounded-lg transition-all text-center whitespace-nowrap"
-                            title={t('products.stockEdit.title', { defaultValue: 'Editar stock' })}
-                          >
-                            {t('products.stockEdit.button', { defaultValue: 'Stock' })}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="grow basis-[calc(50%-0.25rem)] md:basis-0 px-2 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all text-center whitespace-nowrap"
-                        >
-                          {t('products.delete')}
-                        </button>
-                      </div>
                     </div>
                   )}
                 </SortableProductCard>
