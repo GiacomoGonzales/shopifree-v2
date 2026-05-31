@@ -47,6 +47,42 @@ const STATUS_LABELS: Record<OrderStatus, Record<string, string>> = {
   cancelled: { es: 'Cancelado', en: 'Cancelled' }
 }
 
+// Stacked product thumbnails for an order row, so merchants can tell orders
+// apart at a glance without opening each one. Shows up to 4 item images
+// (placeholder for items without a stored photo) and a "+N" overflow chip.
+function OrderItemThumbs({ items, size = 'sm' }: { items?: Order['items']; size?: 'sm' | 'md' }) {
+  if (!items?.length) return null
+  const max = 4
+  const shown = items.slice(0, max)
+  const extra = items.length - shown.length
+  const box = size === 'md' ? 'w-7 h-7' : 'w-6 h-6'
+  return (
+    <div className="flex items-center -space-x-1.5">
+      {shown.map((it, i) =>
+        it.productImage ? (
+          <img
+            key={i}
+            src={it.productImage}
+            alt=""
+            className={`${box} rounded-md object-cover ring-2 ring-white bg-gray-100`}
+          />
+        ) : (
+          <div key={i} className={`${box} rounded-md bg-gray-100 ring-2 ring-white flex items-center justify-center`}>
+            <svg className="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )
+      )}
+      {extra > 0 && (
+        <div className={`${box} rounded-md bg-gray-100 ring-2 ring-white flex items-center justify-center text-[9px] font-semibold text-gray-500`}>
+          +{extra}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Orders() {
   const { t, i18n } = useTranslation('dashboard')
   const { store } = useAuth()
@@ -819,6 +855,9 @@ export default function Orders() {
                           </span>
                         )}
                       </div>
+                      <div className="mt-1.5">
+                        <OrderItemThumbs items={order.items} />
+                      </div>
                     </td>
                     <td className="px-5 py-3">
                       <div>
@@ -914,9 +953,12 @@ export default function Orders() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{order.customer?.name || '-'}</p>
-                    <p className="text-xs text-gray-500">{formatShortDate(order.createdAt)}</p>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <OrderItemThumbs items={order.items} size="md" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{order.customer?.name || '-'}</p>
+                      <p className="text-xs text-gray-500">{formatShortDate(order.createdAt)}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-gray-900">
