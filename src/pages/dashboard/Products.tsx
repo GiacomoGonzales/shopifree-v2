@@ -67,6 +67,7 @@ export default function Products() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
 
   // Category management
@@ -448,12 +449,15 @@ export default function Products() {
 
   const sortedCategories = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
+  const search = searchQuery.trim().toLowerCase()
   const filteredProducts = (selectedCategory
     ? selectedCategory === 'uncategorized'
       ? products.filter(p => !p.categoryId)
       : products.filter(p => p.categoryId === selectedCategory)
     : products
-  ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  )
+    .filter(p => !search || p.name.toLowerCase().includes(search))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
   const getProductCount = (categoryId: string | null) => {
     if (categoryId === null) return products.length
@@ -791,6 +795,31 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Search by name */}
+      <div className="relative">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={t('products.search', { defaultValue: 'Buscar producto por nombre...' })}
+          className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-gray-200/60 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2d6cb5]/30 focus:border-[#2d6cb5] transition-all"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            aria-label={t('common.clear', { defaultValue: 'Limpiar' })}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
       {/* Products list */}
       {filteredProducts.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center shadow-sm">
@@ -800,10 +829,10 @@ export default function Products() {
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-[#1e3a5f] mb-2">
-            {selectedCategory ? t('products.empty.titleFiltered') : t('products.empty.title')}
+            {(selectedCategory || search) ? t('products.empty.titleFiltered') : t('products.empty.title')}
           </h3>
           <p className="text-gray-600 mb-6">
-            {selectedCategory ? t('products.empty.descriptionFiltered') : t('products.empty.description')}
+            {(selectedCategory || search) ? t('products.empty.descriptionFiltered') : t('products.empty.description')}
           </p>
           <button
             onClick={handleAddProduct}
