@@ -894,17 +894,17 @@ export default function Products() {
                         </div>
                       </Link>
 
-                      <div className="px-4 pb-4 flex gap-2">
+                      <div className="px-4 pb-4 flex flex-wrap gap-2">
                         <Link
                           to={localePath(`/dashboard/products/${product.id}`)}
-                          className="flex-1 px-3 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center"
+                          className="grow basis-[calc(50%-0.25rem)] md:basis-0 px-2 py-2 text-xs font-medium text-[#2d6cb5] bg-[#f0f7ff] hover:bg-[#e0efff] rounded-lg transition-all text-center whitespace-nowrap"
                         >
                           {t('products.edit')}
                         </Link>
                         {product.trackStock && (
                           <button
                             onClick={() => setStockEditingProduct(product)}
-                            className="px-3 py-2 text-xs font-medium text-[#1e3a5f] bg-amber-50 hover:bg-amber-100 rounded-lg transition-all"
+                            className="grow basis-[calc(50%-0.25rem)] md:basis-0 px-2 py-2 text-xs font-medium text-[#1e3a5f] bg-amber-50 hover:bg-amber-100 rounded-lg transition-all text-center whitespace-nowrap"
                             title={t('products.stockEdit.title', { defaultValue: 'Editar stock' })}
                           >
                             {t('products.stockEdit.button', { defaultValue: 'Stock' })}
@@ -912,7 +912,7 @@ export default function Products() {
                         )}
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          className="grow basis-[calc(50%-0.25rem)] md:basis-0 px-2 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all text-center whitespace-nowrap"
                         >
                           {t('products.delete')}
                         </button>
