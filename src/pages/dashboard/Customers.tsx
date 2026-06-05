@@ -32,6 +32,15 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Inline edit of a customer's contact data. Customers aren't their own
+  // documents — they're aggregated from orders — so saving propagates the new
+  // name/phone/email to every order belonging to this customer.
+  const [editMode, setEditMode] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [savingCustomer, setSavingCustomer] = useState(false)
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -190,6 +199,51 @@ export default function Customers() {
       month: 'short',
       year: 'numeric'
     })
+  }
+
+  const closeModal = () => {
+    setSelectedCustomer(null)
+    setEditMode(false)
+  }
+
+  const startEdit = () => {
+    if (!selectedCustomer) return
+    setEditName(selectedCustomer.name === '-' ? '' : selectedCustomer.name)
+    setEditPhone(selectedCustomer.phone)
+    setEditEmail(selectedCustomer.email || '')
+    setEditMode(true)
+  }
+
+  const handleSaveCustomer = async () => {
+    if (!store || !selectedCustomer) return
+    const phone = editPhone.trim()
+    if (!phone) {
+      showToast(t('customers.phoneRequired', { defaultValue: 'El teléfono es obligatorio' }), 'error')
+      return
+    }
+    const name = editName.trim()
+    const email = editEmail.trim()
+    const newCustomer: { name?: string; phone: string; email?: string } = { phone }
+    if (name) newCustomer.name = name
+    if (email) newCustomer.email = email
+
+    setSavingCustomer(true)
+    try {
+      const targetOrders = selectedCustomer.orders.filter(o => o.id)
+      await Promise.all(targetOrders.map(o => orderService.update(store.id, o.id!, { customer: newCustomer })))
+
+      // Reflect the change locally so the aggregated list recomputes.
+      const ids = new Set(targetOrders.map(o => o.id))
+      setOrders(prev => prev.map(o => (ids.has(o.id) ? { ...o, customer: newCustomer } : o)))
+
+      showToast(t('customers.updated', { defaultValue: 'Cliente actualizado' }), 'success')
+      closeModal()
+    } catch (error) {
+      console.error('Error updating customer:', error)
+      showToast(t('customers.updateError', { defaultValue: 'No se pudo actualizar el cliente' }), 'error')
+    } finally {
+      setSavingCustomer(false)
+    }
   }
 
   const handleSort = (field: SortField) => {
@@ -576,26 +630,103 @@ export default function Customers() {
 
       {/* Customer detail modal */}
       {selectedCustomer && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedCustomer(null)}>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeModal}>
           <div className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
             {/* Modal header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-200/60">
               <div>
-                <h3 className="text-base font-bold text-gray-900">{selectedCustomer.name}</h3>
+                <h3 className="text-base font-bold text-gray-900">
+                  {editMode ? t('customers.editCustomer', { defaultValue: 'Editar cliente' }) : selectedCustomer.name}
+                </h3>
                 <p className="text-sm text-gray-400">{selectedCustomer.phone}</p>
               </div>
-              <button
-                onClick={() => setSelectedCustomer(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                {!editMode && (
+                  <button
+                    onClick={startEdit}
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    aria-label={t('customers.edit', { defaultValue: 'Editar' })}
+                    title={t('customers.edit', { defaultValue: 'Editar' })}
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={closeModal}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Modal content */}
             <div className="p-5 space-y-5">
+              {editMode && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">
+                      {t('customers.customer')}
+                    </label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder={t('customers.customer')}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">
+                      {t('customers.phone')}
+                    </label>
+                    <input
+                      type="tel"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      placeholder={t('customers.phone')}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="email@ejemplo.com"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    {t('customers.editHint', { defaultValue: 'Los cambios se aplicarán a todos los pedidos de este cliente.' })}
+                  </p>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => setEditMode(false)}
+                      disabled={savingCustomer}
+                      className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
+                    >
+                      {t('customers.cancel', { defaultValue: 'Cancelar' })}
+                    </button>
+                    <button
+                      onClick={handleSaveCustomer}
+                      disabled={savingCustomer}
+                      className="flex-1 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {savingCustomer && <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>}
+                      {t('customers.save', { defaultValue: 'Guardar' })}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!editMode && (<>
               {/* Customer stats */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-50 rounded-xl p-4">
@@ -666,6 +797,7 @@ export default function Customers() {
                 </svg>
                 {t('customers.contactWhatsApp')}
               </a>
+              </>)}
             </div>
           </div>
         </div>
