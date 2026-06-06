@@ -538,14 +538,15 @@ export default function Branding() {
                     <p className="text-xs text-gray-400">{group.desc}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 px-4 md:px-6">
+                {/* Movil: carrusel horizontal · sm+: grilla */}
+                <div className="carousel-container flex gap-3 px-4 md:px-6 pb-3 sm:grid sm:grid-cols-3 xl:grid-cols-4 sm:gap-4 sm:pb-0">
                   {groupThemes.map((theme) => {
                     const isSelected = selectedTheme === theme.id
                     const isLocked = theme.isPremium && store?.plan === 'free'
                     return (
                       <div
                         key={theme.id}
-                        className={`relative rounded-xl overflow-hidden border-2 transition-all group ${
+                        className={`carousel-item w-[150px] sm:w-auto relative rounded-xl overflow-hidden border-2 transition-all group ${
                           isSelected
                             ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
                             : isLocked
