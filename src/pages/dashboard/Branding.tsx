@@ -593,6 +593,16 @@ export default function Branding() {
                             className="aspect-square p-2 sm:p-3 flex flex-col relative"
                             style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
                           >
+                            {/* Thumbnail real si existe; si 404 cae al preview de colores de abajo */}
+                            {theme.thumbnail && (
+                              <img
+                                src={theme.thumbnail}
+                                alt={theme.name}
+                                loading="lazy"
+                                className="absolute inset-0 w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.style.display = 'none' }}
+                              />
+                            )}
                             <div className="flex items-center justify-between mb-2">
                               <div className="w-6 h-2 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
                               <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.colors?.accent || '#666' }} />

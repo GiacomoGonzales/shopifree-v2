@@ -24,6 +24,7 @@ import Payments from './pages/dashboard/Payments'
 import Integrations from './pages/dashboard/Integrations'
 import ApiAccess from './pages/dashboard/ApiAccess'
 import ApiDocs from './pages/ApiDocs'
+import ThemeShot from './pages/ThemeShot'
 import Coupons from './pages/dashboard/Coupons'
 import Plan from './pages/dashboard/Plan'
 import Analytics from './pages/dashboard/Analytics'
@@ -178,6 +179,9 @@ function AppRoutes() {
 
       {/* Public API docs — no language prefix, no auth required */}
       <Route path="/api-docs" element={<ApiDocs />} />
+
+      {/* Theme thumbnail capture (used by scripts/generate-theme-thumbnails.mjs) */}
+      <Route path="/theme-shot/:themeId" element={<ThemeShot />} />
 
       {/* Language-prefixed routes */}
       <Route path="/:lang" element={<LanguageLayout />}>

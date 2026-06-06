@@ -15,6 +15,7 @@
     "ios": "npx cap open ios",
     "android:build": "npm run build && npx cap sync android && npx cap open android",
     "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
+    "thumbnails": "npx tsx scripts/generate-theme-thumbnails.ts",
     "app:config": "npx tsx mobile/build-config.ts",
     "wl:config": "npx tsx mobile/build-config.ts",
     "wl:reset": "npx tsx mobile/wl-reset.ts",
