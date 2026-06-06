@@ -149,7 +149,6 @@ export default function Branding() {
   const [categories, setCategories] = useState<Category[]>([])
 
   // Theme category filter
-  const themeCarouselRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Cover selection
   const [showCoverSelector, setShowCoverSelector] = useState(false)
@@ -531,52 +530,22 @@ export default function Branding() {
                 ]
               : sorted
             if (groupThemes.length === 0) return null
-            const scrollKey = group.key
             return (
               <div key={group.key}>
-                <div className="flex items-center justify-between mb-2 px-4 md:px-6">
+                <div className="flex items-center justify-between mb-3 px-4 md:px-6">
                   <div>
                     <h3 className="text-sm font-semibold text-[#1e3a5f]">{group.label}</h3>
                     <p className="text-xs text-gray-400">{group.desc}</p>
                   </div>
-                  <div className="hidden md:flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        const el = themeCarouselRefs.current[scrollKey]
-                        if (el) el.scrollBy({ left: -240, behavior: 'smooth' })
-                      }}
-                      className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => {
-                        const el = themeCarouselRefs.current[scrollKey]
-                        if (el) el.scrollBy({ left: 240, behavior: 'smooth' })
-                      }}
-                      className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
-                <div
-                  ref={(el) => { themeCarouselRefs.current[scrollKey] = el }}
-                  className="carousel-container flex gap-3 pb-2 scroll-pl-4 md:scroll-pl-6"
-                >
-                  {groupThemes.map((theme, themeIndex) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 px-4 md:px-6">
+                  {groupThemes.map((theme) => {
                     const isSelected = selectedTheme === theme.id
-                    const isFirst = themeIndex === 0
-                    const isLast = themeIndex === groupThemes.length - 1
                     const isLocked = theme.isPremium && store?.plan === 'free'
                     return (
                       <div
                         key={theme.id}
-                        className={`carousel-item w-[120px] sm:w-[150px] md:w-[160px] flex-shrink-0 relative rounded-xl sm:rounded-xl overflow-hidden border-2 transition-all group ${isFirst ? 'ml-4 md:ml-6' : ''} ${isLast ? 'mr-4 md:mr-6' : ''} ${
+                        className={`relative rounded-xl overflow-hidden border-2 transition-all group ${
                           isSelected
                             ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
                             : isLocked
@@ -588,9 +557,9 @@ export default function Branding() {
                           onClick={() => { if (!isLocked) setSelectedTheme(theme.id) }}
                           className={`w-full text-left ${isLocked ? 'cursor-not-allowed' : ''}`}
                         >
-                          {/* Mini Preview */}
+                          {/* Mini Preview (captura movil vertical) */}
                           <div
-                            className="aspect-square p-2 sm:p-3 flex flex-col relative"
+                            className="aspect-[9/16] p-2 sm:p-3 flex flex-col relative"
                             style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
                           >
                             {/* Thumbnail real si existe; si 404 cae al preview de colores de abajo */}
