@@ -28,6 +28,7 @@ export default function Coupons() {
   const [minOrderAmount, setMinOrderAmount] = useState('')
   const [maxUses, setMaxUses] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
+  const [showInCheckout, setShowInCheckout] = useState(false)
 
   const isPro = store?.plan === 'pro' || store?.plan === 'business'
   const currencySymbol = getCurrencySymbol(store?.currency || 'USD')
@@ -71,6 +72,7 @@ export default function Coupons() {
     setMinOrderAmount('')
     setMaxUses('')
     setExpiresAt('')
+    setShowInCheckout(false)
     setEditingId(null)
     setShowForm(false)
   }
@@ -82,6 +84,7 @@ export default function Coupons() {
     setMinOrderAmount(coupon.minOrderAmount ? String(coupon.minOrderAmount) : '')
     setMaxUses(coupon.maxUses ? String(coupon.maxUses) : '')
     setExpiresAt(coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().split('T')[0] : '')
+    setShowInCheckout(coupon.showInCheckout ?? false)
     setEditingId(coupon.id)
     setShowForm(true)
   }
@@ -95,6 +98,7 @@ export default function Coupons() {
         code: code.toUpperCase().trim(),
         discountType,
         discountValue: Number(discountValue),
+        showInCheckout,
         ...(minOrderAmount && { minOrderAmount: Number(minOrderAmount) }),
         ...(maxUses && { maxUses: Number(maxUses) }),
         ...(expiresAt && { expiresAt: new Date(expiresAt) }),
@@ -338,6 +342,22 @@ export default function Coupons() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
+          </div>
+          {/* Show in checkout toggle */}
+          <div className="flex items-start justify-between gap-4 mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200/60">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-[#1e3a5f]">{t('coupons.form.showInCheckout')}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{t('coupons.form.showInCheckoutHint')}</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-0.5">
+              <input
+                type="checkbox"
+                checked={showInCheckout}
+                onChange={(e) => setShowInCheckout(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+            </label>
           </div>
           {/* Actions */}
           <div className="flex gap-3 mt-6">

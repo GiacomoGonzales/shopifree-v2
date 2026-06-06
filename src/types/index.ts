@@ -96,6 +96,7 @@ export interface Store {
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
     paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
     productViewMode?: 'drawer' | 'reels'
+    hideFilters?: boolean         // Ocultar la barra de filtros del catalogo publico
   }
 
   // === INTEGRACIONES ===
@@ -656,6 +657,7 @@ export interface Coupon {
   maxUses?: number                // null = unlimited
   currentUses: number
   active: boolean
+  showInCheckout?: boolean        // Show as a one-tap button in the storefront checkout
   expiresAt?: Date
   createdAt: Date
 }

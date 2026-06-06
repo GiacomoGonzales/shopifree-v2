@@ -22,6 +22,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react'
 import type { AvailableFilters, ActiveFilters } from './useProductFilters'
 import { getThemeTranslations } from './translations'
+import { useThemeOptional } from '../../components/catalog/ThemeContext'
 
 // =====================================================
 // FilterDropdownButton — un boton + panel flotante.
@@ -158,6 +159,9 @@ export default function FilterPanel({
 }: FilterPanelProps) {
   const t = getThemeTranslations(language)
   const rootRef = useRef<HTMLDivElement>(null)
+  // El dueno puede ocultar toda la barra de filtros desde Apariencia.
+  const themeCtx = useThemeOptional()
+  const hideFilters = themeCtx?.store.themeSettings?.hideFilters ?? false
 
   // Solo un dropdown abierto a la vez. Se identifica por una key:
   //   'variation:<nombre>' | 'brand' | 'price' | null
@@ -199,13 +203,14 @@ export default function FilterPanel({
   const primaryColor = colors?.primary ?? '#111827'
   const surfaceColor = colors?.surface ?? '#f9fafb'
 
-  // Auto-deteccion: si no hay nada que mostrar, no renderizar nada
+  // Auto-deteccion: si no hay nada que mostrar, no renderizar nada.
+  // Tambien se oculta si el dueno desactivo los filtros en Apariencia.
   const hasAnyFilterAvailable =
     availableFilters.brands.length > 0 ||
     availableFilters.priceRange !== null ||
     availableFilters.variations.length > 0
 
-  if (!hasAnyFilterAvailable) return null
+  if (hideFilters || !hasAnyFilterAvailable) return null
 
   const applyPriceFilter = () => {
     const minVal = priceMinInput.trim()

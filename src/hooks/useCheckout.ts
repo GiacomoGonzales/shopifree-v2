@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
 import type { Store, Order, OrderItem, Coupon } from '../types'
 import type { CartItem } from './useCart'
@@ -142,6 +142,19 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
   const [couponLoading, setCouponLoading] = useState(false)
+  // Coupons the merchant chose to surface as one-tap buttons in the checkout
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([])
+
+  const isPaidPlan = store.plan === 'pro' || store.plan === 'business'
+
+  useEffect(() => {
+    if (!isPaidPlan) return
+    let cancelled = false
+    couponService.getCheckoutVisible(store.id)
+      .then(coupons => { if (!cancelled) setAvailableCoupons(coupons) })
+      .catch(() => { /* silent — buttons just won't show */ })
+    return () => { cancelled = true }
+  }, [store.id, isPaidPlan])
 
   // Calculate discount amount
   const discountAmount = appliedCoupon
@@ -1147,6 +1160,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     finalTotal,
     discountAmount,
     appliedCoupon,
+    availableCoupons,
     couponError,
     couponLoading,
     brickMode,

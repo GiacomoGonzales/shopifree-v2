@@ -78,6 +78,11 @@ export function useTheme() {
   return context
 }
 
+/** Variante que no lanza si se usa fuera del provider — devuelve null. */
+export function useThemeOptional() {
+  return useContext(ThemeContext)
+}
+
 interface ThemeProviderProps {
   theme: ThemeConfig
   store: Store

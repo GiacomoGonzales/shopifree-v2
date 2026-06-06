@@ -142,6 +142,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
     finalTotal,
     discountAmount,
     appliedCoupon,
+    availableCoupons,
     couponError,
     couponLoading,
     brickMode,
@@ -364,6 +365,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                 deliveryMethod={data.delivery?.method}
                 shippingEnabled={store.shipping?.enabled}
                 appliedCoupon={appliedCoupon}
+                availableCoupons={availableCoupons}
                 couponError={couponError}
                 couponLoading={couponLoading}
                 onApplyCoupon={(store.plan === 'pro' || store.plan === 'business') ? applyCoupon : undefined}

@@ -696,6 +696,12 @@
       "imageSwapDesc": "Shows the second product image when hovering with the mouse.",
       "upgradeMessage": "Upgrade your plan to enable visual effects.",
       "viewPlans": "View plans"
+    },
+    "catalog": {
+      "title": "Catalog",
+      "subtitle": "Control how the product list looks in your store.",
+      "hideFilters": "Hide filters",
+      "hideFiltersDesc": "Hides the filter bar (Size, Color, Price, etc.) in the public catalog."
     }
   },
   "settings": {
@@ -1081,6 +1087,8 @@
       "expires": "Expiration date",
       "optional": "Optional",
       "unlimited": "Unlimited",
+      "showInCheckout": "Show in checkout",
+      "showInCheckoutHint": "It will appear as a one-tap button in the order summary. Leave it off for private coupons you only share by code.",
       "saving": "Saving...",
       "save": "Create coupon",
       "update": "Save changes",

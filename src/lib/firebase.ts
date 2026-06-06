@@ -539,6 +539,28 @@ export const couponService = {
     })) as Coupon[]
   },
 
+  // Coupons the merchant chose to surface as one-tap buttons in the storefront
+  // checkout. Filters expired/maxed-out coupons client-side so a stale flag
+  // never shows an unusable button. Single-field query → no composite index.
+  async getCheckoutVisible(storeId: string): Promise<Coupon[]> {
+    const q = query(this.getCollection(storeId), where('showInCheckout', '==', true))
+    const snapshot = await getDocs(q)
+    const coupons = snapshot.docs.map(d => ({
+      id: d.id,
+      storeId,
+      ...convertTimestamps(d.data())
+    })) as Coupon[]
+    return coupons.filter(c => {
+      if (!c.active) return false
+      if (c.expiresAt) {
+        const expires = c.expiresAt instanceof Date ? c.expiresAt : new Date(c.expiresAt)
+        if (expires.getTime() < Date.now()) return false
+      }
+      if (c.maxUses && c.currentUses >= c.maxUses) return false
+      return true
+    })
+  },
+
   async create(storeId: string, data: Partial<Coupon>): Promise<string> {
     const docRef = await addDoc(this.getCollection(storeId), {
       ...data,

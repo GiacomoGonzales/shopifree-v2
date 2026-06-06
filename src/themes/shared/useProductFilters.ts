@@ -163,37 +163,59 @@ export function useProductFilters(
     // 4. Variaciones (Color, Talla, etc.) — escaneamos ambos modelos
     //    - product.variations[]   (modelo legacy: cada variation tiene options[])
     //    - product.combinations[] (modelo moderno: matriz de combinaciones)
-    const variationMap = new Map<string, Set<string>>()
+    //
+    //    Unificamos nombres Y valores sin distinguir mayusculas/minusculas ni
+    //    espacios sobrantes: dos duenos que escriben "TALLA" y "Talla" (o
+    //    "Rojo" y "rojo") deben colapsar en un solo filtro. La clave del Map es
+    //    la forma normalizada; conservamos la primera variante escrita como
+    //    etiqueta visible.
+    const variationMap = new Map<string, { name: string; values: Map<string, string> }>()
+
+    // Etiqueta canonica del nombre: primera letra en mayuscula, resto en
+    // minuscula. Asi "TALLA", "talla" y "taLLA" siempre se muestran como
+    // "Talla", sin importar como lo escribio el dueno en cada producto.
+    const canonicalLabel = (raw: string) =>
+      raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase()
+
+    const addVariationValue = (rawName: string, rawValue: string) => {
+      const name = rawName.trim()
+      const value = rawValue.trim()
+      if (!name || !value) return
+      const nameKey = name.toLowerCase()
+      let entry = variationMap.get(nameKey)
+      if (!entry) {
+        entry = { name: canonicalLabel(name), values: new Map() }
+        variationMap.set(nameKey, entry)
+      }
+      const valueKey = value.toLowerCase()
+      if (!entry.values.has(valueKey)) entry.values.set(valueKey, value)
+    }
 
     products.forEach(p => {
       // Modelo legacy
       p.variations?.forEach(v => {
         if (!v.name) return
-        if (!variationMap.has(v.name)) variationMap.set(v.name, new Set())
-        const set = variationMap.get(v.name)!
         v.options?.forEach(opt => {
-          if (opt.value && opt.available !== false) set.add(opt.value)
+          if (opt.value && opt.available !== false) addVariationValue(v.name, opt.value)
         })
       })
 
       // Modelo moderno (combinations)
       p.combinations?.forEach(c => {
-        if (!c.options) return
+        if (!c.options || c.available === false) return
         Object.entries(c.options).forEach(([variationName, value]) => {
           if (!variationName || !value) return
-          if (c.available === false) return
-          if (!variationMap.has(variationName)) variationMap.set(variationName, new Set())
-          variationMap.get(variationName)!.add(value)
+          addVariationValue(variationName, value)
         })
       })
     })
 
     const variations: VariationFilter[] = []
-    variationMap.forEach((valueSet, name) => {
-      const values = Array.from(valueSet).sort()
+    variationMap.forEach(entry => {
+      const values = Array.from(entry.values.values()).sort()
       // Solo mostrar la variacion si hay 2+ valores distintos
       if (values.length >= MIN_DISTINCT_VALUES) {
-        variations.push({ name, values })
+        variations.push({ name: entry.name, values })
       }
     })
 
@@ -235,12 +257,20 @@ export function useProductFilters(
       for (const [variationName, requiredValues] of Object.entries(activeFilters.variations)) {
         if (!requiredValues || requiredValues.length === 0) continue
 
+        // Comparacion case-insensitive: el filtro unifico nombres/valores que
+        // solo diferian en mayusculas, asi que el match contra el producto debe
+        // ignorar capitalizacion para no dejar fuera productos validos.
+        const nameLower = variationName.trim().toLowerCase()
         const matchesSomeValue = requiredValues.some(requiredValue => {
+          const valueLower = requiredValue.trim().toLowerCase()
           const hasInLegacy = p.variations?.some(
-            v => v.name === variationName && v.options?.some(o => o.value === requiredValue && o.available !== false)
+            v => v.name?.trim().toLowerCase() === nameLower &&
+              v.options?.some(o => o.value?.trim().toLowerCase() === valueLower && o.available !== false)
           )
           const hasInCombinations = p.combinations?.some(
-            c => c.options?.[variationName] === requiredValue && c.available !== false
+            c => c.available !== false && Object.entries(c.options ?? {}).some(
+              ([k, val]) => k.trim().toLowerCase() === nameLower && val?.trim().toLowerCase() === valueLower
+            )
           )
           return hasInLegacy || hasInCombinations
         })

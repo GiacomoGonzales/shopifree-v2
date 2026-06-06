@@ -18,13 +18,14 @@ interface Props {
   deliveryMethod?: 'pickup' | 'delivery'
   shippingEnabled?: boolean
   appliedCoupon?: Coupon | null
+  availableCoupons?: Coupon[]
   couponError?: string | null
   couponLoading?: boolean
   onApplyCoupon?: (code: string) => void
   onRemoveCoupon?: () => void
 }
 
-export default function OrderSummary({ items, totalPrice, shippingCost = 0, discountAmount = 0, finalTotal, currency, t, collapsible = true, deliveryMethod, shippingEnabled, appliedCoupon, couponError, couponLoading, onApplyCoupon, onRemoveCoupon }: Props) {
+export default function OrderSummary({ items, totalPrice, shippingCost = 0, discountAmount = 0, finalTotal, currency, t, collapsible = true, deliveryMethod, shippingEnabled, appliedCoupon, availableCoupons, couponError, couponLoading, onApplyCoupon, onRemoveCoupon }: Props) {
   const displayTotal = finalTotal ?? totalPrice
   const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(!collapsible)
@@ -164,10 +165,12 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, disc
               </div>
             </div>
           ))}
+        </div>
+      )}
 
-          {/* Coupon input */}
-          {onApplyCoupon && (
-            <div className="p-4 border-t" style={{ borderColor: theme.colors.border }}>
+      {/* Coupon section — always visible so the discount zone stays in primer plano */}
+      {onApplyCoupon && (
+        <div className="p-4 border-t" style={{ borderColor: theme.colors.border }}>
               {appliedCoupon ? (
                 <div className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ backgroundColor: `${theme.colors.accent}15` }}>
                   <div className="flex items-center gap-2">
@@ -189,6 +192,33 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, disc
                 </div>
               ) : (
                 <div>
+                  {availableCoupons && availableCoupons.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {availableCoupons.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => onApplyCoupon(c.code)}
+                          disabled={couponLoading}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border transition-opacity disabled:opacity-50"
+                          style={{
+                            borderColor: theme.colors.primary,
+                            color: theme.colors.primary,
+                            borderRadius: theme.radius.sm,
+                            backgroundColor: `${theme.colors.primary}08`
+                          }}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="font-mono">{c.code}</span>
+                          <span className="font-semibold">
+                            -{c.discountType === 'percentage' ? `${c.discountValue}%` : formatPrice(c.discountValue, currency)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -265,8 +295,6 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, disc
               </span>
             </div>
           </div>
-        </div>
-      )}
     </div>
   )
 }

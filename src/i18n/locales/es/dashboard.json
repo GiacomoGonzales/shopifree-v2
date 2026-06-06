@@ -697,6 +697,12 @@
       "imageSwapDesc": "Muestra la segunda imagen del producto al pasar el mouse.",
       "upgradeMessage": "Mejora tu plan para activar los efectos visuales.",
       "viewPlans": "Ver planes"
+    },
+    "catalog": {
+      "title": "Catálogo",
+      "subtitle": "Controla cómo se ve el listado de productos en tu tienda.",
+      "hideFilters": "Ocultar filtros",
+      "hideFiltersDesc": "Esconde la barra de filtros (Talla, Color, Precio, etc.) en el catálogo público."
     }
   },
   "settings": {
@@ -1082,6 +1088,8 @@
       "expires": "Fecha de expiración",
       "optional": "Opcional",
       "unlimited": "Ilimitado",
+      "showInCheckout": "Mostrar en el checkout",
+      "showInCheckoutHint": "Aparecerá como botón de un toque en el resumen del pedido. Déjalo desactivado para cupones privados que solo compartes por código.",
       "saving": "Guardando...",
       "save": "Crear cupón",
       "update": "Guardar cambios",

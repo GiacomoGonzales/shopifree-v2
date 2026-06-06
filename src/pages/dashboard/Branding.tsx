@@ -1191,6 +1191,41 @@ export default function Branding() {
               </div>
             </div>
           )}
+
+          {/* Catalog options */}
+          {store && (
+            <div className="border-t border-gray-200/60 pt-6 mt-6">
+              <h3 className="font-medium text-[#1e3a5f] mb-2">{t('branding.catalog.title')}</h3>
+              <p className="text-sm text-gray-600 mb-4">{t('branding.catalog.subtitle')}</p>
+              <div className="flex items-center justify-between p-3 rounded-xl border bg-white border-gray-200">
+                <div className="flex-1 mr-4">
+                  <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.catalog.hideFilters')}</span>
+                  <p className="text-xs text-gray-500 mt-0.5">{t('branding.catalog.hideFiltersDesc')}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={store.themeSettings?.hideFilters || false}
+                    onChange={async (e) => {
+                      const newValue = e.target.checked
+                      try {
+                        await updateDoc(doc(db, 'stores', store.id), {
+                          'themeSettings.hideFilters': newValue,
+                          updatedAt: new Date()
+                        })
+                        setStore({ ...store, themeSettings: { ...store.themeSettings, hideFilters: newValue } })
+                        showToast(t('branding.toast.saved'), 'success')
+                      } catch {
+                        showToast(t('branding.toast.error'), 'error')
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Hero Images */}
