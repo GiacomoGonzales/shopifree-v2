@@ -1166,6 +1166,83 @@ export const themes: Theme[] = [
     isNew: true,
     createdAt: new Date('2026-06-06'),
     colors: { primary: '#1B2A4A', background: '#E8E0CE', accent: '#C8A24B' }
+  },
+  {
+    id: 'tag',
+    name: 'Tag',
+    description: 'Tema-concepto (retail): la tienda es una etiqueta colgante de boutique. Cartulina kraft con ojal e hilo, nombre estampado, codigo de barras y "Nueva coleccion". El catalogo es la coleccion.',
+    thumbnail: '/themes/tag.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#2A2622', background: '#F1ECE3', accent: '#B23A30' }
+  },
+  {
+    id: 'menu',
+    name: 'Menu',
+    description: 'Tema-concepto (restaurante): la tienda es la carta de un restaurante elegante. Papel crema, serif fino, ornamentos y secciones con guia de puntos. El catalogo son los platos.',
+    thumbnail: '/themes/menu.png',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#6E2B2B', background: '#FBF7EF', accent: '#A6803F' }
+  },
+  {
+    id: 'appointment',
+    name: 'Appointment',
+    description: 'Tema-concepto (servicios): la tienda es una tarjeta de reserva. Agenda con franjas horarias, sello "Confirmado" y fecha. El catalogo son los servicios disponibles.',
+    thumbnail: '/themes/appointment.png',
+    category: 'services',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#3A6E8F', background: '#EEF2F5', accent: '#2E8B6F' }
+  },
+  {
+    id: 'editor',
+    name: 'Editor',
+    description: 'Tema-concepto (tech): la tienda es un editor de codigo. Barra de titulo con semaforo, sidebar EXPLORER con las categorias como archivos, pestanas y barra de estado. El catalogo vive en el panel del editor.',
+    thumbnail: '/themes/editor.png',
+    category: 'tech',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#89B4FA', background: '#1E1E2E', accent: '#A6E3A1' }
+  },
+  {
+    id: 'swatch',
+    name: 'Swatch',
+    description: 'Tema-concepto (cosmetica): la tienda es una carta de tonos de maquillaje. Fila de swatches de color con nombre y numero, estetica beauty editorial. El catalogo es la coleccion.',
+    thumbnail: '/themes/swatch.png',
+    category: 'cosmetics',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#3A2D2D', background: '#F6ECE8', accent: '#C0726E' }
+  },
+  {
+    id: 'nutrition',
+    name: 'Nutrition',
+    description: 'Tema-concepto (abarrotes): la tienda es el panel de Informacion Nutricional. Bordes negros gruesos, reglas finas/gruesas, "Porcion" y "% Valor Diario". El catalogo son los ingredientes.',
+    thumbnail: '/themes/nutrition.png',
+    category: 'grocery',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#0A0A0A', background: '#EFEFE9', accent: '#2E7D32' }
+  },
+  {
+    id: 'petcard',
+    name: 'Petcard',
+    description: 'Tema-concepto (mascotas): la tienda es una placa de identificacion + ficha de mascota. Chapa con hueso y huellas, sellos de patita y colores calidos. El catalogo son "mis cositas".',
+    thumbnail: '/themes/petcard.png',
+    category: 'pets',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#F2994A', background: '#FFF6E9', accent: '#5FB89A' }
   }
 ]
 
