@@ -1081,6 +1081,21 @@ export const themes: Theme[] = [
       background: '#DDD7CB',
       accent: '#C0362C'
     }
+  },
+  {
+    id: 'chat',
+    name: 'Chat',
+    description: 'Tema-concepto: la vitrina es una conversacion de mensajeria con la tienda. Header con avatar y "en linea", saludo en burbujas, categorias como respuestas rapidas, catalogo "compartido" en el hilo y barra de input al pie. Perfecto para venta conversacional.',
+    thumbnail: '/themes/chat.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: {
+      primary: '#0FA98F',
+      background: '#E7E2DA',
+      accent: '#0FA98F'
+    }
   }
 ]
 
