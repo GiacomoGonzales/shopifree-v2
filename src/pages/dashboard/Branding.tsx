@@ -599,7 +599,7 @@ export default function Branding() {
                                 src={theme.thumbnail}
                                 alt={theme.name}
                                 loading="lazy"
-                                className="absolute inset-0 w-full h-full object-cover"
+                                className="absolute inset-0 w-full h-full object-cover object-top"
                                 onError={(e) => { e.currentTarget.style.display = 'none' }}
                               />
                             )}

@@ -23,8 +23,10 @@ import { themes } from '../src/themes/index'
 
 const BASE = process.env.SHOT_BASE || 'http://localhost:5173'
 const OUT = path.resolve(process.cwd(), 'public/themes')
-const W = 1100
-const H = 760
+// Viewport movil (≈ iPhone): la mayoria de clientes navegan en mobile, asi que
+// el thumbnail muestra la version mobile. Ancho < 768px activa el layout movil.
+const W = 390
+const H = 720
 
 async function main() {
   const args = process.argv.slice(2)
@@ -34,7 +36,7 @@ async function main() {
   console.log(`→ ${ids.length} temas · base ${BASE}\n`)
 
   const browser = await chromium.launch()
-  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 })
+  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2, isMobile: true })
 
   let ok = 0
   for (const id of ids) {
