@@ -1036,6 +1036,21 @@ export const themes: Theme[] = [
       background: '#FFFFFF',
       accent: '#E63E3E'
     }
+  },
+  {
+    id: 'carat',
+    name: 'Carat',
+    description: 'Boutique de joyeria fina: marfil calido, carbon suave y dorado antiguo. Tipografia serif Cormorant con hairlines doradas y mucho aire. Ideal para joyeria, relojes, accesorios finos y lujo discreto.',
+    thumbnail: '/themes/carat.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: {
+      primary: '#2B2622',
+      background: '#FAF6EF',
+      accent: '#B8945F'
+    }
   }
 ]
 
