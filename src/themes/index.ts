@@ -1051,6 +1051,36 @@ export const themes: Theme[] = [
       background: '#FAF6EF',
       accent: '#B8945F'
     }
+  },
+  {
+    id: 'clay',
+    name: 'Clay',
+    description: 'Claymorphism: tarjetas infladas con doble sombra suave, esquinas muy redondeadas y paleta pastel lila/coral. Botones tactiles que se hunden al presionar, tipografia redonda Fredoka. Ideal para ninos, dulces, hecho a mano y marcas juguetonas.',
+    thumbnail: '/themes/clay.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: {
+      primary: '#8B7CF0',
+      background: '#ECE9FB',
+      accent: '#FF9EB3'
+    }
+  },
+  {
+    id: 'receipt',
+    name: 'Receipt',
+    description: 'Tema-concepto: toda la tienda se imprime como un ticket de caja. Papel con borde dentado sobre escritorio kraft, tipografia monoespaciada, lineas punteadas, sello rojo y codigo de barras al pie. Original y memorable para cualquier rubro.',
+    thumbnail: '/themes/receipt.png',
+    category: 'retail',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: {
+      primary: '#1A1A1A',
+      background: '#DDD7CB',
+      accent: '#C0362C'
+    }
   }
 ]
 
