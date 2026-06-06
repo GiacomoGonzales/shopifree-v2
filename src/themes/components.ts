@@ -74,6 +74,12 @@ import CaratTheme from './carat/CaratTheme'
 import ClayTheme from './clay/ClayTheme'
 import ReceiptTheme from './receipt/ReceiptTheme'
 import ChatTheme from './chat/ChatTheme'
+import DesktopTheme from './desktop/DesktopTheme'
+import BoardingPassTheme from './boardingpass/BoardingPassTheme'
+import CassetteTheme from './cassette/CassetteTheme'
+import TabloidTheme from './tabloid/TabloidTheme'
+import VendingTheme from './vending/VendingTheme'
+import PassportTheme from './passport/PassportTheme'
 
 // Map theme IDs to their components
 export const themeComponents: Record<string, React.ComponentType<any>> = {
@@ -150,10 +156,16 @@ export const themeComponents: Record<string, React.ComponentType<any>> = {
   clay: ClayTheme,
   receipt: ReceiptTheme,
   chat: ChatTheme,
+  desktop: DesktopTheme,
+  boardingpass: BoardingPassTheme,
+  cassette: CassetteTheme,
+  tabloid: TabloidTheme,
+  vending: VendingTheme,
+  passport: PassportTheme,
 }
 
 export function getThemeComponent(themeId: string): React.ComponentType<any> {
   return themeComponents[themeId] || MinimalTheme
 }
 
-export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme, VaporwaveTheme, CandyTheme, BrutalistTheme, MidnightTheme, TropicalTheme, GrungeTheme, AuroraThemePremium, PrismTheme, NoirTheme, BarbershopTheme, SerenityTheme, FolioTheme, CosmosTheme, LiquidTheme, GlacierTheme, VelvetTheme, HologramTheme, VaporTheme, MirageTheme, EditorialTheme, ArcadeTheme, PolaroidTheme, BlueprintTheme, ComicTheme, AtelierTheme, BotanicalTheme, VinylTheme, GazetteTheme, PaperCutTheme, ZineTheme, CartographyTheme, TerminalTheme, WatercolorTheme, DinerTheme, BauhausTheme, CaratTheme, ClayTheme, ReceiptTheme, ChatTheme }
+export { MinimalTheme, BoldTheme, BoutiqueTheme, FreshTheme, NeonTheme, LuxeTheme, CraftTheme, PopTheme, MetroTheme, VintageTheme, FlavorTheme, UrbanTheme, BistroTheme, TaqueriaTheme, SakuraTheme, TrattoriaTheme, MinimalTechTheme, NeonCyberTheme, GlamTheme, OrganicTheme, PawshopTheme, FitnessTheme, BaristaTheme, ToylandTheme, BloomTheme, DecoTheme, LibreriaTheme, SlateTheme, EmberTheme, CircuitTheme, AuraTheme, BlushTheme, HarvestTheme, FurryTheme, VaporwaveTheme, CandyTheme, BrutalistTheme, MidnightTheme, TropicalTheme, GrungeTheme, AuroraThemePremium, PrismTheme, NoirTheme, BarbershopTheme, SerenityTheme, FolioTheme, CosmosTheme, LiquidTheme, GlacierTheme, VelvetTheme, HologramTheme, VaporTheme, MirageTheme, EditorialTheme, ArcadeTheme, PolaroidTheme, BlueprintTheme, ComicTheme, AtelierTheme, BotanicalTheme, VinylTheme, GazetteTheme, PaperCutTheme, ZineTheme, CartographyTheme, TerminalTheme, WatercolorTheme, DinerTheme, BauhausTheme, CaratTheme, ClayTheme, ReceiptTheme, ChatTheme, DesktopTheme, BoardingPassTheme, CassetteTheme, TabloidTheme, VendingTheme, PassportTheme }

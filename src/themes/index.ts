@@ -1096,6 +1096,76 @@ export const themes: Theme[] = [
       background: '#E7E2DA',
       accent: '#0FA98F'
     }
+  },
+  {
+    id: 'desktop',
+    name: 'Desktop',
+    description: 'Tema-concepto: la tienda es un escritorio de sistema operativo retro. Barra de menu con reloj, escritorio teal con iconos y el catalogo dentro de una ventana con barra de titulo a rayas, botones de cerrar/zoom y sombra dura. Para marcas tech, retro y creativas.',
+    thumbnail: '/themes/desktop.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: {
+      primary: '#2C5AA0',
+      background: '#6E8CA0',
+      accent: '#1A1A1A'
+    }
+  },
+  {
+    id: 'boardingpass',
+    name: 'Boarding Pass',
+    description: 'Tema-concepto: la tienda es un pase de abordar de aerolinea. Tarjeta con ruta origen-destino, vuelo/puerta/asiento, talon perforado con codigo de barras y livery azul marino. El catalogo es el itinerario del viaje.',
+    thumbnail: '/themes/boardingpass.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#13294B', background: '#EAF1F8', accent: '#2E78D2' }
+  },
+  {
+    id: 'cassette',
+    name: 'Cassette',
+    description: 'Tema-concepto: la tienda es un casete mixtape de los 80/90. Cuerpo de casete con carretes que giran, etiqueta manuscrita, plastico oscuro y acentos neon. El catalogo es el tracklist.',
+    thumbnail: '/themes/cassette.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#FF5DA2', background: '#211E2B', accent: '#3DD6D0' }
+  },
+  {
+    id: 'tabloid',
+    name: 'Tabloid',
+    description: 'Tema-concepto: la tienda es la portada de un tabloide sensacionalista. Cabecera enorme, titulares condensados gigantes, papel periodico y rojo de alarma. El catalogo es la edicion del dia.',
+    thumbnail: '/themes/tabloid.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#15140F', background: '#F4F1E8', accent: '#C62828' }
+  },
+  {
+    id: 'vending',
+    name: 'Vending',
+    description: 'Tema-concepto: la tienda es una maquina expendedora. Cuerpo metalico rojo, display LED verde, vitrina de cristal con el catalogo, ranura de monedas, teclado y bandeja para retirar.',
+    thumbnail: '/themes/vending.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#B0231C', background: '#241E1C', accent: '#F4C430' }
+  },
+  {
+    id: 'passport',
+    name: 'Passport',
+    description: 'Tema-concepto: la tienda es un pasaporte de viaje. Portada azul marino con dorado, pagina de datos con guilloche, sellos de entrada y zona MRZ legible por maquina. El catalogo son las paginas.',
+    thumbnail: '/themes/passport.png',
+    category: 'all',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-06-06'),
+    colors: { primary: '#1B2A4A', background: '#E8E0CE', accent: '#C8A24B' }
   }
 ]
 
