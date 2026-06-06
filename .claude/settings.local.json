@@ -83,7 +83,14 @@
       "Bash(echo \"exit:$?\")",
       "Bash(git --no-pager diff --stat .claude/settings.local.json)",
       "Bash(git --no-pager log --oneline -7)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(kill bzsb7dm2j *)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(npx playwright *)",
+      "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts receipt vending)",
+      "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts)",
+      "Bash(kill b3qxx2wh5 *)",
+      "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts receipt petcard)"
     ],
     "deny": [],
     "ask": []
