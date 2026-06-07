@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type JSX } from 'react'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, limit } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { db } from '../../lib/firebase'
@@ -185,39 +185,41 @@ export default function Branding() {
             setSocialProof(storeData.socialProof)
           }
 
-          // Fetch products and categories for preview (simple queries to avoid index requirement)
-          const [productsSnapshot, categoriesSnapshot] = await Promise.all([
-            getDocs(collection(db, 'stores', storeWithId.id, 'products')),
+          // La pagina ya puede renderizar: solo necesitaba la tienda.
+          setLoading(false)
+
+          // Productos + categorias se usan SOLO para el modal de "Vista previa".
+          // Se cargan en segundo plano (sin bloquear la pagina) y limitados,
+          // porque un preview no necesita el catalogo completo.
+          Promise.all([
+            getDocs(query(collection(db, 'stores', storeWithId.id, 'products'), limit(24))),
             getDocs(collection(db, 'stores', storeWithId.id, 'categories'))
-          ])
-
-          // Filter active products and sort by createdAt on client side
-          const productsData = productsSnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }) as Product)
-            .filter(p => p.active !== false)
-            .sort((a, b) => {
-              const getTime = (date: unknown): number => {
-                if (!date) return 0
-                if (date instanceof Date) return date.getTime()
-                if (typeof date === 'object' && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
-                  return (date as { toDate: () => Date }).toDate().getTime()
+          ]).then(([productsSnapshot, categoriesSnapshot]) => {
+            const productsData = productsSnapshot.docs
+              .map(doc => ({ id: doc.id, ...doc.data() }) as Product)
+              .filter(p => p.active !== false)
+              .sort((a, b) => {
+                const getTime = (date: unknown): number => {
+                  if (!date) return 0
+                  if (date instanceof Date) return date.getTime()
+                  if (typeof date === 'object' && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
+                    return (date as { toDate: () => Date }).toDate().getTime()
+                  }
+                  return 0
                 }
-                return 0
-              }
-              return getTime(b.createdAt) - getTime(a.createdAt)
-            })
-
-          // Sort categories by order on client side
-          const categoriesData = categoriesSnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }) as Category)
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-
-          setProducts(productsData)
-          setCategories(categoriesData)
+                return getTime(b.createdAt) - getTime(a.createdAt)
+              })
+            const categoriesData = categoriesSnapshot.docs
+              .map(doc => ({ id: doc.id, ...doc.data() }) as Category)
+              .sort((a, b) => (a.order || 0) - (b.order || 0))
+            setProducts(productsData)
+            setCategories(categoriesData)
+          }).catch(err => console.error('Error fetching preview data:', err))
+        } else {
+          setLoading(false)
         }
       } catch (error) {
         console.error('Error fetching store:', error)
-      } finally {
         setLoading(false)
       }
     }
@@ -569,6 +571,7 @@ export default function Branding() {
                                 src={theme.thumbnail}
                                 alt={theme.name}
                                 loading="lazy"
+                                decoding="async"
                                 className="absolute inset-0 w-full h-full object-cover object-top"
                                 onError={(e) => { e.currentTarget.style.display = 'none' }}
                               />
