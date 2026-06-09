@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import MigrationTool from '../../components/admin/MigrationTool'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { Store, Product } from '../../types'
 
@@ -331,6 +332,9 @@ export default function AdminMediaStats() {
         <StatCard label="Videos totales" value={stats.totalVideos} />
         <StatCard label="Tiendas con media" value={stats.storesWithMedia} sub={`de ${stats.totalStores}`} />
       </div>
+
+      {/* Migración Cloudinary → Cloudflare R2, tienda por tienda */}
+      <MigrationTool stores={stats.perStore.map(s => ({ id: s.id, name: s.name }))} />
 
       {/* Real Cloudinary usage — bytes, bandwidth, format breakdown */}
       <div className="border border-gray-200 rounded-lg">
