@@ -147,17 +147,30 @@ export function getGallerySrcSet(url: string | undefined): string {
     .join(', ')
 }
 
+// ============================================
+// CLOUDFLARE STREAM (videos)
+// ============================================
+const STREAM_HOSTS = ['videodelivery.net', 'cloudflarestream.com']
+
+/** ¿La URL es un video servido por Cloudflare Stream? */
+export function isStreamVideo(url: string | undefined | null): boolean {
+  return !!url && STREAM_HOSTS.some(h => url.includes(h))
+}
+
+/** Extrae el uid de un video de Cloudflare Stream a partir de su URL. */
+function streamUid(url: string): string | null {
+  const m = url.match(/(?:videodelivery\.net|cloudflarestream\.com)\/([^/?#]+)/)
+  return m ? m[1] : null
+}
+
 /**
- * Optimizes a Cloudinary video URL for Reels (9:16 vertical format)
- * - Crops to 9:16 using c_fill with auto gravity (focuses on content)
- * - Compresses with auto quality
- * - Converts square/horizontal videos to vertical fullscreen
- *
- * This is the fallback for browsers without HLS support. Prefer
- * optimizeReelVideoHLS when you can use adaptive bitrate streaming.
+ * Optimizes a video URL for Reels (9:16 vertical format).
+ * - Cloudflare Stream: devuelve la URL tal cual (el player usa HLS adaptativo).
+ * - Cloudinary: recorta a 9:16 + comprime (fallback mp4 para sin-HLS).
  */
 export function optimizeReelVideo(videoUrl: string | undefined | null): string {
   if (!videoUrl) return ''
+  if (isStreamVideo(videoUrl)) return videoUrl
   if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
   const transforms = 'c_fill,w_720,h_1280,g_center,q_auto:eco,f_auto'
   return videoUrl.replace('/upload/', `/upload/${transforms}/`)
@@ -180,6 +193,8 @@ export function optimizeReelVideo(videoUrl: string | undefined | null): string {
  */
 export function optimizeReelVideoHLS(videoUrl: string | undefined | null): string {
   if (!videoUrl) return ''
+  // Cloudflare Stream ya entrega el manifest HLS — devolverlo tal cual.
+  if (isStreamVideo(videoUrl)) return videoUrl
   if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
   // Crop first, then sp_full_hd generates renditions up to 1080p tall.
   // For our 720x1280 source the max rendition is ~608x1080 (capped to 1080
@@ -200,6 +215,11 @@ export function optimizeReelVideoHLS(videoUrl: string | undefined | null): strin
  */
 export function getVideoThumbnail(videoUrl: string | undefined | null): string {
   if (!videoUrl) return ''
+  // Cloudflare Stream genera la miniatura en /thumbnails/thumbnail.jpg
+  if (isStreamVideo(videoUrl)) {
+    const uid = streamUid(videoUrl)
+    return uid ? `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg` : ''
+  }
   if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
   const transforms = 'c_fill,w_600,h_600,q_auto,f_jpg,so_0'
   return videoUrl.replace('/upload/', `/upload/${transforms}/`).replace(/\.(mp4|webm|mov)$/i, '.jpg')

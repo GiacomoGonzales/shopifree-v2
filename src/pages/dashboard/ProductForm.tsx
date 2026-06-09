@@ -13,6 +13,7 @@ import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
 import { getVideoThumbnail } from '../../utils/cloudinary'
 import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
+import { shouldUploadToStream, uploadVideoToStream } from '../../utils/uploadVideo'
 import { formatPrice } from '../../lib/currency'
 import { stripUndefined } from '../../lib/firestoreUtils'
 import type { Category, ModifierGroup, ProductVariation } from '../../types'
@@ -364,19 +365,24 @@ export default function ProductForm() {
 
     setUploadingVideo(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'shopifree/products')
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
-        { method: 'POST', body: formData }
-      )
-
-      if (!response.ok) throw new Error('Upload failed')
-      const data = await response.json()
-      setVideo(data.secure_url)
+      if (shouldUploadToStream()) {
+        // Cuenta piloto → Cloudflare Stream
+        const url = await uploadVideoToStream(file)
+        setVideo(url)
+      } else {
+        // Resto → Cloudinary (como antes)
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+        formData.append('folder', 'shopifree/products')
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
+          { method: 'POST', body: formData }
+        )
+        if (!response.ok) throw new Error('Upload failed')
+        const data = await response.json()
+        setVideo(data.secure_url)
+      }
     } catch (error) {
       console.error('Error uploading video:', error)
       showToast(t('productForm.video.uploadError'), 'error')
