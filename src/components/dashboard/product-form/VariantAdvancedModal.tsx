@@ -2,9 +2,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '../../ui/Toast'
 import type { VariantCombination } from '../../../types'
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+import { uploadImage as uploadToStorage } from '../../../utils/uploadImage'
 
 interface Props {
   combo: VariantCombination
@@ -30,17 +28,8 @@ export default function VariantAdvancedModal({
     if (!file) return
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'shopifree/products')
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
-      if (!res.ok) throw new Error('Upload failed')
-      const data = await res.json()
-      onChange({ image: data.secure_url })
+      const url = await uploadToStorage(file, { folder: 'shopifree/products' })
+      onChange({ image: url })
     } catch (err) {
       console.error(err)
       showToast(t('productForm.variantAdvanced.uploadError'), 'error')

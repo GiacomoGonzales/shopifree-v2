@@ -2,9 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { chatService, type ChatMessage } from '../../lib/chatService'
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 
 function linkifyText(text: string, isUser: boolean) {
   const urlRegex = /(https?:\/\/[^\s]+)/g
@@ -186,16 +184,8 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
     setPendingImages(prev => [...prev, { id, preview, url: null, uploading: true }])
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'chat')
-
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
-      const data = await res.json()
+      const uploadedUrl = await uploadToStorage(file, { folder: 'chat' })
+      const data = { secure_url: uploadedUrl }
       if (data.secure_url) {
         setPendingImages(prev => prev.map(p =>
           p.id === id ? { ...p, url: data.secure_url, uploading: false } : p

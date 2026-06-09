@@ -9,9 +9,7 @@ import { useToast } from '../../components/ui/Toast'
 import { useLanguage } from '../../hooks/useLanguage'
 import AppDownloadCard from '../../components/dashboard/AppDownloadCard'
 import type { StoreAppConfig, StoreAppPublishInfo } from '../../types'
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 
 interface NotificationHistory {
   id: string
@@ -109,18 +107,8 @@ export default function MiApp() {
 
     setUploadingIcon(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', `shopifree/app-icons`)
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
-      if (!response.ok) throw new Error('Upload failed')
-      const data = await response.json()
-      setIcon(data.secure_url)
+      const url = await uploadToStorage(file, { folder: 'shopifree/app-icons', storeId: store.id })
+      setIcon(url)
     } catch {
       showToast(t('miApp.toast.iconError'), 'error')
     } finally {

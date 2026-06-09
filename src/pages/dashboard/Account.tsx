@@ -11,9 +11,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 import type { User } from '../../types'
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 
 export default function Account() {
   const { t } = useTranslation('dashboard')
@@ -94,19 +92,8 @@ export default function Account() {
 
     setUploadingAvatar(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'shopifree/avatars')
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
-
-      if (!response.ok) throw new Error('Upload failed')
-      const data = await response.json()
-      setAvatar(data.secure_url)
+      const url = await uploadToStorage(file, { folder: 'shopifree/avatars' })
+      setAvatar(url)
     } catch (error) {
       console.error('Error uploading avatar:', error)
       showToast(t('account.toast.avatarError'), 'error')

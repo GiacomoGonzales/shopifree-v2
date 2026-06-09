@@ -14,6 +14,7 @@ import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCatego
 import ProductImport from '../../components/dashboard/ProductImport'
 import StockEditModal from '../../components/dashboard/StockEditModal'
 import { optimizeImage } from '../../utils/cloudinary'
+import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 import type { Product, Category } from '../../types'
 
 // Constraints for the category image upload. Mirrors the rules we use for
@@ -55,8 +56,6 @@ function SortableCategoryTab({ category, children }: { category: Category; child
   )
 }
 
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Products() {
   const { t } = useTranslation('dashboard')
@@ -162,21 +161,9 @@ export default function Products() {
 
     setUploadingCategoryImage(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'shopifree/categories')
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
-      if (!response.ok) throw new Error('Cloudinary upload failed')
-      const data = await response.json()
       // Stage the URL — it only persists to Firestore when the user clicks Save.
-      // If they cancel, the upload is orphaned in Cloudinary (small storage
-      // cost, no broken state).
-      setNewCategoryImage(data.secure_url as string)
+      const url = await uploadToStorage(file, { folder: 'shopifree/categories', storeId: store?.id })
+      setNewCategoryImage(url)
     } catch (error) {
       console.error('Error uploading category image:', error)
       showToast(t('products.categories.imageError', { defaultValue: 'Error al subir imagen' }), 'error')
@@ -298,20 +285,7 @@ export default function Products() {
 
     setUploadingProductId(productId)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('folder', 'shopifree/products')
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      )
-
-      if (!response.ok) throw new Error('Upload failed')
-
-      const data = await response.json()
-      const imageUrl = data.secure_url
+      const imageUrl = await uploadToStorage(file, { folder: 'shopifree/products', storeId: store.id })
 
       // Update product in Firebase
       await productService.update(store.id, productId, { image: imageUrl })
