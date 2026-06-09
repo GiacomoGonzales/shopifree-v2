@@ -1,10 +1,11 @@
 /**
- * MigrationTool — migración Cloudinary → Cloudflare R2, tienda por tienda.
+ * MigrationTool — migración Cloudinary → Cloudflare R2, por lotes de tiendas.
  *
- * Solo admin. Llama a /api/admin-migrate-store-r2:
- *  - "Analizar": cuenta cuántas imágenes de Cloudinary tiene la tienda (no mueve nada).
- *  - "Migrar": copia esas imágenes a R2 en tandas (limit) hasta terminar, con
- *    respaldo y SIN borrar nada de Cloudinary. Muestra el progreso.
+ * Solo admin. Llama a /api/admin-migrate-store-r2 por cada tienda seleccionada,
+ * en tandas (limit) hasta terminar, con respaldo y SIN borrar nada de Cloudinary.
+ *
+ * Flujo: marca varias tiendas (botón "Seleccionar 10") → "Migrar seleccionadas".
+ * Procesa una tienda a la vez y muestra el resultado de cada una.
  */
 
 import { useMemo, useState } from 'react'
@@ -14,16 +15,16 @@ import { apiUrl } from '../../utils/apiBase'
 interface StoreOpt { id: string; name: string }
 interface Props { stores: StoreOpt[] }
 
-interface Analysis { storeName: string; totalCloudinary: number; products: number; categories: number }
+type Status = 'running' | 'done' | 'error'
+interface Result { status: Status; migrated: number; errors: number; msg?: string }
 
 export default function MigrationTool({ stores }: Props) {
   const { firebaseUser } = useAuth()
-  const [storeId, setStoreId] = useState('')
   const [filter, setFilter] = useState('')
-  const [analysis, setAnalysis] = useState<Analysis | null>(null)
-  const [busy, setBusy] = useState<'analyze' | 'migrate' | null>(null)
-  const [progress, setProgress] = useState<{ migrated: number; total: number; errors: number } | null>(null)
-  const [log, setLog] = useState<string>('')
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [results, setResults] = useState<Record<string, Result>>({})
+  const [running, setRunning] = useState(false)
+  const [current, setCurrent] = useState<{ i: number; n: number } | null>(null)
 
   const options = useMemo(() => {
     const f = filter.trim().toLowerCase()
@@ -43,114 +44,127 @@ export default function MigrationTool({ stores }: Props) {
     return data
   }
 
-  const analyze = async () => {
-    if (!storeId) return
-    setBusy('analyze'); setAnalysis(null); setProgress(null); setLog('')
-    try {
-      const d = await post({ storeId, dryRun: true })
-      setAnalysis({ storeName: d.storeName, totalCloudinary: d.totalCloudinary, products: d.products, categories: d.categories })
-    } catch (e) {
-      setLog('Error: ' + (e as Error).message)
-    } finally {
-      setBusy(null)
-    }
+  const toggle = (id: string) => {
+    if (running) return
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
   }
 
-  const migrate = async () => {
-    if (!storeId) return
-    setBusy('migrate'); setProgress(null); setLog('Migrando…')
+  // Marca las próximas 10 tiendas (del listado filtrado) que aún no están migradas.
+  const selectNext10 = () => {
+    if (running) return
+    const next = new Set(selected)
+    let added = 0
+    for (const s of options) {
+      if (added >= 10) break
+      if (results[s.id]?.status === 'done') continue
+      if (!next.has(s.id)) { next.add(s.id); added++ }
+    }
+    setSelected(next)
+  }
+
+  const clearSel = () => { if (!running) setSelected(new Set()) }
+
+  const migrateSelected = async () => {
+    const ids = [...selected]
+    if (ids.length === 0) return
+    setRunning(true)
     try {
-      let migrated = 0, errors = 0, total = analysis?.totalCloudinary || 0
-      for (let i = 0; i < 500; i++) {
-        const d = await post({ storeId, limit: 60 })
-        if (i === 0) total = d.totalCloudinary
-        migrated += d.migrated
-        errors += d.errors || 0
-        setProgress({ migrated, total, errors })
-        if (d.done || d.migrated === 0) {
-          setLog(`✅ Listo. ${migrated} imágenes movidas a Cloudflare${errors ? ` · ${errors} con error (quedaron en Cloudinary)` : ''}.`)
-          break
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i]
+        setCurrent({ i: i + 1, n: ids.length })
+        setResults(prev => ({ ...prev, [id]: { status: 'running', migrated: 0, errors: 0 } }))
+        let migrated = 0, errors = 0
+        try {
+          for (let k = 0; k < 500; k++) {
+            const d = await post({ storeId: id, limit: 60 })
+            migrated += d.migrated
+            errors += d.errors || 0
+            setResults(prev => ({ ...prev, [id]: { status: 'running', migrated, errors } }))
+            if (d.done || d.migrated === 0) break
+          }
+          setResults(prev => ({ ...prev, [id]: { status: 'done', migrated, errors, msg: errors ? `${errors} con error` : undefined } }))
+        } catch (e) {
+          setResults(prev => ({ ...prev, [id]: { status: 'error', migrated, errors, msg: (e as Error).message } }))
         }
       }
-      // refrescar el análisis para ver lo que queda
-      try {
-        const d = await post({ storeId, dryRun: true })
-        setAnalysis({ storeName: d.storeName, totalCloudinary: d.totalCloudinary, products: d.products, categories: d.categories })
-      } catch { /* noop */ }
-    } catch (e) {
-      setLog('Error: ' + (e as Error).message)
     } finally {
-      setBusy(null)
+      setRunning(false)
+      setCurrent(null)
+      setSelected(new Set())
     }
   }
 
-  const pct = progress && progress.total > 0 ? Math.min(100, Math.round((progress.migrated / progress.total) * 100)) : 0
+  const doneCount = Object.values(results).filter(r => r.status === 'done').length
+
+  const badge = (id: string) => {
+    const r = results[id]
+    if (!r) return null
+    if (r.status === 'running') return <span className="text-[11px] text-blue-600">migrando… {r.migrated}</span>
+    if (r.status === 'done') return <span className="text-[11px] text-green-600">✅ {r.migrated} movidas{r.msg ? ` · ${r.msg}` : ''}</span>
+    return <span className="text-[11px] text-red-600">⚠️ {r.msg}</span>
+  }
 
   return (
     <div className="border border-gray-200 rounded-lg p-5">
-      <h2 className="text-base font-semibold text-gray-900">Migración a Cloudflare R2</h2>
-      <p className="text-xs text-gray-500 mt-0.5 mb-4">
-        Mueve las imágenes de una tienda desde Cloudinary al depósito nuevo. Guarda respaldo y no borra nada de Cloudinary.
-      </p>
+      <div className="flex items-end justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Migración a Cloudflare R2</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Marca tiendas y migra sus imágenes de Cloudinary al depósito nuevo. Guarda respaldo y no borra nada de Cloudinary.
+          </p>
+        </div>
+        <span className="text-xs text-gray-400 tabular-nums">{doneCount} migradas esta sesión</span>
+      </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-3">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 mt-4">
         <input
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          placeholder="Buscar tienda por nombre o id…"
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg sm:w-64"
+          placeholder="Buscar tienda…"
+          className="px-3 py-2 text-sm border border-gray-200 rounded-lg w-48"
         />
-        <select
-          value={storeId}
-          onChange={e => { setStoreId(e.target.value); setAnalysis(null); setProgress(null); setLog('') }}
-          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white"
-        >
-          <option value="">— Elige una tienda ({options.length}) —</option>
-          {options.map(s => <option key={s.id} value={s.id}>{s.name} · {s.id.slice(0, 6)}</option>)}
-        </select>
+        <button onClick={selectNext10} disabled={running} className="px-3 py-2 text-sm rounded-lg border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50">
+          Seleccionar 10
+        </button>
+        <button onClick={clearSel} disabled={running || selected.size === 0} className="px-3 py-2 text-sm rounded-lg border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50">
+          Limpiar
+        </button>
+        <button onClick={migrateSelected} disabled={running || selected.size === 0} className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50">
+          {running ? 'Migrando…' : `Migrar seleccionadas (${selected.size})`}
+        </button>
+        {current && <span className="text-xs text-gray-500">Tienda {current.i} de {current.n}…</span>}
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={analyze}
-          disabled={!storeId || busy !== null}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
-        >
-          {busy === 'analyze' ? 'Analizando…' : 'Analizar'}
-        </button>
-        <button
-          onClick={migrate}
-          disabled={!storeId || busy !== null || (analysis !== null && analysis.totalCloudinary === 0)}
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
-        >
-          {busy === 'migrate' ? 'Migrando…' : 'Migrar a Cloudflare'}
-        </button>
+      {/* Lista de tiendas con casillas */}
+      <div className="mt-3 border border-gray-100 rounded-lg max-h-80 overflow-y-auto divide-y divide-gray-100">
+        {options.map(s => {
+          const r = results[s.id]
+          const rowDone = r?.status === 'done'
+          return (
+            <label
+              key={s.id}
+              className={`flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${rowDone ? 'opacity-60' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={selected.has(s.id)}
+                onChange={() => toggle(s.id)}
+                disabled={running}
+                className="w-4 h-4"
+              />
+              <span className="flex-1 truncate text-gray-800">{s.name}</span>
+              <span className="text-[10px] text-gray-400 font-mono">{s.id.slice(0, 6)}</span>
+              {badge(s.id)}
+            </label>
+          )
+        })}
+        {options.length === 0 && <p className="px-3 py-4 text-sm text-gray-400">Sin tiendas que coincidan.</p>}
       </div>
-
-      {analysis && (
-        <div className="mt-4 text-sm text-gray-700">
-          <p><strong>{analysis.storeName}</strong></p>
-          <p className="text-gray-600">
-            Imágenes en Cloudinary por mover: <strong className={analysis.totalCloudinary === 0 ? 'text-green-600' : 'text-amber-600'}>{analysis.totalCloudinary}</strong>
-            {' '}· {analysis.products} productos · {analysis.categories} categorías
-          </p>
-          {analysis.totalCloudinary === 0 && <p className="text-green-600 mt-1">✅ Esta tienda ya está 100% en Cloudflare.</p>}
-        </div>
-      )}
-
-      {progress && (
-        <div className="mt-4">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>{progress.migrated} / {progress.total} movidas{progress.errors ? ` · ${progress.errors} con error` : ''}</span>
-            <span>{pct}%</span>
-          </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-gray-900 transition-all" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-      )}
-
-      {log && <p className="mt-3 text-sm text-gray-700">{log}</p>}
     </div>
   )
 }
