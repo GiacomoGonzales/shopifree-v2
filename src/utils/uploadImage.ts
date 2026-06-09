@@ -20,9 +20,11 @@ import { auth } from '../lib/firebase'
 import { apiUrl } from './apiBase'
 
 // === Feature flag ===
-// Cuando R2 esté 100% probado, poner en true para mandar TODAS las subidas
-// nuevas a R2 (Cloudinary queda solo como respaldo de emergencia).
-const R2_UPLOAD_FOR_ALL = false
+// ACTIVADO PARA TODOS (piloto validado): todas las subidas NUEVAS van a
+// Cloudflare R2. Cloudinary queda solo como RESPALDO de emergencia (si la
+// subida a R2 fallara, el fallback en uploadImage() usa Cloudinary para que
+// el usuario nunca se quede sin poder subir).
+const R2_UPLOAD_FOR_ALL = true
 
 // storeId de las tiendas de prueba que ya suben a R2 (piloto).
 const R2_UPLOAD_ALLOWLIST: string[] = []
