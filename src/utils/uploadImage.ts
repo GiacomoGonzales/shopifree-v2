@@ -30,7 +30,7 @@ const R2_UPLOAD_ALLOWLIST: string[] = []
 // Emails de prueba: si el usuario logueado es uno de estos, sube a R2 sin
 // importar en qué tienda esté.
 const R2_UPLOAD_EMAIL_ALLOWLIST: string[] = [
-  // 'giiacomo@gmail.com',
+  'giiacomo@gmail.com', // piloto: solo esta cuenta sube a R2; el resto sigue en Cloudinary
 ]
 
 export function shouldUploadToR2(storeId?: string): boolean {
@@ -45,17 +45,28 @@ export function shouldUploadToR2(storeId?: string): boolean {
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined
 
+export interface UploadOptions {
+  /** Carpeta/prefijo. En Cloudinary se usa como `folder`; en R2 como prefijo de la key. */
+  folder?: string
+  /** Solo Cloudinary: 'auto:good', etc. (en R2 no aplica, se sube tal cual). */
+  quality?: string
+  /** Tienda a la que pertenece la subida (para el flag por tienda). */
+  storeId?: string
+}
+
 /**
  * Sube un archivo a Cloudinary vía unsigned upload. Devuelve la secure_url.
  * Centraliza la lógica que hoy está duplicada en ~8 componentes.
  */
-export async function uploadToCloudinary(file: File | Blob): Promise<string> {
+export async function uploadToCloudinary(file: File | Blob, opts: UploadOptions = {}): Promise<string> {
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     throw new Error('Cloudinary no configurado (VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET)')
   }
   const formData = new FormData()
   formData.append('file', file)
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  if (opts.folder) formData.append('folder', opts.folder)
+  if (opts.quality) formData.append('quality', opts.quality)
 
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -108,15 +119,15 @@ async function uploadToR2(file: File | Blob, folder: string): Promise<string> {
  */
 export async function uploadImage(
   file: File | Blob,
-  { folder = 'uploads', storeId }: { folder?: string; storeId?: string } = {}
+  { folder = 'uploads', quality, storeId }: UploadOptions = {}
 ): Promise<string> {
   if (shouldUploadToR2(storeId)) {
     try {
       return await uploadToR2(file, folder)
     } catch (e) {
       console.warn('⚠️ Subida a R2 falló, usando Cloudinary de respaldo:', e instanceof Error ? e.message : e)
-      return uploadToCloudinary(file)
+      return uploadToCloudinary(file, { folder, quality })
     }
   }
-  return uploadToCloudinary(file)
+  return uploadToCloudinary(file, { folder, quality })
 }

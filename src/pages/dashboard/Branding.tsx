@@ -11,9 +11,7 @@ import type { Store, StoreAnnouncement, StoreTrustBadges, StoreFlashSale, StoreS
 import '../../themes/shared/animations.css'
 import { getTrustBadgeText, ALL_BADGE_IDS } from '../../themes/shared/trustBadgeDefaults'
 import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 
 // Predefined cover images from Unsplash (free for commercial use)
 const COVER_IMAGES = {
@@ -227,25 +225,14 @@ export default function Branding() {
     fetchStore()
   }, [firebaseUser])
 
-  const uploadImage = async (file: File, folder: string, highQuality = false): Promise<string> => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-    formData.append('folder', `shopifree/${folder}`)
-
-    // For hero images, use good quality (balance between quality and file size)
-    if (highQuality) {
-      formData.append('quality', 'auto:good')
-    }
-
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-      { method: 'POST', body: formData }
-    )
-
-    if (!response.ok) throw new Error('Upload failed')
-    const data = await response.json()
-    return data.secure_url
+  // Sube vía el helper central: para la cuenta piloto va a Cloudflare R2,
+  // para el resto sigue yendo a Cloudinary (mismo folder/calidad de antes).
+  const uploadImage = (file: File, folder: string, highQuality = false): Promise<string> => {
+    return uploadToStorage(file, {
+      folder: `shopifree/${folder}`,
+      storeId: store?.id,
+      ...(highQuality ? { quality: 'auto:good' } : {}),
+    })
   }
 
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

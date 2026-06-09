@@ -12,6 +12,7 @@ import HelpTip from '../../components/ui/HelpTip'
 import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
 import { getVideoThumbnail } from '../../utils/cloudinary'
+import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 import { formatPrice } from '../../lib/currency'
 import { stripUndefined } from '../../lib/firestoreUtils'
 import type { Category, ModifierGroup, ProductVariation } from '../../types'
@@ -276,21 +277,10 @@ export default function ProductForm() {
     setUploading(true)
 
     try {
-      const uploadPromises = filesToUpload.map(async (file) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-        formData.append('folder', 'shopifree/products')
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-          { method: 'POST', body: formData }
-        )
-
-        if (!response.ok) throw new Error('Upload failed')
-        const data = await response.json()
-        return data.secure_url
-      })
+      // Helper central: cuenta piloto → Cloudflare R2; resto → Cloudinary.
+      const uploadPromises = filesToUpload.map((file) =>
+        uploadToStorage(file, { folder: 'shopifree/products' })
+      )
 
       const uploadedUrls = await Promise.all(uploadPromises)
       setImages(prev => [...prev, ...uploadedUrls])
