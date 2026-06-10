@@ -4,6 +4,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import MigrationTool from '../../components/admin/MigrationTool'
+import { apiUrl } from '../../utils/apiBase'
 import { useLanguage } from '../../hooks/useLanguage'
 import type { Store, Product } from '../../types'
 
@@ -252,7 +253,7 @@ export default function AdminMediaStats() {
       setCloudError(null)
       try {
         const token = await firebaseUser.getIdToken()
-        const r = await fetch('/api/admin-cloudinary-stats', {
+        const r = await fetch(apiUrl('/api/admin-cloudinary-stats'), {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!r.ok) {
