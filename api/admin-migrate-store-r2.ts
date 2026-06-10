@@ -70,6 +70,17 @@ function getR2(): S3Client {
 const isCloudinary = (url: unknown): url is string =>
   typeof url === 'string' && url.includes('res.cloudinary.com')
 
+// Cuenta imágenes de Cloudinary anidadas en un producto:
+//   variations[].options[].image  +  combinations[].image
+function countNestedCloudinary(data: FirebaseFirestore.DocumentData): number {
+  let n = 0
+  const vars = data.variations
+  if (Array.isArray(vars)) for (const v of vars) if (Array.isArray(v?.options)) for (const o of v.options) if (isCloudinary(o?.image)) n++
+  const combos = data.combinations
+  if (Array.isArray(combos)) for (const c of combos) if (isCloudinary(c?.image)) n++
+  return n
+}
+
 /**
  * Deriva la key R2 desde una URL de Cloudinary, conservando carpeta + extensión.
  * .../image/upload/v123/shopifree/products/abc.jpg  ->  shopifree/products/abc.jpg
@@ -148,11 +159,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ])
 
     // Armar la lista de "documentos con campos de imagen" a revisar.
-    type DocTask = { ref: FirebaseFirestore.DocumentReference; data: FirebaseFirestore.DocumentData; scalars: string[]; arrays: string[] }
+    type DocTask = { ref: FirebaseFirestore.DocumentReference; data: FirebaseFirestore.DocumentData; scalars: string[]; arrays: string[]; isProduct: boolean }
     const tasks: DocTask[] = []
-    tasks.push({ ref: storeRef, data: storeSnap.data() || {}, scalars: STORE_SCALAR_FIELDS, arrays: [] })
-    productsSnap.docs.forEach(d => tasks.push({ ref: d.ref, data: d.data(), scalars: PRODUCT_SCALAR_FIELDS, arrays: PRODUCT_ARRAY_FIELDS }))
-    categoriesSnap.docs.forEach(d => tasks.push({ ref: d.ref, data: d.data(), scalars: CATEGORY_SCALAR_FIELDS, arrays: [] }))
+    tasks.push({ ref: storeRef, data: storeSnap.data() || {}, scalars: STORE_SCALAR_FIELDS, arrays: [], isProduct: false })
+    productsSnap.docs.forEach(d => tasks.push({ ref: d.ref, data: d.data(), scalars: PRODUCT_SCALAR_FIELDS, arrays: PRODUCT_ARRAY_FIELDS, isProduct: true }))
+    categoriesSnap.docs.forEach(d => tasks.push({ ref: d.ref, data: d.data(), scalars: CATEGORY_SCALAR_FIELDS, arrays: [], isProduct: false }))
 
     // Contar total de imágenes de Cloudinary pendientes.
     let totalCloudinary = 0
@@ -162,6 +173,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const arr = t.data[f]
         if (Array.isArray(arr)) for (const u of arr) if (isCloudinary(u)) totalCloudinary++
       }
+      if (t.isProduct) totalCloudinary += countNestedCloudinary(t.data)
     }
 
     if (dryRun) {
@@ -225,6 +237,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (changed) {
           updates[f] = newArr
           updates[`${f}_r2Backup`] = arr
+        }
+      }
+
+      // Imágenes anidadas del producto: variations[].options[].image y combinations[].image
+      if (t.isProduct && migrated < limit) {
+        const vars = t.data.variations
+        if (Array.isArray(vars) && vars.some((v: { options?: { image?: unknown }[] }) => v?.options?.some(o => isCloudinary(o?.image)))) {
+          const newVars = JSON.parse(JSON.stringify(vars)) as { options?: { image?: string }[] }[]
+          let changed = false
+          for (const v of newVars) {
+            if (!Array.isArray(v?.options)) continue
+            for (const o of v.options) {
+              if (migrated >= limit) break
+              if (isCloudinary(o?.image)) {
+                try { o.image = await copyToR2(o.image as string, publicUrl, bucket); changed = true; migrated++ }
+                catch (e) { errors++; if (errorSamples.length < 5) errorSamples.push(`variation: ${(e as Error).message}`) }
+              }
+            }
+          }
+          if (changed) { updates.variations = newVars; updates.variations_r2Backup = vars }
+        }
+
+        const combos = t.data.combinations
+        if (Array.isArray(combos) && combos.some((c: { image?: unknown }) => isCloudinary(c?.image))) {
+          const newCombos = JSON.parse(JSON.stringify(combos)) as { image?: string }[]
+          let changed = false
+          for (const c of newCombos) {
+            if (migrated >= limit) break
+            if (isCloudinary(c?.image)) {
+              try { c.image = await copyToR2(c.image as string, publicUrl, bucket); changed = true; migrated++ }
+              catch (e) { errors++; if (errorSamples.length < 5) errorSamples.push(`combination: ${(e as Error).message}`) }
+            }
+          }
+          if (changed) { updates.combinations = newCombos; updates.combinations_r2Backup = combos }
         }
       }
 

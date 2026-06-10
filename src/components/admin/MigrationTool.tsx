@@ -26,6 +26,11 @@ export default function MigrationTool({ stores }: Props) {
   const [results, setResults] = useState<Record<string, Result>>({})
   const [running, setRunning] = useState(false)
   const [current, setCurrent] = useState<{ i: number; n: number } | null>(null)
+  const [verifying, setVerifying] = useState(false)
+  const [verify, setVerify] = useState<null | {
+    scannedStores: number; total: number; storeImages: number; productImage: number
+    productGallery: number; variantImages: number; categoryImages: number; productVideos: number
+  }>(null)
 
   const options = useMemo(() => {
     const f = filter.trim().toLowerCase()
@@ -113,6 +118,21 @@ export default function MigrationTool({ stores }: Props) {
     runMigration(pendingAll)
   }
 
+  const runVerify = async () => {
+    setVerifying(true); setVerify(null)
+    try {
+      const token = await firebaseUser?.getIdToken()
+      const res = await fetch(apiUrl('/api/admin-cloudinary-remaining'), { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
+      setVerify({ scannedStores: data.scannedStores, ...data.remaining })
+    } catch (e) {
+      window.alert('Error verificando: ' + (e as Error).message)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   const doneCount = Object.values(results).filter(r => r.status === 'done').length
 
   const badge = (id: string) => {
@@ -147,6 +167,30 @@ export default function MigrationTool({ stores }: Props) {
             {m === 'images' ? '📷 Fotos (R2)' : '🎬 Videos (Stream)'}
           </button>
         ))}
+      </div>
+
+      {/* Verificador: cuánto queda en Cloudinary (para decidir si ya se puede borrar) */}
+      <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button onClick={runVerify} disabled={verifying || running} className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-800 hover:bg-white disabled:opacity-50">
+            {verifying ? 'Escaneando toda la base…' : '🔎 Verificar cuánto queda en Cloudinary'}
+          </button>
+          {verify && (
+            <span className={`text-sm font-semibold ${verify.total === 0 ? 'text-green-600' : 'text-amber-600'}`}>
+              {verify.total === 0 ? '✅ 0 — nada apunta a Cloudinary, es seguro borrar' : `Quedan ${verify.total} referencias en ${verify.scannedStores} tiendas`}
+            </span>
+          )}
+        </div>
+        {verify && verify.total > 0 && (
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs text-gray-600">
+            <span>Fotos producto: <strong>{verify.productImage}</strong></span>
+            <span>Galería: <strong>{verify.productGallery}</strong></span>
+            <span>Variantes: <strong>{verify.variantImages}</strong></span>
+            <span>Categorías: <strong>{verify.categoryImages}</strong></span>
+            <span>Logo/portada: <strong>{verify.storeImages}</strong></span>
+            <span>Videos: <strong>{verify.productVideos}</strong></span>
+          </div>
+        )}
       </div>
 
       {/* Toolbar */}
