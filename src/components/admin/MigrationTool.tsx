@@ -20,6 +20,7 @@ interface Result { status: Status; migrated: number; errors: number; msg?: strin
 
 export default function MigrationTool({ stores }: Props) {
   const { firebaseUser } = useAuth()
+  const [mode, setMode] = useState<'images' | 'videos'>('images')
   const [filter, setFilter] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Record<string, Result>>({})
@@ -34,7 +35,8 @@ export default function MigrationTool({ stores }: Props) {
 
   const post = async (body: Record<string, unknown>) => {
     const token = await firebaseUser?.getIdToken()
-    const res = await fetch(apiUrl('/api/admin-migrate-store-r2'), {
+    const endpoint = mode === 'videos' ? '/api/admin-migrate-store-videos' : '/api/admin-migrate-store-r2'
+    const res = await fetch(apiUrl(endpoint), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
@@ -112,12 +114,26 @@ export default function MigrationTool({ stores }: Props) {
     <div className="border border-gray-200 rounded-lg p-5">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Migración a Cloudflare R2</h2>
+          <h2 className="text-base font-semibold text-gray-900">Migración a Cloudflare</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Marca tiendas y migra sus imágenes de Cloudinary al depósito nuevo. Guarda respaldo y no borra nada de Cloudinary.
+            Marca tiendas y migra su media de Cloudinary {mode === 'videos' ? 'a Cloudflare Stream' : 'a R2'}. Guarda respaldo y no borra nada de Cloudinary.
           </p>
         </div>
         <span className="text-xs text-gray-400 tabular-nums">{doneCount} migradas esta sesión</span>
+      </div>
+
+      {/* Selector Fotos / Videos */}
+      <div className="inline-flex mt-3 rounded-lg border border-gray-200 overflow-hidden text-sm">
+        {(['images', 'videos'] as const).map(m => (
+          <button
+            key={m}
+            onClick={() => { if (running) return; setMode(m); setSelected(new Set()); setResults({}) }}
+            disabled={running}
+            className={`px-4 py-1.5 ${mode === m ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} disabled:opacity-50`}
+          >
+            {m === 'images' ? '📷 Fotos (R2)' : '🎬 Videos (Stream)'}
+          </button>
+        ))}
       </div>
 
       {/* Toolbar */}
