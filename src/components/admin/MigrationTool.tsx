@@ -70,8 +70,7 @@ export default function MigrationTool({ stores }: Props) {
 
   const clearSel = () => { if (!running) setSelected(new Set()) }
 
-  const migrateSelected = async () => {
-    const ids = [...selected]
+  const runMigration = async (ids: string[]) => {
     if (ids.length === 0) return
     setRunning(true)
     try {
@@ -98,6 +97,20 @@ export default function MigrationTool({ stores }: Props) {
       setCurrent(null)
       setSelected(new Set())
     }
+  }
+
+  const migrateSelected = () => runMigration([...selected])
+
+  // Masivo: todas las tiendas visibles que aún no estén migradas en esta sesión.
+  const pendingAll = useMemo(
+    () => options.filter(s => results[s.id]?.status !== 'done').map(s => s.id),
+    [options, results]
+  )
+  const migrateAll = () => {
+    if (pendingAll.length === 0) return
+    const label = mode === 'videos' ? 'videos' : 'fotos'
+    if (!window.confirm(`Vas a migrar ${label} de ${pendingAll.length} tiendas, una por una. Puede tardar varios minutos y no debes cerrar esta pestaña. ¿Continuar?`)) return
+    runMigration(pendingAll)
   }
 
   const doneCount = Object.values(results).filter(r => r.status === 'done').length
@@ -152,6 +165,9 @@ export default function MigrationTool({ stores }: Props) {
         </button>
         <button onClick={migrateSelected} disabled={running || selected.size === 0} className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50">
           {running ? 'Migrando…' : `Migrar seleccionadas (${selected.size})`}
+        </button>
+        <button onClick={migrateAll} disabled={running || pendingAll.length === 0} className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50" title="Migra todas las tiendas visibles que falten">
+          {running ? 'Migrando…' : `Migrar TODAS (${pendingAll.length})`}
         </button>
         {current && <span className="text-xs text-gray-500">Tienda {current.i} de {current.n}…</span>}
       </div>
