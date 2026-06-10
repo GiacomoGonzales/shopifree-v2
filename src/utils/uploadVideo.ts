@@ -15,9 +15,11 @@
 import { auth } from '../lib/firebase'
 import { apiUrl } from './apiBase'
 
-const STREAM_FOR_ALL = false
+// ACTIVADO PARA TODOS (piloto validado): todos los videos nuevos van a
+// Cloudflare Stream. Cloudinary deja de recibir videos nuevos.
+const STREAM_FOR_ALL = true
 const STREAM_EMAIL_ALLOWLIST: string[] = [
-  'giiacomo@gmail.com', // piloto
+  'giiacomo@gmail.com', // piloto (ya cubierto por FOR_ALL)
 ]
 
 export function shouldUploadToStream(): boolean {
