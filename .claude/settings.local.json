@@ -90,7 +90,22 @@
       "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts receipt vending)",
       "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts)",
       "Bash(kill b3qxx2wh5 *)",
-      "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts receipt petcard)"
+      "Bash(SHOT_BASE=http://localhost:5174 npx tsx scripts/generate-theme-thumbnails.ts receipt petcard)",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print :CFBundleShortVersionString\" ios/App/App/Info.plist)",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print :CFBundleVersion\" ios/App/App/Info.plist)",
+      "Bash(xcrun devicectl *)",
+      "Bash(xcrun xctrace *)",
+      "Bash(export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(echo \"=== buscar cobrify ===\"; find ~ -maxdepth 4 -iname \"*cobrify*\" -type d 2>/dev/null | grep -v node_modules | head -20; echo \"=== también en Desktop/Documents ===\"; ls -d ~/Desktop/*obrify* ~/Documents/*obrify* ~/*obrify* 2>/dev/null | head)",
+      "Bash(npm i *)",
+      "Bash(vercel --version)",
+      "Bash(awk '{print $3}')",
+      "Bash(echo \"=== probar token correcto contra Stream API ===\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('success:', d.get\\('success'\\), '| errors:', d.get\\('errors'\\)\\)\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(git reset *)"
     ],
     "deny": [],
     "ask": []
