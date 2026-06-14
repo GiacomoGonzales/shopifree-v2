@@ -723,7 +723,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
           price: item.itemPrice,
           quantity: item.quantity
         }))
-        const preference = cartToPreference(mpItems, store.currency, createdOrder.id)
+        const preference = cartToPreference(mpItems, store.currency, createdOrder.id, {
+          discountAmount: createdOrder.discount?.amount || 0,
+          shippingCost: createdOrder.shippingCost || 0,
+        })
         if (data.customer) {
           preference.payer = {
             name: data.customer.name,
@@ -930,7 +933,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         quantity: item.quantity
       }))
 
-      const preference = cartToPreference(mpItems, store.currency, orderToUse.id)
+      const preference = cartToPreference(mpItems, store.currency, orderToUse.id, {
+        discountAmount: orderToUse.discount?.amount || 0,
+        shippingCost: orderToUse.shippingCost || 0,
+      })
 
       // Add customer info if available
       if (data.customer) {
@@ -1015,6 +1021,15 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   const processBrickPayment = useCallback(async (formData: Record<string, unknown>) => {
     if (!order) return
 
+    // MP Wallet (y otros métodos sin formulario de tarjeta) llegan acá sin
+    // formData de tarjeta → no se pueden procesar inline. En vez de mandar al
+    // backend (que respondería "Missing required parameters"), redirigimos a
+    // Checkout Pro, que es como se paga Wallet/PSE.
+    if (!formData || Object.keys(formData).length === 0) {
+      redirectToCheckoutPro()
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -1044,7 +1059,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     } finally {
       setLoading(false)
     }
-  }, [order, store.id, onOrderComplete])
+  }, [order, store.id, onOrderComplete, redirectToCheckoutPro])
 
   // Whether we're in stripe mode (inline payment element)
   const stripeMode = step === 'stripe'

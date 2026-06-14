@@ -57,19 +57,49 @@ export interface CartItem {
 export function cartToPreference(
   items: CartItem[],
   currency: string = 'PEN',
-  orderId?: string
+  orderId?: string,
+  opts?: { discountAmount?: number; shippingCost?: number }
 ): MercadoPagoPreference {
-  const mpItems = items.map((item, index) => ({
-    id: item.id || `item-${index}`,
-    title: item.variant?.name ? `${item.name} - ${item.variant.name}` : item.name,
-    quantity: item.quantity,
-    unit_price: Math.round((item.variant?.price || item.price) * 100) / 100,
-    currency_id: currency
-  }))
+  // MercadoPago cobra la SUMA de los ítems. Si no aplicamos el cupón/envío
+  // aquí, cobra el subtotal sin descuento. Por eso repartimos el descuento
+  // entre las líneas y agregamos el envío, para que el total cobrado sea el
+  // neto correcto (subtotal − descuento + envío).
+  const cents = (n: number) => Math.round(n * 100)
+  const discountCents = Math.max(0, cents(opts?.discountAmount || 0))
+  const shippingCents = Math.max(0, cents(opts?.shippingCost || 0))
+
+  const lineCents = items.map(item => cents((item.variant?.price ?? item.price) * item.quantity))
+  const subtotalCents = lineCents.reduce((a, b) => a + b, 0)
+  const targetCents = Math.max(0, subtotalCents - discountCents) // subtotal ya con descuento
+
+  // Cada línea va como un solo ítem (quantity: 1) con su total ya descontado.
+  // La última absorbe el redondeo para que el total sea EXACTO.
+  let allocated = 0
+  const mpItems = items.map((item, index) => {
+    const isLast = index === items.length - 1
+    const lc = subtotalCents === 0
+      ? 0
+      : isLast
+        ? targetCents - allocated
+        : Math.round((lineCents[index] * targetCents) / subtotalCents)
+    if (!isLast) allocated += lc
+    const base = item.variant?.name ? `${item.name} - ${item.variant.name}` : item.name
+    return {
+      id: item.id || `item-${index}`,
+      title: item.quantity > 1 ? `${base} (x${item.quantity})` : base,
+      quantity: 1,
+      unit_price: lc / 100,
+      currency_id: currency,
+    }
+  })
+
+  if (shippingCents > 0) {
+    mpItems.push({ id: 'shipping', title: 'Envío', quantity: 1, unit_price: shippingCents / 100, currency_id: currency })
+  }
 
   return {
     items: mpItems,
-    external_reference: orderId || `order-${Date.now()}`
+    external_reference: orderId || `order-${Date.now()}`,
   }
 }
 
