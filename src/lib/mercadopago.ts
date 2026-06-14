@@ -58,43 +58,34 @@ export function cartToPreference(
   items: CartItem[],
   currency: string = 'PEN',
   orderId?: string,
-  opts?: { discountAmount?: number; shippingCost?: number }
+  opts?: { discountAmount?: number; discountLabel?: string; shippingCost?: number }
 ): MercadoPagoPreference {
-  // MercadoPago cobra la SUMA de los ítems. Si no aplicamos el cupón/envío
-  // aquí, cobra el subtotal sin descuento. Por eso repartimos el descuento
-  // entre las líneas y agregamos el envío, para que el total cobrado sea el
-  // neto correcto (subtotal − descuento + envío).
-  const cents = (n: number) => Math.round(n * 100)
-  const discountCents = Math.max(0, cents(opts?.discountAmount || 0))
-  const shippingCents = Math.max(0, cents(opts?.shippingCost || 0))
+  const round2 = (n: number) => Math.round(n * 100) / 100
 
-  const lineCents = items.map(item => cents((item.variant?.price ?? item.price) * item.quantity))
-  const subtotalCents = lineCents.reduce((a, b) => a + b, 0)
-  const targetCents = Math.max(0, subtotalCents - discountCents) // subtotal ya con descuento
-
-  // Cada línea va como un solo ítem (quantity: 1) con su total ya descontado.
-  // La última absorbe el redondeo para que el total sea EXACTO.
-  let allocated = 0
+  // Productos a su precio real (se muestran tal cual en MercadoPago).
   const mpItems = items.map((item, index) => {
-    const isLast = index === items.length - 1
-    const lc = subtotalCents === 0
-      ? 0
-      : isLast
-        ? targetCents - allocated
-        : Math.round((lineCents[index] * targetCents) / subtotalCents)
-    if (!isLast) allocated += lc
     const base = item.variant?.name ? `${item.name} - ${item.variant.name}` : item.name
     return {
       id: item.id || `item-${index}`,
-      title: item.quantity > 1 ? `${base} (x${item.quantity})` : base,
-      quantity: 1,
-      unit_price: lc / 100,
+      title: base,
+      quantity: item.quantity,
+      unit_price: round2(item.variant?.price ?? item.price),
       currency_id: currency,
     }
   })
 
-  if (shippingCents > 0) {
-    mpItems.push({ id: 'shipping', title: 'Envío', quantity: 1, unit_price: shippingCents / 100, currency_id: currency })
+  // Envío como línea aparte.
+  const shipping = opts?.shippingCost || 0
+  if (shipping > 0) {
+    mpItems.push({ id: 'shipping', title: 'Envío', quantity: 1, unit_price: round2(shipping), currency_id: currency })
+  }
+
+  // Descuento como línea negativa, para que MercadoPago muestre el desglose:
+  // productos + "Descuento (CUPÓN)" = total neto.
+  const discount = opts?.discountAmount || 0
+  if (discount > 0) {
+    const label = opts?.discountLabel ? ` (${opts.discountLabel})` : ''
+    mpItems.push({ id: 'discount', title: `Descuento${label}`, quantity: 1, unit_price: -round2(discount), currency_id: currency })
   }
 
   return {

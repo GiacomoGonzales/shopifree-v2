@@ -725,6 +725,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         }))
         const preference = cartToPreference(mpItems, store.currency, createdOrder.id, {
           discountAmount: createdOrder.discount?.amount || 0,
+          discountLabel: createdOrder.discount?.code,
           shippingCost: createdOrder.shippingCost || 0,
         })
         if (data.customer) {
@@ -935,6 +936,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
       const preference = cartToPreference(mpItems, store.currency, orderToUse.id, {
         discountAmount: orderToUse.discount?.amount || 0,
+        discountLabel: orderToUse.discount?.code,
         shippingCost: orderToUse.shippingCost || 0,
       })
 
