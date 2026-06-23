@@ -12,6 +12,7 @@ interface PendingOrderData {
   storeName?: string
   storeWhatsapp?: string
   storeSubdomain?: string
+  storeCustomDomain?: string
   currency?: string
   customer?: { name?: string; phone?: string; email?: string }
   deliveryMethod?: 'pickup' | 'delivery'
@@ -160,7 +161,9 @@ export default function PaymentSuccess() {
   const t = getThemeTranslations(orderData?.language)
 
   const handleBackToStore = () => {
-    if (orderData?.storeSubdomain) {
+    if (orderData?.storeCustomDomain) {
+      window.location.href = `https://${orderData.storeCustomDomain}`
+    } else if (orderData?.storeSubdomain) {
       window.location.href = `https://${orderData.storeSubdomain}.shopifree.app`
     } else {
       window.location.href = '/'

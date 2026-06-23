@@ -20,6 +20,11 @@ const SEARCH_ENGINE_BOTS = [
   'YandexBot',
   'DuckDuckBot',
   'Baiduspider',
+  // Google's Search Console ownership verifier (UA: "Google-Site-Verification/1.0").
+  // It does NOT run JS, so it can't see the client-side <meta> from StoreSEO — it
+  // must be served the prerendered og-image HTML, which injects the per-store
+  // google-site-verification tag from store.integrations.googleSearchConsole.
+  'Google-Site-Verification',
 ]
 
 // All crawler user agents

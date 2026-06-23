@@ -105,7 +105,9 @@
       "Bash(echo \"=== probar token correcto contra Stream API ===\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('success:', d.get\\('success'\\), '| errors:', d.get\\('errors'\\)\\)\")",
       "Bash(python3 -m json.tool)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)"
     ],
     "deny": [],
     "ask": []

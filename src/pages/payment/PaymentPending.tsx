@@ -10,6 +10,7 @@ interface PendingOrder {
   orderNumber: string
   language?: string
   storeSubdomain?: string
+  storeCustomDomain?: string
   customHeadHtml?: string
   customBodyHtml?: string
 }
@@ -61,9 +62,13 @@ export default function PaymentPending() {
   const t = getThemeTranslations(language)
 
   const handleBackToStore = () => {
-    const subdomain = (orderData as PendingOrder | null)?.storeSubdomain
+    const order = orderData as PendingOrder | null
+    const customDomain = order?.storeCustomDomain
+    const subdomain = order?.storeSubdomain
     localStorage.removeItem('pendingOrder')
-    if (subdomain) {
+    if (customDomain) {
+      window.location.href = `https://${customDomain}`
+    } else if (subdomain) {
       window.location.href = `https://${subdomain}.shopifree.app`
     } else {
       window.location.href = '/'

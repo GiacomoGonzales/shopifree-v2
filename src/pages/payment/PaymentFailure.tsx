@@ -11,6 +11,7 @@ interface PendingOrder {
   orderNumber: string
   language?: string
   storeSubdomain?: string
+  storeCustomDomain?: string
   customHeadHtml?: string
   customBodyHtml?: string
 }
@@ -61,7 +62,9 @@ export default function PaymentFailure() {
 
   const handleBackToStore = () => {
     // Don't clear localStorage - user might retry
-    if (pendingOrder?.storeSubdomain) {
+    if (pendingOrder?.storeCustomDomain) {
+      window.location.href = `https://${pendingOrder.storeCustomDomain}`
+    } else if (pendingOrder?.storeSubdomain) {
       window.location.href = `https://${pendingOrder.storeSubdomain}.shopifree.app`
     } else {
       window.location.href = '/'
