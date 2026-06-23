@@ -749,9 +749,20 @@ export default function DashboardHome() {
             >
               {/* Mini preview */}
               <div
-                className="aspect-[4/3] p-3 flex flex-col relative"
+                className="aspect-[9/16] p-3 flex flex-col relative"
                 style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
               >
+                {/* Thumbnail real (captura del tema); si 404 cae al preview de colores de abajo */}
+                {theme.thumbnail && (
+                  <img
+                    src={theme.thumbnail}
+                    alt={theme.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover object-top"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                )}
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="w-5 h-1.5 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.colors?.accent || '#666' }} />
