@@ -107,7 +107,11 @@
       "Bash(python3 -m json.tool)",
       "Bash(git reset *)",
       "Bash(git fetch *)",
-      "Bash(git rev-list *)"
+      "Bash(git rev-list *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"ESLINT EXIT: $?\")",
+      "Bash(echo \"TSC EXIT: $?\")",
+      "Bash(echo \"TSC: $?\")"
     ],
     "deny": [],
     "ask": []
