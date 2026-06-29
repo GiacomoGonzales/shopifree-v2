@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
+import { decrementOrderStockAdmin } from './_shared/order-stock'
 import { paypalFetch, type MerchantCredentials } from '../src/lib/paypal-server.js'
 
 /**
@@ -109,6 +110,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         paidAt: new Date(),
         updatedAt: new Date(),
       })
+      // Apply stock server-side on confirmation (storefront can't write
+      // products). Idempotent via stockDecremented, shared with the webhook.
+      try {
+        await decrementOrderStockAdmin(db, storeId, orderId)
+      } catch (err) {
+        console.error('process-paypal-payment stock decrement failed:', err)
+      }
       return res.status(200).json({ ok: true, paid: true, paypalStatus: response.status })
     }
 

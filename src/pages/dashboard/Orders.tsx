@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { orderService } from '../../lib/firebase'
+import { restoreOrderStock, decrementOrderStock } from '../../lib/stock'
 import { markOrdersAsSeen } from '../../hooks/useNewOrdersCount'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
@@ -301,6 +302,18 @@ export default function Orders() {
     if (!confirm(t('orders.confirmDelete', { defaultValue: '¿Eliminar este pedido? Esta acción no se puede deshacer.' }))) return
     setDeletingOrderId(orderId)
     try {
+      // If the order still holds a stock reservation and was never paid or
+      // fulfilled (e.g. an abandoned online order), return its stock before
+      // deleting — otherwise the units would stay stuck as "agotado". Paid or
+      // delivered orders keep their decrement: the goods really left.
+      const order = orders.find(o => o.id === orderId)
+      if (order?.stockDecremented && order.paymentStatus !== 'paid' && order.status !== 'delivered') {
+        try {
+          await restoreOrderStock(store.id, order, { createdBy: store.ownerId, reason: 'Pedido eliminado' })
+        } catch (err) {
+          console.error('Error restoring stock before delete:', err)
+        }
+      }
       await orderService.delete(store.id, orderId)
       setOrders(prev => prev.filter(o => o.id !== orderId))
       if (selectedOrder?.id === orderId) setSelectedOrder(null)
@@ -313,17 +326,58 @@ export default function Orders() {
     }
   }
 
+  // Apply an order's stock the first time it's confirmed/paid from the
+  // dashboard. Online orders reach the dashboard without stock applied (the
+  // unauthenticated storefront can't write products): gateway payments get
+  // decremented server-side on confirmation, but manual WhatsApp/transfer orders
+  // are only decremented here, when the merchant accepts them. Idempotent via
+  // the flag — orders already decremented (POS, gateway) are skipped, so it
+  // never double-counts. Returns true if it actually decremented.
+  const ensureStockDecremented = async (order: Order): Promise<boolean> => {
+    if (!store || order.stockDecremented) return false
+    try {
+      const did = await decrementOrderStock(store.id, order, { createdBy: store.ownerId })
+      if (did) {
+        await orderService.update(store.id, order.id, { stockDecremented: true })
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('Error applying stock on confirm:', err)
+      return false
+    }
+  }
+
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     if (!store) return
 
     setUpdatingStatus(orderId)
     try {
       await orderService.updateStatus(store.id, orderId, newStatus)
-      setOrders(orders.map(o =>
-        o.id === orderId ? { ...o, status: newStatus, updatedAt: new Date() } : o
-      ))
+
+      const order = orders.find(o => o.id === orderId)
+      let stockFlagPatch: boolean | undefined
+      if (newStatus === 'cancelled' && order?.stockDecremented) {
+        // Cancelling returns reserved stock to inventory (idempotent via the
+        // flag, which we flip off once restored). Without this, cancelled or
+        // abandoned orders left their units stuck at "agotado".
+        try {
+          await restoreOrderStock(store.id, order, { createdBy: store.ownerId, reason: 'Pedido cancelado' })
+          await orderService.update(store.id, orderId, { stockDecremented: false })
+          stockFlagPatch = false
+        } catch (err) {
+          console.error('Error restoring stock on cancel:', err)
+        }
+      } else if (order && newStatus !== 'pending' && newStatus !== 'cancelled') {
+        // Accepting an order applies its stock now if it hasn't been already.
+        if (await ensureStockDecremented(order)) stockFlagPatch = true
+      }
+
+      const patch: Partial<Order> = { status: newStatus, updatedAt: new Date() }
+      if (stockFlagPatch !== undefined) patch.stockDecremented = stockFlagPatch
+      setOrders(orders.map(o => (o.id === orderId ? { ...o, ...patch } : o)))
       if (selectedOrder?.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus, updatedAt: new Date() })
+        setSelectedOrder({ ...selectedOrder, ...patch })
       }
       showToast(t('orders.statusUpdated'), 'success')
     } catch (error) {
@@ -346,6 +400,9 @@ export default function Orders() {
       }
       if (note && note.trim()) update.paymentNote = note.trim()
       await orderService.update(store.id, order.id, update)
+      // Marking a manual order paid confirms the sale → apply its stock (no-op
+      // if already decremented by POS or an online gateway).
+      if (await ensureStockDecremented(order)) update.stockDecremented = true
       const updated = { ...order, ...update, updatedAt: now } as Order
       setOrders(prev => prev.map(o => o.id === order.id ? updated : o))
       if (selectedOrder?.id === order.id) setSelectedOrder(updated)
@@ -370,6 +427,9 @@ export default function Orders() {
         paidAt: order.paidAt || now,
       }
       await orderService.update(store.id, order.id, update)
+      // Completing the sale confirms it → apply its stock (no-op if already
+      // decremented by POS or an online gateway).
+      if (await ensureStockDecremented(order)) update.stockDecremented = true
       const updated = { ...order, ...update, updatedAt: now } as Order
       setOrders(prev => prev.map(o => o.id === order.id ? updated : o))
       if (selectedOrder?.id === order.id) setSelectedOrder(updated)

@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth'
 import { Capacitor } from '@capacitor/core'
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, increment, writeBatch, type DocumentData } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, runTransaction, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import type { User, Store, Product, Category, Order, Coupon, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
 
@@ -155,6 +155,160 @@ export const storeService = {
 }
 
 // ============================================
+// STOCK MUTATION HELPERS
+// ============================================
+// All stock mutations go through a Firestore transaction so concurrent writers
+// (POS sales, purchases, inventory edits) can't race a read-modify-write and
+// corrupt inventory (two writers both reading stock=1 and both writing 0).
+// `sign` is -1 for a decrement (sale) and +1 for a restore (cancel/refund),
+// which lets decrement and restore share one code path and stay symmetric.
+//
+// These decrements clamp at 0 (never throw): online orders apply stock
+// server-side on payment confirmation (see api/_shared/order-stock.ts) where a
+// confirmed-and-paid order can't be rejected, so clamping is the right policy.
+
+type WarehouseStock = Record<string, number>
+
+const sumValues = (m: WarehouseStock): number =>
+  Object.values(m).reduce((s, n) => s + (n || 0), 0)
+
+/**
+ * Adjust a per-warehouse stock map by `delta` units (negative = take out,
+ * positive = put back) while keeping the map non-negative and the total
+ * correct. Single-warehouse stores (the common case) have exactly one key, so
+ * this is exact. For multi-warehouse we prefer `preferredId`, otherwise take
+ * from the fullest warehouse (decrement) / the default-or-first (restore) — an
+ * approximation that always keeps `sum(warehouseStock)` consistent, which is
+ * what `product.stock` mirrors.
+ */
+function adjustWarehouseStock(
+  ws: WarehouseStock | undefined,
+  delta: number,
+  preferredId?: string,
+): WarehouseStock | undefined {
+  if (!ws || Object.keys(ws).length === 0) return ws
+  const next: WarehouseStock = { ...ws }
+  if (delta < 0) {
+    let remaining = -delta
+    const order = Object.keys(next).sort((a, b) => {
+      if (a === preferredId) return -1
+      if (b === preferredId) return 1
+      return (next[b] || 0) - (next[a] || 0)
+    })
+    for (const wid of order) {
+      if (remaining <= 0) break
+      const take = Math.min(next[wid] || 0, remaining)
+      next[wid] = (next[wid] || 0) - take
+      remaining -= take
+    }
+  } else if (delta > 0) {
+    const target = preferredId && preferredId in next ? preferredId : Object.keys(next)[0]
+    next[target] = (next[target] || 0) + delta
+  }
+  return next
+}
+
+/** Run a stock mutator for one product inside a transaction (atomic RMW). */
+async function mutateProductStock(
+  storeId: string,
+  productId: string,
+  mutate: (data: DocumentData) => Record<string, unknown> | null,
+): Promise<void> {
+  const ref = doc(db, 'stores', storeId, 'products', productId)
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists()) return
+    const patch = mutate(snap.data())
+    if (!patch) return
+    tx.update(ref, { ...patch, updatedAt: new Date() })
+  })
+}
+
+/** Patch for a simple (non-variant) product. */
+function simpleStockPatch(data: DocumentData, qty: number, sign: number): Record<string, unknown> {
+  const ws = data.warehouseStock as WarehouseStock | undefined
+  if (ws && Object.keys(ws).length > 0) {
+    const newWs = adjustWarehouseStock(ws, sign * qty)!
+    return { warehouseStock: newWs, stock: sumValues(newWs) }
+  }
+  const cur = typeof data.stock === 'number' ? data.stock : 0
+  return { stock: Math.max(0, cur + sign * qty) }
+}
+
+/** Patch for a legacy variant product (option-level stock). */
+function variantStockPatch(
+  data: DocumentData,
+  updates: { variationName: string; optionValue: string; quantity: number }[],
+  sign: number,
+): Record<string, unknown> | null {
+  const variations = data.variations as Array<{ name: string; options: Array<{ value: string; stock?: number }> }> | undefined
+  if (!variations) return null
+  let totalDelta = 0
+  for (const u of updates) {
+    const variation = variations.find(v => v.name === u.variationName)
+    const option = variation?.options.find(o => o.value === u.optionValue)
+    if (option && typeof option.stock === 'number') {
+      option.stock = Math.max(0, option.stock + sign * u.quantity)
+    }
+    totalDelta += sign * u.quantity
+  }
+  const patch: Record<string, unknown> = { variations }
+  const ws = data.warehouseStock as WarehouseStock | undefined
+  if (ws && Object.keys(ws).length > 0) {
+    const newWs = adjustWarehouseStock(ws, totalDelta)!
+    patch.warehouseStock = newWs
+    patch.stock = sumValues(newWs)
+  } else if (typeof data.stock === 'number') {
+    patch.stock = Math.max(0, data.stock + totalDelta)
+  }
+  return patch
+}
+
+/** Patch for a modern combinations[] product (source of truth). */
+function combinationStockPatch(
+  data: DocumentData,
+  updates: { combinationId: string; quantity: number; warehouseId?: string }[],
+  sign: number,
+): Record<string, unknown> | null {
+  const combinations = (data.combinations || []) as Array<{ id: string; stock: number; warehouseStock?: WarehouseStock }>
+  if (combinations.length === 0) return null
+  for (const u of updates) {
+    const combo = combinations.find(c => c.id === u.combinationId)
+    if (!combo) continue
+    combo.stock = Math.max(0, (combo.stock || 0) + sign * u.quantity)
+    if (combo.warehouseStock && Object.keys(combo.warehouseStock).length > 0) {
+      combo.warehouseStock = adjustWarehouseStock(combo.warehouseStock, sign * u.quantity, u.warehouseId)
+    }
+  }
+  // product.stock / warehouseStock are always derived from the combinations.
+  const patch: Record<string, unknown> = {
+    combinations,
+    stock: combinations.reduce((s, c) => s + (c.stock || 0), 0),
+  }
+  const newWs: WarehouseStock = {}
+  let hasWs = false
+  for (const c of combinations) {
+    if (c.warehouseStock) {
+      hasWs = true
+      for (const [wid, q] of Object.entries(c.warehouseStock)) newWs[wid] = (newWs[wid] || 0) + (q || 0)
+    }
+  }
+  if (hasWs) patch.warehouseStock = newWs
+  return patch
+}
+
+/** Group a flat list of per-product updates by productId. */
+function groupByProduct<T extends { productId: string }>(updates: T[]): Map<string, T[]> {
+  const byProduct = new Map<string, T[]>()
+  for (const u of updates) {
+    const list = byProduct.get(u.productId) || []
+    list.push(u)
+    byProduct.set(u.productId, list)
+  }
+  return byProduct
+}
+
+// ============================================
 // PRODUCT SERVICES (Subcollection)
 // ============================================
 
@@ -222,166 +376,55 @@ export const productService = {
     await deleteDoc(doc(db, 'stores', storeId, 'products', productId))
   },
 
+  // Simple products (no variants). Atomic per-product transaction keeps
+  // `stock` (and `warehouseStock`, when present) in sync without racing.
   async decrementStock(storeId: string, items: { productId: string; quantity: number }[]): Promise<void> {
-    const batch = writeBatch(db)
-    for (const item of items) {
-      const ref = doc(db, 'stores', storeId, 'products', item.productId)
-      batch.update(ref, {
-        stock: increment(-item.quantity),
-        updatedAt: new Date()
-      })
+    for (const [productId, group] of groupByProduct(items)) {
+      const qty = group.reduce((s, i) => s + i.quantity, 0)
+      await mutateProductStock(storeId, productId, data => simpleStockPatch(data, qty, -1))
     }
-    await batch.commit()
   },
 
   async restoreStock(storeId: string, items: { productId: string; quantity: number }[]): Promise<void> {
-    const batch = writeBatch(db)
-    for (const item of items) {
-      const ref = doc(db, 'stores', storeId, 'products', item.productId)
-      batch.update(ref, {
-        stock: increment(item.quantity),
-        updatedAt: new Date()
-      })
+    for (const [productId, group] of groupByProduct(items)) {
+      const qty = group.reduce((s, i) => s + i.quantity, 0)
+      await mutateProductStock(storeId, productId, data => simpleStockPatch(data, qty, +1))
     }
-    await batch.commit()
   },
 
+  // Legacy variant products (option-level stock). Atomic; also keeps the
+  // product-level total in sync so ProductCard ("agotado") and the dashboard
+  // can't drift apart.
   async decrementVariantStock(storeId: string, updates: { productId: string; variationName: string; optionValue: string; quantity: number }[]): Promise<void> {
-    // Group updates by productId to batch reads
-    const byProduct = new Map<string, typeof updates>()
-    for (const u of updates) {
-      const list = byProduct.get(u.productId) || []
-      list.push(u)
-      byProduct.set(u.productId, list)
-    }
-
-    for (const [productId, productUpdates] of byProduct) {
-      const ref = doc(db, 'stores', storeId, 'products', productId)
-      const snap = await getDoc(ref)
-      if (!snap.exists()) continue
-
-      const data = snap.data()
-      const variations = data.variations as Array<{ id: string; name: string; options: Array<{ id: string; value: string; stock?: number; available: boolean; image?: string }> }>
-      if (!variations) continue
-
-      // Track total decrement so product.stock stays in sync. Legacy variants
-      // don't have combinations[], so we can't recompute as a sum — we
-      // decrement by the same total quantity that was sold.
-      let totalDecrement = 0
-      for (const update of productUpdates) {
-        const variation = variations.find(v => v.name === update.variationName)
-        const option = variation?.options.find(o => o.value === update.optionValue)
-        if (option && typeof option.stock === 'number') {
-          option.stock = Math.max(0, option.stock - update.quantity)
-        }
-        totalDecrement += update.quantity
-      }
-
-      // Keep product.stock in sync. Without this, ProductCard ("agotado")
-      // and ProductDrawer drift apart: the listing keeps showing the old
-      // total even though the variant has run out — or vice versa.
-      const patch: Record<string, unknown> = { variations, updatedAt: new Date() }
-      if (typeof data.stock === 'number' && totalDecrement > 0) {
-        patch.stock = Math.max(0, data.stock - totalDecrement)
-      }
-      await updateDoc(ref, patch)
-    }
-  },
-
-  // Modern path: decrement stock at the combinations[] level, the source of truth
-  // used by the dashboard inventory, purchases, and production flows. Also keeps
-  // product.stock in sync (= sum of combinations) so listings stay accurate.
-  async decrementCombinationStock(
-    storeId: string,
-    updates: { productId: string; combinationId: string; quantity: number; warehouseId?: string }[],
-  ): Promise<void> {
-    const byProduct = new Map<string, typeof updates>()
-    for (const u of updates) {
-      const list = byProduct.get(u.productId) || []
-      list.push(u)
-      byProduct.set(u.productId, list)
-    }
-
-    for (const [productId, productUpdates] of byProduct) {
-      const ref = doc(db, 'stores', storeId, 'products', productId)
-      const snap = await getDoc(ref)
-      if (!snap.exists()) continue
-
-      const data = snap.data()
-      const combinations = (data.combinations || []) as Array<{
-        id: string
-        stock: number
-        warehouseStock?: Record<string, number>
-      }>
-      if (combinations.length === 0) continue
-
-      for (const update of productUpdates) {
-        const combo = combinations.find(c => c.id === update.combinationId)
-        if (!combo) continue
-        combo.stock = Math.max(0, (combo.stock || 0) - update.quantity)
-        if (update.warehouseId && combo.warehouseStock) {
-          const cur = combo.warehouseStock[update.warehouseId] || 0
-          combo.warehouseStock[update.warehouseId] = Math.max(0, cur - update.quantity)
-        }
-      }
-
-      // Recompute product-level totals from combinations (single source of truth)
-      const totalStock = combinations.reduce((sum, c) => sum + (c.stock || 0), 0)
-      const newWarehouseStock: Record<string, number> = {}
-      for (const c of combinations) {
-        if (c.warehouseStock) {
-          for (const [wid, qty] of Object.entries(c.warehouseStock)) {
-            newWarehouseStock[wid] = (newWarehouseStock[wid] || 0) + (qty || 0)
-          }
-        }
-      }
-
-      const patch: Record<string, unknown> = {
-        combinations,
-        stock: totalStock,
-        updatedAt: new Date(),
-      }
-      if (Object.keys(newWarehouseStock).length > 0) {
-        patch.warehouseStock = newWarehouseStock
-      }
-      await updateDoc(ref, patch)
+    for (const [productId, group] of groupByProduct(updates)) {
+      await mutateProductStock(storeId, productId, data => variantStockPatch(data, group, -1))
     }
   },
 
   async restoreVariantStock(storeId: string, updates: { productId: string; variationName: string; optionValue: string; quantity: number }[]): Promise<void> {
-    const byProduct = new Map<string, typeof updates>()
-    for (const u of updates) {
-      const list = byProduct.get(u.productId) || []
-      list.push(u)
-      byProduct.set(u.productId, list)
+    for (const [productId, group] of groupByProduct(updates)) {
+      await mutateProductStock(storeId, productId, data => variantStockPatch(data, group, +1))
     }
+  },
 
-    for (const [productId, productUpdates] of byProduct) {
-      const ref = doc(db, 'stores', storeId, 'products', productId)
-      const snap = await getDoc(ref)
-      if (!snap.exists()) continue
+  // Modern path: stock lives on combinations[] (the source of truth used by the
+  // dashboard inventory, purchases, and production flows). Atomic; product.stock
+  // and product.warehouseStock are always recomputed from the combinations.
+  async decrementCombinationStock(
+    storeId: string,
+    updates: { productId: string; combinationId: string; quantity: number; warehouseId?: string }[],
+  ): Promise<void> {
+    for (const [productId, group] of groupByProduct(updates)) {
+      await mutateProductStock(storeId, productId, data => combinationStockPatch(data, group, -1))
+    }
+  },
 
-      const data = snap.data()
-      const variations = data.variations as Array<{ id: string; name: string; options: Array<{ id: string; value: string; stock?: number; available: boolean; image?: string }> }>
-      if (!variations) continue
-
-      let totalRestore = 0
-      for (const update of productUpdates) {
-        const variation = variations.find(v => v.name === update.variationName)
-        const option = variation?.options.find(o => o.value === update.optionValue)
-        if (option && typeof option.stock === 'number') {
-          option.stock += update.quantity
-        }
-        totalRestore += update.quantity
-      }
-
-      // Mirror decrementVariantStock: restore product.stock when an order is
-      // cancelled/refunded so listings stop showing "agotado" incorrectly.
-      const patch: Record<string, unknown> = { variations, updatedAt: new Date() }
-      if (typeof data.stock === 'number' && totalRestore > 0) {
-        patch.stock = data.stock + totalRestore
-      }
-      await updateDoc(ref, patch)
+  async restoreCombinationStock(
+    storeId: string,
+    updates: { productId: string; combinationId: string; quantity: number; warehouseId?: string }[],
+  ): Promise<void> {
+    for (const [productId, group] of groupByProduct(updates)) {
+      await mutateProductStock(storeId, productId, data => combinationStockPatch(data, group, +1))
     }
   }
 }

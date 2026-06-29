@@ -369,16 +369,13 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       orderData.notes = data.delivery.observations
     }
 
-    // Validate stock before creating the order. Three paths, in order of
-    // preference, mirroring the rest of the system:
-    //   (a) Modern: product has combinations[] → check + decrement combo stock.
-    //   (b) Legacy variant: product has variations[].options[].stock but no
-    //       combinations → check + decrement option-level stock.
-    //   (c) Simple: product.stock for products without variants.
-    const stockItems: { productId: string; quantity: number; name: string }[] = []
-    const variantStockUpdates: { productId: string; variationName: string; optionValue: string; quantity: number; productName: string }[] = []
-    const combinationStockUpdates: { productId: string; combinationId: string; quantity: number }[] = []
-
+    // Validate stock before creating the order. This is READ-ONLY: the
+    // unauthenticated storefront can't write products under firestore.rules, so
+    // the actual decrement happens when the order is COMMITTED — server-side on
+    // payment confirmation for online gateways (see api/_shared/order-stock.ts),
+    // or in the dashboard when the merchant confirms a manual (WhatsApp/transfer)
+    // order. Three paths mirror the rest of the system: combinations[] → legacy
+    // option stock → simple product.stock.
     for (const item of items) {
       if (!item.product.trackStock) continue
 
@@ -388,87 +385,44 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       // (a) Modern: combinations[]
       if (item.selectedVariants && freshProduct.combinations?.length) {
         const combo = findCombination(freshProduct, item.selectedVariants)
-        if (!combo) {
-          throw new Error(`stockInsufficient:${item.product.name}:0`)
-        }
-        if (!combo.available) {
+        if (!combo || !combo.available) {
           throw new Error(`stockInsufficient:${item.product.name}:0`)
         }
         if (combo.stock < item.quantity) {
           const variantLabel = Object.values(item.selectedVariants).join(' / ')
           throw new Error(`stockInsufficient:${item.product.name} (${variantLabel}):${combo.stock}`)
         }
-        combinationStockUpdates.push({
-          productId: item.product.id,
-          combinationId: combo.id,
-          quantity: item.quantity,
-        })
         continue
       }
 
-      // (b) Legacy variant-level stock
+      // (b) Legacy variant-level stock. Respect the manual availability toggle,
+      // mirroring combo.available: an option marked unavailable can't be ordered
+      // even if it still has stock on the record.
       if (item.selectedVariants && freshProduct.variations?.length) {
         let hasVariantStock = false
         for (const [varName, varValue] of Object.entries(item.selectedVariants)) {
           const variation = freshProduct.variations.find(v => v.name === varName)
           const option = variation?.options.find(o => o.value === varValue)
+          if (option && option.available === false) {
+            throw new Error(`stockInsufficient:${item.product.name} (${varValue}):0`)
+          }
           if (option && typeof option.stock === 'number') {
             hasVariantStock = true
             if (option.stock < item.quantity) {
               throw new Error(`stockInsufficient:${item.product.name} (${varValue}):${option.stock}`)
             }
-            variantStockUpdates.push({
-              productId: item.product.id,
-              variationName: varName,
-              optionValue: varValue,
-              quantity: item.quantity,
-              productName: item.product.name
-            })
           }
         }
         if (hasVariantStock) continue
       }
 
       // (c) Simple product
-      if (typeof freshProduct.stock === 'number') {
-        if (freshProduct.stock < item.quantity) {
-          throw new Error(`stockInsufficient:${item.product.name}:${freshProduct.stock}`)
-        }
-        stockItems.push({ productId: item.product.id, quantity: item.quantity, name: item.product.name })
+      if (typeof freshProduct.stock === 'number' && freshProduct.stock < item.quantity) {
+        throw new Error(`stockInsufficient:${item.product.name}:${freshProduct.stock}`)
       }
     }
 
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
-
-    // Decrement stock SEQUENTIALLY (not fire-and-forget) so a failure in any
-    // one write surfaces in logs instead of silently corrupting inventory.
-    // The previous implementation ran three .catch(() => {}) in parallel —
-    // that's what caused the "agotado at random hours" bug: one write would
-    // win the race and leave product.stock / combinations[].stock /
-    // variations[].options[].stock out of sync, which then propagates to the
-    // public ProductCard and Dashboard inventory.
-    //
-    // We swallow the final error (don't re-throw) because the order is
-    // already persisted — failing the checkout for the customer at this
-    // point would be worse than logging.
-    try {
-      // Combination-level stock (modern variant model). This also recomputes
-      // product.stock and warehouseStock from the combinations.
-      if (combinationStockUpdates.length > 0) {
-        await productService.decrementCombinationStock(store.id, combinationStockUpdates)
-      }
-      // Legacy option-level stock (products not yet migrated to combinations[]).
-      // After the firebase.ts fix, this also keeps product.stock in sync.
-      if (variantStockUpdates.length > 0) {
-        await productService.decrementVariantStock(store.id, variantStockUpdates)
-      }
-      // Product-level stock (simple products, no variants).
-      if (stockItems.length > 0) {
-        await productService.decrementStock(store.id, stockItems)
-      }
-    } catch (stockErr) {
-      console.error('[checkout] stock decrement failed for order', orderId, stockErr)
-    }
 
     // Increment coupon uses after successful order creation
     if (appliedCoupon) {

@@ -584,6 +584,13 @@ export interface Order {
   paidAt?: Date                 // When payment was confirmed (marks real income for cash flow)
   paymentNote?: string          // Optional note: reference #, terminal, etc.
 
+  // Inventory reservation flag. true once this order has decremented stock
+  // (reserved it). Restoring stock on cancel/refund flips it back to false so
+  // the operation stays idempotent and we never double-restore. Orders that
+  // never touched stock (test orders, products without trackStock) leave it
+  // unset/false so restore is a no-op for them.
+  stockDecremented?: boolean
+
   // Origen del pedido (para distinguir ventas online vs manuales)
   channel?: 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'
   manual?: boolean              // true if created from Dashboard (Nueva venta), false/undefined if from storefront

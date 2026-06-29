@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import Stripe from 'stripe'
+import { decrementOrderStockAdmin } from './_shared/order-stock'
 
 let db: Firestore
 
@@ -118,6 +119,12 @@ async function handleConfirmPayment(body: Record<string, unknown>, res: VercelRe
       paymentId: paymentIntentId,
       updatedAt: new Date()
     })
+    // Apply stock server-side on confirmation (storefront can't write products).
+    try {
+      await decrementOrderStockAdmin(firestore, storeId, orderId)
+    } catch (err) {
+      console.error('[stripe-payment] stock decrement failed:', err)
+    }
   } else if (paymentIntent.status === 'processing') {
     await orderRef.update({
       paymentId: paymentIntentId,

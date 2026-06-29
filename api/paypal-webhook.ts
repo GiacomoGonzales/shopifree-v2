@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
+import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './_shared/order-stock'
 
 /**
  * Receives PayPal webhook events. With per-merchant credentials there is
@@ -111,6 +112,14 @@ async function handleCaptureEvent(storeId: string, event: PayPalWebhookEvent) {
       paidAt: new Date(),
       updatedAt: new Date(),
     })
+    // Apply stock now that payment is confirmed (storefront can't write
+    // products). Idempotent via stockDecremented, so retries don't double-count.
+    try {
+      const did = await decrementOrderStockAdmin(db, storeId, orderId)
+      if (did) console.log(`[paypal-webhook] order ${ref.path} → stock decremented`)
+    } catch (err) {
+      console.error('[paypal-webhook] stock decrement failed:', err)
+    }
     console.log(`[paypal-webhook] order ${ref.path} → paid`)
   } else if (eventType === 'PAYMENT.CAPTURE.DENIED') {
     await ref.update({
@@ -125,6 +134,13 @@ async function handleCaptureEvent(storeId: string, event: PayPalWebhookEvent) {
       paymentStatus: 'refunded',
       updatedAt: new Date(),
     })
+    // Return the stock to inventory (idempotent via stockDecremented).
+    try {
+      const restored = await restoreOrderStockAdmin(db, storeId, orderId)
+      if (restored) console.log(`[paypal-webhook] order ${ref.path} → stock restored`)
+    } catch (err) {
+      console.error('[paypal-webhook] stock restore failed:', err)
+    }
     console.log(`[paypal-webhook] order ${ref.path} → refunded`)
   }
 }

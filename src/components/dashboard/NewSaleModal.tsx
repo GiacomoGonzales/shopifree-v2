@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { productService, orderService } from '../../lib/firebase'
+import { decrementOrderStock } from '../../lib/stock'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
@@ -215,6 +216,9 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
         if (it.variationName && it.optionValue) {
           base.selectedVariations = [{ name: it.variationName, value: it.optionValue }]
         }
+        // Carry the combination id so the order line maps back to its inventoried
+        // combination — needed for a correct stock restore if it's cancelled.
+        if (it._comboId) base.combinationId = it._comboId
         return base
       })
 
@@ -259,53 +263,24 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
       if (paymentStatus === 'paid' && paymentNote.trim()) orderData.paymentNote = paymentNote.trim()
       if (isTest) orderData.isTest = true
 
-      // Decrement stock if product is tracked (mirror the storefront flow).
-      // Test orders SKIP stock decrements — the whole point of marking an
-      // order as a test is to probe the flow without polluting inventory.
-      const stockItems: { productId: string; quantity: number }[] = []
-      const variantStockUpdates: { productId: string; variationName: string; optionValue: string; quantity: number }[] = []
-      const combinationUpdates: { productId: string; comboId: string; quantity: number }[] = []
-
-      if (!isTest) {
-        for (const it of activeItems) {
-          if (!it.trackStock) continue
-          if (it._comboId) {
-            // Combination case — manual update after order creation
-            combinationUpdates.push({ productId: it.productId, comboId: it._comboId, quantity: it.quantity })
-          } else if (it.variationName && it.optionValue) {
-            variantStockUpdates.push({
-              productId: it.productId,
-              variationName: it.variationName,
-              optionValue: it.optionValue,
-              quantity: it.quantity,
-            })
-          } else {
-            stockItems.push({ productId: it.productId, quantity: it.quantity })
-          }
-        }
-      }
+      // Flag the order as holding a stock reservation when it has tracked items,
+      // so a later cancel/refund restores exactly what was taken. Test orders
+      // SKIP stock decrements — the whole point of a test order is to probe the
+      // flow without polluting inventory.
+      const willTrackStock = !isTest && activeItems.some(it => it.trackStock)
+      if (willTrackStock) orderData.stockDecremented = true
 
       const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-      // Stock decrements (fire-and-forget — don't block UI if they fail).
-      // All three lists are empty when isTest is true, so these no-op.
-      if (stockItems.length > 0) productService.decrementStock(store.id, stockItems).catch(() => {})
-      if (variantStockUpdates.length > 0) productService.decrementVariantStock(store.id, variantStockUpdates).catch(() => {})
-      // Combination stock update — use productService.update-like approach
-      // Simpler: reload product, mutate combo, save back (kept sequential to be correct)
-      for (const upd of combinationUpdates) {
+      // Apply stock through the SAME shared helper the dashboard uses, which
+      // routes combos/variants/simple atomically (warehouse-consistent) and
+      // writes a stock_movements audit row. Errors are logged, not swallowed.
+      if (willTrackStock) {
         try {
-          const fresh = await productService.get(store.id, upd.productId)
-          if (!fresh?.combinations) continue
-          const newCombos = fresh.combinations.map(c =>
-            c.id === upd.comboId ? { ...c, stock: Math.max(0, c.stock - upd.quantity) } : c
-          )
-          const newTotal = newCombos.reduce((s, c) => s + (c.stock || 0), 0)
-          await productService.update(store.id, upd.productId, {
-            combinations: newCombos,
-            stock: newTotal,
-          })
-        } catch (err) { console.error('Combo stock decrement failed:', err) }
+          await decrementOrderStock(store.id, { id: orderId, items: orderItems }, { createdBy: firebaseUser.uid })
+        } catch (err) {
+          console.error('[new-sale] stock decrement failed for order', orderId, err)
+        }
       }
 
       // Build the created order to hand back
@@ -330,6 +305,7 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
       if (orderData.notes) created.notes = orderData.notes
       if (orderData.paidAt) created.paidAt = orderData.paidAt
       if (orderData.paymentNote) created.paymentNote = orderData.paymentNote
+      if (orderData.stockDecremented) created.stockDecremented = true
       if (isTest) created.isTest = true
 
       showToast(isTest ? 'Venta de prueba registrada' : 'Venta registrada', 'success')

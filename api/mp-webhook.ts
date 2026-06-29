@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './_shared/order-stock'
 
 let db: Firestore
 
@@ -105,16 +106,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         updatedAt: new Date()
       }
 
+      let confirmed = false
+      let refunded = false
       if (paymentStatus === 'approved') {
         updateData.paymentStatus = 'paid'
         updateData.status = 'confirmed'
+        confirmed = true
       } else if (paymentStatus === 'rejected' || paymentStatus === 'cancelled') {
         updateData.paymentStatus = 'failed'
         // Don't change order status - let the store owner decide
+      } else if (paymentStatus === 'refunded' || paymentStatus === 'charged_back') {
+        updateData.paymentStatus = 'refunded'
+        refunded = true
       }
       // For 'pending', 'in_process', etc. - don't update, keep as is
 
       await orderRef.update(updateData)
+
+      // Apply stock server-side now that payment is confirmed (the storefront
+      // customer can't write products). Idempotent via stockDecremented, so the
+      // inline endpoint + this webhook + MP retries decrement exactly once.
+      if (confirmed) {
+        try {
+          const did = await decrementOrderStockAdmin(firestore, storeId, orderId)
+          if (did) console.log('[mp-webhook] stock decremented for paid order:', orderId)
+        } catch (err) {
+          console.error('[mp-webhook] stock decrement failed:', err)
+        }
+      }
+      // On a refund/chargeback, return the stock to inventory (idempotent).
+      if (refunded) {
+        try {
+          const restored = await restoreOrderStockAdmin(firestore, storeId, orderId)
+          if (restored) console.log('[mp-webhook] stock restored for refund:', orderId)
+        } catch (err) {
+          console.error('[mp-webhook] stock restore failed:', err)
+        }
+      }
 
       console.log('[mp-webhook] Order updated:', { orderId, ...updateData })
     }

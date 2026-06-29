@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { decrementOrderStockAdmin } from './_shared/order-stock'
 
 let db: Firestore
 
@@ -90,15 +91,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // "approved" is the only success status confirmed by the Go Cuotas docs.
     // Other Rails-style verbs are accepted defensively.
+    let confirmed = false
     if (/^(approved|paid|delivered|succeeded|confirmed|completed)$/.test(status)) {
       updateData.paymentStatus = 'paid'
       updateData.status = 'confirmed'
       updateData.paidAt = new Date()
+      confirmed = true
     } else if (/^(rejected|failed|cancell?ed|discarded|denied)$/.test(status)) {
       updateData.paymentStatus = 'failed'
     }
 
     await orderRef.update(updateData)
+
+    // Apply stock server-side on confirmation (storefront can't write products).
+    // Idempotent via stockDecremented, so Go Cuotas retries don't double-count.
+    if (confirmed) {
+      try {
+        const did = await decrementOrderStockAdmin(firestore, storeId, orderId)
+        if (did) console.log('[gocuotas-webhook] stock decremented for paid order:', orderId)
+      } catch (err) {
+        console.error('[gocuotas-webhook] stock decrement failed:', err)
+      }
+    }
     console.log('[gocuotas-webhook] order updated:', { orderId, status, updateData })
 
     return res.status(200).json({ received: true })

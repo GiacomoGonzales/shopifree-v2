@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { randomUUID } from 'crypto'
+import { decrementOrderStockAdmin } from './_shared/order-stock'
 
 let db: Firestore
 
@@ -106,6 +107,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: 'confirmed',
         updatedAt: new Date()
       })
+      // Apply stock server-side on confirmation (storefront can't write
+      // products). Idempotent via stockDecremented, shared with mp-webhook.
+      try {
+        await decrementOrderStockAdmin(firestore, storeId, orderId)
+      } catch (err) {
+        console.error('[process-mp-payment] stock decrement failed:', err)
+      }
     } else if (paymentResult.status === 'in_process' || paymentResult.status === 'pending') {
       await orderRef.update({
         paymentId: String(paymentResult.id),
@@ -173,14 +181,26 @@ async function handleConfirmOrder(
     updatedAt: new Date()
   }
 
+  let confirmed = false
   if (payment.status === 'approved') {
     updateData.paymentStatus = 'paid'
     updateData.status = 'confirmed'
+    confirmed = true
   } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
     updateData.paymentStatus = 'failed'
   }
 
   await orderRef.update(updateData)
+
+  // Apply stock server-side on confirmation (storefront can't write products).
+  // Idempotent via stockDecremented, shared with the main flow + mp-webhook.
+  if (confirmed) {
+    try {
+      await decrementOrderStockAdmin(firestore, storeId, orderId)
+    } catch (err) {
+      console.error('[confirm-mp-order] stock decrement failed:', err)
+    }
+  }
 
   console.log('[confirm-mp-order] Order updated:', { orderId, paymentStatus: payment.status })
 
