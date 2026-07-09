@@ -3,6 +3,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { randomUUID } from 'crypto'
 import { decrementOrderStockAdmin } from './_shared/order-stock'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
 
 let db: Firestore
 
@@ -66,6 +67,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const storeData = storeDoc.data()
+
+    // Card payments are a paid feature — server-side gate (client is bypassable).
+    if (!hasPaidEffectivePlan(storeData)) {
+      return res.status(403).json(PLAN_REQUIRED_RESPONSE)
+    }
+
     const mpConfig = storeData?.payments?.mercadopago
 
     if (!mpConfig?.enabled || !mpConfig.accessToken) {

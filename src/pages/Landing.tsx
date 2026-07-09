@@ -396,7 +396,12 @@ export default function Landing() {
               <p className="text-4xl font-bold mb-1">
                 $4.99
               </p>
-              <p className="text-[#38bdf8] text-sm mb-6">{t('pricing.perMonth')}</p>
+              <p className="text-[#38bdf8] text-sm mb-2">{t('pricing.perMonth')}</p>
+              {/* Registration grants an automatic 7-day Pro trial — say it here so
+                  the ad promise ("prueba gratis") matches what actually happens. */}
+              <p className="inline-block bg-white/10 text-white/90 text-xs font-medium px-3 py-1 rounded-full mb-6">
+                {t('pricing.trialNote')}
+              </p>
               <ul className="space-y-3 mb-8">
                 {[t('pricing.pro.features.products'), t('pricing.pro.features.paymentGateway'), t('pricing.pro.features.coupons'), t('pricing.pro.features.customDomain'), t('pricing.pro.features.multiplePhotos'), t('pricing.pro.features.advancedStats')].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">

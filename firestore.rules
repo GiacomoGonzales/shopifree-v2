@@ -44,10 +44,31 @@ service cloud.firestore {
     match /stores/{storeId} {
       // Anyone can read store (public catalogs)
       allow read: if true;
-      // Only authenticated users can create stores
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      // Owner or admin can update/delete
-      allow update: if isStoreOwnerOrAdmin(storeId);
+      // Only authenticated users can create stores — as themselves, with a
+      // client-settable plan limited to free/pro and the signup trial capped
+      // at 8 days (7 + clock-skew headroom). planExpiresAt is an admin-only
+      // comp field and can never be set from the client.
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == request.auth.uid
+        && (isAdmin() || (
+          (!('plan' in request.resource.data) || request.resource.data.plan in ['free', 'pro'])
+          && (!('trialEndsAt' in request.resource.data) || (
+            request.resource.data.trialEndsAt is timestamp
+            && request.resource.data.trialEndsAt <= request.time + duration.value(8, 'd')
+          ))
+          && !('planExpiresAt' in request.resource.data)
+          && !('subscription' in request.resource.data)
+        ));
+      // Owner can update everything EXCEPT billing-integrity fields — those
+      // are only written by the Stripe webhook / trial crons (admin SDK
+      // bypasses rules) or by the platform admin. Without this lock a free
+      // store could self-assign plan:'business' or forge an active
+      // subscription and keep Pro features forever.
+      allow update: if isAdmin() || (
+        isStoreOwner(storeId)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['plan', 'trialEndsAt', 'planExpiresAt', 'subscription', 'ownerId'])
+      );
       allow delete: if isStoreOwnerOrAdmin(storeId);
 
       // Products subcollection
@@ -146,6 +167,10 @@ service cloud.firestore {
       allow write: if false; // Only backend manages domains
     }
 
+    // Subdomain claim registry — THE uniqueness lock for store subdomains.
+    // create-only + update:false means the first writer wins and nobody can
+    // overwrite an existing claim; storeService.create claims here BEFORE
+    // creating the store doc. Keep update:false — it's load-bearing.
     match /subdomains/{subdomain} {
       allow read: if true;
       allow create: if isAuthenticated();

@@ -278,6 +278,14 @@ export default function Account() {
 
         // Delete the store document
         await deleteDoc(doc(db, 'stores', store.id))
+
+        // Release the subdomain claim — /subdomains/{sub} is the uniqueness
+        // lock and rules forbid overwriting it, so leaving it behind would
+        // orphan the name forever (nobody could ever register it again).
+        // Must run while still authenticated (before deleteUser).
+        if (store.subdomain) {
+          await deleteDoc(doc(db, 'subdomains', store.subdomain)).catch(() => {})
+        }
       }
 
       // Delete the user document

@@ -1,10 +1,29 @@
 /**
- * Funciones para crear y gestionar subdominios en Vercel
- * para Shopifree v2
+ * Subdominios de tiendas: validación, unicidad y gestión en Vercel.
+ *
+ * La unicidad REAL vive en la colección /subdomains de Firestore: cada tienda
+ * reclama su doc `/subdomains/{sub}` y las reglas niegan update sobre docs
+ * existentes — bajo una carrera, exactamente un registrante gana el claim.
+ * Los checks de este módulo son la capa de UX (elegir un nombre libre antes
+ * de escribir nada); storeService.create reclama ANTES de crear la tienda.
  */
+
+import { doc, getDoc } from 'firebase/firestore'
+import { db, storeService } from './firebase'
 
 const VERCEL_PROJECT_ID = import.meta.env.VITE_VERCEL_PROJECT_ID || 'prj_YgKbAHmwKcCff31cek9QUWknSiAX'
 const VERCEL_TOKEN = import.meta.env.VITE_VERCEL_TOKEN
+
+// Palabras de infraestructura/producto que nunca pueden ser subdominio de
+// tienda. Match exacto contra el slug base (variantes sufijadas como
+// "api-2" sí se permiten).
+export const RESERVED_SUBDOMAINS = new Set([
+  'www', 'api', 'app', 'admin', 'dashboard', 'mail', 'email', 'smtp', 'ftp',
+  'blog', 'help', 'support', 'status', 'docs', 'dev', 'staging', 'test',
+  'demo', 'cdn', 'static', 'assets', 'media', 'img', 'images', 'files',
+  'pay', 'payment', 'payments', 'checkout', 'billing',
+  'shopifree', 'vercel', 'firebase', 'ns1', 'ns2', 'mx',
+])
 
 /**
  * Valida el formato de un subdominio
@@ -32,7 +51,49 @@ export function validateSubdomain(subdomain: string): true | string {
     return 'El subdominio no puede tener más de 63 caracteres'
   }
 
+  if (RESERVED_SUBDOMAINS.has(subdomain.toLowerCase())) {
+    return 'Este subdominio está reservado, elige otro'
+  }
+
   return true
+}
+
+const randomSuffix = () => Math.random().toString(36).slice(2, 6)
+
+/**
+ * true cuando ningún otro negocio usa este subdominio. Consulta tanto el
+ * registro /subdomains (el lock) como la colección stores (tiendas legacy
+ * anteriores al registro). Ambos son legibles públicamente por reglas.
+ */
+export async function isSubdomainAvailable(subdomain: string): Promise<boolean> {
+  if (!subdomain || RESERVED_SUBDOMAINS.has(subdomain)) return false
+  const claim = await getDoc(doc(db, 'subdomains', subdomain))
+  if (claim.exists()) return false
+  const existing = await storeService.getBySubdomain(subdomain)
+  return existing === null
+}
+
+/**
+ * Resuelve un subdominio usable y disponible para una tienda nueva, sin
+ * bloquear jamás el registro:
+ *  - slug vacío ("百货店", "!!!") → cae a "mitienda-xxxx"
+ *  - reservado u ocupado → prueba "-2".."-5" y luego sufijos aleatorios
+ * Lanza SUBDOMAIN_UNAVAILABLE solo en el caso patológico de agotar candidatos.
+ */
+export async function resolveAvailableSubdomain(storeName: string): Promise<string> {
+  const base = generateSubdomain(storeName).slice(0, 40).replace(/-$/, '') || `mitienda-${randomSuffix()}`
+
+  const candidates = [
+    base,
+    ...[2, 3, 4, 5].map(n => `${base}-${n}`),
+    `${base}-${randomSuffix()}`,
+    `${base}-${randomSuffix()}`,
+  ]
+
+  for (const candidate of candidates) {
+    if (await isSubdomainAvailable(candidate)) return candidate
+  }
+  throw new Error('SUBDOMAIN_UNAVAILABLE')
 }
 
 /**

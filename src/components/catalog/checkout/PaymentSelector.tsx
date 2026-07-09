@@ -1,5 +1,6 @@
 import { useState, useImperativeHandle, forwardRef } from 'react'
 import { useTheme } from '../ThemeContext'
+import { getEffectivePlan } from '../../../lib/stripe'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import type { Store } from '../../../types'
 
@@ -26,16 +27,23 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
 }, ref) => {
   const { theme } = useTheme()
 
+  // Card/gateway payments are a paid feature: hide them the moment the
+  // EFFECTIVE plan is free (expired trial included), even if the merchant's
+  // payments.*.enabled flags are still on from their trial. The API endpoints
+  // enforce the same rule server-side (api/_shared/plan.ts) — this keeps the
+  // customer from ever selecting a method that would then be rejected.
+  const cardPaymentsAllowed = getEffectivePlan(store) !== 'free'
+
   const hasWhatsApp = store.payments?.whatsapp?.enabled ?? true
-  const hasMercadoPago = store.payments?.mercadopago?.enabled
-  const hasStripe = store.payments?.stripe?.enabled
+  const hasMercadoPago = cardPaymentsAllowed && store.payments?.mercadopago?.enabled
+  const hasStripe = cardPaymentsAllowed && store.payments?.stripe?.enabled
   // Surface PayPal whenever the merchant has both credentials set AND the
   // toggle on. We trust their save step to have validated against PayPal
   // already; the worst case (creds revoked since save) is a 401 on capture
   // which the success page surfaces as a paid=false error.
-  const hasPayPal = !!(store.payments?.paypal?.enabled && store.payments?.paypal?.clientId && store.payments?.paypal?.clientSecret)
+  const hasPayPal = cardPaymentsAllowed && !!(store.payments?.paypal?.enabled && store.payments?.paypal?.clientId && store.payments?.paypal?.clientSecret)
   // Go Cuotas — only surfaces in Argentine stores with credentials configured.
-  const hasGoCuotas = !!(
+  const hasGoCuotas = cardPaymentsAllowed && !!(
     store.payments?.gocuotas?.enabled &&
     store.payments?.gocuotas?.email &&
     store.payments?.gocuotas?.password &&

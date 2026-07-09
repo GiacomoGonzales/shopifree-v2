@@ -106,24 +106,41 @@ export const storeService = {
       throw new Error('STORE_ALREADY_EXISTS')
     }
 
-    await setDoc(doc(db, 'stores', storeId), {
-      ...data,
-      plan: data.plan || 'free', // Use provided plan or default to free
-      stats: {
-        totalProducts: 0,
-        totalOrders: 0,
-        totalRevenue: 0
-      },
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })
-
-    // Register subdomain
+    // Claim the subdomain FIRST — /subdomains/{sub} is the uniqueness lock:
+    // firestore.rules deny updates to existing docs, so under a race exactly
+    // one registrant wins and the loser gets permission-denied here, BEFORE
+    // any store doc exists (no half-created stores with duplicate subdomains).
     if (data.subdomain) {
-      await setDoc(doc(db, 'subdomains', data.subdomain), {
-        storeId,
-        createdAt: new Date()
+      try {
+        await setDoc(doc(db, 'subdomains', data.subdomain), {
+          storeId,
+          createdAt: new Date()
+        })
+      } catch (err) {
+        console.warn('[storeService.create] subdomain claim denied (taken):', data.subdomain, err)
+        throw new Error('SUBDOMAIN_TAKEN')
+      }
+    }
+
+    try {
+      await setDoc(doc(db, 'stores', storeId), {
+        ...data,
+        plan: data.plan || 'free', // Use provided plan or default to free
+        stats: {
+          totalProducts: 0,
+          totalOrders: 0,
+          totalRevenue: 0
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
+    } catch (err) {
+      // Store write failed after we claimed the name — release the claim so
+      // the subdomain isn't stranded pointing at a store that doesn't exist.
+      if (data.subdomain) {
+        await deleteDoc(doc(db, 'subdomains', data.subdomain)).catch(() => {})
+      }
+      throw err
     }
 
     // Create default branch + warehouse

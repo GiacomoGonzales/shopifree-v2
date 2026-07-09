@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 
@@ -73,6 +74,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const storeData = storeDoc.data()
+
+    // Card payments are a paid feature. This is the REAL gate — the client UI
+    // can be bypassed by editing payments.*.enabled directly in Firestore.
+    if (!hasPaidEffectivePlan(storeData)) {
+      return res.status(403).json(PLAN_REQUIRED_RESPONSE)
+    }
+
     const mpConfig = storeData?.payments?.mercadopago
 
     if (!mpConfig?.enabled) {

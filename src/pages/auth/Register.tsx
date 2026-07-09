@@ -5,6 +5,10 @@ import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { userService, storeService } from '../../lib/firebase'
+import { resolveAvailableSubdomain } from '../../lib/subdomain'
+import { getAttribution } from '../../lib/attribution'
+import { trackLead, trackStoreCreated } from '../../lib/platformTracking'
+import { apiUrl } from '../../utils/apiBase'
 
 import { BUSINESS_TYPES, type BusinessType } from '../../config/businessTypes'
 import { countries, currencyByCountry, phoneCodeByCountry } from '../../data/states'
@@ -113,6 +117,7 @@ export default function Register() {
 
     try {
       await register(email, password)
+      trackLead('email') // funnel step 1: auth account created
       setStep(2)
     } catch (err: unknown) {
       setError((err as Error).message || t('register.error'))
@@ -125,6 +130,10 @@ export default function Register() {
     try {
       setLoading(true)
       await loginWithGoogle()
+      // Funnel step 1. May rarely fire for an existing user signing in from
+      // the register page — acceptable noise; the real conversion is
+      // trackStoreCreated, which only fires on actual store creation.
+      trackLead('google')
       // useEffect will handle showing step 2 if no store
     } catch (err: unknown) {
       setError((err as Error).message || t('register.googleError'))
@@ -138,6 +147,7 @@ export default function Register() {
     setLoading(true)
     try {
       await loginWithApple()
+      trackLead('apple') // funnel step 1 (no-ops on native — platform pixel is web-only)
     } catch (err: unknown) {
       const msg = (err as Error).message || ''
       // Apple's cancel error code — silently dismiss, not a real error.
@@ -197,14 +207,11 @@ export default function Register() {
         return
       }
 
-      // Generate subdomain from store name
-      const subdomain = storeName
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '')
+      // Pick a usable, AVAILABLE subdomain: slugifies the store name, falls
+      // back to "mitienda-xxxx" for names with no latin characters, skips
+      // reserved words (www/api/...), and auto-suffixes on collision so two
+      // "Mi Tienda" stores never end up sharing "mi-tienda".
+      let subdomain = await resolveAvailableSubdomain(storeName)
 
       setGeneratedSubdomain(subdomain)
 
@@ -236,22 +243,51 @@ export default function Register() {
       const trialEndsAt = new Date()
       trialEndsAt.setDate(trialEndsAt.getDate() + 7)
 
-      await storeService.create(storeId, {
+      // First-touch ad attribution (utm/fbclid/gclid captured at landing) —
+      // stamped on the store so campaigns can be joined against real signups.
+      const acquisition = getAttribution()
+
+      const buildStoreData = (sub: string) => ({
         id: storeId,
         ownerId: firebaseUser.uid,
         name: storeName,
-        subdomain,
+        subdomain: sub,
         whatsapp: fullWhatsapp,
         currency: currencyByCountry[country] || 'USD',
         location: { country },
         themeId: 'minimal',
-        plan: isAdmin ? 'business' : 'pro',
+        plan: isAdmin ? ('business' as const) : ('pro' as const),
         ...(!isAdmin && { trialEndsAt }),
+        ...(acquisition && { acquisition }),
         businessType,
       })
 
-      // Send welcome email (non-blocking, fire-and-forget)
-      fetch('/api/send-email', {
+      try {
+        await storeService.create(storeId, buildStoreData(subdomain))
+      } catch (createErr) {
+        // Race loser: someone claimed the same subdomain between our
+        // availability check and the claim write. Re-resolve (the resolver
+        // now sees the winner's claim and suffixes) and retry once.
+        if ((createErr as Error).message === 'SUBDOMAIN_TAKEN') {
+          subdomain = await resolveAvailableSubdomain(storeName)
+          setGeneratedSubdomain(subdomain)
+          await storeService.create(storeId, buildStoreData(subdomain))
+        } else {
+          throw createErr
+        }
+      }
+
+      // Acquisition conversion: the store exists. This is the event META
+      // campaigns should optimize for (CompleteRegistration) and the GA4
+      // counterpart for funnel reporting.
+      const providerId = firebaseUser.providerData[0]?.providerId
+      const method = providerId === 'google.com' ? 'google' : providerId === 'apple.com' ? 'apple' : 'email'
+      trackStoreCreated({ method, businessType, country })
+
+      // Send welcome email (non-blocking, fire-and-forget). apiUrl() resolves
+      // to https://shopifree.app on Capacitor native and vite dev, where a
+      // relative /api/* path has no server behind it and failed silently.
+      fetch(apiUrl('/api/send-email'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -7,6 +7,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { couponService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
+import { getEffectivePlan } from '../../lib/stripe'
 import type { Coupon } from '../../types'
 
 export default function Coupons() {
@@ -30,7 +31,9 @@ export default function Coupons() {
   const [expiresAt, setExpiresAt] = useState('')
   const [showInCheckout, setShowInCheckout] = useState(false)
 
-  const isPro = store?.plan === 'pro' || store?.plan === 'business'
+  // EFFECTIVE plan: an expired trial gates coupons immediately, without
+  // waiting for the daily cron to flip store.plan to 'free'.
+  const isPro = !!store && getEffectivePlan(store) !== 'free'
   const currencySymbol = getCurrencySymbol(store?.currency || 'USD')
 
   // Compute stats

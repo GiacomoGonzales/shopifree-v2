@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
 
 let db: Firestore
 
@@ -80,6 +81,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!storeDoc.exists) return res.status(404).json({ error: 'Store not found' })
 
     const storeData = storeDoc.data()
+
+    // Card/installment payments are a paid feature — server-side gate.
+    if (!hasPaidEffectivePlan(storeData)) {
+      return res.status(403).json(PLAN_REQUIRED_RESPONSE)
+    }
+
     const gcConfig = storeData?.payments?.gocuotas
 
     if (!gcConfig?.enabled) return res.status(400).json({ error: 'Go Cuotas is not enabled for this store' })

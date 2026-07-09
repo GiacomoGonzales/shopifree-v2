@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 import { findCombination, getDisplayImage, getDisplayPrice } from '../lib/variants'
+import { getEffectivePlan } from '../lib/stripe'
 import { apiUrl } from '../utils/apiBase'
 
 export type CheckoutStep = 'customer' | 'delivery' | 'payment' | 'brick' | 'stripe' | 'confirmation'
@@ -145,7 +146,9 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
   // Coupons the merchant chose to surface as one-tap buttons in the checkout
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([])
 
-  const isPaidPlan = store.plan === 'pro' || store.plan === 'business'
+  // EFFECTIVE plan (expired trial counts as free) — keeps coupon behavior in
+  // sync with the dashboard gates and the server-side payment enforcement.
+  const isPaidPlan = getEffectivePlan(store) !== 'free'
 
   useEffect(() => {
     if (!isPaidPlan) return

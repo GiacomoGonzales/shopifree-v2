@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { paypalFetch, isPayPalSupportedCurrency, getConversionRate, type MerchantCredentials } from '../src/lib/paypal-server.js'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
 
 /**
  * Creates a PayPal order using the merchant's own credentials. Called by the
@@ -71,6 +72,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const storeSnap = await db.collection('stores').doc(storeId).get()
     if (!storeSnap.exists) return res.status(404).json({ error: 'Store not found' })
+
+    // Card payments are a paid feature — server-side gate (client is bypassable).
+    if (!hasPaidEffectivePlan(storeSnap.data())) {
+      return res.status(403).json(PLAN_REQUIRED_RESPONSE)
+    }
+
     const store = storeSnap.data() as {
       name?: string
       payments?: {

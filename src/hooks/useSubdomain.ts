@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
 
-// Main domains where the app is hosted (no subdomain routing)
-const MAIN_DOMAINS = [
+// Main domains where the app is hosted (no subdomain routing).
+// Exported so platform-level tracking can tell "our site" apart from
+// merchant storefronts (subdomains / custom domains).
+export const MAIN_DOMAINS = [
   'localhost',
   '127.0.0.1',
   'shopifree.app',

@@ -2,82 +2,102 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLoca
 import { AuthProvider } from './hooks/useAuth'
 import { ToastProvider } from './components/ui/Toast'
 import { useSubdomain } from './hooks/useSubdomain'
-import { useEffect } from 'react'
+import { trackPlatformPageView } from './lib/platformTracking'
+import { lazy, Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supportedLanguages, type SupportedLanguage } from './i18n'
 import { Capacitor } from '@capacitor/core'
 
-// Pages
+// First-paint pages stay STATIC: Landing is the paid-ads entry (web) and
+// MobileWelcome the native splash — they must render without an extra chunk
+// round-trip. Everything else is code-split per route (React.lazy) so the
+// landing no longer ships the dashboard, finance, admin, blog and ~30 themes
+// in one 4.2MB bundle.
 import Landing from './pages/Landing'
 import MobileWelcome from './pages/mobile/MobileWelcome'
-import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
-import DashboardLayout from './components/dashboard/DashboardLayout'
-import DashboardHome from './pages/dashboard/Home'
-import Products from './pages/dashboard/Products'
-import ProductForm from './pages/dashboard/ProductForm'
-import Settings from './pages/dashboard/Settings'
-import Branding from './pages/dashboard/Branding'
-import Account from './pages/dashboard/Account'
-import Domain from './pages/dashboard/Domain'
-import Payments from './pages/dashboard/Payments'
-import Integrations from './pages/dashboard/Integrations'
-import ApiAccess from './pages/dashboard/ApiAccess'
-import ApiDocs from './pages/ApiDocs'
-import ThemeShot from './pages/ThemeShot'
-import Coupons from './pages/dashboard/Coupons'
-import Plan from './pages/dashboard/Plan'
-import Analytics from './pages/dashboard/Analytics'
-import Orders from './pages/dashboard/Orders'
-import Customers from './pages/dashboard/Customers'
-import SupportChats from './pages/dashboard/SupportChats'
-import MoreMenu from './pages/dashboard/MoreMenu'
-import Help from './pages/dashboard/Help'
-import MiApp from './pages/dashboard/MiApp'
-import Dropshipping from './pages/dashboard/Dropshipping'
-import Catalog from './pages/catalog/Catalog'
 
-// Blog Pages
-import BlogList from './pages/blog/BlogList'
-import BlogPost from './pages/blog/BlogPost'
+// Auth
+const Login = lazy(() => import('./pages/auth/Login'))
+const Register = lazy(() => import('./pages/auth/Register'))
 
-// Finance Pages
-import FinanceLayout from './components/finance/FinanceLayout'
-import FinanceDashboard from './pages/finance/FinanceDashboard'
-import Expenses from './pages/finance/Expenses'
-import CashFlow from './pages/finance/CashFlow'
-import ComingSoon from './pages/finance/ComingSoon'
-import Inventory from './pages/finance/Inventory'
-import InventoryAdjust from './pages/finance/InventoryAdjust'
-import StockMovements from './pages/finance/StockMovements'
-import StockDiagnostic from './pages/finance/StockDiagnostic'
-import WarehousesPage from './pages/finance/Warehouses'
-import Suppliers from './pages/finance/Suppliers'
-import PurchasesPage from './pages/finance/Purchases'
-import ProductionPage from './pages/finance/Production'
-import AppShell from './components/layout/AppShell'
+// Dashboard
+const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout'))
+const DashboardHome = lazy(() => import('./pages/dashboard/Home'))
+const Products = lazy(() => import('./pages/dashboard/Products'))
+const ProductForm = lazy(() => import('./pages/dashboard/ProductForm'))
+const Settings = lazy(() => import('./pages/dashboard/Settings'))
+const Branding = lazy(() => import('./pages/dashboard/Branding'))
+const Account = lazy(() => import('./pages/dashboard/Account'))
+const Domain = lazy(() => import('./pages/dashboard/Domain'))
+const Payments = lazy(() => import('./pages/dashboard/Payments'))
+const Integrations = lazy(() => import('./pages/dashboard/Integrations'))
+const ApiAccess = lazy(() => import('./pages/dashboard/ApiAccess'))
+const ApiDocs = lazy(() => import('./pages/ApiDocs'))
+const ThemeShot = lazy(() => import('./pages/ThemeShot'))
+const Coupons = lazy(() => import('./pages/dashboard/Coupons'))
+const Plan = lazy(() => import('./pages/dashboard/Plan'))
+const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
+const Orders = lazy(() => import('./pages/dashboard/Orders'))
+const Customers = lazy(() => import('./pages/dashboard/Customers'))
+const SupportChats = lazy(() => import('./pages/dashboard/SupportChats'))
+const MoreMenu = lazy(() => import('./pages/dashboard/MoreMenu'))
+const Help = lazy(() => import('./pages/dashboard/Help'))
+const MiApp = lazy(() => import('./pages/dashboard/MiApp'))
+const Dropshipping = lazy(() => import('./pages/dashboard/Dropshipping'))
 
-// Admin Pages
-import AdminLayout from './components/admin/AdminLayout'
-import AdminAppBuilds from './pages/admin/AppBuilds'
-import AdminDashboard from './pages/admin/Dashboard'
-import AdminStores from './pages/admin/Stores'
-import AdminStoreDetail from './pages/admin/StoreDetail'
-import AdminUsers from './pages/admin/Users'
-import AdminPlans from './pages/admin/Plans'
-import AdminPaidStores from './pages/admin/PaidStores'
-import AdminFeedback from './pages/admin/Feedback'
-import AdminMediaStats from './pages/admin/MediaStats'
-import AdminStoreAppPreview from './pages/admin/StoreAppPreview'
+// Storefront catalog (pulls all themes — the single heaviest chunk)
+const Catalog = lazy(() => import('./pages/catalog/Catalog'))
 
-// Payment Pages
-import PaymentSuccess from './pages/payment/PaymentSuccess'
-import PaymentFailure from './pages/payment/PaymentFailure'
-import PaymentPending from './pages/payment/PaymentPending'
+// Blog
+const BlogList = lazy(() => import('./pages/blog/BlogList'))
+const BlogPost = lazy(() => import('./pages/blog/BlogPost'))
 
-// Legal Pages
-import Privacy from './pages/Privacy'
-import StorePrivacyPage from './pages/catalog/StorePrivacyPage'
+// Finance
+const FinanceLayout = lazy(() => import('./components/finance/FinanceLayout'))
+const FinanceDashboard = lazy(() => import('./pages/finance/FinanceDashboard'))
+const Expenses = lazy(() => import('./pages/finance/Expenses'))
+const CashFlow = lazy(() => import('./pages/finance/CashFlow'))
+const ComingSoon = lazy(() => import('./pages/finance/ComingSoon'))
+const Inventory = lazy(() => import('./pages/finance/Inventory'))
+const InventoryAdjust = lazy(() => import('./pages/finance/InventoryAdjust'))
+const StockMovements = lazy(() => import('./pages/finance/StockMovements'))
+const StockDiagnostic = lazy(() => import('./pages/finance/StockDiagnostic'))
+const WarehousesPage = lazy(() => import('./pages/finance/Warehouses'))
+const Suppliers = lazy(() => import('./pages/finance/Suppliers'))
+const PurchasesPage = lazy(() => import('./pages/finance/Purchases'))
+const ProductionPage = lazy(() => import('./pages/finance/Production'))
+const AppShell = lazy(() => import('./components/layout/AppShell'))
+
+// Admin
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const AdminAppBuilds = lazy(() => import('./pages/admin/AppBuilds'))
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
+const AdminStores = lazy(() => import('./pages/admin/Stores'))
+const AdminStoreDetail = lazy(() => import('./pages/admin/StoreDetail'))
+const AdminUsers = lazy(() => import('./pages/admin/Users'))
+const AdminPlans = lazy(() => import('./pages/admin/Plans'))
+const AdminPaidStores = lazy(() => import('./pages/admin/PaidStores'))
+const AdminFeedback = lazy(() => import('./pages/admin/Feedback'))
+const AdminMediaStats = lazy(() => import('./pages/admin/MediaStats'))
+const AdminStoreAppPreview = lazy(() => import('./pages/admin/StoreAppPreview'))
+
+// Payment return pages (also used by storefronts)
+const PaymentSuccess = lazy(() => import('./pages/payment/PaymentSuccess'))
+const PaymentFailure = lazy(() => import('./pages/payment/PaymentFailure'))
+const PaymentPending = lazy(() => import('./pages/payment/PaymentPending'))
+
+// Legal
+const Privacy = lazy(() => import('./pages/Privacy'))
+const StorePrivacyPage = lazy(() => import('./pages/catalog/StorePrivacyPage'))
+
+// Suspense fallback while a route chunk downloads — mirrors the app's spinner
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a5f]"></div>
+    </div>
+  )
+}
 
 // Subdomain catalog wrapper (supports optional product slug)
 function SubdomainCatalog({ subdomain }: { subdomain: string }) {
@@ -94,6 +114,7 @@ function CustomDomainCatalog({ domain }: { domain: string }) {
 // Detect browser language and redirect to appropriate language route
 function LanguageRedirect() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { i18n } = useTranslation()
 
   useEffect(() => {
@@ -104,8 +125,10 @@ function LanguageRedirect() {
       : 'es'
 
     i18n.changeLanguage(targetLang)
-    navigate(`/${targetLang}`, { replace: true })
-  }, [navigate, i18n])
+    // Preserve query + hash: ad clicks land on "/" carrying utm_*/fbclid, and
+    // dropping them here blinded GA4/Meta attribution for every campaign.
+    navigate(`/${targetLang}${location.search}${location.hash}`, { replace: true })
+  }, [navigate, i18n, location.search, location.hash])
 
   return null
 }
@@ -115,6 +138,7 @@ function LanguageLayout() {
   const { lang } = useParams<{ lang: string }>()
   const { i18n } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (lang && supportedLanguages.includes(lang as SupportedLanguage)) {
@@ -122,10 +146,10 @@ function LanguageLayout() {
         i18n.changeLanguage(lang)
       }
     } else {
-      // Invalid language, redirect to Spanish
-      navigate('/es', { replace: true })
+      // Invalid language, redirect to Spanish (keep query + hash for ads)
+      navigate(`/es${location.search}${location.hash}`, { replace: true })
     }
-  }, [lang, i18n, navigate])
+  }, [lang, i18n, navigate, location.search, location.hash])
 
   return <Outlet />
 }
@@ -137,33 +161,38 @@ function AppRoutes() {
   // If we're on a subdomain, show only the catalog
   if (isSubdomain && subdomain) {
     return (
-      <Routes>
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failure" element={<PaymentFailure />} />
-        <Route path="/payment/pending" element={<PaymentPending />} />
-        <Route path="/privacy" element={<StorePrivacyPage subdomainStore={subdomain} />} />
-        <Route path="/p/:productSlug" element={<SubdomainCatalog subdomain={subdomain} />} />
-        <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failure" element={<PaymentFailure />} />
+          <Route path="/payment/pending" element={<PaymentPending />} />
+          <Route path="/privacy" element={<StorePrivacyPage subdomainStore={subdomain} />} />
+          <Route path="/p/:productSlug" element={<SubdomainCatalog subdomain={subdomain} />} />
+          <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
+        </Routes>
+      </Suspense>
     )
   }
 
   // If we're on a custom domain, show only the catalog
   if (isCustomDomain && customDomain) {
     return (
-      <Routes>
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failure" element={<PaymentFailure />} />
-        <Route path="/payment/pending" element={<PaymentPending />} />
-        <Route path="/privacy" element={<StorePrivacyPage customDomain={customDomain} />} />
-        <Route path="/p/:productSlug" element={<CustomDomainCatalog domain={customDomain} />} />
-        <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failure" element={<PaymentFailure />} />
+          <Route path="/payment/pending" element={<PaymentPending />} />
+          <Route path="/privacy" element={<StorePrivacyPage customDomain={customDomain} />} />
+          <Route path="/p/:productSlug" element={<CustomDomainCatalog domain={customDomain} />} />
+          <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
+        </Routes>
+      </Suspense>
     )
   }
 
   // Normal app routes
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       {/* Root redirect to detected language */}
       <Route path="/" element={<LanguageRedirect />} />
@@ -277,6 +306,7 @@ function AppRoutes() {
       <Route path="/blog" element={<Navigate to="/es/blog" replace />} />
       <Route path="/blog/*" element={<Navigate to="/es/blog" replace />} />
     </Routes>
+    </Suspense>
   )
 }
 
@@ -303,6 +333,11 @@ function GoogleAnalyticsTracker() {
         site_type: siteType,
         store_name: storeName,
       })
+    }
+    // Platform Meta Pixel PageView (main site only — storefronts fire the
+    // merchant's own pixel via src/lib/pixels.ts instead).
+    if (siteType === 'main') {
+      trackPlatformPageView()
     }
   }, [location, siteType, storeName])
   return null

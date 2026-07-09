@@ -173,6 +173,9 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
   for (const doc of reminderQuery.docs) {
     const store = doc.data()
     if ((store.emailsSent || []).includes('trial-reminder')) continue
+    // Already paying (upgraded during the trial) — "your trial is ending"
+    // would be wrong and reads like a billing scare. Skip.
+    if (store.subscription?.status === 'active' || store.subscription?.status === 'trialing') continue
 
     const userDoc = await firestore.doc(`users/${store.ownerId}`).get()
     const user = userDoc.data()
@@ -203,6 +206,10 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
   for (const doc of expiredQuery.docs) {
     const store = doc.data()
     if ((store.emailsSent || []).includes('trial-expired')) continue
+    // Skip paying customers (upgraded during trial) and admin-comped stores —
+    // telling them "you're now on the free plan" would be false.
+    if (store.subscription?.status === 'active' || store.subscription?.status === 'trialing') continue
+    if (store.planExpiresAt === null || (store.planExpiresAt?.toDate?.() || 0) > now) continue
 
     const userDoc = await firestore.doc(`users/${store.ownerId}`).get()
     const user = userDoc.data()

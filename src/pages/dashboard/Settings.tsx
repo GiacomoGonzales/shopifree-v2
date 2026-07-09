@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
-import { validateSubdomain } from '../../lib/subdomain'
+import { validateSubdomain, isSubdomainAvailable } from '../../lib/subdomain'
 import type { Store, StoreLocation, StoreShipping } from '../../types'
 import { statesByCountry, stateLabel, cityLabel, phoneCodeByCountry, countries } from '../../data/states'
 import { citiesByState } from '../../data/cities'
@@ -249,29 +249,44 @@ export default function Settings() {
     setSubdomainError('')
 
     try {
-      // Check if subdomain is already taken in Firestore
-      const subdomainDoc = await getDoc(doc(db, 'subdomains', subdomain))
-      if (subdomainDoc.exists()) {
+      // Availability covers the /subdomains registry, legacy stores that
+      // predate it, and reserved words — not just the claim doc.
+      if (!(await isSubdomainAvailable(subdomain))) {
         setSubdomainError(t('settings.subdomain.taken'))
         setSavingSubdomain(false)
         return
       }
 
-      // 1. Update store document with new subdomain
-      await updateDoc(doc(db, 'stores', store.id), {
-        subdomain,
-        updatedAt: new Date()
-      })
+      // 1. Claim the NEW subdomain first — the /subdomains doc is the
+      // uniqueness lock (rules deny updates to existing docs). If a race
+      // loses here, nothing else has been touched yet.
+      try {
+        await setDoc(doc(db, 'subdomains', subdomain), {
+          storeId: store.id,
+          createdAt: new Date()
+        })
+      } catch {
+        setSubdomainError(t('settings.subdomain.taken'))
+        setSavingSubdomain(false)
+        return
+      }
 
-      // 2. Create new subdomain document in Firestore
-      await setDoc(doc(db, 'subdomains', subdomain), {
-        storeId: store.id,
-        createdAt: new Date()
-      })
+      // 2. Point the store at it; if this fails, release the claim so the
+      // name isn't stranded.
+      try {
+        await updateDoc(doc(db, 'stores', store.id), {
+          subdomain,
+          updatedAt: new Date()
+        })
+      } catch (err) {
+        await deleteDoc(doc(db, 'subdomains', subdomain)).catch(() => {})
+        throw err
+      }
 
-      // 3. Delete old subdomain document from Firestore
+      // 3. Release the old claim (non-fatal — worst case it stays orphaned
+      // and unusable until cleaned up, but the store already moved).
       if (originalSubdomain) {
-        await deleteDoc(doc(db, 'subdomains', originalSubdomain))
+        await deleteDoc(doc(db, 'subdomains', originalSubdomain)).catch(() => {})
       }
 
       setOriginalSubdomain(subdomain)

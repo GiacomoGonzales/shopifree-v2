@@ -141,6 +141,24 @@ export interface Store {
   // === PRESENCIA ===
   lastOnlineAt?: Date
 
+  // === ADQUISICIÓN ===
+  // First-touch ad attribution captured on the visitor's first tagged visit
+  // (see src/lib/attribution.ts) and stamped here at registration. Lets us
+  // join META/Google campaigns against real merchant signups.
+  acquisition?: {
+    source?: string      // utm_source
+    medium?: string      // utm_medium
+    campaign?: string    // utm_campaign
+    content?: string     // utm_content
+    term?: string        // utm_term
+    fbclid?: string
+    gclid?: string
+    ttclid?: string
+    referrer?: string    // external referrer host
+    landingPage?: string
+    capturedAt?: string  // ISO timestamp of the first touch
+  }
+
   // === META ===
   createdAt: Date
   updatedAt: Date

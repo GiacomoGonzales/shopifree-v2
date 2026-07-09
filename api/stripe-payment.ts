@@ -3,6 +3,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import Stripe from 'stripe'
 import { decrementOrderStockAdmin } from './_shared/order-stock'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
 
 let db: Firestore
 
@@ -53,6 +54,12 @@ async function handleCreateIntent(body: Record<string, unknown>, res: VercelResp
   }
 
   const storeData = storeDoc.data()
+
+  // Card payments are a paid feature — server-side gate (client is bypassable).
+  if (!hasPaidEffectivePlan(storeData)) {
+    return res.status(403).json(PLAN_REQUIRED_RESPONSE)
+  }
+
   const stripeConfig = storeData?.payments?.stripe
 
   if (!stripeConfig?.enabled) {
