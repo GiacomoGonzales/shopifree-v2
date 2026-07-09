@@ -111,7 +111,12 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(echo \"ESLINT EXIT: $?\")",
       "Bash(echo \"TSC EXIT: $?\")",
-      "Bash(echo \"TSC: $?\")"
+      "Bash(echo \"TSC: $?\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -)",
+      "Bash(sort -t'│' -k2 -rn)",
+      "Bash(awk '{total+=$5} END {print \"total JS bytes:\", total}')",
+      "Bash(echo \"API TSC: $?\")"
     ],
     "deny": [],
     "ask": []
