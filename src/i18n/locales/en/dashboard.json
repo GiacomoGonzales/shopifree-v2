@@ -910,7 +910,7 @@
       },
       "trial": {
         "question": "Is there a free trial?",
-        "answer": "Yes, all paid plans include a 7-day free trial. You just need a card, and if it's not for you, you can cancel before it ends."
+        "answer": "Yes. When you sign up you get a 7-day Pro trial for free, with no credit card required. When it ends, if you don't subscribe, your store automatically moves to the Free plan (nothing is charged)."
       }
     },
     "discount": {

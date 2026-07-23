@@ -911,7 +911,7 @@
       },
       "trial": {
         "question": "¿Hay periodo de prueba?",
-        "answer": "Sí, todos los planes de pago incluyen 7 días de prueba gratis. Solo necesitas una tarjeta, y si no te convence puedes cancelar antes de que termine."
+        "answer": "Sí. Al registrarte recibes 7 días gratis del plan Pro, sin necesidad de tarjeta de crédito. Cuando terminan, si no te suscribes, tu tienda pasa automáticamente al plan Gratis (no se cobra nada)."
       }
     },
     "discount": {
