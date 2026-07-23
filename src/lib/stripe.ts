@@ -1,4 +1,5 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
+import { PLAN_FEATURES, type PlanType } from './plans'
 
 // Initialize Stripe
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
@@ -24,68 +25,12 @@ export const STRIPE_PRICES = {
   }
 }
 
-// Plan features for display
-export const PLAN_FEATURES = {
-  free: {
-    name: 'Gratis',
-    price: 0,
-    priceYearly: 0,
-    features: [
-      'Vende hasta 10 productos',
-      'Recibe pedidos por WhatsApp',
-      'Tu propio link de tienda',
-      'Codigo QR para compartir',
-      '1 foto por producto',
-      'Hasta 3 categorias'
-    ],
-    limits: {
-      products: 10,
-      imagesPerProduct: 1,
-      categories: 3,
-      videoUpload: false
-    }
-  },
-  pro: {
-    name: 'Pro',
-    price: 4.99,
-    priceYearly: 49.99,
-    features: [
-      'Vende hasta 200 productos',
-      'Cobra online con tarjeta',
-      'Cupones de descuento',
-      'Tu propio dominio .com',
-      '5 fotos por producto',
-      'Conoce a tus clientes'
-    ],
-    limits: {
-      products: 200,
-      imagesPerProduct: 5,
-      categories: -1,
-      videoUpload: true
-    }
-  },
-  business: {
-    name: 'Business',
-    price: 9.99,
-    priceYearly: 99.99,
-    features: [
-      'Todo lo de Pro',
-      'Productos sin limite',
-      'Dropshipping (CJ, Printful...)',
-      'Tu marca, sin Shopifree',
-      'App Android y iPhone de tu tienda',
-      'Soporte prioritario'
-    ],
-    limits: {
-      products: -1,
-      imagesPerProduct: 10,
-      categories: -1,
-      videoUpload: true
-    }
-  }
-}
-
-export type PlanType = keyof typeof PLAN_FEATURES
+// PLAN_FEATURES + PlanType are now defined in ./plans (single source of truth,
+// dependency-free so serverless code — e.g. the support bot — can import them
+// too). Re-exported here so the many frontend modules that do
+// `import { PLAN_FEATURES } from 'lib/stripe'` keep working unchanged.
+export { PLAN_FEATURES }
+export type { PlanType }
 
 // ============================================
 // PLAN LIMITS HELPERS
