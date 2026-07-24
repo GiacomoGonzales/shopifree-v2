@@ -54,6 +54,12 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Bundle native-lib debug symbols into the AAB so Play Console can
+            // symbolicate native crashes/ANRs (clears the "no debug symbols"
+            // upload warning). SYMBOL_TABLE keeps the AAB small vs FULL.
+            ndk {
+                debugSymbolLevel 'SYMBOL_TABLE'
+            }
         }
     }
 }
