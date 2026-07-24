@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -38,4 +39,15 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        firebase-messaging (via @capacitor/push-notifications) transitively pulls
+        play-services-measurement, which merges the advertising-ID permission into
+        our manifest even though neither the Shopifree app nor any white-label
+        store app serves ads or reads the ad ID. Play Console's "Ad ID declaration"
+        blocks releases whose manifest contains AD_ID while the declaration says
+        the app doesn't use one — so strip it here to match reality.
+        Push notifications don't depend on this permission.
+    -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
 </manifest>
