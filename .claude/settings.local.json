@@ -117,7 +117,13 @@
       "Bash(sort -t'│' -k2 -rn)",
       "Bash(awk '{total+=$5} END {print \"total JS bytes:\", total}')",
       "Bash(echo \"API TSC: $?\")",
-      "Bash(echo \"PUSH: $?\")"
+      "Bash(echo \"PUSH: $?\")",
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(grep -rn \"src/lib\\\\|from '\\\\.\\\\./\\\\.\\\\./src\" api/)",
+      "Bash(node \"C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/strip-prompt.mjs\")"
     ],
     "deny": [],
     "ask": []
