@@ -8,6 +8,8 @@ export interface BlogPost {
   image: string
   author: string
   date: string
+  /** Fecha de la ultima revision, si el articulo se actualizo despues de publicarse. */
+  updated?: string
   readTime: number
   tags: string[]
   relatedPosts?: string[]
@@ -22,6 +24,7 @@ export const blogPosts: BlogPost[] = [
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200',
     author: 'Shopifree',
     date: '2025-01-13',
+    updated: '2026-07-25',
     readTime: 8,
     tags: ['tienda online', 'ecommerce', 'emprendimiento', 'gratis'],
     relatedPosts: ['vender-por-whatsapp-guia-completa', 'mejores-plataformas-ecommerce-gratis-2026'],
@@ -106,6 +109,7 @@ Crear una tienda online gratis es mas facil que nunca. Con las herramientas corr
     image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=1200',
     author: 'Shopifree',
     date: '2025-01-12',
+    updated: '2026-07-25',
     readTime: 10,
     tags: ['whatsapp', 'ventas', 'marketing', 'emprendimiento'],
     relatedPosts: ['como-crear-tienda-online-gratis', 'catalogo-digital-para-negocios'],
@@ -408,6 +412,7 @@ Para emprendedores en Latinoamerica que quieren empezar rapido y sin costos, **S
     image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200',
     author: 'Shopifree',
     date: '2025-01-09',
+    updated: '2026-07-25',
     readTime: 15,
     tags: ['emprendimiento', 'negocio online', 'startup'],
     relatedPosts: ['como-crear-tienda-online-gratis', 'mejores-plataformas-ecommerce-gratis-2026'],
@@ -521,6 +526,7 @@ Tratales increiblemente bien. Ellos traeran mas clientes.
     image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200',
     author: 'Shopifree',
     date: '2025-01-08',
+    updated: '2026-07-25',
     readTime: 9,
     tags: ['tienda virtual', 'marketplace', 'ecommerce', 'comparativa'],
     relatedPosts: ['mejores-plataformas-ecommerce-gratis-2026', 'como-crear-tienda-online-gratis'],
@@ -1103,6 +1109,544 @@ Los descuentos son una herramienta, no una estrategia. Úsalos con un objetivo c
 Si tu negocio solo vende cuando hay promoción, el problema no se arregla con más descuentos: hay que revisar el precio, el producto o cómo lo estás mostrando.
 
 Los cupones están disponibles desde el plan Pro.
+    `
+  },
+  {
+    slug: 'como-conseguir-tus-primeros-clientes',
+    category: 'Vender mas',
+    title: 'Cómo Conseguir tus Primeros 10 Clientes (sin Gastar en Publicidad)',
+    description: 'Tu tienda ya está lista pero nadie compra. Guía práctica para conseguir tus primeras ventas usando los contactos y redes que ya tienes, sin invertir en anuncios.',
+    image: 'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-25',
+    readTime: 9,
+    tags: ['clientes', 'ventas', 'marketing', 'emprendimiento'],
+    relatedPosts: ['vender-por-whatsapp-guia-completa', 'cupones-y-promociones-que-si-venden'],
+    content: `
+Terminaste tu tienda, subiste los productos, quedó bonita. Compartes el link y... no pasa nada. Es el momento más frustrante de emprender, y le pasa absolutamente a todos.
+
+La buena noticia: tus primeras ventas casi nunca vienen de desconocidos. Vienen de gente que ya te conoce. Y no necesitas presupuesto para llegar a ellos.
+
+## Antes de salir a vender: revisa esto
+
+Si mandas tráfico a una tienda que no está lista, quemas oportunidades. Chequea rápido:
+
+- **Cada producto tiene foto, precio y descripción.** Sin precio no hay venta: la gente no pregunta, se va.
+- **Tu WhatsApp está bien configurado.** Prueba tú mismo hacer un pedido y confirma que te llega.
+- **Tienes al menos 6 u 8 productos.** Una tienda con dos cosas parece abandonada.
+- **Se ve bien en el celular.** Es donde va a entrar el 90% de tu gente.
+
+## Paso 1: tu círculo cercano (los primeros 3)
+
+Empieza por donde es más fácil. No para que te compren por lástima, sino porque son quienes te van a dar feedback honesto y las primeras reseñas.
+
+- **Mándalo por mensaje directo, uno por uno.** Un mensaje personal convierte muchísimo más que una publicación general.
+- **No pidas que compren, pide opinión.** "Acabo de abrir mi tienda, ¿le das una mirada y me dices qué te parece?" Muchos terminan comprando solos.
+- **Ofrece algo por ser los primeros.** Un descuento de lanzamiento genuino para las primeras 10 personas.
+
+## Paso 2: tus estados de WhatsApp
+
+Esta es la herramienta más subestimada que existe, y es gratis.
+
+Tus contactos ya te conocen y ya te tienen agendado. Un estado lo ven decenas o cientos de personas sin que tengas que pagar nada.
+
+Qué publicar:
+
+- **El producto en uso**, no solo la foto de catálogo
+- **El detrás de escena**: preparando pedidos, empacando, llegando mercadería
+- **Los pedidos que van saliendo** (con permiso del cliente), porque genera prueba social
+- **Tu link**, siempre visible
+
+Un consejo: no publiques solo cuando quieres vender. Si tus estados son puro catálogo, la gente deja de mirarlos.
+
+## Paso 3: Instagram y TikTok
+
+No necesitas ser creador de contenido. Necesitas ser constante.
+
+- **Pon tu link en la bio.** Es el error número uno: perfiles llenos de productos sin forma de comprar.
+- **Publica el producto en contexto**, no solo sobre fondo blanco. La gente compra lo que se imagina usando.
+- **Usa video corto.** Desempacar, mostrar texturas, mostrar cómo queda puesto. Convierte mucho más que la foto fija.
+- **Responde todos los comentarios y mensajes.** El algoritmo premia la conversación, y además cada respuesta es una venta potencial.
+
+## Paso 4: los grupos donde ya está tu cliente
+
+Grupos de barrio en WhatsApp o Facebook, comunidades de tu rubro, grupos del colegio de tus hijos, del trabajo, del edificio.
+
+La regla de oro: **participa antes de vender**. Si entras a un grupo y lo primero que haces es tirar tu link, te van a sacar. Aporta un tiempo, y cuando corresponda menciona lo que haces.
+
+## Paso 5: el mundo físico
+
+Si tienes local, atiendes ferias o entregas en persona, tienes una ventaja que los negocios 100% online no tienen.
+
+- **Código QR impreso** en el mostrador, en la bolsa, en la tarjeta
+- **Un volante pequeño** dentro de cada pedido, invitando a seguirte
+- **Pídele a cada cliente que te siga** en redes cuando le entregas
+
+Tu tienda genera un QR automáticamente desde el panel: imprímelo y pégalo donde tu cliente ya está.
+
+## El paso que casi todos saltan: pedir la recompra
+
+Conseguir un cliente nuevo cuesta mucho más que hacer que uno vuelva. Cuando alguien ya te compró:
+
+1. **Escríbele unos días después** para saber si todo llegó bien. No para vender, para preguntar.
+2. **Pídele una foto o una reseña.** Es tu mejor material de marketing y es gratis.
+3. **Avísale primero** cuando llegue mercadería nueva. Que se sienta cliente frecuente, no un número.
+
+## Qué esperar de verdad
+
+Tus primeras 10 ventas van a ser lentas y casi todas de gente conocida. Es normal, no significa que tu negocio no funcione.
+
+Lo que sí importa es lo que aprendes en el camino: qué producto pregunta la gente, qué dudas se repiten, qué foto genera más mensajes. Esa información vale más que las primeras ventas en sí, porque es la que te dice qué vender después.
+
+## Cuando ya tengas tráfico, mide
+
+Cuando empieces a recibir visitas, revisa tus estadísticas: de dónde vienen, qué productos miran más y en qué punto se van sin comprar. Ahí es cuando puedes empezar a tomar decisiones con datos en vez de intuición.
+    `
+  },
+  {
+    slug: 'como-poner-precio-a-tus-productos',
+    category: 'Gestion',
+    title: 'Cómo Poner Precio a tus Productos sin Regalar tu Trabajo',
+    description: 'Aprende a calcular el precio de tus productos considerando costos, tiempo, comisiones y envío. Con ejemplos reales y los errores que dejan a los emprendedores sin margen.',
+    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-24',
+    readTime: 10,
+    tags: ['precios', 'margen', 'costos', 'gestion'],
+    relatedPosts: ['cupones-y-promociones-que-si-venden', 'como-controlar-el-stock-de-tu-tienda'],
+    content: `
+Poner precio "a ojo" o copiando al de al lado es la razón número uno por la que muchos negocios venden mucho y no ganan nada.
+
+Vamos a hacerlo bien, con números.
+
+## Primero: cuánto te cuesta de verdad
+
+La mayoría solo cuenta lo que le costó el producto. Y ahí empieza el problema, porque hay costos que no ves pero igual pagas.
+
+**Costos directos** (los obvios):
+- Lo que pagaste por el producto o los materiales
+- Empaque: bolsa, caja, etiqueta, papel
+- Comisión de la pasarela de pago
+- Envío, si tú lo asumes
+
+**Costos indirectos** (los que se olvidan):
+- Tu tiempo (sí, tu tiempo vale)
+- Internet, luz, transporte a proveedores
+- Publicidad, si haces
+- Roturas, pérdidas y devoluciones
+- Mercadería que nunca se vendió
+
+Ese último punto duele pero es real: si de cada 10 unidades una nunca se vende, esa pérdida tiene que estar repartida en las otras 9.
+
+## El cálculo básico
+
+Empecemos simple. Un producto que te cuesta 40:
+
+| Concepto | Monto |
+| --- | --- |
+| Costo del producto | 40 |
+| Empaque | 3 |
+| Comisión de pago (≈4%) | 4 |
+| **Costo total** | **47** |
+
+Si lo vendes a 60, ganas 13. Ese 13 sobre 60 es un margen de **21%**. ¿Suficiente? Depende de cuánto vendas y de qué otros gastos tengas, pero para la mayoría de negocios pequeños es ajustado.
+
+## Cuánto margen necesitas
+
+Como referencia general:
+
+- **Productos de reventa:** apunta a 40-50% de margen
+- **Productos hechos por ti:** 50-70%, porque tu tiempo va incluido
+- **Servicios:** depende de las horas, pero nunca menos de lo que te pagarían por ese tiempo trabajando para otro
+
+Si tu margen está por debajo del 30%, cualquier imprevisto —una devolución, una rotura, un envío mal cobrado— te deja en cero.
+
+## No te olvides de pagarte a ti
+
+Este es el error más común en productos artesanales o hechos a mano.
+
+Si haces velas y cada una te toma 40 minutos, ese tiempo es un costo. Si tu hora vale 15, esa vela lleva 10 de mano de obra **antes** de los materiales. Si no lo cuentas, no tienes un negocio: tienes un pasatiempo que te cuesta dinero.
+
+## Cuidado con el envío
+
+El envío se come márgenes enteros sin que te des cuenta.
+
+Tienes tres opciones:
+
+1. **El cliente lo paga aparte.** Lo más transparente, pero baja la conversión: a nadie le gusta ver un costo extra al final.
+2. **Lo incluyes en el precio.** El producto se ve más caro, pero "envío gratis" convierte mucho mejor.
+3. **Gratis desde cierto monto.** La mejor de las tres: te protege en compras chicas y empuja el ticket hacia arriba.
+
+Si eliges la tercera, calcula bien el umbral. Si tu envío cuesta 8 y pones envío gratis desde 30, en una compra de 30 estás regalando casi todo tu margen. Pon el umbral donde el margen alcance a cubrirlo.
+
+Puedes configurar zonas de entrega con costos distintos según el distrito, y así no pierdes en las entregas lejanas.
+
+## Precio psicológico
+
+Cuando ya tienes tu número, ajústalo:
+
+- **Termina en 9.** 39 se percibe bastante más barato que 40, aunque sea un sol de diferencia.
+- **No pongas precios rarísimos.** 38.47 se ve improvisado y da desconfianza.
+- **Redondea en productos caros.** En tickets altos, 1,200 se ve más serio que 1,199.
+
+## Los errores que arruinan el margen
+
+**Copiar el precio del vecino.** No sabes sus costos. Quizá compra en volumen, quizá no le paga a nadie, quizá está perdiendo plata y no lo sabe.
+
+**Poner precio bajo "para arrancar".** Subir precios después es durísimo: tus clientes ya se acostumbraron. Es mejor entrar con el precio correcto y dar un descuento de lanzamiento temporal.
+
+**Olvidar la comisión de pago.** Si tu margen es 15% y la pasarela cobra 4%, se llevó más de un cuarto de tu ganancia.
+
+**No revisar nunca.** Los costos suben. Si tu proveedor te subió el precio hace ocho meses y tú no moviste el tuyo, estás vendiendo con menos margen del que crees.
+
+## Cuándo y cómo subir precios
+
+Revisa tus precios al menos dos veces al año. Cuando toque subir:
+
+- **Sube poco y seguido**, mejor que mucho de golpe
+- **Avisa con tiempo** a tus clientes frecuentes: se lo van a tomar bien
+- **Sube primero lo que más se vende**, que es donde tienes demanda comprobada
+- **Aprovecha para mejorar algo**: mejor empaque, mejor foto, un detalle extra
+
+Y si te da miedo: casi siempre pierdes menos clientes de los que crees. Los que se van por un 10% probablemente no eran tus clientes ideales.
+
+## Un ejercicio que vale la pena
+
+Toma tus 5 productos más vendidos y calcula el margen real de cada uno, con todos los costos incluidos. Casi siempre aparece una sorpresa: hay un producto que vendes muchísimo y que casi no deja nada.
+
+Ese producto no necesariamente es malo —puede ser el que atrae gente— pero necesitas saberlo para decidir a conciencia y no por accidente.
+    `
+  },
+  {
+    slug: 'como-cobrar-los-envios-de-tu-tienda',
+    category: 'Gestion',
+    title: 'Envíos: Cómo Cobrar el Delivery sin Perder Dinero ni Ventas',
+    description: 'Costo fijo, envío gratis desde cierto monto, zonas por distrito o retiro en tienda. Cómo elegir la estrategia de envío correcta para tu tienda online y configurarla bien.',
+    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-23',
+    readTime: 8,
+    tags: ['envios', 'delivery', 'logistica', 'gestion'],
+    relatedPosts: ['como-poner-precio-a-tus-productos', 'como-controlar-el-stock-de-tu-tienda'],
+    content: `
+El envío es donde más plata se pierde sin darse cuenta, y también donde más ventas se caen. Un costo de envío inesperado en el último paso es la razón número uno por la que la gente abandona una compra.
+
+Vamos a ver cómo resolverlo sin regalar tu margen.
+
+## Las cuatro estrategias
+
+### 1. Costo fijo
+
+Cobras lo mismo a todos, sin importar dónde vivan.
+
+- **A favor:** simple de entender y de comunicar. El cliente sabe desde el principio qué va a pagar.
+- **En contra:** pierdes en las entregas lejanas y cobras de más en las cercanas.
+- **Cuándo usarlo:** si vendes en una sola ciudad y las distancias son parecidas.
+
+### 2. Envío gratis desde cierto monto
+
+Debajo del umbral el cliente paga; arriba, es gratis.
+
+- **A favor:** de las herramientas que más suben el ticket promedio. La gente agrega algo más con tal de no pagar envío.
+- **En contra:** si pones mal el umbral, regalas margen.
+- **Cuándo usarlo:** casi siempre. Es la estrategia más equilibrada.
+
+**Cómo calcular el umbral:** ponlo entre 1.3 y 1.5 veces tu ticket promedio. Si tu promedio es 50 y tu envío cuesta 8, un umbral de 70 hace que la gente suba de 50 a 70 (ganas 20 de venta extra y gastas 8 en envío). Si lo pusieras en 55, estarías regalando el envío en compras que ya ibas a hacer igual.
+
+### 3. Zonas de entrega
+
+Cobras distinto según el distrito o la zona.
+
+- **A favor:** es lo más justo y lo más preciso. No pierdes en las entregas lejanas.
+- **En contra:** requiere configurar cada zona una vez.
+- **Cuándo usarlo:** si tu ciudad es grande o cubres varias provincias.
+
+En Shopifree puedes definir zonas con su propio costo y armar la cobertura por departamento, provincia y distrito.
+
+### 4. Retiro en tienda
+
+El cliente pasa a recoger.
+
+- **A favor:** cero costo de envío y el cliente entra a tu local, donde suele comprar más.
+- **En contra:** solo aplica si tienes punto físico.
+- **Cuándo usarlo:** siempre que tengas local, como opción adicional.
+
+## Lo que no debes hacer
+
+**Esconder el costo hasta el final.** Es la forma más rápida de perder una venta. Si el cliente llega al último paso y aparece un cargo que no esperaba, se va y encima queda con mala sensación.
+
+**Ofrecer envío gratis a todos sin calcular.** "Envío gratis" suena increíble hasta que ves que en pedidos chicos estás pagando por vender.
+
+**Cobrar el costo exacto del courier.** El envío tiene más costos que el flete: el empaque, tu tiempo llevándolo, el viaje. Súmalos.
+
+**Prometer tiempos que no puedes cumplir.** Es mejor decir "3 a 5 días" y llegar en 3, que prometer 24 horas y llegar en 4 días.
+
+## Cuánto cobrar
+
+Un cálculo honesto incluye:
+
+| Concepto | Ejemplo |
+| --- | --- |
+| Flete del courier | 7 |
+| Empaque (caja, cinta, relleno) | 2 |
+| Tu tiempo de preparación y despacho | 2 |
+| **Costo real del envío** | **11** |
+
+Si estabas cobrando 7 "porque es lo que cobra el courier", estabas perdiendo 4 en cada pedido. En 50 pedidos al mes son 200 que salieron de tu bolsillo.
+
+## Comunica bien
+
+La mitad del trabajo es que el cliente lo entienda antes de comprar:
+
+- **Ponlo en tu barra de anuncios:** "Envío gratis en compras desde 70"
+- **Dilo en la descripción** de tus productos más caros
+- **Menciónalo en tus redes** cuando publiques
+- **Sé claro con los tiempos** de entrega desde el inicio
+
+## Empaca bien, es parte del producto
+
+El empaque es lo primero que toca tu cliente. No hace falta gastar mucho:
+
+- Que el producto llegue **sin dañarse**, esa es la base
+- Una **nota escrita a mano** cuesta cero y genera muchísima recompra
+- Un **sticker o cinta con tu marca** hace que se vea profesional
+- Si es regalo, ofrece **envolverlo**: es un diferencial que casi nadie da
+
+## Un truco que funciona
+
+Muestra el ahorro. En vez de solo decir "envío gratis desde 70", cuando el cliente lleva 55 puedes hacerle notar que le faltan 15 para el envío gratis.
+
+Ese recordatorio simple es una de las cosas que más sube el ticket promedio en cualquier tienda online.
+
+## Empieza simple
+
+Si recién arrancas: pon un costo fijo razonable y envío gratis desde un monto que te deje margen. Con eso cubres el 90% de los casos.
+
+Cuando tengas volumen y sepas de dónde vienen tus pedidos, arma zonas y afina los costos. No intentes montar un sistema perfecto el primer día.
+    `
+  },
+  {
+    slug: 'seo-para-tiendas-online',
+    category: 'Vender mas',
+    title: 'SEO para Tiendas Online: Cómo Aparecer en Google sin Ser Experto',
+    description: 'Guía práctica de SEO para tiendas online pequeñas: cómo escribir títulos y descripciones que Google entienda, qué palabras usar y qué esperar de verdad.',
+    image: 'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-20',
+    readTime: 10,
+    tags: ['seo', 'google', 'marketing', 'trafico'],
+    relatedPosts: ['como-conseguir-tus-primeros-clientes', 'catalogo-digital-para-negocios'],
+    content: `
+SEO suena a cosa de expertos, pero para una tienda pequeña se reduce a algo simple: **escribir de forma que Google entienda qué vendes y a quién le sirve**.
+
+No vas a competir con Amazon. Pero sí puedes aparecer cuando alguien de tu ciudad busca exactamente lo que tú vendes, y esa gente compra.
+
+## Primero, expectativas realistas
+
+- **El SEO tarda.** Entre 3 y 6 meses para ver movimiento real. No es un canal para vender esta semana.
+- **No reemplaza a las redes.** Es un complemento que trabaja mientras duermes.
+- **Lo específico gana.** No vas a rankear por "ropa", pero sí puedes por "vestidos de lino artesanales en Arequipa".
+
+Si necesitas ventas ya, enfócate en WhatsApp y redes. El SEO es la inversión de fondo que se paga sola con el tiempo.
+
+## Piensa como tu cliente, no como tu negocio
+
+El error más común es escribir con el nombre interno de tus productos.
+
+Tu cliente no busca "Modelo A-24 edición otoño". Busca "vestido largo para matrimonio". Escribe como busca la gente, no como catalogas tú.
+
+Una forma fácil de encontrar esas palabras:
+
+- **Escribe tu producto en Google** y mira las sugerencias del autocompletado: eso es lo que la gente realmente busca
+- **Mira "Búsquedas relacionadas"** al final de la página de resultados
+- **Revisa las preguntas** que te llegan por WhatsApp: esas son las palabras exactas de tus clientes
+
+## Los títulos de tus productos
+
+Este es el punto con más impacto y el más descuidado.
+
+**Mal:** \`Vestido 001\`
+**Bien:** \`Vestido largo de lino beige para verano\`
+
+La fórmula que funciona: **qué es + característica principal + para qué o para quién**.
+
+Piensa que ese título aparece en Google como el enlace azul. ¿Le harías clic?
+
+## Las descripciones
+
+Escribe de verdad, no rellenes con palabras clave. Google lleva años detectando eso y penaliza.
+
+Una buena descripción de producto responde:
+
+- **Qué es** y de qué está hecho
+- **Qué problema resuelve** o para qué ocasión sirve
+- **Medidas, tallas o especificaciones** concretas
+- **Qué incluye** el envío o la compra
+
+Con 100 a 200 palabras bien escritas alcanza. Es infinitamente mejor que 500 palabras de relleno.
+
+## El nombre de tu tienda y tu dirección
+
+- Tu **dominio propio** ayuda: Google le da más peso a un dominio establecido que a un subdominio.
+- Usa **direcciones legibles**: \`/producto/vestido-lino-beige\` es mejor que \`/p?id=8432\`.
+- Pon **tu ciudad** en la descripción de tu tienda si vendes local. "Tienda de ropa artesanal en Cusco" te posiciona para búsquedas locales, que son las que más convierten.
+
+## Las fotos también hacen SEO
+
+- **Nombra los archivos** antes de subirlos: \`vestido-lino-beige.jpg\`, no \`IMG_20260715.jpg\`
+- **Comprime las imágenes.** Una página lenta baja en el ranking, y las fotos pesadas son la causa número uno.
+- Las fotos aparecen en **Google Imágenes**, que es una fuente de tráfico que casi nadie aprovecha.
+
+## La velocidad importa
+
+Google mide cuánto tarda tu página en cargar, sobre todo en celular. Lo que puedes controlar:
+
+- **No subas fotos de 5 MB.** Redimensiona antes.
+- **No pongas 60 productos** en la portada si no hace falta.
+- Elige un **tema limpio** en vez de uno cargado de efectos.
+
+## Escribe contenido, no solo productos
+
+Aquí está la oportunidad más grande y la que casi nadie usa.
+
+Si vendes velas artesanales, además de tus productos puedes escribir sobre "cómo cuidar una vela de soya" o "qué aroma elegir según el ambiente". Esa gente todavía no está comprando, pero llega a tu tienda y te conoce.
+
+Un artículo útil sigue trayendo visitas dos años después. Un post de Instagram vive 24 horas.
+
+## Google Search Console: gratis y obligatorio
+
+Es la herramienta de Google que te dice qué búsquedas te están trayendo gente. Es gratis y se conecta en cinco minutos desde la sección de Integraciones de tu panel.
+
+Con ella ves:
+- Por qué palabras estás apareciendo
+- Cuánta gente te ve y cuánta hace clic
+- Qué páginas funcionan y cuáles no
+
+Es la diferencia entre adivinar y saber.
+
+## Qué NO hacer
+
+- **Copiar descripciones del proveedor.** Si veinte tiendas tienen el mismo texto, Google elige a una y no vas a ser tú.
+- **Repetir la palabra clave veinte veces.** Se lee mal y penaliza.
+- **Comprar enlaces.** Es la forma más rápida de que te castiguen.
+- **Cambiar las direcciones de tus páginas** sin redirigir las viejas: pierdes todo lo ganado.
+
+## Por dónde empezar esta semana
+
+Si solo puedes hacer una cosa: **reescribe los títulos y descripciones de tus 10 productos más importantes** pensando en cómo los buscaría un cliente.
+
+Es una tarde de trabajo y es lo que más mueve la aguja. El resto viene después.
+    `
+  },
+  {
+    slug: 'que-es-dropshipping-y-como-empezar',
+    category: 'Comparativas',
+    title: 'Qué Es el Dropshipping y Cómo Empezar sin Comprar Stock',
+    description: 'Cómo funciona el dropshipping, cuánto se gana realmente, sus riesgos reales y cómo empezar con proveedores como CJ o Printful. Sin promesas de dinero fácil.',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-17',
+    readTime: 9,
+    tags: ['dropshipping', 'proveedores', 'ecommerce', 'emprendimiento'],
+    relatedPosts: ['tienda-virtual-vs-marketplace', 'como-poner-precio-a-tus-productos'],
+    content: `
+El dropshipping es un modelo donde vendes productos que no tienes. Cuando alguien te compra, tu proveedor se lo envía directamente al cliente y tú te quedas con la diferencia.
+
+Suena perfecto, y por eso está lleno de gente prometiendo que te vas a hacer rico. Vamos a ver cómo funciona de verdad, con sus ventajas y sus problemas.
+
+## Cómo funciona
+
+1. Eliges productos del catálogo de un proveedor y los publicas en tu tienda con tu precio
+2. Un cliente compra en tu tienda y te paga a ti
+3. Tú le pasas el pedido al proveedor y le pagas el costo
+4. El proveedor lo empaca y lo envía directo a tu cliente
+5. Tu ganancia es la diferencia
+
+Nunca tocas el producto ni guardas mercadería.
+
+## Lo bueno
+
+- **Empiezas sin invertir en stock.** No tienes que comprar 50 unidades esperando venderlas.
+- **Cero riesgo de mercadería parada.** Si algo no se vende, no perdiste nada.
+- **Catálogo enorme.** Puedes ofrecer cientos de productos sin espacio físico.
+- **Pruebas rápido.** Puedes ver qué funciona sin comprometerte con un producto.
+
+## Lo que no te cuentan
+
+Aquí es donde la mayoría se cae. Sé honesto contigo mismo sobre esto:
+
+**Los márgenes son bajos.** Estás comprando por unidad, no por volumen, así que pagas más caro que quien importa en cantidad. Márgenes de 15-25% son lo normal, no el 300% que prometen algunos.
+
+**Los envíos son lentos.** Si tu proveedor está en Asia, un pedido puede tardar de 2 a 5 semanas. Tu cliente está acostumbrado a plazos de días, y esa espera genera reclamos.
+
+**No controlas la calidad.** Nunca viste el producto. Si llega mal, con defectos o distinto a la foto, el problema es tuyo: tu cliente te reclama a ti, no al proveedor.
+
+**Tampoco controlas el stock.** El proveedor puede quedarse sin producto justo después de que vendiste.
+
+**La competencia es feroz.** Miles de personas venden exactamente el mismo catálogo. Si compites solo por precio, es una carrera al fondo.
+
+## Cuándo tiene sentido
+
+El dropshipping funciona bien si:
+
+- **Estás probando** un rubro antes de invertir en stock
+- **Complementas** tu catálogo propio con productos que no quieres almacenar
+- **Vendes productos personalizados bajo demanda** (polos estampados, tazas, posters), donde tener stock no tendría sentido
+- **Tienes una audiencia** ya construida a la que puedes venderle
+
+Funciona mal si esperas ingresos rápidos sin trabajo, o si tu única ventaja es el precio.
+
+## Print on demand: la variante más sana
+
+Es dropshipping de productos personalizados: tú subes un diseño y el proveedor lo imprime y lo envía cuando alguien compra.
+
+Es mejor modelo que el dropshipping tradicional porque:
+
+- **Tu diseño es tuyo**, nadie más lo vende
+- **No compites por precio**, compites por creatividad
+- La calidad de impresión suele ser más consistente
+- Los proveedores serios están en América y Europa, así que los envíos son más rápidos
+
+Printful es el más conocido para este modelo.
+
+## Los proveedores
+
+**CJ Dropshipping** — catálogo amplio de productos generales, con almacenes en varios países (lo que acorta los envíos si eliges bien).
+
+**Printful** — print on demand: polos, tazas, posters, gorras. Calidad consistente y buena integración.
+
+En Shopifree puedes conectar ambos desde la sección de Integraciones e importar productos directo a tu catálogo. Es una función del plan Business.
+
+## Cómo empezar bien
+
+**1. Elige un nicho, no "de todo".** Una tienda de "productos variados" no le interesa a nadie. Una tienda de artículos para gatos sí tiene público.
+
+**2. Pide muestras.** Compra tú mismo 3 o 4 de los productos que vas a vender. Vas a ver la calidad real, cuánto tarda y cómo llega empacado. Este paso te ahorra decenas de reclamos.
+
+**3. Sé transparente con los plazos.** Si el envío tarda tres semanas, dilo antes de la compra. Un cliente que sabe lo que espera no reclama; uno sorprendido, sí.
+
+**4. Calcula bien tu precio.** Costo del producto + envío + comisión de pago + tu margen. Con márgenes bajos, cualquier descuento te deja en cero.
+
+**5. Prepárate para atender problemas.** Van a llegar pedidos con retraso o con fallas. Tu forma de responder es lo único que te diferencia.
+
+## Dropshipping vs. stock propio
+
+| | Dropshipping | Stock propio |
+| --- | --- | --- |
+| Inversión inicial | Baja | Alta |
+| Margen | 15-25% | 40-60% |
+| Control de calidad | Ninguno | Total |
+| Tiempo de envío | Semanas | Días |
+| Riesgo de mercadería | Ninguno | Alto |
+| Diferenciación | Difícil | Más fácil |
+
+Muchos negocios sanos usan un modelo mixto: stock propio de lo que más rota y dropshipping para probar productos nuevos o cubrir la cola larga del catálogo.
+
+## En resumen
+
+El dropshipping es una herramienta legítima, no un atajo a la riqueza. Baja la barrera de entrada, pero a cambio te quita margen y control.
+
+Si entras sabiendo eso, puede funcionarte muy bien. Si entras pensando que es dinero fácil, vas a perder tiempo y confianza de clientes.
     `
   },
 ]

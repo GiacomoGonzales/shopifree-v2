@@ -85,6 +85,7 @@ export default function BlogPost() {
         <meta property="og:image" content={post.image} />
         <meta property="og:url" content={canonical} />
         <meta property="article:published_time" content={post.date} />
+        {post.updated && <meta property="article:modified_time" content={post.updated} />}
         <meta property="article:author" content={post.author} />
         <meta property="article:section" content={post.category} />
         {post.tags.map(tag => (
@@ -174,6 +175,12 @@ export default function BlogPost() {
               <span>{formatDate(post.date)}</span>
               <span>·</span>
               <span>{post.readTime} min de lectura</span>
+              {post.updated && (
+                <>
+                  <span className="hidden sm:inline">·</span>
+                  <span className="w-full sm:w-auto">Actualizado el {formatDate(post.updated)}</span>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -375,7 +382,7 @@ export default function BlogPost() {
           "description": post.description,
           "image": post.image,
           "datePublished": post.date,
-          "dateModified": post.date,
+          "dateModified": post.updated ?? post.date,
           "articleSection": post.category,
           "author": { "@type": "Person", "name": post.author },
           "publisher": {
