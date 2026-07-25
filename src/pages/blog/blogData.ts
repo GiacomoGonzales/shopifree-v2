@@ -1649,6 +1649,350 @@ El dropshipping es una herramienta legítima, no un atajo a la riqueza. Baja la 
 Si entras sabiendo eso, puede funcionarte muy bien. Si entras pensando que es dinero fácil, vas a perder tiempo y confianza de clientes.
     `
   },
+  {
+    slug: 'como-elegir-plataforma-ecommerce',
+    category: 'Comparativas',
+    title: 'Qué Plataforma de Ecommerce Elegir: Guía de Decisión por Tipo de Negocio',
+    description: 'Guía para elegir plataforma de tienda online según tu situación real: cuántos productos vendes, si cobras online, si necesitas dominio propio y cuánto puedes invertir.',
+    image: 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-22',
+    readTime: 11,
+    tags: ['comparativa', 'plataformas', 'ecommerce', 'decision'],
+    relatedPosts: ['alternativas-a-shopify-latinoamerica', 'tienda-virtual-vs-marketplace'],
+    content: `
+Casi todas las comparativas de plataformas de ecommerce terminan diciendo "depende". Esta también, pero con criterios concretos para que puedas decidir hoy.
+
+La pregunta correcta no es "cuál es la mejor", sino **"cuál resuelve mi situación actual sin cobrarme por lo que todavía no necesito"**.
+
+## Las cuatro preguntas que definen tu elección
+
+### 1. ¿Cuántos productos vas a publicar?
+
+- **Menos de 20:** casi cualquier plan gratuito te sirve. No pagues por capacidad que no usarás.
+- **Entre 20 y 200:** aquí empiezan los límites de los planes gratuitos. Vas a necesitar un plan pago básico.
+- **Más de 500:** necesitas buscador interno, filtros e importación masiva. Ya no cualquier plataforma sirve.
+
+### 2. ¿Cómo te van a pagar?
+
+- **Solo coordinas por WhatsApp o efectivo:** no necesitas pasarela. Muchas plataformas te cobran por funciones de pago que no usarás.
+- **Quieres cobrar con tarjeta:** revisa qué pasarelas soporta **en tu país**. Una plataforma con Stripe pero sin MercadoPago sirve de poco en Perú o Argentina.
+- **Vendes al exterior:** necesitas multi-moneda y pasarelas internacionales.
+
+### 3. ¿Necesitas dominio propio?
+
+Si vendes a conocidos y por redes, un subdominio funciona perfecto. Si haces publicidad pagada o imprimes material, el dominio propio vale la pena.
+
+### 4. ¿Cuánto puedes pagar al mes, de verdad?
+
+Sé honesto. Una plataforma de 30 al mes cuando vendes 200 al mes se lleva el 15% de tu facturación antes de contar el costo del producto.
+
+Y ojo con **las comisiones por venta**: es el costo que más crece y el que menos se mira al comparar. Un 2% sobre cada venta puede superar rápidamente lo que pagarías de suscripción.
+
+## Los perfiles más comunes
+
+### "Recién empiezo y no sé si esto va a funcionar"
+
+**Necesitas:** costo cero, publicar rápido, cero curva de aprendizaje.
+**Evita:** plataformas que exigen tarjeta desde el día uno o que cobran comisión por venta.
+**Busca:** un plan gratuito real, con pedidos por WhatsApp y link compartible.
+
+En este perfil, lo peor que puedes hacer es pagar por una plataforma potente que vas a usar al 5%.
+
+### "Ya vendo y quiero profesionalizarme"
+
+**Necesitas:** dominio propio, cobros con tarjeta, estadísticas para decidir.
+**Evita:** quedarte en un plan gratuito que te limite a 10 productos.
+**Busca:** un plan intermedio (entre 5 y 15 al mes) sin comisión por venta.
+
+Es el punto donde más gente se equivoca: o se queda de más en lo gratuito y pierde ventas, o salta a un plan corporativo que no necesita.
+
+### "Tengo local físico y quiero vender también online"
+
+**Necesitas:** control de stock unificado, retiro en tienda, registro de ventas presenciales.
+**Evita:** plataformas puramente online que no contemplen inventario ni tu local.
+**Busca:** stock por almacén y posibilidad de registrar ventas hechas fuera de la web.
+
+### "Vendo productos con variantes (ropa, calzado)"
+
+**Necesitas:** variantes por talla y color **con stock independiente por combinación**.
+**Evita:** plataformas donde la variante es solo un texto sin stock propio: vas a vender tallas agotadas.
+**Busca:** que puedas ver y editar el stock de cada combinación.
+
+### "Quiero vender sin comprar stock"
+
+**Necesitas:** integración con proveedores de dropshipping o print on demand.
+**Ten en cuenta:** los márgenes son bajos y los envíos lentos. Léelo bien antes de construir tu negocio sobre eso.
+
+## La tabla de decisión rápida
+
+| Tu situación | Prioriza |
+| --- | --- |
+| Presupuesto cero | Plan gratuito real, sin comisión por venta |
+| Vendes por WhatsApp/Instagram | Catálogo compartible por link y QR |
+| Quieres cobrar con tarjeta | Pasarelas disponibles **en tu país** |
+| Ropa, calzado, accesorios | Stock por variante |
+| Tienes local | Inventario por almacén y retiro en tienda |
+| Vendes al exterior | Multi-moneda y pasarelas internacionales |
+| Catálogo muy grande | Importación masiva y buscador interno |
+
+## Lo que casi nadie mira y termina doliendo
+
+**Las comisiones por venta.** Es lo que más encarece a largo plazo. Si vendes 3.000 al mes, un 2% son 60 mensuales: más que cualquier suscripción.
+
+**Si puedes exportar tus datos.** Si algún día quieres irte, ¿puedes llevarte tus productos y clientes? Si la respuesta es no, estás atado.
+
+**El idioma del soporte.** Un soporte que solo responde en inglés y en otro huso horario es un problema real cuando tu tienda se cae un sábado.
+
+**Cómo se ve en celular.** El 90% de tus visitas van a llegar desde un teléfono. Si la plataforma no está pensada para móvil, nada más importa.
+
+## Cómo probar sin perder tiempo
+
+No leas más comparativas: prueba.
+
+1. Elige **dos** plataformas, no cinco
+2. Sube **los mismos 5 productos** en ambas
+3. Cronometra cuánto tardas
+4. Ábrelas en tu celular y compara cómo se ven
+5. Haz un pedido de prueba completo en cada una
+6. Escribe al soporte de ambas y mide cuánto tardan en responder
+
+En dos horas vas a tener una respuesta mucho mejor que la de cualquier artículo.
+
+## Y si te equivocas
+
+No es grave. Casi todas las plataformas permiten exportar productos, y migrar 50 productos es una tarde de trabajo.
+
+Lo que sí cuesta caro es **no empezar** por meses mientras decides. Una tienda imperfecta que ya está vendiendo vale más que la plataforma perfecta que sigues evaluando.
+    `
+  },
+  {
+    slug: 'alternativas-a-shopify-latinoamerica',
+    category: 'Comparativas',
+    title: 'Alternativas a Shopify para Vender en Latinoamérica',
+    description: 'Shopify es potente pero no siempre es la mejor opción en LatAm. Repasamos qué alternativas existen, para qué tipo de negocio sirve cada una y cuándo conviene quedarse con Shopify.',
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-19',
+    readTime: 10,
+    tags: ['comparativa', 'shopify', 'alternativas', 'plataformas'],
+    relatedPosts: ['como-elegir-plataforma-ecommerce', 'tienda-virtual-vs-marketplace'],
+    content: `
+Shopify es probablemente la plataforma de ecommerce más conocida del mundo, y con razón: es sólida, tiene un ecosistema enorme de aplicaciones y escala sin problemas.
+
+Pero "la más conocida" no significa "la que te conviene". Para un negocio pequeño en Latinoamérica hay fricciones concretas que vale la pena mirar antes de decidir.
+
+## Cuándo Shopify sí es la respuesta
+
+Seamos justos primero. Shopify es la mejor opción si:
+
+- Facturas lo suficiente para que la suscripción sea un porcentaje pequeño de tus ventas
+- Necesitas funciones muy específicas que existen como aplicaciones de terceros
+- Vendes internacionalmente y con volumen alto
+- Tienes quien administre la tienda de forma dedicada
+
+Si estás en ese punto, deja de leer y quédate con Shopify.
+
+## Dónde aprieta el zapato en LatAm
+
+**El costo en dólares.** La suscripción se paga en dólares, y para un negocio que factura en soles, pesos o bolivianos eso es un gasto fijo que no baja cuando el mes viene flojo.
+
+**Las comisiones si no usas su pasarela.** Shopify cobra un porcentaje adicional por transacción cuando usas una pasarela de pago externa. En países donde su procesador propio no opera, eso significa pagar dos veces.
+
+**Está pensado para checkout, no para WhatsApp.** En Latinoamérica muchísimas ventas se cierran conversando por WhatsApp. Shopify lo resuelve con aplicaciones de terceros, y cada aplicación suma costo mensual.
+
+**La curva de aprendizaje.** Es una herramienta profesional. Si nunca administraste una tienda online, hay bastante que aprender antes de publicar.
+
+## Qué tipos de alternativas existen
+
+En vez de darte una lista de nombres que envejece mal, te sirve más entender **las categorías**, porque cada una resuelve un problema distinto:
+
+### Plataformas regionales
+
+Hechas para Latinoamérica. Su ventaja es que integran de fábrica los medios de pago locales y cobran en moneda local. Tiendanube y Jumpseller son ejemplos conocidos en la región.
+
+**Te convienen si** quieres una tienda completa, con checkout tradicional, y facturas lo suficiente para pagar una suscripción mensual.
+
+### Plataformas enfocadas en WhatsApp y catálogo
+
+Parten de cómo se vende realmente en la región: el cliente ve el catálogo y cierra por WhatsApp. Suelen tener plan gratuito real y ser mucho más simples de configurar.
+
+**Te convienen si** vendes por redes sociales, tu ticket es pequeño o mediano, y no necesitas todavía un checkout complejo.
+
+Es donde se ubica Shopifree: catálogo gratis, pedidos por WhatsApp, sin comisión por venta, y cobros con tarjeta cuando decides activarlos.
+
+### Constructores web generalistas
+
+Wix, Squarespace y similares. Traen tienda como un módulo dentro de un creador de páginas.
+
+**Te convienen si** tu prioridad es una web bonita con contenido, y la tienda es secundaria.
+
+### Marketplaces
+
+Mercado Libre, Amazon. No son "tu tienda", son un lugar donde exponer tus productos.
+
+**Te convienen si** quieres tráfico inmediato y aceptas pagar comisión alta y no ser dueño de la relación con el cliente. Lo tratamos a fondo en el artículo de tienda propia vs marketplace.
+
+### Autogestionadas
+
+WooCommerce sobre WordPress. Máxima flexibilidad, cero costo de licencia, pero necesitas hosting, mantenimiento y actualizaciones.
+
+**Te convienen si** tienes conocimientos técnicos o alguien que te lo mantenga.
+
+## Cómo comparar de verdad
+
+En vez de comparar listas de funciones, calcula el **costo total real** durante un año:
+
+| Concepto | Anótalo |
+| --- | --- |
+| Suscripción mensual × 12 | |
+| Comisión por venta × tu facturación anual | |
+| Aplicaciones de terceros que necesites | |
+| Pasarela de pago | |
+| Dominio | |
+| Tu tiempo de configuración | |
+
+Ese último renglón es el que más se subestima. Una plataforma que te toma tres semanas configurar tiene un costo real, aunque la suscripción sea barata.
+
+> Un aviso honesto: no publicamos aquí los precios de otras plataformas porque cambian seguido y varían por país. Revísalos en sus sitios oficiales antes de decidir; una comparativa con precios viejos te lleva a una mala decisión.
+
+## La pregunta que ordena todo
+
+**¿Tu cuello de botella es la plataforma, o son las visitas?**
+
+La mayoría de los negocios pequeños que "necesitan una plataforma mejor" en realidad tienen un problema de tráfico, no de tecnología. Cambiar de plataforma no trae clientes.
+
+Si todavía no tienes ventas constantes, empieza con lo más simple y barato posible, y gasta esa energía en conseguir clientes. Cuando la plataforma sea de verdad tu límite, migrar es fácil y ya tendrás con qué pagarla.
+
+## Migrar no es tan difícil
+
+Si ya estás en una plataforma y quieres cambiar:
+
+1. **Exporta tus productos** a CSV desde la plataforma actual
+2. **Impórtalos** en la nueva (la mayoría acepta CSV o Excel)
+3. **Configura pagos y envíos** antes de anunciar nada
+4. **Prueba una compra completa** tú mismo
+5. **Redirige tu dominio** cuando todo funcione
+6. **Avisa a tus clientes** frecuentes
+
+Con un catálogo de 50 productos, es cuestión de una tarde.
+    `
+  },
+  {
+    slug: 'cuanto-cuesta-tener-una-tienda-online',
+    category: 'Comparativas',
+    title: 'Cuánto Cuesta Tener una Tienda Online en 2026 (Costos Reales)',
+    description: 'Desglose honesto de lo que cuesta abrir y mantener una tienda online: plataforma, dominio, pasarela de pago, envíos y publicidad. Con tres escenarios según el tamaño del negocio.',
+    image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200',
+    author: 'Shopifree',
+    date: '2026-07-16',
+    readTime: 9,
+    tags: ['costos', 'presupuesto', 'comparativa', 'emprendimiento'],
+    relatedPosts: ['como-elegir-plataforma-ecommerce', 'como-poner-precio-a-tus-productos'],
+    content: `
+"¿Cuánto cuesta tener una tienda online?" tiene una respuesta incómoda: puede ser cero o pueden ser cientos al mes, y ambos extremos son legítimos según en qué etapa estés.
+
+Vamos a desglosarlo por partes para que armes tu propio número.
+
+## Los costos que existen
+
+### 1. La plataforma
+
+Va desde gratis hasta suscripciones de tres cifras. Lo importante no es el número, sino **qué incluye**: revisa el límite de productos, si hay comisión por venta y si las funciones que necesitas están en el plan que estás mirando o en uno superior.
+
+### 2. El dominio
+
+Un \`.com\` cuesta aproximadamente entre 10 y 15 dólares al año. Las extensiones locales (\`.pe\`, \`.mx\`, \`.com.ar\`) suelen costar algo más.
+
+Es opcional al principio: casi todas las plataformas te dan una dirección gratuita del tipo \`tutienda.plataforma.com\`.
+
+### 3. La pasarela de pago
+
+No tiene costo fijo, pero cobra un porcentaje de cada venta más un monto fijo por transacción. Varía bastante por país y por método de pago.
+
+**Este es el costo que más crece con tu facturación** y el que menos se calcula al empezar. Consulta las tarifas vigentes de MercadoPago, Stripe o PayPal en tu país.
+
+### 4. Los envíos
+
+Si los asumes tú, es costo directo. Si los cobras al cliente, cuida que cubra el flete **más el empaque más tu tiempo**, que es lo que casi siempre queda fuera de la cuenta.
+
+### 5. El empaque
+
+Bolsas, cajas, cinta, etiquetas. Parece menor pero en volumen suma. Presupuesta entre 1 y 3 por pedido según lo que vendas.
+
+### 6. La publicidad
+
+Es opcional y es donde más fácil se va el dinero sin retorno. Si recién empiezas, **no empieces por aquí**: usa WhatsApp, tus redes y tus contactos, que son gratis y convierten mejor al inicio.
+
+### 7. Tu tiempo
+
+El costo invisible. Fotografiar productos, escribir descripciones, responder mensajes, empacar. No sale de tu bolsillo pero sí de tus horas, y si no lo cuentas vas a creer que ganas más de lo que ganas.
+
+## Tres escenarios
+
+### Escenario A: estás validando (0 al mes)
+
+- Plataforma: plan gratuito
+- Dominio: el subdominio gratuito
+- Pagos: coordinas por WhatsApp, sin pasarela
+- Envíos: los cobras al cliente
+- Publicidad: cero, solo redes y contactos
+
+**Costo fijo mensual: 0.** Solo pagas empaque cuando vendes.
+
+Es donde debería empezar todo el mundo. Sirve para responder la única pregunta que importa al inicio: ¿alguien compra esto?
+
+### Escenario B: ya vendes de forma constante (10 a 25 al mes)
+
+- Plataforma: plan intermedio
+- Dominio propio: 1 al mes prorrateado
+- Pasarela de pago: el porcentaje de tus ventas
+- Empaque: según pedidos
+
+Aquí ya conviene invertir, porque el dominio propio y el cobro con tarjeta **se pagan solos** con las ventas que destrabas.
+
+### Escenario C: es tu negocio principal (variable)
+
+Además de lo anterior: publicidad, quizás alguien que te ayude, mejor empaque, más herramientas.
+
+En este punto ya no piensas en costos sino en **retorno**: cada gasto debe justificarse con lo que trae.
+
+## El error de presupuesto más común
+
+Gastar en lo que se ve y no en lo que vende.
+
+Mucha gente que empieza invierte en un dominio bonito, un logo profesional y un plan premium... y sigue sin ventas, porque nadie sabe que la tienda existe.
+
+El orden correcto de inversión es:
+
+1. **Productos bien fotografiados** (gratis, solo tu celular y luz de ventana)
+2. **Descripciones claras con precio visible** (gratis)
+3. **Conseguir tus primeros clientes** (gratis: WhatsApp, redes, conocidos)
+4. **Recién ahí**: dominio, plan pago, publicidad
+
+## Cómo saber si un gasto vale la pena
+
+Antes de pagar cualquier cosa, pregúntate: **¿esto me va a traer más ventas de lo que cuesta?**
+
+- Un dominio de 12 al año: si haces publicidad o material impreso, sí. Si vendes solo por WhatsApp a conocidos, todavía no.
+- Cobrar con tarjeta: si pierdes ventas porque la gente no quiere transferir, sí, claramente.
+- Un plan superior: solo si estás topando un límite real (productos, fotos, funciones), no "por si acaso".
+
+## Sobre las comisiones por venta
+
+Merece su propio apartado porque es el costo que más engaña.
+
+Una plataforma que cobra 15 al mes sin comisión es **más barata** que una gratuita que cobra 3% por venta, en cuanto factures más de 500 al mes.
+
+Saca esa cuenta con tu facturación real antes de elegir. Es la diferencia más grande a largo plazo y casi nunca aparece en las comparativas.
+
+## En resumen
+
+Puedes tener una tienda online funcionando hoy sin gastar nada, y esa es la forma correcta de empezar: valida que vendes antes de invertir.
+
+Los costos deberían crecer **después** de las ventas, nunca antes.
+    `
+  },
 ]
 
 export function getBlogPost(slug: string): BlogPost | undefined {
