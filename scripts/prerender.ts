@@ -67,13 +67,29 @@ async function copySnapshot() {
     return
   }
   let n = 0
+  let stale = 0
   for (const route of routes) {
     const from = path.join(SNAPSHOT, route, 'index.html')
     if (!existsSync(from)) continue
+    const html = await readFile(from, 'utf-8')
+
+    // Vital: los nombres de los assets llevan un hash que cambia en cada build.
+    // Una copia generada contra otro build apunta a archivos que ya no existen,
+    // y como vercel.json reescribe lo no encontrado a index.html, el navegador
+    // recibe HTML donde espera CSS y la pagina sale sin estilos. Antes de
+    // copiar, comprobamos que los assets referenciados existan de verdad.
+    const refs = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map(m => m[1])
+    const missing = refs.filter(r => !existsSync(path.join(DIST, r)))
+    if (missing.length) { stale++; continue }
+
     const dir = path.join(DIST, route)
     await mkdir(dir, { recursive: true })
-    await writeFile(path.join(dir, 'index.html'), await readFile(from), 'utf-8')
+    await writeFile(path.join(dir, 'index.html'), html, 'utf-8')
     n++
+  }
+  if (stale) {
+    console.warn(`           ${stale} pagina(s) omitidas: su copia apunta a assets de otro build.`)
+    console.warn('           Corre `npm run prerender` en local y commitea prerendered/.')
   }
   console.log(`prerender: ${n}/${routes.length} paginas copiadas desde prerendered/`)
   if (n < routes.length) {
