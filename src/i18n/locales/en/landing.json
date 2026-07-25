@@ -161,8 +161,8 @@
     "subtitle": "100+ themes",
     "title": "The same store, in the style that fits you",
     "description": "Switch themes in one click — your products rearrange themselves. No designer, no code.",
-    "desktopAlt": "Example store with the Velvet theme on desktop",
-    "desktopCaption": "Velvet theme on desktop — tap any theme below to see it in full",
+    "desktopAlt": "Example store with the {{theme}} theme on desktop",
+    "desktopCaption": "The same store switching themes — tap any below to see it in full",
     "themeAlt": "{{theme}} theme",
     "more": "And these are just 10. Inside the dashboard you get 100+ ready-to-use themes."
   }

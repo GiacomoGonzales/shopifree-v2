@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../hooks/useLanguage'
@@ -27,18 +27,23 @@ const CheckIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
 //   npm run thumbnails -- <id>          (movil, public/themes/<id>.png)
 //   npx tsx scripts/generate-theme-desktop-shots.ts <id>   (escritorio)
 // y luego se optimizan a public/themes/landing/<id>.webp.
+// Orden pensado para el carrusel de escritorio: arranca con el tema mas
+// llamativo (Bauhaus) y alterna claro/oscuro y tipos de layout para que cada
+// cambio se note. El grid de telefonos usa esta misma lista.
 const THEME_SHOWCASE = [
-  { id: 'tabloid', name: 'Tabloid', tag: 'Editorial' },
-  { id: 'comic', name: 'Comic', tag: 'Pop' },
-  { id: 'zine', name: 'Zine', tag: 'Underground' },
   { id: 'bauhaus', name: 'Bauhaus', tag: 'Geométrico' },
-  { id: 'papercut', name: 'Papercut', tag: 'Ilustrado' },
   { id: 'grunge', name: 'Grunge', tag: 'Urbano' },
-  { id: 'menu', name: 'Menu', tag: 'Restaurante' },
-  { id: 'watercolor', name: 'Watercolor', tag: 'Artesanal' },
+  { id: 'tabloid', name: 'Tabloid', tag: 'Editorial' },
+  { id: 'papercut', name: 'Papercut', tag: 'Ilustrado' },
   { id: 'velvet', name: 'Velvet', tag: 'Premium' },
+  { id: 'comic', name: 'Comic', tag: 'Pop' },
+  { id: 'menu', name: 'Menu', tag: 'Restaurante' },
+  { id: 'zine', name: 'Zine', tag: 'Underground' },
+  { id: 'watercolor', name: 'Watercolor', tag: 'Artesanal' },
   { id: 'prism', name: 'Prism', tag: 'Moderno' },
 ] as const
+
+const SLIDE_MS = 3800
 
 const WhatsAppIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -53,6 +58,37 @@ export default function Landing() {
 
   // If authenticated, go straight to dashboard (or register if no store yet)
   const authTarget = firebaseUser ? (store ? localePath('/dashboard') : localePath('/register')) : localePath('/login')
+
+  // ── Carrusel de temas en escritorio ────────────────────────────────
+  const [slide, setSlide] = useState(0)
+  const [paused, setPaused] = useState(false)
+  // Solo montamos las capturas ya vistas + la siguiente: evita descargar las
+  // 10 (456 KB) de golpe cuando la seccion entra en pantalla.
+  const [mounted, setMounted] = useState<number[]>([0, 1])
+  const shellRef = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const el = shellRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.25 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  useEffect(() => {
+    // Sin autoplay si el usuario pidio menos movimiento, si esta pausado por
+    // hover/foco, o si la seccion no esta a la vista (no gastar red ni CPU).
+    if (paused || !inView) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = window.setInterval(() => setSlide(s => (s + 1) % THEME_SHOWCASE.length), SLIDE_MS)
+    return () => window.clearInterval(id)
+  }, [paused, inView])
+
+  useEffect(() => {
+    const next = (slide + 1) % THEME_SHOWCASE.length
+    setMounted(m => (m.includes(slide) && m.includes(next) ? m : [...new Set([...m, slide, next])]))
+  }, [slide])
 
   // Reveal discreto al hacer scroll (se desactiva con prefers-reduced-motion)
   useEffect(() => {
@@ -691,8 +727,15 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Tema destacado en escritorio, dentro de marco de navegador */}
-          <div className="slpr">
+          {/* Carrusel: la misma tienda cambiando de tema en escritorio */}
+          <div
+            ref={shellRef}
+            className="slpr"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocusCapture={() => setPaused(true)}
+            onBlurCapture={() => setPaused(false)}
+          >
             <div className="slp-browser max-w-5xl mx-auto">
               <div className="slp-browser-bar">
                 <span className="flex gap-1.5">
@@ -703,17 +746,50 @@ export default function Landing() {
                 <span className="slp-url">aurelia.shopifree.app</span>
                 <span className="w-12"></span>
               </div>
-              <img
-                src="/themes/desktop/velvet.jpg"
-                alt={t('storesShowcase.desktopAlt')}
-                width={1600}
-                height={1000}
-                loading="lazy"
-                decoding="async"
-                className="block w-full"
-              />
+
+              {/* aspect-ratio fijo (1400x875) para que no salte el layout */}
+              <div className="relative" style={{ aspectRatio: '1400 / 875', background: 'var(--soft)' }}>
+                {THEME_SHOWCASE.map((th, i) => (
+                  mounted.includes(i) && (
+                    <img
+                      key={th.id}
+                      src={`/themes/desktop/${th.id}.webp`}
+                      alt={t('storesShowcase.desktopAlt', { theme: th.name })}
+                      width={1400}
+                      height={875}
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full"
+                      style={{ opacity: i === slide ? 1 : 0, transition: 'opacity .7s ease' }}
+                    />
+                  )
+                ))}
+              </div>
             </div>
-            <p className="text-center text-[0.8rem] font-semibold mt-4" style={{ color: 'var(--muted)' }}>
+
+            {/* Controles: nombre del tema + puntos para saltar */}
+            <div className="max-w-5xl mx-auto mt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-[0.9rem] font-bold order-2 sm:order-1" aria-live="polite">
+                {THEME_SHOWCASE[slide].name}
+                <span className="font-medium ml-2" style={{ color: 'var(--muted)' }}>{THEME_SHOWCASE[slide].tag}</span>
+              </p>
+              <div className="flex items-center gap-2 order-1 sm:order-2">
+                {THEME_SHOWCASE.map((th, i) => (
+                  <button
+                    key={th.id}
+                    type="button"
+                    onClick={() => setSlide(i)}
+                    aria-label={th.name}
+                    aria-current={i === slide}
+                    className="rounded-full transition-all"
+                    style={{
+                      width: i === slide ? 22 : 8, height: 8,
+                      background: i === slide ? 'var(--sky-deep)' : '#D3DCE6',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <p className="text-center text-[0.8rem] mt-5" style={{ color: 'var(--muted)' }}>
               {t('storesShowcase.desktopCaption')}
             </p>
           </div>
