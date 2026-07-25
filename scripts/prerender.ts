@@ -27,6 +27,11 @@ import path from 'node:path'
 import { blogPosts } from '../src/pages/blog/blogData'
 
 const DIST = path.resolve(process.cwd(), 'dist')
+// Copia versionada del prerender. El build de Vercel corre en Amazon Linux y
+// el chromium de Playwright no arranca ahi (le faltan librerias del sistema y
+// no hay root para instalarlas), asi que el HTML se genera en la maquina del
+// desarrollador, se commitea, y en el servidor solo se copia.
+const SNAPSHOT = path.resolve(process.cwd(), 'prerendered')
 const PORT = Number(process.env.PRERENDER_PORT || 4183)
 
 const MIME: Record<string, string> = {
@@ -53,6 +58,29 @@ function serveDist() {
   })
 }
 
+/** Copia el prerender versionado a dist/ cuando no hay navegador disponible. */
+async function copySnapshot() {
+  if (!existsSync(SNAPSHOT)) {
+    console.warn('           y no hay copia en prerendered/ — se omite el prerender.')
+    console.warn('           El sitio funciona como SPA, pero los rastreadores de IA no veran')
+    console.warn('           el contenido. Genera la copia con: npm run prerender')
+    return
+  }
+  let n = 0
+  for (const route of routes) {
+    const from = path.join(SNAPSHOT, route, 'index.html')
+    if (!existsSync(from)) continue
+    const dir = path.join(DIST, route)
+    await mkdir(dir, { recursive: true })
+    await writeFile(path.join(dir, 'index.html'), await readFile(from), 'utf-8')
+    n++
+  }
+  console.log(`prerender: ${n}/${routes.length} paginas copiadas desde prerendered/`)
+  if (n < routes.length) {
+    console.warn('           Faltan paginas: corre `npm run prerender` en local y commitea el resultado.')
+  }
+}
+
 const routes = [
   '/es',
   '/en',
@@ -61,13 +89,25 @@ const routes = [
 ]
 
 async function launch(): Promise<Browser | null> {
+  // En Vercel no hay navegador que pueda arrancar, asi que conviene saltarse
+  // el intento y usar directamente la copia versionada.
+  if (process.env.PRERENDER_FROM_SNAPSHOT === '1') {
+    console.log('prerender: PRERENDER_FROM_SNAPSHOT=1 — se usa la copia versionada.')
+    return null
+  }
   // Preferimos el Chrome del sistema (no requiere descarga); si no esta,
   // probamos el chromium de Playwright.
-  for (const opts of [{ channel: 'chrome' }, {}]) {
+  const errors: string[] = []
+  for (const [label, opts] of [['chrome del sistema', { channel: 'chrome' }], ['chromium de playwright', {}]] as const) {
     try {
       return await chromium.launch(opts as Parameters<typeof chromium.launch>[0])
-    } catch { /* probamos la siguiente opcion */ }
+    } catch (err) {
+      errors.push(`${label}: ${(err as Error).message.split('\n')[0]}`)
+    }
   }
+  // Registramos el motivo real: sin esto, un chromium presente pero que no
+  // arranca (faltan librerias del sistema) parece "no hay navegador".
+  errors.forEach(e => console.warn(`           ${e}`))
   return null
 }
 
@@ -79,9 +119,10 @@ async function main() {
 
   const browser = await launch()
   if (!browser) {
-    console.warn('prerender: no hay navegador disponible — se omite.')
-    console.warn('           El sitio funciona igual como SPA, pero los rastreadores de IA')
-    console.warn('           no veran el contenido. Instala Chrome o corre: npx playwright install chromium')
+    if (process.env.PRERENDER_FROM_SNAPSHOT !== '1') {
+      console.warn('prerender: no se pudo abrir un navegador.')
+    }
+    await copySnapshot()
     return
   }
 
@@ -104,9 +145,11 @@ async function main() {
 
       const html = await page.evaluate(() => '<!doctype html>\n' + document.documentElement.outerHTML)
 
-      const dir = path.join(DIST, route)
-      await mkdir(dir, { recursive: true })
-      await writeFile(path.join(dir, 'index.html'), html, 'utf-8')
+      for (const base of [DIST, SNAPSHOT]) {
+        const dir = path.join(base, route)
+        await mkdir(dir, { recursive: true })
+        await writeFile(path.join(dir, 'index.html'), html, 'utf-8')
+      }
       ok++
       console.log(`  ✓ ${route}  (${Math.round(html.length / 1024)} KB)`)
     } catch (err) {
