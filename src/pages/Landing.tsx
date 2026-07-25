@@ -305,31 +305,76 @@ export default function Landing() {
                     {/* Reflejo */}
                     <div className="absolute inset-0 z-20 pointer-events-none" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,0) 30%)' }} />
 
-                    {/* Barra de estado (el recorte de la captura empieza en la
-                        cabecera de la tienda, así que la dibujamos nosotros) */}
-                    <div className="flex items-center justify-between px-6 pt-3 pb-1.5" style={{ background: '#0d0d0f' }}>
-                      <span className="text-[0.62rem] font-bold text-white">9:41</span>
-                      <span className="flex items-center gap-1 text-white">
+                    {/* Barra de estado */}
+                    <div className="flex items-center justify-between px-6 pt-3 pb-1">
+                      <span className="text-[0.62rem] font-bold" style={{ color: '#0B1220' }}>9:41</span>
+                      <span className="flex items-center gap-1" style={{ color: '#0B1220' }}>
                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M2 20h3v-8H2v8zm5.5 0h3V9h-3v11zm5.5 0h3V4h-3v16zm5.5 0h3v-6h-3v6z"/></svg>
                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l3.5-4.5c-1-.75-2.2-1.2-3.5-1.2s-2.5.45-3.5 1.2L12 21zm0-18C7.4 3 3.2 4.6 0 7.3l2 2.6C4.7 7.6 8.2 6.3 12 6.3s7.3 1.3 10 3.6l2-2.6C20.8 4.6 16.6 3 12 3zm0 6.6c-3 0-5.8 1-8 2.8l2 2.6c1.6-1.3 3.7-2.1 6-2.1s4.4.8 6 2.1l2-2.6c-2.2-1.8-5-2.8-8-2.8z"/></svg>
                         <svg className="w-4 h-3.5" viewBox="0 0 28 24" fill="currentColor"><rect x="1" y="7" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.6"/><rect x="3.2" y="9.2" width="16.6" height="5.6" rx="1.2"/><path d="M24 10.5v3c1.1-.3 1.9-.8 1.9-1.5s-.8-1.2-1.9-1.5z"/></svg>
                       </span>
                     </div>
 
-                    {/* Captura real de una tienda demo (logo, fotos y precios
-                        reales) — recortada sin barra de estado ni barra de URL */}
-                    <img
-                      src="/landing/store-alienstore.jpg"
-                      alt=""
-                      width={739}
-                      height={1342}
-                      className="block w-full"
-                      style={{ marginBottom: '-1px' }}
-                    />
+                    {/* Cabecera de la tienda */}
+                    <div className="px-4 pt-2 pb-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                      <div className="flex items-center gap-2">
+                        {/* Logo de ejemplo (marca ficticia) */}
+                        <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#F472B6,#A855F7)' }}>
+                          <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2.6c1.9 0 3.4 1.5 3.4 3.4 0 .6-.1 1.1-.4 1.6.5-.3 1-.4 1.6-.4 1.9 0 3.4 1.5 3.4 3.4S18.5 14 16.6 14c-.6 0-1.1-.1-1.6-.4.3.5.4 1 .4 1.6 0 1.9-1.5 3.4-3.4 3.4s-3.4-1.5-3.4-3.4c0-.6.1-1.1.4-1.6-.5.3-1 .4-1.6.4C5.5 14 4 12.5 4 10.6s1.5-3.4 3.4-3.4c.6 0 1.1.1 1.6.4-.3-.5-.4-1-.4-1.6 0-1.9 1.5-3.4 3.4-3.4zm0 5.7a2.3 2.3 0 100 4.6 2.3 2.3 0 000-4.6z"/>
+                          </svg>
+                        </span>
+                        <div className="leading-tight min-w-0">
+                          <p className="text-[0.72rem] font-extrabold truncate">Luna Boutique</p>
+                          <p className="text-[0.55rem] truncate" style={{ color: 'var(--muted)' }}>lunaboutique.shopifree.app</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chips de categorías */}
+                    <div className="flex gap-1.5 px-4 pt-2.5 pb-2 flex-wrap">
+                      {['Todo', 'Ropa', 'Accesorios', 'Ofertas'].map((c, i) => (
+                        <span key={c} className="text-[0.56rem] font-bold rounded-full px-2 py-0.5"
+                          style={i === 0 ? { background: 'var(--navy)', color: '#fff' } : { border: '1px solid var(--border)', color: 'var(--body)' }}>
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Grid de productos (fotos de ejemplo libres de derechos) */}
+                    <div className="grid grid-cols-2 gap-2 px-4 pb-3">
+                      {[
+                        { img: '/landing/prod-blusa.jpg', n: 'Blusa Bordada', p: '$ 29.00', off: '-15%' },
+                        { img: '/landing/prod-pantalon.jpg', n: 'Pantalón Rosé', p: '$ 34.00', off: null },
+                        { img: '/landing/prod-collar.jpg', n: 'Collar Perlas', p: '$ 19.00', off: null },
+                        { img: '/landing/prod-makeup.jpg', n: 'Set Maquillaje', p: '$ 24.00', off: '-20%' },
+                      ].map((p) => (
+                        <div key={p.n} className="rounded-xl overflow-hidden bg-white" style={{ border: '1px solid var(--border)' }}>
+                          <div className="aspect-square relative overflow-hidden" style={{ background: 'var(--soft)' }}>
+                            {/* Above the fold: carga inmediata, sin lazy */}
+                            <img src={p.img} alt="" width={400} height={400} decoding="async" className="w-full h-full object-cover" />
+                            {p.off && (
+                              <span className="absolute top-1 left-1 text-[0.5rem] font-extrabold rounded-full px-1.5 py-0.5 text-white" style={{ background: '#EC4899' }}>{p.off}</span>
+                            )}
+                          </div>
+                          <div className="p-1.5">
+                            <p className="text-[0.6rem] font-bold leading-tight truncate">{p.n}</p>
+                            <p className="text-[0.62rem] font-extrabold mt-0.5" style={{ color: 'var(--sky-deep)' }}>{p.p}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Botón pedir por WhatsApp */}
+                    <div className="px-4 pb-3">
+                      <div className="rounded-xl py-2 flex items-center justify-center gap-1.5 text-white text-[0.68rem] font-bold" style={{ background: '#16A34A', boxShadow: '0 8px 18px -8px rgba(22,163,74,.6)' }}>
+                        <WhatsAppIcon className="w-3.5 h-3.5" /> {t('mockup.orderViaWhatsApp')}
+                      </div>
+                    </div>
 
                     {/* Indicador home */}
-                    <div className="flex justify-center pb-2 pt-1.5" style={{ background: '#0d0d0f' }}>
-                      <span style={{ width: '92px', height: '4px', borderRadius: '999px', background: '#fff', opacity: .55 }} />
+                    <div className="flex justify-center pb-2 pt-0.5">
+                      <span style={{ width: '92px', height: '4px', borderRadius: '999px', background: '#0B1220', opacity: .85 }} />
                     </div>
                   </div>
                 </div>
