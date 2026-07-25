@@ -152,5 +152,9 @@
   "cta": {
     "title": "¿Listo para empezar a vender?",
     "subtitle": "Crea tu catálogo en menos de 3 minutos. Es gratis."
+  },
+  "footer": {
+    "product": "Producto",
+    "legal": "Legal"
   }
 }

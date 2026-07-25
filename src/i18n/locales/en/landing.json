@@ -152,5 +152,9 @@
   "cta": {
     "title": "Ready to start selling?",
     "subtitle": "Create your catalog in less than 3 minutes. It's free."
+  },
+  "footer": {
+    "product": "Product",
+    "legal": "Legal"
   }
 }
