@@ -43,32 +43,63 @@
     }
   },
   "features": {
-    "title": "Everything you need",
-    "subtitle": "Features designed for entrepreneurs",
-    "mobileCatalog": {
-      "title": "Mobile catalog",
-      "description": "Optimized for phones"
-    },
-    "customLink": {
-      "title": "Custom link",
-      "description": "yourstore.shopifree.app"
-    },
-    "qrCode": {
-      "title": "QR Code",
-      "description": "For your store or business cards"
-    },
-    "categories": {
-      "title": "Categories",
-      "description": "Organize your products"
-    },
-    "directWhatsApp": {
-      "title": "Direct WhatsApp",
-      "description": "Instant orders"
-    },
-    "statistics": {
-      "title": "Statistics",
-      "description": "See who visits your catalog"
-    }
+    "title": "Everything you need to sell",
+    "subtitle": "Built for small businesses",
+    "note": "All included from the Free plan. Advanced features unlock with Pro or Business.",
+    "groups": [
+      {
+        "title": "Your online store",
+        "items": [
+          "Catalog optimized for phones",
+          "100+ themes to choose from",
+          "Your logo, cover image and colors",
+          "Your own link: yourstore.shopifree.app",
+          "Your own .com domain",
+          "QR code for your shop",
+          "Announcement bar, flash sales and trust badges",
+          "Android and iPhone app with push notifications"
+        ]
+      },
+      {
+        "title": "Sell and get paid",
+        "items": [
+          "Orders straight to your WhatsApp",
+          "Card payments: MercadoPago, Stripe and PayPal",
+          "Go Cuotas: installments without a card (Argentina)",
+          "Bank transfer",
+          "Discount coupons with expiry and usage limits",
+          "Free shipping over an amount, or store pickup",
+          "Delivery zones with per-area pricing",
+          "Charge in your currency: PEN, USD, MXN, COP, ARS and more"
+        ]
+      },
+      {
+        "title": "Run the day to day",
+        "items": [
+          "Variants by size, color or material",
+          "Stock per variant and per warehouse",
+          "Import hundreds of products from Excel or CSV",
+          "Orders with statuses: pending, confirmed, delivered",
+          "A profile per customer with their purchase history",
+          "Record sales made outside the store",
+          "Test orders that don't affect your numbers",
+          "Built-in help center and support chat"
+        ]
+      },
+      {
+        "title": "Grow your business",
+        "items": [
+          "Visits, most-viewed products and conversion funnel",
+          "Where your customers come from: WhatsApp, Instagram, Google",
+          "Google Analytics, Meta Pixel and TikTok Pixel",
+          "Dropshipping with CJ and Printful",
+          "Inventory, warehouses and suppliers",
+          "Purchases, production and expenses",
+          "Your business cash flow",
+          "API and webhooks to connect your POS or ERP"
+        ]
+      }
+    ]
   },
   "pricing": {
     "title": "Simple plans",

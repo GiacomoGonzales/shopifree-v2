@@ -45,6 +45,28 @@ const THEME_SHOWCASE = [
 
 const SLIDE_MS = 3800
 
+// Grupos de funciones. Los textos (titulo + items) viven en landing.json bajo
+// features.groups[i], para que el inventario se traduzca y se edite sin tocar
+// el componente; aqui solo va lo visual.
+const FEATURE_GROUPS = [
+  {
+    key: 'store', bg: '#E0F2FE', fg: '#0284C7',
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9l1.5-5h15L21 9M3 9h18M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9M9 20v-6h6v6" /></svg>,
+  },
+  {
+    key: 'sell', bg: '#DCFCE7', fg: '#16A34A',
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zm2 8h4" /></svg>,
+  },
+  {
+    key: 'manage', bg: '#EDE9FE', fg: '#7C3AED',
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4v10l8 4 8-4V7zM4 7l8 4 8-4M12 11v10" /></svg>,
+  },
+  {
+    key: 'grow', bg: '#FEF3C7', fg: '#B45309',
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5" /></svg>,
+  },
+] as const
+
 const WhatsAppIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884z" />
@@ -116,39 +138,6 @@ export default function Landing() {
     { n: '1', title: t('howItWorks.step1.title'), desc: t('howItWorks.step1.description') },
     { n: '2', title: t('howItWorks.step2.title'), desc: t('howItWorks.step2.description') },
     { n: '3', title: t('howItWorks.step3.title'), desc: t('howItWorks.step3.description') },
-  ]
-
-  const features = [
-    {
-      title: t('features.mobileCatalog.title'),
-      desc: t('features.mobileCatalog.description'),
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>,
-    },
-    {
-      title: t('features.customLink.title'),
-      desc: t('features.customLink.description'),
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>,
-    },
-    {
-      title: t('features.qrCode.title'),
-      desc: t('features.qrCode.description'),
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>,
-    },
-    {
-      title: t('features.categories.title'),
-      desc: t('features.categories.description'),
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-    },
-    {
-      title: t('features.directWhatsApp.title'),
-      desc: t('features.directWhatsApp.description'),
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
-    },
-    {
-      title: t('features.statistics.title'),
-      desc: t('features.statistics.description'),
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
-    },
   ]
 
   const freeFeatures = [
@@ -833,7 +822,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Funciones ===== */}
+      {/* ===== Funciones: inventario real agrupado por lo que hace el negocio ===== */}
       <section className="slp-section py-20 lg:py-24" style={{ background: 'var(--soft)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
         <div className="slp-container">
           <div className="slpr max-w-2xl mb-14">
@@ -842,15 +831,43 @@ export default function Landing() {
               {t('features.title')}
             </h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
-              <div key={f.title} className="slpr slp-card p-7" style={{ transitionDelay: `${(i % 3) * 0.07}s` }}>
-                <div className="slp-icon">{f.icon}</div>
-                <h3 className="font-bold mb-1.5">{f.title}</h3>
-                <p className="text-[0.92rem] leading-relaxed" style={{ color: 'var(--body)' }}>{f.desc}</p>
-              </div>
-            ))}
+
+          {/* Columnas separadas por hairlines en vez de tarjetas: cabe mucho mas
+              detalle sin que la seccion se vea como un muro de cajas. */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURE_GROUPS.map((g, gi) => {
+              const items = t(`features.groups.${gi}.items`, { returnObjects: true }) as string[]
+              return (
+                <div
+                  key={g.key}
+                  className="slpr px-0 sm:px-7 lg:px-6 first:pl-0 py-8 sm:py-0"
+                  style={{
+                    transitionDelay: `${gi * 0.07}s`,
+                    borderTop: '1px solid var(--border)',
+                  }}
+                >
+                  <div className="slp-icon" style={{ background: g.bg, color: g.fg }}>{g.icon}</div>
+                  <h3 className="font-bold mb-4">{t(`features.groups.${gi}.title`)}</h3>
+                  <ul className="space-y-2.5">
+                    {items.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5 text-[0.88rem] leading-snug" style={{ color: 'var(--body)' }}>
+                        <span className="shrink-0 mt-[0.3rem]" style={{ color: g.fg }}>
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.2} aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })}
           </div>
+
+          <p className="slpr text-center text-[0.9rem] mt-14" style={{ color: 'var(--muted)' }}>
+            {t('features.note')}
+          </p>
         </div>
       </section>
 
