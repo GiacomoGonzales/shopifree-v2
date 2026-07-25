@@ -156,5 +156,10 @@
   "footer": {
     "product": "Producto",
     "legal": "Legal"
+  },
+  "storesShowcase": {
+    "subtitle": "Tiendas hechas con Shopifree",
+    "title": "Cada tienda con su propio estilo",
+    "description": "Elige entre mas de 100 temas y personaliza colores, portada y logo. Tu tienda, tu marca — sin tocar codigo."
   }
 }

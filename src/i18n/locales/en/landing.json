@@ -156,5 +156,10 @@
   "footer": {
     "product": "Product",
     "legal": "Legal"
+  },
+  "storesShowcase": {
+    "subtitle": "Stores built with Shopifree",
+    "title": "Every store with its own style",
+    "description": "Choose from 100+ themes and customize colors, cover and logo. Your store, your brand — no code needed."
   }
 }

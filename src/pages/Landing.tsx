@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../hooks/useLanguage'
 import { useAuth } from '../hooks/useAuth'
-import DemoStoresCarousel from '../components/landing/DemoStoresCarousel'
 import LanguageSelector from '../components/common/LanguageSelector'
 
 // Landing rediseñada — dirección B2B premium estilo Stripe (misma línea que la
@@ -197,6 +196,20 @@ export default function Landing() {
           background: #E0F2FE; color: var(--sky-deep); margin-bottom: 1.1rem;
         }
 
+        /* ===== Marco de navegador (simulaciones del producto) ===== */
+        .slp-browser {
+          background: #fff; border-radius: 14px; border: 1px solid var(--border); overflow: hidden;
+          box-shadow: 0 50px 100px -24px rgba(50, 50, 93, .28), 0 24px 48px -28px rgba(30, 58, 95, .3);
+        }
+        .slp-browser-bar {
+          display: flex; align-items: center; gap: .9rem; padding: .65rem 1rem;
+          background: #F6F9FC; border-bottom: 1px solid var(--border);
+        }
+        .slp-url {
+          flex: 1; max-width: 22rem; margin: 0 auto; background: #fff; border: 1px solid var(--border);
+          border-radius: 999px; font-size: .72rem; color: var(--body); padding: .28rem .9rem; text-align: center;
+        }
+
         /* ===== Texto degradado del hero ===== */
         .slp-grad {
           background: linear-gradient(92deg, #0EA5E9 0%, #38bdf8 55%, #6366F1 100%);
@@ -377,9 +390,163 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Carrusel de tiendas demo */}
+          {/* Simulación del dashboard (mockup CSS) en marco de navegador */}
           <div className="slpr mt-16 lg:mt-20" style={{ transitionDelay: '.28s' }}>
-            <DemoStoresCarousel />
+            <div className="slp-browser max-w-5xl mx-auto">
+              <div className="slp-browser-bar">
+                <span className="flex gap-1.5">
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#FF5F57' }}></span>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#FEBC2E' }}></span>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#28C840' }}></span>
+                </span>
+                <span className="slp-url">shopifree.app/dashboard</span>
+                <span className="w-12"></span>
+              </div>
+
+              <div aria-hidden="true" className="flex" style={{ background: 'var(--soft)' }}>
+                {/* Sidebar del dashboard */}
+                <aside className="hidden md:block w-[150px] shrink-0 bg-white" style={{ borderRight: '1px solid var(--border)' }}>
+                  <div className="flex items-center px-3 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <img src="/newlogo.png" className="h-4 w-auto object-contain" alt="" />
+                  </div>
+                  <nav className="p-2 space-y-0.5">
+                    {[
+                      ['M3 12l9-9 9 9M5 10v10h14V10', 'Inicio', true],
+                      ['M20 7l-8-4-8 4v10l8 4 8-4V7zM4 7l8 4 8-4M12 11v10', 'Productos', false],
+                      ['M3 3h2l3 14h11l3-9H6', 'Pedidos', false],
+                      ['M16 7a4 4 0 11-8 0 4 4 0 018 0zM5 21a7 7 0 0114 0', 'Clientes', false],
+                      ['M9 19V9m6 10V5M3 19h18', 'Estadísticas', false],
+                      ['M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2', 'Apariencia', false],
+                      ['M3 10h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z', 'Pagos', false],
+                      ['M3 9l1-5h16l1 5M4 9v10h16V9M9 19v-5h6v5', 'Mi Negocio', false],
+                    ].map(([d, label, active]) => (
+                      <div key={label as string} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[0.66rem] font-semibold"
+                        style={active ? { background: '#E0F2FE', color: 'var(--sky-deep)' } : { color: 'var(--body)' }}>
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d={d as string} />
+                        </svg>
+                        <span className="truncate">{label}</span>
+                      </div>
+                    ))}
+                  </nav>
+                </aside>
+
+                <div className="flex-1 min-w-0">
+                  {/* Cabecera */}
+                  <div className="flex items-center justify-between bg-white px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <div>
+                      <p className="text-[0.88rem] font-extrabold leading-none">Inicio</p>
+                      <p className="text-[0.62rem] mt-1" style={{ color: 'var(--muted)' }}>Resumen de tu tienda · Hoy</p>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[0.6rem] font-bold rounded-lg px-2.5 py-1 hidden sm:block" style={{ border: '1px solid var(--border)', color: 'var(--body)' }}>Últimos 7 días ▾</span>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="#8898AA" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                      <span className="w-6 h-6 rounded-lg flex items-center justify-center text-[0.58rem] font-extrabold text-white" style={{ background: 'linear-gradient(135deg,#38bdf8,#6366F1)' }}>A</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 lg:p-4 space-y-3">
+                    {/* KPIs */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      {[
+                        { d: 'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.5 12C4.3 7.9 7.9 5 12 5s7.7 2.9 9.5 7c-1.8 4.1-5.4 7-9.5 7s-7.7-2.9-9.5-7z', l: 'Visitas hoy', v: '312', delta: '+18%', up: true, bg: '#E0F2FE', tx: '#0284C7' },
+                        { d: 'M3 3h2l3 14h11l3-9H6', l: 'Pedidos', v: '24', delta: '+12%', up: true, bg: '#EDE9FE', tx: '#7C3AED' },
+                        { d: 'M12 8c-3.3 0-6 1.3-6 3s2.7 3 6 3 6-1.3 6-3-2.7-3-6-3zM6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5', l: 'Ingresos', v: '$ 1,240', delta: '+9%', up: true, bg: '#DCFCE7', tx: '#16A34A' },
+                        { d: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z', l: 'Pendientes', v: '3', delta: 'por confirmar', up: null, bg: '#FEF3C7', tx: '#B45309' },
+                      ].map((k) => (
+                        <div key={k.l} className="bg-white rounded-xl p-3" style={{ border: '1px solid var(--border)' }}>
+                          <div className="flex items-center justify-between">
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: k.bg }}>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke={k.tx} strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d={k.d} /></svg>
+                            </span>
+                            {k.up !== null && (
+                              <span className="flex items-center gap-0.5 text-[0.56rem] font-bold" style={{ color: '#16A34A' }}>
+                                <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5"/></svg>
+                                {k.delta}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[1.05rem] font-extrabold mt-2 leading-none">{k.v}</p>
+                          <p className="text-[0.58rem] mt-1" style={{ color: 'var(--muted)' }}>{k.up === null ? `${k.l} · ${k.delta}` : k.l}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Reportes */}
+                    <div className="grid lg:grid-cols-[1.55fr_1fr] gap-2.5">
+                      {/* Barras: ventas de la semana */}
+                      <div className="bg-white rounded-xl p-3.5" style={{ border: '1px solid var(--border)' }}>
+                        <div className="flex items-start justify-between mb-1">
+                          <div>
+                            <p className="text-[0.7rem] font-bold">Ventas de la semana</p>
+                            <p className="text-[0.55rem]" style={{ color: 'var(--muted)' }}>+18% vs. semana anterior</p>
+                          </div>
+                          <p className="text-[0.62rem] font-extrabold rounded-md px-2 py-0.5" style={{ background: '#E0F2FE', color: 'var(--sky-deep)' }}>$ 6,480</p>
+                        </div>
+                        <div className="flex gap-2 pt-5">
+                          <div className="flex flex-col justify-between text-right shrink-0 text-[0.5rem] font-semibold" style={{ color: '#A9B6C6', width: 24, height: '5.5rem' }}>
+                            <span>$1.5k</span><span>1k</span><span>500</span><span>0</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="relative" style={{ height: '5.5rem' }}>
+                              {[33.3, 66.6, 100].map((p) => (
+                                <div key={p} className="absolute left-0 right-0" style={{ bottom: `${p}%`, borderTop: '1px dashed var(--border)' }} />
+                              ))}
+                              <div className="relative flex items-end gap-2" style={{ height: '100%' }}>
+                                {[[46, '690'], [58, '870'], [40, '600'], [70, '1.0k'], [90, '1.4k'], [78, '1.2k'], [36, '540']].map(([pct, val], i) => (
+                                  <div key={i} className="relative flex-1 rounded-t-md" style={{ height: `${pct}%`, background: i === 4 ? 'linear-gradient(180deg,#22D3EE,#0284C7)' : 'linear-gradient(180deg,#BAE6FD,#38bdf8)', opacity: i === 4 ? 1 : .85 }}>
+                                    <span className="absolute left-1/2 text-[0.5rem] font-bold whitespace-nowrap" style={{ bottom: 'calc(100% + 3px)', transform: 'translateX(-50%)', color: i === 4 ? 'var(--sky-deep)' : '#8898AA' }}>{val}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+                                <span key={i} className="flex-1 text-center text-[0.5rem] font-semibold" style={{ color: '#8898AA' }}>{d}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Donut: fuentes de tráfico + pedidos recientes */}
+                      <div className="space-y-2.5">
+                        <div className="bg-white rounded-xl p-3.5" style={{ border: '1px solid var(--border)' }}>
+                          <p className="text-[0.7rem] font-bold mb-2.5">Fuentes de tráfico</p>
+                          <div className="flex items-center gap-3">
+                            <div className="relative shrink-0" style={{ width: 58, height: 58 }}>
+                              <div style={{ width: 58, height: 58, borderRadius: '50%', background: 'conic-gradient(#16A34A 0 46%, #EC4899 46% 80%, #38bdf8 80% 100%)' }}></div>
+                              <div className="absolute flex items-center justify-center" style={{ inset: 11, borderRadius: '50%', background: '#fff' }}>
+                                <span className="text-[0.58rem] font-extrabold">312</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1 text-[0.6rem] font-semibold">
+                              <p className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#16A34A' }}></span>WhatsApp <span style={{ color: '#8898AA' }}>46%</span></p>
+                              <p className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#EC4899' }}></span>Instagram <span style={{ color: '#8898AA' }}>34%</span></p>
+                              <p className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#38bdf8' }}></span>Directo <span style={{ color: '#8898AA' }}>20%</span></p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-3.5" style={{ border: '1px solid var(--border)' }}>
+                          <p className="text-[0.7rem] font-bold mb-2">Pedidos recientes</p>
+                          <div className="space-y-1.5">
+                            {[
+                              { id: '#1042', n: 'María T.', s: 'Entregado', bg: '#DCFCE7', tx: '#16A34A' },
+                              { id: '#1041', n: 'Lucía R.', s: 'Pendiente', bg: '#FEF3C7', tx: '#B45309' },
+                            ].map((o) => (
+                              <div key={o.id} className="flex items-center justify-between rounded-lg px-2 py-1.5" style={{ border: '1px solid var(--border)' }}>
+                                <span className="text-[0.62rem] font-bold truncate">{o.id} · {o.n}</span>
+                                <span className="text-[0.54rem] font-bold rounded-full px-2 py-0.5 whitespace-nowrap" style={{ background: o.bg, color: o.tx }}>{o.s}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -483,8 +650,151 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Funciones ===== */}
+      {/* ===== Tiendas virtuales (simulaciones con temas distintos) ===== */}
       <section className="slp-section py-20 lg:py-24">
+        <div className="slp-container">
+          <div className="slpr flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
+            <div className="max-w-xl">
+              <p className="slp-eyebrow">{t('storesShowcase.subtitle')}</p>
+              <h2 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: 'clamp(1.9rem, 4vw, 2.9rem)' }}>
+                {t('storesShowcase.title')}
+              </h2>
+            </div>
+            <p className="max-w-sm text-[0.95rem] leading-relaxed" style={{ color: 'var(--body)' }}>
+              {t('storesShowcase.description')}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5" aria-hidden="true">
+            {/* Boutique — tema claro rosado */}
+            <div className="slpr slp-card overflow-hidden" style={{ borderRadius: 14 }}>
+              <div className="slp-browser-bar">
+                <span className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF5F57' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }}></span>
+                </span>
+                <span className="slp-url !max-w-[11rem]">flora.shopifree.app</span>
+              </div>
+              <div style={{ background: '#FFF7F5' }}>
+                <div className="text-center pt-5 pb-3">
+                  <p className="text-[1.05rem] tracking-[0.28em] font-semibold" style={{ color: '#9F5C68', fontFamily: 'Georgia, serif' }}>FLORA</p>
+                  <p className="text-[0.55rem] mt-0.5 tracking-widest uppercase" style={{ color: '#C9A0A9' }}>Moda femenina</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+                  {[
+                    { g: 'linear-gradient(135deg,#FBE4E8,#F5C6CF)', n: 'Vestido Dalia', p: '$ 45' },
+                    { g: 'linear-gradient(135deg,#F7E8DD,#EFD3BE)', n: 'Falda Lino', p: '$ 32' },
+                    { g: 'linear-gradient(135deg,#EFE0EA,#DFC2D6)', n: 'Blusa Seda', p: '$ 38' },
+                    { g: 'linear-gradient(135deg,#FDEFE3,#F8DCC4)', n: 'Pañuelo', p: '$ 14' },
+                  ].map((p) => (
+                    <div key={p.n} className="rounded-lg overflow-hidden bg-white" style={{ border: '1px solid #F3DDE1' }}>
+                      <div className="aspect-[4/3] relative" style={{ background: p.g }}>
+                        <span className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 30% 25%, rgba(255,255,255,.5), transparent 70%)' }} />
+                      </div>
+                      <div className="px-1.5 py-1.5 text-center">
+                        <p className="text-[0.56rem] leading-tight truncate" style={{ color: '#7A4E58', fontFamily: 'Georgia, serif' }}>{p.n}</p>
+                        <p className="text-[0.6rem] font-bold" style={{ color: '#9F5C68' }}>{p.p}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-4 pb-4">
+                  <div className="rounded-full py-1.5 text-center text-white text-[0.6rem] font-bold tracking-wide" style={{ background: '#B76E79' }}>
+                    {t('mockup.orderViaWhatsApp')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tech — tema oscuro */}
+            <div className="slpr slp-card overflow-hidden" style={{ borderRadius: 14, transitionDelay: '.07s' }}>
+              <div className="slp-browser-bar">
+                <span className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF5F57' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }}></span>
+                </span>
+                <span className="slp-url !max-w-[11rem]">nova.shopifree.app</span>
+              </div>
+              <div style={{ background: '#0B1220' }}>
+                <div className="flex items-center justify-between px-4 pt-4 pb-3">
+                  <p className="text-[0.95rem] font-extrabold tracking-tight text-white">NOVA<span style={{ color: '#22D3EE' }}>TECH</span></p>
+                  <span className="text-[0.52rem] font-bold rounded-full px-2 py-0.5" style={{ background: 'rgba(34,211,238,.15)', color: '#22D3EE' }}>Envío gratis</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+                  {[
+                    { g: 'linear-gradient(135deg,#1E293B,#0F172A)', n: 'Audífonos Pro', p: '$ 59', a: '#22D3EE' },
+                    { g: 'linear-gradient(135deg,#172554,#0F172A)', n: 'Smartwatch X', p: '$ 89', a: '#818CF8' },
+                    { g: 'linear-gradient(135deg,#134E4A,#0F172A)', n: 'Parlante Mini', p: '$ 35', a: '#2DD4BF' },
+                    { g: 'linear-gradient(135deg,#312E81,#0F172A)', n: 'Cargador 65W', p: '$ 22', a: '#A78BFA' },
+                  ].map((p) => (
+                    <div key={p.n} className="rounded-lg overflow-hidden" style={{ background: '#111A2E', border: '1px solid #1E293B' }}>
+                      <div className="aspect-[4/3] relative" style={{ background: p.g }}>
+                        <span className="absolute inset-0" style={{ background: `radial-gradient(55% 45% at 70% 30%, ${p.a}33, transparent 70%)` }} />
+                      </div>
+                      <div className="px-1.5 py-1.5">
+                        <p className="text-[0.56rem] font-semibold leading-tight truncate text-white">{p.n}</p>
+                        <p className="text-[0.6rem] font-extrabold" style={{ color: p.a }}>{p.p}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-4 pb-4">
+                  <div className="rounded-lg py-1.5 text-center text-[0.6rem] font-bold" style={{ background: '#22D3EE', color: '#0B1220' }}>
+                    {t('mockup.orderViaWhatsApp')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Restaurante — tema cálido */}
+            <div className="slpr slp-card overflow-hidden" style={{ borderRadius: 14, transitionDelay: '.14s' }}>
+              <div className="slp-browser-bar">
+                <span className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF5F57' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }}></span>
+                </span>
+                <span className="slp-url !max-w-[11rem]">sabor.shopifree.app</span>
+              </div>
+              <div style={{ background: '#FFFBF3' }}>
+                <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-[0.95rem] font-extrabold" style={{ color: '#7C2D12' }}>Sabor Criollo</p>
+                    <p className="text-[0.55rem]" style={{ color: '#B45309' }}>Cocina de casa · Delivery</p>
+                  </div>
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.6rem] font-extrabold" style={{ background: '#EA580C' }}>S</span>
+                </div>
+                <div className="px-4 pb-4 space-y-2 pt-1">
+                  {[
+                    { g: 'linear-gradient(135deg,#FDE68A,#F59E0B)', n: 'Lomo Saltado', d: 'Con papas doradas', p: '$ 9.50' },
+                    { g: 'linear-gradient(135deg,#FECACA,#EF4444)', n: 'Ají de Gallina', d: 'Receta de la abuela', p: '$ 8.00' },
+                    { g: 'linear-gradient(135deg,#D9F99D,#84CC16)', n: 'Causa Limeña', d: 'Entrada fría', p: '$ 6.50' },
+                  ].map((m) => (
+                    <div key={m.n} className="flex items-center gap-2.5 bg-white rounded-xl p-2" style={{ border: '1px solid #FDE9D0' }}>
+                      <span className="w-10 h-10 rounded-lg shrink-0 relative overflow-hidden" style={{ background: m.g }}>
+                        <span className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 30% 25%, rgba(255,255,255,.45), transparent 70%)' }} />
+                      </span>
+                      <div className="flex-1 min-w-0 leading-tight">
+                        <p className="text-[0.62rem] font-bold truncate" style={{ color: '#7C2D12' }}>{m.n}</p>
+                        <p className="text-[0.54rem] truncate" style={{ color: '#B45309' }}>{m.d}</p>
+                      </div>
+                      <span className="text-[0.62rem] font-extrabold whitespace-nowrap" style={{ color: '#EA580C' }}>{m.p}</span>
+                    </div>
+                  ))}
+                  <div className="rounded-xl py-1.5 text-center text-white text-[0.6rem] font-bold" style={{ background: '#EA580C' }}>
+                    {t('mockup.orderViaWhatsApp')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Funciones ===== */}
+      <section className="slp-section py-20 lg:py-24" style={{ background: 'var(--soft)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
         <div className="slp-container">
           <div className="slpr max-w-2xl mb-14">
             <p className="slp-eyebrow">{t('features.subtitle')}</p>
@@ -505,7 +815,7 @@ export default function Landing() {
       </section>
 
       {/* ===== Precios ===== */}
-      <section id="precios" className="slp-section py-20 lg:py-24" style={{ background: 'var(--soft)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+      <section id="precios" className="slp-section py-20 lg:py-24">
         <div className="slp-container">
           <div className="slpr max-w-2xl mb-14">
             <p className="slp-eyebrow">{t('pricing.subtitle')}</p>
@@ -589,7 +899,7 @@ export default function Landing() {
       </section>
 
       {/* ===== App móvil ===== */}
-      <section className="slp-section py-20 lg:py-24">
+      <section className="slp-section py-20 lg:py-24" style={{ background: 'var(--soft)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
         <div className="slp-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="slpr">
@@ -634,7 +944,7 @@ export default function Landing() {
       </section>
 
       {/* ===== Testimonios ===== */}
-      <section className="slp-section py-20 lg:py-24" style={{ background: 'var(--soft)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+      <section className="slp-section py-20 lg:py-24">
         <div className="slp-container">
           <div className="slpr max-w-2xl mb-14">
             <p className="slp-eyebrow">{t('testimonials.subtitle')}</p>

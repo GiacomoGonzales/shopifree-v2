@@ -123,7 +123,13 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(grep -rn \"src/lib\\\\|from '\\\\.\\\\./\\\\.\\\\./src\" api/)",
-      "Bash(node \"C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/strip-prompt.mjs\")"
+      "Bash(node \"C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/strip-prompt.mjs\")",
+      "Bash(gh workflow *)",
+      "Bash(gh run *)",
+      "Bash(gh api *)",
+      "Bash('C:/Program Files/Android/Android Studio/jbr/bin/java.exe' -jar C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/bundletool-all-1.18.3.jar dump manifest --bundle=C:/Users/giaco/Downloads/amaranto-women-v5/app-release.aab)",
+      "Bash(npx vite *)",
+      "Bash(python -c ' *)"
     ],
     "deny": [],
     "ask": []
