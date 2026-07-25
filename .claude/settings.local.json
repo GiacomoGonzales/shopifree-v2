@@ -132,7 +132,9 @@
       "Bash(python -c ' *)",
       "Bash(python -c \"from PIL import Image; print\\('PIL OK'\\)\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 12 \"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&q=80\")",
-      "Bash(python -)"
+      "Bash(python -)",
+      "Bash(pwd -W)",
+      "Bash(SHOT_BASE=http://localhost:5199 npx tsx scripts/generate-theme-desktop-shots.ts velvet)"
     ],
     "deny": [],
     "ask": []

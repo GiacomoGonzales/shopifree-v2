@@ -35,7 +35,9 @@ async function main() {
   await mkdir(OUT, { recursive: true })
   console.log(`→ ${ids.length} temas · base ${BASE}\n`)
 
-  const browser = await chromium.launch()
+  // channel: 'chrome' usa el Chrome instalado en el sistema, así no hace falta
+  // `npx playwright install chromium` (~150 MB) solo para regenerar thumbnails.
+  const browser = await chromium.launch({ channel: 'chrome' })
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2, isMobile: true })
 
   let ok = 0

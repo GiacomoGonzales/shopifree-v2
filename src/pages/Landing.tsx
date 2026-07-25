@@ -23,6 +23,23 @@ const CheckIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
   </svg>
 )
 
+// Temas mostrados en la seccion de showcase. Las capturas se regeneran con
+//   npm run thumbnails -- <id>          (movil, public/themes/<id>.png)
+//   npx tsx scripts/generate-theme-desktop-shots.ts <id>   (escritorio)
+// y luego se optimizan a public/themes/landing/<id>.webp.
+const THEME_SHOWCASE = [
+  { id: 'tabloid', name: 'Tabloid', tag: 'Editorial' },
+  { id: 'comic', name: 'Comic', tag: 'Pop' },
+  { id: 'zine', name: 'Zine', tag: 'Underground' },
+  { id: 'bauhaus', name: 'Bauhaus', tag: 'Geométrico' },
+  { id: 'papercut', name: 'Papercut', tag: 'Ilustrado' },
+  { id: 'grunge', name: 'Grunge', tag: 'Urbano' },
+  { id: 'menu', name: 'Menu', tag: 'Restaurante' },
+  { id: 'watercolor', name: 'Watercolor', tag: 'Artesanal' },
+  { id: 'velvet', name: 'Velvet', tag: 'Premium' },
+  { id: 'prism', name: 'Prism', tag: 'Moderno' },
+] as const
+
 const WhatsAppIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884z" />
@@ -659,7 +676,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Tiendas virtuales (simulaciones con temas distintos) ===== */}
+      {/* ===== Temas: showcase real de la tienda con distintos temas ===== */}
       <section className="slp-section py-20 lg:py-24">
         <div className="slp-container">
           <div className="slpr flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
@@ -674,131 +691,69 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5" aria-hidden="true">
-            {/* Boutique — tema claro rosado */}
-            <div className="slpr slp-card overflow-hidden" style={{ borderRadius: 14 }}>
+          {/* Tema destacado en escritorio, dentro de marco de navegador */}
+          <div className="slpr">
+            <div className="slp-browser max-w-5xl mx-auto">
               <div className="slp-browser-bar">
                 <span className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF5F57' }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }}></span>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#FF5F57' }}></span>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#FEBC2E' }}></span>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#28C840' }}></span>
                 </span>
-                <span className="slp-url !max-w-[11rem]">flora.shopifree.app</span>
+                <span className="slp-url">aurelia.shopifree.app</span>
+                <span className="w-12"></span>
               </div>
-              <div style={{ background: '#FFF7F5' }}>
-                <div className="text-center pt-5 pb-3">
-                  <p className="text-[1.05rem] tracking-[0.28em] font-semibold" style={{ color: '#9F5C68', fontFamily: 'Georgia, serif' }}>FLORA</p>
-                  <p className="text-[0.55rem] mt-0.5 tracking-widest uppercase" style={{ color: '#C9A0A9' }}>Moda femenina</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-                  {[
-                    { g: 'linear-gradient(135deg,#FBE4E8,#F5C6CF)', n: 'Vestido Dalia', p: '$ 45' },
-                    { g: 'linear-gradient(135deg,#F7E8DD,#EFD3BE)', n: 'Falda Lino', p: '$ 32' },
-                    { g: 'linear-gradient(135deg,#EFE0EA,#DFC2D6)', n: 'Blusa Seda', p: '$ 38' },
-                    { g: 'linear-gradient(135deg,#FDEFE3,#F8DCC4)', n: 'Pañuelo', p: '$ 14' },
-                  ].map((p) => (
-                    <div key={p.n} className="rounded-lg overflow-hidden bg-white" style={{ border: '1px solid #F3DDE1' }}>
-                      <div className="aspect-[4/3] relative" style={{ background: p.g }}>
-                        <span className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 30% 25%, rgba(255,255,255,.5), transparent 70%)' }} />
-                      </div>
-                      <div className="px-1.5 py-1.5 text-center">
-                        <p className="text-[0.56rem] leading-tight truncate" style={{ color: '#7A4E58', fontFamily: 'Georgia, serif' }}>{p.n}</p>
-                        <p className="text-[0.6rem] font-bold" style={{ color: '#9F5C68' }}>{p.p}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-4 pb-4">
-                  <div className="rounded-full py-1.5 text-center text-white text-[0.6rem] font-bold tracking-wide" style={{ background: '#B76E79' }}>
-                    {t('mockup.orderViaWhatsApp')}
-                  </div>
-                </div>
-              </div>
+              <img
+                src="/themes/desktop/velvet.jpg"
+                alt={t('storesShowcase.desktopAlt')}
+                width={1600}
+                height={1000}
+                loading="lazy"
+                decoding="async"
+                className="block w-full"
+              />
             </div>
-
-            {/* Tech — tema oscuro */}
-            <div className="slpr slp-card overflow-hidden" style={{ borderRadius: 14, transitionDelay: '.07s' }}>
-              <div className="slp-browser-bar">
-                <span className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF5F57' }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }}></span>
-                </span>
-                <span className="slp-url !max-w-[11rem]">nova.shopifree.app</span>
-              </div>
-              <div style={{ background: '#0B1220' }}>
-                <div className="flex items-center justify-between px-4 pt-4 pb-3">
-                  <p className="text-[0.95rem] font-extrabold tracking-tight text-white">NOVA<span style={{ color: '#22D3EE' }}>TECH</span></p>
-                  <span className="text-[0.52rem] font-bold rounded-full px-2 py-0.5" style={{ background: 'rgba(34,211,238,.15)', color: '#22D3EE' }}>Envío gratis</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-                  {[
-                    { g: 'linear-gradient(135deg,#1E293B,#0F172A)', n: 'Audífonos Pro', p: '$ 59', a: '#22D3EE' },
-                    { g: 'linear-gradient(135deg,#172554,#0F172A)', n: 'Smartwatch X', p: '$ 89', a: '#818CF8' },
-                    { g: 'linear-gradient(135deg,#134E4A,#0F172A)', n: 'Parlante Mini', p: '$ 35', a: '#2DD4BF' },
-                    { g: 'linear-gradient(135deg,#312E81,#0F172A)', n: 'Cargador 65W', p: '$ 22', a: '#A78BFA' },
-                  ].map((p) => (
-                    <div key={p.n} className="rounded-lg overflow-hidden" style={{ background: '#111A2E', border: '1px solid #1E293B' }}>
-                      <div className="aspect-[4/3] relative" style={{ background: p.g }}>
-                        <span className="absolute inset-0" style={{ background: `radial-gradient(55% 45% at 70% 30%, ${p.a}33, transparent 70%)` }} />
-                      </div>
-                      <div className="px-1.5 py-1.5">
-                        <p className="text-[0.56rem] font-semibold leading-tight truncate text-white">{p.n}</p>
-                        <p className="text-[0.6rem] font-extrabold" style={{ color: p.a }}>{p.p}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-4 pb-4">
-                  <div className="rounded-lg py-1.5 text-center text-[0.6rem] font-bold" style={{ background: '#22D3EE', color: '#0B1220' }}>
-                    {t('mockup.orderViaWhatsApp')}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Restaurante — tema cálido */}
-            <div className="slpr slp-card overflow-hidden" style={{ borderRadius: 14, transitionDelay: '.14s' }}>
-              <div className="slp-browser-bar">
-                <span className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF5F57' }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }}></span>
-                </span>
-                <span className="slp-url !max-w-[11rem]">sabor.shopifree.app</span>
-              </div>
-              <div style={{ background: '#FFFBF3' }}>
-                <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-                  <div>
-                    <p className="text-[0.95rem] font-extrabold" style={{ color: '#7C2D12' }}>Sabor Criollo</p>
-                    <p className="text-[0.55rem]" style={{ color: '#B45309' }}>Cocina de casa · Delivery</p>
-                  </div>
-                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.6rem] font-extrabold" style={{ background: '#EA580C' }}>S</span>
-                </div>
-                <div className="px-4 pb-4 space-y-2 pt-1">
-                  {[
-                    { g: 'linear-gradient(135deg,#FDE68A,#F59E0B)', n: 'Lomo Saltado', d: 'Con papas doradas', p: '$ 9.50' },
-                    { g: 'linear-gradient(135deg,#FECACA,#EF4444)', n: 'Ají de Gallina', d: 'Receta de la abuela', p: '$ 8.00' },
-                    { g: 'linear-gradient(135deg,#D9F99D,#84CC16)', n: 'Causa Limeña', d: 'Entrada fría', p: '$ 6.50' },
-                  ].map((m) => (
-                    <div key={m.n} className="flex items-center gap-2.5 bg-white rounded-xl p-2" style={{ border: '1px solid #FDE9D0' }}>
-                      <span className="w-10 h-10 rounded-lg shrink-0 relative overflow-hidden" style={{ background: m.g }}>
-                        <span className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 30% 25%, rgba(255,255,255,.45), transparent 70%)' }} />
-                      </span>
-                      <div className="flex-1 min-w-0 leading-tight">
-                        <p className="text-[0.62rem] font-bold truncate" style={{ color: '#7C2D12' }}>{m.n}</p>
-                        <p className="text-[0.54rem] truncate" style={{ color: '#B45309' }}>{m.d}</p>
-                      </div>
-                      <span className="text-[0.62rem] font-extrabold whitespace-nowrap" style={{ color: '#EA580C' }}>{m.p}</span>
-                    </div>
-                  ))}
-                  <div className="rounded-xl py-1.5 text-center text-white text-[0.6rem] font-bold" style={{ background: '#EA580C' }}>
-                    {t('mockup.orderViaWhatsApp')}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-center text-[0.8rem] font-semibold mt-4" style={{ color: 'var(--muted)' }}>
+              {t('storesShowcase.desktopCaption')}
+            </p>
           </div>
+
+          {/* Los mismos productos, diez temas distintos, en movil */}
+          <div className="mt-16 lg:mt-20 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-9">
+            {THEME_SHOWCASE.map((th, i) => (
+              <a
+                key={th.id}
+                href={`/theme-shot/${th.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="slpr group block"
+                style={{ transitionDelay: `${(i % 5) * 0.06}s`, textDecoration: 'none' }}
+              >
+                {/* Marco de telefono sobrio (sin isla: a este tamano seria ruido) */}
+                <div
+                  className="relative mx-auto transition-transform duration-300 group-hover:-translate-y-1.5"
+                  style={{ maxWidth: 168, borderRadius: '1.6rem', padding: '3px', background: 'linear-gradient(150deg,#4a4d55 0%,#1b1e24 45%,#0c0d11 100%)', boxShadow: '0 18px 34px -18px rgba(30,58,95,.5)' }}
+                >
+                  <img
+                    src={`/themes/landing/${th.id}.webp`}
+                    alt={t('storesShowcase.themeAlt', { theme: th.name })}
+                    width={420}
+                    height={775}
+                    loading="lazy"
+                    decoding="async"
+                    className="block w-full"
+                    style={{ borderRadius: '1.35rem' }}
+                  />
+                </div>
+                <p className="text-center text-[0.82rem] font-bold mt-3 transition-colors group-hover:text-[var(--sky-deep)]">{th.name}</p>
+                <p className="text-center text-[0.68rem]" style={{ color: 'var(--muted)' }}>{th.tag}</p>
+              </a>
+            ))}
+          </div>
+
+          <p className="slpr text-center text-[0.95rem] mt-14" style={{ color: 'var(--body)' }}>
+            {t('storesShowcase.more')}
+          </p>
         </div>
       </section>
 

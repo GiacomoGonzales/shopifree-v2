@@ -158,8 +158,12 @@
     "legal": "Legal"
   },
   "storesShowcase": {
-    "subtitle": "Stores built with Shopifree",
-    "title": "Every store with its own style",
-    "description": "Choose from 100+ themes and customize colors, cover and logo. Your store, your brand — no code needed."
+    "subtitle": "100+ themes",
+    "title": "The same store, in the style that fits you",
+    "description": "Switch themes in one click — your products rearrange themselves. No designer, no code.",
+    "desktopAlt": "Example store with the Velvet theme on desktop",
+    "desktopCaption": "Velvet theme on desktop — tap any theme below to see it in full",
+    "themeAlt": "{{theme}} theme",
+    "more": "And these are just 10. Inside the dashboard you get 100+ ready-to-use themes."
   }
 }

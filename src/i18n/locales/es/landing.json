@@ -158,8 +158,12 @@
     "legal": "Legal"
   },
   "storesShowcase": {
-    "subtitle": "Tiendas hechas con Shopifree",
-    "title": "Cada tienda con su propio estilo",
-    "description": "Elige entre mas de 100 temas y personaliza colores, portada y logo. Tu tienda, tu marca — sin tocar codigo."
+    "subtitle": "Mas de 100 temas",
+    "title": "La misma tienda, con el estilo que va contigo",
+    "description": "Cambia de tema con un clic: tus productos se reacomodan solos. Sin disenador y sin tocar codigo.",
+    "desktopAlt": "Tienda de ejemplo con el tema Velvet vista en computadora",
+    "desktopCaption": "Tema Velvet en escritorio - toca cualquier tema de abajo para verlo completo",
+    "themeAlt": "Tema {{theme}}",
+    "more": "Y estos son solo 10. Dentro del panel tienes mas de 100 temas listos para usar."
   }
 }
