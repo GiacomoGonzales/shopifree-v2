@@ -50,7 +50,9 @@ export default function BlogList() {
         <section className="pb-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {blogPosts.map(post => (
+              {/* Ordenado por fecha: el listado mostraba el orden del array, así
+                  que un artículo nuevo aparecía al final si se agregaba abajo. */}
+              {[...blogPosts].sort((a, b) => b.date.localeCompare(a.date)).map(post => (
                 <Link
                   key={post.slug}
                   to={localePath(`/blog/${post.slug}`)}
