@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run seo:generate && tsc -b && vite build",
+    "build": "npm run seo:generate && tsc -b && vite build && npm run prerender",
     "seo:generate": "npx tsx scripts/generate-seo-files.ts",
+    "prerender": "npx tsx scripts/prerender.ts",
     "prepare": "node mobile/setup-hooks.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
