@@ -6,18 +6,30 @@
  * Por que hace falta: la app es un SPA renderizado en el cliente y vercel.json
  * reescribe todo a index.html. Google ejecuta JavaScript y ve el contenido, pero
  * los rastreadores de IA (GPTBot, ClaudeBot, PerplexityBot...) normalmente NO lo
- * ejecutan: piden la URL y leen el HTML tal cual. Sin prerender, los 16
- * articulos del blog les devuelven la misma cascara vacia, con el titulo y el
- * canonical de la landing.
+ * ejecutan: piden la URL y leen el HTML tal cual. Sin prerender, cada articulo
+ * del blog les devuelve la misma cascara vacia, con el titulo y el canonical de
+ * la landing.
  *
- * Como funciona: levanta un servidor estatico sobre dist/, visita cada ruta con
- * un navegador real, espera a que React monte y guarda el HTML resultante en
- * dist/<ruta>/index.html. Vercel sirve el sistema de archivos antes que los
- * rewrites, asi que esos archivos ganan sobre el fallback a index.html.
+ * Como funciona:
+ *   1. Levanta un servidor estatico sobre dist/ y visita cada ruta con un
+ *      navegador real, esperando a que React monte.
+ *   2. De cada pagina guarda SOLO lo que no depende del build — los metadatos
+ *      del <head> y el markup de #root — en prerendered/<ruta>/page.json.
+ *   3. Compone el HTML final inyectando esas partes en el index.html recien
+ *      construido.
  *
- * Tolerante a fallos: si no hay navegador disponible (por ejemplo en un entorno
- * de CI sin Chrome), avisa y termina con exito para no romper el despliegue; el
- * sitio sigue funcionando como SPA.
+ * El paso 2 es la parte importante. Los nombres de los assets llevan un hash de
+ * contenido que cambia en cada compilacion, asi que guardar el HTML completo
+ * ata la copia a un build concreto: al desplegarla contra otro, los <script> y
+ * <link> apuntan a archivos inexistentes, Vercel los reescribe a index.html, y
+ * el navegador recibe HTML donde espera CSS. La pagina sale sin estilos. Paso.
+ *
+ * En Vercel el navegador no puede arrancar (build sobre Amazon Linux, chromium
+ * de Ubuntu, sin root para instalar las librerias que le faltan), asi que alli
+ * se usa la copia versionada: PRERENDER_FROM_SNAPSHOT=1 se salta el intento.
+ *
+ * Tolerante a fallos: ante cualquier problema deja la ruta sin prerenderizar y
+ * termina con exito. La pagina sigue sirviendose como SPA, que funciona bien.
  */
 import { chromium, type Browser } from 'playwright'
 import { createServer } from 'node:http'
@@ -27,12 +39,22 @@ import path from 'node:path'
 import { blogPosts } from '../src/pages/blog/blogData'
 
 const DIST = path.resolve(process.cwd(), 'dist')
-// Copia versionada del prerender. El build de Vercel corre en Amazon Linux y
-// el chromium de Playwright no arranca ahi (le faltan librerias del sistema y
-// no hay root para instalarlas), asi que el HTML se genera en la maquina del
-// desarrollador, se commitea, y en el servidor solo se copia.
 const SNAPSHOT = path.resolve(process.cwd(), 'prerendered')
 const PORT = Number(process.env.PRERENDER_PORT || 4183)
+
+interface PageParts {
+  /** Tags de <head> con los metadatos SEO y el JSON-LD de la pagina. */
+  head: string
+  /** Markup renderizado dentro de #root. */
+  root: string
+}
+
+const routes = [
+  '/es',
+  '/en',
+  '/es/blog',
+  ...blogPosts.map(p => `/es/blog/${p.slug}`),
+]
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
@@ -58,8 +80,40 @@ function serveDist() {
   })
 }
 
-/** Copia el prerender versionado a dist/ cuando no hay navegador disponible. */
-async function copySnapshot() {
+/**
+ * Arma el HTML de una ruta sobre el index.html vigente. Los <script>/<link>
+ * salen del armazon, asi que siempre apuntan a los assets de este build.
+ */
+function compose(shell: string, parts: PageParts): string {
+  let html = shell
+
+  // Fuera los metadatos por defecto: los de la pagina son los que valen.
+  html = html
+    .replace(/<title>[\s\S]*?<\/title>\s*/i, '')
+    .replace(/<meta\s+name="(?:title|description|keywords)"[^>]*>\s*/gi, '')
+    .replace(/<meta\s+property="og:[^"]*"[^>]*>\s*/gi, '')
+    .replace(/<meta\s+name="twitter:[^"]*"[^>]*>\s*/gi, '')
+    .replace(/<link\s+rel="canonical"[^>]*>\s*/gi, '')
+
+  html = html.replace('</head>', `  ${parts.head}\n  </head>`)
+
+  // El contenedor viene vacio del build; lo llenamos con el markup renderizado.
+  const rootTag = /(<div id="root">)(\s*)(<\/div>)/
+  if (!rootTag.test(html)) throw new Error('no se encontro <div id="root"></div> en index.html')
+  html = html.replace(rootTag, `$1${parts.root}$3`)
+
+  return html
+}
+
+/** Escribe dist/<ruta>/index.html a partir del armazon y las partes guardadas. */
+async function emit(shell: string, route: string, parts: PageParts) {
+  const dir = path.join(DIST, route)
+  await mkdir(dir, { recursive: true })
+  await writeFile(path.join(dir, 'index.html'), compose(shell, parts), 'utf-8')
+}
+
+/** Usa la copia versionada cuando no hay navegador (el caso de Vercel). */
+async function fromSnapshot(shell: string) {
   if (!existsSync(SNAPSHOT)) {
     console.warn('           y no hay copia en prerendered/ — se omite el prerender.')
     console.warn('           El sitio funciona como SPA, pero los rastreadores de IA no veran')
@@ -67,78 +121,62 @@ async function copySnapshot() {
     return
   }
   let n = 0
-  let stale = 0
+  const missing: string[] = []
   for (const route of routes) {
-    const from = path.join(SNAPSHOT, route, 'index.html')
-    if (!existsSync(from)) continue
-    const html = await readFile(from, 'utf-8')
-
-    // Vital: los nombres de los assets llevan un hash que cambia en cada build.
-    // Una copia generada contra otro build apunta a archivos que ya no existen,
-    // y como vercel.json reescribe lo no encontrado a index.html, el navegador
-    // recibe HTML donde espera CSS y la pagina sale sin estilos. Antes de
-    // copiar, comprobamos que los assets referenciados existan de verdad.
-    const refs = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map(m => m[1])
-    const missing = refs.filter(r => !existsSync(path.join(DIST, r)))
-    if (missing.length) { stale++; continue }
-
-    const dir = path.join(DIST, route)
-    await mkdir(dir, { recursive: true })
-    await writeFile(path.join(dir, 'index.html'), html, 'utf-8')
-    n++
+    const file = path.join(SNAPSHOT, route, 'page.json')
+    if (!existsSync(file)) { missing.push(route); continue }
+    try {
+      await emit(shell, route, JSON.parse(await readFile(file, 'utf-8')) as PageParts)
+      n++
+    } catch (err) {
+      missing.push(route)
+      console.warn(`  ✗ ${route} — ${(err as Error).message}`)
+    }
   }
-  if (stale) {
-    console.warn(`           ${stale} pagina(s) omitidas: su copia apunta a assets de otro build.`)
+  console.log(`prerender: ${n}/${routes.length} paginas compuestas desde prerendered/`)
+  if (missing.length) {
+    console.warn(`           Sin copia: ${missing.join(', ')}`)
     console.warn('           Corre `npm run prerender` en local y commitea prerendered/.')
-  }
-  console.log(`prerender: ${n}/${routes.length} paginas copiadas desde prerendered/`)
-  if (n < routes.length) {
-    console.warn('           Faltan paginas: corre `npm run prerender` en local y commitea el resultado.')
   }
 }
 
-const routes = [
-  '/es',
-  '/en',
-  '/es/blog',
-  ...blogPosts.map(p => `/es/blog/${p.slug}`),
-]
-
 async function launch(): Promise<Browser | null> {
-  // En Vercel no hay navegador que pueda arrancar, asi que conviene saltarse
-  // el intento y usar directamente la copia versionada.
+  // En Vercel ningun navegador arranca, asi que conviene saltarse el intento.
   if (process.env.PRERENDER_FROM_SNAPSHOT === '1') {
     console.log('prerender: PRERENDER_FROM_SNAPSHOT=1 — se usa la copia versionada.')
     return null
   }
-  // Preferimos el Chrome del sistema (no requiere descarga); si no esta,
-  // probamos el chromium de Playwright.
   const errors: string[] = []
-  for (const [label, opts] of [['chrome del sistema', { channel: 'chrome' }], ['chromium de playwright', {}]] as const) {
+  for (const [label, opts] of [
+    ['chrome del sistema', { channel: 'chrome' }],
+    ['chromium de playwright', {}],
+  ] as const) {
     try {
       return await chromium.launch(opts as Parameters<typeof chromium.launch>[0])
     } catch (err) {
       errors.push(`${label}: ${(err as Error).message.split('\n')[0]}`)
     }
   }
-  // Registramos el motivo real: sin esto, un chromium presente pero que no
-  // arranca (faltan librerias del sistema) parece "no hay navegador".
+  // Sin esto, un chromium presente pero que no arranca (le faltan librerias del
+  // sistema) es indistinguible de uno que no esta instalado.
   errors.forEach(e => console.warn(`           ${e}`))
   return null
 }
 
 async function main() {
-  if (!existsSync(path.join(DIST, 'index.html'))) {
+  const shellPath = path.join(DIST, 'index.html')
+  if (!existsSync(shellPath)) {
     console.warn('prerender: no existe dist/index.html — se omite (corre vite build antes)')
     return
   }
+  const shell = await readFile(shellPath, 'utf-8')
 
   const browser = await launch()
   if (!browser) {
     if (process.env.PRERENDER_FROM_SNAPSHOT !== '1') {
       console.warn('prerender: no se pudo abrir un navegador.')
     }
-    await copySnapshot()
+    await fromSnapshot(shell)
     return
   }
 
@@ -159,15 +197,24 @@ async function main() {
       }, { timeout: 20000 })
       await page.waitForTimeout(400)
 
-      const html = await page.evaluate(() => '<!doctype html>\n' + document.documentElement.outerHTML)
+      // Solo los tags que React eleva al <head>. El JSON-LD queda dentro de
+      // #root (React 19 no lo eleva), asi que ya viaja en el markup: incluirlo
+      // aqui lo duplicaria.
+      const parts: PageParts = await page.evaluate(() => ({
+        head: [...document.querySelectorAll(
+          'title[data-seo], meta[data-seo], link[rel="canonical"][data-seo]'
+        )].map(el => el.outerHTML).join('\n    '),
+        root: document.getElementById('root')?.innerHTML ?? '',
+      }))
+      if (!parts.root) throw new Error('#root quedo vacio')
 
-      for (const base of [DIST, SNAPSHOT]) {
-        const dir = path.join(base, route)
-        await mkdir(dir, { recursive: true })
-        await writeFile(path.join(dir, 'index.html'), html, 'utf-8')
-      }
+      const dir = path.join(SNAPSHOT, route)
+      await mkdir(dir, { recursive: true })
+      await writeFile(path.join(dir, 'page.json'), JSON.stringify(parts), 'utf-8')
+
+      await emit(shell, route, parts)
       ok++
-      console.log(`  ✓ ${route}  (${Math.round(html.length / 1024)} KB)`)
+      console.log(`  ✓ ${route}  (${Math.round(parts.root.length / 1024)} KB de markup)`)
     } catch (err) {
       failed.push(route)
       console.warn(`  ✗ ${route} — ${(err as Error).message.split('\n')[0]}`)
