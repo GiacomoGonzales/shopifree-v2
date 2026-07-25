@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom'
-import { HelmetProvider } from 'react-helmet-async'
 import { ToastProvider } from './components/ui/Toast'
 import Catalog from './pages/catalog/Catalog'
 import StorePrivacyPage from './pages/catalog/StorePrivacyPage'
@@ -16,7 +15,6 @@ function StoreCatalog() {
 
 export default function WhiteLabelApp() {
   return (
-    <HelmetProvider>
       <ToastProvider>
         <BrowserRouter>
           <Routes>
@@ -29,6 +27,5 @@ export default function WhiteLabelApp() {
           </Routes>
         </BrowserRouter>
       </ToastProvider>
-    </HelmetProvider>
   )
 }

@@ -34,7 +34,7 @@ Disallow: /en/admin/*
 # Disallow API routes
 Disallow: /api/
 
-# Sitemap location
+# Sitemap y guia para modelos de lenguaje
 Sitemap: https://shopifree.app/sitemap.xml
 
 # Crawl-delay for polite crawling
@@ -49,3 +49,69 @@ Crawl-delay: 0
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
+
+# ─────────────────────────────────────────────────────────────
+# Rastreadores de IA (GEO / Answer Engine Optimization)
+# Se permiten explicitamente para poder aparecer como opcion cuando
+# alguien le pregunta a ChatGPT, Gemini, Claude o Perplexity por
+# plataformas de tienda online o catalogo digital.
+# Guia legible por modelos: https://shopifree.app/llms.txt
+# ─────────────────────────────────────────────────────────────
+
+# OpenAI (ChatGPT)
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic (Claude)
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+
+# Google (Gemini / AI Overviews)
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+
+# Microsoft Copilot
+User-agent: BingBot
+Allow: /
+
+# Meta AI
+User-agent: meta-externalagent
+Allow: /
+User-agent: FacebookBot
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (fuente de entrenamiento de varios modelos)
+User-agent: CCBot
+Allow: /
+
+# Otros buscadores con IA
+User-agent: YouBot
+Allow: /
+User-agent: DuckAssistBot
+Allow: /
+
+# Guia del sitio en texto plano para modelos de lenguaje
+# https://shopifree.app/llms.txt
+# https://shopifree.app/llms-full.txt

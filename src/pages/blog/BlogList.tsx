@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Helmet } from 'react-helmet-async'
+import Seo from '../../components/seo/Seo'
 import { blogPosts } from './blogData'
 import { useLanguage } from '../../hooks/useLanguage'
 
@@ -61,12 +61,32 @@ export default function BlogList() {
 
   return (
     <>
-      <Helmet>
-        <title>Blog | Shopifree - Tips para Vender Online</title>
-        <meta name="description" content="Aprende a vender online con nuestros articulos. Tips de ecommerce, marketing digital, WhatsApp Business y emprendimiento." />
-        <meta name="keywords" content="blog ecommerce, como vender online, tips tienda online, marketing digital, whatsapp business" />
-        <link rel="canonical" href="https://shopifree.app/es/blog" />
-      </Helmet>
+      <Seo
+        title="Blog | Shopifree - Guías para Vender Online"
+        description="Guías prácticas de ecommerce: cómo crear tu tienda, cobrar con tarjeta, vender por WhatsApp, controlar stock y hacer crecer tu negocio."
+        canonical="https://shopifree.app/es/blog"
+        keywords="blog ecommerce, como vender online, tips tienda online, marketing digital, whatsapp business"
+        schemas={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Blog',
+            name: 'Blog de Shopifree',
+            description: 'Guías prácticas de ecommerce para pequeños negocios en Latinoamérica.',
+            url: 'https://shopifree.app/es/blog',
+            publisher: { '@type': 'Organization', name: 'Shopifree', url: 'https://shopifree.app' },
+            blogPost: sorted.slice(0, 20).map(p => ({
+              '@type': 'BlogPosting',
+              headline: p.title,
+              description: p.description,
+              url: `https://shopifree.app/es/blog/${p.slug}`,
+              datePublished: p.date,
+              dateModified: p.updated ?? p.date,
+              image: p.image,
+              author: { '@type': 'Organization', name: p.author },
+            })),
+          },
+        ]}
+      />
 
       <div className="blog-root min-h-screen">
         <style>{`

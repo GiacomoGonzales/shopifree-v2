@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../hooks/useLanguage'
 import { useAuth } from '../hooks/useAuth'
 import LanguageSelector from '../components/common/LanguageSelector'
+import Seo from '../components/seo/Seo'
 
 // Landing rediseñada — dirección B2B premium estilo Stripe (misma línea que la
 // landing V2 de Cobrify): fondo blanco, navy de marca, degradado animado sutil
@@ -63,7 +64,7 @@ const WhatsAppIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
 
 export default function Landing() {
   const { t } = useTranslation(['landing', 'common'])
-  const { localePath } = useLanguage()
+  const { localePath, lang } = useLanguage()
   const { firebaseUser, store, loading: authLoading } = useAuth()
 
   // If authenticated, go straight to dashboard (or register if no store yet)
@@ -144,7 +145,56 @@ export default function Landing() {
     t('pricing.business.features.prioritySupport'),
   ]
 
+  // index.html trae los metadatos por defecto, pero apuntan siempre a la raiz.
+  // Aqui fijamos el canonical y el idioma reales de /es y /en, y publicamos los
+  // datos estructurados que usan los buscadores y los asistentes de IA.
+  const isEs = lang !== 'en'
+  const canonical = `https://shopifree.app/${isEs ? 'es' : 'en'}`
+
   return (
+    <>
+      <Seo
+        title={isEs
+          ? 'Crea tu Tienda Online Gratis en Minutos | Shopifree'
+          : 'Create your Online Store for Free in Minutes | Shopifree'}
+        description={isEs
+          ? 'Crea tu catálogo online gratis y recibe pedidos por WhatsApp. Sin comisiones por venta y sin conocimientos técnicos. Más de 100 temas, cobros con tarjeta y dominio propio.'
+          : 'Create your online catalog for free and take orders on WhatsApp. No sales commission, no technical skills needed. 100+ themes, card payments and your own domain.'}
+        canonical={canonical}
+        locale={isEs ? 'es_LA' : 'en_US'}
+        schemas={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            // Mismo @id que el schema estatico de index.html: asi los crawlers
+            // entienden que son la misma entidad y no dos apps distintas.
+            '@id': 'https://shopifree.app/#software',
+            name: 'Shopifree',
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web, Android, iOS',
+            url: 'https://shopifree.app',
+            description: isEs
+              ? 'Plataforma para crear una tienda online y catálogo digital gratis, con pedidos por WhatsApp y sin comisión por venta.'
+              : 'Platform to create a free online store and digital catalog, with WhatsApp orders and no sales commission.',
+            inLanguage: isEs ? 'es' : 'en',
+            offers: [
+              { '@type': 'Offer', name: 'Gratis', price: '0', priceCurrency: 'USD' },
+              { '@type': 'Offer', name: 'Pro', price: '4.99', priceCurrency: 'USD' },
+              { '@type': 'Offer', name: 'Business', price: '9.99', priceCurrency: 'USD' },
+            ],
+            featureList: [
+              'Catálogo online optimizado para celular',
+              'Pedidos por WhatsApp sin comisión',
+              'Cobros con MercadoPago, Stripe, PayPal y Go Cuotas',
+              'Más de 100 temas personalizables',
+              'Dominio propio y código QR',
+              'Control de stock por variante y almacén',
+              'App Android y iPhone de la tienda',
+              'Estadísticas y fuentes de tráfico',
+            ],
+          },
+        ]}
+      />
     <div className="slp-root min-h-screen">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -1071,5 +1121,6 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+    </>
   )
 }

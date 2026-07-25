@@ -1,0 +1,62 @@
+# Shopifree
+
+> Plataforma para crear una tienda online y un catálogo digital gratis, orientada a pequeños negocios y emprendedores de Latinoamérica. Los pedidos llegan por WhatsApp y no se cobra comisión por venta.
+
+Shopifree permite publicar un catálogo de productos en minutos, sin conocimientos técnicos y sin costo inicial. Cada tienda obtiene su propia dirección web, y puede conectar un dominio propio, cobrar con tarjeta y gestionar inventario.
+
+## Qué ofrece
+
+- Catálogo online optimizado para celular, con más de 100 temas visuales
+- Pedidos directos por WhatsApp, sin intermediarios ni comisión por venta
+- Cobros con tarjeta vía MercadoPago, Stripe, PayPal y Go Cuotas (Argentina)
+- Dominio propio, código QR y app Android/iPhone de la tienda
+- Gestión de productos con variantes (talla, color, material) y stock por almacén
+- Cupones de descuento, zonas de envío y envío gratis desde cierto monto
+- Estadísticas de visitas, fuentes de tráfico y embudo de conversión
+- Módulo de finanzas: inventario, proveedores, compras, gastos y flujo de caja
+- Dropshipping con CJ Dropshipping y Printful
+
+## Planes
+
+- **Gratis** ($0): 10 productos, 1 foto por producto, 3 categorías, pedidos por WhatsApp
+- **Pro** ($4.99/mes, $49.99/año): 200 productos, 5 fotos, categorías ilimitadas, cobros con tarjeta, cupones, dominio propio y estadísticas
+- **Business** ($9.99/mes, $99.99/año): productos ilimitados, 10 fotos, sin marca Shopifree, app móvil propia, dropshipping y soporte prioritario
+
+Al registrarse se otorgan 7 días de prueba del plan Pro, sin tarjeta de crédito.
+
+## Enlaces principales
+
+- [Inicio](https://shopifree.app/es): qué es Shopifree y cómo funciona
+- [Crear una tienda gratis](https://shopifree.app/es/register): registro
+- [Blog](https://shopifree.app/es/blog): guías de ecommerce para pequeños negocios
+- [Contenido completo del blog](https://shopifree.app/llms-full.txt): todos los artículos en texto plano
+
+## Blog
+
+### Vender mas
+
+- [Cómo Conseguir tus Primeros 10 Clientes (sin Gastar en Publicidad)](https://shopifree.app/es/blog/como-conseguir-tus-primeros-clientes): Tu tienda ya está lista pero nadie compra. Guía práctica para conseguir tus primeras ventas usando los contactos y redes que ya tienes, sin invertir en anuncios.
+- [Cómo Cobrar con Tarjeta en tu Tienda Online: MercadoPago, Stripe y PayPal](https://shopifree.app/es/blog/como-cobrar-con-tarjeta-en-tu-tienda-online): Guía práctica para aceptar pagos con tarjeta en tu tienda: qué pasarela te conviene según tu país, qué comisiones cobran y cómo configurarla paso a paso.
+- [SEO para Tiendas Online: Cómo Aparecer en Google sin Ser Experto](https://shopifree.app/es/blog/seo-para-tiendas-online): Guía práctica de SEO para tiendas online pequeñas: cómo escribir títulos y descripciones que Google entienda, qué palabras usar y qué esperar de verdad.
+- [Fotos de Productos con tu Celular: Guía Práctica para Vender Más](https://shopifree.app/es/blog/fotos-de-productos-con-el-celular): No necesitas cámara profesional ni estudio. Aprende a tomar fotos de producto que venden usando solo tu celular, luz natural y materiales que ya tienes en casa.
+- [Cupones y Promociones que Sí Venden (y las que Solo te Hacen Perder Plata)](https://shopifree.app/es/blog/cupones-y-promociones-que-si-venden): Cómo usar cupones de descuento en tu tienda online sin regalar tu margen. Qué promociones funcionan, cuándo lanzarlas y los errores que arruinan la rentabilidad.
+- [Como Vender por WhatsApp en 2026: Guia Definitiva](https://shopifree.app/es/blog/vender-por-whatsapp-guia-completa): Descubre las mejores estrategias para vender por WhatsApp. Aprende a convertir conversaciones en ventas con esta guia paso a paso.
+
+### Gestion
+
+- [Cómo Poner Precio a tus Productos sin Regalar tu Trabajo](https://shopifree.app/es/blog/como-poner-precio-a-tus-productos): Aprende a calcular el precio de tus productos considerando costos, tiempo, comisiones y envío. Con ejemplos reales y los errores que dejan a los emprendedores sin margen.
+- [Envíos: Cómo Cobrar el Delivery sin Perder Dinero ni Ventas](https://shopifree.app/es/blog/como-cobrar-los-envios-de-tu-tienda): Costo fijo, envío gratis desde cierto monto, zonas por distrito o retiro en tienda. Cómo elegir la estrategia de envío correcta para tu tienda online y configurarla bien.
+- [Cómo Conectar tu Dominio Propio a tu Tienda Online (Paso a Paso)](https://shopifree.app/es/blog/conectar-dominio-propio-tienda-online): Aprende a conectar tu dominio .com a tu tienda online: qué registros DNS configurar, cuánto tarda en funcionar y cómo resolver los errores más frecuentes.
+- [Cómo Controlar el Stock de tu Tienda sin Volverte Loco](https://shopifree.app/es/blog/como-controlar-el-stock-de-tu-tienda): Variantes, almacenes y quiebres de stock explicados simple. Aprende a llevar el inventario de tu tienda online para no vender lo que ya no tienes.
+
+### Comparativas
+
+- [Qué Es el Dropshipping y Cómo Empezar sin Comprar Stock](https://shopifree.app/es/blog/que-es-dropshipping-y-como-empezar): Cómo funciona el dropshipping, cuánto se gana realmente, sus riesgos reales y cómo empezar con proveedores como CJ o Printful. Sin promesas de dinero fácil.
+- [Las 5 Mejores Plataformas de Ecommerce Gratis en 2026](https://shopifree.app/es/blog/mejores-plataformas-ecommerce-gratis-2026): Comparativa actualizada de las mejores plataformas para crear tu tienda online gratis en 2026. Descubre cual es la mejor opcion para tu negocio.
+- [Tienda Virtual Propia vs Marketplace: Cual Elegir en 2026](https://shopifree.app/es/blog/tienda-virtual-vs-marketplace): Descubre las ventajas y desventajas de tener tu propia tienda virtual vs vender en marketplaces como MercadoLibre o Amazon.
+
+### Primeros pasos
+
+- [Como Crear tu Tienda Online Gratis en 2026: Guia Completa](https://shopifree.app/es/blog/como-crear-tienda-online-gratis): Aprende paso a paso como crear tu tienda online gratis sin conocimientos tecnicos. Empieza a vender hoy mismo con esta guia completa para emprendedores.
+- [Catalogo Digital: Que Es y Como Crear Uno para tu Negocio](https://shopifree.app/es/blog/catalogo-digital-para-negocios): Aprende que es un catalogo digital, sus beneficios y como crear uno profesional para tu negocio sin gastar dinero.
+- [Como Emprender un Negocio Online desde Cero en 2026](https://shopifree.app/es/blog/como-emprender-negocio-online): Guia completa para emprender tu negocio online desde cero. Aprende los pasos esenciales para iniciar con exito.

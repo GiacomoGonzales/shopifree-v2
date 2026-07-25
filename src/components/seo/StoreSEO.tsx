@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Helmet } from 'react-helmet-async'
+import { useEffect, useMemo } from 'react'
+import Seo from './Seo'
 import { useCustomHeadHtml, useCustomBodyHtml } from '../../hooks/useCustomHeadHtml'
 import type { Store, Product, Category } from '../../types'
 
@@ -284,89 +284,61 @@ export default function StoreSEO({ store, products, categories, product }: Store
     itemListElement: breadcrumbItems
   }
 
+  // Los pixeles y GA se inyectan por DOM, no como hijos de un componente de
+  // metadatos: React 19 solo eleva <title>, <meta> y <link>, y estos scripts
+  // llevaban tiempo sin ejecutarse porque vivian dentro de Helmet, que dejo de
+  // funcionar con React 19. Reutilizamos el inyector ya probado de custom HTML.
+  const analyticsHtml = useMemo(() => {
+    const parts: string[] = []
+    const ga = store.integrations?.googleAnalytics
+    if (ga) {
+      parts.push(`<script async src="https://www.googletagmanager.com/gtag/js?id=${ga}"></script>`)
+      parts.push(`<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga}');</script>`)
+    }
+    const meta = store.integrations?.metaPixel
+    if (meta) {
+      parts.push(`<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${meta}');fbq('track','PageView');</script>`)
+    }
+    const tiktok = store.integrations?.tiktokPixel
+    if (tiktok) {
+      parts.push(`<script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var i=d.createElement("script");i.type="text/javascript",i.async=!0,i.src=r+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(i,a)};ttq.load('${tiktok}');ttq.page();}(window,document,'ttq');</script>`)
+    }
+    return parts.join('\n')
+  }, [store.integrations?.googleAnalytics, store.integrations?.metaPixel, store.integrations?.tiktokPixel])
+
+  useCustomHeadHtml(analyticsHtml || undefined)
+
+  const schemas = [
+    localBusinessSchema,
+    breadcrumbSchema,
+    ...(singleProductSchema ? [singleProductSchema] : []),
+    ...(itemListSchema ? [itemListSchema] : []),
+    ...productSchemas,
+  ] as Record<string, unknown>[]
+
   return (
-    <Helmet>
-      {/* Basic Meta Tags */}
-      <title>{pageTitle}</title>
-      <meta name="description" content={metaDescription!} />
-      <meta name="keywords" content={keywords} />
-      <meta name="author" content={store.name} />
-      <link rel="canonical" href={canonicalUrl} />
-
-      {/* Open Graph */}
-      <meta property="og:type" content={ogType} />
-      <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:title" content={ogTitle} />
-      <meta property="og:description" content={metaDescription!} />
-      <meta property="og:image" content={ogImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:site_name" content={store.name} />
-      <meta property="og:locale" content={ogLocale} />
-
-      {/* Product-specific OG tags */}
+    <Seo
+      title={pageTitle}
+      ogTitle={ogTitle}
+      description={metaDescription!}
+      canonical={canonicalUrl}
+      image={ogImage}
+      keywords={keywords}
+      type={ogType}
+      siteName={store.name}
+      locale={ogLocale}
+      author={store.name}
+      schemas={schemas}
+    >
       {isProductPage && (
         <>
           <meta property="product:price:amount" content={String(product.price)} />
           <meta property="product:price:currency" content={store.currency || 'USD'} />
         </>
       )}
-
-      {/* Twitter Card */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={ogTitle} />
-      <meta name="twitter:description" content={metaDescription!} />
-      <meta name="twitter:image" content={ogImage} />
-
-      {/* Additional SEO */}
-      <meta name="robots" content="index, follow" />
-      <meta name="googlebot" content="index, follow" />
-
-      {/* JSON-LD Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(localBusinessSchema)}
-      </script>
-      <script type="application/ld+json">
-        {JSON.stringify(breadcrumbSchema)}
-      </script>
-      {singleProductSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(singleProductSchema)}
-        </script>
-      )}
-      {itemListSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(itemListSchema)}
-        </script>
-      )}
-      {productSchemas.map((schema, index) => (
-        <script key={index} type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
-      ))}
-
-      {/* Google Search Console verification */}
       {store.integrations?.googleSearchConsole && (
         <meta name="google-site-verification" content={store.integrations.googleSearchConsole} />
       )}
-
-      {/* Google Analytics 4 */}
-      {store.integrations?.googleAnalytics && (
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${store.integrations.googleAnalytics}`} />
-      )}
-      {store.integrations?.googleAnalytics && (
-        <script>{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${store.integrations.googleAnalytics}');`}</script>
-      )}
-
-      {/* Meta Pixel (Facebook / Instagram) */}
-      {store.integrations?.metaPixel && (
-        <script>{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${store.integrations.metaPixel}');fbq('track','PageView');`}</script>
-      )}
-
-      {/* TikTok Pixel */}
-      {store.integrations?.tiktokPixel && (
-        <script>{`!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var i=d.createElement("script");i.type="text/javascript",i.async=!0,i.src=r+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(i,a)};ttq.load('${store.integrations.tiktokPixel}');ttq.page();}(window,document,'ttq');`}</script>
-      )}
-    </Helmet>
+    </Seo>
   )
 }
