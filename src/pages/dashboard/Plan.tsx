@@ -142,7 +142,16 @@ export default function Plan() {
   }
 
   const currentPlan = store?.plan || 'free'
-  const hasActiveSubscription = store?.subscription?.status === 'active' || store?.subscription?.status === 'trialing'
+  // Any status where a Stripe subscription still exists and the merchant may need
+  // the Billing Portal — deliberately includes the dunning states. Gating this on
+  // 'active' alone hid both portal buttons exactly when a merchant most needed
+  // them: a failed card leaves the sub past_due/unpaid, keeps paid features live
+  // (api/_shared/plan.ts treats past_due as paid), and left no in-app way to fix
+  // the card or cancel. Mirrors `liveStatuses` in api/create-checkout.ts, which
+  // already routes these subs to the portal instead of a duplicate checkout.
+  const hasLiveSubscription = ['active', 'trialing', 'past_due', 'unpaid'].includes(
+    store?.subscription?.status || ''
+  )
   const stripeIsTrialing = store?.subscription?.status === 'trialing'
   const isNative = Capacitor.isNativePlatform()
 
@@ -251,7 +260,7 @@ export default function Plan() {
               </p>
             )}
 
-            {hasActiveSubscription && (
+            {hasLiveSubscription && (
               <button
                 onClick={handleManageSubscription}
                 disabled={loading}
@@ -263,7 +272,7 @@ export default function Plan() {
           </div>
 
           {/* Downgrade to Free — only shown when the user has a paid subscription to cancel */}
-          {hasActiveSubscription && (
+          {hasLiveSubscription && (
             <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
               <h3 className="font-semibold text-[#1e3a5f] mb-1">{PLAN_FEATURES.free.name}</h3>
               <p className="text-sm text-gray-600 mb-4">
@@ -312,7 +321,7 @@ export default function Plan() {
               const key = `${planId}_${billing}`
               const isProcessing = processingKey === key
               // This card represents the user's current plan+billing combo — disable it.
-              const isCurrentCard = planId === currentPlan && billing === currentBilling && hasActiveSubscription
+              const isCurrentCard = planId === currentPlan && billing === currentBilling && hasLiveSubscription
               const hasDiscount = qualifiesForDiscount && billing === 'monthly'
               const discountedPrice = hasDiscount ? Math.round(price * 0.5) : price
               const monthlyEquivalent = billing === 'yearly' ? (price / 12).toFixed(2) : null
