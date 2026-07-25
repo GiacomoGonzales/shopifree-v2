@@ -305,74 +305,38 @@ export default function Landing() {
                     {/* Reflejo */}
                     <div className="absolute inset-0 z-20 pointer-events-none" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,0) 30%)' }} />
 
-                    {/* Barra de estado */}
-                    <div className="flex items-center justify-between px-6 pt-3 pb-1">
-                      <span className="text-[0.62rem] font-bold" style={{ color: '#0B1220' }}>9:41</span>
-                      <span className="flex items-center gap-1" style={{ color: '#0B1220' }}>
+                    {/* Barra de estado (el recorte de la captura empieza en la
+                        cabecera de la tienda, así que la dibujamos nosotros) */}
+                    <div className="flex items-center justify-between px-6 pt-3 pb-1.5" style={{ background: '#0d0d0f' }}>
+                      <span className="text-[0.62rem] font-bold text-white">9:41</span>
+                      <span className="flex items-center gap-1 text-white">
                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M2 20h3v-8H2v8zm5.5 0h3V9h-3v11zm5.5 0h3V4h-3v16zm5.5 0h3v-6h-3v6z"/></svg>
                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l3.5-4.5c-1-.75-2.2-1.2-3.5-1.2s-2.5.45-3.5 1.2L12 21zm0-18C7.4 3 3.2 4.6 0 7.3l2 2.6C4.7 7.6 8.2 6.3 12 6.3s7.3 1.3 10 3.6l2-2.6C20.8 4.6 16.6 3 12 3zm0 6.6c-3 0-5.8 1-8 2.8l2 2.6c1.6-1.3 3.7-2.1 6-2.1s4.4.8 6 2.1l2-2.6c-2.2-1.8-5-2.8-8-2.8z"/></svg>
                         <svg className="w-4 h-3.5" viewBox="0 0 28 24" fill="currentColor"><rect x="1" y="7" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.6"/><rect x="3.2" y="9.2" width="16.6" height="5.6" rx="1.2"/><path d="M24 10.5v3c1.1-.3 1.9-.8 1.9-1.5s-.8-1.2-1.9-1.5z"/></svg>
                       </span>
                     </div>
 
-                    {/* Cabecera de la tienda */}
-                    <div className="px-4 pt-2 pb-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-                      <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.6rem] font-extrabold" style={{ background: 'linear-gradient(135deg,#38bdf8,#6366F1)' }}>A</span>
-                        <div className="leading-tight">
-                          <p className="text-[0.72rem] font-extrabold">Amaranto Store</p>
-                          <p className="text-[0.55rem]" style={{ color: 'var(--muted)' }}>amaranto.shopifree.app</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Chips de categorías */}
-                    <div className="flex gap-1.5 px-4 pt-2.5 pb-2 flex-wrap">
-                      {['Todo', 'Ropa', 'Accesorios', 'Ofertas'].map((c, i) => (
-                        <span key={c} className="text-[0.56rem] font-bold rounded-full px-2 py-0.5"
-                          style={i === 0 ? { background: 'var(--navy)', color: '#fff' } : { border: '1px solid var(--border)', color: 'var(--body)' }}>
-                          {c}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Grid de productos */}
-                    <div className="grid grid-cols-2 gap-2 px-4 pb-3">
-                      {[
-                        { g: 'linear-gradient(135deg,#FDE7EF,#FBCFE8)', n: 'Vestido Lino', p: '$ 39.00' },
-                        { g: 'linear-gradient(135deg,#E0F2FE,#BAE6FD)', n: 'Blusa Celeste', p: '$ 25.00' },
-                        { g: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', n: 'Bolso Tejido', p: '$ 32.00' },
-                        { g: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', n: 'Aretes Flora', p: '$ 12.00' },
-                      ].map((p) => (
-                        <div key={p.n} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                          <div className="aspect-square relative" style={{ background: p.g }}>
-                            <span className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 30% 25%, rgba(255,255,255,.55), transparent 70%)' }} />
-                          </div>
-                          <div className="p-1.5">
-                            <p className="text-[0.6rem] font-bold leading-tight truncate">{p.n}</p>
-                            <p className="text-[0.62rem] font-extrabold mt-0.5" style={{ color: 'var(--sky-deep)' }}>{p.p}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Botón pedir por WhatsApp */}
-                    <div className="px-4 pb-3">
-                      <div className="rounded-xl py-2 flex items-center justify-center gap-1.5 text-white text-[0.68rem] font-bold" style={{ background: '#16A34A', boxShadow: '0 8px 18px -8px rgba(22,163,74,.6)' }}>
-                        <WhatsAppIcon className="w-3.5 h-3.5" /> {t('mockup.orderViaWhatsApp')}
-                      </div>
-                    </div>
+                    {/* Captura real de una tienda demo (logo, fotos y precios
+                        reales) — recortada sin barra de estado ni barra de URL */}
+                    <img
+                      src="/landing/store-alienstore.jpg"
+                      alt=""
+                      width={739}
+                      height={1342}
+                      className="block w-full"
+                      style={{ marginBottom: '-1px' }}
+                    />
 
                     {/* Indicador home */}
-                    <div className="flex justify-center pb-2 pt-0.5">
-                      <span style={{ width: '92px', height: '4px', borderRadius: '999px', background: '#0B1220', opacity: .85 }} />
+                    <div className="flex justify-center pb-2 pt-1.5" style={{ background: '#0d0d0f' }}>
+                      <span style={{ width: '92px', height: '4px', borderRadius: '999px', background: '#fff', opacity: .55 }} />
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Toast flotante: nuevo pedido */}
-              <div className="absolute z-20 -left-10 sm:-left-24 top-16 bg-white rounded-2xl p-3 flex items-center gap-2.5" style={{ border: '1px solid var(--border)', boxShadow: '0 20px 40px -16px rgba(30,58,95,.25)' }}>
+              <div className="absolute z-20 -left-10 sm:-left-24 top-28 bg-white rounded-2xl p-3 flex items-center gap-2.5" style={{ border: '1px solid var(--border)', boxShadow: '0 20px 40px -16px rgba(30,58,95,.25)' }}>
                 <span className="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: '#16A34A' }}>
                   <WhatsAppIcon className="w-4 h-4" />
                 </span>
