@@ -1,5 +1,7 @@
 export interface BlogPost {
   slug: string
+  /** Categoria visible en /blog. Ver CATEGORIES en BlogList. */
+  category: string
   title: string
   description: string
   content: string
@@ -14,7 +16,8 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: 'como-crear-tienda-online-gratis',
-    title: 'Como Crear tu Tienda Online Gratis en 2025: Guia Completa',
+    category: 'Primeros pasos',
+    title: 'Como Crear tu Tienda Online Gratis en 2026: Guia Completa',
     description: 'Aprende paso a paso como crear tu tienda online gratis sin conocimientos tecnicos. Empieza a vender hoy mismo con esta guia completa para emprendedores.',
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200',
     author: 'Shopifree',
@@ -25,7 +28,7 @@ export const blogPosts: BlogPost[] = [
     content: `
 Crear una tienda online ya no requiere grandes inversiones ni conocimientos tecnicos avanzados. En esta guia te mostramos como puedes tener tu negocio digital funcionando en menos de una hora.
 
-## Por que necesitas una tienda online en 2025
+## Por que necesitas una tienda online en 2026
 
 El comercio electronico sigue creciendo exponencialmente. Segun estudios recientes:
 
@@ -97,7 +100,8 @@ Crear una tienda online gratis es mas facil que nunca. Con las herramientas corr
   },
   {
     slug: 'vender-por-whatsapp-guia-completa',
-    title: 'Como Vender por WhatsApp en 2025: Guia Definitiva',
+    category: 'Vender mas',
+    title: 'Como Vender por WhatsApp en 2026: Guia Definitiva',
     description: 'Descubre las mejores estrategias para vender por WhatsApp. Aprende a convertir conversaciones en ventas con esta guia paso a paso.',
     image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=1200',
     author: 'Shopifree',
@@ -178,6 +182,7 @@ Asi automatizas el proceso y te enfocas en cerrar ventas.
   },
   {
     slug: 'catalogo-digital-para-negocios',
+    category: 'Primeros pasos',
     title: 'Catalogo Digital: Que Es y Como Crear Uno para tu Negocio',
     description: 'Aprende que es un catalogo digital, sus beneficios y como crear uno profesional para tu negocio sin gastar dinero.',
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200',
@@ -256,129 +261,8 @@ Los clientes pueden hacer zoom en fotos, ver detalles y contactarte directamente
     `
   },
   {
-    slug: 'mejores-plataformas-ecommerce-gratis-2025',
-    title: 'Las 5 Mejores Plataformas de Ecommerce Gratis en 2025',
-    description: 'Comparativa de las mejores plataformas para crear tu tienda online gratis. Descubre cual es la mejor opcion para tu negocio.',
-    image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200',
-    author: 'Shopifree',
-    date: '2025-01-10',
-    readTime: 12,
-    tags: ['ecommerce', 'plataformas', 'comparativa', 'gratis'],
-    relatedPosts: ['como-crear-tienda-online-gratis', 'tienda-virtual-vs-marketplace'],
-    content: `
-Elegir la plataforma correcta puede marcar la diferencia entre el exito y el fracaso de tu negocio online.
-
-## Criterios de evaluacion
-
-Evaluamos cada plataforma en:
-- Facilidad de uso
-- Funcionalidades gratuitas
-- Comisiones por venta
-- Integracion con WhatsApp
-- Personalizacion
-
-## 1. Shopifree
-
-**Ideal para:** Emprendedores en Latinoamerica que venden por WhatsApp
-
-**Pros:**
-- 100% gratis para empezar
-- Sin comisiones por venta
-- Ventas directas por WhatsApp
-- Multiples temas profesionales
-- Facil de usar
-
-**Contras:**
-- Enfocado en mercado hispanohablante
-
-**Precio:** Gratis / Pro desde $4.99/mes
-
-## 2. WooCommerce
-
-**Ideal para:** Usuarios tecnicos con WordPress
-
-**Pros:**
-- Open source y gratuito
-- Muy personalizable
-- Miles de plugins
-
-**Contras:**
-- Requiere hosting (costo adicional)
-- Curva de aprendizaje alta
-- Necesitas conocimientos tecnicos
-
-**Precio:** Gratis (pero hosting ~$10/mes)
-
-## 3. Tiendanube
-
-**Ideal para:** Negocios medianos en Latinoamerica
-
-**Pros:**
-- Buena integracion con pagos locales
-- Soporte en espanol
-
-**Contras:**
-- Plan gratis muy limitado
-- Cobra comisiones por venta (2%)
-
-**Precio:** Gratis limitado / Desde $29/mes
-
-## 4. Ecwid
-
-**Ideal para:** Agregar tienda a sitio existente
-
-**Pros:**
-- Se integra en cualquier web
-- Plan gratis disponible
-
-**Contras:**
-- Limitado a 10 productos gratis
-- Comisiones en planes basicos
-
-**Precio:** Gratis (10 productos) / Desde $19/mes
-
-## 5. Square Online
-
-**Ideal para:** Negocios en USA
-
-**Pros:**
-- Plan gratis robusto
-- Integracion con POS
-
-**Contras:**
-- Comision del 2.9% + 30c por transaccion
-- Limitado fuera de USA
-
-**Precio:** Gratis (con comisiones)
-
-## Tabla comparativa
-
-| Plataforma | Gratis | Comisiones | WhatsApp | Facilidad |
-|------------|--------|------------|----------|-----------|
-| Shopifree | Si | 0% | Si | Alta |
-| WooCommerce | Si* | 0% | Plugin | Baja |
-| Tiendanube | Limitado | 2% | Si | Media |
-| Ecwid | 10 prod | Variable | No | Media |
-| Square | Si | 2.9%+ | No | Alta |
-
-*Requiere hosting pagado
-
-## Nuestra recomendacion
-
-Para emprendedores en Latinoamerica que quieren empezar rapido y sin costos, **Shopifree** es la mejor opcion:
-
-- Empieza gratis de verdad
-- Sin comisiones que se coman tus ganancias
-- Tus clientes te contactan por WhatsApp
-- Facil de usar, sin codigo
-
----
-
-**Prueba Shopifree gratis** y descubre por que miles de emprendedores lo eligen.
-    `
-  },
-  {
     slug: 'mejores-plataformas-ecommerce-gratis-2026',
+    category: 'Comparativas',
     title: 'Las 5 Mejores Plataformas de Ecommerce Gratis en 2026',
     description: 'Comparativa actualizada de las mejores plataformas para crear tu tienda online gratis en 2026. Descubre cual es la mejor opcion para tu negocio.',
     image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200',
@@ -518,7 +402,8 @@ Para emprendedores en Latinoamerica que quieren empezar rapido y sin costos, **S
   },
   {
     slug: 'como-emprender-negocio-online',
-    title: 'Como Emprender un Negocio Online desde Cero en 2025',
+    category: 'Primeros pasos',
+    title: 'Como Emprender un Negocio Online desde Cero en 2026',
     description: 'Guia completa para emprender tu negocio online desde cero. Aprende los pasos esenciales para iniciar con exito.',
     image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200',
     author: 'Shopifree',
@@ -630,7 +515,8 @@ Tratales increiblemente bien. Ellos traeran mas clientes.
   },
   {
     slug: 'tienda-virtual-vs-marketplace',
-    title: 'Tienda Virtual Propia vs Marketplace: Cual Elegir en 2025',
+    category: 'Comparativas',
+    title: 'Tienda Virtual Propia vs Marketplace: Cual Elegir en 2026',
     description: 'Descubre las ventajas y desventajas de tener tu propia tienda virtual vs vender en marketplaces como MercadoLibre o Amazon.',
     image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200',
     author: 'Shopifree',
@@ -748,6 +634,7 @@ No es uno u otro, es usar ambos estrategicamente. Pero tu meta a largo plazo deb
   },
   {
     slug: 'como-cobrar-con-tarjeta-en-tu-tienda-online',
+    category: 'Vender mas',
     title: 'Cómo Cobrar con Tarjeta en tu Tienda Online: MercadoPago, Stripe y PayPal',
     description: 'Guía práctica para aceptar pagos con tarjeta en tu tienda: qué pasarela te conviene según tu país, qué comisiones cobran y cómo configurarla paso a paso.',
     image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200',
@@ -849,6 +736,7 @@ Los pagos con tarjeta están disponibles desde el plan Pro. Si aún estás en el
   },
   {
     slug: 'conectar-dominio-propio-tienda-online',
+    category: 'Gestion',
     title: 'Cómo Conectar tu Dominio Propio a tu Tienda Online (Paso a Paso)',
     description: 'Aprende a conectar tu dominio .com a tu tienda online: qué registros DNS configurar, cuánto tarda en funcionar y cómo resolver los errores más frecuentes.',
     image: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=1200',
@@ -945,6 +833,7 @@ El dominio propio está disponible desde el plan Pro. El dominio en sí lo compr
   },
   {
     slug: 'como-controlar-el-stock-de-tu-tienda',
+    category: 'Gestion',
     title: 'Cómo Controlar el Stock de tu Tienda sin Volverte Loco',
     description: 'Variantes, almacenes y quiebres de stock explicados simple. Aprende a llevar el inventario de tu tienda online para no vender lo que ya no tienes.',
     image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1200',
@@ -1032,6 +921,7 @@ Empieza simple. Un stock básico bien llevado es infinitamente mejor que un sist
   },
   {
     slug: 'fotos-de-productos-con-el-celular',
+    category: 'Vender mas',
     title: 'Fotos de Productos con tu Celular: Guía Práctica para Vender Más',
     description: 'No necesitas cámara profesional ni estudio. Aprende a tomar fotos de producto que venden usando solo tu celular, luz natural y materiales que ya tienes en casa.',
     image: 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200',
@@ -1119,6 +1009,7 @@ En Shopifree puedes subir 1 foto por producto en el plan Gratis, 5 en el plan Pr
   },
   {
     slug: 'cupones-y-promociones-que-si-venden',
+    category: 'Vender mas',
     title: 'Cupones y Promociones que Sí Venden (y las que Solo te Hacen Perder Plata)',
     description: 'Cómo usar cupones de descuento en tu tienda online sin regalar tu margen. Qué promociones funcionan, cuándo lanzarlas y los errores que arruinan la rentabilidad.',
     image: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=1200',

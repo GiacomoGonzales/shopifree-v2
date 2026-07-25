@@ -4,6 +4,13 @@
       "includeFiles": "src/lib/**"
     }
   },
+  "redirects": [
+    {
+      "source": "/:lang/blog/mejores-plataformas-ecommerce-gratis-2025",
+      "destination": "/:lang/blog/mejores-plataformas-ecommerce-gratis-2026",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],

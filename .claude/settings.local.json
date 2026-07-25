@@ -137,7 +137,11 @@
       "Bash(SHOT_BASE=http://localhost:5199 npx tsx scripts/generate-theme-desktop-shots.ts velvet)",
       "Bash(SHOT_BASE=http://localhost:5199 npx tsx scripts/generate-theme-desktop-shots.ts tabloid comic zine bauhaus papercut grunge menu watercolor velvet prism)",
       "Bash(grep -n \"^  {$\" src/pages/blog/blogData.ts)",
-      "Bash(python \"C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/newposts.py\")"
+      "Bash(python \"C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/newposts.py\")",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)",
+      "Bash(python \"C:/Users/giaco/AppData/Local/Temp/claude/C--Users-giaco-shopifree-v2/aa9d6ca1-1021-40c6-a0cd-9a2db2f852c7/scratchpad/blogfix.py\")",
+      "Bash(git rm *)"
     ],
     "deny": [],
     "ask": []
