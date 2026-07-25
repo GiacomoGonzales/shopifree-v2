@@ -47,24 +47,12 @@ const SLIDE_MS = 3800
 
 // Grupos de funciones. Los textos (titulo + items) viven en landing.json bajo
 // features.groups[i], para que el inventario se traduzca y se edite sin tocar
-// el componente; aqui solo va lo visual.
+// el componente; aqui solo va el color que identifica a cada grupo.
 const FEATURE_GROUPS = [
-  {
-    key: 'store', bg: '#E0F2FE', fg: '#0284C7',
-    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9l1.5-5h15L21 9M3 9h18M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9M9 20v-6h6v6" /></svg>,
-  },
-  {
-    key: 'sell', bg: '#DCFCE7', fg: '#16A34A',
-    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zm2 8h4" /></svg>,
-  },
-  {
-    key: 'manage', bg: '#EDE9FE', fg: '#7C3AED',
-    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4v10l8 4 8-4V7zM4 7l8 4 8-4M12 11v10" /></svg>,
-  },
-  {
-    key: 'grow', bg: '#FEF3C7', fg: '#B45309',
-    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5" /></svg>,
-  },
+  { key: 'store', accent: '#0284C7' },
+  { key: 'sell', accent: '#16A34A' },
+  { key: 'manage', accent: '#7C3AED' },
+  { key: 'grow', accent: '#B45309' },
 ] as const
 
 const WhatsAppIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
@@ -840,22 +828,17 @@ export default function Landing() {
               return (
                 <div
                   key={g.key}
-                  className="slpr px-0 sm:px-7 lg:px-6 first:pl-0 py-8 sm:py-0"
+                  className="slpr px-0 sm:px-7 lg:px-6 first:pl-0 py-8"
                   style={{
                     transitionDelay: `${gi * 0.07}s`,
                     borderTop: '1px solid var(--border)',
                   }}
                 >
-                  <div className="slp-icon" style={{ background: g.bg, color: g.fg }}>{g.icon}</div>
                   <h3 className="font-bold mb-4">{t(`features.groups.${gi}.title`)}</h3>
                   <ul className="space-y-2.5">
                     {items.map((item) => (
                       <li key={item} className="flex items-start gap-2.5 text-[0.88rem] leading-snug" style={{ color: 'var(--body)' }}>
-                        <span className="shrink-0 mt-[0.3rem]" style={{ color: g.fg }}>
-                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.2} aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
+                        <span className="shrink-0 rounded-full mt-[0.45rem]" style={{ width: 5, height: 5, background: g.accent }} />
                         {item}
                       </li>
                     ))}
