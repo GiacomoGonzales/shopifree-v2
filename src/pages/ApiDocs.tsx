@@ -120,7 +120,7 @@ export default function ApiDocs() {
               API Docs
             </span>
           </div>
-          <Link to="/es/dashboard/api" className="text-sm text-gray-600 hover:text-gray-900">
+          <Link to="/es/dashboard/integrations?tab=api" className="text-sm text-gray-600 hover:text-gray-900">
             ← Volver al dashboard
           </Link>
         </div>

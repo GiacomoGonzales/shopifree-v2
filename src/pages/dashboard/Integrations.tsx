@@ -1,86 +1,248 @@
-import { useState, useEffect } from 'react'
+/**
+ * Integraciones
+ * ==========================================================================
+ * Une lo que antes eran dos entradas del menú lateral — "Integraciones" y
+ * "API & Webhooks" — en una sola página con pestañas. Son lo mismo desde el
+ * punto de vista del comerciante: conectar Shopifree con algo de afuera.
+ *
+ * Estilo alineado con el Inicio y la landing: bordes de 1px en #E6EBF1, radios
+ * de 14px, nada por encima de semibold y sin iconos SVG. Cada conexión se
+ * identifica por su nombre y un punto de color, y muestra si está conectada —
+ * dato que la versión anterior no daba, pese a dedicarle una tarjeta de 100px
+ * de alto a cada servicio.
+ */
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
+import { apiUrl } from '../../utils/apiBase'
 import type { Store } from '../../types'
+
+type Tab = 'connections' | 'api'
+
+interface StoredApiKey {
+  prefix: string
+  createdAt: Date | { toDate: () => Date } | string
+  lastUsedAt?: Date | { toDate: () => Date } | string | null
+}
+
+const toDate = (d: StoredApiKey['createdAt']): Date => {
+  if (d instanceof Date) return d
+  if (typeof d === 'object' && d !== null && 'toDate' in d) return d.toDate()
+  return new Date(d as string)
+}
+
+/** Campos de integrations que se editan y guardan juntos. */
+type FieldKey =
+  | 'googleAnalytics'
+  | 'metaPixel'
+  | 'tiktokPixel'
+  | 'googleSearchConsole'
+  | 'cjApiKey'
+  | 'printfulToken'
+
+const FIELD_KEYS: FieldKey[] = [
+  'googleAnalytics',
+  'metaPixel',
+  'tiktokPixel',
+  'googleSearchConsole',
+  'cjApiKey',
+  'printfulToken',
+]
+
+const EMPTY_FIELDS: Record<FieldKey, string> = {
+  googleAnalytics: '',
+  metaPixel: '',
+  tiktokPixel: '',
+  googleSearchConsole: '',
+  cjApiKey: '',
+  printfulToken: '',
+}
+
+/** Color de identidad de cada servicio (el punto a la izquierda del nombre). */
+const DOTS: Record<FieldKey, string> = {
+  googleAnalytics: '#F9AB00',
+  metaPixel: '#1877F2',
+  tiktokPixel: '#334155',
+  googleSearchConsole: '#4285F4',
+  cjApiKey: '#F57C00',
+  printfulToken: '#16A34A',
+}
+
+const GROUPS: { key: string; fields: FieldKey[] }[] = [
+  { key: 'tracking', fields: ['googleAnalytics', 'metaPixel', 'tiktokPixel', 'googleSearchConsole'] },
+  { key: 'suppliers', fields: ['cjApiKey', 'printfulToken'] },
+]
+
+const INPUT_CLASS =
+  'w-full px-3.5 py-2.5 rounded-xl bg-[#F6F9FC] border border-[#E6EBF1] text-[0.8rem] font-mono text-[#1e3a5f] ' +
+  'placeholder:text-[#A9B6C6] placeholder:font-sans transition-colors focus:outline-none focus:bg-white ' +
+  'focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/15'
 
 export default function Integrations() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
-  const [store, setStore] = useState<Store | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // La pestaña vive en la URL para que /dashboard/api pueda redirigir aquí
+  // apuntando directo a la sección correcta.
+  const tab: Tab = searchParams.get('tab') === 'api' ? 'api' : 'connections'
+  const setTab = (next: Tab) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'connections') params.delete('tab')
+    else params.set('tab', next)
+    setSearchParams(params, { replace: true })
+  }
+
+  const [storeId, setStoreId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const [googleAnalytics, setGoogleAnalytics] = useState('')
-  const [metaPixel, setMetaPixel] = useState('')
-  const [tiktokPixel, setTiktokPixel] = useState('')
-  const [googleSearchConsole, setGoogleSearchConsole] = useState('')
-  const [cjApiKey, setCjApiKey] = useState('')
-  const [printfulToken, setPrintfulToken] = useState('')
+  const [fields, setFields] = useState<Record<FieldKey, string>>(EMPTY_FIELDS)
+  const [savedFields, setSavedFields] = useState<Record<FieldKey, string>>(EMPTY_FIELDS)
   const [customHeadHtml, setCustomHeadHtml] = useState('')
   const [customBodyHtml, setCustomBodyHtml] = useState('')
+  const [savedHtml, setSavedHtml] = useState({ head: '', body: '' })
+
+  const [apiKey, setApiKey] = useState<StoredApiKey | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const [revoking, setRevoking] = useState(false)
+  // La key en claro se muestra UNA vez en el modal. Nunca sale de este estado:
+  // el servidor solo guarda su hash SHA-256.
+  const [plainKey, setPlainKey] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    const fetchStore = async () => {
-      if (!firebaseUser) return
-
+    if (!firebaseUser) return
+    let cancelled = false
+    const findStore = async () => {
       try {
-        const storesRef = collection(db, 'stores')
-        const storeQuery = query(storesRef, where('ownerId', '==', firebaseUser.uid))
-        const storeSnapshot = await getDocs(storeQuery)
-
-        if (!storeSnapshot.empty) {
-          const storeData = storeSnapshot.docs[0].data() as Store
-          setStore({ ...storeData, id: storeSnapshot.docs[0].id })
-
-          if (storeData.integrations) {
-            setGoogleAnalytics(storeData.integrations.googleAnalytics || '')
-            setMetaPixel(storeData.integrations.metaPixel || '')
-            setTiktokPixel(storeData.integrations.tiktokPixel || '')
-            setGoogleSearchConsole(storeData.integrations.googleSearchConsole || '')
-            setCjApiKey(storeData.integrations.cjApiKey || '')
-            setPrintfulToken(storeData.integrations.printfulToken || '')
-            setCustomHeadHtml(storeData.integrations.customHeadHtml || '')
-            setCustomBodyHtml(storeData.integrations.customBodyHtml || '')
-          }
+        const snap = await getDocs(query(collection(db, 'stores'), where('ownerId', '==', firebaseUser.uid)))
+        if (cancelled) return
+        if (snap.empty) {
+          setLoading(false)
+          return
         }
+        const data = snap.docs[0].data() as Store
+        setStoreId(snap.docs[0].id)
+
+        const loaded = { ...EMPTY_FIELDS }
+        for (const key of FIELD_KEYS) loaded[key] = data.integrations?.[key] || ''
+        setFields(loaded)
+        setSavedFields(loaded)
+
+        const head = data.integrations?.customHeadHtml || ''
+        const body = data.integrations?.customBodyHtml || ''
+        setCustomHeadHtml(head)
+        setCustomBodyHtml(body)
+        setSavedHtml({ head, body })
       } catch (error) {
         console.error('Error fetching store:', error)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
-
-    fetchStore()
+    findStore()
+    return () => {
+      cancelled = true
+    }
   }, [firebaseUser])
 
-  const handleSave = async () => {
-    if (!store) return
+  // Suscripción a la tienda: /api/api-keys escribe la key nueva del lado del
+  // servidor, así que el bloque de la API se refresca solo.
+  useEffect(() => {
+    if (!storeId) return
+    const unsub = onSnapshot(doc(db, 'stores', storeId), snap => {
+      setApiKey((snap.data() as Store | undefined)?.apiKey ?? null)
+    })
+    return () => unsub()
+  }, [storeId])
 
+  const dirty =
+    FIELD_KEYS.some(k => fields[k] !== savedFields[k]) ||
+    customHeadHtml !== savedHtml.head ||
+    customBodyHtml !== savedHtml.body
+
+  const handleSave = async () => {
+    if (!storeId) return
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'stores', store.id), {
-        integrations: {
-          googleAnalytics: googleAnalytics.trim() || null,
-          metaPixel: metaPixel.trim() || null,
-          tiktokPixel: tiktokPixel.trim() || null,
-          googleSearchConsole: googleSearchConsole.trim() || null,
-          cjApiKey: cjApiKey.trim() || null,
-          printfulToken: printfulToken.trim() || null,
-          customHeadHtml: customHeadHtml.trim() || null,
-          customBodyHtml: customBodyHtml.trim() || null,
-        },
-        updatedAt: new Date()
-      })
+      const payload: Record<string, string | null> = {}
+      for (const key of FIELD_KEYS) payload[key] = fields[key].trim() || null
+      payload.customHeadHtml = customHeadHtml.trim() || null
+      payload.customBodyHtml = customBodyHtml.trim() || null
+
+      await updateDoc(doc(db, 'stores', storeId), { integrations: payload, updatedAt: new Date() })
+
+      const trimmed = { ...EMPTY_FIELDS }
+      for (const key of FIELD_KEYS) trimmed[key] = fields[key].trim()
+      setFields(trimmed)
+      setSavedFields(trimmed)
+      setSavedHtml({ head: customHeadHtml.trim(), body: customBodyHtml.trim() })
       showToast(t('integrations.toast.saved'), 'success')
     } catch (error) {
       console.error('Error saving:', error)
       showToast(t('integrations.toast.error'), 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const callApi = useCallback(
+    async (action: 'generate' | 'revoke') => {
+      if (!firebaseUser) throw new Error('Not authenticated')
+      const token = await firebaseUser.getIdToken()
+      const res = await fetch(apiUrl('/api/api-keys'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
+      return data
+    },
+    [firebaseUser]
+  )
+
+  const handleGenerate = async () => {
+    if (apiKey && !window.confirm(t('integrations.api.confirmRegenerate'))) return
+    setGenerating(true)
+    try {
+      const data = await callApi('generate')
+      setPlainKey(data.plainKey)
+      setCopied(false)
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleRevoke = async () => {
+    if (!window.confirm(t('integrations.api.confirmRevoke'))) return
+    setRevoking(true)
+    try {
+      await callApi('revoke')
+      showToast(t('integrations.api.revoked'), 'success')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'desconocido'}`, 'error')
+    } finally {
+      setRevoking(false)
+    }
+  }
+
+  const copyPlainKey = async () => {
+    if (!plainKey) return
+    try {
+      await navigator.clipboard.writeText(plainKey)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      showToast(t('integrations.api.copyFailed'), 'error')
     }
   }
 
@@ -92,195 +254,309 @@ export default function Integrations() {
     )
   }
 
-  const cards = [
-    {
-      key: 'googleAnalytics',
-      title: t('integrations.googleAnalytics.title'),
-      description: t('integrations.googleAnalytics.description'),
-      label: t('integrations.googleAnalytics.label'),
-      placeholder: t('integrations.googleAnalytics.placeholder'),
-      value: googleAnalytics,
-      onChange: setGoogleAnalytics,
-      color: '#F9AB00',
-      icon: (
-        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M22.84 2.998v17.958c0 .97-.654 1.823-1.59 2.073l-.098.024a2.126 2.126 0 01-2.503-1.476l-.016-.063a2.127 2.127 0 01-.076-.558V6.11L7.057 19.562a2.127 2.127 0 01-1.778.966h-.002a2.127 2.127 0 01-1.78-.966L1.16 15.53a2.127 2.127 0 01.378-2.652l.052-.048L14.633 2.126A2.127 2.127 0 0116.148 1.5h4.565c1.175 0 2.127.952 2.127 2.127v-.63z"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'metaPixel',
-      title: t('integrations.metaPixel.title'),
-      description: t('integrations.metaPixel.description'),
-      label: t('integrations.metaPixel.label'),
-      placeholder: t('integrations.metaPixel.placeholder'),
-      value: metaPixel,
-      onChange: setMetaPixel,
-      color: '#1877F2',
-      icon: (
-        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'tiktokPixel',
-      title: t('integrations.tiktokPixel.title'),
-      description: t('integrations.tiktokPixel.description'),
-      label: t('integrations.tiktokPixel.label'),
-      placeholder: t('integrations.tiktokPixel.placeholder'),
-      value: tiktokPixel,
-      onChange: setTiktokPixel,
-      color: '#000000',
-      icon: (
-        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.75a8.18 8.18 0 004.76 1.52V6.84a4.84 4.84 0 01-1-.15z"/>
-        </svg>
-      ),
-    },
-    {
-      key: 'googleSearchConsole',
-      title: t('integrations.googleSearchConsole.title'),
-      description: t('integrations.googleSearchConsole.description'),
-      label: t('integrations.googleSearchConsole.label'),
-      placeholder: t('integrations.googleSearchConsole.placeholder'),
-      value: googleSearchConsole,
-      onChange: setGoogleSearchConsole,
-      color: '#4285F4',
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      ),
-    },
-    {
-      key: 'cjApiKey',
-      title: 'CJ Dropshipping',
-      description: 'Conecta tu cuenta de CJ Dropshipping para importar productos y hacer dropshipping. Registrate gratis en cjdropshipping.com y obtiene tu API Key.',
-      label: 'API Key',
-      placeholder: 'CJ1234567@api@xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-      value: cjApiKey,
-      onChange: setCjApiKey,
-      color: '#F57C00',
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      key: 'printfulToken',
-      title: 'Printful',
-      description: 'Conecta tu cuenta de Printful para vender productos print-on-demand (remeras, tazas, posters y mas). Genera tu token en printful.com > Settings > API.',
-      label: 'Private Token',
-      placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-      value: printfulToken,
-      onChange: setPrintfulToken,
-      color: '#2E7D32',
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-        </svg>
-      ),
-    },
-  ]
-
   return (
-    <div>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('integrations.title')}</h1>
-          <p className="text-gray-600 mt-1">{t('integrations.subtitle')}</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full sm:w-auto px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm"
-        >
-          {saving ? t('integrations.saving') : t('integrations.saveChanges')}
-        </button>
-      </div>
-
-      {/* Cards */}
-      <div className="space-y-6">
-        {cards.map((card) => (
-          <div key={card.key} className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-                style={{ backgroundColor: card.color, boxShadow: `0 4px 14px ${card.color}33` }}
-              >
-                {card.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-[#1e3a5f]">{card.title}</h2>
-                <p className="text-sm text-gray-600 mt-1">{card.description}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200/60">
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{card.label}</label>
-              <input
-                type="text"
-                value={card.value}
-                onChange={(e) => card.onChange(e.target.value)}
-                placeholder={card.placeholder}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
-              />
-            </div>
+    <>
+      <div className="max-w-3xl space-y-5 text-[#1e3a5f]">
+        {/* Cabecera */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div>
+            <h1 className="text-lg sm:text-xl font-semibold tracking-tight">{t('integrations.title')}</h1>
+            <p className="text-[0.82rem] mt-0.5 font-normal text-[#8898AA]">{t('integrations.subtitle')}</p>
           </div>
-        ))}
-
-        {/* Código HTML personalizado — head + body */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-              style={{ backgroundColor: '#475569', boxShadow: '0 4px 14px #47556933' }}
+          {tab === 'connections' && (
+            <button
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="px-4 py-2.5 rounded-xl text-white text-[0.82rem] font-semibold shrink-0 transition-opacity hover:opacity-90 disabled:opacity-40"
+              style={{ background: '#1e3a5f', boxShadow: '0 8px 20px -12px rgba(30,58,95,.7)' }}
             >
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('integrations.customHeadHtml.title')}</h2>
-              <p className="text-sm text-gray-600 mt-1">{t('integrations.customHeadHtml.description')}</p>
-            </div>
-          </div>
+              {saving ? t('integrations.saving') : dirty ? t('integrations.saveChanges') : t('integrations.saved')}
+            </button>
+          )}
+        </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-200/60 space-y-4">
-            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p className="text-xs text-amber-800">{t('integrations.customHeadHtml.warning')}</p>
-            </div>
+        {/* Pestañas */}
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-[#F6F9FC] border border-[#E6EBF1] self-start w-fit">
+          {(['connections', 'api'] as Tab[]).map(id => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`px-3.5 py-1.5 rounded-lg text-[0.78rem] transition-all ${
+                tab === id
+                  ? 'bg-white text-[#1e3a5f] shadow-sm font-semibold'
+                  : 'text-[#8898AA] hover:text-[#425466] font-medium'
+              }`}
+            >
+              {t(`integrations.tabs.${id}`)}
+            </button>
+          ))}
+        </div>
 
+        {tab === 'connections' ? (
+          <>
+            {GROUPS.map(group => (
+              <div key={group.key}>
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-[#8898AA] mb-2">
+                  {t(`integrations.groups.${group.key}`)}
+                </p>
+                <div className="bg-white rounded-[14px] border border-[#E6EBF1] divide-y divide-[#EEF2F6]">
+                  {group.fields.map(key => {
+                    const connected = !!fields[key].trim()
+                    return (
+                      <div key={key} className="p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="flex items-center gap-2 text-[0.86rem] font-semibold">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: DOTS[key] }} />
+                              {t(`integrations.${key}.title`)}
+                            </p>
+                            <p className="text-[0.78rem] mt-1 font-normal text-[#8898AA]">
+                              {t(`integrations.${key}.description`)}
+                            </p>
+                          </div>
+                          {/* Estado de un vistazo: antes había que leer si el campo tenía algo. */}
+                          <span
+                            className="text-[0.64rem] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap shrink-0"
+                            style={
+                              connected
+                                ? { background: '#DCFCE7', color: '#15803D' }
+                                : { background: '#F1F5F9', color: '#8898AA' }
+                            }
+                          >
+                            {connected ? t('integrations.connected') : t('integrations.notConnected')}
+                          </span>
+                        </div>
+                        <div className="mt-3">
+                          <label className="block text-[0.7rem] font-medium text-[#8898AA] mb-1.5">
+                            {t(`integrations.${key}.label`)}
+                          </label>
+                          <input
+                            type="text"
+                            value={fields[key]}
+                            onChange={e => setFields(prev => ({ ...prev, [key]: e.target.value }))}
+                            placeholder={t(`integrations.${key}.placeholder`)}
+                            className={INPUT_CLASS}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Código HTML personalizado */}
             <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('integrations.customHeadHtml.headLabel')}</label>
-              <textarea
-                value={customHeadHtml}
-                onChange={(e) => setCustomHeadHtml(e.target.value)}
-                placeholder={'<meta name="example-site-verification" content="abc123" />'}
-                rows={6}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm resize-y"
-              />
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-[#8898AA] mb-2">
+                {t('integrations.groups.code')}
+              </p>
+              <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
+                <p className="text-[0.86rem] font-semibold">{t('integrations.customHeadHtml.title')}</p>
+                <p className="text-[0.78rem] mt-1 font-normal text-[#8898AA]">
+                  {t('integrations.customHeadHtml.description')}
+                </p>
+
+                <p
+                  className="mt-3 rounded-xl px-3 py-2.5 text-[0.74rem] font-medium"
+                  style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' }}
+                >
+                  {t('integrations.customHeadHtml.warning')}
+                </p>
+
+                <div className="mt-4 space-y-4">
+                  {(
+                    [
+                      {
+                        label: t('integrations.customHeadHtml.headLabel'),
+                        value: customHeadHtml,
+                        set: setCustomHeadHtml,
+                        placeholder: '<meta name="example-site-verification" content="abc123" />',
+                      },
+                      {
+                        label: t('integrations.customHeadHtml.bodyLabel'),
+                        value: customBodyHtml,
+                        set: setCustomBodyHtml,
+                        placeholder: '<script type="text/javascript">TrustLogo("...", "...", "...")</script>',
+                      },
+                    ] as const
+                  ).map(area => (
+                    <div key={area.label}>
+                      <label className="block text-[0.7rem] font-medium text-[#8898AA] mb-1.5">{area.label}</label>
+                      <textarea
+                        value={area.value}
+                        onChange={e => area.set(e.target.value)}
+                        placeholder={area.placeholder}
+                        rows={5}
+                        className={`${INPUT_CLASS} resize-y`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <p
+              className="rounded-[14px] px-4 py-3.5 text-[0.8rem] font-normal"
+              style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', color: '#0C4A6E' }}
+            >
+              <span className="font-semibold">{t('integrations.api.whatFor')}</span>{' '}
+              {t('integrations.api.whatForBody')}
+            </p>
+
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[0.86rem] font-semibold">{t('integrations.api.keyTitle')}</p>
+                {apiKey && (
+                  <span
+                    className="text-[0.64rem] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap"
+                    style={{ background: '#DCFCE7', color: '#15803D' }}
+                  >
+                    {t('integrations.api.active')}
+                  </span>
+                )}
+              </div>
+
+              {!apiKey ? (
+                <div className="mt-4 text-center py-6">
+                  <p className="text-[0.82rem] font-normal text-[#8898AA] mb-4">{t('integrations.api.noKey')}</p>
+                  <button
+                    onClick={handleGenerate}
+                    disabled={generating}
+                    className="px-4 py-2.5 rounded-xl text-white text-[0.82rem] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                    style={{ background: '#1e3a5f', boxShadow: '0 8px 20px -12px rgba(30,58,95,.7)' }}
+                  >
+                    {generating ? t('integrations.api.generating') : t('integrations.api.generate')}
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="text-[0.7rem] font-medium text-[#8898AA] mb-1.5">{t('integrations.api.identifier')}</p>
+                    <code
+                      className="inline-block px-3 py-2 rounded-xl text-[0.8rem] font-mono"
+                      style={{ background: '#F6F9FC', border: '1px solid #E6EBF1' }}
+                    >
+                      {apiKey.prefix}…
+                    </code>
+                    <p className="text-[0.74rem] mt-2 font-normal text-[#8898AA]">{t('integrations.api.hashOnly')}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[0.7rem] font-medium text-[#8898AA] mb-0.5">{t('integrations.api.created')}</p>
+                      <p className="text-[0.8rem] font-semibold">
+                        {toDate(apiKey.createdAt).toLocaleDateString(undefined, {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[0.7rem] font-medium text-[#8898AA] mb-0.5">{t('integrations.api.lastUsed')}</p>
+                      <p className="text-[0.8rem] font-semibold">
+                        {apiKey.lastUsedAt
+                          ? toDate(apiKey.lastUsedAt).toLocaleString(undefined, {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : t('integrations.api.never')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-3 border-t border-[#EEF2F6]">
+                    <button
+                      onClick={handleGenerate}
+                      disabled={generating || revoking}
+                      className="px-3 py-1.5 rounded-lg text-[0.76rem] font-semibold transition-colors disabled:opacity-50 hover:bg-[#F6F9FC]"
+                      style={{ border: '1px solid #E6EBF1', color: '#425466' }}
+                    >
+                      {generating ? t('integrations.api.regenerating') : t('integrations.api.regenerate')}
+                    </button>
+                    <button
+                      onClick={handleRevoke}
+                      disabled={generating || revoking}
+                      className="px-3 py-1.5 rounded-lg text-[0.76rem] font-semibold transition-colors disabled:opacity-50 hover:bg-[#FEF2F2] hover:text-[#B91C1C] hover:border-[#FECACA]"
+                      style={{ border: '1px solid #E6EBF1', color: '#425466' }}
+                    >
+                      {revoking ? t('integrations.api.revoking') : t('integrations.api.revoke')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('integrations.customHeadHtml.bodyLabel')}</label>
-              <textarea
-                value={customBodyHtml}
-                onChange={(e) => setCustomBodyHtml(e.target.value)}
-                placeholder={'<script type="text/javascript">TrustLogo("...", "...", "...")</script>'}
-                rows={6}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm resize-y"
-              />
+            <p className="text-[0.8rem] font-normal text-[#8898AA]">
+              {t('integrations.api.docs')}{' '}
+              <a
+                href="/api-docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#0284C7] hover:text-[#1e3a5f] transition-colors"
+              >
+                shopifree.app/api-docs
+              </a>
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Modal con la key en claro — se muestra una sola vez */}
+      {plainKey && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setPlainKey(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg text-[#1e3a5f]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-[#EEF2F6]">
+              <h2 className="text-base font-semibold">{t('integrations.api.modalTitle')}</h2>
+              <p className="text-[0.78rem] mt-0.5 font-normal text-[#8898AA]">{t('integrations.api.modalSubtitle')}</p>
+            </div>
+            <div className="px-5 py-4 space-y-4">
+              <p
+                className="rounded-xl px-3 py-2.5 text-[0.74rem] font-medium"
+                style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' }}
+              >
+                {t('integrations.api.modalWarning')}
+              </p>
+              <div>
+                <label className="block text-[0.7rem] font-medium text-[#8898AA] mb-1.5">
+                  {t('integrations.api.keyTitle')}
+                </label>
+                <div className="flex items-stretch rounded-xl overflow-hidden" style={{ border: '1px solid #E6EBF1' }}>
+                  <code className="flex-1 px-3 py-2.5 text-[0.8rem] font-mono break-all" style={{ background: '#F6F9FC' }}>
+                    {plainKey}
+                  </code>
+                  <button
+                    onClick={copyPlainKey}
+                    className="px-4 text-[0.76rem] font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                    style={{ background: copied ? '#16A34A' : '#1e3a5f' }}
+                  >
+                    {copied ? t('home.actions.copied') : t('home.actions.copy')}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-3.5 border-t border-[#EEF2F6] flex justify-end">
+              <button
+                onClick={() => setPlainKey(null)}
+                className="px-4 py-2 rounded-xl text-white text-[0.82rem] font-semibold transition-opacity hover:opacity-90"
+                style={{ background: '#1e3a5f' }}
+              >
+                {t('home.actions.close')}
+              </button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }

@@ -31,7 +31,6 @@ const Account = lazy(() => import('./pages/dashboard/Account'))
 const Domain = lazy(() => import('./pages/dashboard/Domain'))
 const Payments = lazy(() => import('./pages/dashboard/Payments'))
 const Integrations = lazy(() => import('./pages/dashboard/Integrations'))
-const ApiAccess = lazy(() => import('./pages/dashboard/ApiAccess'))
 const ApiDocs = lazy(() => import('./pages/ApiDocs'))
 const ThemeShot = lazy(() => import('./pages/ThemeShot'))
 const Coupons = lazy(() => import('./pages/dashboard/Coupons'))
@@ -243,7 +242,9 @@ function AppRoutes() {
             <Route path="domain" element={<Domain />} />
             <Route path="payments" element={<Payments />} />
             <Route path="integrations" element={<Integrations />} />
-            <Route path="api" element={<ApiAccess />} />
+            {/* API & Webhooks se fusionó con Integraciones. La ruta vieja sigue
+                viva porque hay enlaces a ella (por ejemplo desde /api-docs). */}
+            <Route path="api" element={<Navigate to="../integrations?tab=api" replace />} />
             <Route path="mi-app" element={<MiApp />} />
             <Route path="coupons" element={<Coupons />} />
             <Route path="dropshipping" element={<Dropshipping />} />
