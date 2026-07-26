@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { CARD, INPUT, LABEL, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 interface Spec {
   key: string
@@ -49,13 +50,13 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+    <div className={CARD}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">
+          <h2 className={SECTION_TITLE}>
             {t('productForm.specs.title', 'Especificaciones tecnicas')}
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className={SECTION_HINT}>
             {t('productForm.specs.description', 'Caracteristicas tecnicas del producto')}
           </p>
         </div>
@@ -70,7 +71,7 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
 
       {/* Model Number */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+        <label className={LABEL}>
           {t('productForm.specs.model', 'Numero de modelo')}
         </label>
         <input
@@ -78,14 +79,14 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
           value={model || ''}
           onChange={(e) => onModelChange(e.target.value || undefined)}
           placeholder={t('productForm.specs.modelPlaceholder', 'Ej: XM5-2024')}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+          className={INPUT}
         />
       </div>
 
       {/* Quick Presets */}
       {specs.length === 0 && (
         <div className="mb-4">
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-[0.72rem] font-medium text-[#8898AA] mb-2">
             {t('productForm.specs.quickAdd', 'Agregar rapido:')}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -94,7 +95,7 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
                 key={preset.key}
                 type="button"
                 onClick={() => addPreset(preset)}
-                className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 text-xs bg-[#F1F5F9] text-[#425466] rounded-lg hover:bg-[#E1E8EF] transition-colors"
               >
                 {preset.key}
               </button>
@@ -104,38 +105,36 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
       )}
 
       {specs.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-          <p className="text-gray-500 text-sm">
+        <div className="text-center py-8 bg-[#F6F9FC] rounded-xl border border-dashed border-[#E6EBF1]">
+          <p className="text-[#8898AA] text-sm">
             {t('productForm.specs.empty', 'Sin especificaciones. Agrega una para empezar.')}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {specs.map((spec, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div key={index} className="flex items-center gap-3 p-3 bg-[#F6F9FC] rounded-lg">
               <input
                 type="text"
                 value={spec.key}
                 onChange={(e) => updateSpec(index, 'key', e.target.value)}
                 placeholder={t('productForm.specs.keyPlaceholder', 'Caracteristica')}
-                className="w-1/3 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                className="w-1/3 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
               />
-              <span className="text-gray-400">:</span>
+              <span className="text-[#A9B6C6]">:</span>
               <input
                 type="text"
                 value={spec.value}
                 onChange={(e) => updateSpec(index, 'value', e.target.value)}
                 placeholder={t('productForm.specs.valuePlaceholder', 'Valor')}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                className="flex-1 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
               />
               <button
                 type="button"
                 onClick={() => removeSpec(index)}
-                className="text-gray-400 hover:text-red-500 transition-colors"
+                className="text-[1.05rem] leading-none text-[#A9B6C6] hover:text-[#DC2626] transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                &times;
               </button>
             </div>
           ))}
@@ -145,7 +144,7 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
       {/* Preview */}
       {specs.length > 0 && specs.some(s => s.key && s.value) && (
         <div className="mt-4 p-4 bg-[#f0f7ff] rounded-xl">
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-[0.72rem] font-medium text-[#8898AA] mb-2">
             {t('productForm.specs.preview', 'Vista previa:')}
           </p>
           <table className="w-full text-sm">
@@ -155,7 +154,7 @@ export default function SpecsSection({ specs, model, onChange, onModelChange }: 
                 .map((spec, index) => (
                   <tr key={index} className="border-b border-[#38bdf8]/20 last:border-0">
                     <td className="py-1.5 font-medium text-[#1e3a5f]">{spec.key}</td>
-                    <td className="py-1.5 text-gray-600 text-right">{spec.value}</td>
+                    <td className="py-1.5 text-[#425466] text-right">{spec.value}</td>
                   </tr>
                 ))}
             </tbody>

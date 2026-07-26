@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import PetIcon from '../../ui/PetIcon'
+import { CARD, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 type PetType = 'dog' | 'cat' | 'bird' | 'fish' | 'small' | 'other'
 type PetAge = 'puppy' | 'adult' | 'senior' | 'all'
@@ -36,12 +37,12 @@ export default function PetTypeSection({
   ]
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+    <div className={CARD}>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-[#1e3a5f]">
+        <h2 className={SECTION_TITLE}>
           {t('productForm.petType.title', 'Tipo de mascota')}
         </h2>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className={SECTION_HINT}>
           {t('productForm.petType.description', 'Para que tipo de mascota es este producto')}
         </p>
       </div>
@@ -61,14 +62,14 @@ export default function PetTypeSection({
                 className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
                   petType === type.value
                     ? 'border-[#2d6cb5] bg-[#f0f7ff]'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-[#E6EBF1] hover:border-[#D8E2EC]'
                 }`}
               >
-                <span className={petType === type.value ? 'text-[#1e3a5f]' : 'text-gray-500'}>
+                <span className={petType === type.value ? 'text-[#1e3a5f]' : 'text-[#8898AA]'}>
                   <PetIcon type={type.value} className="w-6 h-6" />
                 </span>
                 <span className={`text-xs font-medium ${
-                  petType === type.value ? 'text-[#1e3a5f]' : 'text-gray-600'
+                  petType === type.value ? 'text-[#1e3a5f]' : 'text-[#425466]'
                 }`}>
                   {type.label}
                 </span>
@@ -92,7 +93,7 @@ export default function PetTypeSection({
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     petAge === age.value
                       ? 'bg-[#2d6cb5] text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-[#F1F5F9] text-[#425466] hover:bg-[#E1E8EF]'
                   }`}
                 >
                   {age.label}
@@ -105,7 +106,7 @@ export default function PetTypeSection({
 
       {/* Preview */}
       {petType && (
-        <div className="mt-4 p-3 bg-[#f0f7ff] rounded-xl">
+        <div className="mt-4 p-3 rounded-xl bg-[#F0F9FF]">
           <p className="text-sm text-[#1e3a5f] flex items-center gap-2">
             {t('productForm.petType.preview', 'Se mostrara:')}
             <span className="font-medium inline-flex items-center gap-1.5">
@@ -114,7 +115,7 @@ export default function PetTypeSection({
                 pet: petTypes.find(pt => pt.value === petType)?.label.toLowerCase()
               })}
               {petAge && petAge !== 'all' && (
-                <span className="text-gray-500">
+                <span className="text-[#8898AA]">
                   {' - '}
                   {petAges.find(a => a.value === petAge)?.label}
                 </span>

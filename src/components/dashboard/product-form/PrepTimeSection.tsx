@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { CARD, INPUT, LABEL, REMOVE_BTN, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 interface PrepTimeSectionProps {
   prepTime?: {
@@ -27,13 +28,13 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+    <div className={CARD}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">
+          <h2 className={SECTION_TITLE}>
             {t('productForm.prepTime.title', 'Tiempo de preparacion')}
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className={SECTION_HINT}>
             {t('productForm.prepTime.description', 'Tiempo estimado para preparar este platillo')}
           </p>
         </div>
@@ -41,7 +42,7 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
           <button
             type="button"
             onClick={clearPrepTime}
-            className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+            className={REMOVE_BTN}
           >
             {t('productForm.prepTime.clear', 'Limpiar')}
           </button>
@@ -50,7 +51,7 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+          <label className={LABEL}>
             {t('productForm.prepTime.min', 'Minimo')}
           </label>
           <input
@@ -59,11 +60,11 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
             value={prepTime?.min || ''}
             onChange={(e) => handleChange('min', e.target.value)}
             placeholder="15"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+            className={INPUT}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+          <label className={LABEL}>
             {t('productForm.prepTime.max', 'Maximo')}
           </label>
           <input
@@ -72,17 +73,17 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
             value={prepTime?.max || ''}
             onChange={(e) => handleChange('max', e.target.value)}
             placeholder="20"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+            className={INPUT}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+          <label className={LABEL}>
             {t('productForm.prepTime.unit', 'Unidad')}
           </label>
           <select
             value={prepTime?.unit || 'min'}
             onChange={(e) => handleChange('unit', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+            className={INPUT}
           >
             <option value="min">{t('productForm.prepTime.minutes', 'Minutos')}</option>
             <option value="hr">{t('productForm.prepTime.hours', 'Horas')}</option>
@@ -91,8 +92,8 @@ export default function PrepTimeSection({ prepTime, onChange }: PrepTimeSectionP
       </div>
 
       {prepTime && prepTime.min > 0 && prepTime.max > 0 && (
-        <div className="mt-4 p-3 bg-[#f0f7ff] rounded-xl">
-          <p className="text-sm text-[#1e3a5f]">
+        <div className="mt-4 p-3 rounded-xl bg-[#F0F9FF]">
+          <p className="text-[0.8rem] font-medium text-[#1e3a5f]">
             {t('productForm.prepTime.preview', 'Vista previa:')}
             <span className="font-medium ml-2">
               {prepTime.min}-{prepTime.max} {prepTime.unit === 'hr' ? 'hr' : 'min'}

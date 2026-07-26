@@ -28,6 +28,7 @@ import {
   PetTypeSection,
   CollapsibleCard,
 } from '../../components/dashboard/product-form'
+import { CARD, SECTION_TITLE, LABEL, FIELD, INPUT, INPUT_SM, TOGGLE, NOTE, NOTE_BORDER } from '../../components/dashboard/product-form/tokens'
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -701,13 +702,13 @@ export default function ProductForm() {
   }
 
   return (
-    <div>
+    <div className="text-[#1e3a5f]">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">
+      <div className="mb-5 text-[#1e3a5f]">
+        <h1 className="text-lg sm:text-xl font-semibold tracking-tight">
           {isEditing ? t('productForm.editTitle') : t('productForm.newTitle')}
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-[0.82rem] mt-0.5 font-normal text-[#8898AA]">
           {isEditing ? t('productForm.editDescription') : t('productForm.newDescription')}
         </p>
       </div>
@@ -717,13 +718,10 @@ export default function ProductForm() {
           externo. El merchant puede ver los datos para confirmar pero no
           tocarlos desde aca. */}
       {isApiManaged && (
-        <div className="mb-4 border border-blue-200 bg-blue-50 rounded-xl px-4 py-3 flex items-start gap-3">
-          <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="text-sm text-blue-900">
-            <p className="font-medium mb-0.5">Producto gestionado externamente</p>
-            <p className="text-blue-800">
+        <div className="mb-4 rounded-[14px] px-4 py-3.5 bg-[#F0F9FF]" style={{ border: '1px solid #BAE6FD' }}>
+          <div className="text-[0.8rem]" style={{ color: '#0C4A6E' }}>
+            <p className="font-semibold mb-0.5">Producto gestionado externamente</p>
+            <p className="font-normal">
               Este producto se sincroniza automáticamente desde tu sistema conectado por API.
               Editalo desde allí — los cambios hechos acá no se guardarán.
             </p>
@@ -737,16 +735,16 @@ export default function ProductForm() {
             elimina el layout del fieldset para no romper el grid. */}
         <fieldset disabled={isApiManaged} className="contents">
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
           {/* Left Column - Basic Info */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             {/* Image upload - Multiple images */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className={CARD}>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-semibold text-[#1e3a5f]">
+                <label className={SECTION_TITLE}>
                   {t('productForm.photos.title')}
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-[#8898AA]">
                   {maxImages === 1
                     ? t('productForm.photos.countSingular', { count: images.length, max: maxImages })
                     : t('productForm.photos.count', { count: images.length, max: maxImages })}
@@ -757,7 +755,7 @@ export default function ProductForm() {
               {images.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {images.map((img, index) => (
-                    <div key={img} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
+                    <div key={img} className="relative group aspect-square rounded-xl overflow-hidden" style={{ border: '1px solid #E6EBF1' }}>
                       <img src={img} alt={`${t('productForm.photos.title')} ${index + 1}`} className="w-full h-full object-cover" />
                       {index === 0 && (
                         <span className="absolute top-1 left-1 bg-[#1e3a5f] text-white text-[10px] px-1.5 py-0.5 rounded">
@@ -770,35 +768,30 @@ export default function ProductForm() {
                           <button
                             type="button"
                             onClick={() => handleMoveImage(index, 'up')}
-                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-[0.9rem] font-semibold leading-none text-[#425466] hover:bg-[#F6F9FC]"
                             title={t('productForm.photos.moveLeft')}
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
+                            &lsaquo;
                           </button>
                         )}
                         {index < images.length - 1 && (
                           <button
                             type="button"
                             onClick={() => handleMoveImage(index, 'down')}
-                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-[0.9rem] font-semibold leading-none text-[#425466] hover:bg-[#F6F9FC]"
                             title={t('productForm.photos.moveRight')}
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            &rsaquo;
                           </button>
                         )}
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(index)}
-                          className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.9rem] leading-none hover:opacity-90"
+                          style={{ background: '#DC2626' }}
                           title={t('productForm.photos.delete')}
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          &times;
                         </button>
                       </div>
                     </div>
@@ -814,13 +807,11 @@ export default function ProductForm() {
                   onDragEnter={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all ${
-                    isDragging
-                      ? 'border-[#38bdf8] bg-[#e0f2fe]'
-                      : 'border-[#38bdf8]/30 hover:border-[#38bdf8] bg-gradient-to-br from-[#f0f7ff] to-white'
+                  className={`border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-colors ${
+                    isDragging ? 'border-[#38bdf8] bg-[#E0F2FE]' : 'border-[#D8E7F3] hover:border-[#38bdf8] bg-[#F6F9FC]'
                   } ${images.length === 0 ? 'aspect-[4/3]' : 'py-6'}`}
                 >
-                  <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500">
+                  <div className="flex flex-col items-center justify-center h-full p-4 text-[#8898AA]">
                     {uploading ? (
                       <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
@@ -828,12 +819,7 @@ export default function ProductForm() {
                       </>
                     ) : (
                       <>
-                        <div className={`w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center mb-2 shadow-sm transition-transform ${isDragging ? 'scale-110' : ''}`}>
-                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </div>
-                        <p className="text-[#1e3a5f] font-medium text-sm">
+                        <p className="text-[0.84rem] font-semibold text-[#0284C7]">
                           {isDragging
                             ? t('productForm.photos.dropHere', 'Suelta la imagen aqui')
                             : images.length === 0
@@ -841,7 +827,7 @@ export default function ProductForm() {
                               : t('productForm.photos.addMore')}
                         </p>
                         {!isDragging && (
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-[0.74rem] font-normal text-[#A9B6C6] mt-1">
                             {maxImages > 1 ? t('productForm.photos.selectMultiple') : t('productForm.photos.dragAndDrop', 'o arrastra y suelta')}
                           </p>
                         )}
@@ -851,31 +837,20 @@ export default function ProductForm() {
                 </div>
               ) : (
                 maxImages === 1 && !Capacitor.isNativePlatform() ? (
-                  <div className="bg-gradient-to-r from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20 p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-[#1e3a5f]">{t('productForm.photos.wantMore')}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{t('productForm.photos.proImages')}</p>
-                        <a
-                          href={localePath('/dashboard/plan')}
-                          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-[#1e3a5f] text-white text-xs font-semibold rounded-lg hover:bg-[#2d6cb5] transition-all shadow-md"
-                        >
-                          {t('productForm.photos.upgradeForMore')}
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
+                  <div className={NOTE} style={NOTE_BORDER}>
+                    <p className="text-[0.82rem] font-semibold">{t('productForm.photos.wantMore')}</p>
+                    <p className="text-[0.76rem] font-normal text-[#8898AA] mt-0.5">{t('productForm.photos.proImages')}</p>
+                    <a
+                      href={localePath('/dashboard/plan')}
+                      className="inline-block mt-2.5 px-3 py-1.5 rounded-lg text-white text-[0.76rem] font-semibold transition-opacity hover:opacity-90"
+                      style={{ background: '#1e3a5f' }}
+                    >
+                      {t('productForm.photos.upgradeForMore')}
+                    </a>
                   </div>
                 ) : (
-                  <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-sm text-gray-600">{t('productForm.photos.limitReached')}</p>
+                  <div className="text-center py-4 rounded-xl bg-[#F6F9FC]" style={{ border: '1px solid #E6EBF1' }}>
+                    <p className="text-sm text-[#425466]">{t('productForm.photos.limitReached')}</p>
                   </div>
                 )
               )}
@@ -891,12 +866,12 @@ export default function ProductForm() {
             </div>
 
             {/* Video Upload */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className={CARD}>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-semibold text-[#1e3a5f]">
+                <label className={SECTION_TITLE}>
                   {t('productForm.video.title')}
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-[#8898AA]">
                   {t('productForm.video.optional')}
                 </span>
               </div>
@@ -905,18 +880,25 @@ export default function ProductForm() {
                 <>
                   {video ? (
                     <div className="relative group">
-                      <div className="aspect-video rounded-xl overflow-hidden border border-gray-200 bg-black">
+                      <div className="aspect-video rounded-xl overflow-hidden bg-black">
                         <img
                           src={getVideoThumbnail(video)}
                           alt={t('productForm.video.preview')}
                           className="w-full h-full object-cover"
                         />
-                        {/* Play icon overlay */}
+                        {/* Triangulo de reproducir, dibujado con bordes CSS */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-14 h-14 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
+                            <span
+                              style={{
+                                width: 0,
+                                height: 0,
+                                marginLeft: 4,
+                                borderLeft: '15px solid #fff',
+                                borderTop: '10px solid transparent',
+                                borderBottom: '10px solid transparent',
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
@@ -924,19 +906,18 @@ export default function ProductForm() {
                       <button
                         type="button"
                         onClick={handleRemoveVideo}
-                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white text-base leading-none opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: '#DC2626' }}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        &times;
                       </button>
                     </div>
                   ) : (
                     <div
                       onClick={() => !uploadingVideo && videoInputRef.current?.click()}
-                      className="border-2 border-dashed border-[#38bdf8]/30 hover:border-[#38bdf8] rounded-xl cursor-pointer transition-all bg-gradient-to-br from-[#f0f7ff] to-white py-8"
+                      className="border-2 border-dashed border-[#D8E7F3] hover:border-[#38bdf8] rounded-xl cursor-pointer transition-colors bg-[#F6F9FC] py-8"
                     >
-                      <div className="flex flex-col items-center justify-center text-gray-500">
+                      <div className="flex flex-col items-center justify-center text-[#8898AA]">
                         {uploadingVideo ? (
                           <>
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
@@ -944,24 +925,14 @@ export default function ProductForm() {
                           </>
                         ) : (
                           <>
-                            <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center mb-2 shadow-sm">
-                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                            <p className="text-[#1e3a5f] font-medium text-sm">{t('productForm.video.clickToUpload')}</p>
-                            <p className="text-xs text-gray-400 mt-1">{t('productForm.video.formats')}</p>
+                            <p className="text-[0.84rem] font-semibold text-[#0284C7]">{t('productForm.video.clickToUpload')}</p>
+                            <p className="text-[0.74rem] font-normal text-[#A9B6C6] mt-1">{t('productForm.video.formats')}</p>
                           </>
                         )}
                       </div>
                     </div>
                   )}
-                  <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {t('productForm.video.reelsOnly')}
-                  </p>
+                  <p className="text-[0.74rem] font-normal text-[#A9B6C6] mt-2">{t('productForm.video.reelsOnly')}</p>
                   <input
                     ref={videoInputRef}
                     type="file"
@@ -971,38 +942,27 @@ export default function ProductForm() {
                   />
                 </>
               ) : (
-                <div className="bg-gradient-to-r from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-[#1e3a5f]">{t('productForm.video.proTitle')}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{t('productForm.video.proDescription')}</p>
-                      <a
-                        href={localePath('/dashboard/plan')}
-                        className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-[#1e3a5f] text-white text-xs font-semibold rounded-lg hover:bg-[#2d6cb5] transition-all shadow-md"
-                      >
-                        {t('productForm.video.upgradeToPro')}
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </a>
-                    </div>
-                  </div>
+                <div className={NOTE} style={NOTE_BORDER}>
+                  <p className="text-[0.82rem] font-semibold">{t('productForm.video.proTitle')}</p>
+                  <p className="text-[0.76rem] font-normal text-[#8898AA] mt-0.5">{t('productForm.video.proDescription')}</p>
+                  <a
+                    href={localePath('/dashboard/plan')}
+                    className="inline-block mt-2.5 px-3 py-1.5 rounded-lg text-white text-[0.76rem] font-semibold transition-opacity hover:opacity-90"
+                    style={{ background: '#1e3a5f' }}
+                  >
+                    {t('productForm.video.upgradeToPro')}
+                  </a>
                 </div>
               )}
             </div>
 
             {/* Basic Fields */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.basic.title')}</h2>
+            <div className={CARD}>
+              <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.basic.title')}</h2>
               <div className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                  <label htmlFor="name" className={LABEL}>
                     {t('productForm.basic.name')} *
                   </label>
                   <input
@@ -1017,7 +977,7 @@ export default function ProductForm() {
                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 transition-all ${
                       touched.name && fieldErrors.name
                         ? 'border-red-300 focus:ring-red-100 focus:border-red-400'
-                        : 'border-gray-200 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40'
+                        : 'border-[#E6EBF1] focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40'
                     }`}
                   />
                   {touched.name && fieldErrors.name && (
@@ -1027,7 +987,7 @@ export default function ProductForm() {
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                  <label htmlFor="description" className={LABEL}>
                     {t('productForm.basic.description')}
                   </label>
                   <textarea
@@ -1036,7 +996,7 @@ export default function ProductForm() {
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                     placeholder={t('productForm.basic.descriptionPlaceholder')}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
+                    className={`${INPUT} resize-none`}
                   />
                 </div>
               </div>
@@ -1044,8 +1004,8 @@ export default function ProductForm() {
 
             {/* Pricing — unified card: Price + Compare + Cost.
                 Replaced by a "priced by variants" summary when combinations exist. */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.pricing.title')}</h2>
+            <div className={CARD}>
+              <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.pricing.title')}</h2>
               {hasVariantsWithPricing ? (
                 <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
@@ -1053,7 +1013,7 @@ export default function ProductForm() {
                       <p className="text-sm font-medium text-[#1e3a5f]">
                         {t('productForm.basic.pricedByVariants')}
                       </p>
-                      <p className="text-xs text-gray-600 mt-0.5">
+                      <p className="text-xs text-[#425466] mt-0.5">
                         {t('productForm.basic.pricedByVariantsHint')}
                       </p>
                     </div>
@@ -1068,7 +1028,7 @@ export default function ProductForm() {
                 <div className="space-y-4">
                   <div className={features.showComparePrice ? 'grid grid-cols-2 gap-4' : ''}>
                     <div>
-                      <label htmlFor="price" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                      <label htmlFor="price" className={LABEL}>
                         {t('productForm.pricing.salePrice')} *
                       </label>
                       <input
@@ -1085,7 +1045,7 @@ export default function ProductForm() {
                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 transition-all ${
                           touched.price && fieldErrors.price
                             ? 'border-red-300 focus:ring-red-100 focus:border-red-400'
-                            : 'border-gray-200 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40'
+                            : 'border-[#E6EBF1] focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40'
                         }`}
                       />
                       {touched.price && fieldErrors.price && (
@@ -1094,7 +1054,7 @@ export default function ProductForm() {
                     </div>
                     {features.showComparePrice && (
                       <div>
-                        <label htmlFor="comparePrice" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                        <label htmlFor="comparePrice" className={LABEL}>
                           {t('productForm.pricing.comparePrice')}
                         </label>
                         <input
@@ -1105,15 +1065,15 @@ export default function ProductForm() {
                           value={comparePrice}
                           onChange={(e) => setComparePrice(e.target.value)}
                           placeholder="0.00"
-                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                          className={INPUT}
                         />
-                        <p className="text-xs text-gray-400 mt-1">{t('productForm.pricing.comparePriceHint')}</p>
+                        <p className="text-xs text-[#A9B6C6] mt-1">{t('productForm.pricing.comparePriceHint')}</p>
                       </div>
                     )}
                   </div>
                   {features.showCost && (
                     <div>
-                      <label htmlFor="cost" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                      <label htmlFor="cost" className={LABEL}>
                         {t('productForm.pricing.cost')}
                       </label>
                       <input
@@ -1124,9 +1084,9 @@ export default function ProductForm() {
                         value={cost}
                         onChange={(e) => setCost(e.target.value)}
                         placeholder="0.00"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                        className={INPUT}
                       />
-                      <p className="text-xs text-gray-400 mt-1">{t('productForm.pricing.costHint')}</p>
+                      <p className="text-xs text-[#A9B6C6] mt-1">{t('productForm.pricing.costHint')}</p>
                     </div>
                   )}
                 </div>
@@ -1136,7 +1096,7 @@ export default function ProductForm() {
             {/* Variants — first-class section, in left column right after pricing
                 because variant prices override the global price. */}
             {features.showVariants && (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-5">
+              <div className={CARD}>
                 <VariationsSection
                   variations={variations}
                   onChange={setVariations}
@@ -1152,8 +1112,8 @@ export default function ProductForm() {
             {/* Catalog — Category + Brand + Tags. Category is always shown
                 (even when the store has zero categories) so the merchant can
                 create one inline without leaving the form. */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.catalog.title')}</h2>
+            <div className={CARD}>
+                <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.catalog.title')}</h2>
                 <div className="space-y-4">
                   {/* Category — always visible, with inline create */}
                   <div>
@@ -1183,7 +1143,7 @@ export default function ProductForm() {
                             if (e.key === 'Escape') { setCreatingCategory(false); setNewCategoryName('') }
                           }}
                           placeholder={t('products.categories.namePlaceholder', { defaultValue: 'Nombre de la categoría' })}
-                          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                          className={`${INPUT} flex-1`}
                         />
                         <button
                           type="button"
@@ -1198,7 +1158,7 @@ export default function ProductForm() {
                         <button
                           type="button"
                           onClick={() => { setCreatingCategory(false); setNewCategoryName('') }}
-                          className="px-3 py-2.5 text-gray-500 hover:text-gray-700 text-sm"
+                          className="px-3 py-2.5 text-[#8898AA] hover:text-[#425466] text-sm"
                         >
                           {t('products.categories.cancel', { defaultValue: 'Cancelar' })}
                         </button>
@@ -1208,7 +1168,7 @@ export default function ProductForm() {
                         id="category"
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                        className={INPUT}
                       >
                         <option value="">{t('productForm.basic.noCategory')}</option>
                         {categories.map(cat => (
@@ -1220,7 +1180,7 @@ export default function ProductForm() {
                   {/* Brand (compact, no longer its own card) */}
                   {features.showBrand && (
                     <div>
-                      <label htmlFor="brand" className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                      <label htmlFor="brand" className={LABEL}>
                         {t('productForm.organization.brand')}
                       </label>
                       <input
@@ -1229,23 +1189,23 @@ export default function ProductForm() {
                         value={brand}
                         onChange={(e) => setBrand(e.target.value)}
                         placeholder={t('productForm.catalog.brandPlaceholder')}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                        className={INPUT}
                       />
                     </div>
                   )}
                   {/* Tags */}
                   {features.showTags && (
                     <div>
-                      <label htmlFor="tags" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.organization.tags')}</label>
+                      <label htmlFor="tags" className={LABEL}>{t('productForm.organization.tags')}</label>
                       <input
                         id="tags"
                         type="text"
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
                         placeholder={t('productForm.organization.tagsPlaceholder')}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                        className={INPUT}
                       />
-                      <p className="text-xs text-gray-400 mt-1">{t('productForm.organization.tagsHint')}</p>
+                      <p className="text-xs text-[#A9B6C6] mt-1">{t('productForm.organization.tagsHint')}</p>
                     </div>
                   )}
                 </div>
@@ -1317,12 +1277,12 @@ export default function ProductForm() {
           </div>
 
           {/* Right Column - Visibility + Business Type Sections + Advanced Options */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             {/* Visibility */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('productForm.visibility.title')}</h2>
+            <div className={CARD}>
+              <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.visibility.title')}</h2>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-[#f0f7ff] rounded-xl">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F6F9FC]">
                   <span className="text-sm text-[#1e3a5f] font-medium">
                     {active ? t('productForm.visibility.visible') : t('productForm.visibility.hidden')}
                   </span>
@@ -1333,13 +1293,13 @@ export default function ProductForm() {
                       onChange={(e) => setActive(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                    <div className={TOGGLE}></div>
                   </label>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-200">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#FFFBEB]" style={{ border: '1px solid #FDE68A' }}>
                   <div>
-                    <span className="text-sm text-gray-800 font-medium">{t('productForm.visibility.featured')}</span>
-                    <p className="text-xs text-gray-500">{t('productForm.visibility.featuredDescription')}</p>
+                    <span className="text-[0.82rem] font-medium text-[#1e3a5f]">{t('productForm.visibility.featured')}</span>
+                    <p className="text-xs text-[#8898AA]">{t('productForm.visibility.featuredDescription')}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -1348,7 +1308,7 @@ export default function ProductForm() {
                       onChange={(e) => setFeatured(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                    <div className={`${TOGGLE} peer-checked:!bg-[#D97706]`}></div>
                   </label>
                 </div>
               </div>
@@ -1359,13 +1319,13 @@ export default function ProductForm() {
                 When editing, the stock fields are replaced by a link to the Inventory page,
                 which is the source of truth once the product exists. */}
             {(features.showSku || features.showBarcode || features.showStock) && (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-5 space-y-4">
-                <h2 className="text-sm font-medium text-gray-900">{t('productForm.inventory.title')}</h2>
+              <div className={`${CARD} space-y-4`}>
+                <h2 className={SECTION_TITLE}>{t('productForm.inventory.title')}</h2>
 
                 {/* Track Stock toggle — moved to the top so it gates everything below it */}
                 {features.showStock && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700 inline-flex items-center gap-1.5">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#F6F9FC]">
+                    <span className="text-sm text-[#425466] inline-flex items-center gap-1.5">
                       {t('productForm.inventory.trackStock')}
                       <HelpTip
                         text="Activa esto si quieres llevar control de unidades por producto o por variante (talla/color). Cuando se vende, el stock baja solo. Si lo dejas desactivado, el producto se vende sin límite."
@@ -1374,7 +1334,7 @@ export default function ProductForm() {
                     </span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={trackStock} onChange={e => setTrackStock(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]" />
+                      <div className={TOGGLE} />
                     </label>
                   </div>
                 )}
@@ -1383,24 +1343,24 @@ export default function ProductForm() {
                     in VariationsSection (combo.sku / combo.barcode). */}
                 {(features.showSku || features.showBarcode) && (
                   combinations.length > 0 ? (
-                    <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 p-3">
+                    <div className="rounded-xl bg-[#F0F9FF] p-3" style={{ border: '1px dashed #7FCDF3' }}>
                       <p className="text-sm font-medium text-[#1e3a5f]">{t('productForm.skuByVariant.title')}</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{t('productForm.skuByVariant.hint')}</p>
+                      <p className="text-xs text-[#425466] mt-0.5">{t('productForm.skuByVariant.hint')}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
                       {features.showSku && (
                         <div>
-                          <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.sku')}</label>
+                          <label className={LABEL}>{t('productForm.inventory.sku')}</label>
                           <input type="text" value={sku} onChange={e => setSku(e.target.value)} placeholder="ABC-123"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                            className={INPUT_SM} />
                         </div>
                       )}
                       {features.showBarcode && (
                         <div>
-                          <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.barcode')}</label>
+                          <label className={LABEL}>{t('productForm.inventory.barcode')}</label>
                           <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} placeholder="7501234567890"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                            className={INPUT_SM} />
                         </div>
                       )}
                     </div>
@@ -1412,54 +1372,51 @@ export default function ProductForm() {
                   <>
                     {/* When variants exist with stock control, defer to the Variants section */}
                     {combinations.length > 0 ? (
-                      <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 p-3">
+                      <div className="rounded-xl bg-[#F0F9FF] p-3" style={{ border: '1px dashed #7FCDF3' }}>
                         <p className="text-sm font-medium text-[#1e3a5f]">{t('productForm.stockByVariant.title')}</p>
-                        <p className="text-xs text-gray-600 mt-0.5">{t('productForm.stockByVariant.hint')}</p>
-                        <p className="text-[11px] text-gray-500 mt-2 tabular-nums">
+                        <p className="text-xs text-[#425466] mt-0.5">{t('productForm.stockByVariant.hint')}</p>
+                        <p className="text-[11px] text-[#8898AA] mt-2 tabular-nums">
                           Total: {combinations.reduce((s, c) => s + c.stock, 0)} uds
                         </p>
                       </div>
                     ) : isEditing ? (
                       // Editing a simple product → stock is managed from the Inventory page,
                       // which is the source of truth (purchases, transfers, adjustments...).
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
+                      <div className="rounded-xl bg-[#F6F9FC] p-3 space-y-2" style={{ border: '1px solid #E6EBF1' }}>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">{t('productForm.stockManaged.title')}</span>
-                          <span className="text-sm font-semibold text-gray-900 tabular-nums">{stock || 0} uds</span>
+                          <span className="text-sm text-[#425466]">{t('productForm.stockManaged.title')}</span>
+                          <span className="text-[0.82rem] font-semibold text-[#1e3a5f] tabular-nums">{stock || 0} uds</span>
                         </div>
-                        <p className="text-xs text-gray-500">{t('productForm.stockManaged.subtitle')}</p>
+                        <p className="text-xs text-[#8898AA]">{t('productForm.stockManaged.subtitle')}</p>
                         <button
                           type="button"
                           onClick={() => navigate(localePath('/finance/inventory'))}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-[#1e3a5f] hover:text-[#2d6cb5]"
+                          className="text-[0.76rem] font-semibold text-[#0284C7] hover:text-[#1e3a5f] transition-colors"
                         >
                           {t('productForm.stockManaged.cta')}
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
                         </button>
                       </div>
                     ) : (
                       <>
                         {warehouses.length > 0 && (
                           <div>
-                            <label className="text-xs text-gray-500 mb-1 block">Almacén destino</label>
+                            <label className={LABEL}>Almacén destino</label>
                             <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                              className={INPUT_SM}>
                               {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
                             </select>
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.stock')}</label>
+                            <label className={LABEL}>{t('productForm.inventory.stock')}</label>
                             <input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} placeholder="0"
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                              className={INPUT_SM} />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-500 mb-1 block">{t('productForm.inventory.lowStockAlert')}</label>
+                            <label className={LABEL}>{t('productForm.inventory.lowStockAlert')}</label>
                             <input type="number" min="0" value={lowStockAlert} onChange={e => setLowStockAlert(e.target.value)} placeholder="5"
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                              className={INPUT_SM} />
                           </div>
                         </div>
                       </>
@@ -1478,7 +1435,7 @@ export default function ProductForm() {
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="weight" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.weight')}</label>
+                    <label htmlFor="weight" className={LABEL}>{t('productForm.shipping.weight')}</label>
                     <input
                       id="weight"
                       type="number"
@@ -1486,11 +1443,11 @@ export default function ProductForm() {
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
                       placeholder="500"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      className={INPUT}
                     />
                   </div>
                   <div>
-                    <label htmlFor="length" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.length')}</label>
+                    <label htmlFor="length" className={LABEL}>{t('productForm.shipping.length')}</label>
                     <input
                       id="length"
                       type="number"
@@ -1498,11 +1455,11 @@ export default function ProductForm() {
                       value={length}
                       onChange={(e) => setLength(e.target.value)}
                       placeholder="20"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      className={INPUT}
                     />
                   </div>
                   <div>
-                    <label htmlFor="width" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.width')}</label>
+                    <label htmlFor="width" className={LABEL}>{t('productForm.shipping.width')}</label>
                     <input
                       id="width"
                       type="number"
@@ -1510,11 +1467,11 @@ export default function ProductForm() {
                       value={width}
                       onChange={(e) => setWidth(e.target.value)}
                       placeholder="15"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      className={INPUT}
                     />
                   </div>
                   <div>
-                    <label htmlFor="height" className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('productForm.shipping.height')}</label>
+                    <label htmlFor="height" className={LABEL}>{t('productForm.shipping.height')}</label>
                     <input
                       id="height"
                       type="number"
@@ -1522,7 +1479,7 @@ export default function ProductForm() {
                       value={height}
                       onChange={(e) => setHeight(e.target.value)}
                       placeholder="10"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                      className={INPUT}
                     />
                   </div>
                 </div>
@@ -1537,7 +1494,7 @@ export default function ProductForm() {
           and the native-only action bar with a single, always-visible action area
           that includes a live validation summary. */}
       <div
-        className="sticky bottom-0 -mx-4 sm:-mx-6 lg:-mx-8 mt-6 bg-white/95 backdrop-blur border-t border-gray-200/80 px-4 sm:px-6 lg:px-8 py-3 z-20"
+        className="sticky bottom-0 -mx-4 sm:-mx-6 lg:-mx-8 mt-6 bg-white/95 backdrop-blur border-t border-[#E6EBF1] px-4 sm:px-6 lg:px-8 py-3 z-20"
         style={isNative ? { paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' } : undefined}
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -1545,25 +1502,25 @@ export default function ProductForm() {
           <div className="flex items-center gap-3 text-sm min-w-0 flex-wrap">
             {validationErrors.length > 0 ? (
               <div className="flex items-center gap-2 min-w-0">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 text-xs font-semibold shrink-0">!</span>
-                <span className="text-gray-700 truncate">
-                  <span className="font-medium text-red-600">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#FEE2E2] text-[#DC2626] text-[0.72rem] font-semibold shrink-0">!</span>
+                <span className="text-[0.8rem] text-[#425466] truncate">
+                  <span className="font-semibold text-[#DC2626]">
                     {t('productForm.validation.missing', { count: validationErrors.length })}:
                   </span>{' '}
-                  <span className="text-gray-600">{validationErrors.join(', ')}</span>
+                  <span className="text-[#425466]">{validationErrors.join(', ')}</span>
                 </span>
               </div>
             ) : (
               <div className="flex items-center gap-2 min-w-0">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 text-xs font-semibold shrink-0">✓</span>
-                <span className="text-gray-600">{t('productForm.validation.ready')}</span>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[0.72rem] font-semibold shrink-0">✓</span>
+                <span className="text-[0.8rem] font-medium text-[#425466]">{t('productForm.validation.ready')}</span>
               </div>
             )}
             {!active && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-[0.7rem] font-semibold"
+                style={{ background: '#FFFBEB', color: '#92400E', border: '1px solid #FDE68A' }}
+              >
                 {t('productForm.hiddenWarning')}
               </span>
             )}
@@ -1574,7 +1531,8 @@ export default function ProductForm() {
             <button
               type="button"
               onClick={() => navigate(localePath('/dashboard/products'))}
-              className="flex-1 sm:flex-none px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-[0.82rem] font-semibold transition-colors hover:bg-[#EEF3F8]"
+              style={{ background: '#F6F9FC', border: '1px solid #E6EBF1', color: '#425466' }}
             >
               {t('productForm.cancel')}
             </button>
@@ -1582,7 +1540,8 @@ export default function ProductForm() {
               type="button"
               onClick={handleSubmit}
               disabled={saving || validationErrors.length > 0 || isApiManaged}
-              className="flex-1 sm:flex-none px-6 py-2.5 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold disabled:opacity-50 shadow-sm text-sm"
+              className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-white text-[0.82rem] font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
+              style={{ background: '#1e3a5f', boxShadow: '0 8px 20px -12px rgba(30,58,95,.7)' }}
               title={isApiManaged ? 'Producto gestionado externamente — editalo desde el sistema conectado' : undefined}
             >
               {saving ? t('productForm.saving') : isEditing ? t('productForm.save') : t('productForm.create')}
@@ -1596,19 +1555,19 @@ export default function ProductForm() {
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50" onClick={() => setOrphanDialog(null)} />
           <div className="fixed inset-x-4 top-[8%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg z-50 animate-[slideDown_0.2s_ease-out]">
-            <div className="bg-white rounded-xl shadow-2xl border border-gray-200/60 max-h-[85vh] flex flex-col">
+            <div className="bg-white rounded-xl shadow-2xl border border-[#E6EBF1] max-h-[85vh] flex flex-col">
               {/* Header */}
-              <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
-                <h2 className="text-sm font-medium text-gray-900">Este producto tiene stock previo</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Este producto tenia <span className="font-medium text-gray-700">{orphanDialog.origStock} unidades</span> en stock antes de agregar variantes. Elegi que hacer con ese stock:
+              <div className="px-5 py-4 border-b border-[#EEF2F6] flex-shrink-0">
+                <h2 className={SECTION_TITLE}>Este producto tiene stock previo</h2>
+                <p className="text-xs text-[#8898AA] mt-1">
+                  Este producto tenia <span className="font-medium text-[#425466]">{orphanDialog.origStock} unidades</span> en stock antes de agregar variantes. Elegi que hacer con ese stock:
                 </p>
               </div>
 
               {/* Options */}
               <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
                 {/* Mode: assign to one combo */}
-                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'assign' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'assign' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-[#E6EBF1] hover:bg-[#F6F9FC]'}`}>
                   <div className="flex items-start gap-2">
                     <input
                       type="radio"
@@ -1617,15 +1576,15 @@ export default function ProductForm() {
                       className="mt-1"
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">Asignar todo a una variante</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
+                      <p className="text-[0.82rem] font-medium text-[#1e3a5f]">Asignar todo a una variante</p>
+                      <p className="text-[11px] text-[#8898AA] mt-0.5">
                         Pone las {orphanDialog.origStock} unidades en la combinacion que elijas.
                       </p>
                       {orphanDialog.mode === 'assign' && (
                         <select
                           value={orphanDialog.assignComboId}
                           onChange={e => setOrphanDialog({ ...orphanDialog, assignComboId: e.target.value })}
-                          className="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                          className={`${INPUT_SM} mt-2`}
                         >
                           {combinations.map(c => (
                             <option key={c.id} value={c.id}>{Object.values(c.options).join(' / ')}</option>
@@ -1637,7 +1596,7 @@ export default function ProductForm() {
                 </label>
 
                 {/* Mode: distribute */}
-                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'distribute' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'distribute' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-[#E6EBF1] hover:bg-[#F6F9FC]'}`}>
                   <div className="flex items-start gap-2">
                     <input
                       type="radio"
@@ -1646,15 +1605,15 @@ export default function ProductForm() {
                       className="mt-1"
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">Distribuir manualmente</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
+                      <p className="text-[0.82rem] font-medium text-[#1e3a5f]">Distribuir manualmente</p>
+                      <p className="text-[11px] text-[#8898AA] mt-0.5">
                         Asigna cuanto stock va a cada combinacion. La suma debe ser {orphanDialog.origStock}.
                       </p>
                       {orphanDialog.mode === 'distribute' && (
                         <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
                           {combinations.map(c => (
-                            <div key={c.id} className="flex items-center justify-between gap-2 bg-white border border-gray-100 rounded-md px-2.5 py-1.5">
-                              <span className="text-xs text-gray-700 flex-1 truncate">{Object.values(c.options).join(' / ')}</span>
+                            <div key={c.id} className="flex items-center justify-between gap-2 bg-white border border-[#EEF2F6] rounded-md px-2.5 py-1.5">
+                              <span className="text-xs text-[#425466] flex-1 truncate">{Object.values(c.options).join(' / ')}</span>
                               <input
                                 type="number"
                                 min="0"
@@ -1664,7 +1623,7 @@ export default function ProductForm() {
                                   ...orphanDialog,
                                   distribution: { ...orphanDialog.distribution, [c.id]: e.target.value },
                                 })}
-                                className="w-16 px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                                className={`${FIELD} w-16 px-2 py-1 text-[0.72rem] text-right`}
                               />
                             </div>
                           ))}
@@ -1679,7 +1638,7 @@ export default function ProductForm() {
                 </label>
 
                 {/* Mode: discard */}
-                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'discard' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <label className={`block border rounded-lg p-3 cursor-pointer transition-colors ${orphanDialog.mode === 'discard' ? 'border-[#1e3a5f] bg-[#1e3a5f]/5' : 'border-[#E6EBF1] hover:bg-[#F6F9FC]'}`}>
                   <div className="flex items-start gap-2">
                     <input
                       type="radio"
@@ -1688,8 +1647,8 @@ export default function ProductForm() {
                       className="mt-1"
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">Descartar</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
+                      <p className="text-[0.82rem] font-medium text-[#1e3a5f]">Descartar</p>
+                      <p className="text-[11px] text-[#8898AA] mt-0.5">
                         Las {orphanDialog.origStock} unidades se ignoran. Las combinaciones arrancan con el stock que hayas escrito en el formulario (probablemente 0).
                       </p>
                     </div>
@@ -1698,10 +1657,10 @@ export default function ProductForm() {
               </div>
 
               {/* Footer */}
-              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-end gap-2 flex-shrink-0">
+              <div className="px-5 py-3 border-t border-[#EEF2F6] flex items-center justify-end gap-2 flex-shrink-0">
                 <button
                   onClick={() => setOrphanDialog(null)}
-                  className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                  className="px-3 py-2 text-sm text-[#8898AA] hover:text-[#425466]"
                 >
                   Cancelar
                 </button>

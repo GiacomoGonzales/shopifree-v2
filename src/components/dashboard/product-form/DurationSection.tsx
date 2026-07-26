@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { CARD, INPUT, LABEL, REMOVE_BTN, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 interface DurationSectionProps {
   duration?: {
@@ -37,13 +38,13 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+    <div className={CARD}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">
+          <h2 className={SECTION_TITLE}>
             {t('productForm.duration.title', 'Duracion del servicio')}
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className={SECTION_HINT}>
             {t('productForm.duration.description', 'Tiempo aproximado que dura este servicio')}
           </p>
         </div>
@@ -51,7 +52,7 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
           <button
             type="button"
             onClick={clearDuration}
-            className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+            className={REMOVE_BTN}
           >
             {t('productForm.duration.clear', 'Limpiar')}
           </button>
@@ -60,7 +61,7 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
 
       {/* Quick Presets */}
       <div className="mb-4">
-        <p className="text-xs text-gray-500 mb-2">
+        <p className="text-[0.72rem] font-medium text-[#8898AA] mb-2">
           {t('productForm.duration.quickSelect', 'Seleccion rapida:')}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -72,8 +73,8 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                 (duration?.unit === 'min' && duration.value === minutes) ||
                 (duration?.unit === 'hr' && duration.value === minutes / 60)
-                  ? 'bg-[#2d6cb5] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#1e3a5f] border-[#1e3a5f] text-white'
+                  : 'bg-white border-[#E6EBF1] text-[#425466] hover:bg-[#F6F9FC]'
               }`}
             >
               {minutes >= 60 ? `${minutes / 60}h` : `${minutes} min`}
@@ -84,7 +85,7 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+          <label className={LABEL}>
             {t('productForm.duration.value', 'Duracion')}
           </label>
           <input
@@ -93,17 +94,17 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
             value={duration?.value || ''}
             onChange={(e) => handleChange('value', e.target.value)}
             placeholder="30"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+            className={INPUT}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+          <label className={LABEL}>
             {t('productForm.duration.unit', 'Unidad')}
           </label>
           <select
             value={duration?.unit || 'min'}
             onChange={(e) => handleChange('unit', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+            className={INPUT}
           >
             <option value="min">{t('productForm.duration.minutes', 'Minutos')}</option>
             <option value="hr">{t('productForm.duration.hours', 'Horas')}</option>
@@ -112,8 +113,8 @@ export default function DurationSection({ duration, onChange }: DurationSectionP
       </div>
 
       {duration && duration.value > 0 && (
-        <div className="mt-4 p-3 bg-[#f0f7ff] rounded-xl">
-          <p className="text-sm text-[#1e3a5f]">
+        <div className="mt-4 p-3 rounded-xl bg-[#F0F9FF]">
+          <p className="text-[0.8rem] font-medium text-[#1e3a5f]">
             {t('productForm.duration.preview', 'Vista previa:')}
             <span className="font-medium ml-2">
               {duration.value} {duration.unit === 'hr'

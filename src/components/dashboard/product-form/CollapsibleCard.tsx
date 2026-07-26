@@ -19,38 +19,43 @@ export default function CollapsibleCard({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left hover:bg-gray-50/60 transition-colors"
+        className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-left transition-colors hover:bg-[#F6F9FC]"
       >
         <div className="min-w-0 flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">{title}</h2>
+          <h2 className="text-[0.9rem] font-semibold text-[#1e3a5f]">{title}</h2>
           {badge && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">
+            <span className="text-[0.68rem] font-medium px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#8898AA] whitespace-nowrap">
               {badge}
             </span>
           )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {description && !open && (
-            <span className="hidden sm:inline text-xs text-gray-400 truncate max-w-[16rem]">
+            <span className="hidden sm:inline text-[0.74rem] font-normal text-[#A9B6C6] truncate max-w-[16rem]">
               {description}
             </span>
           )}
-          <svg
-            className={`w-5 h-5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          {/* Cheurón dibujado con dos bordes rotados, sin SVG. La rotación va
+              inline en vez de con rotate-45/rotate-[-135deg] para no depender de
+              que Tailwind genere el valor arbitrario. */}
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRight: '1.6px solid #A9B6C6',
+              borderBottom: '1.6px solid #A9B6C6',
+              transform: `rotate(${open ? -135 : 45}deg)`,
+              transition: 'transform .15s ease',
+            }}
+          />
         </div>
       </button>
-      {open && <div className="px-6 pb-6">{children}</div>}
+      {open && <div className="px-4 sm:px-5 pb-4 sm:pb-5">{children}</div>}
     </div>
   )
 }

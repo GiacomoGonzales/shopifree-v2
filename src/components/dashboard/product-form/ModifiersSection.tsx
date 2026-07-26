@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ModifierGroup, ModifierOption } from '../../../types'
+import { CARD, INPUT, LABEL, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 interface ModifiersSectionProps {
   modifierGroups: ModifierGroup[]
@@ -78,13 +79,13 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+    <div className={CARD}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">
+          <h2 className={SECTION_TITLE}>
             {t('productForm.modifiers.title', 'Modificadores / Extras')}
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className={SECTION_HINT}>
             {t('productForm.modifiers.description', 'Opciones adicionales como toppings, extras, tamanos')}
           </p>
         </div>
@@ -98,8 +99,8 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
       </div>
 
       {modifierGroups.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-          <p className="text-gray-500 text-sm">
+        <div className="text-center py-8 bg-[#F6F9FC] rounded-xl border border-dashed border-[#E6EBF1]">
+          <p className="text-[#8898AA] text-sm">
             {t('productForm.modifiers.empty', 'Sin modificadores. Agrega un grupo para empezar.')}
           </p>
         </div>
@@ -108,31 +109,29 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
           {modifierGroups.map((group) => (
             <div
               key={group.id}
-              className="border border-gray-200 rounded-xl overflow-hidden"
+              className="border border-[#E6EBF1] rounded-xl overflow-hidden"
             >
               {/* Group Header */}
               <div
-                className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer"
+                className="flex items-center justify-between p-4 bg-[#F6F9FC] cursor-pointer"
                 onClick={() =>
                   setExpandedGroup(expandedGroup === group.id ? null : group.id)
                 }
               >
                 <div className="flex items-center gap-3">
-                  <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                      expandedGroup === group.id ? 'rotate-90' : ''
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                  <span
+                    className="shrink-0"
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRight: '1.6px solid #A9B6C6',
+                      borderBottom: '1.6px solid #A9B6C6',
+                      // Rotacion inline para no depender de que Tailwind genere
+                      // el valor arbitrario. Cerrado apunta a la derecha, abierto abajo.
+                      transform: `rotate(${expandedGroup === group.id ? 45 : -45}deg)`,
+                      transition: 'transform .15s ease',
+                    }}
+                  />
                   <span className="font-medium text-[#1e3a5f]">
                     {group.name || t('productForm.modifiers.unnamed', 'Sin nombre')}
                   </span>
@@ -141,7 +140,7 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                       {t('productForm.modifiers.required', 'Requerido')}
                     </span>
                   )}
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[#A9B6C6]">
                     ({group.options.length} {t('productForm.modifiers.options', 'opciones')})
                   </span>
                 </div>
@@ -151,11 +150,9 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                     e.stopPropagation()
                     removeGroup(group.id)
                   }}
-                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  className="text-[1.05rem] leading-none text-[#A9B6C6] hover:text-[#DC2626] transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  &times;
                 </button>
               </div>
 
@@ -164,7 +161,7 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                 <div className="p-4 space-y-4">
                   {/* Group Name */}
                   <div>
-                    <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+                    <label className={LABEL}>
                       {t('productForm.modifiers.groupName', 'Nombre del grupo')}
                     </label>
                     <input
@@ -172,7 +169,7 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                       value={group.name}
                       onChange={(e) => updateGroup(group.id, { name: e.target.value })}
                       placeholder={t('productForm.modifiers.groupNamePlaceholder', 'Ej: Extras, Tamano, Tipo de pan')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                      className={INPUT}
                     />
                   </div>
 
@@ -189,14 +186,14 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                             minSelect: e.target.checked ? 1 : 0,
                           })
                         }
-                        className="w-4 h-4 rounded border-gray-300 text-[#2d6cb5] focus:ring-[#38bdf8]"
+                        className="w-4 h-4 rounded border-[#D8E2EC] text-[#2d6cb5] focus:ring-[#38bdf8]"
                       />
-                      <label htmlFor={`required-${group.id}`} className="text-sm text-gray-700">
+                      <label htmlFor={`required-${group.id}`} className="text-sm text-[#425466]">
                         {t('productForm.modifiers.isRequired', 'Obligatorio')}
                       </label>
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">
+                      <label className="block text-xs text-[#8898AA] mb-1">
                         {t('productForm.modifiers.minSelect', 'Min. seleccion')}
                       </label>
                       <input
@@ -206,11 +203,11 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                         onChange={(e) =>
                           updateGroup(group.id, { minSelect: parseInt(e.target.value) || 0 })
                         }
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                        className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">
+                      <label className="block text-xs text-[#8898AA] mb-1">
                         {t('productForm.modifiers.maxSelect', 'Max. seleccion')}
                       </label>
                       <input
@@ -220,7 +217,7 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                         onChange={(e) =>
                           updateGroup(group.id, { maxSelect: parseInt(e.target.value) || 1 })
                         }
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                        className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                       />
                     </div>
                   </div>
@@ -241,7 +238,7 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                     </div>
 
                     {group.options.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-[#A9B6C6] text-center py-4 bg-[#F6F9FC] rounded-lg">
                         {t('productForm.modifiers.noOptions', 'Agrega opciones a este grupo')}
                       </p>
                     ) : (
@@ -249,7 +246,7 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                         {group.options.map((option) => (
                           <div
                             key={option.id}
-                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                            className="flex items-center gap-3 p-3 bg-[#F6F9FC] rounded-lg"
                           >
                             <input
                               type="text"
@@ -258,10 +255,10 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                                 updateOption(group.id, option.id, { name: e.target.value })
                               }
                               placeholder={t('productForm.modifiers.optionName', 'Nombre')}
-                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                              className="flex-1 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                             />
                             <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A9B6C6] text-sm">
                                 +
                               </span>
                               <input
@@ -275,28 +272,26 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                                   })
                                 }
                                 placeholder="0"
-                                className="w-20 pl-6 pr-2 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
+                                className="w-20 pl-6 pr-2 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
                               />
                             </div>
-                            <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                            <label className="flex items-center gap-1.5 text-xs text-[#8898AA]">
                               <input
                                 type="checkbox"
                                 checked={option.available}
                                 onChange={(e) =>
                                   updateOption(group.id, option.id, { available: e.target.checked })
                                 }
-                                className="w-3.5 h-3.5 rounded border-gray-300 text-[#2d6cb5] focus:ring-[#38bdf8]"
+                                className="w-3.5 h-3.5 rounded border-[#D8E2EC] text-[#2d6cb5] focus:ring-[#38bdf8]"
                               />
                               {t('productForm.modifiers.available', 'Disp.')}
                             </label>
                             <button
                               type="button"
                               onClick={() => removeOption(group.id, option.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors"
+                              className="text-[1.05rem] leading-none text-[#A9B6C6] hover:text-[#DC2626] transition-colors"
                             >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
+                              &times;
                             </button>
                           </div>
                         ))}

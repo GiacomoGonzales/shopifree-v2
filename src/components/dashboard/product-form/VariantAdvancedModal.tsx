@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useToast } from '../../ui/Toast'
 import type { VariantCombination } from '../../../types'
 import { uploadImage as uploadToStorage } from '../../../utils/uploadImage'
+import { INPUT_SM, LABEL } from './tokens'
 
 interface Props {
   combo: VariantCombination
@@ -46,22 +47,20 @@ export default function VariantAdvancedModal({
         onClick={onClose}
       />
       <div className="fixed inset-x-4 top-[6%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg z-50 animate-[slideDown_0.2s_ease-out]">
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-200/60 max-h-[88vh] flex flex-col">
+        <div className="bg-white rounded-xl shadow-2xl border border-[#E6EBF1] max-h-[88vh] flex flex-col">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
+          <div className="px-5 py-4 border-b border-[#EEF2F6] flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-[#1e3a5f]">{t('productForm.variantAdvanced.title')}</h3>
-              <p className="text-xs text-gray-500 mt-0.5 truncate">{comboLabel}</p>
+              <p className="text-xs text-[#8898AA] mt-0.5 truncate">{comboLabel}</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
+              className="p-1 text-[#A9B6C6] hover:text-[#425466] rounded-md hover:bg-[#F1F5F9] transition-colors"
               aria-label="Close"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
+              &times;
             </button>
           </div>
 
@@ -69,17 +68,15 @@ export default function VariantAdvancedModal({
           <div className="overflow-y-auto px-5 py-4 space-y-5">
             {/* Image */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-medium text-[#425466] mb-2">
                 {t('productForm.variantAdvanced.image')}
               </label>
               <div className="flex items-center gap-3">
-                <div className="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center shrink-0">
+                <div className="w-20 h-20 rounded-lg border border-[#E6EBF1] bg-[#F6F9FC] overflow-hidden flex items-center justify-center shrink-0">
                   {combo.image ? (
                     <img src={combo.image} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <svg className="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                    </svg>
+                    <span className="text-[0.66rem] font-medium text-[#C3CFDB]">Sin foto</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0 space-y-2">
@@ -103,13 +100,13 @@ export default function VariantAdvancedModal({
                       <button
                         type="button"
                         onClick={() => onChange({ image: undefined })}
-                        className="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium bg-[#F1F5F9] text-[#425466] rounded-md hover:bg-[#E1E8EF] transition-colors"
                       >
                         {t('productForm.variantAdvanced.removeImage')}
                       </button>
                     )}
                   </div>
-                  <p className="text-[11px] text-gray-400">{t('productForm.variantAdvanced.imageHint')}</p>
+                  <p className="text-[0.7rem] font-normal text-[#A9B6C6]">{t('productForm.variantAdvanced.imageHint')}</p>
                 </div>
               </div>
             </div>
@@ -117,7 +114,7 @@ export default function VariantAdvancedModal({
             {/* Identifiers */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={LABEL}>
                   {t('productForm.variantAdvanced.sku')}
                 </label>
                 <input
@@ -125,11 +122,11 @@ export default function VariantAdvancedModal({
                   value={combo.sku || ''}
                   onChange={e => onChange({ sku: e.target.value || undefined })}
                   placeholder="ABC-123"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className={INPUT_SM}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={LABEL}>
                   {t('productForm.variantAdvanced.barcode')}
                 </label>
                 <input
@@ -137,7 +134,7 @@ export default function VariantAdvancedModal({
                   value={combo.barcode || ''}
                   onChange={e => onChange({ barcode: e.target.value || undefined })}
                   placeholder="7501234567890"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className={INPUT_SM}
                 />
               </div>
             </div>
@@ -145,7 +142,7 @@ export default function VariantAdvancedModal({
             {/* Pricing */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={LABEL}>
                   {t('productForm.variantAdvanced.price')}
                 </label>
                 <input
@@ -155,12 +152,12 @@ export default function VariantAdvancedModal({
                   value={combo.price ?? ''}
                   onChange={e => onChange({ price: e.target.value ? Number(e.target.value) : undefined })}
                   placeholder={basePrice !== undefined ? String(basePrice) : '0.00'}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className={INPUT_SM}
                 />
-                <p className="text-[11px] text-gray-400 mt-1">{t('productForm.variantAdvanced.priceHint')}</p>
+                <p className="text-[11px] text-[#A9B6C6] mt-1">{t('productForm.variantAdvanced.priceHint')}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={LABEL}>
                   {t('productForm.variantAdvanced.cost')}
                 </label>
                 <input
@@ -170,9 +167,9 @@ export default function VariantAdvancedModal({
                   value={combo.cost ?? ''}
                   onChange={e => onChange({ cost: e.target.value ? Number(e.target.value) : undefined })}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className={INPUT_SM}
                 />
-                <p className="text-[11px] text-gray-400 mt-1">{t('productForm.variantAdvanced.costHint')}</p>
+                <p className="text-[11px] text-[#A9B6C6] mt-1">{t('productForm.variantAdvanced.costHint')}</p>
               </div>
             </div>
 
@@ -180,7 +177,7 @@ export default function VariantAdvancedModal({
                 (when editing, stock is managed from the Inventory page) */}
             {trackStock && !isEditing && (
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className={LABEL}>
                   {t('productForm.variantAdvanced.stock')}
                 </label>
                 <input
@@ -189,14 +186,14 @@ export default function VariantAdvancedModal({
                   value={combo.stock || ''}
                   onChange={e => onChange({ stock: Number(e.target.value) || 0 })}
                   placeholder="0"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className={INPUT_SM}
                 />
               </div>
             )}
 
             {/* Available toggle */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm text-gray-700">
+            <div className="flex items-center justify-between p-3 bg-[#F6F9FC] rounded-lg">
+              <span className="text-sm text-[#425466]">
                 {combo.available
                   ? t('productForm.variantAdvanced.available')
                   : t('productForm.variantAdvanced.unavailable')}
@@ -208,13 +205,13 @@ export default function VariantAdvancedModal({
                   onChange={e => onChange({ available: e.target.checked })}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]" />
+                <div className="w-9 h-5 bg-[#E1E8EF] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2d6cb5]" />
               </label>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-3 border-t border-gray-100 flex justify-end">
+          <div className="px-5 py-3 border-t border-[#EEF2F6] flex justify-end">
             <button
               type="button"
               onClick={onClose}

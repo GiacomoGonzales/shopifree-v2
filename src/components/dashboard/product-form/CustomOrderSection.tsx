@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { CARD, LABEL, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 interface CustomOrderSectionProps {
   customizable: boolean
@@ -20,24 +21,24 @@ export default function CustomOrderSection({
   const { t } = useTranslation('dashboard')
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+    <div className={CARD}>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-[#1e3a5f]">
+        <h2 className={SECTION_TITLE}>
           {t('productForm.customOrder.title', 'Pedido personalizado')}
         </h2>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className={SECTION_HINT}>
           {t('productForm.customOrder.description', 'Permite a los clientes agregar notas de personalizacion')}
         </p>
       </div>
 
       <div className="space-y-4">
         {/* Enable Customization Toggle */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+        <div className="flex items-center justify-between p-4 bg-[#F6F9FC] rounded-xl">
           <div>
             <span className="text-sm font-medium text-[#1e3a5f]">
               {t('productForm.customOrder.enable', 'Permitir personalizacion')}
             </span>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-[#8898AA] mt-0.5">
               {t('productForm.customOrder.enableHint', 'Los clientes pueden agregar instrucciones especiales')}
             </p>
           </div>
@@ -48,14 +49,14 @@ export default function CustomOrderSection({
               onChange={(e) => onCustomizableChange(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+            <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
           </label>
         </div>
 
         {/* Customization Instructions */}
         {customizable && (
           <div>
-            <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+            <label className={LABEL}>
               {t('productForm.customOrder.instructions', 'Instrucciones para el cliente')}
             </label>
             <textarea
@@ -63,9 +64,9 @@ export default function CustomOrderSection({
               onChange={(e) => onInstructionsChange(e.target.value || undefined)}
               rows={3}
               placeholder={t('productForm.customOrder.instructionsPlaceholder', 'Ej: Describe el color, tamano, texto que deseas...')}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
+              className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-[#A9B6C6] mt-1">
               {t('productForm.customOrder.instructionsHint', 'Este texto se mostrara al cliente junto al campo de personalizacion')}
             </p>
           </div>
@@ -73,7 +74,7 @@ export default function CustomOrderSection({
 
         {/* Available Quantity */}
         <div>
-          <label className="block text-sm font-medium text-[#1e3a5f] mb-1">
+          <label className={LABEL}>
             {t('productForm.customOrder.quantity', 'Cantidad disponible')}
           </label>
           <div className="flex items-center gap-3">
@@ -86,9 +87,9 @@ export default function CustomOrderSection({
                 onQuantityChange(val ? parseInt(val) : undefined)
               }}
               placeholder={t('productForm.customOrder.quantityPlaceholder', 'Ilimitado')}
-              className="w-32 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+              className="w-32 px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
             />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-[#8898AA]">
               {t('productForm.customOrder.quantityHint', 'Deja vacio para ilimitado')}
             </span>
           </div>

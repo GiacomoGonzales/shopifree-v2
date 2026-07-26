@@ -155,11 +155,11 @@ export default function VariationsSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-medium text-gray-900">Variantes</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Tallas, colores u otras opciones</p>
+          <h2 className="text-[0.9rem] font-semibold text-[#1e3a5f]">Variantes</h2>
+          <p className="text-xs text-[#A9B6C6] mt-0.5">Tallas, colores u otras opciones</p>
         </div>
         <button type="button" onClick={addVariation}
-          className="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+          className="px-3 py-1.5 text-xs font-medium bg-[#F1F5F9] text-[#425466] rounded-lg hover:bg-[#E1E8EF] transition-colors">
           + Agregar variante
         </button>
       </div>
@@ -167,11 +167,11 @@ export default function VariationsSection({
       {/* Presets */}
       {variations.length === 0 && (
         <div>
-          <p className="text-[11px] text-gray-400 mb-2">Agregar rapido:</p>
+          <p className="text-[11px] text-[#A9B6C6] mb-2">Agregar rapido:</p>
           <div className="flex flex-wrap gap-1.5">
             {presets.map(p => (
               <button key={p.name} type="button" onClick={() => addPreset(p)}
-                className="px-2.5 py-1 text-xs bg-gray-50 text-gray-500 rounded-md hover:bg-gray-100 transition-colors">
+                className="px-2.5 py-1 text-xs bg-[#F6F9FC] text-[#8898AA] rounded-md hover:bg-[#F1F5F9] transition-colors">
                 {p.name}
               </button>
             ))}
@@ -183,25 +183,32 @@ export default function VariationsSection({
       {variations.length > 0 && (
         <div className="space-y-3">
           {variations.map(variation => (
-            <div key={variation.id} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div key={variation.id} className="border border-[#E6EBF1] rounded-lg overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50/80 cursor-pointer"
+              <div className="flex items-center justify-between px-3 py-2.5 bg-[#F6F9FC] cursor-pointer"
                 onClick={() => setExpandedVariation(expandedVariation === variation.id ? null : variation.id)}>
                 <div className="flex items-center gap-2">
-                  <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedVariation === variation.id ? 'rotate-90' : ''}`}
-                    fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span
+                    className="shrink-0"
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRight: '1.6px solid #A9B6C6',
+                      borderBottom: '1.6px solid #A9B6C6',
+                      // Rotacion inline para no depender de que Tailwind genere
+                      // el valor arbitrario. Cerrado apunta a la derecha, abierto abajo.
+                      transform: `rotate(${expandedVariation === variation.id ? 45 : -45}deg)`,
+                      transition: 'transform .15s ease',
+                    }}
+                  />
+                  <span className="text-sm font-medium text-[#425466]">
                     {variation.name || 'Sin nombre'}
                   </span>
-                  <span className="text-[11px] text-gray-400">({variation.options.length} opciones)</span>
+                  <span className="text-[0.7rem] font-normal text-[#A9B6C6]">({variation.options.length} opciones)</span>
                 </div>
                 <button type="button" onClick={e => { e.stopPropagation(); removeVariation(variation.id) }}
-                  className="p-1 text-gray-300 hover:text-red-400 transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
+                  className="p-1 text-[1.05rem] leading-none text-[#C3CFDB] hover:text-[#DC2626] transition-colors">
+                  &times;
                 </button>
               </div>
 
@@ -211,31 +218,29 @@ export default function VariationsSection({
                   <input type="text" value={variation.name}
                     onChange={e => updateVariation(variation.id, { name: e.target.value })}
                     placeholder="Ej: Talla, Color, Material"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+                    className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
 
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Opciones</span>
+                    <span className="text-xs text-[#8898AA]">Opciones</span>
                     <button type="button" onClick={() => addOption(variation.id)}
-                      className="text-xs text-gray-400 hover:text-gray-600 font-medium">
+                      className="text-xs text-[#A9B6C6] hover:text-[#425466] font-medium">
                       + Agregar
                     </button>
                   </div>
 
                   {variation.options.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-lg">Agrega opciones</p>
+                    <p className="text-xs text-[#A9B6C6] text-center py-3 bg-[#F6F9FC] rounded-lg">Agrega opciones</p>
                   ) : (
                     <div className="space-y-1.5">
                       {variation.options.map(option => (
-                        <div key={option.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <div key={option.id} className="flex items-center gap-2 p-2 bg-[#F6F9FC] rounded-lg">
                           <input type="text" value={option.value}
                             onChange={e => updateOption(variation.id, option.id, { value: e.target.value })}
                             placeholder="Valor"
-                            className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                            className="flex-1 px-2.5 py-1.5 border border-[#E6EBF1] rounded-md text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                           <button type="button" onClick={() => removeOption(variation.id, option.id)}
-                            className="p-1 text-gray-300 hover:text-red-400 transition-colors">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
+                            className="p-1 text-[1.05rem] leading-none text-[#C3CFDB] hover:text-[#DC2626] transition-colors">
+                            &times;
                           </button>
                         </div>
                       ))}
@@ -252,30 +257,30 @@ export default function VariationsSection({
       {combinations.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-900">
-              Combinaciones <span className="text-gray-400 font-normal">({combinations.length})</span>
+            <h3 className="text-[0.9rem] font-semibold text-[#1e3a5f]">
+              Combinaciones <span className="text-[#A9B6C6] font-normal">({combinations.length})</span>
             </h3>
             {trackStock && (
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[0.7rem] font-normal text-[#A9B6C6]">
                 Stock total: {combinations.reduce((s, c) => s + c.stock, 0)}
               </p>
             )}
           </div>
 
           {isEditing && trackStock && (
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[0.7rem] font-normal text-[#A9B6C6]">
               También puedes ajustar stock desde el botón "Stock" en el listado de Productos o desde Inventario.
             </p>
           )}
           {!trackStock && (
-            <p className="text-[11px] text-gray-400 italic">
+            <p className="text-[11px] text-[#A9B6C6] italic">
               Para gestionar stock por variante, activa "Controlar stock" en Inventario.
             </p>
           )}
 
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="border border-[#E6EBF1] rounded-lg overflow-hidden">
             {/* Table header */}
-            <div className="hidden sm:grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50/80 text-[11px] text-gray-400 uppercase tracking-wider font-medium border-b border-gray-100">
+            <div className="hidden sm:grid grid-cols-12 gap-2 px-3 py-2 bg-[#F6F9FC] text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium border-b border-[#EEF2F6]">
               <div className={trackStock ? 'col-span-4' : 'col-span-5'}>Combinacion</div>
               <div className={trackStock ? 'col-span-2' : 'col-span-3'}>SKU</div>
               <div className={trackStock ? 'col-span-2 text-right' : 'col-span-2 text-right'}>Precio</div>
@@ -297,40 +302,36 @@ export default function VariationsSection({
                         {combo.image && (
                           <img src={combo.image} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
                         )}
-                        <p className="text-sm text-gray-900 truncate">{comboLabel(combo)}</p>
+                        <p className="text-[0.8rem] font-medium text-[#1e3a5f] truncate">{comboLabel(combo)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {trackStock && (
-                          <span className="text-xs text-gray-500 tabular-nums">{combo.stock} uds</span>
+                          <span className="text-xs text-[#8898AA] tabular-nums">{combo.stock} uds</span>
                         )}
                         <label className="flex items-center gap-1">
                           <input type="checkbox" checked={combo.available}
                             onChange={e => updateCombination(combo.id, { available: e.target.checked })}
-                            className="w-3 h-3 rounded border-gray-300 text-[#1e3a5f]" />
-                          <span className="text-[10px] text-gray-400">Activo</span>
+                            className="w-3 h-3 rounded border-[#D8E2EC] text-[#1e3a5f]" />
+                          <span className="text-[10px] text-[#A9B6C6]">Activo</span>
                         </label>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <input type="text" value={combo.sku || ''} placeholder="SKU"
                         onChange={e => updateCombination(combo.id, { sku: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-200 rounded-md text-xs" />
+                        className="px-2 py-1.5 border border-[#E6EBF1] rounded-md text-xs" />
                       <input type="number" min="0" value={combo.price ?? ''} placeholder="Precio"
                         onChange={e => updateCombination(combo.id, { price: e.target.value ? Number(e.target.value) : undefined })}
-                        className="px-2 py-1.5 border border-gray-200 rounded-md text-xs text-right" />
+                        className="px-2 py-1.5 border border-[#E6EBF1] rounded-md text-xs text-right" />
                     </div>
                     {trackStock && (
                       <input type="number" min="0" value={combo.stock || ''} placeholder={isEditing ? 'Stock' : 'Stock inicial'}
                         onChange={e => updateCombination(combo.id, { stock: Number(e.target.value) || 0 })}
-                        className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-xs text-right" />
+                        className="w-full px-2 py-1.5 border border-[#E6EBF1] rounded-md text-xs text-right" />
                     )}
                     <button type="button" onClick={() => setAdvancedComboId(combo.id)}
                       className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-[#1e3a5f] bg-[#1e3a5f]/5 hover:bg-[#1e3a5f]/10 rounded-md transition-colors">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.425-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      </svg>
-                      <span>{t('productForm.variantAdvanced.openCta')}</span>
+                                            <span>{t('productForm.variantAdvanced.openCta')}</span>
                       {hasAdvancedData && <span className="w-1.5 h-1.5 rounded-full bg-[#2d6cb5]" />}
                     </button>
                   </div>
@@ -342,18 +343,18 @@ export default function VariationsSection({
                         {combo.image && (
                           <img src={combo.image} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
                         )}
-                        <p className="text-sm text-gray-900 truncate">{comboLabel(combo)}</p>
+                        <p className="text-[0.8rem] font-medium text-[#1e3a5f] truncate">{comboLabel(combo)}</p>
                       </div>
                     </div>
                     <div className={trackStock ? 'col-span-2' : 'col-span-3'}>
                       <input type="text" value={combo.sku || ''} placeholder="SKU"
                         onChange={e => updateCombination(combo.id, { sku: e.target.value })}
-                        className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        className="w-full px-2 py-1 border border-[#E6EBF1] rounded-md text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                     </div>
                     <div className="col-span-2 text-right">
                       <input type="number" min="0" value={combo.price ?? ''} placeholder={String(basePrice || 0)}
                         onChange={e => updateCombination(combo.id, { price: e.target.value ? Number(e.target.value) : undefined })}
-                        className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        className="w-full px-2 py-1 border border-[#E6EBF1] rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                     </div>
                     {trackStock && (
                       <div className="col-span-2 text-right">
@@ -364,23 +365,20 @@ export default function VariationsSection({
                             product.stock from the sum, so editing here is safe. */}
                         <input type="number" min="0" value={combo.stock || ''}
                           onChange={e => updateCombination(combo.id, { stock: Number(e.target.value) || 0 })}
-                          className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                          className="w-full px-2 py-1 border border-[#E6EBF1] rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                       </div>
                     )}
                     <div className="col-span-2 flex justify-end items-center gap-2">
                       <label className="flex items-center gap-1.5">
                         <input type="checkbox" checked={combo.available}
                           onChange={e => updateCombination(combo.id, { available: e.target.checked })}
-                          className="w-3 h-3 rounded border-gray-300 text-[#1e3a5f]" />
-                        <span className="text-[11px] text-gray-400">{combo.available ? 'Activo' : 'Inactivo'}</span>
+                          className="w-3 h-3 rounded border-[#D8E2EC] text-[#1e3a5f]" />
+                        <span className="text-[0.7rem] font-normal text-[#A9B6C6]">{combo.available ? 'Activo' : 'Inactivo'}</span>
                       </label>
                       <button type="button" onClick={() => setAdvancedComboId(combo.id)}
                         title={t('productForm.variantAdvanced.openCta')}
-                        className="relative p-1 text-gray-400 hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.425-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
+                        className="relative p-1 text-[#A9B6C6] hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors">
+                        <span className="text-[0.85rem] leading-none">&ctdot;</span>
                         {hasAdvancedData && (
                           <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-[#2d6cb5]" />
                         )}
