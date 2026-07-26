@@ -30,11 +30,14 @@ interface NavItem {
 type NavElement = NavItem | 'separator'
 
 
+/** Tres barras con CSS, sin SVG. */
 function MenuIcon() {
   return (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
+    <span className="flex flex-col justify-between" style={{ width: 18, height: 12 }}>
+      {[0, 1, 2].map(i => (
+        <span key={i} style={{ height: 2, borderRadius: 1, background: 'currentColor' }} />
+      ))}
+    </span>
   )
 }
 
@@ -175,25 +178,26 @@ export default function DashboardLayout() {
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center gap-2.5 px-3 py-[5px] rounded-md text-[13px] transition-colors relative ${
+              // Activo en azul, igual que el mockup de dashboard de la landing.
+              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[0.82rem] transition-colors relative ${
                 isActive
-                  ? 'bg-gray-900/[0.04] text-gray-900 font-medium'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-900/[0.02] font-normal'
+                  ? 'bg-[#E0F2FE] text-[#0284C7] font-semibold'
+                  : 'text-[#425466] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] font-medium'
               }`}
             >
-              {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-gray-900 rounded-r-full" />}
+              {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full" style={{ background: '#0284C7' }} />}
               <item.icon />
               <span className="flex-1">{item.name}</span>
               {isChatItem && totalUnread > 0 && (
-                <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
-                  isActive ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
+                <span className={`min-w-[18px] h-[18px] px-1 text-[0.62rem] font-semibold rounded-full flex items-center justify-center ${
+                  isActive ? 'bg-[#0284C7] text-white' : 'bg-[#DC2626] text-white'
                 }`}>
                   {totalUnread > 9 ? '9+' : totalUnread}
                 </span>
               )}
               {!isChatItem && (item.badge ?? 0) > 0 && (
-                <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
-                  isActive ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
+                <span className={`min-w-[18px] h-[18px] px-1 text-[0.62rem] font-semibold rounded-full flex items-center justify-center ${
+                  isActive ? 'bg-[#0284C7] text-white' : 'bg-[#DC2626] text-white'
                 }`}>
                   {(item.badge ?? 0) > 9 ? '9+' : item.badge}
                 </span>
@@ -204,7 +208,7 @@ export default function DashboardLayout() {
       </nav>
 
       {/* User section */}
-      <div className="px-3 pt-3 pb-5 border-t border-gray-100">
+      <div className="px-3 pt-3 pb-5 border-t border-[#EEF2F6]">
         <div className="flex items-center gap-2.5">
           {user.avatar ? (
             <img
@@ -213,14 +217,14 @@ export default function DashboardLayout() {
               className="w-7 h-7 rounded-full object-cover"
             />
           ) : (
-            <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
-              <span className="text-[11px] font-medium text-gray-600">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#E1E8EF' }}>
+              <span className="text-[0.68rem] font-semibold text-[#425466]">
                 {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
               </span>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-gray-700 truncate">
+            <p className="text-[0.8rem] font-semibold text-[#1e3a5f] truncate">
               {user.firstName && user.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : user.firstName || user.email
@@ -229,12 +233,9 @@ export default function DashboardLayout() {
           </div>
           <button
             onClick={handleLogout}
-            className="text-gray-300 hover:text-gray-500 transition-colors p-1.5 rounded-md hover:bg-gray-100"
-            title={t('nav.logout')}
+            className="text-[0.72rem] font-semibold text-[#A9B6C6] hover:text-[#DC2626] transition-colors px-2 py-1 rounded-lg hover:bg-[#FEF2F2] shrink-0"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            {t('nav.logout')}
           </button>
         </div>
       </div>
@@ -256,10 +257,10 @@ export default function DashboardLayout() {
         {/* Status bar background - matches header seamlessly */}
         <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
         {/* Header bar */}
-        <div className="h-12 bg-white flex items-center justify-between px-4 border-b border-gray-100">
+        <div className="h-12 bg-white flex items-center justify-between px-4 border-b border-[#EEF2F6]">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-[#425466] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] rounded-lg transition-colors"
           >
             <MenuIcon />
           </button>
@@ -271,20 +272,20 @@ export default function DashboardLayout() {
               showUpgrade ? (
                 <Link
                   to={localePath('/finance/subscription')}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
-                    store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
-                    : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
-                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  className={`px-2 py-0.5 rounded-full text-[0.62rem] font-semibold capitalize ${
+                    store.plan === 'free' ? 'bg-[#F1F5F9] text-[#8898AA]'
+                    : store.plan === 'pro' ? 'bg-[#E0F2FE] text-[#0284C7]'
+                    : 'bg-[#FEF3C7] text-[#B45309]'
                   }`}
                 >
                   {store.plan}
                 </Link>
               ) : (
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${
-                    store.plan === 'free' ? 'bg-gray-100/80 text-gray-600'
-                    : store.plan === 'pro' ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
-                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  className={`px-2 py-0.5 rounded-full text-[0.62rem] font-semibold capitalize ${
+                    store.plan === 'free' ? 'bg-[#F1F5F9] text-[#8898AA]'
+                    : store.plan === 'pro' ? 'bg-[#E0F2FE] text-[#0284C7]'
+                    : 'bg-[#FEF3C7] text-[#B45309]'
                   }`}
                 >
                   {store.plan}
@@ -299,19 +300,17 @@ export default function DashboardLayout() {
                 href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[0.95rem] leading-none text-[#425466] hover:text-[#0284C7] hover:bg-[#F6F9FC] transition-colors"
                 title={store.customDomain || `${store.subdomain}.shopifree.app`}
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                </svg>
+                &#8599;
               </a>
             )}
             {!isAdmin && (
               <button onClick={() => setChatOpen(true)} className="relative w-8 h-8 flex items-center justify-center">
                 <img src="/chat-support.png" alt="Soporte" className="w-6 h-6 object-contain" />
                 {chatUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
                     {chatUnread > 9 ? '9+' : chatUnread}
                   </span>
                 )}
@@ -321,8 +320,8 @@ export default function DashboardLayout() {
               {user.avatar ? (
                 <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-lg object-cover" />
               ) : (
-                <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
-                  <span className="text-[11px] font-medium text-gray-600">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#E1E8EF' }}>
+                  <span className="text-[0.68rem] font-semibold text-[#425466]">
                     {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
                   </span>
                 </div>
@@ -335,10 +334,10 @@ export default function DashboardLayout() {
       {/* Mobile sidebar is rendered by AppShell so it persists across mode switches */}
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-gray-100">
+      <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-[#EEF2F6]">
         <div className="flex flex-col h-full">
           {/* Logo + Mode Switcher */}
-          <div className="px-4 pt-5 pb-3 border-b border-gray-100 space-y-4">
+          <div className="px-4 pt-5 pb-3 border-b border-[#EEF2F6] space-y-4">
             <div className="flex items-center justify-center gap-2">
               <Link to={localePath('/dashboard')}>
                 <img src="/newlogo.png" alt="Shopifree" className="h-10" />
@@ -346,12 +345,11 @@ export default function DashboardLayout() {
               {isAdmin && (
                 <Link
                   to={localePath('/admin')}
-                  className="p-1 rounded-md text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-colors"
+                  className="px-1.5 py-0.5 rounded-md text-[0.6rem] font-bold tracking-wide transition-colors"
+                  style={{ background: '#F1F5F9', color: '#A9B6C6' }}
                   title="Admin"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                  </svg>
+                  ADM
                 </Link>
               )}
             </div>
@@ -366,20 +364,20 @@ export default function DashboardLayout() {
       <main className="lg:pl-60 lg:!pt-0" style={{ paddingTop: isNative ? 'calc(3rem + env(safe-area-inset-top))' : '3rem' }}>
         {/* Desktop top bar */}
         {store && (
-          <div className="hidden lg:flex items-center justify-between px-8 py-2.5 border-b border-gray-100 bg-white sticky top-0 z-10">
+          <div className="hidden lg:flex items-center justify-between px-8 py-2.5 border-b border-[#EEF2F6] bg-white sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <Link
                 to={localePath('/dashboard/plan')}
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium ${
-                  store.plan === 'business' ? 'bg-amber-50 text-amber-600' :
-                  store.plan === 'pro' ? 'bg-blue-50 text-blue-600' :
-                  'bg-gray-50 text-gray-500'
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.68rem] font-semibold ${
+                  store.plan === 'business' ? 'bg-[#FEF3C7] text-[#B45309]' :
+                  store.plan === 'pro' ? 'bg-[#E0F2FE] text-[#0284C7]' :
+                  'bg-[#F1F5F9] text-[#8898AA]'
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${
-                  store.plan === 'business' ? 'bg-amber-500' :
-                  store.plan === 'pro' ? 'bg-blue-500' :
-                  'bg-gray-400'
+                  store.plan === 'business' ? 'bg-[#D97706]' :
+                  store.plan === 'pro' ? 'bg-[#0284C7]' :
+                  'bg-[#A9B6C6]'
                 }`} />
                 {store.plan === 'business' ? 'Business' : store.plan === 'pro' ? 'Pro' : 'Free'}
               </Link>
@@ -389,22 +387,19 @@ export default function DashboardLayout() {
                 href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[0.74rem] font-medium text-[#8898AA] hover:text-[#0284C7] hover:bg-[#F6F9FC] rounded-lg transition-colors"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
                 {store.customDomain || `${store.subdomain}.shopifree.app`}
+                <span className="text-[0.85rem] leading-none">&#8599;</span>
               </a>
               <button
                 onClick={() => setChatOpen(!chatOpen)}
-                className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="relative p-1.5 rounded-lg hover:bg-[#F6F9FC] transition-colors"
+                title="Soporte"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
+                <img src="/chat-support.png" alt="Soporte" className="w-5 h-5 object-contain" />
                 {chatUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
                     {chatUnread > 9 ? '9+' : chatUnread}
                   </span>
                 )}
@@ -423,11 +418,12 @@ export default function DashboardLayout() {
       {!isAdmin && !chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
-          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-xl bg-white shadow-md hover:shadow-lg items-center justify-center transition-all hover:scale-105 active:scale-95 border border-gray-200/60"
+          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-[14px] bg-white items-center justify-center transition-all hover:scale-105 active:scale-95"
+          style={{ border: '1px solid #E6EBF1', boxShadow: '0 12px 32px -16px rgba(30,58,95,.45)' }}
         >
           <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
           {chatUnread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
               {chatUnread > 9 ? '9+' : chatUnread}
             </span>
           )}
