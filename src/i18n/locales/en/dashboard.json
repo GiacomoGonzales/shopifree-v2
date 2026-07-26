@@ -9,7 +9,6 @@
     "myBusiness": "Settings",
     "domain": "Domain",
     "integrations": "Integrations",
-    "api": "API & Webhooks",
     "payments": "Payments",
     "coupons": "Coupons",
     "myAccount": "My Account",
@@ -29,19 +28,11 @@
     "qrTitle": "Your store QR code",
     "downloadQR": "Download QR",
     "products": "Products",
-    "visitsWeek": "Visits this week",
-    "whatsappClicks": "WhatsApp clicks",
     "recentProducts": "Recent products",
-    "yourProducts": "Your Products ({{count}})",
     "viewAll": "View all",
-    "addProduct": "+ Add product",
     "noProductsTitle": "You don't have products yet",
     "noProductsDesc": "Add your first product to start selling",
     "addFirstProduct": "Add my first product",
-    "recommendedThemes": "Recommended themes",
-    "preview": "Preview",
-    "useTheme": "Use theme",
-    "saving": "Saving...",
     "planUsage": {
       "title": "Plan usage",
       "categories": "Categories",
@@ -50,9 +41,6 @@
       "upgrade": "Upgrade plan",
       "unlockMore": "Unlock more with Pro"
     },
-    "upgradeTitle": "Want more features?",
-    "upgradeDesc": "Unlimited products, multiple photos, categories, coupons and more",
-    "viewPlans": "View plans",
     "trial": {
       "title": "Free Pro trial",
       "daysLeft": "{{days}} days left",
@@ -67,24 +55,6 @@
       "description": "Renew your subscription to keep enjoying all Pro features.",
       "offer": "Get 20% off your first month",
       "renew": "Renew now"
-    },
-    "milestone": {
-      "firstOrder": {
-        "title": "Your first order arrived!",
-        "description": "Customers trust your store. Upgrade to Pro to keep growing.",
-        "cta": "Unlock Pro"
-      },
-      "products5": {
-        "title": "Your store is growing!",
-        "description": "You already have 5 products. With Pro you can add up to 200 and much more.",
-        "cta": "Grow with Pro"
-      },
-      "whatsapp": {
-        "title": "Your customers are interested!",
-        "description": "You've received WhatsApp inquiries. Upgrade to Pro to convert more sales.",
-        "cta": "Sell more with Pro"
-      },
-      "dismiss": "Not now"
     },
     "onboarding": {
       "title": "Set up your store",
@@ -101,7 +71,62 @@
       "shareStoreDesc": "Send the link to your first customers",
       "setupPayments": "Set up online payments",
       "setupPaymentsDesc": "Accept card payments"
-    }
+    },
+    "period": {
+      "today": "Today",
+      "d7": "7 days",
+      "d30": "30 days"
+    },
+    "kpi": {
+      "visits": "Visits",
+      "orders": "Orders",
+      "revenue": "Revenue",
+      "pending": "Pending",
+      "pendingHint": "to confirm",
+      "noChange": "no change"
+    },
+    "charts": {
+      "metric": {
+        "visits": "Visits",
+        "orders": "Orders",
+        "revenue": "Revenue"
+      },
+      "sourcesTitle": "Traffic sources",
+      "noData": "No data yet",
+      "last7": "Last 7 days",
+      "dayInitials": "S,M,T,W,T,F,S"
+    },
+    "sources": {
+      "direct": "Direct",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "google": "Google",
+      "tiktok": "TikTok",
+      "other": "Other"
+    },
+    "orderStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "recentOrders": {
+      "title": "Recent orders",
+      "empty": "You haven't received any orders yet.",
+      "contact": "Message on WhatsApp"
+    },
+    "actions": {
+      "open": "Open",
+      "qr": "QR",
+      "copy": "Copy",
+      "copied": "Copied",
+      "close": "Close",
+      "whatsapp": "WhatsApp"
+    },
+    "noPhoto": "No photo"
   },
   "analytics": {
     "title": "Analytics",
@@ -327,7 +352,8 @@
       "saveError": "Error saving category",
       "deleted": "Category deleted",
       "deleteError": "Error deleting category",
-      "confirmDelete": "Delete category \"{{name}}\"? Products will not be deleted."
+      "confirmDelete": "Delete category \"{{name}}\"? Products will not be deleted.",
+      "reorderError": "Could not reorder categories"
     },
     "empty": {
       "title": "You don't have products yet",
@@ -360,7 +386,14 @@
       "save": "Save",
       "saving": "Saving...",
       "movementReason": "Quick edit from Products"
-    }
+    },
+    "hiddenWarning": {
+      "title": "{{count}} product hidden from your catalog",
+      "title_plural": "{{count}} products hidden from your catalog",
+      "description": "Your {{plan}} plan allows {{max}} products. The rest are not shown to your customers.",
+      "upgrade": "Upgrade plan"
+    },
+    "reorderError": "Could not reorder products"
   },
   "productForm": {
     "newTitle": "New product",
@@ -645,6 +678,16 @@
         "restaurant": "Restaurants, coffee shops, delivery and food trucks",
         "services": "Barbershops, spas, freelancers and personal branding",
         "specialized": "Technology, beauty, grocery and pet shops"
+      },
+      "countHint": "{{count}} designs. Pick one and preview it before applying.",
+      "current": "In use",
+      "inUse": "In use",
+      "searchPlaceholder": "Search theme by name...",
+      "noResults": "No theme matches that search.",
+      "showMore": "Show {{count}} more themes",
+      "filters": {
+        "suggested": "For your industry",
+        "all": "All"
       }
     },
     "layout": {
@@ -1029,7 +1072,7 @@
   },
   "integrations": {
     "title": "Integrations",
-    "subtitle": "Connect analytics and tracking tools",
+    "subtitle": "Connect Shopifree with external tools",
     "saving": "Saving...",
     "saveChanges": "Save changes",
     "toast": {
@@ -1067,6 +1110,56 @@
       "headLabel": "Code in <head>",
       "bodyLabel": "Code before </body>",
       "warning": "If you paste broken code, your store may stop loading. If that happens, clear the field and save to restore your store."
+    },
+    "saved": "Saved",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "tabs": {
+      "connections": "Connections",
+      "api": "API & webhooks"
+    },
+    "groups": {
+      "tracking": "Analytics and pixels",
+      "suppliers": "Product suppliers",
+      "code": "Custom code"
+    },
+    "cjApiKey": {
+      "title": "CJ Dropshipping",
+      "description": "Import CJ Dropshipping products into your catalog. Sign up free at cjdropshipping.com and copy your API key.",
+      "label": "API Key",
+      "placeholder": "CJ1234567@api@xxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "printfulToken": {
+      "title": "Printful",
+      "description": "Sell print-on-demand products (tees, mugs, posters). Generate the token at printful.com › Settings › API.",
+      "label": "Private Token",
+      "placeholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    },
+    "api": {
+      "whatFor": "What is this for?",
+      "whatForBody": "An API key lets external systems (ERP, POS, invoicing) push products into your catalog and pull the orders coming from your store.",
+      "keyTitle": "API key",
+      "active": "Active",
+      "noKey": "You haven't generated an API key yet.",
+      "generate": "Generate API key",
+      "generating": "Generating…",
+      "regenerate": "Regenerate",
+      "regenerating": "Regenerating…",
+      "revoke": "Revoke",
+      "revoking": "Revoking…",
+      "revoked": "API key revoked",
+      "identifier": "Identifier",
+      "hashOnly": "For security we only store a hash. If you lost the full key, generate a new one.",
+      "created": "Created",
+      "lastUsed": "Last used",
+      "never": "Never",
+      "docs": "API documentation:",
+      "confirmRegenerate": "You already have an active API key. Generating a new one DEACTIVATES the previous key: any integration using it stops working immediately. Continue?",
+      "confirmRevoke": "Revoke the API key? Any integration using it stops working immediately. This cannot be undone — you will have to generate a new one.",
+      "copyFailed": "Could not copy — select the text manually",
+      "modalTitle": "Your new API key",
+      "modalSubtitle": "Copy it now — you will not be able to see it again.",
+      "modalWarning": "Store it somewhere safe. We do not keep the full key: if you lose it you must generate a new one and reconfigure your integrations."
     }
   },
   "coupons": {
@@ -1405,6 +1498,7 @@
     "edit": "Edit",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "clear": "Clear"
   }
 }

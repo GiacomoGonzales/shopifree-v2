@@ -9,7 +9,6 @@
     "myBusiness": "Configuración",
     "domain": "Dominio",
     "integrations": "Integraciones",
-    "api": "API & Webhooks",
     "payments": "Pagos",
     "coupons": "Cupones",
     "myAccount": "Mi Cuenta",
@@ -29,19 +28,11 @@
     "qrTitle": "Código QR de tu tienda",
     "downloadQR": "Descargar QR",
     "products": "Productos",
-    "visitsWeek": "Visitas esta semana",
-    "whatsappClicks": "Clicks en WhatsApp",
     "recentProducts": "Productos recientes",
-    "yourProducts": "Tus Productos ({{count}})",
     "viewAll": "Ver todos",
-    "addProduct": "+ Agregar producto",
     "noProductsTitle": "No tienes productos aún",
     "noProductsDesc": "Agrega tu primer producto para empezar a vender",
     "addFirstProduct": "Agregar mi primer producto",
-    "recommendedThemes": "Temas recomendados",
-    "preview": "Vista previa",
-    "useTheme": "Usar tema",
-    "saving": "Guardando...",
     "planUsage": {
       "title": "Uso de tu plan",
       "categories": "Categorías",
@@ -50,9 +41,6 @@
       "upgrade": "Mejorar plan",
       "unlockMore": "Desbloquear más con Pro"
     },
-    "upgradeTitle": "¿Quieres más funciones?",
-    "upgradeDesc": "Productos ilimitados, múltiples fotos, categorías, cupones y más",
-    "viewPlans": "Ver planes",
     "trial": {
       "title": "Prueba Pro gratuita",
       "daysLeft": "{{days}} días restantes",
@@ -67,24 +55,6 @@
       "description": "Renueva tu suscripción para seguir disfrutando de todas las funciones Pro.",
       "offer": "Obtén 20% de descuento en tu primer mes",
       "renew": "Renovar ahora"
-    },
-    "milestone": {
-      "firstOrder": {
-        "title": "Tu primer pedido llego!",
-        "description": "Los clientes confian en tu tienda. Pasa a Pro para seguir creciendo.",
-        "cta": "Desbloquear Pro"
-      },
-      "products5": {
-        "title": "Tu tienda esta creciendo!",
-        "description": "Ya tenes 5 productos. Con Pro podes agregar hasta 200 y mucho mas.",
-        "cta": "Crecer con Pro"
-      },
-      "whatsapp": {
-        "title": "Tus clientes estan interesados!",
-        "description": "Ya recibiste consultas por WhatsApp. Pasa a Pro para convertir mas ventas.",
-        "cta": "Vender mas con Pro"
-      },
-      "dismiss": "Ahora no"
     },
     "onboarding": {
       "title": "Configura tu tienda",
@@ -101,7 +71,62 @@
       "shareStoreDesc": "Envía el link a tus primeros clientes",
       "setupPayments": "Configura pagos online",
       "setupPaymentsDesc": "Acepta pagos con tarjeta"
-    }
+    },
+    "period": {
+      "today": "Hoy",
+      "d7": "7 días",
+      "d30": "30 días"
+    },
+    "kpi": {
+      "visits": "Visitas",
+      "orders": "Pedidos",
+      "revenue": "Ingresos",
+      "pending": "Pendientes",
+      "pendingHint": "por confirmar",
+      "noChange": "sin cambios"
+    },
+    "charts": {
+      "metric": {
+        "visits": "Visitas",
+        "orders": "Pedidos",
+        "revenue": "Ingresos"
+      },
+      "sourcesTitle": "Fuentes de tráfico",
+      "noData": "Sin datos todavía",
+      "last7": "Últimos 7 días",
+      "dayInitials": "D,L,M,M,J,V,S"
+    },
+    "sources": {
+      "direct": "Directo",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "google": "Google",
+      "tiktok": "TikTok",
+      "other": "Otros"
+    },
+    "orderStatus": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmado",
+      "preparing": "Preparando",
+      "ready": "Listo",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado"
+    },
+    "recentOrders": {
+      "title": "Pedidos recientes",
+      "empty": "Todavía no recibiste pedidos.",
+      "contact": "Escribir por WhatsApp"
+    },
+    "actions": {
+      "open": "Abrir",
+      "qr": "QR",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "close": "Cerrar",
+      "whatsapp": "WhatsApp"
+    },
+    "noPhoto": "Sin foto"
   },
   "analytics": {
     "title": "Estadisticas",
@@ -328,7 +353,8 @@
       "saveError": "Error al guardar categoría",
       "deleted": "Categoría eliminada",
       "deleteError": "Error al eliminar categoría",
-      "confirmDelete": "¿Eliminar la categoría \"{{name}}\"? Los productos no se eliminarán."
+      "confirmDelete": "¿Eliminar la categoría \"{{name}}\"? Los productos no se eliminarán.",
+      "reorderError": "Error al reordenar las categorías"
     },
     "empty": {
       "title": "No tienes productos aún",
@@ -361,7 +387,14 @@
       "save": "Guardar",
       "saving": "Guardando...",
       "movementReason": "Edición rápida desde Productos"
-    }
+    },
+    "hiddenWarning": {
+      "title": "{{count}} producto oculto en tu catálogo",
+      "title_plural": "{{count}} productos ocultos en tu catálogo",
+      "description": "Tu plan {{plan}} permite {{max}} productos. Los demás no se muestran a tus clientes.",
+      "upgrade": "Actualizar plan"
+    },
+    "reorderError": "Error al reordenar los productos"
   },
   "productForm": {
     "newTitle": "Nuevo producto",
@@ -646,6 +679,16 @@
         "restaurant": "Restaurantes, cafeterias, delivery y food trucks",
         "services": "Barberias, spas, freelancers y marca personal",
         "specialized": "Tecnologia, belleza, alimentos y mascotas"
+      },
+      "countHint": "{{count}} diseños. Elegí uno y previsualizalo antes de aplicarlo.",
+      "current": "En uso",
+      "inUse": "En uso",
+      "searchPlaceholder": "Buscar tema por nombre...",
+      "noResults": "Ningún tema coincide con esa búsqueda.",
+      "showMore": "Ver {{count}} temas más",
+      "filters": {
+        "suggested": "Para tu rubro",
+        "all": "Todos"
       }
     },
     "layout": {
@@ -1030,7 +1073,7 @@
   },
   "integrations": {
     "title": "Integraciones",
-    "subtitle": "Conecta herramientas de analítica y tracking",
+    "subtitle": "Conecta Shopifree con herramientas externas",
     "saving": "Guardando...",
     "saveChanges": "Guardar cambios",
     "toast": {
@@ -1068,6 +1111,56 @@
       "headLabel": "Código en <head>",
       "bodyLabel": "Código antes de </body>",
       "warning": "Si pegás código con errores tu tienda puede dejar de cargar. Si eso pasa, borrá el campo y guardá los cambios para volver a la normalidad."
+    },
+    "saved": "Guardado",
+    "connected": "Conectado",
+    "notConnected": "Sin conectar",
+    "tabs": {
+      "connections": "Conexiones",
+      "api": "API y webhooks"
+    },
+    "groups": {
+      "tracking": "Analítica y píxeles",
+      "suppliers": "Proveedores de productos",
+      "code": "Código personalizado"
+    },
+    "cjApiKey": {
+      "title": "CJ Dropshipping",
+      "description": "Importá productos de CJ Dropshipping a tu catálogo. Registrate gratis en cjdropshipping.com y copiá tu API Key.",
+      "label": "API Key",
+      "placeholder": "CJ1234567@api@xxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "printfulToken": {
+      "title": "Printful",
+      "description": "Vendé productos print-on-demand (remeras, tazas, pósters). Generá el token en printful.com › Settings › API.",
+      "label": "Private Token",
+      "placeholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    },
+    "api": {
+      "whatFor": "¿Para qué sirve?",
+      "whatForBody": "Una API key permite que sistemas externos (ERP, POS, facturación) suban productos a tu catálogo y reciban los pedidos que entran por tu tienda.",
+      "keyTitle": "API key",
+      "active": "Activa",
+      "noKey": "Todavía no generaste una API key.",
+      "generate": "Generar API key",
+      "generating": "Generando…",
+      "regenerate": "Regenerar",
+      "regenerating": "Regenerando…",
+      "revoke": "Revocar",
+      "revoking": "Revocando…",
+      "revoked": "API key revocada",
+      "identifier": "Identificador",
+      "hashOnly": "Por seguridad solo guardamos un hash. Si perdiste la key completa, generá una nueva.",
+      "created": "Creada",
+      "lastUsed": "Último uso",
+      "never": "Nunca",
+      "docs": "Documentación de la API:",
+      "confirmRegenerate": "Ya tenés una API key activa. Generar una nueva DESACTIVA la anterior: cualquier integración que la esté usando deja de funcionar al instante. ¿Continuar?",
+      "confirmRevoke": "¿Revocar la API key? Cualquier integración que la esté usando deja de funcionar al instante. No se puede deshacer: tendrás que generar una nueva.",
+      "copyFailed": "No pude copiar — seleccioná el texto manualmente",
+      "modalTitle": "Tu nueva API key",
+      "modalSubtitle": "Copiala ahora — no la vas a poder ver de nuevo.",
+      "modalWarning": "Guardala en un lugar seguro. No almacenamos la key completa: si la perdés tenés que generar una nueva y reconfigurar tus integraciones."
     }
   },
   "coupons": {
@@ -1406,6 +1499,7 @@
     "edit": "Editar",
     "loading": "Cargando...",
     "error": "Error",
-    "success": "Éxito"
+    "success": "Éxito",
+    "clear": "Limpiar"
   }
 }
