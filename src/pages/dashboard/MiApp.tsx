@@ -261,12 +261,12 @@ export default function MiApp() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('miApp.title')}</h1>
-          <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('miApp.title')}</h1>
+          <p className="mt-1 text-[#8898AA]">{t('miApp.subtitle')}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Hero */}
-        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-xl p-6 sm:p-8 text-white overflow-hidden relative flex flex-col justify-between">
+        <div className="bg-[#1e3a5f] rounded-xl p-6 sm:p-8 text-white overflow-hidden relative flex flex-col justify-between">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -292,18 +292,18 @@ export default function MiApp() {
         </div>
 
         {/* Features + CTA */}
-        <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-8 flex flex-col">
-          <p className="text-sm text-gray-600 mb-5">{t('miApp.businessRequired')}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm p-4 sm:p-8 flex flex-col">
+          <p className="text-sm text-[#425466] mb-5">{t('miApp.businessRequired')}</p>
 
           <div className="grid grid-cols-1 gap-3 mb-6 flex-1">
             {(['heroFeature1', 'heroFeature2', 'heroFeature3', 'heroFeature4'] as const).map((key) => (
-              <div key={key} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+              <div key={key} className="flex items-start gap-3 p-3 bg-[#F6F9FC] rounded-xl">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="text-sm text-gray-700 font-medium pt-1">{t(`miApp.${key}`)}</span>
+                <span className="text-sm text-[#425466] font-medium pt-1">{t(`miApp.${key}`)}</span>
               </div>
             ))}
           </div>
@@ -311,12 +311,9 @@ export default function MiApp() {
           {!Capacitor.isNativePlatform() && (
             <Link
               to={localePath('/dashboard/plan') + '?upgrade=business'}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-200 self-start"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#0284C7] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-sm shadow-purple-200 self-start"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-              {t('miApp.upgradeToBusiness')}
+{t('miApp.upgradeToBusiness')}
             </Link>
           )}
         </div>
@@ -329,12 +326,12 @@ export default function MiApp() {
     <div className="space-y-8">
       {/* Page title */}
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">{t('miApp.title')}</h1>
-        <p className="mt-1 text-gray-500">{t('miApp.subtitle')}</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('miApp.title')}</h1>
+        <p className="mt-1 text-[#8898AA]">{t('miApp.subtitle')}</p>
       </div>
 
       {/* Store badges banner */}
-      <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-xl p-4 sm:p-6 relative">
+      <div className="bg-[#1e3a5f] rounded-xl p-4 sm:p-6 relative">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-1">
             <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto" />
@@ -344,8 +341,8 @@ export default function MiApp() {
       </div>
 
       {/* Status tracker */}
-      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
-        <h2 className="text-lg font-semibold text-gray-900">{t('miApp.status.title')}</h2>
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm p-4 sm:p-6">
+        <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('miApp.status.title')}</h2>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {STATUS_STEPS.map((step, idx) => {
             const isActive = idx <= currentStepIdx
@@ -353,10 +350,10 @@ export default function MiApp() {
             return (
               <div key={step} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                 isCurrent
-                  ? 'bg-[#1e3a5f] text-white shadow-md'
+                  ? 'bg-[#1e3a5f] text-white shadow-sm'
                   : isActive
                     ? 'bg-green-50 text-green-700'
-                    : 'bg-gray-50 text-gray-400'
+                    : 'bg-[#F6F9FC] text-[#A9B6C6]'
               }`}>
                 {isActive && idx < currentStepIdx ? (
                   <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -370,43 +367,43 @@ export default function MiApp() {
             )
           })}
         </div>
-        <p className="mt-3 text-sm text-gray-500">
+        <p className="mt-3 text-sm text-[#8898AA]">
           {t(`miApp.status.${currentStatus}Desc`)}
         </p>
       </div>
 
       {/* App config form */}
-      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
-        <h2 className="text-lg font-semibold text-gray-900">{t('miApp.config.title')}</h2>
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm p-4 sm:p-6">
+        <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('miApp.config.title')}</h2>
 
         <div className="mt-4 space-y-4">
           {/* App name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.config.appName')}</label>
+            <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.config.appName')}</label>
             <input
               type="text"
               value={appName}
               onChange={(e) => setAppName(e.target.value)}
               placeholder={t('miApp.config.appNamePlaceholder')}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
+              className="w-full px-3 py-2 border border-[#E6EBF1] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
             />
           </div>
 
           {/* App icon */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.config.icon')}</label>
-            <p className="text-xs text-gray-400 mb-2">{t('miApp.config.iconHint')}</p>
+            <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.config.icon')}</label>
+            <p className="text-xs text-[#A9B6C6] mb-2">{t('miApp.config.iconHint')}</p>
             <div className="flex items-center gap-4">
               {icon ? (
-                <img src={icon} alt="App icon" className="w-16 h-16 rounded-xl object-cover border border-gray-200 shadow-sm" />
+                <img src={icon} alt="App icon" className="w-16 h-16 rounded-xl object-cover border border-[#E6EBF1] shadow-sm" />
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-16 h-16 rounded-xl bg-[#F1F5F9] border-2 border-dashed border-[#D8E2EC] flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                 </div>
               )}
-              <label className="cursor-pointer px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 transition-all">
+              <label className="cursor-pointer px-4 py-2 bg-[#F1F5F9] hover:bg-[#E1E8EF] rounded-xl text-sm font-medium text-[#425466] transition-all">
                 {uploadingIcon ? '...' : t('miApp.config.uploadIcon')}
                 <input type="file" accept="image/png,image/jpeg" onChange={handleIconUpload} className="hidden" />
               </label>
@@ -416,53 +413,53 @@ export default function MiApp() {
           {/* Colors */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.config.primaryColor')}</label>
+              <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.config.primaryColor')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer"
+                  className="w-8 h-8 rounded-lg border border-[#E6EBF1] cursor-pointer"
                 />
                 <input
                   type="text"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
+                  className="flex-1 px-2 py-1.5 border border-[#E6EBF1] rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.config.secondaryColor')}</label>
+              <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.config.secondaryColor')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={secondaryColor}
                   onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer"
+                  className="w-8 h-8 rounded-lg border border-[#E6EBF1] cursor-pointer"
                 />
                 <input
                   type="text"
                   value={secondaryColor}
                   onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
+                  className="flex-1 px-2 py-1.5 border border-[#E6EBF1] rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.config.splashColor')}</label>
+              <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.config.splashColor')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={splashColor}
                   onChange={(e) => setSplashColor(e.target.value)}
-                  className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer"
+                  className="w-8 h-8 rounded-lg border border-[#E6EBF1] cursor-pointer"
                 />
                 <input
                   type="text"
                   value={splashColor}
                   onChange={(e) => setSplashColor(e.target.value)}
-                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
+                  className="flex-1 px-2 py-1.5 border border-[#E6EBF1] rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
                 />
               </div>
             </div>
@@ -470,9 +467,9 @@ export default function MiApp() {
 
           {/* Tester emails for Play Store closed testing — 12 required by
               Google policy, 14-day testing window before production. */}
-          <div className="pt-4 mt-4 border-t border-gray-200/60">
-            <h3 className="text-base font-semibold text-gray-900">{t('miApp.publishInfo.title')}</h3>
-            <p className="mt-1 text-xs text-gray-500">
+          <div className="pt-4 mt-4 border-t border-[#E6EBF1]">
+            <h3 className="text-base font-semibold text-[#1e3a5f]">{t('miApp.publishInfo.title')}</h3>
+            <p className="mt-1 text-xs text-[#8898AA]">
               {t('miApp.publishInfo.subtitle', { count: REQUIRED_TESTERS })}
             </p>
 
@@ -509,7 +506,7 @@ export default function MiApp() {
                     }
                   }}
                   placeholder={t('miApp.publishInfo.testerPlaceholder')}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
+                  className="flex-1 px-3 py-2 border border-[#E6EBF1] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
                 />
                 <button
                   type="button"
@@ -523,18 +520,18 @@ export default function MiApp() {
               {/* Counter + progress bar */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className={testers.length >= REQUIRED_TESTERS ? 'text-green-700 font-medium' : 'text-gray-500'}>
+                  <span className={testers.length >= REQUIRED_TESTERS ? 'text-green-700 font-medium' : 'text-[#8898AA]'}>
                     {testers.length >= REQUIRED_TESTERS
                       ? t('miApp.publishInfo.counterMet', { count: testers.length })
                       : t('miApp.publishInfo.counter', { count: testers.length, required: REQUIRED_TESTERS })}
                   </span>
                   {testers.length < REQUIRED_TESTERS && (
-                    <span className="text-gray-400">
+                    <span className="text-[#A9B6C6]">
                       {t('miApp.publishInfo.missing', { count: REQUIRED_TESTERS - testers.length })}
                     </span>
                   )}
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all ${testers.length >= REQUIRED_TESTERS ? 'bg-green-500' : 'bg-[#1e3a5f]'}`}
                     style={{ width: `${Math.min(100, (testers.length / REQUIRED_TESTERS) * 100)}%` }}
@@ -547,13 +544,13 @@ export default function MiApp() {
                   {testers.map(email => (
                     <li
                       key={email}
-                      className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between gap-2 px-3 py-2 bg-[#F6F9FC] rounded-lg"
                     >
-                      <span className="text-sm text-gray-700 truncate">{email}</span>
+                      <span className="text-sm text-[#425466] truncate">{email}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTester(email)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        className="text-[#A9B6C6] hover:text-red-500 transition-colors"
                         aria-label={t('miApp.publishInfo.removeTester')}
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -564,13 +561,13 @@ export default function MiApp() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-gray-400 italic">{t('miApp.publishInfo.empty')}</p>
+                <p className="text-xs text-[#A9B6C6] italic">{t('miApp.publishInfo.empty')}</p>
               )}
             </div>
           </div>
 
           {/* Save + Request */}
-          <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t border-gray-200/60">
+          <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t border-[#E6EBF1]">
             <button
               onClick={handleSaveConfig}
               disabled={saving}
@@ -583,7 +580,7 @@ export default function MiApp() {
                 <button
                   onClick={handleRequest}
                   disabled={requesting || !appName.trim() || testers.length < REQUIRED_TESTERS}
-                  className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+                  className="px-5 py-2 bg-[#0284C7] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
                 >
                   {requesting ? t('miApp.status.requesting') : t('miApp.status.request')}
                 </button>
@@ -603,8 +600,8 @@ export default function MiApp() {
 
       {/* Download links + QR codes (when published) */}
       {currentStatus === 'published' && (
-        <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-gray-900">{t('miApp.links.title')}</h2>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('miApp.links.title')}</h2>
 
           {/* Closed-testing banner — Google Play policy requires 12 testers
               for 14 continuous days before production. Surfaces the rule
@@ -658,26 +655,26 @@ export default function MiApp() {
               />
             ) : null}
             {!appConfig?.androidUrl && !appConfig?.iosUrl && (
-              <p className="text-sm text-gray-400 py-2 sm:col-span-2">{t('miApp.links.noLinks')}</p>
+              <p className="text-sm text-[#A9B6C6] py-2 sm:col-span-2">{t('miApp.links.noLinks')}</p>
             )}
           </div>
         </div>
       )}
 
       {/* Push Notifications */}
-      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
-        <h2 className="text-lg font-semibold text-gray-900">{t('miApp.push.title')}</h2>
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm p-4 sm:p-6">
+        <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('miApp.push.title')}</h2>
 
         <div className="mt-4 space-y-4">
           {/* Quick templates */}
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">{t('miApp.push.templates')}</p>
+            <p className="text-xs font-medium text-[#8898AA] mb-2">{t('miApp.push.templates')}</p>
             <div className="flex flex-wrap gap-2">
               {PUSH_TEMPLATES.map((tpl) => (
                 <button
                   key={tpl.key}
                   onClick={() => applyTemplate(tpl)}
-                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium text-gray-600 transition-all"
+                  className="px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E1E8EF] rounded-lg text-xs font-medium text-[#425466] transition-all"
                 >
                   {t(`miApp.push.${tpl.key}`)}
                 </button>
@@ -687,27 +684,27 @@ export default function MiApp() {
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.push.titleLabel')}</label>
+            <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.push.titleLabel')}</label>
             <input
               type="text"
               value={pushTitle}
               onChange={(e) => setPushTitle(e.target.value)}
               placeholder={t('miApp.push.titlePlaceholder')}
               maxLength={65}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
+              className="w-full px-3 py-2 border border-[#E6EBF1] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f]"
             />
           </div>
 
           {/* Body */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('miApp.push.bodyLabel')}</label>
+            <label className="block text-sm font-medium text-[#425466] mb-1">{t('miApp.push.bodyLabel')}</label>
             <textarea
               value={pushBody}
               onChange={(e) => setPushBody(e.target.value)}
               placeholder={t('miApp.push.bodyPlaceholder')}
               maxLength={240}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] resize-none"
+              className="w-full px-3 py-2 border border-[#E6EBF1] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] resize-none"
             />
           </div>
 
@@ -717,33 +714,30 @@ export default function MiApp() {
             disabled={sending || !pushTitle.trim() || !pushBody.trim()}
             className="px-5 py-2 bg-[#1e3a5f] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            {sending ? t('miApp.push.sending') : t('miApp.push.send')}
+{sending ? t('miApp.push.sending') : t('miApp.push.send')}
           </button>
         </div>
 
         {/* History */}
         {history.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-200/60">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('miApp.push.history')}</h3>
+          <div className="mt-6 pt-6 border-t border-[#E6EBF1]">
+            <h3 className="text-sm font-semibold text-[#425466] mb-3">{t('miApp.push.history')}</h3>
             <div className="space-y-2">
               {history.map((notif) => (
-                <div key={notif.id} className="flex items-start gap-3 px-3 py-2 bg-gray-50 rounded-xl">
+                <div key={notif.id} className="flex items-start gap-3 px-3 py-2 bg-[#F6F9FC] rounded-xl">
                   <div className="w-8 h-8 bg-[#1e3a5f]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-4 h-4 text-[#1e3a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{notif.title}</p>
-                    <p className="text-xs text-gray-500 truncate">{notif.body}</p>
+                    <p className="text-sm font-medium text-[#1e3a5f]">{notif.title}</p>
+                    <p className="text-xs text-[#8898AA] truncate">{notif.body}</p>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-[#A9B6C6]">
                         {notif.sentAt.toLocaleDateString()}
                       </span>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-[#A9B6C6]">
                         {t('miApp.push.recipients', { count: notif.recipientCount })}
                       </span>
                     </div>
@@ -755,7 +749,7 @@ export default function MiApp() {
         )}
 
         {history.length === 0 && (
-          <p className="mt-4 text-sm text-gray-400">{t('miApp.push.noHistory')}</p>
+          <p className="mt-4 text-sm text-[#A9B6C6]">{t('miApp.push.noHistory')}</p>
         )}
       </div>
     </div>

@@ -616,10 +616,10 @@ export default function SupportChats() {
       <div className="bg-white overflow-hidden" style={{ height: 'calc(100vh - 3rem)' }}>
         <div className="flex h-full">
           {/* Chat list */}
-          <div className={`w-full lg:w-80 lg:min-w-[320px] lg:border-r border-gray-200/60 flex flex-col ${showingConversation ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="p-3 border-b border-gray-200/60 space-y-2">
+          <div className={`w-full lg:w-80 lg:min-w-[320px] lg:border-r border-[#E6EBF1] flex flex-col ${showingConversation ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="p-3 border-b border-[#E6EBF1] space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide tabular-nums">
+                <p className="text-xs font-semibold text-[#8898AA] uppercase tracking-wide tabular-nums">
                   {filter === 'closed'
                     ? (filteredChats.length === closedChats.length
                         ? `${closedChats.length} cerrad${closedChats.length !== 1 ? 'os' : 'o'}`
@@ -634,7 +634,7 @@ export default function SupportChats() {
                   aria-label={audioMuted ? 'Activar alertas sonoras' : 'Silenciar alertas sonoras'}
                   className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
                     audioMuted
-                      ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                      ? 'text-[#A9B6C6] hover:text-[#425466] hover:bg-[#F1F5F9]'
                       : 'text-[#007AFF] hover:bg-[#007AFF]/10'
                   }`}
                 >
@@ -654,7 +654,7 @@ export default function SupportChats() {
 
               {/* Search */}
               <div className="relative">
-                <svg className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#A9B6C6] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -662,13 +662,13 @@ export default function SupportChats() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar tienda, email, mensaje..."
-                  className="w-full pl-8 pr-7 py-1.5 bg-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#007AFF]/40 focus:bg-white transition-colors"
+                  className="w-full pl-8 pr-7 py-1.5 bg-[#F1F5F9] rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#007AFF]/40 focus:bg-white transition-colors"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
                     aria-label="Limpiar búsqueda"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[#A9B6C6] hover:text-[#425466]"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -695,12 +695,12 @@ export default function SupportChats() {
                       className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
                         active
                           ? 'bg-[#007AFF] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-[#F1F5F9] text-[#425466] hover:bg-[#E1E8EF]'
                       }`}
                     >
                       {opt.label}
                       {count > 0 && (
-                        <span className={`ml-1 tabular-nums ${active ? 'text-white/70' : 'text-gray-400'}`}>
+                        <span className={`ml-1 tabular-nums ${active ? 'text-white/70' : 'text-[#A9B6C6]'}`}>
                           {count}
                         </span>
                       )}
@@ -713,15 +713,15 @@ export default function SupportChats() {
             <div className="flex-1 overflow-y-auto">
               {filter === 'closed' && closedChatsLoading && (
                 <div className="flex items-center justify-center py-10">
-                  <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-700 rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#E6EBF1] border-t-gray-700 rounded-full animate-spin" />
                 </div>
               )}
               {!(filter === 'closed' && closedChatsLoading) && filteredChats.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center px-6 py-10">
-                  <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-10 h-10 text-[#C3CFDB] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-[#A9B6C6]">
                     {searchQuery
                       ? 'Sin coincidencias para tu búsqueda'
                       : filter === 'closed'
@@ -745,7 +745,7 @@ export default function SupportChats() {
                 <button
                   key={chat.id}
                   onClick={() => setSelectedChat(chat)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
+                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-[#F6F9FC] transition-colors ${
                     selectedChat?.id === chat.id ? 'bg-[#007AFF]/5' : ''
                   }`}
                 >
@@ -754,7 +754,7 @@ export default function SupportChats() {
                       <img
                         src={storeMap[chat.storeId]!.logo}
                         alt=""
-                        className="w-10 h-10 rounded-full object-cover bg-gray-100 flex-shrink-0"
+                        className="w-10 h-10 rounded-full object-cover bg-[#F1F5F9] flex-shrink-0"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center flex-shrink-0">
@@ -765,14 +765,14 @@ export default function SupportChats() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{chat.storeName}</p>
-                        <span className="text-[11px] text-gray-400 flex-shrink-0 ml-2">
+                        <p className="text-sm font-semibold text-[#1e3a5f] truncate">{chat.storeName}</p>
+                        <span className="text-[11px] text-[#A9B6C6] flex-shrink-0 ml-2">
                           {formatRelativeTime(chat.lastMessageAt)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
-                        <p className="text-xs text-gray-500 truncate">
-                          {chat.lastMessageBy === 'admin' && <span className="text-gray-400">Tú: </span>}
+                        <p className="text-xs text-[#8898AA] truncate">
+                          {chat.lastMessageBy === 'admin' && <span className="text-[#A9B6C6]">Tú: </span>}
                           {chat.lastMessageBy === 'assistant' && <span className="text-purple-400">Sofía: </span>}
                           {chat.lastMessage}
                         </p>
@@ -794,7 +794,7 @@ export default function SupportChats() {
                           )}
                         </div>
                       </div>
-                      <p className="text-[10px] text-gray-400 mt-0.5 truncate">{chat.userEmail}</p>
+                      <p className="text-[10px] text-[#A9B6C6] mt-0.5 truncate">{chat.userEmail}</p>
                     </div>
                   </div>
                 </button>
@@ -814,7 +814,7 @@ export default function SupportChats() {
             {/* Drop overlay */}
             {dragging && (
               <div className="absolute inset-0 bg-[#007AFF]/10 z-10 flex items-center justify-center pointer-events-none">
-                <div className="bg-white px-4 py-2 rounded-xl shadow-lg text-sm font-medium text-[#007AFF]">
+                <div className="bg-white px-4 py-2 rounded-xl shadow-sm text-sm font-medium text-[#007AFF]">
                   Soltar imagen aquí
                 </div>
               </div>
@@ -822,10 +822,10 @@ export default function SupportChats() {
             {selectedChat ? (
               <>
                 {/* Conversation header */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/60 bg-white">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E6EBF1] bg-white">
                   <button
                     onClick={() => setSelectedChat(null)}
-                    className="lg:hidden p-1 text-gray-500 hover:text-gray-700"
+                    className="lg:hidden p-1 text-[#8898AA] hover:text-[#425466]"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -835,7 +835,7 @@ export default function SupportChats() {
                     <img
                       src={storeMap[selectedChat.storeId]!.logo}
                       alt=""
-                      className="w-8 h-8 rounded-full object-cover bg-gray-100 flex-shrink-0"
+                      className="w-8 h-8 rounded-full object-cover bg-[#F1F5F9] flex-shrink-0"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center flex-shrink-0">
@@ -848,26 +848,26 @@ export default function SupportChats() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Link
                         to={`/admin/stores/${selectedChat.storeId}`}
-                        className="text-sm font-semibold text-gray-900 hover:underline truncate"
+                        className="text-sm font-semibold text-[#1e3a5f] hover:underline truncate"
                       >
                         {selectedChat.storeName}
                       </Link>
                       {storeMap[selectedChat.storeId]?.plan && (
-                        <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded uppercase tracking-wide">
+                        <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#425466] text-[10px] font-medium rounded uppercase tracking-wide">
                           {storeMap[selectedChat.storeId]!.plan}
                         </span>
                       )}
                       {storeMap[selectedChat.storeId]?.country && (
-                        <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded">
+                        <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#425466] text-[10px] font-medium rounded">
                           {storeMap[selectedChat.storeId]!.country}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-gray-500 min-w-0">
+                    <div className="flex items-center gap-2 text-[11px] text-[#8898AA] min-w-0">
                       <span className="truncate">{selectedChat.userEmail}</span>
                       {storeMap[selectedChat.storeId]?.subdomain && (
                         <>
-                          <span className="text-gray-300">·</span>
+                          <span className="text-[#C3CFDB]">·</span>
                           <a
                             href={`https://${storeMap[selectedChat.storeId]!.subdomain}.shopifree.app`}
                             target="_blank"
@@ -940,7 +940,7 @@ export default function SupportChats() {
                             day's messages, then hands off to the next
                             day's separator when its parent scrolls past. */}
                         <div className="sticky top-0 z-[1] flex items-center justify-center py-2">
-                          <span className="text-[11px] text-gray-500 bg-white px-3 py-0.5 rounded-full shadow-sm border border-gray-200/60">
+                          <span className="text-[11px] text-[#8898AA] bg-white px-3 py-0.5 rounded-full shadow-sm border border-[#E6EBF1]">
                             {formatDateSeparator(group.messages[0].createdAt)}
                           </span>
                         </div>
@@ -983,8 +983,8 @@ export default function SupportChats() {
                                   isAdmin
                                     ? `bg-[#007AFF] text-white ${isLastOfRun ? 'rounded-br-md' : ''}`
                                     : isAssistant
-                                      ? `bg-purple-50 text-gray-900 border border-purple-100 ${isLastOfRun ? 'rounded-bl-md' : ''}`
-                                      : `bg-white text-gray-900 ${isLastOfRun ? 'rounded-bl-md' : ''}`
+                                      ? `bg-purple-50 text-[#1e3a5f] border border-purple-100 ${isLastOfRun ? 'rounded-bl-md' : ''}`
+                                      : `bg-white text-[#1e3a5f] ${isLastOfRun ? 'rounded-bl-md' : ''}`
                                 }`}
                               >
                                 {isAssistant && isFirstOfRun && (
@@ -1011,7 +1011,7 @@ export default function SupportChats() {
                                   <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{linkifyText(msg.text, isAdmin)}</p>
                                 )}
                                 {isLastOfRun && (
-                                  <div className={`flex items-center justify-end gap-1 mt-0.5 text-[10px] ${isAdmin ? 'text-white/60' : 'text-gray-400'}`}>
+                                  <div className={`flex items-center justify-end gap-1 mt-0.5 text-[10px] ${isAdmin ? 'text-white/60' : 'text-[#A9B6C6]'}`}>
                                     <span>{formatTime(msg.createdAt)}</span>
                                     {isAdmin && msg.id === lastAdminMsgId && (
                                       msg.pending ? (
@@ -1072,17 +1072,14 @@ export default function SupportChats() {
                 {hasNewMessage && (
                   <button
                     onClick={scrollToLatest}
-                    className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-[#007AFF] text-white text-xs font-medium shadow-lg hover:bg-[#0066DD] transition-colors flex items-center gap-1.5"
+                    className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-[#007AFF] text-white text-xs font-medium shadow-sm hover:bg-[#0066DD] transition-colors flex items-center gap-1.5"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
-                    Nuevo mensaje
+Nuevo mensaje
                   </button>
                 )}
 
                 {/* Input */}
-                <div className="border-t border-gray-200/60 px-3 py-2 bg-white">
+                <div className="border-t border-[#E6EBF1] px-3 py-2 bg-white">
                   <div className="max-w-2xl mx-auto">
                     {/* Failed send banner — shows the last message that
                         couldn't be delivered with retry/discard actions.
@@ -1140,7 +1137,7 @@ export default function SupportChats() {
                               <button
                                 onClick={() => removePendingImage(p.id)}
                                 aria-label="Quitar imagen"
-                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-700 hover:bg-gray-900 text-white rounded-full flex items-center justify-center text-xs"
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-700 hover:bg-[#1e3a5f] text-white rounded-full flex items-center justify-center text-xs"
                               >
                                 ×
                               </button>
@@ -1161,7 +1158,7 @@ export default function SupportChats() {
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={sending}
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-[#007AFF] hover:bg-gray-100 transition-colors disabled:opacity-40 flex-shrink-0"
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-[#A9B6C6] hover:text-[#007AFF] hover:bg-[#F1F5F9] transition-colors disabled:opacity-40 flex-shrink-0"
                       >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1179,7 +1176,7 @@ export default function SupportChats() {
                         }}
                         placeholder="Responder..."
                         rows={1}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 rounded-2xl text-[16px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 resize-none leading-snug max-h-[160px] overflow-y-auto block"
+                        className="flex-1 px-4 py-2.5 bg-[#F1F5F9] rounded-2xl text-[16px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 resize-none leading-snug max-h-[160px] overflow-y-auto block"
                       />
                       <button
                         onClick={() => handleSend()}
@@ -1196,14 +1193,14 @@ export default function SupportChats() {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                <div className="w-20 h-20 rounded-full bg-[#F1F5F9] flex items-center justify-center mb-4">
+                  <svg className="w-10 h-10 text-[#C3CFDB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h.01M12 10h.01M15 10h.01" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-500">Selecciona una conversación</p>
-                <p className="text-xs text-gray-400 mt-1">Elige un chat de la lista para responder</p>
+                <p className="text-sm font-medium text-[#8898AA]">Selecciona una conversación</p>
+                <p className="text-xs text-[#A9B6C6] mt-1">Elige un chat de la lista para responder</p>
               </div>
             )}
           </div>

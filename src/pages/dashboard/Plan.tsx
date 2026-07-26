@@ -208,8 +208,8 @@ export default function Plan() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">{t('plan.title')}</h1>
-        <p className="text-gray-600 mt-1">{t('plan.subtitle')}</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('plan.title')}</h1>
+        <p className="text-[#425466] mt-1">{t('plan.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -217,7 +217,7 @@ export default function Plan() {
         {/* Left Column - Current Plan */}
         <div className="lg:col-span-1 space-y-6">
           {/* Current plan badge */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-[#1e3a5f] rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,7 +225,7 @@ export default function Plan() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">{t('plan.current')}</p>
+                <p className="text-sm text-[#425466]">{t('plan.current')}</p>
                 <p className="font-bold text-[#1e3a5f] text-lg capitalize">
                   {PLAN_FEATURES[currentPlan].name}{isTrialing ? ' Trial' : ''}
                 </p>
@@ -255,7 +255,7 @@ export default function Plan() {
             )}
 
             {store?.planExpiresAt && (
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-[#8898AA] mb-4">
                 {t('plan.expires', { date: new Date(store.planExpiresAt).toLocaleDateString() })}
               </p>
             )}
@@ -273,15 +273,15 @@ export default function Plan() {
 
           {/* Downgrade to Free — only shown when the user has a paid subscription to cancel */}
           {hasLiveSubscription && (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
               <h3 className="font-semibold text-[#1e3a5f] mb-1">{PLAN_FEATURES.free.name}</h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-[#425466] mb-4">
                 {PLAN_FEATURES.free.features.slice(0, 2).join(' · ')}
               </p>
               <button
                 onClick={handleManageSubscription}
                 disabled={loading}
-                className="w-full px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50"
+                className="w-full px-4 py-2.5 text-sm font-medium text-[#425466] bg-[#F6F9FC] border border-[#E6EBF1] rounded-xl hover:bg-[#F1F5F9] transition-all disabled:opacity-50"
               >
                 {t('plan.buttons.downgrade')}
               </button>
@@ -289,25 +289,19 @@ export default function Plan() {
           )}
 
           {/* Support */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h3 className="font-semibold text-[#1e3a5f] mb-3">{t('plan.support.title')}</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-[#425466] mb-4">
               {t('plan.support.description')}
             </p>
             <a
               href="mailto:admin@shopifree.app"
               className="flex items-center gap-2 text-sm text-[#2d6cb5] hover:text-[#1e3a5f] font-medium transition-colors mb-4"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              admin@shopifree.app
+admin@shopifree.app
             </a>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              {t('plan.support.stripe')} <img src="/stripe-logo.png" alt="Stripe" className="h-4 inline-block" />
+            <div className="flex items-center gap-2 text-sm text-[#8898AA]">
+{t('plan.support.stripe')} <img src="/stripe-logo.png" alt="Stripe" className="h-4 inline-block" />
             </div>
           </div>
         </div>
@@ -331,13 +325,13 @@ export default function Plan() {
                   key={key}
                   className={`relative bg-white rounded-xl border-2 p-5 shadow-sm transition-all ${
                     isPopular
-                      ? 'border-[#2d6cb5] shadow-lg shadow-[#2d6cb5]/10'
-                      : 'border-gray-200/60 hover:border-[#38bdf8]/50'
+                      ? 'border-[#2d6cb5] shadow-sm shadow-[#2d6cb5]/10'
+                      : 'border-[#E6EBF1] hover:border-[#38bdf8]/50'
                   }`}
                 >
                   {isPopular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="px-3 py-1 bg-[#1e3a5f] text-white text-xs font-semibold rounded-full shadow-lg">
+                      <span className="px-3 py-1 bg-[#1e3a5f] text-white text-xs font-semibold rounded-full shadow-sm">
                         {t('plan.badge.popular')}
                       </span>
                     </div>
@@ -357,14 +351,14 @@ export default function Plan() {
                     <div className="mt-3">
                       {hasDiscount ? (
                         <>
-                          <span className="text-lg text-gray-400 line-through mr-1">${price}</span>
+                          <span className="text-lg text-[#A9B6C6] line-through mr-1">${price}</span>
                           <span className="text-3xl font-bold text-green-600">${discountedPrice}</span>
-                          <span className="text-gray-500 text-sm">{t('plan.billing.perMonth')}</span>
+                          <span className="text-[#8898AA] text-sm">{t('plan.billing.perMonth')}</span>
                         </>
                       ) : (
                         <>
                           <span className="text-3xl font-bold text-[#1e3a5f]">${price}</span>
-                          <span className="text-gray-500 text-sm">
+                          <span className="text-[#8898AA] text-sm">
                             {billing === 'yearly' ? t('plan.billing.perYear') : t('plan.billing.perMonth')}
                           </span>
                         </>
@@ -388,7 +382,7 @@ export default function Plan() {
                         <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-gray-700">{feature}</span>
+                        <span className="text-[#425466]">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -398,7 +392,7 @@ export default function Plan() {
                     disabled={isCurrentCard || loading}
                     className={`w-full py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm ${
                       isCurrentCard
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'bg-[#F1F5F9] text-[#A9B6C6] cursor-not-allowed'
                         : isPopular
                         ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
                         : 'bg-[#f0f7ff] text-[#1e3a5f] hover:bg-[#e0efff]'
@@ -425,27 +419,27 @@ export default function Plan() {
       </div>
 
       {/* FAQ - Two Columns */}
-      <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('plan.faq.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
               <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.changePlan.question')}</h3>
-              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.changePlan.answer')}</p>
+              <p className="text-xs text-[#425466] mt-1">{t('plan.faq.changePlan.answer')}</p>
             </div>
             <div>
               <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.paymentMethods.question')}</h3>
-              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.paymentMethods.answer')}</p>
+              <p className="text-xs text-[#425466] mt-1">{t('plan.faq.paymentMethods.answer')}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
               <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.cancel.question')}</h3>
-              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.cancel.answer')}</p>
+              <p className="text-xs text-[#425466] mt-1">{t('plan.faq.cancel.answer')}</p>
             </div>
             <div>
               <h3 className="font-medium text-[#1e3a5f] text-sm">{t('plan.faq.trial.question')}</h3>
-              <p className="text-xs text-gray-600 mt-1">{t('plan.faq.trial.answer')}</p>
+              <p className="text-xs text-[#425466] mt-1">{t('plan.faq.trial.answer')}</p>
             </div>
           </div>
         </div>

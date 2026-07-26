@@ -287,8 +287,8 @@ export default function Analytics() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">{t('analytics.upgrade.title')}</h2>
-          <p className="text-gray-600 mb-6">{t('analytics.upgrade.description')}</p>
+          <h2 className="text-xl font-semibold text-[#1e3a5f] mb-3">{t('analytics.upgrade.title')}</h2>
+          <p className="text-[#425466] mb-6">{t('analytics.upgrade.description')}</p>
           {!Capacitor.isNativePlatform() && (
             <Link
               to={localePath('/dashboard/plan')}
@@ -329,20 +329,20 @@ export default function Analytics() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('analytics.title')}</h1>
-          <p className="text-gray-500 mt-1">{t('analytics.subtitle')}</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('analytics.title')}</h1>
+          <p className="text-[#8898AA] mt-1">{t('analytics.subtitle')}</p>
         </div>
 
         {/* Date Range Selector */}
         <div className="flex items-center gap-3">
           {refreshing && (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#D8E2EC] border-t-gray-600"></div>
           )}
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value as DateRange)}
             disabled={refreshing}
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 bg-white border border-[#E6EBF1] rounded-lg text-sm font-medium text-[#425466] focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:border-transparent"
           >
             {dateRangeOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -353,22 +353,22 @@ export default function Analytics() {
 
       {/* Custom date inputs */}
       {dateRange === 'custom' && (
-        <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-gray-200/60 p-4">
-          <label className="text-sm text-gray-600">{t('analytics.dateRange.from')}</label>
+        <div className="flex flex-wrap items-center gap-3 bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+          <label className="text-sm text-[#425466]">{t('analytics.dateRange.from')}</label>
           <input
             type="date"
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
             max={customTo || undefined}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1.5 border border-[#E6EBF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]"
           />
-          <label className="text-sm text-gray-600">{t('analytics.dateRange.to')}</label>
+          <label className="text-sm text-[#425466]">{t('analytics.dateRange.to')}</label>
           <input
             type="date"
             value={customTo}
             onChange={(e) => setCustomTo(e.target.value)}
             min={customFrom || undefined}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1.5 border border-[#E6EBF1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]"
           />
         </div>
       )}
@@ -430,16 +430,16 @@ export default function Analytics() {
       </div>
 
       {/* Daily Chart with Tabs */}
-      <div className="bg-white rounded-xl border border-gray-200/60 p-6">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-[#1e3a5f]">
             {chartTab === 'visits' ? t('analytics.charts.dailyVisits') : t('analytics.charts.dailyRevenue')}
           </h3>
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-[#F1F5F9] rounded-lg p-1">
             <button
               onClick={() => setChartTab('visits')}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                chartTab === 'visits' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                chartTab === 'visits' ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#425466] hover:text-[#1e3a5f]'
               }`}
             >
               {t('analytics.charts.visits')}
@@ -447,7 +447,7 @@ export default function Analytics() {
             <button
               onClick={() => setChartTab('revenue')}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                chartTab === 'revenue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                chartTab === 'revenue' ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#425466] hover:text-[#1e3a5f]'
               }`}
             >
               {t('analytics.charts.revenue')}
@@ -476,8 +476,8 @@ export default function Analytics() {
       {/* Two Column: Top Viewed & Top Selling */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Viewed Products */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.topProducts')}</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 min-w-0">
+          <h3 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('analytics.charts.topProducts')}</h3>
           {topProducts.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
               <BarChart data={topProducts} layout="vertical">
@@ -496,13 +496,13 @@ export default function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-400">{t('analytics.noData')}</div>
+            <div className="h-64 flex items-center justify-center text-[#A9B6C6]">{t('analytics.noData')}</div>
           )}
         </div>
 
         {/* Top Selling Products */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.topSelling')}</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 min-w-0">
+          <h3 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('analytics.charts.topSelling')}</h3>
           {topSelling.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
               <BarChart data={topSelling} layout="vertical">
@@ -527,7 +527,7 @@ export default function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-400">{t('analytics.noData')}</div>
+            <div className="h-64 flex items-center justify-center text-[#A9B6C6]">{t('analytics.noData')}</div>
           )}
         </div>
       </div>
@@ -535,8 +535,8 @@ export default function Analytics() {
       {/* Two Column: Traffic Sources & Devices */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Traffic Sources */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.trafficSources')}</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 min-w-0">
+          <h3 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('analytics.charts.trafficSources')}</h3>
           {referrerChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
               <BarChart data={referrerChartData} layout="vertical">
@@ -552,13 +552,13 @@ export default function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-400">{t('analytics.noData')}</div>
+            <div className="h-64 flex items-center justify-center text-[#A9B6C6]">{t('analytics.noData')}</div>
           )}
         </div>
 
         {/* Device Distribution */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.deviceDistribution')}</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 min-w-0">
+          <h3 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('analytics.charts.deviceDistribution')}</h3>
           {devicePieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={256}>
               <PieChart>
@@ -581,24 +581,24 @@ export default function Analytics() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-400">{t('analytics.noData')}</div>
+            <div className="h-64 flex items-center justify-center text-[#A9B6C6]">{t('analytics.noData')}</div>
           )}
         </div>
       </div>
 
       {/* Conversion Funnel */}
-      <div className="bg-white rounded-xl border border-gray-200/60 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.charts.conversionFunnel')}</h3>
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6">
+        <h3 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('analytics.charts.conversionFunnel')}</h3>
         <div className="space-y-4">
           {funnelData.map((item, index) => {
             const percentage = summary?.pageViews ? (item.value / summary.pageViews) * 100 : 0
             return (
               <div key={item.name}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">{item.name}</span>
-                  <span className="font-medium text-gray-900">{item.value}</span>
+                  <span className="text-[#425466]">{item.name}</span>
+                  <span className="font-medium text-[#1e3a5f]">{item.value}</span>
                 </div>
-                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-3 bg-[#F1F5F9] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${Math.max(percentage, 2)}%`, backgroundColor: item.color }}
@@ -606,7 +606,7 @@ export default function Analytics() {
                 </div>
                 {index < funnelData.length - 1 && (
                   <div className="flex justify-center my-2">
-                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-[#C3CFDB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
                   </div>
@@ -614,10 +614,10 @@ export default function Analytics() {
               </div>
             )
           })}
-          <div className="pt-4 border-t border-gray-200/60">
+          <div className="pt-4 border-t border-[#E6EBF1]">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">{t('analytics.conversionRate')}</span>
-              <span className="text-xl font-semibold text-gray-900">{conversionRate}%</span>
+              <span className="text-[#425466]">{t('analytics.conversionRate')}</span>
+              <span className="text-xl font-semibold text-[#1e3a5f]">{conversionRate}%</span>
             </div>
           </div>
         </div>
@@ -641,7 +641,7 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, color, trend, prefix, formatValue }: SummaryCardProps) {
   const accentColors: Record<string, string> = {
-    blue: 'text-blue-600',
+    blue: 'text-[#0284C7]',
     emerald: 'text-emerald-600',
     amber: 'text-amber-600',
     green: 'text-green-600',
@@ -653,8 +653,8 @@ function SummaryCard({ label, value, color, trend, prefix, formatValue }: Summar
   const displayValue = formatValue ? formatValue(value) : value.toLocaleString()
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-3 sm:p-5">
-      <div className="text-xs sm:text-sm text-gray-500 truncate">{label}</div>
+    <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3 sm:p-5">
+      <div className="text-xs sm:text-sm text-[#8898AA] truncate">{label}</div>
       <div className={`text-lg sm:text-2xl font-semibold mt-1 truncate ${accentColors[color]}`}>
         {prefix && <span className="text-sm sm:text-lg">{prefix}</span>}
         {displayValue}

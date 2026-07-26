@@ -313,8 +313,8 @@ export default function Settings() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">{t('settings.title')}</h1>
-        <p className="text-gray-600 mt-1">{t('settings.subtitle')}</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('settings.title')}</h1>
+        <p className="text-[#425466] mt-1">{t('settings.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -322,7 +322,7 @@ export default function Settings() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.basic.title')}</h2>
 
             <div className="space-y-4">
@@ -334,7 +334,7 @@ export default function Settings() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                  className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 />
               </div>
 
@@ -350,11 +350,11 @@ export default function Settings() {
                       value={subdomain}
                       onChange={(e) => handleSubdomainChange(e.target.value)}
                       className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8] transition-all ${
-                        subdomainError ? 'border-red-300' : 'border-gray-200'
+                        subdomainError ? 'border-red-300' : 'border-[#E6EBF1]'
                       }`}
                       placeholder="mi-tienda"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A9B6C6] text-sm">
                       .shopifree.app
                     </span>
                   </div>
@@ -381,7 +381,7 @@ export default function Settings() {
                   <p className="text-sm text-red-500 mt-1">{subdomainError}</p>
                 )}
                 {!subdomainError && subdomain === originalSubdomain && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-[#8898AA] mt-1">
                     {t('settings.subdomain.hint')}
                   </p>
                 )}
@@ -410,14 +410,14 @@ export default function Settings() {
                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
                           isSelected
                             ? 'border-[#38bdf8] bg-[#f0f7ff]'
-                            : 'border-gray-200 hover:border-gray-300'
+                            : 'border-[#E6EBF1] hover:border-[#D8E2EC]'
                         }`}
                       >
-                        <span className={isSelected ? 'text-[#1e3a5f]' : 'text-gray-500'}>
+                        <span className={isSelected ? 'text-[#1e3a5f]' : 'text-[#8898AA]'}>
                           <BusinessTypeIcon type={bt.type} className="w-6 h-6" />
                         </span>
                         <span className={`text-xs font-medium text-center leading-tight ${
-                          isSelected ? 'text-[#1e3a5f]' : 'text-gray-600'
+                          isSelected ? 'text-[#1e3a5f]' : 'text-[#425466]'
                         }`}>
                           {labels.name.split(' / ')[0]}
                         </span>
@@ -435,7 +435,7 @@ export default function Settings() {
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   >
                     <option value="PEN">{t('settings.basic.currencies.PEN')}</option>
                     <option value="USD">{t('settings.basic.currencies.USD')}</option>
@@ -464,20 +464,20 @@ export default function Settings() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                  className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 >
                   <option value="es">Espanol</option>
                   <option value="en">English</option>
                   <option value="pt">Portugues</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-[#8898AA] mt-1">
                   {t('settings.basic.languageHint', 'Idioma de botones y textos de tu catalogo (Carrito, Agregar, etc.)')}
                 </p>
               </div>
 
               {/* Business Type Features Preview */}
               {businessType && businessType !== 'general' && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-[#f0f7ff] to-white rounded-xl border border-[#38bdf8]/20">
+                <div className="mt-4 p-4 bg-[#F0F9FF] rounded-xl border border-[#38bdf8]/20">
                   <p className="text-sm font-medium text-[#1e3a5f] mb-2">
                     {t('settings.basic.featuresEnabled', 'Funciones habilitadas:')}
                   </p>
@@ -519,7 +519,7 @@ export default function Settings() {
           </div>
 
           {/* About */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.about.title')}</h2>
 
             <div className="space-y-4">
@@ -532,7 +532,7 @@ export default function Settings() {
                   value={slogan}
                   onChange={(e) => setSlogan(e.target.value)}
                   placeholder={t('settings.about.sloganPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                  className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 />
               </div>
 
@@ -545,14 +545,14 @@ export default function Settings() {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
                   placeholder={t('settings.about.descriptionPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
+                  className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none"
                 />
               </div>
             </div>
           </div>
 
           {/* Location */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.location.title')}</h2>
 
             <div className="space-y-4">
@@ -564,7 +564,7 @@ export default function Settings() {
                   <select
                     value={location.country}
                     onChange={(e) => setLocation({ ...location, country: e.target.value, state: '', city: '', district: '' })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   >
                     {countries.map(c => (
                       <option key={c.code} value={c.code}>
@@ -586,7 +586,7 @@ export default function Settings() {
                           <select
                             value={location.state || ''}
                             onChange={(e) => setLocation({ ...location, state: e.target.value, city: '', district: '' })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                            className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           >
                             <option value="">{stateFieldLabel + '...'}</option>
                             {(statesByCountry[location.country] || []).map((s) => (
@@ -599,7 +599,7 @@ export default function Settings() {
                             value={location.state || ''}
                             onChange={(e) => setLocation({ ...location, state: e.target.value })}
                             placeholder={stateFieldLabel + '...'}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                            className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           />
                         )}
                       </>
@@ -629,7 +629,7 @@ export default function Settings() {
                                 setLocation({ ...location, city: e.target.value, district: '' })
                               }
                             }}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                            className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           >
                             <option value="">{cityFieldLabel}...</option>
                             {cities.map((c) => (
@@ -643,7 +643,7 @@ export default function Settings() {
                               value={location.city === '__other__' ? '' : (location.city || '')}
                               onChange={(e) => setLocation({ ...location, city: e.target.value || '__other__', district: '' })}
                               placeholder={cityFieldLabel + '...'}
-                              className="w-full mt-2 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                              className="w-full mt-2 px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                             />
                           )}
                         </>
@@ -653,7 +653,7 @@ export default function Settings() {
                           value={location.city || ''}
                           onChange={(e) => setLocation({ ...location, city: e.target.value, district: '' })}
                           placeholder={t('settings.location.cityPlaceholder')}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                          className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                         />
                       )}
                     </div>
@@ -680,7 +680,7 @@ export default function Settings() {
                         value={location.district || ''}
                         onChange={(e) => setLocation({ ...location, district: e.target.value })}
                         disabled={isDisabled}
-                        className={`w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all ${isDisabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                        className={`w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all ${isDisabled ? 'bg-[#F6F9FC] text-[#A9B6C6] cursor-not-allowed' : ''}`}
                       >
                         <option value="">{districtFieldLabel}...</option>
                         {availableDistricts.map((d) => (
@@ -699,7 +699,7 @@ export default function Settings() {
                     value={location.address || ''}
                     onChange={(e) => setLocation({ ...location, address: e.target.value })}
                     placeholder={t('settings.location.addressPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               </div>
@@ -710,7 +710,7 @@ export default function Settings() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Shipping / Delivery Methods */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.shipping.title')}</h2>
 
             <div className="space-y-4">
@@ -718,7 +718,7 @@ export default function Settings() {
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.pickupEnabled')}</p>
-                  <p className="text-sm text-gray-500">{t('settings.shipping.pickupHint')}</p>
+                  <p className="text-sm text-[#8898AA]">{t('settings.shipping.pickupHint')}</p>
                 </div>
                 <button
                   type="button"
@@ -728,7 +728,7 @@ export default function Settings() {
                     setShipping({ ...shipping, pickupEnabled: newPickup })
                   }}
                   className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    shipping.pickupEnabled !== false ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                    shipping.pickupEnabled !== false ? 'bg-[#38bdf8]' : 'bg-[#E1E8EF]'
                   }`}
                 >
                   <span
@@ -743,7 +743,7 @@ export default function Settings() {
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.deliveryEnabled')}</p>
-                  <p className="text-sm text-gray-500">{t('settings.shipping.deliveryHint')}</p>
+                  <p className="text-sm text-[#8898AA]">{t('settings.shipping.deliveryHint')}</p>
                 </div>
                 <button
                   type="button"
@@ -753,7 +753,7 @@ export default function Settings() {
                     setShipping({ ...shipping, deliveryEnabled: newDelivery })
                   }}
                   className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    shipping.deliveryEnabled !== false ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                    shipping.deliveryEnabled !== false ? 'bg-[#38bdf8]' : 'bg-[#E1E8EF]'
                   }`}
                 >
                   <span
@@ -772,18 +772,18 @@ export default function Settings() {
               {/* Shipping cost toggle - only relevant if delivery is enabled */}
               {shipping.deliveryEnabled !== false && (
                 <>
-                  <hr className="border-gray-200/60" />
+                  <hr className="border-[#E6EBF1]" />
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.enableLabel')}</p>
-                      <p className="text-sm text-gray-500">{t('settings.shipping.enableHint')}</p>
+                      <p className="text-sm text-[#8898AA]">{t('settings.shipping.enableHint')}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShipping({ ...shipping, enabled: !shipping.enabled })}
                       className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        shipping.enabled ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                        shipping.enabled ? 'bg-[#38bdf8]' : 'bg-[#E1E8EF]'
                       }`}
                     >
                       <span
@@ -798,7 +798,7 @@ export default function Settings() {
                   {shipping.enabled && (
                     <>
                       {/* --- NATIONAL SHIPPING --- */}
-                      <div className="bg-gray-50 rounded-xl p-4 space-y-4">
+                      <div className="bg-[#F6F9FC] rounded-xl p-4 space-y-4">
                         <p className="text-sm font-semibold text-[#1e3a5f]">Envio nacional</p>
 
                         <div>
@@ -806,7 +806,7 @@ export default function Settings() {
                             {t('settings.shipping.cost')}
                           </label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A9B6C6] font-medium">
                               {currencySymbols[currency] || '$'}
                             </span>
                             <input
@@ -818,7 +818,7 @@ export default function Settings() {
                                 setShipping({ ...shipping, cost: parseFloat(val) || 0 })
                               }}
                               placeholder="0.00"
-                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
+                              className="w-full pl-12 pr-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
                             />
                           </div>
                         </div>
@@ -829,7 +829,7 @@ export default function Settings() {
                             {t('settings.shipping.freeAbove')}
                           </label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A9B6C6] font-medium">
                               {currencySymbols[currency] || '$'}
                             </span>
                             <input
@@ -844,10 +844,10 @@ export default function Settings() {
                                 })
                               }}
                               placeholder={t('settings.shipping.freeAbovePlaceholder')}
-                              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
+                              className="w-full pl-12 pr-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
                             />
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{t('settings.shipping.freeAboveHint')}</p>
+                          <p className="text-xs text-[#8898AA] mt-1">{t('settings.shipping.freeAboveHint')}</p>
                         </div>
                       </div>
 
@@ -877,13 +877,13 @@ export default function Settings() {
                                 className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
                                   isSelected
                                     ? 'border-[#38bdf8] bg-[#f0f7ff]'
-                                    : 'border-gray-200 hover:border-gray-300'
+                                    : 'border-[#E6EBF1] hover:border-[#D8E2EC]'
                                 }`}
                               >
-                                <span className={`text-sm font-medium ${isSelected ? 'text-[#1e3a5f]' : 'text-gray-600'}`}>
+                                <span className={`text-sm font-medium ${isSelected ? 'text-[#1e3a5f]' : 'text-[#425466]'}`}>
                                   {labels[mode]}
                                 </span>
-                                <span className={`text-xs ${isSelected ? 'text-[#1e3a5f]/70' : 'text-gray-400'}`}>
+                                <span className={`text-xs ${isSelected ? 'text-[#1e3a5f]/70' : 'text-[#A9B6C6]'}`}>
                                   {hints[mode]}
                                 </span>
                               </button>
@@ -904,11 +904,11 @@ export default function Settings() {
 
                         if (!countryHasDistricts || localDistricts.length === 0) {
                           return (
-                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                              <p className="text-sm text-gray-600">
+                            <div className="p-4 bg-[#F6F9FC] rounded-[14px] border border-[#E6EBF1]">
+                              <p className="text-sm text-[#425466]">
                                 {t('settings.shipping.localModeInfo', 'Los envios seran solo para tu ciudad configurada en ubicación.')}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-[#8898AA] mt-1">
                                 {location.city && location.city !== '__other__' ? location.city : ''}{location.state ? `, ${location.state}` : ''}
                               </p>
                             </div>
@@ -939,15 +939,15 @@ export default function Settings() {
                                 }
                               </button>
                             </div>
-                            <p className="text-xs text-gray-500 mb-2">
+                            <p className="text-xs text-[#8898AA] mb-2">
                               {location.city && location.city !== '__other__' ? location.city : ''}{location.state ? `, ${location.state}` : ''}
                             </p>
-                            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-3 grid grid-cols-2 gap-1">
+                            <div className="max-h-48 overflow-y-auto border border-[#E6EBF1] rounded-xl p-3 grid grid-cols-2 gap-1">
                               {localDistricts.map((dist) => {
                                 const distKey = `${location.state}|${cityForDistricts}|${dist}`
                                 const isChecked = (shipping.allowedDistricts || []).includes(distKey)
                                 return (
-                                  <label key={dist} className="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 cursor-pointer">
+                                  <label key={dist} className="flex items-center gap-2 py-1 px-2 rounded hover:bg-[#F6F9FC] cursor-pointer">
                                     <input
                                       type="checkbox"
                                       checked={isChecked}
@@ -958,14 +958,14 @@ export default function Settings() {
                                           : [...current, distKey]
                                         setShipping({ ...shipping, allowedDistricts: updated })
                                       }}
-                                      className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                      className="rounded border-[#D8E2EC] text-[#38bdf8] focus:ring-[#38bdf8]"
                                     />
-                                    <span className="text-sm text-gray-600">{dist}</span>
+                                    <span className="text-sm text-[#425466]">{dist}</span>
                                   </label>
                                 )
                               })}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#8898AA] mt-1">
                               {(shipping.allowedDistricts || []).length} {districtFieldLabel.toLowerCase()}s seleccionados
                             </p>
                           </div>
@@ -999,7 +999,7 @@ export default function Settings() {
                               }
                             </button>
                           </div>
-                          <div className="max-h-72 overflow-y-auto border border-gray-200 rounded-xl p-3 space-y-1">
+                          <div className="max-h-72 overflow-y-auto border border-[#E6EBF1] rounded-xl p-3 space-y-1">
                             {(statesByCountry[location.country] || []).map((dept) => {
                               const isDeptChecked = (shipping.allowedZones || []).includes(dept)
                               const provinces = citiesByState[location.country]?.[dept] || []
@@ -1009,7 +1009,7 @@ export default function Settings() {
                               return (
                                 <div key={dept}>
                                   {/* Department row */}
-                                  <div className="flex items-center gap-2 py-1.5 px-1 rounded hover:bg-gray-50">
+                                  <div className="flex items-center gap-2 py-1.5 px-1 rounded hover:bg-[#F6F9FC]">
                                     {provinces.length > 0 && (
                                       <button
                                         type="button"
@@ -1022,7 +1022,7 @@ export default function Settings() {
                                           }
                                           setExpandedDepts(newExpanded)
                                         }}
-                                        className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                        className="w-5 h-5 flex items-center justify-center text-[#A9B6C6] hover:text-[#425466]"
                                       >
                                         <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1048,9 +1048,9 @@ export default function Settings() {
                                             : shipping.allowedDistricts || []
                                           setShipping({ ...shipping, allowedZones: updated, allowedProvinces: newProvinces, allowedDistricts: newDistricts })
                                         }}
-                                        className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                        className="rounded border-[#D8E2EC] text-[#38bdf8] focus:ring-[#38bdf8]"
                                       />
-                                      <span className="text-sm font-medium text-gray-700">{dept}</span>
+                                      <span className="text-sm font-medium text-[#425466]">{dept}</span>
                                       {dept === location.state && (
                                         <span className="text-xs text-[#38bdf8] font-medium ml-auto mr-2">
                                           {t('settings.shipping.yourZone', 'Tu zona')}
@@ -1061,7 +1061,7 @@ export default function Settings() {
 
                                   {/* Provinces (expanded) */}
                                   {isExpanded && provinces.length > 0 && (
-                                    <div className="ml-7 pl-3 border-l border-gray-200 space-y-1 mt-1">
+                                    <div className="ml-7 pl-3 border-l border-[#E6EBF1] space-y-1 mt-1">
                                       {provinces.map((prov) => {
                                         const provKey = `${dept}|${prov}`
                                         const isProvChecked = (shipping.allowedProvinces || []).includes(provKey)
@@ -1071,7 +1071,7 @@ export default function Settings() {
                                         return (
                                           <div key={prov}>
                                             {/* Province row */}
-                                            <div className="flex items-center gap-2 py-1 px-1 rounded hover:bg-gray-50">
+                                            <div className="flex items-center gap-2 py-1 px-1 rounded hover:bg-[#F6F9FC]">
                                               {districts.length > 0 && (
                                                 <button
                                                   type="button"
@@ -1084,7 +1084,7 @@ export default function Settings() {
                                                     }
                                                     setExpandedProvs(newExpanded)
                                                   }}
-                                                  className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                                  className="w-4 h-4 flex items-center justify-center text-[#A9B6C6] hover:text-[#425466]"
                                                 >
                                                   <svg className={`w-3 h-3 transition-transform ${isProvExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1107,20 +1107,20 @@ export default function Settings() {
                                                       : shipping.allowedDistricts || []
                                                     setShipping({ ...shipping, allowedProvinces: updated, allowedDistricts: newDistricts })
                                                   }}
-                                                  className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                                  className="rounded border-[#D8E2EC] text-[#38bdf8] focus:ring-[#38bdf8]"
                                                 />
-                                                <span className="text-sm text-gray-600">{prov}</span>
+                                                <span className="text-sm text-[#425466]">{prov}</span>
                                               </label>
                                             </div>
 
                                             {/* Districts (expanded) */}
                                             {isProvExpanded && districts.length > 0 && (
-                                              <div className="ml-6 pl-3 border-l border-gray-200/60 space-y-0.5 mt-1">
+                                              <div className="ml-6 pl-3 border-l border-[#E6EBF1] space-y-0.5 mt-1">
                                                 {districts.map((dist) => {
                                                   const distKey = `${dept}|${prov}|${dist}`
                                                   const isDistChecked = (shipping.allowedDistricts || []).includes(distKey)
                                                   return (
-                                                    <label key={dist} className="flex items-center gap-2 py-0.5 px-1 rounded hover:bg-gray-50 cursor-pointer">
+                                                    <label key={dist} className="flex items-center gap-2 py-0.5 px-1 rounded hover:bg-[#F6F9FC] cursor-pointer">
                                                       <input
                                                         type="checkbox"
                                                         checked={isDistChecked}
@@ -1131,9 +1131,9 @@ export default function Settings() {
                                                             : [...current, distKey]
                                                           setShipping({ ...shipping, allowedDistricts: updated })
                                                         }}
-                                                        className="rounded border-gray-300 text-[#38bdf8] focus:ring-[#38bdf8]"
+                                                        className="rounded border-[#D8E2EC] text-[#38bdf8] focus:ring-[#38bdf8]"
                                                       />
-                                                      <span className="text-xs text-gray-500">{dist}</span>
+                                                      <span className="text-xs text-[#8898AA]">{dist}</span>
                                                     </label>
                                                   )
                                                 })}
@@ -1148,7 +1148,7 @@ export default function Settings() {
                               )
                             })}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-[#8898AA] mt-1">
                             {(shipping.allowedZones || []).length} departamentos, {(shipping.allowedProvinces || []).length} provincias, {(shipping.allowedDistricts || []).length} distritos
                           </p>
                         </div>
@@ -1162,7 +1162,7 @@ export default function Settings() {
                               {t('settings.shipping.localCost', 'Costo envio local')}
                             </label>
                             <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A9B6C6] font-medium">
                                 {currencySymbols[currency] || '$'}
                               </span>
                               <input
@@ -1174,10 +1174,10 @@ export default function Settings() {
                                   setShipping({ ...shipping, localCost: val ? parseFloat(val) : undefined })
                                 }}
                                 placeholder="0.00"
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                                className="w-full pl-12 pr-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                               />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#8898AA] mt-1">
                               {t('settings.shipping.localCostHint', 'Envios dentro de tu zona')}
                             </p>
                           </div>
@@ -1186,7 +1186,7 @@ export default function Settings() {
                               {t('settings.shipping.nationalCost', 'Costo envio nacional')}
                             </label>
                             <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A9B6C6] font-medium">
                                 {currencySymbols[currency] || '$'}
                               </span>
                               <input
@@ -1198,24 +1198,24 @@ export default function Settings() {
                                   setShipping({ ...shipping, nationalCost: val ? parseFloat(val) : undefined })
                                 }}
                                 placeholder="0.00"
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                                className="w-full pl-12 pr-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                               />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#8898AA] mt-1">
                               {t('settings.shipping.nationalCostHint', 'Envios a otras zonas')}
                             </p>
                           </div>
                         </div>
                       )}
                       {/* --- INTERNATIONAL SHIPPING --- */}
-                      <div className="bg-gray-50 rounded-xl p-4 space-y-4">
+                      <div className="bg-[#F6F9FC] rounded-xl p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-semibold text-[#1e3a5f]">Envio internacional</p>
                           <button
                             type="button"
                             onClick={() => setShipping({ ...shipping, internationalShipping: !shipping.internationalShipping })}
                             className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                              shipping.internationalShipping ? 'bg-[#38bdf8]' : 'bg-gray-200'
+                              shipping.internationalShipping ? 'bg-[#38bdf8]' : 'bg-[#E1E8EF]'
                             }`}
                           >
                             <span
@@ -1226,7 +1226,7 @@ export default function Settings() {
                           </button>
                         </div>
                         {!shipping.internationalShipping && (
-                          <p className="text-xs text-gray-400">Solo clientes de tu pais podran comprar</p>
+                          <p className="text-xs text-[#A9B6C6]">Solo clientes de tu pais podran comprar</p>
                         )}
 
                         {shipping.internationalShipping && (
@@ -1235,7 +1235,7 @@ export default function Settings() {
                               Costo de envio internacional
                             </label>
                             <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A9B6C6] font-medium">
                                 {currencySymbols[currency] || '$'}
                               </span>
                               <input
@@ -1247,10 +1247,10 @@ export default function Settings() {
                                   setShipping({ ...shipping, internationalCost: val ? parseFloat(val) : undefined })
                                 }}
                                 placeholder="0.00"
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
+                                className="w-full pl-12 pr-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all bg-white"
                               />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#8898AA] mt-1">
                               Tarifa plana para pedidos desde otros paises
                             </p>
                           </div>
@@ -1265,16 +1265,16 @@ export default function Settings() {
           </div>
 
           {/* Catalog display settings */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Catalogo</h2>
-            <p className="text-sm text-gray-500 mb-4">Como se muestran los productos con poco o sin stock en la tienda</p>
+            <p className="text-sm text-[#8898AA] mb-4">Como se muestran los productos con poco o sin stock en la tienda</p>
 
             <div className="space-y-4">
               {/* Show out-of-stock */}
-              <div className="flex items-start justify-between gap-4 py-2 border-b border-gray-100">
+              <div className="flex items-start justify-between gap-4 py-2 border-b border-[#EEF2F6]">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900">Mostrar productos agotados</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-sm font-medium text-[#1e3a5f]">Mostrar productos agotados</p>
+                  <p className="text-xs text-[#8898AA] mt-0.5">
                     Si esta activo, los productos sin stock siguen apareciendo en el catalogo con la etiqueta "Agotado" y el boton de compra deshabilitado. Si lo desactivas, desaparecen del catalogo.
                   </p>
                 </div>
@@ -1282,7 +1282,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => setShowOutOfStock(!showOutOfStock)}
                   className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-                    showOutOfStock ? 'bg-[#1e3a5f]' : 'bg-gray-200'
+                    showOutOfStock ? 'bg-[#1e3a5f]' : 'bg-[#E1E8EF]'
                   }`}
                   aria-label="Toggle mostrar agotados"
                 >
@@ -1295,8 +1295,8 @@ export default function Settings() {
               {/* Show low-stock badge */}
               <div className="flex items-start justify-between gap-4 py-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900">Mostrar aviso de pocas unidades</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-sm font-medium text-[#1e3a5f]">Mostrar aviso de pocas unidades</p>
+                  <p className="text-xs text-[#8898AA] mt-0.5">
                     Muestra un badge "Pocas unidades" en los productos cuando el stock esta cerca de agotarse. Genera urgencia al cliente.
                   </p>
                 </div>
@@ -1304,7 +1304,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => setShowLowStockBadge(!showLowStockBadge)}
                   className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-                    showLowStockBadge ? 'bg-[#1e3a5f]' : 'bg-gray-200'
+                    showLowStockBadge ? 'bg-[#1e3a5f]' : 'bg-[#E1E8EF]'
                   }`}
                   aria-label="Toggle mostrar low stock"
                 >
@@ -1315,9 +1315,9 @@ export default function Settings() {
               </div>
 
               {showLowStockBadge && (
-                <div className="pl-0 sm:pl-4 border-l-0 sm:border-l-2 border-gray-100 animate-[slideDown_0.15s_ease-out]">
+                <div className="pl-0 sm:pl-4 border-l-0 sm:border-l-2 border-[#EEF2F6] animate-[slideDown_0.15s_ease-out]">
                   <label className="block text-sm font-medium text-[#1e3a5f] mb-1">Umbral de pocas unidades</label>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <p className="text-xs text-[#8898AA] mb-2">
                     El badge aparece cuando el stock queda en este numero o menos.
                   </p>
                   <input
@@ -1325,7 +1325,7 @@ export default function Settings() {
                     min="1"
                     value={lowStockThreshold}
                     onChange={(e) => setLowStockThreshold(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-32 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-32 px-3 py-2 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               )}
@@ -1333,7 +1333,7 @@ export default function Settings() {
           </div>
 
           {/* Contact */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('settings.contact.title')}</h2>
 
             <div className="space-y-4">
@@ -1343,7 +1343,7 @@ export default function Settings() {
                     WhatsApp
                   </label>
                   <div className="flex gap-2">
-                    <div className="flex items-center gap-1.5 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium shrink-0">
+                    <div className="flex items-center gap-1.5 px-3 py-3 border border-[#E6EBF1] rounded-xl bg-[#F6F9FC] text-[#425466] font-medium shrink-0">
                       <img src={`https://flagcdn.com/w20/${location.country.toLowerCase()}.png`} alt={location.country} className="w-5 h-auto" />
                       <span>{phoneCodeByCountry[location.country] || '+51'}</span>
                     </div>
@@ -1352,7 +1352,7 @@ export default function Settings() {
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d]/g, ''))}
                       placeholder="999888777"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                      className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                     />
                   </div>
                 </div>
@@ -1366,7 +1366,7 @@ export default function Settings() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('settings.contact.emailPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               </div>
@@ -1381,7 +1381,7 @@ export default function Settings() {
                     value={instagram}
                     onChange={(e) => setInstagram(e.target.value)}
                     placeholder={t('settings.contact.instagramPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
                 <div>
@@ -1393,7 +1393,7 @@ export default function Settings() {
                     value={facebook}
                     onChange={(e) => setFacebook(e.target.value)}
                     placeholder={t('settings.contact.facebookPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
                 <div>
@@ -1405,7 +1405,7 @@ export default function Settings() {
                     value={tiktok}
                     onChange={(e) => setTiktok(e.target.value)}
                     placeholder={t('settings.contact.tiktokPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                    className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
               </div>

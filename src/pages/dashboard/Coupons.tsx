@@ -186,13 +186,13 @@ export default function Coupons() {
   if (!isPro) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
-        <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-[#F6F9FC] border border-[#E6EBF1] rounded-xl flex items-center justify-center mb-6">
           <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
         </div>
         <h2 className="text-xl font-bold text-[#1e3a5f] mb-2">{t('coupons.proRequired.title')}</h2>
-        <p className="text-gray-600 mb-6 max-w-md">{t('coupons.proRequired.description')}</p>
+        <p className="text-[#425466] mb-6 max-w-md">{t('coupons.proRequired.description')}</p>
         {!Capacitor.isNativePlatform() && (
           <Link
             to={localePath('/dashboard/plan')}
@@ -210,8 +210,8 @@ export default function Coupons() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('coupons.title')}</h1>
-          <p className="text-gray-600 mt-1">{t('coupons.subtitle')}</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('coupons.title')}</h1>
+          <p className="text-[#425466] mt-1">{t('coupons.subtitle')}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
@@ -225,7 +225,7 @@ export default function Coupons() {
       {coupons.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Active coupons */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -233,27 +233,27 @@ export default function Coupons() {
                 </svg>
               </div>
               <div>
-                <p className="text-xl font-semibold text-gray-900">{stats.activeCoupons}</p>
-                <p className="text-xs text-gray-500">{t('coupons.stats.active')}</p>
+                <p className="text-xl font-semibold text-[#1e3a5f]">{stats.activeCoupons}</p>
+                <p className="text-xs text-[#8898AA]">{t('coupons.stats.active')}</p>
               </div>
             </div>
           </div>
           {/* Total uses */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-[#E0F2FE] rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-[#0284C7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                 </svg>
               </div>
               <div>
-                <p className="text-xl font-semibold text-gray-900">{stats.totalUses}</p>
-                <p className="text-xs text-gray-500">{t('coupons.stats.totalUses')}</p>
+                <p className="text-xl font-semibold text-[#1e3a5f]">{stats.totalUses}</p>
+                <p className="text-xs text-[#8898AA]">{t('coupons.stats.totalUses')}</p>
               </div>
             </div>
           </div>
           {/* Total discounted */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm col-span-2 lg:col-span-1">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 shadow-sm col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,8 +261,8 @@ export default function Coupons() {
                 </svg>
               </div>
               <div>
-                <p className="text-xl font-semibold text-gray-900">~{currencySymbol}{stats.totalDiscounted.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">{t('coupons.stats.totalDiscounted')}</p>
+                <p className="text-xl font-semibold text-[#1e3a5f]">~{currencySymbol}{stats.totalDiscounted.toLocaleString()}</p>
+                <p className="text-xs text-[#8898AA]">{t('coupons.stats.totalDiscounted')}</p>
               </div>
             </div>
           </div>
@@ -271,7 +271,7 @@ export default function Coupons() {
 
       {/* Create/Edit Form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm mb-6">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm mb-6">
           <h3 className="font-semibold text-[#1e3a5f] mb-4">
             {editingId ? t('coupons.edit') : t('coupons.new')}
           </h3>
@@ -284,7 +284,7 @@ export default function Coupons() {
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="VERANO20"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all uppercase font-mono"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all uppercase font-mono"
               />
             </div>
             {/* Discount type + value */}
@@ -294,7 +294,7 @@ export default function Coupons() {
                 <select
                   value={discountType}
                   onChange={(e) => setDiscountType(e.target.value as 'percentage' | 'fixed')}
-                  className="px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                  className="px-3 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 >
                   <option value="percentage">%</option>
                   <option value="fixed">{currencySymbol}</option>
@@ -306,7 +306,7 @@ export default function Coupons() {
                   placeholder={discountType === 'percentage' ? '20' : '10.00'}
                   min="0"
                   step={discountType === 'percentage' ? '1' : '0.01'}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                  className="flex-1 px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                 />
               </div>
             </div>
@@ -320,7 +320,7 @@ export default function Coupons() {
                 placeholder={t('coupons.form.optional')}
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
             {/* Max uses */}
@@ -332,7 +332,7 @@ export default function Coupons() {
                 onChange={(e) => setMaxUses(e.target.value)}
                 placeholder={t('coupons.form.unlimited')}
                 min="1"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
             {/* Expires */}
@@ -342,15 +342,15 @@ export default function Coupons() {
                 type="date"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
           </div>
           {/* Show in checkout toggle */}
-          <div className="flex items-start justify-between gap-4 mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200/60">
+          <div className="flex items-start justify-between gap-4 mt-4 p-4 bg-[#F6F9FC] rounded-[14px] border border-[#E6EBF1]">
             <div className="min-w-0">
               <p className="text-sm font-medium text-[#1e3a5f]">{t('coupons.form.showInCheckout')}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{t('coupons.form.showInCheckoutHint')}</p>
+              <p className="text-xs text-[#8898AA] mt-0.5">{t('coupons.form.showInCheckoutHint')}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-0.5">
               <input
@@ -359,7 +359,7 @@ export default function Coupons() {
                 onChange={(e) => setShowInCheckout(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+              <div className="w-9 h-5 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
             </label>
           </div>
           {/* Actions */}
@@ -373,7 +373,7 @@ export default function Coupons() {
             </button>
             <button
               onClick={resetForm}
-              className="px-6 py-2.5 text-gray-600 hover:text-[#1e3a5f] transition-colors"
+              className="px-6 py-2.5 text-[#425466] hover:text-[#1e3a5f] transition-colors"
             >
               {t('coupons.form.cancel')}
             </button>
@@ -383,14 +383,14 @@ export default function Coupons() {
 
       {/* Coupons list */}
       {coupons.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center shadow-sm">
-          <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-12 text-center shadow-sm">
+          <div className="w-20 h-20 bg-[#F6F9FC] border border-[#E6EBF1] rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-[#1e3a5f] mb-2">{t('coupons.empty.title')}</h3>
-          <p className="text-gray-600 mb-6">{t('coupons.empty.description')}</p>
+          <p className="text-[#425466] mb-6">{t('coupons.empty.description')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -403,13 +403,13 @@ export default function Coupons() {
               <div
                 key={coupon.id}
                 className={`bg-white rounded-xl border p-4 sm:p-5 shadow-sm transition-all ${
-                  !coupon.active || isExpired || isMaxed ? 'border-gray-200 opacity-60' : 'border-gray-200/60'
+                  !coupon.active || isExpired || isMaxed ? 'border-[#E6EBF1] opacity-60' : 'border-[#E6EBF1]'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Code + info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-12 h-12 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-[#F6F9FC] border border-[#E6EBF1] rounded-xl flex items-center justify-center flex-shrink-0">
                       <svg className="w-6 h-6 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
@@ -420,7 +420,7 @@ export default function Coupons() {
                         {/* Copy button */}
                         <button
                           onClick={() => handleCopy(coupon)}
-                          className="p-1 text-gray-400 hover:text-[#2d6cb5] transition-colors"
+                          className="p-1 text-[#A9B6C6] hover:text-[#2d6cb5] transition-colors"
                           title={copiedId === coupon.id ? t('coupons.copied') : t('home.copyLink')}
                         >
                           {copiedId === coupon.id ? (
@@ -440,7 +440,7 @@ export default function Coupons() {
                           <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">{t('coupons.expired')}</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-[#425466]">
                         {coupon.minOrderAmount ? `${t('coupons.min')} ${currencySymbol}${coupon.minOrderAmount}` : ''}
                         {coupon.minOrderAmount && (coupon.maxUses || coupon.currentUses) ? ' · ' : ''}
                         {coupon.maxUses ? `${coupon.currentUses}/${coupon.maxUses} ${t('coupons.uses')}` : `${coupon.currentUses} ${t('coupons.uses')}`}
@@ -448,7 +448,7 @@ export default function Coupons() {
                       </p>
                       {/* Usage progress bar */}
                       {usagePercent !== null && (
-                        <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5">
+                        <div className="mt-2 w-full bg-[#F1F5F9] rounded-full h-1.5">
                           <div
                             className={`h-1.5 rounded-full transition-all ${
                               usagePercent > 90 ? 'bg-red-500' : usagePercent > 70 ? 'bg-yellow-500' : 'bg-green-500'
@@ -466,7 +466,7 @@ export default function Coupons() {
                     <span className={`px-3 py-1.5 rounded-full text-lg font-bold ${
                       coupon.discountType === 'percentage'
                         ? 'bg-purple-100 text-purple-700'
-                        : 'bg-blue-100 text-blue-700'
+                        : 'bg-[#E0F2FE] text-[#0369A1]'
                     }`}>
                       -{coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `${currencySymbol}${coupon.discountValue}`}
                     </span>
@@ -480,12 +480,12 @@ export default function Coupons() {
                           onChange={() => handleToggle(coupon)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                        <div className="w-9 h-5 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                       </label>
                       {/* WhatsApp share */}
                       <button
                         onClick={() => handleShare(coupon)}
-                        className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                        className="p-2 text-[#A9B6C6] hover:text-green-600 transition-colors"
                         title={t('coupons.share')}
                       >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -494,7 +494,7 @@ export default function Coupons() {
                       </button>
                       <button
                         onClick={() => handleEdit(coupon)}
-                        className="p-2 text-gray-400 hover:text-[#2d6cb5] transition-colors"
+                        className="p-2 text-[#A9B6C6] hover:text-[#2d6cb5] transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -502,7 +502,7 @@ export default function Coupons() {
                       </button>
                       <button
                         onClick={() => handleDelete(coupon.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-2 text-[#A9B6C6] hover:text-red-500 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

@@ -553,8 +553,8 @@ export default function Branding() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">{t('branding.title')}</h1>
-        <p className="text-gray-600 mt-1">{t('branding.subtitle')}</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('branding.title')}</h1>
+        <p className="text-[#425466] mt-1">{t('branding.subtitle')}</p>
       </div>
 
       {/* Selector de tema. Son 86: antes se pintaban todos, repartidos en seis
@@ -743,11 +743,11 @@ export default function Branding() {
 
       {/* Logo */}
       <div className="mt-6">
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm space-y-6">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm space-y-6">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.logo.title')}</h2>
 
           {/* Tip: recommend transparent PNG */}
-          <div className="text-xs text-gray-500 bg-[#f0f7ff] border border-[#38bdf8]/20 rounded-lg px-3 py-2">
+          <div className="text-xs text-[#8898AA] bg-[#f0f7ff] border border-[#38bdf8]/20 rounded-lg px-3 py-2">
             <span className="font-medium text-[#1e3a5f]">Tip:</span>{' '}
             Para que tu logo se vea nítido en todos los fondos, subilo como PNG con fondo transparente.
           </div>
@@ -756,7 +756,7 @@ export default function Branding() {
           <div className="flex items-start gap-4">
             <div
               onClick={() => logoInputRef.current?.click()}
-              className="w-24 h-24 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
+              className="w-24 h-24 bg-[#F0F9FF] border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
             >
               {uploadingLogo ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2d6cb5]"></div>
@@ -767,7 +767,7 @@ export default function Branding() {
                   <svg className="w-6 h-6 text-[#38bdf8] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  <span className="text-[10px] text-gray-500">{t('branding.logo.upload')}</span>
+                  <span className="text-[10px] text-[#8898AA]">{t('branding.logo.upload')}</span>
                 </div>
               )}
             </div>
@@ -782,7 +782,7 @@ export default function Branding() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium text-[#1e3a5f] text-sm">Logo principal (cuadrado)</span>
               </div>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-[#425466] mb-2">
                 {t('branding.logo.description')}
               </p>
               {logo && (
@@ -797,13 +797,13 @@ export default function Branding() {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-gray-200/70" />
+          <div className="border-t border-[#E6EBF1]" />
 
           {/* Logo horizontal (opcional) */}
           <div className="flex items-start gap-4">
             <div
               onClick={() => logoLandscapeInputRef.current?.click()}
-              className="w-40 h-20 bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
+              className="w-40 h-20 bg-[#F0F9FF] border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center flex-shrink-0"
             >
               {uploadingLogoLandscape ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2d6cb5]"></div>
@@ -814,7 +814,7 @@ export default function Branding() {
                   <svg className="w-6 h-6 text-[#38bdf8] mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  <span className="text-[10px] text-gray-500">Subir</span>
+                  <span className="text-[10px] text-[#8898AA]">Subir</span>
                 </div>
               )}
             </div>
@@ -829,7 +829,7 @@ export default function Branding() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium text-[#1e3a5f] text-sm">Logo horizontal (opcional)</span>
               </div>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-[#425466] mb-2">
                 Si subís una versión horizontal con el nombre de tu marca, reemplaza al logo en el header y esconde el texto del nombre.
               </p>
               {logoLandscape && (
@@ -848,18 +848,18 @@ export default function Branding() {
       {/* Catalog Layout + Visual Effects | Hero Images */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Left Column: Layout + Effects in one card */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm h-fit">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm h-fit">
           {store && (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.layout.title')}</h2>
                 {store.plan === 'free' && (
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mb-6">{t('branding.layout.subtitle')}</p>
+              <p className="text-sm text-[#425466] mb-6">{t('branding.layout.subtitle')}</p>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {([
@@ -928,17 +928,17 @@ export default function Branding() {
                         isSelected
                           ? 'border-[#2d6cb5] bg-[#f0f7ff]'
                           : isDisabled
-                            ? 'border-gray-200/60 bg-gray-50 opacity-60 cursor-not-allowed'
-                            : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                            ? 'border-[#E6EBF1] bg-[#F6F9FC] opacity-60 cursor-not-allowed'
+                            : 'border-[#E6EBF1] hover:border-[#38bdf8]/50 bg-white'
                       }`}
                     >
-                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-[#A9B6C6]'}`}>
                         {layout.icon}
                       </div>
                       <div className="font-medium text-sm text-[#1e3a5f]">
                         {t(`branding.layout.${layout.id}`)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
+                      <div className="text-xs text-[#8898AA] mt-0.5">
                         {t(`branding.layout.${layout.id}Desc`)}
                       </div>
                       {isSelected && (
@@ -972,16 +972,16 @@ export default function Branding() {
 
           {/* Product Pagination */}
           {store && (
-            <div className="border-t border-gray-200/60 pt-6 mt-6">
+            <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.pagination.title')}</h3>
                 {store.plan === 'free' && (
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mb-6">{t('branding.pagination.subtitle')}</p>
+              <p className="text-sm text-[#425466] mb-6">{t('branding.pagination.subtitle')}</p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {([
@@ -1033,17 +1033,17 @@ export default function Branding() {
                         isSelected
                           ? 'border-[#2d6cb5] bg-[#f0f7ff]'
                           : isDisabled
-                            ? 'border-gray-200/60 bg-gray-50 opacity-60 cursor-not-allowed'
-                            : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                            ? 'border-[#E6EBF1] bg-[#F6F9FC] opacity-60 cursor-not-allowed'
+                            : 'border-[#E6EBF1] hover:border-[#38bdf8]/50 bg-white'
                       }`}
                     >
-                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-[#A9B6C6]'}`}>
                         {option.icon}
                       </div>
                       <div className="font-medium text-sm text-[#1e3a5f]">
                         {t(`branding.pagination.${labelKey}`)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
+                      <div className="text-xs text-[#8898AA] mt-0.5">
                         {t(`branding.pagination.${descKey}`)}
                       </div>
                       {isSelected && (
@@ -1077,16 +1077,16 @@ export default function Branding() {
 
           {/* Product View Mode */}
           {store && (
-            <div className="border-t border-gray-200/60 pt-6 mt-6">
+            <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.viewMode.title')}</h3>
                 {store.plan === 'free' && (
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mb-6">{t('branding.viewMode.subtitle')}</p>
+              <p className="text-sm text-[#425466] mb-6">{t('branding.viewMode.subtitle')}</p>
 
               <div className="grid grid-cols-2 gap-3">
                 {([
@@ -1125,17 +1125,17 @@ export default function Branding() {
                         isSelected
                           ? 'border-[#2d6cb5] bg-[#f0f7ff]'
                           : isDisabled
-                            ? 'border-gray-200/60 bg-gray-50 opacity-60 cursor-not-allowed'
-                            : 'border-gray-200 hover:border-[#38bdf8]/50 bg-white'
+                            ? 'border-[#E6EBF1] bg-[#F6F9FC] opacity-60 cursor-not-allowed'
+                            : 'border-[#E6EBF1] hover:border-[#38bdf8]/50 bg-white'
                       }`}
                     >
-                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-gray-400'}`}>
+                      <div className={`mb-2 ${isSelected ? 'text-[#2d6cb5]' : 'text-[#A9B6C6]'}`}>
                         {option.icon}
                       </div>
                       <div className="font-medium text-sm text-[#1e3a5f]">
                         {t(`branding.viewMode.${option.labelKey}`)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
+                      <div className="text-xs text-[#8898AA] mt-0.5">
                         {t(`branding.viewMode.${option.descKey}`)}
                       </div>
                       {isSelected && (
@@ -1168,23 +1168,23 @@ export default function Branding() {
 
           {/* Visual Effects */}
           {store && (
-            <div className="border-t border-gray-200/60 pt-6 mt-6">
+            <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.effects.title')}</h3>
                 {store.plan === 'free' && (
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mb-4">{t('branding.effects.subtitle')}</p>
+              <p className="text-sm text-[#425466] mb-4">{t('branding.effects.subtitle')}</p>
 
               <div className="space-y-3">
                 {/* Scroll Reveal */}
-                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-200/60' : 'bg-white border-gray-200'}`}>
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-[#F6F9FC] border-[#E6EBF1]' : 'bg-white border-[#E6EBF1]'}`}>
                   <div className="flex-1 mr-4">
                     <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
-                    <p className="text-xs text-gray-500 mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
+                    <p className="text-xs text-[#8898AA] mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -1206,19 +1206,19 @@ export default function Branding() {
                       }}
                       className="sr-only peer"
                     />
-                    <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                    <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                       store.plan === 'free'
-                        ? 'bg-gray-200 cursor-not-allowed'
-                        : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                        ? 'bg-[#E1E8EF] cursor-not-allowed'
+                        : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                     }`}></div>
                   </label>
                 </div>
 
                 {/* Image Swap on Hover */}
-                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-gray-50 border-gray-200/60' : 'bg-white border-gray-200'}`}>
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-[#F6F9FC] border-[#E6EBF1]' : 'bg-white border-[#E6EBF1]'}`}>
                   <div className="flex-1 mr-4">
                     <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
-                    <p className="text-xs text-gray-500 mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
+                    <p className="text-xs text-[#8898AA] mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -1240,10 +1240,10 @@ export default function Branding() {
                       }}
                       className="sr-only peer"
                     />
-                    <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                    <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                       store.plan === 'free'
-                        ? 'bg-gray-200 cursor-not-allowed'
-                        : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                        ? 'bg-[#E1E8EF] cursor-not-allowed'
+                        : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                     }`}></div>
                   </label>
                 </div>
@@ -1268,13 +1268,13 @@ export default function Branding() {
 
           {/* Catalog options */}
           {store && (
-            <div className="border-t border-gray-200/60 pt-6 mt-6">
+            <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <h3 className="font-medium text-[#1e3a5f] mb-2">{t('branding.catalog.title')}</h3>
-              <p className="text-sm text-gray-600 mb-4">{t('branding.catalog.subtitle')}</p>
-              <div className="flex items-center justify-between p-3 rounded-xl border bg-white border-gray-200">
+              <p className="text-sm text-[#425466] mb-4">{t('branding.catalog.subtitle')}</p>
+              <div className="flex items-center justify-between p-3 rounded-xl border bg-white border-[#E6EBF1]">
                 <div className="flex-1 mr-4">
                   <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.catalog.hideFilters')}</span>
-                  <p className="text-xs text-gray-500 mt-0.5">{t('branding.catalog.hideFiltersDesc')}</p>
+                  <p className="text-xs text-[#8898AA] mt-0.5">{t('branding.catalog.hideFiltersDesc')}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -1295,7 +1295,7 @@ export default function Branding() {
                     }}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                  <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                 </label>
               </div>
             </div>
@@ -1303,9 +1303,9 @@ export default function Branding() {
         </div>
 
         {/* Right Column - Hero Images */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm h-fit">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm h-fit">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-2">{t('branding.hero.title')}</h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="text-sm text-[#425466] mb-6">
             {t('branding.hero.description')}
           </p>
 
@@ -1317,11 +1317,11 @@ export default function Branding() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <span className="font-medium text-[#1e3a5f]">{t('branding.hero.desktop')}</span>
-                <span className="text-xs text-gray-400">{t('branding.hero.desktopSize')}</span>
+                <span className="text-xs text-[#A9B6C6]">{t('branding.hero.desktopSize')}</span>
               </div>
               <div
                 onClick={() => heroInputRef.current?.click()}
-                className="w-full aspect-[16/5] bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
+                className="w-full aspect-[16/5] bg-[#F0F9FF] border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
               >
                 {uploadingHero ? (
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5]"></div>
@@ -1332,7 +1332,7 @@ export default function Branding() {
                     <svg className="w-8 h-8 text-[#38bdf8] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <p className="text-sm text-gray-500">{t('branding.hero.uploadHorizontal')}</p>
+                    <p className="text-sm text-[#8898AA]">{t('branding.hero.uploadHorizontal')}</p>
                   </div>
                 )}
               </div>
@@ -1360,11 +1360,11 @@ export default function Branding() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 <span className="font-medium text-[#1e3a5f]">{t('branding.hero.mobile')}</span>
-                <span className="text-xs text-gray-400">{t('branding.hero.mobileSize')}</span>
+                <span className="text-xs text-[#A9B6C6]">{t('branding.hero.mobileSize')}</span>
               </div>
               <div
                 onClick={() => heroMobileInputRef.current?.click()}
-                className="w-full aspect-[3/2] max-w-[280px] bg-gradient-to-br from-[#f0f7ff] to-white border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
+                className="w-full aspect-[3/2] max-w-[280px] bg-[#F0F9FF] border-2 border-dashed border-[#38bdf8]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#38bdf8] transition-all flex items-center justify-center"
               >
                 {uploadingHeroMobile ? (
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5]"></div>
@@ -1375,7 +1375,7 @@ export default function Branding() {
                     <svg className="w-8 h-8 text-[#38bdf8] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <p className="text-sm text-gray-500">{t('branding.hero.uploadSquare')}</p>
+                    <p className="text-sm text-[#8898AA]">{t('branding.hero.uploadSquare')}</p>
                   </div>
                 )}
               </div>
@@ -1398,8 +1398,8 @@ export default function Branding() {
           </div>
 
           {/* Gallery + Tip */}
-          <div className="mt-4 pt-4 border-t border-gray-200/60 flex items-center justify-between gap-4">
-            <p className="text-xs text-gray-400">
+          <div className="mt-4 pt-4 border-t border-[#E6EBF1] flex items-center justify-between gap-4">
+            <p className="text-xs text-[#A9B6C6]">
               <span className="font-medium">{t('branding.hero.tip')}</span> {t('branding.hero.tipText')}
             </p>
             <button
@@ -1415,17 +1415,17 @@ export default function Branding() {
       {/* Conversion Features - Single unified card */}
       {store && (
         <div className="mt-6">
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             {/* Header */}
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.conversion.title')}</h2>
               {store.plan === 'free' && (
-                <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full uppercase">
+                <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                   PRO
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600 mb-6">{t('branding.conversion.description')}</p>
+            <p className="text-sm text-[#425466] mb-6">{t('branding.conversion.description')}</p>
 
             {/* Two-column grid for sections */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1443,14 +1443,14 @@ export default function Branding() {
                         onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                         store.plan === 'free'
-                          ? 'bg-gray-200 cursor-not-allowed'
-                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                          ? 'bg-[#E1E8EF] cursor-not-allowed'
+                          : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-500 mb-4">{t('branding.announcement.description')}</p>
+                  <p className="text-sm text-[#8898AA] mb-4">{t('branding.announcement.description')}</p>
 
                   {announcement.enabled && store.plan !== 'free' && (
                     <div className="space-y-4">
@@ -1461,7 +1461,7 @@ export default function Branding() {
                           value={announcement.text}
                           onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
                           placeholder={t('branding.announcement.messagePlaceholder')}
-                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                          className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
                         />
                       </div>
                       <div>
@@ -1471,7 +1471,7 @@ export default function Branding() {
                           value={announcement.link || ''}
                           onChange={(e) => setAnnouncement({ ...announcement, link: e.target.value })}
                           placeholder={t('branding.announcement.linkPlaceholder')}
-                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                          className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
                         />
                       </div>
 
@@ -1483,13 +1483,13 @@ export default function Branding() {
                               type="color"
                               value={announcement.backgroundColor}
                               onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                              className="w-10 h-10 rounded-lg border border-[#E6EBF1] cursor-pointer flex-shrink-0"
                             />
                             <input
                               type="text"
                               value={announcement.backgroundColor}
                               onChange={(e) => setAnnouncement({ ...announcement, backgroundColor: e.target.value })}
-                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                              className="flex-1 min-w-0 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm"
                             />
                           </div>
                         </div>
@@ -1500,25 +1500,25 @@ export default function Branding() {
                               type="color"
                               value={announcement.textColor}
                               onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer flex-shrink-0"
+                              className="w-10 h-10 rounded-lg border border-[#E6EBF1] cursor-pointer flex-shrink-0"
                             />
                             <input
                               type="text"
                               value={announcement.textColor}
                               onChange={(e) => setAnnouncement({ ...announcement, textColor: e.target.value })}
-                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                              className="flex-1 min-w-0 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Marquee mode toggle */}
-                      <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-gray-200">
+                      <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-[#E6EBF1]">
                         <div className="flex-1 mr-4">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-[#1e3a5f]">{t('branding.announcement.marquee')}</span>
                           </div>
-                          <p className="text-sm text-gray-500 mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
+                          <p className="text-sm text-[#8898AA] mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -1527,14 +1527,14 @@ export default function Branding() {
                             onChange={(e) => setAnnouncement({ ...announcement, mode: e.target.checked ? 'marquee' : 'static' })}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                          <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                         </label>
                       </div>
 
                       {/* Preview */}
                       {announcement.text && (
                         <div>
-                          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.announcement.preview')}</div>
+                          <div className="text-[11px] font-semibold text-[#A9B6C6] uppercase tracking-wider mb-2">{t('branding.announcement.preview')}</div>
                           <div
                             className="py-2.5 px-4 text-sm font-medium rounded-lg overflow-hidden"
                             style={{
@@ -1564,7 +1564,7 @@ export default function Branding() {
                 </div>
 
                 {/* Section 3: Flash Sale */}
-                <div className="border-t border-gray-200/60 pt-5 mt-5">
+                <div className="border-t border-[#E6EBF1] pt-5 mt-5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-[#1e3a5f]">{t('branding.flashSale.title')}</h3>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1575,40 +1575,40 @@ export default function Branding() {
                         onChange={(e) => setFlashSale({ ...flashSale, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                         store.plan === 'free'
-                          ? 'bg-gray-200 cursor-not-allowed'
-                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                          ? 'bg-[#E1E8EF] cursor-not-allowed'
+                          : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-500 mb-4">{t('branding.flashSale.description')}</p>
+                  <p className="text-sm text-[#8898AA] mb-4">{t('branding.flashSale.description')}</p>
 
                   {flashSale.enabled && store.plan !== 'free' && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.endDate')}</label>
+                        <label className="block text-sm font-medium text-[#425466] mb-1">{t('branding.flashSale.endDate')}</label>
                         <input
                           type="datetime-local"
                           value={flashSale.endDate ? flashSale.endDate.slice(0, 16) : ''}
                           onChange={(e) => setFlashSale({ ...flashSale, endDate: new Date(e.target.value).toISOString() })}
-                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                          className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.customText')}</label>
+                        <label className="block text-sm font-medium text-[#425466] mb-1">{t('branding.flashSale.customText')}</label>
                         <input
                           type="text"
                           value={flashSale.text || ''}
                           onChange={(e) => setFlashSale({ ...flashSale, text: e.target.value })}
                           placeholder={t('branding.flashSale.customTextPlaceholder')}
-                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
+                          className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-transparent outline-none"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.bgColor')}</label>
+                          <label className="block text-sm font-medium text-[#425466] mb-1">{t('branding.flashSale.bgColor')}</label>
                           <div className="flex gap-2 items-center">
                             <input
                               type="color"
@@ -1620,12 +1620,12 @@ export default function Branding() {
                               type="text"
                               value={flashSale.backgroundColor || '#dc2626'}
                               onChange={(e) => setFlashSale({ ...flashSale, backgroundColor: e.target.value })}
-                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                              className="flex-1 min-w-0 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('branding.flashSale.textColor')}</label>
+                          <label className="block text-sm font-medium text-[#425466] mb-1">{t('branding.flashSale.textColor')}</label>
                           <div className="flex gap-2 items-center">
                             <input
                               type="color"
@@ -1637,7 +1637,7 @@ export default function Branding() {
                               type="text"
                               value={flashSale.textColor || '#ffffff'}
                               onChange={(e) => setFlashSale({ ...flashSale, textColor: e.target.value })}
-                              className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                              className="flex-1 min-w-0 px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm"
                             />
                           </div>
                         </div>
@@ -1646,7 +1646,7 @@ export default function Branding() {
                       {/* Live preview */}
                       {flashSale.endDate && (
                         <div>
-                          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.flashSale.preview')}</div>
+                          <div className="text-[11px] font-semibold text-[#A9B6C6] uppercase tracking-wider mb-2">{t('branding.flashSale.preview')}</div>
                           <div
                             className="py-2.5 px-4 rounded-xl text-center text-sm font-semibold"
                             style={{
@@ -1677,14 +1677,14 @@ export default function Branding() {
                         onChange={(e) => setTrustBadges({ ...trustBadges, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                         store.plan === 'free'
-                          ? 'bg-gray-200 cursor-not-allowed'
-                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                          ? 'bg-[#E1E8EF] cursor-not-allowed'
+                          : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-500 mb-4">{t('branding.trustBadges.description')}</p>
+                  <p className="text-sm text-[#8898AA] mb-4">{t('branding.trustBadges.description')}</p>
 
                   {trustBadges.enabled && store.plan !== 'free' && (
                     <>
@@ -1725,8 +1725,8 @@ export default function Branding() {
                       {/* Live preview strip */}
                       {trustBadges.badges.some(b => b.enabled) && (
                         <div className="mt-4">
-                          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('branding.trustBadges.preview')}</div>
-                          <div className="py-3.5 px-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/60 overflow-x-auto scrollbar-hide">
+                          <div className="text-[11px] font-semibold text-[#A9B6C6] uppercase tracking-wider mb-2">{t('branding.trustBadges.preview')}</div>
+                          <div className="py-3.5 px-4 bg-[#F6F9FC]/50 rounded-[14px] border border-[#E6EBF1] overflow-x-auto scrollbar-hide">
                             <div className="flex items-center justify-center gap-5 md:gap-8 min-w-max">
                               {trustBadges.badges.filter(b => b.enabled).map((badge) => (
                                 <div key={badge.id} className="flex items-center gap-2.5 flex-shrink-0">
@@ -1747,11 +1747,11 @@ export default function Branding() {
                 </div>
 
                 {/* Section 4: Social Proof */}
-                <div className="border-t border-gray-200/60 pt-5 mt-5">
+                <div className="border-t border-[#E6EBF1] pt-5 mt-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-[#1e3a5f]">{t('branding.socialProof.title')}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{t('branding.socialProof.description')}</p>
+                      <p className="text-sm text-[#8898AA] mt-1">{t('branding.socialProof.description')}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
                       <input
@@ -1761,10 +1761,10 @@ export default function Branding() {
                         onChange={(e) => setSocialProof({ ...socialProof, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
                         store.plan === 'free'
-                          ? 'bg-gray-200 cursor-not-allowed'
-                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                          ? 'bg-[#E1E8EF] cursor-not-allowed'
+                          : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
                     </label>
                   </div>
@@ -1896,22 +1896,22 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
       <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200/60 flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 border-b border-[#E6EBF1] flex items-center justify-between flex-shrink-0">
           <h3 className="text-lg font-semibold text-[#1e3a5f]">
             {t('branding.hero.selectCover')}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 -m-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 -m-2 hover:bg-[#F1F5F9] rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-[#8898AA]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Category tabs */}
-        <div className="px-6 py-3 border-b border-gray-200/60 flex-shrink-0 overflow-x-auto">
+        <div className="px-6 py-3 border-b border-[#E6EBF1] flex-shrink-0 overflow-x-auto">
           <div className="flex gap-2">
             {categories.map((cat) => (
               <button
@@ -1919,8 +1919,8 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
                 onClick={() => onCategoryChange(cat.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                   category === cat.id
-                    ? 'bg-[#1e3a5f] text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-[#1e3a5f] text-white shadow-sm'
+                    : 'bg-[#F1F5F9] text-[#425466] hover:bg-[#E1E8EF]'
                 }`}
               >
                 {cat.label}
@@ -1956,10 +1956,10 @@ function CoverSelectorModal({ category, onCategoryChange, onSelect, onClose }: C
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200/60 flex-shrink-0">
+        <div className="px-6 py-4 border-t border-[#E6EBF1] flex-shrink-0">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+            className="w-full px-4 py-3 border border-[#E6EBF1] rounded-xl text-[#425466] font-medium hover:bg-[#F6F9FC] transition-colors"
           >
             {t('branding.hero.close')}
           </button>
@@ -2036,10 +2036,10 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
           <button
             onClick={handleSelect}
             disabled={saving}
-            className="px-4 py-2 bg-white text-gray-900 rounded-full hover:bg-gray-100 transition-all font-medium text-sm disabled:opacity-70 flex items-center gap-2"
+            className="px-4 py-2 bg-white text-[#1e3a5f] rounded-full hover:bg-[#F1F5F9] transition-all font-medium text-sm disabled:opacity-70 flex items-center gap-2"
           >
             {saving && (
-              <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-[#A9B6C6] border-t-gray-900 rounded-full animate-spin" />
             )}
             {saving ? t('branding.saving') : t('branding.theme.useTheme')}
           </button>
@@ -2089,10 +2089,10 @@ function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onText
     <div
       className={`relative rounded-xl border-2 p-4 transition-all duration-200 ${
         isDisabled
-          ? 'bg-gray-50 border-gray-200/60 opacity-50 cursor-not-allowed'
+          ? 'bg-[#F6F9FC] border-[#E6EBF1] opacity-50 cursor-not-allowed'
           : isEnabled
             ? 'bg-[#f0f7ff] border-[#2d6cb5]/30 shadow-sm'
-            : 'bg-white border-gray-200 hover:border-gray-300 cursor-pointer'
+            : 'bg-white border-[#E6EBF1] hover:border-[#D8E2EC] cursor-pointer'
       }`}
       onClick={() => {
         if (isDisabled || editing) return
@@ -2111,8 +2111,8 @@ function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onText
       {/* Icon */}
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${
         isEnabled && !isDisabled
-          ? 'bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] text-white'
-          : 'bg-gray-100 text-gray-400'
+          ? 'bg-[#1e3a5f] text-white'
+          : 'bg-[#F1F5F9] text-[#A9B6C6]'
       }`}>
         <TrustBadgeIcon id={badgeId} />
       </div>
@@ -2132,7 +2132,7 @@ function TrustBadgeCard({ badgeId, badge, isDisabled, language, onToggle, onText
         />
       ) : (
         <div className="flex items-center gap-1.5 min-h-[28px]">
-          <span className={`text-sm font-medium leading-tight ${isEnabled && !isDisabled ? 'text-[#1e3a5f]' : 'text-gray-500'}`}>
+          <span className={`text-sm font-medium leading-tight ${isEnabled && !isDisabled ? 'text-[#1e3a5f]' : 'text-[#8898AA]'}`}>
             {badge?.text || getTrustBadgeText(badgeId, language)}
           </span>
           {isEnabled && !isDisabled && (
@@ -2329,11 +2329,11 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fadeIn">
       <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200/60">
+        <div className="px-6 py-4 border-b border-[#E6EBF1]">
           <h3 className="text-lg font-semibold text-[#1e3a5f]">
             {title}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-[#8898AA] mt-1">
             {description}
           </p>
         </div>
@@ -2342,7 +2342,7 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
         <div className="p-6 overflow-x-auto">
           <div
             ref={containerRef}
-            className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
+            className="relative mx-auto overflow-hidden rounded-xl bg-[#F1F5F9]"
             style={{ width: cropWidth, height: cropHeight }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -2372,7 +2372,7 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
 
             {/* Loading indicator */}
             {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <div className="absolute inset-0 flex items-center justify-center bg-[#F1F5F9]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5]" />
               </div>
             )}
@@ -2382,10 +2382,10 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
           <div className="flex items-center justify-center gap-4 mt-4">
             <button
               onClick={handleZoomOut}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              className="p-2 rounded-lg bg-[#F1F5F9] hover:bg-[#E1E8EF] transition-colors"
               title={t('branding.logo.zoomOut', 'Alejar')}
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-[#425466]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
               </svg>
             </button>
@@ -2397,15 +2397,15 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
               step="0.01"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2d6cb5]"
+              className="w-32 h-2 bg-[#E1E8EF] rounded-lg appearance-none cursor-pointer accent-[#2d6cb5]"
             />
 
             <button
               onClick={handleZoomIn}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              className="p-2 rounded-lg bg-[#F1F5F9] hover:bg-[#E1E8EF] transition-colors"
               title={t('branding.logo.zoomIn', 'Acercar')}
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-[#425466]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </button>
@@ -2413,10 +2413,10 @@ function ImageCropModal({ imageSrc, onCrop, onCancel, aspectRatio, title, descri
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-gray-200/60 flex gap-3">
+        <div className="px-6 py-4 border-t border-[#E6EBF1] flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-3 border border-[#E6EBF1] rounded-xl text-[#425466] font-medium hover:bg-[#F6F9FC] transition-colors"
           >
             {t('branding.logo.cancel', 'Cancelar')}
           </button>

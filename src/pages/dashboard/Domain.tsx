@@ -257,8 +257,8 @@ export default function Domain() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">{t('domain.title')}</h1>
-        <p className="text-gray-600 mt-1">{t('domain.subtitle')}</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('domain.title')}</h1>
+        <p className="text-[#425466] mt-1">{t('domain.subtitle')}</p>
       </div>
 
       {/* Two Column Layout */}
@@ -266,7 +266,7 @@ export default function Domain() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Current URL */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('domain.currentUrl.title')}</h2>
             <div className="flex flex-col sm:flex-row gap-3">
               <code className="flex-1 px-4 py-3 bg-[#f0f7ff] rounded-xl text-sm text-[#1e3a5f] font-medium border border-[#38bdf8]/20 break-all">
@@ -277,18 +277,18 @@ export default function Domain() {
                   navigator.clipboard.writeText(catalogUrl)
                   showToast(t('domain.toast.copied'), 'success')
                 }}
-                className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all text-sm font-medium whitespace-nowrap flex-shrink-0"
+                className="px-4 py-3 bg-[#F1F5F9] text-[#425466] rounded-xl hover:bg-[#E1E8EF] transition-all text-sm font-medium whitespace-nowrap flex-shrink-0"
               >
                 {t('domain.currentUrl.copy')}
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-[#8898AA] mt-2">
               {t('domain.currentUrl.freeLink')}
             </p>
           </div>
 
           {/* Custom Domain */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <div className="flex flex-col gap-4">
               <div className="w-12 h-12 bg-[#1e3a5f] rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,7 +297,7 @@ export default function Domain() {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('domain.custom.title')}</h2>
-                <p className="text-sm text-gray-600 mt-1 mb-4" dangerouslySetInnerHTML={{ __html: t('domain.custom.description') }} />
+                <p className="text-sm text-[#425466] mt-1 mb-4" dangerouslySetInnerHTML={{ __html: t('domain.custom.description') }} />
 
                 {store && (getEffectivePlan(store) === 'pro' || getEffectivePlan(store) === 'business') ? (
                   <div className="space-y-4">
@@ -337,38 +337,35 @@ export default function Domain() {
                         </div>
 
                         {!isVerified && (
-                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                          <div className="p-4 bg-[#F0F9FF] border border-blue-200 rounded-xl">
                             <div className="flex items-center justify-between mb-2">
-                              <p className="text-sm text-blue-800 font-medium">
+                              <p className="text-sm text-[#075985] font-medium">
                                 Configura tu DNS para activar el dominio:
                               </p>
                               {!loadingDns && (
                                 <button
                                   onClick={() => store.customDomain && fetchDnsRecords(store.customDomain)}
-                                  className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors"
+                                  className="flex items-center gap-1 px-2 py-1 text-xs text-[#0284C7] hover:text-[#075985] hover:bg-[#E0F2FE] rounded-lg transition-colors"
                                 >
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                  </svg>
-                                  Actualizar
+Actualizar
                                 </button>
                               )}
                             </div>
                             {loadingDns ? (
                               <div className="flex items-center gap-2 py-4 justify-center">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                                <span className="text-sm text-blue-600">Obteniendo registros DNS de Vercel...</span>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#0284C7]"></div>
+                                <span className="text-sm text-[#0284C7]">Obteniendo registros DNS de Vercel...</span>
                               </div>
                             ) : dnsRecords.length > 0 ? (
-                              <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-blue-100 overflow-x-auto">
-                                <div className="grid grid-cols-[60px_60px_1fr_36px] gap-2 text-blue-700 min-w-[300px]">
+                              <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-[#E0F2FE] overflow-x-auto">
+                                <div className="grid grid-cols-[60px_60px_1fr_36px] gap-2 text-[#0369A1] min-w-[300px]">
                                   <span className="font-semibold">Tipo</span>
                                   <span className="font-semibold">Nombre</span>
                                   <span className="font-semibold">Valor</span>
                                   <span></span>
                                 </div>
                                 {dnsRecords.map((record, index) => (
-                                  <div key={index} className="grid grid-cols-[60px_60px_1fr_36px] gap-2 text-blue-900 min-w-[300px] items-center">
+                                  <div key={index} className="grid grid-cols-[60px_60px_1fr_36px] gap-2 text-[#0C4A6E] min-w-[300px] items-center">
                                     <span>{record.type}</span>
                                     <span>{record.name}</span>
                                     <span className="break-all">{record.value}</span>
@@ -377,7 +374,7 @@ export default function Domain() {
                                         navigator.clipboard.writeText(record.value)
                                         showToast('Copiado', 'success')
                                       }}
-                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                      className="p-1.5 text-[#0284C7] hover:text-[#0369A1] hover:bg-[#F0F9FF] rounded-lg transition-colors"
                                       title="Copiar valor"
                                     >
                                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -389,21 +386,18 @@ export default function Domain() {
                               </div>
                             ) : (
                               <div className="flex flex-col items-center gap-2 py-3">
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-[#425466]">
                                   No se pudieron obtener los registros DNS.
                                 </p>
                                 <button
                                   onClick={() => store.customDomain && fetchDnsRecords(store.customDomain)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#0284C7] bg-white border border-blue-200 rounded-lg hover:bg-[#F0F9FF] transition-colors"
                                 >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                  </svg>
-                                  Reintentar
+Reintentar
                                 </button>
                               </div>
                             )}
-                            <p className="text-xs text-blue-600 mt-2">
+                            <p className="text-xs text-[#0284C7] mt-2">
                               Los cambios de DNS pueden tardar hasta 48 horas en propagarse.
                             </p>
                           </div>
@@ -440,9 +434,9 @@ export default function Domain() {
                             value={customDomain}
                             onChange={(e) => setCustomDomain(e.target.value)}
                             placeholder="tutienda.com"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                            className="w-full px-4 py-3 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                           />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-[#8898AA] mt-1">
                             {t('domain.custom.domainHint', 'Ingresa tu dominio sin www (ej: mitienda.com, NO www.mitienda.com)')}
                           </p>
                         </div>
@@ -457,12 +451,12 @@ export default function Domain() {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200/60 rounded-xl p-4">
+                  <div className="bg-[#F6F9FC] border border-[#E6EBF1] rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-2 py-0.5 bg-[#2d6cb5] text-white text-xs font-semibold rounded-full">{t('domain.custom.proBadge')}</span>
                       <span className="text-sm font-medium text-[#1e3a5f]">{t('domain.custom.proPlan')}</span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-[#425466] mb-3">
                       {t('domain.custom.upgradeMessage')}
                     </p>
                     {!Capacitor.isNativePlatform() && (
@@ -481,35 +475,35 @@ export default function Domain() {
         </div>
 
         {/* Right Column - Instructions */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm h-fit">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm h-fit">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('domain.instructions.title')}</h2>
-          <ol className="space-y-4 text-sm text-gray-600">
+          <ol className="space-y-4 text-sm text-[#425466]">
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">1</span>
               <div>
                 <p className="font-medium text-[#1e3a5f]">Compra tu dominio</p>
-                <p className="text-xs text-gray-500 mt-0.5">Puedes comprarlo en GoDaddy, Namecheap, Google Domains, etc.</p>
+                <p className="text-xs text-[#8898AA] mt-0.5">Puedes comprarlo en GoDaddy, Namecheap, Google Domains, etc.</p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">2</span>
               <div>
                 <p className="font-medium text-[#1e3a5f]">Ingresa tu dominio aquí</p>
-                <p className="text-xs text-gray-500 mt-0.5">Escribe tu dominio en el campo de arriba y guárdalo.</p>
+                <p className="text-xs text-[#8898AA] mt-0.5">Escribe tu dominio en el campo de arriba y guárdalo.</p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">3</span>
               <div>
                 <p className="font-medium text-[#1e3a5f]">Configura el DNS</p>
-                <p className="text-xs text-gray-500 mt-0.5">Agrega los registros DNS que aparecen en la tabla (se obtienen automáticamente de Vercel)</p>
+                <p className="text-xs text-[#8898AA] mt-0.5">Agrega los registros DNS que aparecen en la tabla (se obtienen automáticamente de Vercel)</p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 bg-[#f0f7ff] rounded-full flex items-center justify-center text-[#2d6cb5] font-semibold text-xs flex-shrink-0">4</span>
               <div>
                 <p className="font-medium text-[#1e3a5f]">Verifica el dominio</p>
-                <p className="text-xs text-gray-500 mt-0.5">Haz clic en "Verificar DNS" para confirmar que está configurado correctamente.</p>
+                <p className="text-xs text-[#8898AA] mt-0.5">Haz clic en "Verificar DNS" para confirmar que está configurado correctamente.</p>
               </div>
             </li>
           </ol>

@@ -341,18 +341,18 @@ export default function Account() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">{t('account.title')}</h1>
-        <p className="text-gray-600 mt-1">{t('account.subtitle')}</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('account.title')}</h1>
+        <p className="text-[#425466] mt-1">{t('account.subtitle')}</p>
       </div>
 
       <div className="space-y-6">
         {/* Personal Data */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[#1e3a5f] mb-4">{t('account.personal.title')}</h2>
 
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Avatar */}
-            <div className="flex items-center gap-4 sm:border-r sm:border-gray-200/60 sm:pr-6">
+            <div className="flex items-center gap-4 sm:border-r sm:border-[#E6EBF1] sm:pr-6">
               <div
                 onClick={() => avatarInputRef.current?.click()}
                 className="w-16 h-16 bg-[#1e3a5f] rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all flex items-center justify-center shadow-sm flex-shrink-0"
@@ -401,7 +401,7 @@ export default function Account() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder={t('account.personal.firstNamePlaceholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
               <div>
@@ -411,7 +411,7 @@ export default function Account() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder={t('account.personal.lastNamePlaceholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
               <div>
@@ -421,11 +421,11 @@ export default function Account() {
                     type="email"
                     value={firebaseUser?.email || ''}
                     disabled
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
+                    className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl bg-[#F6F9FC] text-[#8898AA] cursor-not-allowed text-sm"
                   />
                   <button
                     onClick={() => isGoogleUser ? setShowUnlinkGoogle(true) : setShowEmailForm(true)}
-                    className="px-3 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium flex-shrink-0"
+                    className="px-3 py-2.5 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium flex-shrink-0"
                     title={isGoogleUser ? t('account.security.unlinkGoogle') : t('account.security.changeEmail')}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -441,7 +441,7 @@ export default function Account() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder={t('account.personal.phonePlaceholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
             </div>
@@ -455,12 +455,12 @@ export default function Account() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  currentPlan === 'free' ? 'bg-gray-100'
+                  currentPlan === 'free' ? 'bg-[#F1F5F9]'
                   : currentPlan === 'pro' ? 'bg-[#1e3a5f]'
-                  : 'bg-gradient-to-br from-purple-500 to-purple-700'
+                  : 'bg-[#0284C7]'
                 }`}>
                   {currentPlan === 'free' ? (
-                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   ) : (
@@ -471,7 +471,7 @@ export default function Account() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-[11px] text-gray-400 uppercase tracking-wider">{t('plan.current')}</p>
+                    <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider">{t('plan.current')}</p>
                     {hasActiveSubscription && (
                       <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
                         {t('subscription.status.active')}
@@ -479,7 +479,7 @@ export default function Account() {
                     )}
                   </div>
                   <h2 className="text-lg font-semibold text-[#1e3a5f] truncate">{planInfo.name}</h2>
-                  <p className="text-xs text-gray-500 truncate">{t(`plan.${currentPlan}Description`)}</p>
+                  <p className="text-xs text-[#8898AA] truncate">{t(`plan.${currentPlan}Description`)}</p>
                 </div>
               </div>
               {!Capacitor.isNativePlatform() && (
@@ -493,13 +493,13 @@ export default function Account() {
             </div>
           )
           return Capacitor.isNativePlatform() ? (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-5 shadow-sm">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-5 shadow-sm">
               {PlanCardContent}
             </div>
           ) : (
             <Link
               to={localePath('/finance/subscription')}
-              className="block bg-white rounded-xl border border-gray-200/60 p-5 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all group"
+              className="block bg-white rounded-[14px] border border-[#E6EBF1] p-5 shadow-sm hover:shadow-sm hover:border-[#1e3a5f]/20 transition-all group"
             >
               {PlanCardContent}
             </Link>
@@ -508,17 +508,17 @@ export default function Account() {
 
 
         {/* Security & Danger Zone */}
-        <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-stretch gap-4">
             {/* Change Password */}
-            <div className="flex-1 sm:border-r sm:border-gray-200/60 sm:pr-6">
+            <div className="flex-1 sm:border-r sm:border-[#E6EBF1] sm:pr-6">
               {isGoogleUser ? (
                 <div>
                   <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">{t('account.security.googleAccount')}</p>
+                  <p className="text-sm text-[#8898AA] mt-0.5">{t('account.security.googleAccount')}</p>
                   <button
                     onClick={() => setShowUnlinkGoogle(true)}
-                    className="mt-3 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                    className="mt-3 px-4 py-2 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium"
                   >
                     {t('account.security.unlinkGoogle')}
                   </button>
@@ -526,10 +526,10 @@ export default function Account() {
               ) : !showPasswordForm ? (
                 <div>
                   <h3 className="font-medium text-[#1e3a5f]">{t('account.security.changePassword')}</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">{t('account.security.subtitle')}</p>
+                  <p className="text-sm text-[#8898AA] mt-0.5">{t('account.security.subtitle')}</p>
                   <button
                     onClick={() => setShowPasswordForm(true)}
-                    className="mt-3 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                    className="mt-3 px-4 py-2 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium"
                   >
                     {t('common.edit')}
                   </button>
@@ -543,21 +543,21 @@ export default function Account() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder={t('account.security.currentPassword')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                      className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                     />
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder={t('account.security.newPassword')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                      className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                     />
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder={t('account.security.confirmPassword')}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                      className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                     />
                     <div className="flex gap-2">
                       <button
@@ -574,7 +574,7 @@ export default function Account() {
                           setNewPassword('')
                           setConfirmPassword('')
                         }}
-                        className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                        className="px-4 py-2 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium"
                       >
                         {t('common.cancel')}
                       </button>
@@ -589,7 +589,7 @@ export default function Account() {
             {/* Delete Catalog */}
             <div className="flex-1">
               <h3 className="font-medium text-red-600">{t('account.danger.deleteCatalog')}</h3>
-              <p className="text-sm text-gray-500 mt-0.5">{t('account.danger.description')}</p>
+              <p className="text-sm text-[#8898AA] mt-0.5">{t('account.danger.description')}</p>
               <button
                 onClick={() => setShowDeleteCatalog(true)}
                 className="mt-3 px-4 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all text-sm font-medium"
@@ -631,7 +631,7 @@ export default function Account() {
               </div>
               <button
                 onClick={() => { setShowUnlinkGoogle(false); setUnlinkPassword(''); setUnlinkConfirmPassword('') }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+                className="p-2 text-[#A9B6C6] hover:text-[#425466] hover:bg-[#F1F5F9] rounded-xl transition-all"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -641,7 +641,7 @@ export default function Account() {
 
             {/* Body */}
             <div className="p-6 space-y-4">
-              <p className="text-sm text-gray-600">{t('account.security.unlinkGoogleDesc')}</p>
+              <p className="text-sm text-[#425466]">{t('account.security.unlinkGoogleDesc')}</p>
 
               {/* New password */}
               <div>
@@ -651,7 +651,7 @@ export default function Account() {
                   value={unlinkPassword}
                   onChange={(e) => setUnlinkPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                   autoFocus
                 />
               </div>
@@ -664,16 +664,16 @@ export default function Account() {
                   value={unlinkConfirmPassword}
                   onChange={(e) => setUnlinkConfirmPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
 
               {/* Info box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex gap-3">
-                <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-[#F0F9FF] border border-blue-200 rounded-xl p-3.5 flex gap-3">
+                <svg className="w-5 h-5 text-[#0284C7] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-xs text-blue-800">{t('account.security.unlinkGoogleHint')}</p>
+                <p className="text-xs text-[#075985]">{t('account.security.unlinkGoogleHint')}</p>
               </div>
             </div>
 
@@ -681,7 +681,7 @@ export default function Account() {
             <div className="flex gap-3 p-6 pt-0">
               <button
                 onClick={() => { setShowUnlinkGoogle(false); setUnlinkPassword(''); setUnlinkConfirmPassword('') }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                className="flex-1 px-4 py-2.5 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium"
               >
                 {t('common.cancel')}
               </button>
@@ -712,7 +712,7 @@ export default function Account() {
               </div>
               <button
                 onClick={() => { setShowDeleteCatalog(false); setDeleteConfirmText('') }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+                className="p-2 text-[#A9B6C6] hover:text-[#425466] hover:bg-[#F1F5F9] rounded-xl transition-all"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -720,7 +720,7 @@ export default function Account() {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm text-gray-600">{t('account.danger.deleteWarning')}</p>
+              <p className="text-sm text-[#425466]">{t('account.danger.deleteWarning')}</p>
               <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex gap-3">
                 <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -736,7 +736,7 @@ export default function Account() {
                   value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="ELIMINAR"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-300 focus:border-red-300 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:ring-2 focus:ring-red-300 focus:border-red-300 transition-all text-sm"
                   autoFocus
                 />
               </div>
@@ -744,7 +744,7 @@ export default function Account() {
             <div className="flex gap-3 p-6 pt-0">
               <button
                 onClick={() => { setShowDeleteCatalog(false); setDeleteConfirmText('') }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                className="flex-1 px-4 py-2.5 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium"
               >
                 {t('common.cancel')}
               </button>
@@ -776,7 +776,7 @@ export default function Account() {
               </div>
               <button
                 onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailPassword('') }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+                className="p-2 text-[#A9B6C6] hover:text-[#425466] hover:bg-[#F1F5F9] rounded-xl transition-all"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -788,7 +788,7 @@ export default function Account() {
             <div className="p-6 space-y-4">
               {/* Current email */}
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">{t('account.security.currentEmail')}</label>
+                <label className="block text-sm font-medium text-[#8898AA] mb-1">{t('account.security.currentEmail')}</label>
                 <p className="text-sm font-medium text-[#1e3a5f]">{firebaseUser?.email}</p>
               </div>
 
@@ -800,7 +800,7 @@ export default function Account() {
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="nuevo@correo.com"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                   autoFocus
                 />
               </div>
@@ -813,7 +813,7 @@ export default function Account() {
                   value={emailPassword}
                   onChange={(e) => setEmailPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all text-sm"
                 />
               </div>
 
@@ -833,7 +833,7 @@ export default function Account() {
             <div className="flex gap-3 p-6 pt-0">
               <button
                 onClick={() => { setShowEmailForm(false); setNewEmail(''); setEmailPassword('') }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-medium"
+                className="flex-1 px-4 py-2.5 border border-[#E6EBF1] text-[#425466] rounded-xl hover:bg-[#F6F9FC] transition-all text-sm font-medium"
               >
                 {t('common.cancel')}
               </button>

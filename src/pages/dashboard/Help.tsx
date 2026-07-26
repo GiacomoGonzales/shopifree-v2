@@ -143,7 +143,7 @@ export default function Help() {
         <h1 className="text-2xl font-bold text-[#1e3a5f]">
           {lang === 'en' ? 'Help & FAQs' : 'Ayuda y preguntas frecuentes'}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[#8898AA] mt-1">
           {lang === 'en'
             ? 'Quick answers to the most common questions, written from real merchant feedback.'
             : 'Respuestas rápidas a las dudas más frecuentes, escritas a partir del feedback real de comerciantes.'}
@@ -155,12 +155,12 @@ export default function Help() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={lang === 'en' ? 'Search…' : 'Buscar…'}
-        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
       />
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-12">
+          <p className="text-sm text-[#8898AA] text-center py-12">
             {lang === 'en' ? 'No results.' : 'Sin resultados.'}
           </p>
         ) : (
@@ -168,15 +168,15 @@ export default function Help() {
             <details
               key={faq.id}
               id={faq.id}
-              className="group bg-white border border-gray-200/60 rounded-xl overflow-hidden open:shadow-sm transition-shadow"
+              className="group bg-white border border-[#E6EBF1] rounded-xl overflow-hidden open:shadow-sm transition-shadow"
             >
-              <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+              <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between hover:bg-[#F6F9FC]/50 transition-colors">
                 <span className="text-sm font-medium text-[#1e3a5f]">{faq.q}</span>
-                <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180 flex-shrink-0 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-[#A9B6C6] transition-transform group-open:rotate-180 flex-shrink-0 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
-              <div className="px-5 pb-5 pt-1 text-sm text-gray-700 leading-relaxed">
+              <div className="px-5 pb-5 pt-1 text-sm text-[#425466] leading-relaxed">
                 {faq.a}
               </div>
             </details>
@@ -184,7 +184,7 @@ export default function Help() {
         )}
       </div>
 
-      <footer className="pt-6 border-t border-gray-100 text-sm text-gray-500">
+      <footer className="pt-6 border-t border-[#EEF2F6] text-sm text-[#8898AA]">
         {lang === 'en' ? '¿' : ''}
         {lang === 'en'
           ? "Couldn't find what you needed? Reach out via "

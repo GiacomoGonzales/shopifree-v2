@@ -32,7 +32,7 @@ export default function MoreMenu() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      color: 'from-blue-400 to-blue-600',
+      color: 'from-[#38bdf8] to-[#0284C7]',
     },
     ...(isAdmin ? [{
       name: t('nav.analytics'),
@@ -63,7 +63,7 @@ export default function MoreMenu() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
-      color: 'from-gray-500 to-gray-700',
+      color: 'from-[#F6F9FC]0 to-gray-700',
     },
     {
       name: t('nav.payments'),
@@ -115,12 +115,12 @@ export default function MoreMenu() {
           <Link
             key={item.name}
             to={item.href}
-            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-gray-200/60 shadow-sm active:scale-95 transition-all"
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm active:scale-95 transition-all"
           >
             <div className={`w-11 h-11 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center text-white shadow-sm`}>
               {item.icon}
             </div>
-            <span className="text-xs font-medium text-gray-700 text-center leading-tight">{item.name}</span>
+            <span className="text-xs font-medium text-[#425466] text-center leading-tight">{item.name}</span>
           </Link>
         ))}
       </div>
@@ -131,7 +131,7 @@ export default function MoreMenu() {
           to={localePath('/admin')}
           className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200/50 active:bg-amber-100 transition-all"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 bg-[#D97706] rounded-xl flex items-center justify-center shadow-sm">
             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
           </div>
           <div className="flex-1">
@@ -148,7 +148,7 @@ export default function MoreMenu() {
       {!Capacitor.isNativePlatform() && (store?.plan === 'free' || !store?.plan) && (
         <Link
           to={localePath('/dashboard/plan')}
-          className="flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-[#f0f7ff] to-white border border-[#38bdf8]/20 active:opacity-80 transition-all"
+          className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#F0F9FF] border border-[#38bdf8]/20 active:opacity-80 transition-all"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center shadow-sm">
@@ -158,17 +158,17 @@ export default function MoreMenu() {
             </div>
             <div>
               <span className="text-sm font-semibold text-[#1e3a5f]">{t('plan.viewPlans')}</span>
-              <p className="text-xs text-gray-500">{t('plan.freeDescription')}</p>
+              <p className="text-xs text-[#8898AA]">{t('plan.freeDescription')}</p>
             </div>
           </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>
       )}
 
       {/* User profile + logout */}
-      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm p-4">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm p-4">
         <div className="flex items-center gap-3">
           {user?.avatar ? (
             <img src={user.avatar} alt={user.firstName || user.email} className="w-12 h-12 rounded-xl object-cover" />
@@ -180,23 +180,20 @@ export default function MoreMenu() {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
+            <p className="text-sm font-semibold text-[#1e3a5f] truncate">
               {user?.firstName && user?.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : user?.firstName || user?.email
               }
             </p>
-            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+            <p className="text-xs text-[#A9B6C6] truncate">{user?.email}</p>
           </div>
         </div>
         <button
           onClick={logout}
           className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 bg-red-50 active:bg-red-100 transition-all"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          {t('nav.logout')}
+{t('nav.logout')}
         </button>
       </div>
     </div>

@@ -744,18 +744,18 @@ export default function Dropshipping() {
           {(selectedProduct || pfProduct || activeProvider) && (
             <button
               onClick={() => selectedProduct ? goBack() : pfProduct ? pfGoBack() : setActiveProvider(null)}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-2 hover:bg-[#F1F5F9] rounded-xl transition-colors"
             >
-              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-[#8898AA]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
           )}
           <div>
-            <h1 className="text-xl sm:text-xl font-semibold text-gray-900">
+            <h1 className="text-xl sm:text-xl font-semibold text-[#1e3a5f]">
               {(selectedProduct || pfProduct) ? 'Importar producto' : activeProvider ? PROVIDERS.find(p => p.id === activeProvider)?.name || 'Dropshipping' : 'Dropshipping'}
             </h1>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-[#A9B6C6]">
               {(selectedProduct || pfProduct)
                 ? (pfProduct ? 'Sube tu diseño, ajusta nombre y precio' : 'Ajusta nombre y precio antes de importar')
                 : activeProvider
@@ -766,7 +766,7 @@ export default function Dropshipping() {
         </div>
         <button
           onClick={() => navigate(localePath('/dashboard/products'))}
-          className="w-full sm:w-auto px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-50 sm:bg-transparent hover:bg-gray-100 rounded-xl transition-colors font-medium"
+          className="w-full sm:w-auto px-4 py-2.5 text-sm text-[#8898AA] hover:text-[#425466] bg-[#F6F9FC] sm:bg-transparent hover:bg-[#F1F5F9] rounded-xl transition-colors font-medium"
         >
           Mis productos
         </button>
@@ -776,7 +776,7 @@ export default function Dropshipping() {
       {activeProvider === 'printful' && pfProduct ? (
         <div className="max-w-2xl space-y-5">
           {/* Product preview */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
               <img
                 src={pfMockupUrl || pfProduct.product.image}
@@ -784,14 +784,14 @@ export default function Dropshipping() {
                 className="w-full sm:w-40 h-48 sm:h-40 object-cover rounded-xl ring-1 ring-black/5 shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{pfProduct.product.title}</h2>
-                <p className="text-xs text-gray-400 mb-1">{pfProduct.product.brand} - {pfProduct.product.model}</p>
-                <p className="text-xs text-gray-400">{pfProduct.variants.length} variantes disponibles</p>
+                <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-1">{pfProduct.product.title}</h2>
+                <p className="text-xs text-[#A9B6C6] mb-1">{pfProduct.product.brand} - {pfProduct.product.model}</p>
+                <p className="text-xs text-[#A9B6C6]">{pfProduct.variants.length} variantes disponibles</p>
                 {pfProduct.variants.length > 0 && (
                   <p className="text-sm font-bold text-red-600 mt-2">
                     Costo desde ${Math.min(...pfProduct.variants.map(v => v.price)).toFixed(2)} USD
                     {currency !== 'USD' && (
-                      <span className="text-xs font-medium text-gray-400 ml-2">
+                      <span className="text-xs font-medium text-[#A9B6C6] ml-2">
                         ({getCurrencySymbol(currency)}{Math.ceil(Math.min(...pfProduct.variants.map(v => v.price)) * rate)} {currency})
                       </span>
                     )}
@@ -802,11 +802,11 @@ export default function Dropshipping() {
           </div>
 
           {/* Design upload */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Tu diseño</h3>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-[#1e3a5f]">Tu diseño</h3>
             {pfProduct.product.files?.length > 1 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Ubicacion del diseño</label>
+                <label className="block text-sm font-medium text-[#425466] mb-1.5">Ubicacion del diseño</label>
                 <div className="flex gap-2 flex-wrap">
                   {pfProduct.product.files.map((f: any) => (
                     <button
@@ -815,7 +815,7 @@ export default function Dropshipping() {
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         pfDesignPlacement === (f.type || f.id)
                           ? 'bg-green-600 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-[#F1F5F9] text-[#425466] hover:bg-[#E1E8EF]'
                       }`}
                     >
                       {f.title || f.type}
@@ -838,10 +838,10 @@ export default function Dropshipping() {
             {pfDesignUrl && !pfDesignUploading && !pfMockupLoading ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <img src={pfDesignUrl} alt="Diseño" className="w-16 h-16 object-contain rounded-lg ring-1 ring-black/5 bg-gray-50" />
+                  <img src={pfDesignUrl} alt="Diseño" className="w-16 h-16 object-contain rounded-lg ring-1 ring-black/5 bg-[#F6F9FC]" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">Diseño subido</p>
-                    <p className="text-xs text-gray-400 truncate">{pfDesignUrl.split('/').pop()?.split('?')[0]}</p>
+                    <p className="text-sm font-medium text-[#1e3a5f]">Diseño subido</p>
+                    <p className="text-xs text-[#A9B6C6] truncate">{pfDesignUrl.split('/').pop()?.split('?')[0]}</p>
                   </div>
                   <button
                     onClick={() => pfFileInputRef.current?.click()}
@@ -852,7 +852,7 @@ export default function Dropshipping() {
                 </div>
                 {pfMockupUrl ? (
                   <div>
-                    <p className="text-xs font-medium text-gray-700 mb-2">Mockup generado</p>
+                    <p className="text-xs font-medium text-[#425466] mb-2">Mockup generado</p>
                     <img src={pfMockupUrl} alt="Mockup" className="w-full max-w-xs rounded-xl ring-1 ring-black/5" />
                     <button
                       onClick={pfGenerateMockup}
@@ -866,37 +866,37 @@ export default function Dropshipping() {
             ) : (pfDesignUploading || pfMockupLoading) ? (
               <div className="flex items-center justify-center gap-3 py-8">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-[#425466]">
                   {pfDesignUploading ? 'Subiendo diseño...' : 'Generando mockup...'}
                 </span>
               </div>
             ) : (
               <button
                 onClick={() => pfFileInputRef.current?.click()}
-                className="w-full py-8 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50/50 transition-all flex flex-col items-center gap-2 group"
+                className="w-full py-8 border-2 border-dashed border-[#E6EBF1] rounded-xl hover:border-green-300 hover:bg-green-50/50 transition-all flex flex-col items-center gap-2 group"
               >
-                <svg className="w-8 h-8 text-gray-300 group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-8 h-8 text-[#C3CFDB] group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-sm font-medium text-gray-500 group-hover:text-green-600">Sube tu diseño</span>
-                <span className="text-xs text-gray-400">PNG, JPG o PDF — minimo 150 DPI</span>
+                <span className="text-sm font-medium text-[#8898AA] group-hover:text-green-600">Sube tu diseño</span>
+                <span className="text-xs text-[#A9B6C6]">PNG, JPG o PDF — minimo 150 DPI</span>
               </button>
             )}
           </div>
 
           {/* Edit fields */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-4">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre del producto</label>
+              <label className="block text-sm font-medium text-[#425466] mb-1.5">Nombre del producto</label>
               <input
                 type="text"
                 value={pfImportName}
                 onChange={e => setPfImportName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-[#425466] mb-1.5">
                 Precio de venta ({currency})
               </label>
               <input
@@ -904,14 +904,14 @@ export default function Dropshipping() {
                 step="0.01"
                 value={pfImportPrice}
                 onChange={e => setPfImportPrice(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm"
               />
               {pfImportPrice && pfProduct.variants.length > 0 && (() => {
                 const avgCost = pfProduct.variants.reduce((a, b) => a + b.price, 0) / pfProduct.variants.length
                 const costInLocal = avgCost * rate
                 const profit = parseFloat(pfImportPrice) - costInLocal
                 return (
-                  <p className="text-xs text-gray-400 mt-1.5">
+                  <p className="text-xs text-[#A9B6C6] mt-1.5">
                     Ganancia estimada: <span className={`font-medium ${profit > 0 ? 'text-green-600' : 'text-red-500'}`}>
                       {getCurrencySymbol(currency)}{profit.toFixed(2)} {currency}
                     </span>
@@ -922,11 +922,11 @@ export default function Dropshipping() {
             </div>
             {categories.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Categoria</label>
+                <label className="block text-sm font-medium text-[#425466] mb-1.5">Categoria</label>
                 <select
                   value={selectedCategoryId}
                   onChange={e => setSelectedCategoryId(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm bg-white"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-sm bg-white"
                 >
                   <option value="">Sin categoria</option>
                   {categories.map(cat => (
@@ -947,9 +947,9 @@ export default function Dropshipping() {
               if (v.size) sizes.add(v.size)
             }
             return (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-3">
+              <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">Variantes</p>
+                  <p className="text-sm font-semibold text-[#1e3a5f]">Variantes</p>
                   <button
                     onClick={() => {
                       if (pfSelectedVariants.length === pfProduct!.variants.length) {
@@ -965,12 +965,12 @@ export default function Dropshipping() {
                 </div>
                 {colors.size > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1.5">Colores ({colors.size})</p>
+                    <p className="text-xs font-medium text-[#8898AA] mb-1.5">Colores ({colors.size})</p>
                     <div className="flex gap-2 flex-wrap">
                       {Array.from(colors.entries()).map(([color, info]) => (
-                        <span key={color} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg text-xs">
+                        <span key={color} className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F6F9FC] rounded-lg text-xs">
                           <span
-                            className="w-3 h-3 rounded-full border border-gray-200"
+                            className="w-3 h-3 rounded-full border border-[#E6EBF1]"
                             style={{ backgroundColor: info.code || '#ccc' }}
                           />
                           {color}
@@ -981,7 +981,7 @@ export default function Dropshipping() {
                 )}
                 {sizes.size > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1.5">Tallas ({sizes.size})</p>
+                    <p className="text-xs font-medium text-[#8898AA] mb-1.5">Tallas ({sizes.size})</p>
                     <div className="flex gap-2 flex-wrap">
                       {Array.from(sizes).map(size => (
                         <span key={size} className="px-2.5 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-medium">{size}</span>
@@ -989,19 +989,16 @@ export default function Dropshipping() {
                     </div>
                   </div>
                 )}
-                <p className="text-xs text-gray-400">{pfSelectedVariants.length} de {pfProduct.variants.length} variantes seleccionadas</p>
+                <p className="text-xs text-[#A9B6C6]">{pfSelectedVariants.length} de {pfProduct.variants.length} variantes seleccionadas</p>
               </div>
             )
           })()}
 
           {/* Shipping estimation */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+          <div className="bg-[#F0FDF4] border border-green-200 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold text-green-900 flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                Envio Printful a {store?.location?.country || '?'}
+Envio Printful a {store?.location?.country || '?'}
               </p>
               {!pfShippingLoading && pfShippingRates.length === 0 && pfSelectedVariants.length > 0 && (
                 <button
@@ -1021,12 +1018,12 @@ export default function Dropshipping() {
               <div className="space-y-1.5">
                 {pfShippingRates.map((r, i) => (
                   <div key={i} className="flex items-center justify-between bg-white/70 rounded-lg px-3 py-2 text-xs">
-                    <span className="font-medium text-gray-700">{r.name}</span>
-                    <span className="text-gray-400">{r.minDeliveryDays}-{r.maxDeliveryDays} dias</span>
+                    <span className="font-medium text-[#425466]">{r.name}</span>
+                    <span className="text-[#A9B6C6]">{r.minDeliveryDays}-{r.maxDeliveryDays} dias</span>
                     <span className="font-bold text-green-700">
                       ${r.rate.toFixed(2)} {r.currency}
                       {currency !== 'USD' && r.currency === 'USD' && (
-                        <span className="font-normal text-gray-400 ml-1">
+                        <span className="font-normal text-[#A9B6C6] ml-1">
                           ({getCurrencySymbol(currency)}{Math.ceil(r.rate * rate)})
                         </span>
                       )}
@@ -1041,13 +1038,13 @@ export default function Dropshipping() {
 
           {/* Import button or prompts */}
           {!isBusiness ? (
-            <div className="bg-gray-50 rounded-xl p-5 text-center space-y-3">
-              <p className="text-sm font-medium text-gray-900">Importar productos requiere el plan Business</p>
-              <p className="text-xs text-gray-500">Explora el catalogo. Para importar, actualiza a Business.</p>
+            <div className="bg-[#F6F9FC] rounded-xl p-5 text-center space-y-3">
+              <p className="text-sm font-medium text-[#1e3a5f]">Importar productos requiere el plan Business</p>
+              <p className="text-xs text-[#8898AA]">Explora el catalogo. Para importar, actualiza a Business.</p>
               {!Capacitor.isNativePlatform() && (
                 <Link
                   to={localePath('/dashboard/plan')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1e3a5f] text-white rounded-xl text-sm font-semibold hover:bg-[#1e3a5f] transition-all"
                 >
                   Ver planes
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1103,7 +1100,7 @@ export default function Dropshipping() {
               value={pfCatalogSearch}
               onChange={e => setPfCatalogSearch(e.target.value)}
               placeholder="Filtrar catalogo (ej: t-shirt, mug, poster)..."
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-base sm:text-sm"
+              className="flex-1 px-4 py-3 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 text-base sm:text-sm"
             />
           </div>
 
@@ -1114,15 +1111,15 @@ export default function Dropshipping() {
             </div>
           ) : pfFilteredCatalog.length > 0 ? (
             <>
-              <p className="text-sm text-gray-400">{pfFilteredCatalog.length} productos en catalogo</p>
+              <p className="text-sm text-[#A9B6C6]">{pfFilteredCatalog.length} productos en catalogo</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {pfFilteredCatalog.map(product => (
                   <button
                     key={product.id}
                     onClick={() => pfViewProduct(product.id)}
-                    className="bg-white border border-gray-200/60 rounded-xl overflow-hidden hover:shadow-lg hover:border-green-200 transition-all text-left group"
+                    className="bg-white border border-[#E6EBF1] rounded-xl overflow-hidden hover:shadow-sm hover:border-green-200 transition-all text-left group"
                   >
-                    <div className="aspect-square bg-gray-50">
+                    <div className="aspect-square bg-[#F6F9FC]">
                       <img
                         src={product.image}
                         alt={product.title}
@@ -1131,8 +1128,8 @@ export default function Dropshipping() {
                       />
                     </div>
                     <div className="p-2.5">
-                      <p className="text-xs text-gray-700 font-medium line-clamp-2 leading-tight">{product.title}</p>
-                      <p className="text-xs text-gray-400 mt-1">{product.variantCount} variantes</p>
+                      <p className="text-xs text-[#425466] font-medium line-clamp-2 leading-tight">{product.title}</p>
+                      <p className="text-xs text-[#A9B6C6] mt-1">{product.variantCount} variantes</p>
                     </div>
                   </button>
                 ))}
@@ -1140,7 +1137,7 @@ export default function Dropshipping() {
             </>
           ) : pfCatalogSearch ? (
             <div className="text-center py-20">
-              <p className="text-gray-400">No se encontraron productos para "{pfCatalogSearch}"</p>
+              <p className="text-[#A9B6C6]">No se encontraron productos para "{pfCatalogSearch}"</p>
             </div>
           ) : null}
 
@@ -1149,7 +1146,7 @@ export default function Dropshipping() {
             <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-xl shadow-xl flex items-center gap-3">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
-                <span className="text-sm text-gray-600">Cargando producto...</span>
+                <span className="text-sm text-[#425466]">Cargando producto...</span>
               </div>
             </div>
           )}
@@ -1165,12 +1162,12 @@ export default function Dropshipping() {
               disabled={!provider.active}
               className={`relative flex flex-col items-center text-center rounded-xl border p-6 transition-all ${
                 provider.active
-                  ? 'border-gray-200 hover:border-blue-300 hover:shadow-lg cursor-pointer bg-white'
-                  : 'border-gray-200/60 bg-gray-50/50 cursor-default'
+                  ? 'border-[#E6EBF1] hover:border-blue-300 hover:shadow-sm cursor-pointer bg-white'
+                  : 'border-[#E6EBF1] bg-[#F6F9FC]/50 cursor-default'
               }`}
             >
               {!provider.active && (
-                <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-gray-200 text-gray-400 text-[10px] font-medium rounded-full">
+                <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-[#E1E8EF] text-[#A9B6C6] text-[10px] font-medium rounded-full">
                   Pronto
                 </span>
               )}
@@ -1178,12 +1175,12 @@ export default function Dropshipping() {
                 src={provider.logo}
                 alt={provider.name}
                 className={`w-14 h-14 object-contain rounded-xl mb-3 ${!provider.active ? 'opacity-40 grayscale' : ''}`}
-                onError={e => { (e.target as HTMLImageElement).src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><rect width="56" height="56" rx="12" fill="%23f3f4f6"/><text x="28" y="34" text-anchor="middle" font-size="20" fill="%239ca3af">${provider.name[0]}</text></svg>` }}
+                onError={e => { (e.target as HTMLImageElement).src = `data:image/svg+xml,` }}
               />
-              <h3 className={`font-semibold text-sm ${provider.active ? 'text-gray-900' : 'text-gray-400'}`}>{provider.name}</h3>
-              <p className={`text-xs mt-1 leading-relaxed ${provider.active ? 'text-gray-400' : 'text-gray-300'}`}>{provider.description}</p>
+              <h3 className={`font-semibold text-sm ${provider.active ? 'text-[#1e3a5f]' : 'text-[#A9B6C6]'}`}>{provider.name}</h3>
+              <p className={`text-xs mt-1 leading-relaxed ${provider.active ? 'text-[#A9B6C6]' : 'text-[#C3CFDB]'}`}>{provider.description}</p>
               {provider.active && (
-                <div className="mt-3 text-xs font-semibold text-blue-600">
+                <div className="mt-3 text-xs font-semibold text-[#0284C7]">
                   Explorar →
                 </div>
               )}
@@ -1194,7 +1191,7 @@ export default function Dropshipping() {
         /* === DETAIL / IMPORT VIEW === */
         <div className="max-w-2xl space-y-5">
           {/* Product preview */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
               <img
                 src={selectedProduct.image}
@@ -1202,12 +1199,12 @@ export default function Dropshipping() {
                 className="w-full sm:w-40 h-48 sm:h-40 object-cover rounded-xl ring-1 ring-black/5 shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{selectedProduct.name}</h2>
-                <p className="text-xs text-gray-400 mb-1">Precio CJ (costo)</p>
+                <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2">{selectedProduct.name}</h2>
+                <p className="text-xs text-[#A9B6C6] mb-1">Precio CJ (costo)</p>
                 <p className="text-xl font-bold text-red-600">
                   ${selectedProduct.sellPrice} USD
                   {currency !== 'USD' && (
-                    <span className="text-sm font-medium text-gray-400 ml-2">
+                    <span className="text-sm font-medium text-[#A9B6C6] ml-2">
                       ({getCurrencySymbol(currency)}{Math.ceil(selectedProduct.sellPrice * rate)} {currency})
                     </span>
                   )}
@@ -1224,10 +1221,10 @@ export default function Dropshipping() {
           </div>
 
           {/* Edit fields */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-4">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 space-y-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-gray-700">Nombre del producto</label>
+                <label className="text-sm font-medium text-[#425466]">Nombre del producto</label>
                 {!translatingName && (
                   <button
                     onClick={async () => {
@@ -1239,15 +1236,15 @@ export default function Dropshipping() {
                       } catch { /* silent */ }
                       finally { setTranslatingName(false) }
                     }}
-                    className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
+                    className="text-xs text-[#0284C7] hover:text-[#0369A1] font-medium transition-colors"
                   >
                     Traducir
                   </button>
                 )}
                 {translatingName && (
                   <div className="flex items-center gap-1.5">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
-                    <span className="text-xs text-blue-400">Traduciendo...</span>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#0284C7]"></div>
+                    <span className="text-xs text-[#38bdf8]">Traduciendo...</span>
                   </div>
                 )}
               </div>
@@ -1255,11 +1252,11 @@ export default function Dropshipping() {
                 type="text"
                 value={importName}
                 onChange={e => setImportName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-[#425466] mb-1.5">
                 Precio de venta ({currency})
               </label>
               <input
@@ -1267,13 +1264,13 @@ export default function Dropshipping() {
                 step="0.01"
                 value={importPrice}
                 onChange={e => setImportPrice(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
+                className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
               />
               {importPrice && selectedProduct.sellPrice && (() => {
                 const costInLocal = selectedProduct.sellPrice * rate
                 const profit = parseFloat(importPrice) - costInLocal
                 return (
-                  <p className="text-xs text-gray-400 mt-1.5">
+                  <p className="text-xs text-[#A9B6C6] mt-1.5">
                     Ganancia estimada: <span className={`font-medium ${profit > 0 ? 'text-green-600' : 'text-red-500'}`}>
                       {getCurrencySymbol(currency)}{profit.toFixed(2)} {currency}
                     </span>
@@ -1284,11 +1281,11 @@ export default function Dropshipping() {
             </div>
             {categories.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Categoria</label>
+                <label className="block text-sm font-medium text-[#425466] mb-1.5">Categoria</label>
                 <select
                   value={selectedCategoryId}
                   onChange={e => setSelectedCategoryId(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm bg-white"
+                  className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm bg-white"
                 >
                   <option value="">Sin categoria</option>
                   {categories.map(cat => (
@@ -1302,41 +1299,38 @@ export default function Dropshipping() {
           {/* Product details */}
           <div className="flex flex-wrap gap-3 text-xs">
             {selectedProduct.sku && (
-              <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-500">SKU: {selectedProduct.sku}</span>
+              <span className="px-2.5 py-1 bg-[#F1F5F9] rounded-lg text-[#8898AA]">SKU: {selectedProduct.sku}</span>
             )}
             {selectedProduct.weight && selectedProduct.weight > 0 && (
-              <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-500">Peso: {selectedProduct.weight}g</span>
+              <span className="px-2.5 py-1 bg-[#F1F5F9] rounded-lg text-[#8898AA]">Peso: {selectedProduct.weight}g</span>
             )}
             {selectedProduct.materials && selectedProduct.materials.length > 0 && (
-              <span className="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-500">Material: {selectedProduct.materials.join(', ')}</span>
+              <span className="px-2.5 py-1 bg-[#F1F5F9] rounded-lg text-[#8898AA]">Material: {selectedProduct.materials.join(', ')}</span>
             )}
           </div>
 
           {/* CJ Shipping estimation */}
           {(freightLoading || freightOptions.length > 0) && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
-              <p className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                Envio CJ a {store?.location?.country || '?'}
+            <div className="bg-gradient-to-r from-[#F0F9FF] to-indigo-50 border border-blue-200 rounded-xl p-4">
+              <p className="text-sm font-semibold text-[#0C4A6E] mb-2 flex items-center gap-1.5">
+Envio CJ a {store?.location?.country || '?'}
               </p>
               {freightLoading ? (
                 <div className="flex items-center gap-2 py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                  <span className="text-xs text-blue-600">Calculando envio...</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#0284C7]"></div>
+                  <span className="text-xs text-[#0284C7]">Calculando envio...</span>
                 </div>
               ) : (
                 <>
                   <div className="space-y-1.5">
                     {freightOptions.map((opt, i) => (
                       <div key={i} className="flex items-center justify-between bg-white/70 rounded-lg px-3 py-2 text-xs">
-                        <span className="font-medium text-gray-700">{opt.carrier}</span>
-                        <span className="text-gray-400">{opt.days}</span>
-                        <span className="font-bold text-blue-700">
+                        <span className="font-medium text-[#425466]">{opt.carrier}</span>
+                        <span className="text-[#A9B6C6]">{opt.days}</span>
+                        <span className="font-bold text-[#0369A1]">
                           ${opt.costUSD.toFixed(2)} USD
                           {currency !== 'USD' && (
-                            <span className="font-normal text-gray-400 ml-1">
+                            <span className="font-normal text-[#A9B6C6] ml-1">
                               ({getCurrencySymbol(currency)}{Math.ceil(opt.costUSD * rate)})
                             </span>
                           )}
@@ -1344,10 +1338,10 @@ export default function Dropshipping() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-blue-600 mt-2">
+                  <p className="text-xs text-[#0284C7] mt-2">
                     Incluye este costo en tu precio de envio al cliente
                     {selectedProduct.variants.length > 1 && (
-                      <span className="block text-blue-400 mt-0.5">
+                      <span className="block text-[#38bdf8] mt-0.5">
                         Estimado para la variante mas pesada — puede variar
                       </span>
                     )}
@@ -1368,29 +1362,29 @@ export default function Dropshipping() {
               })
             }
             return (
-              <div className="bg-white rounded-xl border border-gray-200/60 p-6 space-y-3">
+              <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 space-y-3">
                 {selectedProduct.variantKeyNames.map(name => (
                   groups[name].size > 0 && (
                     <div key={name}>
-                      <p className="text-sm font-medium text-gray-700 mb-1.5">{name} ({groups[name].size})</p>
+                      <p className="text-sm font-medium text-[#425466] mb-1.5">{name} ({groups[name].size})</p>
                       <div className="flex gap-2 flex-wrap">
                         {Array.from(groups[name]).map(val => (
-                          <span key={val} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">{val}</span>
+                          <span key={val} className="px-2.5 py-1 bg-[#F0F9FF] text-[#0369A1] rounded-lg text-xs font-medium">{val}</span>
                         ))}
                       </div>
                     </div>
                   )
                 ))}
-                <p className="text-xs text-gray-400">{selectedProduct.variants.length} combinaciones totales</p>
+                <p className="text-xs text-[#A9B6C6]">{selectedProduct.variants.length} combinaciones totales</p>
               </div>
             )
           })()}
 
           {/* Description */}
           {selectedProduct.description && (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-700">Descripcion</p>
+                <p className="text-sm font-medium text-[#425466]">Descripcion</p>
                 {!translatedDesc && !translating && (
                   <button
                     onClick={async () => {
@@ -1402,28 +1396,28 @@ export default function Dropshipping() {
                       } catch { /* silent */ }
                       finally { setTranslating(false) }
                     }}
-                    className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
+                    className="text-xs text-[#0284C7] hover:text-[#0369A1] font-medium transition-colors"
                   >
                     Traducir
                   </button>
                 )}
                 {translating && (
                   <div className="flex items-center gap-1.5">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
-                    <span className="text-xs text-blue-400">Traduciendo...</span>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#0284C7]"></div>
+                    <span className="text-xs text-[#38bdf8]">Traduciendo...</span>
                   </div>
                 )}
                 {translatedDesc && (
                   <button
                     onClick={() => setTranslatedDesc('')}
-                    className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
+                    className="text-xs text-[#A9B6C6] hover:text-[#425466] font-medium transition-colors"
                   >
                     Ver original
                   </button>
                 )}
               </div>
               <div
-                className="text-xs text-gray-500 max-h-48 overflow-y-auto prose prose-xs"
+                className="text-xs text-[#8898AA] max-h-48 overflow-y-auto prose prose-xs"
                 dangerouslySetInnerHTML={{ __html: translatedDesc || selectedProduct.description }}
               />
             </div>
@@ -1431,17 +1425,17 @@ export default function Dropshipping() {
 
           {/* Import button or upgrade prompt */}
           {!isBusiness ? (
-            <div className="bg-gray-50 rounded-xl p-5 text-center space-y-3">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="bg-[#F6F9FC] rounded-xl p-5 text-center space-y-3">
+              <p className="text-sm font-medium text-[#1e3a5f]">
                 Importar productos requiere el plan Business
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#8898AA]">
                 Explora todos los productos que quieras. Para importarlos a tu tienda, actualiza a Business.
               </p>
               {!Capacitor.isNativePlatform() && (
                 <Link
                   to={localePath('/dashboard/plan')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1e3a5f] text-white rounded-xl text-sm font-semibold hover:bg-[#1e3a5f] transition-all"
                 >
                   Ver planes
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1454,7 +1448,7 @@ export default function Dropshipping() {
             <button
               onClick={importProduct}
               disabled={importing || !importName.trim() || !importPrice}
-              className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#1e3a5f] text-white rounded-xl font-semibold hover:bg-[#1e3a5f] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
             >
               {importing ? (
                 <>
@@ -1500,7 +1494,7 @@ export default function Dropshipping() {
               value={keyword}
               onChange={e => { setKeyword(e.target.value); if (activeCategory) setActiveCategory('') }}
               placeholder="Buscar productos (ej: camiseta, reloj, funda)..."
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-base sm:text-sm"
+              className="flex-1 px-4 py-3 border border-[#E6EBF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-base sm:text-sm"
             />
             <button
               type="submit"
@@ -1519,8 +1513,8 @@ export default function Dropshipping() {
                 onClick={() => browseCategory(cat)}
                 className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
                   activeCategory === cat.keyword
-                    ? 'bg-[#1e3a5f] text-white shadow-md'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600'
+                    ? 'bg-[#1e3a5f] text-white shadow-sm'
+                    : 'bg-white border border-[#E6EBF1] text-[#425466] hover:border-blue-300 hover:text-[#0284C7]'
                 }`}
               >
                 {cat.label}
@@ -1535,15 +1529,15 @@ export default function Dropshipping() {
             </div>
           ) : showingProducts.length > 0 ? (
             <>
-              <p className="text-sm text-gray-400">{showingLabel}</p>
+              <p className="text-sm text-[#A9B6C6]">{showingLabel}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {showingProducts.map(product => (
                   <button
                     key={product.pid}
                     onClick={() => viewDetail(product.pid)}
-                    className="bg-white border border-gray-200/60 rounded-xl overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all text-left group"
+                    className="bg-white border border-[#E6EBF1] rounded-xl overflow-hidden hover:shadow-sm hover:border-blue-200 transition-all text-left group"
                   >
-                    <div className="aspect-square bg-gray-50">
+                    <div className="aspect-square bg-[#F6F9FC]">
                       <img
                         src={product.image}
                         alt={product.name}
@@ -1552,7 +1546,7 @@ export default function Dropshipping() {
                       />
                     </div>
                     <div className="p-2.5">
-                      <p className="text-xs text-gray-700 font-medium line-clamp-2 leading-tight">
+                      <p className="text-xs text-[#425466] font-medium line-clamp-2 leading-tight">
                         {product.name}
                       </p>
                       <p className="text-sm font-bold text-[#1e3a5f] mt-1">
@@ -1569,15 +1563,15 @@ export default function Dropshipping() {
                   <button
                     onClick={() => search(page - 1)}
                     disabled={page <= 1}
-                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                    className="px-3 py-1.5 text-sm rounded-lg border border-[#E6EBF1] hover:bg-[#F6F9FC] disabled:opacity-30 transition-colors"
                   >
                     Anterior
                   </button>
-                  <span className="text-sm text-gray-500">{page} / {totalPages}</span>
+                  <span className="text-sm text-[#8898AA]">{page} / {totalPages}</span>
                   <button
                     onClick={() => search(page + 1)}
                     disabled={page >= totalPages}
-                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                    className="px-3 py-1.5 text-sm rounded-lg border border-[#E6EBF1] hover:bg-[#F6F9FC] disabled:opacity-30 transition-colors"
                   >
                     Siguiente
                   </button>
@@ -1586,7 +1580,7 @@ export default function Dropshipping() {
             </>
           ) : (keyword || activeCategory) ? (
             <div className="text-center py-20">
-              <p className="text-gray-400">No se encontraron productos</p>
+              <p className="text-[#A9B6C6]">No se encontraron productos</p>
             </div>
           ) : null}
 
@@ -1595,7 +1589,7 @@ export default function Dropshipping() {
             <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-xl shadow-xl flex items-center gap-3">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#2d6cb5]"></div>
-                <span className="text-sm text-gray-600">Cargando producto...</span>
+                <span className="text-sm text-[#425466]">Cargando producto...</span>
               </div>
             </div>
           )}

@@ -149,8 +149,8 @@ export default function Payments() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('payments.title')}</h1>
-          <p className="text-gray-600 mt-1">{t('payments.subtitle')}</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('payments.title')}</h1>
+          <p className="text-[#425466] mt-1">{t('payments.subtitle')}</p>
         </div>
         <button
           onClick={handleSave}
@@ -166,9 +166,9 @@ export default function Payments() {
         {/* Left Column - Active Methods */}
         <div className="space-y-6">
           {/* WhatsApp (default) */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 flex-shrink-0">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm shadow-green-500/20 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                 </svg>
@@ -189,11 +189,11 @@ export default function Payments() {
                         onChange={(e) => setWhatsappEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                     </label>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-[#425466] mt-1">
                   {(mpEnabled || stripeEnabled) ? t('payments.whatsapp.toggleDesc') : t('payments.whatsapp.description')}
                 </p>
                 {!(mpEnabled || stripeEnabled) && (
@@ -207,9 +207,9 @@ export default function Payments() {
 
           {/* MercadoPago - Only for countries with MercadoPago */}
           {hasMercadoPagoAvailable && isPro ? (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-[#00b1ea]/20 flex-shrink-0 overflow-hidden">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm shadow-[#00b1ea]/20 flex-shrink-0 overflow-hidden">
                   <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -222,17 +222,17 @@ export default function Payments() {
                         onChange={(e) => setMpEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-[#425466] mt-1">
                     {t('payments.mercadopago.description')}
                   </p>
                 </div>
               </div>
 
               {mpEnabled && (
-                <div className="space-y-4 pt-4 mt-4 border-t border-gray-200/60">
+                <div className="space-y-4 pt-4 mt-4 border-t border-[#E6EBF1]">
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                     <p className="text-xs text-amber-800">
                       <strong>{t('payments.mercadopago.important')}</strong> {t('payments.mercadopago.needAccount')} <a href="https://www.mercadopago.com/developers" target="_blank" rel="noopener noreferrer" className="underline">{t('payments.mercadopago.getCredentials')}</a>
@@ -247,7 +247,7 @@ export default function Payments() {
                         value={mpPublicKey}
                         onChange={(e) => setMpPublicKey(e.target.value)}
                         placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
+                        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
                       />
                     </div>
 
@@ -258,7 +258,7 @@ export default function Payments() {
                         value={mpAccessToken}
                         onChange={(e) => setMpAccessToken(e.target.value)}
                         placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
+                        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -271,18 +271,18 @@ export default function Payments() {
                         onChange={(e) => setMpSandbox(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                     </label>
                     <div>
                       <span className="text-sm font-medium text-[#1e3a5f]">{t('payments.mercadopago.sandbox')}</span>
-                      <p className="text-xs text-gray-500">{t('payments.mercadopago.sandboxDescription')}</p>
+                      <p className="text-xs text-[#8898AA]">{t('payments.mercadopago.sandboxDescription')}</p>
                     </div>
                   </div>
                 </div>
               )}
             </div>
           ) : hasMercadoPagoAvailable ? (
-            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#1e3a5f] rounded-xl p-6 shadow-sm text-white">
+            <div className="bg-[#1e3a5f] rounded-xl p-6 shadow-sm text-white">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                   <img src="/mercadopago-logo.webp" alt="MercadoPago" className="w-full h-full object-cover" />
@@ -332,9 +332,9 @@ export default function Payments() {
 
           {/* Stripe - Only for countries with Stripe */}
           {hasStripeAvailable && isPro ? (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-[#635bff]/20 flex-shrink-0" style={{ backgroundColor: '#635bff' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm shadow-[#635bff]/20 flex-shrink-0" style={{ backgroundColor: '#635bff' }}>
                   <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
                   </svg>
@@ -349,17 +349,17 @@ export default function Payments() {
                         onChange={(e) => setStripeEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-[#425466] mt-1">
                     {t('payments.stripe.description')}
                   </p>
                 </div>
               </div>
 
               {stripeEnabled && (
-                <div className="space-y-4 pt-4 mt-4 border-t border-gray-200/60">
+                <div className="space-y-4 pt-4 mt-4 border-t border-[#E6EBF1]">
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                     <p className="text-xs text-amber-800">
                       <strong>{t('payments.stripe.important')}</strong> {t('payments.stripe.needAccount')} <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">{t('payments.stripe.getCredentials')}</a>
@@ -374,7 +374,7 @@ export default function Payments() {
                         value={stripePublishableKey}
                         onChange={(e) => setStripePublishableKey(e.target.value)}
                         placeholder="pk_test_xxxxxxxxxxxxxxxx"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
+                        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
                       />
                     </div>
 
@@ -385,7 +385,7 @@ export default function Payments() {
                         value={stripeSecretKey}
                         onChange={(e) => setStripeSecretKey(e.target.value)}
                         placeholder="sk_test_xxxxxxxxxxxxxxxx"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
+                        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -398,11 +398,11 @@ export default function Payments() {
                         onChange={(e) => setStripeTestMode(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                     </label>
                     <div>
                       <span className="text-sm font-medium text-[#1e3a5f]">{t('payments.stripe.testMode')}</span>
-                      <p className="text-xs text-gray-500">{t('payments.stripe.testModeDescription')}</p>
+                      <p className="text-xs text-[#8898AA]">{t('payments.stripe.testModeDescription')}</p>
                     </div>
                   </div>
                 </div>
@@ -444,9 +444,9 @@ export default function Payments() {
 
           {/* Go Cuotas — Argentina-only "buy now, pay later" gateway */}
           {hasGoCuotasAvailable && isPro ? (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-lg" style={{ boxShadow: '0 4px 14px rgba(255, 31, 109, 0.25)' }}>
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm" style={{ boxShadow: '0 4px 14px rgba(255, 31, 109, 0.25)' }}>
                   <img src="/gocuotas-logo.png" alt="Go Cuotas" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -459,17 +459,17 @@ export default function Payments() {
                         onChange={(e) => setGcEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#FF1F6D] peer-checked:to-[#FF4F8C]"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#FF1F6D] peer-checked:to-[#FF4F8C]"></div>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-[#425466] mt-1">
                     Permite a tus clientes pagar en cuotas sin tarjeta. Disponible solo en Argentina.
                   </p>
                 </div>
               </div>
 
               {gcEnabled && (
-                <div className="space-y-4 pt-4 mt-4 border-t border-gray-200/60">
+                <div className="space-y-4 pt-4 mt-4 border-t border-[#E6EBF1]">
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                     <p className="text-xs text-amber-800">
                       <strong>Importante:</strong> Necesitas una cuenta de comercio en Go Cuotas. <a href="https://www.gocuotas.com" target="_blank" rel="noopener noreferrer" className="underline">Registrate gratis</a> y usa el mismo email y contrasena con los que ingresas a tu panel de Go Cuotas.
@@ -484,7 +484,7 @@ export default function Payments() {
                         value={gcEmail}
                         onChange={(e) => setGcEmail(e.target.value)}
                         placeholder="comercio@ejemplo.com"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
+                        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
                       />
                     </div>
 
@@ -495,7 +495,7 @@ export default function Payments() {
                         value={gcPassword}
                         onChange={(e) => setGcPassword(e.target.value)}
                         placeholder="Tu contrasena de Go Cuotas"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
+                        className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
                         autoComplete="new-password"
                       />
                     </div>
@@ -509,11 +509,11 @@ export default function Payments() {
                         onChange={(e) => setGcSandbox(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                      <div className="w-11 h-6 bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                     </label>
                     <div>
                       <span className="text-sm font-medium text-[#1e3a5f]">Modo sandbox</span>
-                      <p className="text-xs text-gray-500">Activado para probar sin cobros reales (sandbox.gocuotas.com)</p>
+                      <p className="text-xs text-[#8898AA]">Activado para probar sin cobros reales (sandbox.gocuotas.com)</p>
                     </div>
                   </div>
                 </div>
@@ -553,22 +553,22 @@ export default function Payments() {
 
           {/* No payment gateway available for this country */}
           {hasNoGateway && (
-            <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="bg-[#F1F5F9] rounded-xl p-6 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gray-300">
-                  <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#D8E2EC]">
+                  <svg className="w-6 h-6 text-[#8898AA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold text-gray-700">{t('payments.noGateway.title')}</h2>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h2 className="text-lg font-semibold text-[#425466]">{t('payments.noGateway.title')}</h2>
+                  <p className="text-sm text-[#425466] mt-1">
                     {t('payments.noGateway.description')}
                   </p>
                 </div>
               </div>
               <div className="mt-4 p-4 bg-white/60 rounded-xl">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#425466]">
                   {t('payments.noGateway.useWhatsApp')}
                 </p>
               </div>
@@ -578,8 +578,8 @@ export default function Payments() {
 
         {/* Right Column - Coming Soon */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200/60 p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('payments.comingSoon.title')}</h3>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-[#A9B6C6] uppercase tracking-wider mb-4">{t('payments.comingSoon.title')}</h3>
 
             <div className="space-y-3">
               {[
@@ -599,7 +599,7 @@ export default function Payments() {
                   </svg>
                 )},
               ].map((item) => (
-                <div key={item.name} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl opacity-60">
+                <div key={item.name} className="flex items-center gap-4 p-3 bg-[#F6F9FC] rounded-xl opacity-60">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.color }}>
                     {item.icon || (
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -609,9 +609,9 @@ export default function Payments() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-[#1e3a5f]">{item.name}</h4>
-                    <p className="text-xs text-gray-500">{item.desc}</p>
+                    <p className="text-xs text-[#8898AA]">{item.desc}</p>
                   </div>
-                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#A9B6C6] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
