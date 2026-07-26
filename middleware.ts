@@ -27,8 +27,38 @@ const SEARCH_ENGINE_BOTS = [
   'Google-Site-Verification',
 ]
 
+// Rastreadores de asistentes de IA. No ejecutan JavaScript, asi que sin esta
+// lista reciben la cascara del SPA — con el titulo y el canonical de la landing
+// de Shopifree — y ninguna tienda puede ser citada cuando alguien le pregunta a
+// ChatGPT, Claude, Gemini o Perplexity por un producto.
+const AI_BOTS = [
+  // OpenAI
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  // Anthropic
+  'ClaudeBot',
+  'Claude-Web',
+  'Claude-SearchBot',
+  'anthropic-ai',
+  // Google (Gemini / AI Overviews)
+  'Google-Extended',
+  // Perplexity
+  'PerplexityBot',
+  'Perplexity-User',
+  // Meta AI
+  'meta-externalagent',
+  // Apple Intelligence
+  'Applebot',
+  // Common Crawl (fuente de entrenamiento de varios modelos)
+  'CCBot',
+  // Otros buscadores con IA
+  'YouBot',
+  'DuckAssistBot',
+]
+
 // All crawler user agents
-const CRAWLER_USER_AGENTS = [...SOCIAL_CRAWLER_USER_AGENTS, ...SEARCH_ENGINE_BOTS]
+const CRAWLER_USER_AGENTS = [...SOCIAL_CRAWLER_USER_AGENTS, ...SEARCH_ENGINE_BOTS, ...AI_BOTS]
 
 // Main domains (not store domains)
 const MAIN_DOMAINS = [
@@ -92,13 +122,24 @@ export default async function middleware(request: Request) {
     const storeUrl = customDomain
       ? `https://${customDomain}`
       : `https://${subdomain}.shopifree.app`
-    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${storeUrl}/sitemap.xml\n`
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${storeUrl}/sitemap.xml\n\n# Guia para modelos de lenguaje\n# ${storeUrl}/llms.txt\n`
     return new Response(robotsTxt, {
       headers: {
         'Content-Type': 'text/plain',
         'Cache-Control': 's-maxage=3600, stale-while-revalidate',
       },
     })
+  }
+
+  // Intercept /llms.txt → guia de ESTA tienda. Sin esto se sirve el llms.txt
+  // estatico de Shopifree, y el dominio del comerciante termina diciendole a los
+  // modelos que es la plataforma en vez de su propia tienda.
+  if (pathname === '/llms.txt') {
+    const llmsUrl = new URL('/api/og-image', url.origin)
+    llmsUrl.searchParams.set('type', 'llms')
+    if (subdomain) llmsUrl.searchParams.set('subdomain', subdomain)
+    if (customDomain) llmsUrl.searchParams.set('domain', customDomain)
+    return fetch(llmsUrl.toString())
   }
 
   // Check if this is a crawler
@@ -116,8 +157,10 @@ export default async function middleware(request: Request) {
   const catalogProductMatch = pathname.match(/^\/c\/[^/]+\/p\/([^/]+)/)
   const productSlug = catalogProductMatch?.[1] || productMatch?.[1] || null
 
-  // Determine if this is a social bot (needs meta-refresh) vs search bot (no redirect)
-  const isSearchBot = SEARCH_ENGINE_BOTS.some(bot =>
+  // Los bots de redes sociales necesitan el meta-refresh (llegan desde un enlace
+  // compartido y hay que llevarlos a la tienda). Buscadores y modelos de IA no:
+  // quieren leer el contenido, no ser redirigidos.
+  const isSearchBot = [...SEARCH_ENGINE_BOTS, ...AI_BOTS].some(bot =>
     userAgent.toLowerCase().includes(bot.toLowerCase())
   )
 

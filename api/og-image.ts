@@ -63,6 +63,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleSitemap(req, res, subdomain as string | undefined, domain as string | undefined)
     }
 
+    // Guia de la tienda para modelos de lenguaje
+    if (type === 'llms') {
+      return handleLlms(req, res, subdomain as string | undefined, domain as string | undefined)
+    }
+
     // Fetch store from Firebase
     const storesRef = db.collection('stores')
     let storeQuery
@@ -108,7 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Store-level rendering
-    return renderStorePage(res, store, storeId, storeUrl, ogLocale, lang, isSearchBot)
+    return await renderStorePage(res, store, storeId, storeUrl, ogLocale, lang, isSearchBot)
   } catch (error) {
     console.error('Error generating OG page:', error)
     return res.status(500).json({ error: 'Internal server error' })
@@ -229,7 +234,7 @@ function renderProductPage(
   return res.status(200).send(html)
 }
 
-function renderStorePage(
+async function renderStorePage(
   res: VercelResponse,
   store: any,
   storeId: string,
@@ -264,6 +269,65 @@ function renderStorePage(
     image: ogImage
   }
 
+  // El catalogo es el contenido de esta pagina. Sin el, un buscador solo veia el
+  // nombre y el eslogan (unos 90 caracteres) y lo trataba como pagina vacia; los
+  // productos solo existian en el render del cliente, que este bot nunca ejecuta.
+  const products = await fetchStoreProducts(storeId, 24)
+  const currency = store.currency || 'USD'
+
+  const productList = products.length
+    ? `\n  <h2>${escapeHtml(catalogSuffix)}</h2>\n  <ul>\n` +
+      products.map(pr =>
+        `    <li><a href="${escapeHtml(`${storeUrl}/p/${pr.slug}`)}">${escapeHtml(pr.name)}</a>` +
+        ` — ${escapeHtml(currency)} ${pr.price}` +
+        (pr.description ? `<br>${escapeHtml(String(pr.description).slice(0, 200))}` : '') +
+        `</li>`
+      ).join('\n') +
+      `\n  </ul>`
+    : ''
+
+  const itemListLd = products.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${store.name} - ${catalogSuffix}`,
+    numberOfItems: products.length,
+    itemListElement: products.map((pr, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: pr.name,
+      url: `${storeUrl}/p/${pr.slug}`,
+      image: pr.image || undefined,
+    })),
+  } : null
+
+  // Un Product por articulo, con precio y disponibilidad: es lo que habilita los
+  // resultados enriquecidos en Google. Limitado a 10 para no inflar la respuesta.
+  const productLds = products.slice(0, 10).map(pr => ({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: pr.name,
+    description: pr.description || `${pr.name} - ${store.name}`,
+    image: pr.image || ogImage,
+    url: `${storeUrl}/p/${pr.slug}`,
+    sku: pr.sku || undefined,
+    brand: { '@type': 'Brand', name: pr.brand || store.name },
+    offers: {
+      '@type': 'Offer',
+      url: `${storeUrl}/p/${pr.slug}`,
+      priceCurrency: currency,
+      price: pr.price,
+      availability: pr.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: store.name },
+    },
+  }))
+
+  const extraLd = [itemListLd, ...productLds]
+    .filter(Boolean)
+    .map(ld => `\n  <script type="application/ld+json">${JSON.stringify(ld)}</script>`)
+    .join('')
+
   const html = `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -296,11 +360,11 @@ function renderStorePage(
   ${metaRefresh}
 
   <!-- JSON-LD -->
-  <script type="application/ld+json">${JSON.stringify(localBusinessLd)}</script>
+  <script type="application/ld+json">${JSON.stringify(localBusinessLd)}</script>${extraLd}
 </head>
 <body>
   <h1>${escapeHtml(store.name)}</h1>
-  <p>${description}</p>
+  <p>${description}</p>${productList}
   <p><a href="${storeUrl}">${storeUrl}</a></p>
 </body>
 </html>`
@@ -308,6 +372,109 @@ function renderStorePage(
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
   return res.status(200).send(html)
+}
+
+interface StoreProduct {
+  name: string
+  slug: string
+  price: number
+  description?: string
+  image?: string
+  sku?: string
+  brand?: string
+  inStock: boolean
+}
+
+/** Productos activos de una tienda, en el orden en que se muestran. */
+async function fetchStoreProducts(storeId: string, max: number): Promise<StoreProduct[]> {
+  try {
+    const snap = await db
+      .collection('stores').doc(storeId)
+      .collection('products')
+      .where('active', '==', true)
+      .limit(max)
+      .get()
+
+    return snap.docs.map(d => {
+      const p = d.data()
+      return {
+        name: p.name || 'Producto',
+        slug: p.slug || d.id,
+        price: p.price ?? 0,
+        description: p.shortDescription || p.description || undefined,
+        image: p.image || p.images?.[0] || undefined,
+        sku: p.sku || undefined,
+        brand: p.brand || undefined,
+        // trackStock activo y sin unidades = agotado; si no se controla, disponible
+        inStock: !(p.trackStock && (p.stock ?? 0) <= 0),
+      }
+    })
+  } catch (err) {
+    // Nunca dejamos sin prerender por un fallo al leer productos.
+    console.error('[og-image] no se pudieron leer los productos:', err)
+    return []
+  }
+}
+
+/**
+ * /llms.txt de la tienda. Sin esto se sirve el archivo estatico de Shopifree y
+ * el dominio del comerciante termina describiendo a la plataforma en vez de a su
+ * propio negocio.
+ */
+async function handleLlms(
+  _req: VercelRequest,
+  res: VercelResponse,
+  subdomain?: string,
+  domain?: string
+) {
+  const storesRef = db.collection('stores')
+  const snapshot = await (domain
+    ? storesRef.where('customDomain', '==', domain)
+    : storesRef.where('subdomain', '==', subdomain)
+  ).get()
+
+  if (snapshot.empty) {
+    return res.status(404).send('Store not found')
+  }
+
+  const store = snapshot.docs[0].data()
+  const storeId = snapshot.docs[0].id
+  const storeUrl = store.customDomain
+    ? `https://${store.customDomain}`
+    : `https://${store.subdomain}.shopifree.app`
+
+  const products = await fetchStoreProducts(storeId, 60)
+  const currency = store.currency || 'USD'
+  const slogan = store.about?.slogan || store.about?.description || ''
+  const location = [store.location?.city, store.location?.country].filter(Boolean).join(', ')
+
+  const lines = [
+    `# ${store.name}`,
+    '',
+    `> ${slogan || `${store.name} — catálogo online.`}`,
+    '',
+    location ? `Ubicación: ${location}` : '',
+    store.whatsapp ? `Pedidos por WhatsApp: +${String(store.whatsapp).replace(/\D/g, '')}` : '',
+    `Sitio: ${storeUrl}`,
+    '',
+    '## Catálogo',
+    '',
+    ...products.map(p =>
+      `- [${p.name}](${storeUrl}/p/${p.slug}): ${currency} ${p.price}` +
+      (p.inStock ? '' : ' (agotado)') +
+      (p.description ? ` — ${String(p.description).slice(0, 160)}` : '')
+    ),
+    '',
+    products.length ? '' : 'Todavía no hay productos publicados.',
+    '',
+    `---`,
+    `Tienda creada con Shopifree (https://shopifree.app).`,
+    '',
+  ].filter(l => l !== '')
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+  return res.status(200).send(lines.join('\n'))
 }
 
 async function handleSitemap(
