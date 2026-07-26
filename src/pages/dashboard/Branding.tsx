@@ -13,6 +13,23 @@ import { getTrustBadgeText, ALL_BADGE_IDS } from '../../themes/shared/trustBadge
 import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
 import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 
+/** Cuantos temas se pintan antes de pedir "ver mas". */
+const THEMES_PER_PAGE = 12
+
+/**
+ * Rubro de la tienda -> categoria de tema, para poder ofrecer primero los
+ * disenos pensados para ese negocio en vez de los 86 de golpe.
+ */
+const BUSINESS_TO_THEME_CATEGORY: Record<string, string> = {
+  fashion: 'retail',
+  food: 'restaurant',
+  grocery: 'grocery',
+  cosmetics: 'cosmetics',
+  tech: 'tech',
+  pets: 'pets',
+  craft: 'retail',
+}
+
 // Predefined cover images from Unsplash (free for commercial use)
 const COVER_IMAGES = {
   restaurant: [
@@ -143,6 +160,9 @@ export default function Branding() {
 
   // Theme Preview
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
+  const [themeFilter, setThemeFilter] = useState<string>('suggested')
+  const [themeSearch, setThemeSearch] = useState('')
+  const [themeLimit, setThemeLimit] = useState(THEMES_PER_PAGE)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
 
@@ -472,6 +492,55 @@ export default function Branding() {
     }
   }
 
+  /* ── Seleccion de tema: filtros, busqueda y paginado ─────────────────── */
+
+  const currentTheme = themes.find(th => th.id === selectedTheme) || null
+  const suggestedCategory = BUSINESS_TO_THEME_CATEGORY[store?.businessType || ''] || null
+
+  const matchesFilter = (th: (typeof themes)[number]) => {
+    switch (themeFilter) {
+      case 'suggested':
+        // Sin rubro definido "para tu rubro" no significa nada: cae a todos.
+        return suggestedCategory ? th.category === suggestedCategory : true
+      case 'all':
+        return true
+      case 'premium':
+        return !!th.isPremium
+      default:
+        return th.category === themeFilter
+    }
+  }
+
+  const search = themeSearch.trim().toLowerCase()
+  const filteredThemes = themes
+    .filter(th => matchesFilter(th) && (!search || th.name.toLowerCase().includes(search)))
+    // Mas nuevos primero, pero el tema aplicado siempre arriba.
+    .sort((a, b) => {
+      if (a.id === selectedTheme) return -1
+      if (b.id === selectedTheme) return 1
+      return b.createdAt.getTime() - a.createdAt.getTime()
+    })
+  const visibleThemes = filteredThemes.slice(0, themeLimit)
+
+  const countFor = (key: string) =>
+    themes.filter(th => {
+      if (key === 'suggested') return suggestedCategory ? th.category === suggestedCategory : true
+      if (key === 'all') return true
+      if (key === 'premium') return !!th.isPremium
+      return th.category === key
+    }).length
+
+  const themeFilters = [
+    ...(suggestedCategory ? [{ key: 'suggested', label: t('branding.theme.filters.suggested') }] : []),
+    { key: 'all', label: t('branding.theme.filters.all') },
+    { key: 'retail', label: t('branding.theme.categories.retail') },
+    { key: 'restaurant', label: t('branding.theme.categories.restaurant') },
+    { key: 'services', label: t('branding.theme.categories.services') },
+    { key: 'premium', label: 'Premium' },
+  ]
+    .map(f => ({ ...f, count: countFor(f.key) }))
+    .filter(f => f.count > 0)
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -488,153 +557,188 @@ export default function Branding() {
         <p className="text-gray-600 mt-1">{t('branding.subtitle')}</p>
       </div>
 
-      {/* Theme Selector - Carousel by Category */}
-      <div className="bg-white rounded-xl border border-gray-200/60 py-6 shadow-sm">
-        <div className="px-4 md:px-6">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">{t('branding.theme.title')}</h2>
-          <p className="text-sm text-gray-600 mb-5">
-            {t('branding.theme.description')}
-          </p>
+      {/* Selector de tema. Son 86: antes se pintaban todos, repartidos en seis
+          carruseles de hasta 31 tarjetas. Ahora hay filtros, buscador y se
+          muestran de a 12, empezando por los del rubro de la tienda. */}
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h2 className="text-[0.9rem] font-semibold">{t('branding.theme.title')}</h2>
+            <p className="text-[0.78rem] font-normal text-[#8898AA] mt-0.5">
+              {t('branding.theme.countHint', { count: themes.length })}
+            </p>
+          </div>
+          {/* El tema aplicado, siempre visible aunque el filtro no lo incluya. */}
+          {currentTheme && (
+            <div
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2 shrink-0"
+              style={{ background: '#F6F9FC', border: '1px solid #E6EBF1' }}
+            >
+              <img
+                src={currentTheme.thumbnail}
+                alt=""
+                className="w-8 h-12 rounded-md object-cover object-top shrink-0"
+                style={{ border: '1px solid #E6EBF1' }}
+              />
+              <div className="min-w-0">
+                <p className="text-[0.66rem] font-semibold uppercase tracking-[0.07em] text-[#8898AA]">
+                  {t('branding.theme.current')}
+                </p>
+                <p className="text-[0.82rem] font-semibold truncate">{currentTheme.name}</p>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-6">
-          {([
-            { key: 'all', label: t('branding.theme.categories.general'), desc: t('branding.theme.categoryDesc.general'), categories: ['all'] },
-            { key: 'retail', label: t('branding.theme.categories.retail'), desc: t('branding.theme.categoryDesc.retail'), categories: ['retail'] },
-            { key: 'restaurant', label: t('branding.theme.categories.restaurant'), desc: t('branding.theme.categoryDesc.restaurant'), categories: ['restaurant'] },
-            { key: 'services', label: t('branding.theme.categories.services') || 'Servicios', desc: t('branding.theme.categoryDesc.services'), categories: ['services'] },
-            { key: 'specialized', label: t('branding.theme.categories.specialized') || 'Especializado', desc: t('branding.theme.categoryDesc.specialized'), categories: ['tech', 'cosmetics', 'grocery', 'pets'] },
-            { key: 'premium', label: 'Premium', desc: 'Temas con efectos exclusivos y animaciones avanzadas', categories: ['__premium__'] },
-          ] as const).map((group) => {
-            const filtered = group.key === 'premium'
-              ? themes.filter(th => th.isPremium)
-              : themes.filter(th => !th.isPremium && (group.categories as readonly string[]).includes(th.category))
-            // Newest first; in the "all" carousel keep Minimal pinned at the
-            // start so the default theme stays one tap away.
-            const sorted = [...filtered].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-            const groupThemes = group.key === 'all'
-              ? [
-                  ...sorted.filter(th => th.id === 'minimal'),
-                  ...sorted.filter(th => th.id !== 'minimal'),
-                ]
-              : sorted
-            if (groupThemes.length === 0) return null
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {themeFilters.map(f => {
+            const active = themeFilter === f.key
             return (
-              <div key={group.key}>
-                <div className="flex items-center justify-between mb-3 px-4 md:px-6">
-                  <div>
-                    <h3 className="text-sm font-semibold text-[#1e3a5f]">{group.label}</h3>
-                    <p className="text-xs text-gray-400">{group.desc}</p>
-                  </div>
-                </div>
-                {/* Movil: carrusel horizontal · sm+: grilla */}
-                <div className="carousel-container flex gap-3 px-4 md:px-6 pb-3 sm:grid sm:grid-cols-3 xl:grid-cols-4 sm:gap-4 sm:pb-0">
-                  {groupThemes.map((theme) => {
-                    const isSelected = selectedTheme === theme.id
-                    const isLocked = theme.isPremium && store?.plan === 'free'
-                    return (
-                      <div
-                        key={theme.id}
-                        className={`carousel-item w-[150px] sm:w-auto relative rounded-xl overflow-hidden border-2 transition-all group ${
-                          isSelected
-                            ? 'border-[#2d6cb5] ring-2 ring-[#38bdf8]/30'
-                            : isLocked
-                              ? 'border-gray-200 opacity-70'
-                              : 'border-gray-200 hover:border-[#38bdf8]/50'
-                        }`}
-                      >
-                        <button
-                          onClick={() => { if (!isLocked) setSelectedTheme(theme.id) }}
-                          className={`w-full text-left ${isLocked ? 'cursor-not-allowed' : ''}`}
-                        >
-                          {/* Mini Preview (captura movil vertical) */}
-                          <div
-                            className="aspect-[9/16] p-2 sm:p-3 flex flex-col relative"
-                            style={{ backgroundColor: theme.colors?.background || '#ffffff' }}
-                          >
-                            {/* Thumbnail real si existe; si 404 cae al preview de colores de abajo */}
-                            {theme.thumbnail && (
-                              <img
-                                src={theme.thumbnail}
-                                alt={theme.name}
-                                loading="lazy"
-                                decoding="async"
-                                className="absolute inset-0 w-full h-full object-cover object-top"
-                                onError={(e) => { e.currentTarget.style.display = 'none' }}
-                              />
-                            )}
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="w-6 h-2 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
-                              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.colors?.accent || '#666' }} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-1">
-                              {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="rounded aspect-square" style={{ backgroundColor: theme.colors?.primary ? `${theme.colors.primary}15` : '#f3f4f6' }} />
-                              ))}
-                            </div>
-                            <div className="mt-2 flex items-center gap-1">
-                              <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: theme.colors?.primary || '#000' }} />
-                              <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: theme.colors?.accent || '#666' }} />
-                            </div>
-                            {/* Lock overlay for premium themes on free plan */}
-                            {isLocked ? (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-1">
-                                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                  </svg>
-                                  <span className="text-white text-[10px] font-semibold">PRO</span>
-                                </div>
-                              </div>
-                            ) : (
-                              /* Preview overlay */
-                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span
-                                  onClick={(e) => { e.stopPropagation(); setPreviewTheme(theme.id) }}
-                                  className="px-3 py-1.5 bg-white text-[#1e3a5f] text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                  {t('branding.theme.preview')}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          {/* Theme Name */}
-                          <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-white border-t border-gray-200/60">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-xs sm:text-sm text-[#1e3a5f] truncate">{theme.name}</span>
-                              {theme.isPremium ? (
-                                <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] font-bold rounded-full flex-shrink-0 ml-1">
-                                  PRO
-                                </span>
-                              ) : theme.isNew ? (
-                                <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#2d6cb5] text-white text-[10px] font-bold rounded-full flex-shrink-0 ml-1">
-                                  NEW
-                                </span>
-                              ) : null}
-                            </div>
-                            <p className="text-[10px] sm:text-[11px] text-gray-500 truncate mt-0.5 hidden sm:block">{theme.description}</p>
-                          </div>
-                        </button>
-                        {/* Selected indicator */}
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-[#1e3a5f] rounded-full flex items-center justify-center shadow-lg z-10">
-                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              <button
+                key={f.key}
+                onClick={() => {
+                  setThemeFilter(f.key)
+                  setThemeLimit(THEMES_PER_PAGE)
+                }}
+                className={`px-3 py-1.5 rounded-lg border text-[0.76rem] transition-colors ${
+                  active
+                    ? 'bg-[#1e3a5f] border-[#1e3a5f] text-white font-semibold'
+                    : 'bg-white border-[#E6EBF1] text-[#425466] font-medium hover:bg-[#F6F9FC]'
+                }`}
+              >
+                {f.label}
+                <span className={active ? 'text-white/60 ml-1' : 'text-[#A9B6C6] ml-1'}>{f.count}</span>
+              </button>
             )
           })}
         </div>
+
+        {/* Buscador */}
+        <div className="relative mb-4">
+          <input
+            type="text"
+            value={themeSearch}
+            onChange={e => {
+              setThemeSearch(e.target.value)
+              setThemeLimit(THEMES_PER_PAGE)
+            }}
+            placeholder={t('branding.theme.searchPlaceholder')}
+            className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-[#F6F9FC] border border-[#E6EBF1] text-[0.82rem] font-medium text-[#1e3a5f] placeholder:text-[#A9B6C6] placeholder:font-normal transition-colors focus:outline-none focus:bg-white focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/15"
+          />
+          {themeSearch && (
+            <button
+              onClick={() => setThemeSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.74rem] font-semibold text-[#8898AA] hover:text-[#425466] transition-colors"
+            >
+              {t('common.clear', { defaultValue: 'Limpiar' })}
+            </button>
+          )}
+        </div>
+
+        {visibleThemes.length === 0 ? (
+          <p className="text-[0.82rem] font-normal text-[#8898AA] text-center py-8">
+            {t('branding.theme.noResults')}
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+              {visibleThemes.map(theme => {
+                const isSelected = selectedTheme === theme.id
+                const isLocked = !!theme.isPremium && store?.plan === 'free'
+                return (
+                  <div
+                    key={theme.id}
+                    className={`relative rounded-xl overflow-hidden transition-all group ${isLocked ? 'opacity-70' : ''}`}
+                    style={{
+                      border: isSelected ? '2px solid #0284C7' : '1px solid #E6EBF1',
+                      boxShadow: isSelected ? '0 0 0 3px rgba(56,189,248,.2)' : undefined,
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        if (!isLocked) setSelectedTheme(theme.id)
+                      }}
+                      className={`w-full text-left ${isLocked ? 'cursor-not-allowed' : ''}`}
+                    >
+                      <div
+                        className="aspect-[9/16] relative"
+                        style={{ backgroundColor: theme.colors?.background || '#F6F9FC' }}
+                      >
+                        {theme.thumbnail && (
+                          <img
+                            src={theme.thumbnail}
+                            alt={theme.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute inset-0 w-full h-full object-cover object-top"
+                          />
+                        )}
+
+                        {isLocked ? (
+                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[0.62rem] font-bold text-white"
+                              style={{ background: '#B45309' }}
+                            >
+                              PRO
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span
+                              onClick={e => {
+                                e.stopPropagation()
+                                setPreviewTheme(theme.id)
+                              }}
+                              className="px-3 py-1.5 bg-white rounded-lg text-[0.74rem] font-semibold text-[#1e3a5f] cursor-pointer hover:bg-[#F6F9FC] transition-colors"
+                            >
+                              {t('branding.theme.preview')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="px-2.5 py-2 bg-white" style={{ borderTop: '1px solid #E6EBF1' }}>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[0.78rem] font-semibold truncate">{theme.name}</span>
+                          {/* Solo PRO: el badge NEW estaba en 80 de 86 temas. */}
+                          {theme.isPremium && (
+                            <span
+                              className="px-1.5 py-0.5 rounded-full text-[0.6rem] font-bold shrink-0"
+                              style={{ background: '#FEF3C7', color: '#B45309' }}
+                            >
+                              PRO
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+
+                    {isSelected && (
+                      <div
+                        className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[0.62rem] font-bold text-white z-10"
+                        style={{ background: '#0284C7' }}
+                      >
+                        {t('branding.theme.inUse')}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {filteredThemes.length > visibleThemes.length && (
+              <button
+                onClick={() => setThemeLimit(n => n + THEMES_PER_PAGE)}
+                className="mt-4 w-full py-2.5 rounded-xl text-[0.8rem] font-semibold transition-colors hover:bg-[#EEF3F8]"
+                style={{ background: '#F6F9FC', border: '1px solid #E6EBF1', color: '#0284C7' }}
+              >
+                {t('branding.theme.showMore', { count: filteredThemes.length - visibleThemes.length })}
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       {/* Logo */}

@@ -13,12 +13,17 @@
  *   npm run thumbnails -- receipt chat # solo algunos
  *   SHOT_BASE=http://localhost:5174 npm run thumbnails
  *
- * Salida: public/themes/<id>.png
+ * Salida: public/themes/<id>.webp
+ *
+ * Se guarda WebP y no PNG a 2x: los 86 PNG pesaban 24 MB (hasta 1,2 MB uno) y
+ * /dashboard/branding los pinta todos. En WebP a 390px de ancho son ~20 KB, el
+ * mismo formato que ya usan las capturas de la landing.
  */
 
 import { chromium } from 'playwright'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import sharp from 'sharp'
 import { themes } from '../src/themes/index'
 
 const BASE = process.env.SHOT_BASE || 'http://localhost:5173'
@@ -47,12 +52,13 @@ async function main() {
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
       // Dar tiempo a fuentes de Google + imagenes demo a asentarse
       await page.waitForTimeout(1800)
-      await page.screenshot({
-        path: path.join(OUT, `${id}.png`),
-        clip: { x: 0, y: 0, width: W, height: H },
-      })
+      // Se captura a 2x para que el texto salga nitido y luego se reduce a
+      // ancho real: mejor resultado que capturar directamente a 1x.
+      const shot = await page.screenshot({ clip: { x: 0, y: 0, width: W, height: H } })
+      const out = await sharp(shot).resize({ width: W }).webp({ quality: 78 }).toBuffer()
+      await writeFile(path.join(OUT, `${id}.webp`), out)
       ok++
-      console.log(`  ✓ ${id}`)
+      console.log(`  ✓ ${id}  ${Math.round(out.length / 1024)} KB`)
     } catch (err) {
       console.warn(`  ✗ ${id} — ${(err as Error).message.split('\n')[0]}`)
     }
