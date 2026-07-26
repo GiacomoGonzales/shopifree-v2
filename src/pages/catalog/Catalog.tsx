@@ -213,12 +213,22 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
           getDocs(collection(db, 'stores', storeId, 'categories'))
         ])
 
-        // Get all products then limit based on plan
-        const allProducts = productsSnapshot.docs.map(doc => ({
-          ...doc.data() as Product,
-          id: doc.id,
-          storeId
-        }))
+        // Get all products then limit based on plan.
+        //
+        // El .sort() es imprescindible: la consulta de arriba no pide orderBy,
+        // asi que Firestore devuelve los documentos por ID y el orden que el
+        // comerciante arma con drag & drop en /dashboard/products no se veia en
+        // su tienda. Las categorias si se ordenaban (unas lineas mas abajo);
+        // los productos no. Va en cliente y no como orderBy en la consulta
+        // porque `where(active) + orderBy(order)` exige un indice compuesto que
+        // no esta creado: si falta, la consulta falla y la tienda no carga.
+        const allProducts = productsSnapshot.docs
+          .map(doc => ({
+            ...doc.data() as Product,
+            id: doc.id,
+            storeId
+          }))
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
         // Apply plan limits - use effective plan (considers subscription status)
         const effectivePlan = getEffectivePlan(storeData)

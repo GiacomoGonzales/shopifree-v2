@@ -385,17 +385,29 @@ interface StoreProduct {
   inStock: boolean
 }
 
-/** Productos activos de una tienda, en el orden en que se muestran. */
+/**
+ * Productos activos de una tienda, en el mismo orden que ve el cliente.
+ *
+ * Se traen todos y se ordenan aca en vez de pedir orderBy + limit a Firestore:
+ * `where(active) + orderBy(order)` necesita un indice compuesto que no existe, y
+ * un .limit() sin orden previo se llevaba un subconjunto arbitrario — no los
+ * primeros del catalogo. El catalogo de una tienda son decenas de documentos y
+ * la respuesta se cachea una hora, asi que leerlos todos no es problema.
+ */
 async function fetchStoreProducts(storeId: string, max: number): Promise<StoreProduct[]> {
   try {
     const snap = await db
       .collection('stores').doc(storeId)
       .collection('products')
       .where('active', '==', true)
-      .limit(max)
       .get()
 
-    return snap.docs.map(d => {
+    const ordered = snap.docs
+      .slice()
+      .sort((a, b) => ((a.data().order as number) ?? 0) - ((b.data().order as number) ?? 0))
+      .slice(0, max)
+
+    return ordered.map(d => {
       const p = d.data()
       return {
         name: p.name || 'Producto',

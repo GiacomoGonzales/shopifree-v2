@@ -57,6 +57,33 @@ function SortableCategoryTab({ category, children }: { category: Category; child
 }
 
 
+/**
+ * Agarre de arrastre dibujado con CSS: dos columnas de tres puntos. Antes era
+ * un <svg> con seis <circle>, repetido en cada producto y cada categoria.
+ */
+function GripDots({ tone = '#C3CFDB' }: { tone?: string }) {
+  return (
+    <span
+      className="block shrink-0"
+      style={{
+        width: 10,
+        height: 15,
+        backgroundImage: `radial-gradient(${tone} 1.1px, transparent 1.3px)`,
+        backgroundSize: '5px 5px',
+      }}
+    />
+  )
+}
+
+/* Menus contextuales (categoria y producto): mismo aspecto en los tres sitios. */
+const MENU_CLASS =
+  'absolute right-0 top-full mt-1 bg-white rounded-xl border border-[#E6EBF1] z-20 min-w-[140px] overflow-hidden'
+const MENU_SHADOW = { boxShadow: '0 12px 32px -16px rgba(30,58,95,.45)' }
+const MENU_ITEM =
+  'block w-full px-3.5 py-2 text-[0.78rem] font-medium text-left text-[#425466] hover:bg-[#F6F9FC] transition-colors'
+const MENU_ITEM_DANGER =
+  'block w-full px-3.5 py-2 text-[0.78rem] font-medium text-left text-[#DC2626] hover:bg-[#FEF2F2] transition-colors'
+
 export default function Products() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
@@ -194,12 +221,23 @@ export default function Products() {
     if (oldIndex === -1 || newIndex === -1) return
 
     const reordered = arrayMove(sourceList, oldIndex, newIndex)
-    const updatedItems = reordered.map((p, i) => ({ ...p, order: i }))
+
+    // Con una categoria seleccionada solo se reparten las posiciones globales
+    // que ya ocupaban esos productos. Antes se renumeraba 0..n-1 dentro de la
+    // categoria, asi que sus `order` chocaban con los de las demas categorias y
+    // el orden general de la tienda quedaba arbitrario. Sin filtro se renumera
+    // todo de corrido, que ademas normaliza cualquier empate previo.
+    const updatedItems = selectedCategory
+      ? (() => {
+          const slots = sourceList.map(p => p.order ?? 0).sort((a, b) => a - b)
+          return reordered.map((p, i) => ({ ...p, order: slots[i] }))
+        })()
+      : reordered.map((p, i) => ({ ...p, order: i }))
 
     // Update local state - merge back with products not in current filter
     if (selectedCategory) {
       const otherProducts = products.filter(p => !sourceList.some(sp => sp.id === p.id))
-      setProducts([...otherProducts, ...updatedItems])
+      setProducts([...otherProducts, ...updatedItems].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
     } else {
       setProducts(updatedItems)
     }
@@ -212,7 +250,7 @@ export default function Products() {
       )
     } catch (error) {
       console.error('Error reordering products:', error)
-      showToast(t('products.reorderError') || 'Error al reordenar', 'error')
+      showToast(t('products.reorderError'), 'error')
     } finally {
       setIsReordering(false)
     }
@@ -237,7 +275,7 @@ export default function Products() {
       )
     } catch (error) {
       console.error('Error reordering categories:', error)
-      showToast('Error al reordenar categorias', 'error')
+      showToast(t('products.categories.reorderError'), 'error')
     }
   }
 
@@ -447,19 +485,30 @@ export default function Products() {
     )
   }
 
+  const currency = getCurrencySymbol(store?.currency || 'USD')
+
+  /** Pestaña de categoría — mismo aspecto en la lista móvil y en las de escritorio. */
+  const tabClass = (active: boolean) =>
+    `rounded-xl border text-[0.8rem] transition-colors ${
+      active
+        ? 'bg-[#1e3a5f] border-[#1e3a5f] text-white font-semibold'
+        : 'bg-white border-[#E6EBF1] text-[#425466] font-medium hover:bg-[#F6F9FC]'
+    }`
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-5 text-[#1e3a5f]">
+      {/* Cabecera */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-xl font-semibold text-gray-900">{t('products.title')}</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+          <h1 className="text-lg sm:text-xl font-semibold tracking-tight">{t('products.title')}</h1>
+          <p className="text-[0.82rem] mt-0.5 font-normal text-[#8898AA]">
             {products.length === 1
               ? t('products.subtitle', { count: products.length })
               : t('products.subtitle_plural', { count: products.length })}
             {remainingProducts !== 'unlimited' && (
-              <span className={`ml-2 ${remainingProducts <= 3 ? 'text-orange-500' : 'text-gray-400'}`}>
-                ({t('products.remaining', { count: remainingProducts })})
+              <span className={remainingProducts <= 3 ? 'text-[#C2410C] font-medium' : ''}>
+                {' · '}
+                {t('products.remaining', { count: remainingProducts })}
               </span>
             )}
           </p>
@@ -467,301 +516,267 @@ export default function Products() {
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Link
             to={localePath('/dashboard/dropshipping')}
-            className="w-full sm:w-auto px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+            className="px-3.5 py-2.5 rounded-xl text-[0.8rem] font-semibold text-center transition-colors hover:bg-[#F0FDF4]"
+            style={{ background: '#fff', border: '1px solid #BBF7D0', color: '#15803D' }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
             Dropshipping
           </Link>
           <button
             onClick={() => setShowImportModal(true)}
-            className="w-full sm:w-auto px-4 py-2.5 bg-white border border-[#38bdf8] text-[#2d6cb5] rounded-xl hover:bg-[#f0f7ff] transition-all text-sm font-semibold flex items-center justify-center gap-2"
+            className="px-3.5 py-2.5 rounded-xl text-[0.8rem] font-semibold transition-colors hover:bg-[#F0F9FF]"
+            style={{ background: '#fff', border: '1px solid #BAE6FD', color: '#0284C7' }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
             {t('products.import')}
           </button>
           <button
             onClick={handleAddProduct}
-            className={`w-full sm:w-auto px-4 py-2.5 rounded-xl transition-all text-sm font-semibold text-center ${
-              productLimit.allowed
-                ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            className={`px-4 py-2.5 rounded-xl text-[0.8rem] font-semibold transition-opacity ${
+              productLimit.allowed ? 'text-white hover:opacity-90' : 'cursor-not-allowed'
             }`}
+            style={
+              productLimit.allowed
+                ? { background: '#1e3a5f', boxShadow: '0 8px 20px -12px rgba(30,58,95,.7)' }
+                : { background: '#F1F5F9', color: '#A9B6C6' }
+            }
           >
             {t('products.add')}
           </button>
         </div>
       </div>
 
-      {/* Hidden products warning - products over plan limit are hidden from catalog */}
+      {/* Productos ocultos por superar el límite del plan */}
       {hiddenProducts > 0 && !Capacitor.isNativePlatform() && (
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-xl p-4 border border-red-200 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-red-900">
+        <div className="rounded-[14px] bg-white p-4 sm:px-5" style={{ border: '1px solid #FECACA' }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              {/* La clave plural se elige a mano: i18next v25 usa el formato
+                  JSON v4 (_one/_other), así que el sufijo _plural que usa el
+                  resto del archivo no lo resuelve `count` por sí solo. */}
+              <p className="text-[0.86rem] font-semibold" style={{ color: '#B91C1C' }}>
                 {hiddenProducts === 1
-                  ? '1 producto oculto en tu catálogo'
-                  : `${hiddenProducts} productos ocultos en tu catálogo`}
+                  ? t('products.hiddenWarning.title', { count: hiddenProducts })
+                  : t('products.hiddenWarning.title_plural', { count: hiddenProducts })}
               </p>
-              <p className="text-xs text-red-700 mt-0.5">
-                Tu plan {PLAN_FEATURES[plan].name} permite {maxProducts} productos. Los demás no se muestran a tus clientes.
+              <p className="text-[0.78rem] mt-0.5 font-normal text-[#8898AA]">
+                {t('products.hiddenWarning.description', { plan: PLAN_FEATURES[plan].name, max: maxProducts })}
               </p>
             </div>
             <Link
               to={localePath('/dashboard/plan')}
-              className="px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl hover:from-red-600 hover:to-rose-600 transition-all text-xs font-semibold shadow-lg shadow-red-500/20 flex-shrink-0"
+              className="px-3.5 py-2 rounded-xl text-white text-[0.78rem] font-semibold text-center shrink-0 transition-opacity hover:opacity-90"
+              style={{ background: '#DC2626' }}
             >
-              Actualizar plan
+              {t('products.hiddenWarning.upgrade')}
             </Link>
           </div>
         </div>
       )}
 
-      {/* Near-limit warning banner */}
-      {hiddenProducts === 0 && plan === 'free' && !Capacitor.isNativePlatform() && remainingProducts !== 'unlimited' && remainingProducts > 0 && remainingProducts <= 3 && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-400/20">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
+      {/* Aviso de cercanía al límite */}
+      {hiddenProducts === 0 &&
+        plan === 'free' &&
+        !Capacitor.isNativePlatform() &&
+        remainingProducts !== 'unlimited' &&
+        remainingProducts > 0 &&
+        remainingProducts <= 3 && (
+          <div className="rounded-[14px] bg-white p-4 sm:px-5" style={{ border: '1px solid #FDE68A' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[0.86rem] font-semibold" style={{ color: '#92400E' }}>
+                  {t('products.nearLimit.title', { remaining: remainingProducts })}
+                </p>
+                <p className="text-[0.78rem] mt-0.5 font-normal text-[#8898AA]">{t('products.nearLimit.description')}</p>
+              </div>
+              <Link
+                to={localePath('/dashboard/plan')}
+                className="px-3.5 py-2 rounded-xl text-white text-[0.78rem] font-semibold text-center shrink-0 transition-opacity hover:opacity-90"
+                style={{ background: '#1e3a5f' }}
+              >
+                {t('products.nearLimit.upgrade')}
+              </Link>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-amber-900">
-                {t('products.nearLimit.title', { remaining: remainingProducts })}
-              </p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                {t('products.nearLimit.description')}
-              </p>
-            </div>
-            <Link
-              to={localePath('/dashboard/plan')}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all text-xs font-semibold shadow-lg shadow-amber-500/20 flex-shrink-0"
-            >
-              {t('products.nearLimit.upgrade')}
-            </Link>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Categories tabs */}
-      <div className="bg-white rounded-xl border border-gray-200/60 p-4 shadow-sm">
+      {/* Categorías */}
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-sm font-semibold text-[#1e3a5f]">{t('products.categories.title')}</h3>
+            <h3 className="text-[0.86rem] font-semibold">{t('products.categories.title')}</h3>
             {remainingCategories !== 'unlimited' && (
-              <p className={`text-xs ${remainingCategories <= 1 ? 'text-orange-500' : 'text-gray-400'}`}>
+              <p
+                className={`text-[0.74rem] mt-0.5 ${
+                  remainingCategories <= 1 ? 'font-medium text-[#C2410C]' : 'font-normal text-[#8898AA]'
+                }`}
+              >
                 {t('products.remaining', { count: remainingCategories })}
               </p>
             )}
           </div>
           <button
             onClick={handleAddCategory}
-            className={`text-sm font-medium flex items-center gap-1 ${
-              categoryLimit.allowed
-                ? 'text-[#2d6cb5] hover:text-[#1e3a5f]'
-                : 'text-gray-400 cursor-not-allowed'
+            className={`text-[0.78rem] font-semibold transition-colors ${
+              categoryLimit.allowed ? 'text-[#0284C7] hover:text-[#1e3a5f]' : 'text-[#A9B6C6] cursor-not-allowed'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
             {t('products.categories.new')}
           </button>
         </div>
 
-        {/* Mobile: vertical list for clean drag & drop */}
+        {/* Móvil: lista vertical, para que el arrastre sea claro */}
         <div className="flex flex-col gap-1.5 sm:hidden">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
-              selectedCategory === null
-                ? 'bg-[#1e3a5f] text-white shadow-sm'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
+          <button onClick={() => setSelectedCategory(null)} className={`w-full px-4 py-2.5 text-left ${tabClass(selectedCategory === null)}`}>
             {t('products.categories.all')} ({getProductCount(null)})
           </button>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
             <SortableContext items={sortedCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
-              {sortedCategories.map(category => (
-                <SortableCategoryTab key={category.id} category={category}>
-                  {({ attributes, listeners }) => (
-                    <div className={`relative flex items-center gap-2 rounded-xl transition-all ${
-                      selectedCategory === category.id
-                        ? 'bg-[#1e3a5f] shadow-sm'
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}>
-                      <button
-                        {...attributes}
-                        {...listeners}
-                        className={`pl-3 py-2.5 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${
-                          selectedCategory === category.id ? 'text-white/50' : 'text-gray-300'
-                        }`}
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <circle cx="9" cy="6" r="1.5" />
-                          <circle cx="15" cy="6" r="1.5" />
-                          <circle cx="9" cy="12" r="1.5" />
-                          <circle cx="15" cy="12" r="1.5" />
-                          <circle cx="9" cy="18" r="1.5" />
-                          <circle cx="15" cy="18" r="1.5" />
-                        </svg>
-                      </button>
+              {sortedCategories.map(category => {
+                const active = selectedCategory === category.id
+                return (
+                  <SortableCategoryTab key={category.id} category={category}>
+                    {({ attributes, listeners }) => (
+                      <div className={`relative flex items-center ${tabClass(active)}`}>
+                        <button
+                          {...attributes}
+                          {...listeners}
+                          className="pl-3 pr-1 py-3 flex items-center cursor-grab active:cursor-grabbing touch-none"
+                          aria-label={t('products.reorder', { defaultValue: 'Reordenar' })}
+                        >
+                          <GripDots tone={active ? 'rgba(255,255,255,.55)' : '#C3CFDB'} />
+                        </button>
 
-                      <button
-                        onClick={() => setSelectedCategory(category.id)}
-                        className={`flex-1 py-2.5 text-sm font-medium text-left ${
-                          selectedCategory === category.id ? 'text-white' : 'text-gray-700'
-                        }`}
-                      >
-                        {category.name} ({getProductCount(category.id)})
-                      </button>
+                        <button onClick={() => setSelectedCategory(category.id)} className="flex-1 py-2.5 text-left">
+                          {category.name} ({getProductCount(category.id)})
+                        </button>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
-                        }}
-                        className={`pr-3 py-2.5 ${
-                          selectedCategory === category.id ? 'text-white/60' : 'text-gray-400'
-                        }`}
-                      >
-                        ⋮
-                      </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation()
+                            setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
+                          }}
+                          className={`px-3 py-2.5 leading-none ${active ? 'text-white/70' : 'text-[#A9B6C6]'}`}
+                          aria-label={t('products.actions', { defaultValue: 'Acciones' })}
+                        >
+                          ⋮
+                        </button>
 
-                      {openCategoryMenu === category.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200/60 z-10 min-w-[120px]">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); openEditCategory(category) }}
-                            className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
-                          >
-                            {t('products.categories.edit')}
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); handleDeleteCategory(category) }}
-                            className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
-                          >
-                            {t('products.categories.delete')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </SortableCategoryTab>
-              ))}
+                        {openCategoryMenu === category.id && (
+                          <div className={MENU_CLASS} style={MENU_SHADOW}>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                setOpenCategoryMenu(null)
+                                openEditCategory(category)
+                              }}
+                              className={MENU_ITEM}
+                            >
+                              {t('products.categories.edit')}
+                            </button>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                setOpenCategoryMenu(null)
+                                handleDeleteCategory(category)
+                              }}
+                              className={MENU_ITEM_DANGER}
+                            >
+                              {t('products.categories.delete')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </SortableCategoryTab>
+                )
+              })}
             </SortableContext>
           </DndContext>
 
           {products.some(p => !p.categoryId) && (
             <button
               onClick={() => setSelectedCategory('uncategorized')}
-              className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
-                selectedCategory === 'uncategorized'
-                  ? 'bg-[#1e3a5f] text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`w-full px-4 py-2.5 text-left ${tabClass(selectedCategory === 'uncategorized')}`}
             >
               {t('products.categories.uncategorized')} ({getProductCount('uncategorized')})
             </button>
           )}
         </div>
 
-        {/* Desktop: horizontal tabs */}
+        {/* Escritorio: pestañas horizontales */}
         <div className="hidden sm:flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              selectedCategory === null
-                ? 'bg-[#1e3a5f] text-white shadow-sm'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
+          <button onClick={() => setSelectedCategory(null)} className={`px-3.5 py-2 ${tabClass(selectedCategory === null)}`}>
             {t('products.categories.all')} ({getProductCount(null)})
           </button>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
             <SortableContext items={sortedCategories.map(c => c.id)} strategy={horizontalListSortingStrategy}>
-              {sortedCategories.map(category => (
-                <SortableCategoryTab key={category.id} category={category}>
-                  {({ attributes, listeners }) => (
-                    <div className="relative group flex items-center gap-1">
-                      <button
-                        {...attributes}
-                        {...listeners}
-                        className="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none rounded transition-colors"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                          <circle cx="9" cy="6" r="1.5" />
-                          <circle cx="15" cy="6" r="1.5" />
-                          <circle cx="9" cy="12" r="1.5" />
-                          <circle cx="15" cy="12" r="1.5" />
-                          <circle cx="9" cy="18" r="1.5" />
-                          <circle cx="15" cy="18" r="1.5" />
-                        </svg>
-                      </button>
+              {sortedCategories.map(category => {
+                const active = selectedCategory === category.id
+                return (
+                  <SortableCategoryTab key={category.id} category={category}>
+                    {({ attributes, listeners }) => (
+                      <div className={`relative flex items-center ${tabClass(active)}`}>
+                        <button
+                          {...attributes}
+                          {...listeners}
+                          className="pl-2.5 pr-1 py-2.5 flex items-center cursor-grab active:cursor-grabbing touch-none"
+                          aria-label={t('products.reorder', { defaultValue: 'Reordenar' })}
+                        >
+                          <GripDots tone={active ? 'rgba(255,255,255,.55)' : '#C3CFDB'} />
+                        </button>
 
-                      <button
-                        onClick={() => setSelectedCategory(category.id)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                          selectedCategory === category.id
-                            ? 'bg-[#1e3a5f] text-white shadow-sm'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {category.name} ({getProductCount(category.id)})
-                      </button>
+                        <button onClick={() => setSelectedCategory(category.id)} className="py-2">
+                          {category.name} ({getProductCount(category.id)})
+                        </button>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
-                        }}
-                        className="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all text-xs"
-                      >
-                        ⋮
-                      </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation()
+                            setOpenCategoryMenu(openCategoryMenu === category.id ? null : category.id)
+                          }}
+                          className={`px-2.5 py-2 leading-none ${active ? 'text-white/70' : 'text-[#A9B6C6]'}`}
+                          aria-label={t('products.actions', { defaultValue: 'Acciones' })}
+                        >
+                          ⋮
+                        </button>
 
-                      {openCategoryMenu === category.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200/60 z-10 min-w-[120px]">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); openEditCategory(category) }}
-                            className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
-                          >
-                            {t('products.categories.edit')}
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setOpenCategoryMenu(null); handleDeleteCategory(category) }}
-                            className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
-                          >
-                            {t('products.categories.delete')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </SortableCategoryTab>
-              ))}
+                        {openCategoryMenu === category.id && (
+                          <div className={MENU_CLASS} style={MENU_SHADOW}>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                setOpenCategoryMenu(null)
+                                openEditCategory(category)
+                              }}
+                              className={MENU_ITEM}
+                            >
+                              {t('products.categories.edit')}
+                            </button>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                setOpenCategoryMenu(null)
+                                handleDeleteCategory(category)
+                              }}
+                              className={MENU_ITEM_DANGER}
+                            >
+                              {t('products.categories.delete')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </SortableCategoryTab>
+                )
+              })}
             </SortableContext>
           </DndContext>
 
           {products.some(p => !p.categoryId) && (
             <button
               onClick={() => setSelectedCategory('uncategorized')}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                selectedCategory === 'uncategorized'
-                  ? 'bg-[#1e3a5f] text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3.5 py-2 ${tabClass(selectedCategory === 'uncategorized')}`}
             >
               {t('products.categories.uncategorized')} ({getProductCount('uncategorized')})
             </button>
@@ -769,52 +784,44 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Search by name */}
+      {/* Buscador. Sin lupa: el placeholder ya dice qué hace. */}
       <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           placeholder={t('products.search', { defaultValue: 'Buscar producto por nombre...' })}
-          className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-gray-200/60 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2d6cb5]/30 focus:border-[#2d6cb5] transition-all"
+          className="w-full pl-4 pr-20 py-2.5 rounded-xl bg-white border border-[#E6EBF1] text-[0.82rem] font-medium text-[#1e3a5f] placeholder:text-[#A9B6C6] placeholder:font-normal transition-colors focus:outline-none focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/15"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            aria-label={t('common.clear', { defaultValue: 'Limpiar' })}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.74rem] font-semibold text-[#8898AA] hover:text-[#425466] transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            {t('common.clear', { defaultValue: 'Limpiar' })}
           </button>
         )}
       </div>
 
-      {/* Products list */}
+      {/* Productos */}
       {filteredProducts.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-12 text-center shadow-sm">
-          <div className="w-20 h-20 bg-gray-50 border border-gray-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-10 h-10 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[#1e3a5f] mb-2">
-            {(selectedCategory || search) ? t('products.empty.titleFiltered') : t('products.empty.title')}
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-10 text-center">
+          <h3 className="text-[0.92rem] font-semibold mb-1.5">
+            {selectedCategory || search ? t('products.empty.titleFiltered') : t('products.empty.title')}
           </h3>
-          <p className="text-gray-600 mb-6">
-            {(selectedCategory || search) ? t('products.empty.descriptionFiltered') : t('products.empty.description')}
+          <p className="text-[0.84rem] font-normal text-[#8898AA] mb-5">
+            {selectedCategory || search ? t('products.empty.descriptionFiltered') : t('products.empty.description')}
           </p>
           <button
             onClick={handleAddProduct}
-            className={`inline-flex px-6 py-3 rounded-xl transition-all font-semibold ${
-              productLimit.allowed
-                ? 'bg-[#1e3a5f] text-white hover:bg-[#2d6cb5] shadow-sm'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            className={`inline-flex px-5 py-2.5 rounded-xl text-[0.84rem] font-semibold transition-opacity ${
+              productLimit.allowed ? 'text-white hover:opacity-90' : 'cursor-not-allowed'
             }`}
+            style={
+              productLimit.allowed
+                ? { background: '#1e3a5f', boxShadow: '0 8px 20px -12px rgba(30,58,95,.7)' }
+                : { background: '#F1F5F9', color: '#A9B6C6' }
+            }
           >
             {t('products.addProduct')}
           </button>
@@ -822,63 +829,70 @@ export default function Products() {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={filteredProducts.map(p => p.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredProducts.map((product) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {filteredProducts.map(product => (
                 <SortableProductCard key={product.id} product={product}>
                   {({ attributes, listeners }) => (
-                    <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden hover:shadow-lg hover:shadow-[#1e3a5f]/10 transition-all group">
-                      {/* Drag handle */}
-                      <div className="flex items-center justify-between px-3 pt-2">
+                    <div
+                      className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden transition-all group hover:-translate-y-0.5"
+                      style={{ boxShadow: '0 8px 24px -20px rgba(30,58,95,.5)' }}
+                    >
+                      {/* Arrastre + menú */}
+                      <div className="flex items-center justify-between px-2.5 pt-2">
                         <button
                           {...attributes}
                           {...listeners}
-                          className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none rounded-lg hover:bg-gray-100 transition-colors"
-                          title={t('products.reorder') || 'Reordenar'}
+                          className="w-7 h-7 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none rounded-lg hover:bg-[#F6F9FC] transition-colors"
+                          title={t('products.reorder', { defaultValue: 'Reordenar' })}
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <circle cx="9" cy="6" r="1.5" />
-                            <circle cx="15" cy="6" r="1.5" />
-                            <circle cx="9" cy="12" r="1.5" />
-                            <circle cx="15" cy="12" r="1.5" />
-                            <circle cx="9" cy="18" r="1.5" />
-                            <circle cx="15" cy="18" r="1.5" />
-                          </svg>
+                          <GripDots />
                         </button>
                         <div className="relative flex items-center gap-1">
                           {isReordering && (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#2d6cb5]"></div>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#0284C7]"></div>
                           )}
                           <button
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation()
                               setOpenProductMenu(openProductMenu === product.id ? null : product.id)
                             }}
-                            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-lg leading-none"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg text-[#8898AA] hover:text-[#425466] hover:bg-[#F6F9FC] transition-colors leading-none"
                             aria-label={t('products.actions', { defaultValue: 'Acciones' })}
                           >
                             ⋮
                           </button>
 
                           {openProductMenu === product.id && (
-                            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200/60 z-20 min-w-[140px]">
+                            <div className={MENU_CLASS} style={MENU_SHADOW}>
                               <Link
                                 to={localePath(`/dashboard/products/${product.id}`)}
-                                onClick={(e) => { e.stopPropagation(); setOpenProductMenu(null) }}
-                                className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setOpenProductMenu(null)
+                                }}
+                                className={MENU_ITEM}
                               >
                                 {t('products.edit')}
                               </Link>
                               {product.trackStock && (
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); setOpenProductMenu(null); setStockEditingProduct(product) }}
-                                  className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    setOpenProductMenu(null)
+                                    setStockEditingProduct(product)
+                                  }}
+                                  className={MENU_ITEM}
                                 >
                                   {t('products.stockEdit.button', { defaultValue: 'Stock' })}
                                 </button>
                               )}
                               <button
-                                onClick={(e) => { e.stopPropagation(); setOpenProductMenu(null); handleDeleteProduct(product.id) }}
-                                className="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 rounded-b-lg"
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setOpenProductMenu(null)
+                                  handleDeleteProduct(product.id)
+                                }}
+                                className={MENU_ITEM_DANGER}
                               >
                                 {t('products.delete')}
                               </button>
@@ -887,66 +901,61 @@ export default function Products() {
                         </div>
                       </div>
 
-                      {/* Image section */}
-                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative">
+                      {/* Imagen */}
+                      <div className="aspect-square relative" style={{ background: '#F6F9FC' }}>
                         {product.image ? (
                           <Link to={localePath(`/dashboard/products/${product.id}`)}>
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                           </Link>
                         ) : uploadingProductId === product.id ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6cb5] mb-2"></div>
-                            <p className="text-xs text-[#2d6cb5] font-medium">{t('products.uploading')}</p>
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#0284C7]"></div>
+                            <p className="text-[0.72rem] font-medium text-[#0284C7]">{t('products.uploading')}</p>
                           </div>
                         ) : (
                           <div
                             onClick={() => fileInputRefs.current[product.id]?.click()}
-                            onDrop={(e) => handleDrop(product.id, e)}
+                            onDrop={e => handleDrop(product.id, e)}
                             onDragOver={handleDragOver}
-                            className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[#f0f7ff] transition-colors border-2 border-dashed border-transparent hover:border-[#38bdf8] rounded-t-2xl"
+                            className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors hover:bg-[#F0F9FF] border-2 border-dashed border-transparent hover:border-[#BAE6FD]"
                           >
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8]/20 to-[#2d6cb5]/20 rounded-xl flex items-center justify-center mb-2">
-                              <svg className="w-5 h-5 text-[#2d6cb5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <p className="text-xs text-[#2d6cb5] font-medium">{t('products.addPhoto')}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{t('products.clickOrDrag')}</p>
+                            <p className="text-[0.76rem] font-semibold text-[#0284C7]">{t('products.addPhoto')}</p>
+                            <p className="text-[0.7rem] font-normal text-[#A9B6C6]">{t('products.clickOrDrag')}</p>
                             <input
-                              ref={(el) => { fileInputRefs.current[product.id] = el }}
+                              ref={el => {
+                                fileInputRefs.current[product.id] = el
+                              }}
                               type="file"
                               accept="image/*"
-                              onChange={(e) => handleFileChange(product.id, e)}
+                              onChange={e => handleFileChange(product.id, e)}
                               className="hidden"
                             />
                           </div>
                         )}
                         {!product.active && (
-                          <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900/70 text-white text-xs rounded-lg">
+                          <div
+                            className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[0.64rem] font-semibold"
+                            style={{ background: 'rgba(30,58,95,.85)', color: '#fff' }}
+                          >
                             {t('products.hidden')}
                           </div>
                         )}
                       </div>
 
-                      {/* Product info */}
-                      <Link to={localePath(`/dashboard/products/${product.id}`)}>
-                        <div className="p-4">
-                          <h3 className="font-semibold text-[#1e3a5f] truncate group-hover:text-[#2d6cb5] transition-colors">
-                            {product.name}
-                          </h3>
-                          <p className="text-[#2d6cb5] font-bold text-sm mt-1">
-                            {getCurrencySymbol(store?.currency || 'USD')}{product.price.toFixed(2)}
+                      {/* Datos */}
+                      <Link to={localePath(`/dashboard/products/${product.id}`)} className="block p-3.5">
+                        <h3 className="text-[0.84rem] font-medium truncate group-hover:text-[#0284C7] transition-colors">
+                          {product.name}
+                        </h3>
+                        <p className="text-[0.8rem] font-semibold mt-0.5 text-[#0284C7]">
+                          {currency}
+                          {product.price.toFixed(2)}
+                        </p>
+                        {product.categoryId && (
+                          <p className="text-[0.72rem] font-normal text-[#8898AA] mt-1 truncate">
+                            {categories.find(c => c.id === product.categoryId)?.name}
                           </p>
-                          {product.categoryId && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              {categories.find(c => c.id === product.categoryId)?.name}
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </Link>
                     </div>
                   )}
@@ -957,7 +966,7 @@ export default function Products() {
         </DndContext>
       )}
 
-      {/* Quick stock edit modal (variants + warehouses) */}
+      {/* Edición rápida de stock (variantes + almacenes) */}
       {stockEditingProduct && store && firebaseUser && (
         <StockEditModal
           storeId={store.id}
@@ -965,72 +974,68 @@ export default function Products() {
           product={stockEditingProduct}
           onClose={() => setStockEditingProduct(null)}
           onSaved={updated => {
-            // Update the local list so the new stock totals show up
-            // immediately without refetching from Firestore.
+            // Actualiza la lista local para que el stock nuevo se vea sin
+            // volver a pedir los productos a Firestore.
             setProducts(prev => prev.map(p => (p.id === updated.id ? updated : p)))
           }}
         />
       )}
 
-      {/* Category Modal */}
+      {/* Modal de categoría */}
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-[#1e3a5f] mb-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl text-[#1e3a5f]">
+            <h3 className="text-base font-semibold mb-4">
               {editingCategory ? t('products.categories.editTitle') : t('products.categories.newTitle')}
             </h3>
             <form onSubmit={handleSaveCategory}>
-              {/* Image picker — optional. Square crop applied at render time
-                  by Cloudinary, so any uploaded image works. The thumbnail
-                  shows what's currently staged (existing for edit, fresh
-                  for new). */}
+              {/* Imagen opcional. El recorte cuadrado lo aplica Cloudinary al
+                  renderizar, así que sirve cualquier imagen. */}
               <div className="flex items-start gap-3 mb-4">
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 group">
+                <div
+                  className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 group"
+                  style={{ border: '1px solid #E6EBF1' }}
+                >
                   {newCategoryImage ? (
                     <>
-                      <img
-                        src={optimizeImage(newCategoryImage, 'thumbnail')}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={optimizeImage(newCategoryImage, 'thumbnail')} alt="" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => categoryImageInputRef.current?.click()}
-                        className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center"
-                        title={t('products.categories.changeImage', { defaultValue: 'Cambiar imagen' })}
+                        className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/45 transition-colors"
                       >
                         {uploadingCategoryImage ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
+                          <span className="text-[0.72rem] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                            {t('products.categories.changeImage', { defaultValue: 'Cambiar' })}
+                          </span>
                         )}
                       </button>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); setNewCategoryImage(undefined) }}
-                        className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-bl-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                        onClick={e => {
+                          e.stopPropagation()
+                          setNewCategoryImage(undefined)
+                        }}
+                        className="absolute top-0 right-0 w-5 h-5 rounded-bl-lg text-white text-[0.7rem] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: '#DC2626' }}
                         title={t('products.categories.removeImage', { defaultValue: 'Quitar imagen' })}
                       >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        ×
                       </button>
                     </>
                   ) : (
                     <button
                       type="button"
                       onClick={() => categoryImageInputRef.current?.click()}
-                      className="w-full h-full bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
-                      title={t('products.categories.uploadImage', { defaultValue: 'Subir imagen' })}
+                      className="w-full h-full flex items-center justify-center text-[0.72rem] font-semibold transition-colors"
+                      style={{ background: '#F6F9FC', color: '#0284C7' }}
                     >
                       {uploadingCategoryImage ? (
                         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        t('products.categories.uploadImage', { defaultValue: 'Subir foto' })
                       )}
                     </button>
                   )}
@@ -1039,28 +1044,34 @@ export default function Products() {
                     type="file"
                     accept={CATEGORY_IMAGE_TYPES.join(',')}
                     className="hidden"
-                    onChange={(e) => {
+                    onChange={e => {
                       const file = e.target.files?.[0]
                       if (file) handleCategoryImageUpload(file)
                       e.target.value = ''
                     }}
                   />
                 </div>
-                <div className="flex-1 text-xs text-gray-500 pt-1 leading-relaxed">
-                  <p className="font-medium text-gray-700 mb-0.5">{t('products.categories.imageLabel', { defaultValue: 'Imagen (opcional)' })}</p>
-                  <p>{t('products.categories.imageHelp', { defaultValue: 'Cuadrada idealmente. JPG, PNG o WebP, máx 2 MB. Próximamente aparecerá en tu tienda.' })}</p>
+                <div className="flex-1">
+                  <p className="text-[0.78rem] font-semibold">
+                    {t('products.categories.imageLabel', { defaultValue: 'Imagen (opcional)' })}
+                  </p>
+                  <p className="text-[0.74rem] mt-0.5 font-normal text-[#8898AA] leading-relaxed">
+                    {t('products.categories.imageHelp', {
+                      defaultValue: 'Cuadrada idealmente. JPG, PNG o WebP, máx 2 MB.',
+                    })}
+                  </p>
                 </div>
               </div>
 
               <input
                 type="text"
                 value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
+                onChange={e => setNewCategoryName(e.target.value)}
                 placeholder={t('products.categories.namePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all mb-4"
+                className="w-full px-3.5 py-2.5 mb-4 rounded-xl bg-[#F6F9FC] border border-[#E6EBF1] text-[0.84rem] font-medium text-[#1e3a5f] placeholder:text-[#A9B6C6] placeholder:font-normal transition-colors focus:outline-none focus:bg-white focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/15"
                 autoFocus
               />
-              <div className="flex gap-3">
+              <div className="flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -1069,14 +1080,16 @@ export default function Products() {
                     setNewCategoryImage(undefined)
                     setEditingCategory(null)
                   }}
-                  className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-[0.82rem] font-semibold transition-colors hover:bg-[#EEF3F8]"
+                  style={{ background: '#F6F9FC', border: '1px solid #E6EBF1', color: '#425466' }}
                 >
                   {t('products.categories.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={!newCategoryName.trim() || savingCategory || uploadingCategoryImage}
-                  className="flex-1 px-4 py-3 bg-[#1e3a5f] text-white rounded-xl hover:bg-[#2d6cb5] transition-all font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-white text-[0.82rem] font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
+                  style={{ background: '#1e3a5f' }}
                 >
                   {savingCategory ? t('products.categories.saving') : t('products.categories.save')}
                 </button>
@@ -1086,7 +1099,7 @@ export default function Products() {
         </div>
       )}
 
-      {/* Import Modal */}
+      {/* Importación */}
       {showImportModal && (
         <ProductImport
           onClose={() => setShowImportModal(false)}
@@ -1095,34 +1108,26 @@ export default function Products() {
         />
       )}
 
-
-      {/* Limit Modal */}
+      {/* Límite del plan alcanzado */}
       {showLimitModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-[#1e3a5f] text-center mb-2">
-              {t('products.limit.title')}
-            </h3>
-            <p className="text-gray-600 text-center mb-6">
-              {limitMessage}
-            </p>
-            <div className="space-y-3">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl text-[#1e3a5f]">
+            <h3 className="text-base font-semibold mb-1.5">{t('products.limit.title')}</h3>
+            <p className="text-[0.84rem] font-normal text-[#8898AA] mb-5">{limitMessage}</p>
+            <div className="space-y-2.5">
               {!Capacitor.isNativePlatform() && (
                 <Link
                   to={localePath('/dashboard/plan')}
-                  className="block w-full px-4 py-3 bg-[#1e3a5f] text-white text-center rounded-xl hover:bg-[#2d6cb5] transition-all font-semibold shadow-sm"
+                  className="block w-full px-4 py-2.5 rounded-xl text-white text-[0.84rem] font-semibold text-center transition-opacity hover:opacity-90"
+                  style={{ background: '#1e3a5f', boxShadow: '0 8px 20px -12px rgba(30,58,95,.7)' }}
                 >
                   {t('products.limit.upgrade', { price: PLAN_FEATURES.pro.price })}
                 </Link>
               )}
               <button
                 onClick={() => setShowLimitModal(false)}
-                className="block w-full px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                className="block w-full px-4 py-2.5 rounded-xl text-[0.84rem] font-semibold transition-colors hover:bg-[#EEF3F8]"
+                style={{ background: '#F6F9FC', border: '1px solid #E6EBF1', color: '#425466' }}
               >
                 {t('products.limit.close')}
               </button>
