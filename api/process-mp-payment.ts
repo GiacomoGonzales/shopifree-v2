@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { randomUUID } from 'crypto'
-import { decrementOrderStockAdmin } from './_shared/order-stock'
-import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
+import { decrementOrderStockAdmin } from './_shared/order-stock.js'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
 
 let db: Firestore
 

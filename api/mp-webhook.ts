@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
-import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './_shared/order-stock'
+import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './_shared/order-stock.js'
 
 let db: Firestore
 

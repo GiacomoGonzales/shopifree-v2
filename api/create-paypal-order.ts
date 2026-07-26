@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { paypalFetch, isPayPalSupportedCurrency, getConversionRate, type MerchantCredentials } from '../src/lib/paypal-server.js'
-import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan'
+import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
 
 /**
  * Creates a PayPal order using the merchant's own credentials. Called by the

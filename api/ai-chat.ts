@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, type Firestore, FieldValue } from 'firebase-admin/firestore'
 import Anthropic from '@anthropic-ai/sdk'
-import { buildSystemPrompt } from './_shared/sofia-knowledge'
+import { buildSystemPrompt } from './_shared/sofia-knowledge.js'
 
 let db: Firestore
 
