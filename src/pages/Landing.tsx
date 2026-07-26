@@ -197,8 +197,7 @@ export default function Landing() {
       />
     <div className="slp-root min-h-screen">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
+        /* La fuente se carga con un <link> en index.html — ya vale para toda la app. */
         .slp-root {
           --navy: #1e3a5f;
           --navy-deep: #16304f;

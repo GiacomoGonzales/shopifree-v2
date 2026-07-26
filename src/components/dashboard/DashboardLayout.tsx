@@ -96,8 +96,10 @@ export default function DashboardLayout() {
       { name: t('nav.payments'), href: localePath('/dashboard/payments'), icon: CreditCardIcon },
       { name: t('nav.coupons'), href: localePath('/dashboard/coupons'), icon: TagIcon },
       { name: t('nav.domain'), href: localePath('/dashboard/domain'), icon: GlobeIcon },
+      // "API & Webhooks" era una entrada aparte que apuntaba a lo mismo:
+      // conectar la tienda con algo externo. Ahora es una pestaña dentro de
+      // Integraciones (/dashboard/integrations?tab=api).
       { name: t('nav.integrations'), href: localePath('/dashboard/integrations'), icon: IntegrationsIcon },
-      { name: t('nav.api'), href: localePath('/dashboard/api'), icon: IntegrationsIcon },
       { name: t('nav.miApp'), href: localePath('/dashboard/mi-app'), icon: PhoneIcon },
       'separator',
       { name: t('nav.help', { defaultValue: 'Ayuda' }), href: localePath('/dashboard/help'), icon: HelpIcon },
@@ -241,7 +243,14 @@ export default function DashboardLayout() {
 
   // Native uses the same layout as web mobile (hamburger + lateral sidebar).
   return (
-    <div className="min-h-screen bg-[#fafbfc]">
+    // La tipografia del rediseno se aplica aca y no en `body`: el mismo
+    // index.html sirve las tiendas de los clientes, y 33 de los 87 temas no
+    // declaran fontFamily — heredarian esta y les cambiaria el aspecto a
+    // storefronts en vivo. La landing y el blog ya se la ponen por su cuenta.
+    <div
+      className="min-h-screen bg-[#fafbfc]"
+      style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif" }}
+    >
       {/* Mobile header - status bar area + header bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40">
         {/* Status bar background - matches header seamlessly */}
