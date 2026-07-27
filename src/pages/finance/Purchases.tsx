@@ -423,7 +423,7 @@ export default function Purchases() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
       </div>
     )
   }
@@ -433,15 +433,15 @@ export default function Purchases() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Compras</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{purchases.length} compra{purchases.length !== 1 ? 's' : ''} registrada{purchases.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Compras</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">{purchases.length} compra{purchases.length !== 1 ? 's' : ''} registrada{purchases.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-[#F1F5F9] rounded-lg p-0.5">
             {periods.map(p => (
               <button key={p.key} onClick={() => setPeriod(p.key)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  period === p.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  period === p.key ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#8898AA] hover:text-[#425466]'
                 }`}>
                 {p.label}
               </button>
@@ -457,28 +457,28 @@ export default function Purchases() {
       {/* Summary stats */}
       {purchases.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Total gastado</p>
-            <p className="text-xl font-semibold text-gray-900 tabular-nums">{fmt(stats.totalSpend)}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">en el periodo</p>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Total gastado</p>
+            <p className="text-xl font-semibold text-[#1e3a5f] tabular-nums">{fmt(stats.totalSpend)}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5">en el periodo</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Compras</p>
-            <p className="text-xl font-semibold text-gray-900">{stats.count}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Compras</p>
+            <p className="text-xl font-semibold text-[#1e3a5f]">{stats.count}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5">
               {stats.cancelledCount > 0 && <span className="text-red-400">{stats.cancelledCount} canceladas · </span>}
               {stats.count > 0 ? fmt(stats.avg) + ' promedio' : 'Sin compras'}
             </p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Proveedor principal</p>
-            <p className="text-xl font-semibold text-gray-900 truncate">{stats.topSupplier?.name || '—'}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">{stats.topSupplier ? fmt(stats.topSupplier.total) : 'Sin datos'}</p>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Proveedor principal</p>
+            <p className="text-xl font-semibold text-[#1e3a5f] truncate">{stats.topSupplier?.name || '—'}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5 tabular-nums">{stats.topSupplier ? fmt(stats.topSupplier.total) : 'Sin datos'}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Resultados filtrados</p>
-            <p className="text-xl font-semibold text-gray-900">{filtered.length}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">de {purchases.length} totales</p>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Resultados filtrados</p>
+            <p className="text-xl font-semibold text-[#1e3a5f]">{filtered.length}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5">de {purchases.length} totales</p>
           </div>
         </div>
       )}
@@ -487,19 +487,19 @@ export default function Purchases() {
       {purchases.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por proveedor, producto o notas..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+              className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
           </div>
           <select value={supplierFilter} onChange={e => setSupplierFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+            className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
             <option value="all">Todos los proveedores</option>
             {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+            className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
             <option value="all">Todos</option>
             <option value="received">Recibidas</option>
             <option value="cancelled">Canceladas</option>
@@ -509,37 +509,37 @@ export default function Purchases() {
 
       {/* New purchase form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4 space-y-4 animate-[slideDown_0.2s_ease-out]">
-          <h3 className="text-sm font-medium text-gray-900">Registrar compra</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 space-y-4 animate-[slideDown_0.2s_ease-out]">
+          <h3 className="text-sm font-medium text-[#1e3a5f]">Registrar compra</h3>
 
           {/* Supplier, warehouse, date */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Proveedor</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Proveedor</label>
               <select value={supplierId} onChange={e => setSupplierId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                 <option value="">Sin proveedor</option>
                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Almacen destino</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Almacen destino</label>
               <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                 {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Fecha</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Fecha</label>
               <input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
             </div>
           </div>
 
           {/* Product picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-gray-500">Productos</label>
+              <label className="text-xs text-[#8898AA]">Productos</label>
               <button type="button" onClick={() => setShowProductPicker(!showProductPicker)}
                 className="text-xs text-[#1e3a5f] hover:text-[#2d6cb5] font-medium">
                 + Agregar producto
@@ -550,18 +550,18 @@ export default function Purchases() {
               <div className="mb-3 animate-[slideDown_0.15s_ease-out]">
                 <input type="text" value={productSearch} onChange={e => setProductSearch(e.target.value)}
                   placeholder="Buscar producto por nombre o SKU..." autoFocus
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2 focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-50">
+                  className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm mb-2 focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                <div className="max-h-48 overflow-y-auto border border-[#E6EBF1] rounded-lg divide-y divide-gray-50">
                   {filteredProducts.slice(0, 15).map(p => {
                     const hasCombos = p.combinations && p.combinations.length > 0
                     return (
                       <button key={p.id} onClick={() => addProduct(p)}
-                        className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left">
+                        className="w-full px-3 py-2 flex items-center gap-3 hover:bg-[#F6F9FC] transition-colors text-left">
                         {p.image ? <img src={p.image} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
-                          : <div className="w-7 h-7 rounded bg-gray-100 flex-shrink-0" />}
+                          : <div className="w-7 h-7 rounded bg-[#F1F5F9] flex-shrink-0" />}
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-gray-900 truncate">{p.name}</p>
-                          <p className="text-[11px] text-gray-400">{p.sku || 'Sin SKU'}
+                          <p className="text-sm text-[#1e3a5f] truncate">{p.name}</p>
+                          <p className="text-[11px] text-[#A9B6C6]">{p.sku || 'Sin SKU'}
                             {hasCombos && <span className="ml-1">({p.combinations!.length} combinaciones)</span>}
                           </p>
                         </div>
@@ -574,12 +574,12 @@ export default function Purchases() {
 
             {/* Items table */}
             {items.length === 0 ? (
-              <div className="text-center py-6 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-400">Agrega productos a esta compra</p>
+              <div className="text-center py-6 bg-[#F6F9FC] rounded-lg">
+                <p className="text-sm text-[#A9B6C6]">Agrega productos a esta compra</p>
               </div>
             ) : (
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="hidden sm:grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50/80 text-[11px] text-gray-400 uppercase tracking-wider font-medium border-b border-gray-100">
+              <div className="border border-[#E6EBF1] rounded-lg overflow-hidden">
+                <div className="hidden sm:grid grid-cols-12 gap-2 px-3 py-2 bg-[#F6F9FC] text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium border-b border-[#EEF2F6]">
                   <div className="col-span-5">Producto</div>
                   <div className="col-span-2 text-right">Cantidad</div>
                   <div className="col-span-2 text-right">Costo unit.</div>
@@ -592,45 +592,45 @@ export default function Purchases() {
                       {/* Mobile */}
                       <div className="sm:hidden space-y-2">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-900 truncate flex-1">{item.productName}</p>
-                          <button onClick={() => removeItem(idx)} className="p-1 text-gray-300 hover:text-red-400 ml-2">
+                          <p className="text-sm text-[#1e3a5f] truncate flex-1">{item.productName}</p>
+                          <button onClick={() => removeItem(idx)} className="p-1 text-[#C3CFDB] hover:text-red-400 ml-2">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
-                        {item.optionValue && <p className="text-[11px] text-gray-400">{item.optionValue}</p>}
+                        {item.optionValue && <p className="text-[11px] text-[#A9B6C6]">{item.optionValue}</p>}
                         <div className="grid grid-cols-3 gap-2">
                           <input type="number" min="0" value={item.quantity || ''} placeholder="Cant."
                             onChange={e => updateItem(idx, { quantity: Number(e.target.value) || 0 })}
-                            className="px-2 py-1.5 border border-gray-200 rounded-md text-xs text-right" />
+                            className="px-2 py-1.5 border border-[#E6EBF1] rounded-md text-xs text-right" />
                           <input type="number" min="0" step="0.01" value={item.unitCost || ''} placeholder="Costo"
                             onChange={e => updateItem(idx, { unitCost: Number(e.target.value) || 0 })}
-                            className="px-2 py-1.5 border border-gray-200 rounded-md text-xs text-right" />
-                          <p className="px-2 py-1.5 text-xs text-right text-gray-700 font-medium">{fmt(item.totalCost)}</p>
+                            className="px-2 py-1.5 border border-[#E6EBF1] rounded-md text-xs text-right" />
+                          <p className="px-2 py-1.5 text-xs text-right text-[#425466] font-medium">{fmt(item.totalCost)}</p>
                         </div>
                       </div>
                       {/* Desktop */}
                       <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
                         <div className="col-span-5 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">{item.productName}</p>
-                          {item.optionValue && <p className="text-[11px] text-gray-400">{item.optionValue}</p>}
+                          <p className="text-sm text-[#1e3a5f] truncate">{item.productName}</p>
+                          {item.optionValue && <p className="text-[11px] text-[#A9B6C6]">{item.optionValue}</p>}
                         </div>
                         <div className="col-span-2">
                           <input type="number" min="0" value={item.quantity || ''} placeholder="0"
                             onChange={e => updateItem(idx, { quantity: Number(e.target.value) || 0 })}
-                            className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10" />
+                            className="w-full px-2 py-1 border border-[#E6EBF1] rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10" />
                         </div>
                         <div className="col-span-2">
                           <input type="number" min="0" step="0.01" value={item.unitCost || ''} placeholder="0"
                             onChange={e => updateItem(idx, { unitCost: Number(e.target.value) || 0 })}
-                            className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10" />
+                            className="w-full px-2 py-1 border border-[#E6EBF1] rounded-md text-xs text-right focus:ring-1 focus:ring-[#1e3a5f]/10" />
                         </div>
                         <div className="col-span-2 text-right">
-                          <p className="text-xs font-medium text-gray-700">{fmt(item.totalCost)}</p>
+                          <p className="text-xs font-medium text-[#425466]">{fmt(item.totalCost)}</p>
                         </div>
                         <div className="col-span-1 text-right">
-                          <button onClick={() => removeItem(idx)} className="p-1 text-gray-300 hover:text-red-400">
+                          <button onClick={() => removeItem(idx)} className="p-1 text-[#C3CFDB] hover:text-red-400">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -641,9 +641,9 @@ export default function Purchases() {
                   ))}
                 </div>
                 {/* Totals */}
-                <div className="px-3 py-2 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                  <p className="text-xs text-gray-500">{totalQty} unidades</p>
-                  <p className="text-sm font-medium text-gray-900">Total: {fmt(total)}</p>
+                <div className="px-3 py-2 border-t border-[#EEF2F6] bg-[#F6F9FC]/50 flex items-center justify-between">
+                  <p className="text-xs text-[#8898AA]">{totalQty} unidades</p>
+                  <p className="text-sm font-medium text-[#1e3a5f]">Total: {fmt(total)}</p>
                 </div>
               </div>
             )}
@@ -651,9 +651,9 @@ export default function Purchases() {
 
           {/* Notes */}
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Notas (opcional)</label>
+            <label className="text-xs text-[#8898AA] mb-1 block">Notas (opcional)</label>
             <input type="text" value={purchaseNotes} onChange={e => setPurchaseNotes(e.target.value)} placeholder="Numero de factura, observaciones..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+              className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
           </div>
 
           {/* Save */}
@@ -668,23 +668,23 @@ export default function Purchases() {
 
       {/* Purchase list — grouped by month */}
       {purchases.length === 0 && !showForm ? (
-        <div className="bg-white rounded-xl border border-gray-200/60 px-4 py-16 text-center">
-          <p className="text-sm text-gray-400">Sin compras registradas</p>
-          <p className="text-xs text-gray-300 mt-1">Registra una compra para actualizar el stock y el flujo de caja</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] px-4 py-16 text-center">
+          <p className="text-sm text-[#A9B6C6]">Sin compras registradas</p>
+          <p className="text-xs text-[#C3CFDB] mt-1">Registra una compra para actualizar el stock y el flujo de caja</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200/60 px-4 py-16 text-center">
-          <p className="text-sm text-gray-400">Sin resultados para los filtros seleccionados</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] px-4 py-16 text-center">
+          <p className="text-sm text-[#A9B6C6]">Sin resultados para los filtros seleccionados</p>
         </div>
       ) : (
         <div className="space-y-3">
           {grouped.map(group => (
             <div key={group.month}>
               <div className="flex items-center justify-between px-1 mb-1.5">
-                <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">{group.label}</p>
-                <p className="text-[11px] text-gray-500 tabular-nums">{fmt(group.monthTotal)}</p>
+                <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium">{group.label}</p>
+                <p className="text-[11px] text-[#8898AA] tabular-nums">{fmt(group.monthTotal)}</p>
               </div>
-              <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden divide-y divide-gray-50">
+              <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden divide-y divide-gray-50">
                 {group.items.map(p => {
                   const isOpen = expandedId === p.id
                   const isCancelled = p.status === 'cancelled'
@@ -692,7 +692,7 @@ export default function Purchases() {
                   return (
                     <div key={p.id} className={isCancelled ? 'opacity-60' : ''}>
                       <div
-                        className="px-4 py-3 flex items-center justify-between hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        className="px-4 py-3 flex items-center justify-between hover:bg-[#F6F9FC]/50 transition-colors cursor-pointer"
                         onClick={() => setExpandedId(isOpen ? null : p.id)}
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -701,7 +701,7 @@ export default function Purchases() {
                           }`} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 min-w-0">
-                              <p className={`text-sm truncate ${isCancelled ? 'text-gray-500 line-through' : 'text-gray-900 font-medium'}`}>
+                              <p className={`text-sm truncate ${isCancelled ? 'text-[#8898AA] line-through' : 'text-[#1e3a5f] font-medium'}`}>
                                 {p.supplierName}
                               </p>
                               {isCancelled && (
@@ -709,12 +709,12 @@ export default function Purchases() {
                               )}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-[#A9B6C6]">
                                 {p.date.toLocaleDateString('es', { day: '2-digit', month: 'short' })}
                                 {' · '}{p.items.length} item{p.items.length !== 1 ? 's' : ''}
                               </span>
                               {p.warehouseName && (
-                                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded">
+                                <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] rounded">
                                   {p.warehouseName}
                                 </span>
                               )}
@@ -722,35 +722,35 @@ export default function Purchases() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          <p className={`text-sm font-medium tabular-nums ${isCancelled ? 'text-gray-400' : 'text-gray-900'}`}>
+                          <p className={`text-sm font-medium tabular-nums ${isCancelled ? 'text-[#A9B6C6]' : 'text-[#1e3a5f]'}`}>
                             {fmt(p.total)}
                           </p>
-                          <svg className={`w-4 h-4 text-gray-300 transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <svg className={`w-4 h-4 text-[#C3CFDB] transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                           </svg>
                         </div>
                       </div>
 
                       {isOpen && (
-                        <div className="px-4 pb-3 border-t border-gray-50 bg-gray-50/30 animate-[slideDown_0.15s_ease-out]">
-                          <div className="divide-y divide-gray-100 bg-white rounded-lg border border-gray-100 mt-3">
+                        <div className="px-4 pb-3 border-t border-gray-50 bg-[#F6F9FC]/30 animate-[slideDown_0.15s_ease-out]">
+                          <div className="divide-y divide-[#EEF2F6] bg-white rounded-lg border border-[#EEF2F6] mt-3">
                             {p.items.map((item, idx) => (
                               <div key={idx} className="px-3 py-2 flex items-center justify-between">
                                 <div className="min-w-0">
-                                  <p className="text-sm text-gray-700">{item.productName}</p>
-                                  {item.optionValue && <p className="text-[11px] text-gray-400">{item.optionValue}</p>}
+                                  <p className="text-sm text-[#425466]">{item.productName}</p>
+                                  {item.optionValue && <p className="text-[11px] text-[#A9B6C6]">{item.optionValue}</p>}
                                 </div>
                                 <div className="text-right flex-shrink-0 ml-3">
-                                  <p className="text-[11px] text-gray-500">{item.quantity} × {fmt(item.unitCost)}</p>
-                                  <p className="text-sm font-medium text-gray-700 tabular-nums">{fmt(item.totalCost)}</p>
+                                  <p className="text-[11px] text-[#8898AA]">{item.quantity} × {fmt(item.unitCost)}</p>
+                                  <p className="text-sm font-medium text-[#425466] tabular-nums">{fmt(item.totalCost)}</p>
                                 </div>
                               </div>
                             ))}
                           </div>
                           {p.notes && (
-                            <div className="mt-2 bg-white rounded-lg border border-gray-100 px-3 py-2">
-                              <p className="text-[11px] text-gray-400 mb-0.5">Notas</p>
-                              <p className="text-xs text-gray-600 whitespace-pre-wrap">{p.notes}</p>
+                            <div className="mt-2 bg-white rounded-lg border border-[#EEF2F6] px-3 py-2">
+                              <p className="text-[11px] text-[#A9B6C6] mb-0.5">Notas</p>
+                              <p className="text-xs text-[#425466] whitespace-pre-wrap">{p.notes}</p>
                             </div>
                           )}
                           {!isCancelled && (

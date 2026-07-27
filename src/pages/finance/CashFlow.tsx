@@ -195,16 +195,16 @@ export default function CashFlow() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Flujo de caja</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Ingresos, costos y utilidad</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Flujo de caja</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">Ingresos, costos y utilidad</p>
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-[#F1F5F9] rounded-lg p-0.5">
           {periods.map(p => (
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                period === p.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                period === p.key ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#8898AA] hover:text-[#425466]'
               }`}
             >
               {p.label}
@@ -215,7 +215,7 @@ export default function CashFlow() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
         </div>
       ) : (
         <>
@@ -242,15 +242,15 @@ export default function CashFlow() {
           </div>
 
           {/* P&L — Simple income statement */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-5">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-sm font-medium text-gray-900">Estado de resultados</h2>
-                <p className="text-[11px] text-gray-400 mt-0.5">{periodLabel}</p>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Estado de resultados</h2>
+                <p className="text-[11px] text-[#A9B6C6] mt-0.5">{periodLabel}</p>
               </div>
               <div className="text-right">
-                <p className="text-[11px] text-gray-400">Margen neto</p>
-                <p className={`text-sm font-semibold ${current.netMarginPct >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
+                <p className="text-[11px] text-[#A9B6C6]">Margen neto</p>
+                <p className={`text-sm font-semibold ${current.netMarginPct >= 0 ? 'text-[#1e3a5f]' : 'text-red-500'}`}>
                   {current.netMarginPct.toFixed(1)}%
                 </p>
               </div>
@@ -285,31 +285,31 @@ export default function CashFlow() {
               )}
             </div>
 
-            <p className="text-[11px] text-gray-400 mt-4">
+            <p className="text-[11px] text-[#A9B6C6] mt-4">
               Ingresos cuentan sobre pedidos con pago confirmado (Cobrado), no sobre entregas sin pagar. COGS = costo unitario × unidades en pedidos pagados. Las compras de inventario no se cuentan como gasto operativo hasta que se venden.
             </p>
           </div>
 
           {/* OPEX breakdown */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-5">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium text-gray-900">Gastos operativos por categoria</h2>
-              <p className="text-[11px] text-gray-400">{fmt(current.opex)} total</p>
+              <h2 className="text-sm font-medium text-[#1e3a5f]">Gastos operativos por categoria</h2>
+              <p className="text-[11px] text-[#A9B6C6]">{fmt(current.opex)} total</p>
             </div>
             {current.opexByCategory.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">Sin gastos operativos en este periodo</p>
+              <p className="text-sm text-[#A9B6C6] text-center py-6">Sin gastos operativos en este periodo</p>
             ) : (
               <div className="space-y-3">
                 {current.opexByCategory.map(cat => (
                   <div key={cat.name}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-gray-600">{cat.name}</span>
-                      <span className="text-sm font-medium text-gray-900 tabular-nums">
+                      <span className="text-sm text-[#425466]">{cat.name}</span>
+                      <span className="text-sm font-medium text-[#1e3a5f] tabular-nums">
                         {fmt(cat.amount)}
-                        <span className="ml-2 text-[11px] font-normal text-gray-400">{cat.pct.toFixed(0)}%</span>
+                        <span className="ml-2 text-[11px] font-normal text-[#A9B6C6]">{cat.pct.toFixed(0)}%</span>
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div className="h-full bg-[#1e3a5f] rounded-full transition-all" style={{ width: `${cat.pct}%` }} />
                     </div>
                   </div>
@@ -320,14 +320,14 @@ export default function CashFlow() {
 
           {/* Top expenses */}
           {current.topExpenses.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-5">
-              <h2 className="text-sm font-medium text-gray-900 mb-3">Gastos mas grandes del periodo</h2>
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
+              <h2 className="text-sm font-medium text-[#1e3a5f] mb-3">Gastos mas grandes del periodo</h2>
               <div className="divide-y divide-gray-50">
                 {current.topExpenses.map(e => (
                   <div key={e.id} className="py-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">{e.category}</span>
-                      <p className="text-sm text-gray-700 truncate">{e.description}</p>
+                      <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded">{e.category}</span>
+                      <p className="text-sm text-[#425466] truncate">{e.description}</p>
                     </div>
                     <p className="text-sm font-medium text-red-500 tabular-nums flex-shrink-0">−{fmt(e.amount)}</p>
                   </div>
@@ -358,11 +358,11 @@ function SummaryCard({
   inverted?: boolean  // when true, "up" is bad (e.g. gastos subiendo)
   hint?: string
 }) {
-  const accentClass = accent === 'green' ? 'text-green-600' : accent === 'red' ? 'text-red-500' : 'text-gray-900'
+  const accentClass = accent === 'green' ? 'text-green-600' : accent === 'red' ? 'text-red-500' : 'text-[#1e3a5f]'
   const positiveIsGood = !inverted
   const goodClass = 'text-green-600'
   const badClass = 'text-red-500'
-  const neutralClass = 'text-gray-400'
+  const neutralClass = 'text-[#A9B6C6]'
   let deltaClass = neutralClass
   if (delta.direction === 'up') deltaClass = positiveIsGood ? goodClass : badClass
   if (delta.direction === 'down') deltaClass = positiveIsGood ? badClass : goodClass
@@ -370,12 +370,12 @@ function SummaryCard({
   const arrow = delta.direction === 'up' ? '↑' : delta.direction === 'down' ? '↓' : '→'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
+    <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+      <p className="text-[11px] text-[#A9B6C6] mb-1">{label}</p>
       <p className={`text-xl font-semibold ${accentClass}`}>{value}</p>
-      {hint && <p className="text-[10px] text-gray-400 mt-0.5">{hint}</p>}
+      {hint && <p className="text-[10px] text-[#A9B6C6] mt-0.5">{hint}</p>}
       <p className={`text-[11px] mt-1 ${deltaClass}`}>
-        {arrow} {fmtPct(delta.pct)} <span className="text-gray-400 font-normal">vs periodo previo</span>
+        {arrow} {fmtPct(delta.pct)} <span className="text-[#A9B6C6] font-normal">vs periodo previo</span>
       </p>
     </div>
   )
@@ -396,20 +396,20 @@ function PnLRow({
 }) {
   const labelCls = [
     'text-sm',
-    indent ? 'pl-4 text-gray-500' : emphasis ? 'text-gray-900 font-medium' : 'text-gray-700',
-    muted && !indent ? 'text-gray-500' : '',
+    indent ? 'pl-4 text-[#8898AA]' : emphasis ? 'text-[#1e3a5f] font-medium' : 'text-[#425466]',
+    muted && !indent ? 'text-[#8898AA]' : '',
   ].filter(Boolean).join(' ')
   const valueCls = [
     'tabular-nums',
     bold ? 'text-base font-semibold' : 'text-sm font-medium',
-    negative ? 'text-red-500' : positive ? 'text-green-600' : emphasis ? 'text-gray-900' : 'text-gray-700',
+    negative ? 'text-red-500' : positive ? 'text-green-600' : emphasis ? 'text-[#1e3a5f]' : 'text-[#425466]',
   ].filter(Boolean).join(' ')
 
   return (
     <div className="flex items-center justify-between">
       <span className={labelCls}>{label}</span>
       <div className="flex items-center gap-2">
-        {hint && <span className="text-[11px] text-gray-400">{hint}</span>}
+        {hint && <span className="text-[11px] text-[#A9B6C6]">{hint}</span>}
         <span className={valueCls}>{value}</span>
       </div>
     </div>
@@ -417,5 +417,5 @@ function PnLRow({
 }
 
 function PnLDivider() {
-  return <div className="border-t border-gray-100 my-1" />
+  return <div className="border-t border-[#EEF2F6] my-1" />
 }

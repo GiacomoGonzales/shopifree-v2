@@ -225,22 +225,22 @@ export default function StockDiagnostic() {
     orphan_stock: { label: 'Stock huerfano', color: 'bg-red-50 text-red-600' },
     no_warehouse: { label: 'Sin almacen', color: 'bg-amber-50 text-amber-600' },
     missing_combinations: { label: 'Sin combinaciones', color: 'bg-purple-50 text-purple-600' },
-    stock_mismatch: { label: 'No coincide', color: 'bg-blue-50 text-blue-600' },
-    dead_warehouse: { label: 'Almacen eliminado', color: 'bg-gray-100 text-gray-600' },
+    stock_mismatch: { label: 'No coincide', color: 'bg-[#F0F9FF] text-[#0284C7]' },
+    dead_warehouse: { label: 'Almacen eliminado', color: 'bg-[#F1F5F9] text-[#425466]' },
   }
 
   const unresolvedCount = issues.filter(i => !fixed.has(i.id)).length
 
   if (loading) {
-    return <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" /></div>
+    return <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" /></div>
   }
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Diagnostico de stock</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Diagnostico de stock</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">
             {unresolvedCount === 0 ? 'Todo en orden' : `${unresolvedCount} problema${unresolvedCount !== 1 ? 's' : ''} encontrado${unresolvedCount !== 1 ? 's' : ''}`}
           </p>
         </div>
@@ -253,17 +253,17 @@ export default function StockDiagnostic() {
       </div>
 
       {issues.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200/60 px-4 py-16 text-center">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] px-4 py-16 text-center">
           <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-gray-900">Stock saludable</p>
-          <p className="text-xs text-gray-400 mt-1">No se encontraron problemas en el inventario</p>
+          <p className="text-sm font-medium text-[#1e3a5f]">Stock saludable</p>
+          <p className="text-xs text-[#A9B6C6] mt-1">No se encontraron problemas en el inventario</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
           <div className="divide-y divide-gray-50">
             {issues.map(issue => {
               const isFixed = fixed.has(issue.id)
@@ -277,15 +277,15 @@ export default function StockDiagnostic() {
                       {issue.productImage ? (
                         <img src={issue.productImage} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0 mt-0.5" />
                       ) : (
-                        <div className="w-9 h-9 rounded-lg bg-gray-100 flex-shrink-0 mt-0.5" />
+                        <div className="w-9 h-9 rounded-lg bg-[#F1F5F9] flex-shrink-0 mt-0.5" />
                       )}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">{issue.productName}</p>
+                          <p className="text-sm font-medium text-[#1e3a5f] truncate">{issue.productName}</p>
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${color}`}>{label}</span>
                         </div>
-                        <p className="text-xs text-gray-500">{issue.description}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{issue.currentValue}</p>
+                        <p className="text-xs text-[#8898AA]">{issue.description}</p>
+                        <p className="text-[11px] text-[#A9B6C6] mt-0.5">{issue.currentValue}</p>
                       </div>
                     </div>
                     <div className="flex-shrink-0">
@@ -293,7 +293,7 @@ export default function StockDiagnostic() {
                         <span className="text-xs text-green-500 font-medium">Corregido</span>
                       ) : (
                         <button onClick={() => handleFix(issue)} disabled={isFixing}
-                          className="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-40">
+                          className="px-3 py-1.5 text-xs font-medium bg-[#F1F5F9] text-[#425466] rounded-lg hover:bg-[#E1E8EF] transition-colors disabled:opacity-40">
                           {isFixing ? '...' : 'Corregir'}
                         </button>
                       )}

@@ -147,19 +147,19 @@ export default function SharedMobileSidebar() {
 
       {/* Drawer */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-[280px] bg-white border-r border-gray-200/60 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-y-0 left-0 w-[280px] bg-white border-r border-[#E6EBF1]/60 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
-          <div className="px-4 pt-4 pb-3 border-b border-gray-100 space-y-3 relative">
+          <div className="px-4 pt-4 pb-3 border-b border-[#EEF2F6] space-y-3 relative">
             <div className="flex items-center justify-center gap-2">
               <Link to={rootPath}>
                 <img src="/newlogo.png" alt="Shopifree" className="h-8" />
               </Link>
               {isAdmin && (
-                <Link to={localePath('/admin')} className="p-1 rounded-md text-gray-300 hover:text-violet-500 transition-colors" title="Admin">
+                <Link to={localePath('/admin')} className="p-1 rounded-md text-[#C3CFDB] hover:text-violet-500 transition-colors" title="Admin">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                   </svg>
@@ -167,7 +167,7 @@ export default function SharedMobileSidebar() {
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-md transition-colors absolute right-4 top-4"
+                className="p-1.5 text-[#C3CFDB] hover:text-[#8898AA] hover:bg-[#F1F5F9] rounded-md transition-colors absolute right-4 top-4"
               >
                 <CloseIcon />
               </button>
@@ -191,18 +191,18 @@ export default function SharedMobileSidebar() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-[5px] rounded-md text-[13px] transition-colors relative ${
+                  className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[0.82rem] transition-colors relative ${
                     active
-                      ? 'bg-gray-900/[0.04] text-gray-900 font-medium'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-900/[0.02] font-normal'
+                      ? 'bg-[#E0F2FE] text-[#0284C7] font-semibold'
+                      : 'text-[#425466] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] font-medium'
                   }`}
                 >
-                  {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-gray-900 rounded-r-full" />}
+                  {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full" style={{ background: '#0284C7' }} />}
                   <item.icon active={active} />
                   <span className="flex-1">{item.name}</span>
                   {(item.badge ?? 0) > 0 && (
-                    <span className={`min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center ${
-                      active ? 'bg-gray-900 text-white' : 'bg-red-500 text-white'
+                    <span className={`min-w-[18px] h-[18px] px-1 text-[0.62rem] font-semibold rounded-full flex items-center justify-center ${
+                      active ? 'bg-[#0284C7] text-white' : 'bg-[#DC2626] text-white'
                     }`}>
                       {(item.badge ?? 0) > 9 ? '9+' : item.badge}
                     </span>
@@ -214,27 +214,27 @@ export default function SharedMobileSidebar() {
 
           {/* User section — extra bottom padding, respecting iOS home indicator safe area */}
           <div
-            className="px-3 pt-3 border-t border-gray-100"
+            className="px-3 pt-3 border-t border-[#EEF2F6]"
             style={{ paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
           >
             <div className="flex items-center gap-2.5">
               {user.avatar ? (
                 <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-full object-cover" />
               ) : (
-                <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">
-                  <span className="text-[11px] font-medium text-gray-600">
+                <div className="w-7 h-7 bg-[#E1E8EF] rounded-full flex items-center justify-center">
+                  <span className="text-[11px] font-medium text-[#425466]">
                     {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
                   </span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-gray-700 truncate">
+                <p className="text-[13px] font-medium text-[#425466] truncate">
                   {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.email}
                 </p>
               </div>
               <button
                 onClick={handleLogout}
-                className="text-gray-300 hover:text-gray-500 transition-colors p-1.5 rounded-md hover:bg-gray-100"
+                className="text-[#C3CFDB] hover:text-[#8898AA] transition-colors p-1.5 rounded-md hover:bg-[#F1F5F9]"
                 title={t('nav.logout')}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

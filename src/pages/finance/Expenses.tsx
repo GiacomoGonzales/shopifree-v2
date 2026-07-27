@@ -198,8 +198,8 @@ export default function Expenses() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Gastos</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Registra y controla tus gastos</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Gastos</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">Registra y controla tus gastos</p>
         </div>
         <button
           onClick={() => { if (showForm) { setShowForm(false); resetForm() } else { openCreate() } }}
@@ -211,90 +211,90 @@ export default function Expenses() {
 
       {/* Summary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-          <p className="text-[11px] text-gray-400 mb-1">Total registrado</p>
-          <p className="text-xl font-semibold text-gray-900">{fmt(expenses.reduce((s, e) => s + e.amount, 0))}</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">{expenses.length} gasto{expenses.length !== 1 ? 's' : ''}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Total registrado</p>
+          <p className="text-xl font-semibold text-[#1e3a5f]">{fmt(expenses.reduce((s, e) => s + e.amount, 0))}</p>
+          <p className="text-[11px] text-[#A9B6C6] mt-0.5">{expenses.length} gasto{expenses.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-          <p className="text-[11px] text-gray-400 mb-1">Gastos fijos mensuales</p>
-          <p className="text-xl font-semibold text-gray-900">{fmt(fixedMonthly)}</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Gastos fijos mensuales</p>
+          <p className="text-xl font-semibold text-[#1e3a5f]">{fmt(fixedMonthly)}</p>
+          <p className="text-[11px] text-[#A9B6C6] mt-0.5">
             {expenses.filter(e => e.isRecurring).length} recurrente{expenses.filter(e => e.isRecurring).length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-          <p className="text-[11px] text-gray-400 mb-1">Vista filtrada</p>
-          <p className="text-xl font-semibold text-gray-900">{fmt(totalFiltered)}</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Vista filtrada</p>
+          <p className="text-xl font-semibold text-[#1e3a5f]">{fmt(totalFiltered)}</p>
+          <p className="text-[11px] text-[#A9B6C6] mt-0.5">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4 space-y-3 animate-[slideDown_0.15s_ease-out]">
-          <h3 className="text-sm font-medium text-gray-900">{editingId ? 'Editar gasto' : 'Nuevo gasto'}</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 space-y-3 animate-[slideDown_0.15s_ease-out]">
+          <h3 className="text-sm font-medium text-[#1e3a5f]">{editingId ? 'Editar gasto' : 'Nuevo gasto'}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Descripcion</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Descripcion</label>
               <input
                 type="text"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Ej: Compra de bolsas"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Monto</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Monto</label>
               <input
                 type="number"
                 step="0.01"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Categoria</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Categoria</label>
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               >
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Fecha</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Fecha</label>
               <input
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               />
             </div>
           </div>
 
           {/* Recurring toggle */}
-          <div className="flex items-start gap-3 pt-1 border-t border-gray-100 mt-1">
+          <div className="flex items-start gap-3 pt-1 border-t border-[#EEF2F6] mt-1">
             <label className="flex items-center gap-2 cursor-pointer select-none mt-3">
               <input
                 type="checkbox"
                 checked={isRecurring}
                 onChange={e => setIsRecurring(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-[#1e3a5f] focus:ring-[#1e3a5f]/20"
+                className="w-4 h-4 rounded border-[#D8E2EC] text-[#1e3a5f] focus:ring-[#1e3a5f]/20"
               />
-              <span className="text-sm text-gray-700">Gasto recurrente</span>
+              <span className="text-sm text-[#425466]">Gasto recurrente</span>
             </label>
             {isRecurring && (
               <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-gray-400">Frecuencia:</span>
+                <span className="text-xs text-[#A9B6C6]">Frecuencia:</span>
                 <select
                   value={recurringFrequency}
                   onChange={e => setRecurringFrequency(e.target.value as 'weekly' | 'monthly')}
-                  className="px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+                  className="px-2 py-1 border border-[#E6EBF1] rounded-md text-xs focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
                 >
                   <option value="monthly">Mensual</option>
                   <option value="weekly">Semanal</option>
@@ -307,7 +307,7 @@ export default function Expenses() {
             {editingId && (
               <button
                 onClick={() => { setShowForm(false); resetForm() }}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
+                className="px-4 py-2 text-sm text-[#8898AA] hover:text-[#425466]"
               >
                 Cancelar
               </button>
@@ -327,7 +327,7 @@ export default function Expenses() {
       {expenses.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
             <input
@@ -335,13 +335,13 @@ export default function Expenses() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar por descripcion o categoria..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
+              className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
             />
           </div>
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value as CategoryFilter)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
+            className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
           >
             <option value="all">Todas las categorias</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -350,41 +350,38 @@ export default function Expenses() {
       )}
 
       {/* Expenses list */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-[#A9B6C6]">
               {expenses.length === 0 ? 'No hay gastos registrados' : 'Sin resultados para los filtros seleccionados'}
             </p>
             {expenses.length === 0 && (
-              <p className="text-xs text-gray-300 mt-1">Agrega tu primer gasto para empezar a controlar tus finanzas</p>
+              <p className="text-xs text-[#C3CFDB] mt-1">Agrega tu primer gasto para empezar a controlar tus finanzas</p>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#EEF2F6]">
             {filtered.map(expense => (
-              <div key={expense.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors group">
+              <div key={expense.id} className="px-4 py-3 flex items-center justify-between hover:bg-[#F6F9FC] transition-colors group">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded-md flex-shrink-0">
+                  <span className="px-2 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded-md flex-shrink-0">
                     {expense.category}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm text-gray-900 truncate">{expense.description}</p>
+                      <p className="text-sm text-[#1e3a5f] truncate">{expense.description}</p>
                       {expense.isRecurring && (
-                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-medium rounded">
-                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                          </svg>
-                          {expense.recurringFrequency === 'weekly' ? 'Semanal' : 'Mensual'}
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-[#F0F9FF] text-[#0284C7] text-[9px] font-medium rounded">
+{expense.recurringFrequency === 'weekly' ? 'Semanal' : 'Mensual'}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400">{expense.date.toLocaleDateString('es')}</p>
+                    <p className="text-xs text-[#A9B6C6]">{expense.date.toLocaleDateString('es')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -392,7 +389,7 @@ export default function Expenses() {
                   <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => openEdit(expense)}
-                      className="p-1 text-gray-300 hover:text-blue-500 transition-colors"
+                      className="p-1 text-[#C3CFDB] hover:text-[#0284C7] transition-colors"
                       title="Editar"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -401,7 +398,7 @@ export default function Expenses() {
                     </button>
                     <button
                       onClick={() => handleDelete(expense.id)}
-                      className="p-1 text-gray-300 hover:text-red-500 transition-colors"
+                      className="p-1 text-[#C3CFDB] hover:text-red-500 transition-colors"
                       title="Eliminar"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

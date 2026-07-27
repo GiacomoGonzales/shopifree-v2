@@ -12,13 +12,13 @@ export default function ModeSwitcher({ mode }: ModeSwitcherProps) {
   const { localePath } = useLanguage()
 
   return (
-    <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5 w-full">
+    <div className="flex items-center gap-0.5 rounded-xl p-1 w-full" style={{ background: '#F6F9FC', border: '1px solid #E6EBF1' }}>
       <Link
         to={localePath('/dashboard')}
-        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
+        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.74rem] font-semibold transition-colors ${
           mode === 'ecommerce'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-400 hover:text-gray-600'
+            ? 'bg-white text-[#1e3a5f] shadow-sm'
+            : 'text-[#8898AA] hover:text-[#425466]'
         }`}
       >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -28,10 +28,10 @@ export default function ModeSwitcher({ mode }: ModeSwitcherProps) {
       </Link>
       <Link
         to={localePath('/finance')}
-        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
+        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.74rem] font-semibold transition-colors ${
           mode === 'finance'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-400 hover:text-gray-600'
+            ? 'bg-white text-[#1e3a5f] shadow-sm'
+            : 'text-[#8898AA] hover:text-[#425466]'
         }`}
       >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

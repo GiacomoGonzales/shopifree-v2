@@ -292,10 +292,10 @@ export default function Suppliers() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Proveedores</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Proveedores</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">
             {activeCount} activo{activeCount !== 1 ? 's' : ''}
-            {archivedCount > 0 && <span className="text-gray-400"> · {archivedCount} archivado{archivedCount !== 1 ? 's' : ''}</span>}
+            {archivedCount > 0 && <span className="text-[#A9B6C6]"> · {archivedCount} archivado{archivedCount !== 1 ? 's' : ''}</span>}
           </p>
         </div>
         <button onClick={() => openForm()}
@@ -307,24 +307,24 @@ export default function Suppliers() {
       {/* Summary */}
       {suppliers.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Proveedores activos</p>
-            <p className="text-xl font-semibold text-gray-900">{summary.active}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Proveedores activos</p>
+            <p className="text-xl font-semibold text-[#1e3a5f]">{summary.active}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5">
               {purchases.length} compra{purchases.length !== 1 ? 's' : ''} registradas
             </p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Compras ultimos 30 dias</p>
-            <p className="text-xl font-semibold text-gray-900">{fmt(summary.spendLast30)}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              <Link to={localePath('/finance/purchases')} className="text-blue-500 hover:text-blue-700">Ver compras →</Link>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Compras ultimos 30 dias</p>
+            <p className="text-xl font-semibold text-[#1e3a5f]">{fmt(summary.spendLast30)}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5">
+              <Link to={localePath('/finance/purchases')} className="text-[#0284C7] hover:text-[#0369A1]">Ver compras →</Link>
             </p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-            <p className="text-[11px] text-gray-400 mb-1">Proveedor principal</p>
-            <p className="text-xl font-semibold text-gray-900 truncate">{summary.topName || '—'}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">{summary.topSpend > 0 ? fmt(summary.topSpend) : 'Sin datos'}</p>
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Proveedor principal</p>
+            <p className="text-xl font-semibold text-[#1e3a5f] truncate">{summary.topName || '—'}</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5 tabular-nums">{summary.topSpend > 0 ? fmt(summary.topSpend) : 'Sin datos'}</p>
           </div>
         </div>
       )}
@@ -333,20 +333,20 @@ export default function Suppliers() {
       {suppliers.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre, contacto o email..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+              className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
           </div>
           <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+            className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
             <option value="spend">Mayor gasto</option>
             <option value="recent">Mas recientes</option>
             <option value="name">Alfabetico</option>
           </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+            className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
             <option value="active">Activos</option>
             <option value="archived">Archivados</option>
             <option value="all">Todos</option>
@@ -356,43 +356,43 @@ export default function Suppliers() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4 space-y-3 animate-[slideDown_0.2s_ease-out]">
-          <h3 className="text-sm font-medium text-gray-900">{editing ? 'Editar proveedor' : 'Nuevo proveedor'}</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 space-y-3 animate-[slideDown_0.2s_ease-out]">
+          <h3 className="text-sm font-medium text-[#1e3a5f]">{editing ? 'Editar proveedor' : 'Nuevo proveedor'}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Nombre de la empresa *</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Nombre de la empresa *</label>
               <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Distribuidora Lima"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Persona de contacto</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Persona de contacto</label>
               <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Ej: Carlos Perez"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Telefono</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Telefono</label>
               <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+51 999 999 999"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Email</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="proveedor@email.com"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs text-gray-500 mb-1 block">Direccion</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Direccion</label>
               <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Av. Principal 123, Lima"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs text-gray-500 mb-1 block">Notas</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Notas</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Productos que provee, condiciones de pago, etc."
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none" />
+                className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all resize-none" />
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={() => { setShowForm(false); resetForm() }} className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
+            <button onClick={() => { setShowForm(false); resetForm() }} className="px-3 py-2 text-sm text-[#8898AA] hover:text-[#425466]">Cancelar</button>
             <button onClick={handleSave} disabled={saving || !name.trim()}
               className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-40">
               {saving ? 'Guardando...' : 'Guardar'}
@@ -402,17 +402,17 @@ export default function Suppliers() {
       )}
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
           </div>
         ) : visible.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-[#A9B6C6]">
               {suppliers.length === 0 ? 'Sin proveedores registrados' : 'Sin resultados'}
             </p>
-            {suppliers.length === 0 && <p className="text-xs text-gray-300 mt-1">Agrega tu primer proveedor para gestionar tus compras</p>}
+            {suppliers.length === 0 && <p className="text-xs text-[#C3CFDB] mt-1">Agrega tu primer proveedor para gestionar tus compras</p>}
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
@@ -423,21 +423,21 @@ export default function Suppliers() {
               return (
                 <div key={s.id} className={isArchived ? 'opacity-60' : ''}>
                   <div
-                    className="px-4 py-3 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    className="px-4 py-3 hover:bg-[#F6F9FC]/50 transition-colors cursor-pointer"
                     onClick={() => setExpandedId(isOpen ? null : s.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-medium text-gray-500">{s.name[0].toUpperCase()}</span>
+                      <div className="w-9 h-9 bg-[#F1F5F9] rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium text-[#8898AA]">{s.name[0].toUpperCase()}</span>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{s.name}</p>
+                          <p className="text-sm font-medium text-[#1e3a5f] truncate">{s.name}</p>
                           {isArchived && (
-                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">Archivado</span>
+                            <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded">Archivado</span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-400 truncate">
+                        <p className="text-xs text-[#A9B6C6] truncate">
                           {s.contactName || s.phone || s.email || 'Sin datos de contacto'}
                         </p>
                       </div>
@@ -451,14 +451,14 @@ export default function Suppliers() {
 
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button onClick={e => { e.stopPropagation(); openForm(s) }}
-                          className="p-1.5 text-gray-300 hover:text-blue-500 rounded-md hover:bg-gray-100 transition-colors"
+                          className="p-1.5 text-[#C3CFDB] hover:text-[#0284C7] rounded-md hover:bg-[#F1F5F9] transition-colors"
                           title="Editar">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
                           </svg>
                         </button>
                         <button onClick={e => { e.stopPropagation(); toggleArchive(s) }}
-                          className="p-1.5 text-gray-300 hover:text-amber-500 rounded-md hover:bg-gray-100 transition-colors"
+                          className="p-1.5 text-[#C3CFDB] hover:text-amber-500 rounded-md hover:bg-[#F1F5F9] transition-colors"
                           title={isArchived ? 'Restaurar' : 'Archivar'}>
                           {isArchived ? (
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -470,14 +470,14 @@ export default function Suppliers() {
                             </svg>
                           )}
                         </button>
-                        <svg className={`w-4 h-4 text-gray-300 transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <svg className={`w-4 h-4 text-[#C3CFDB] transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                       </div>
                     </div>
 
                     {/* Mobile stats row */}
-                    <div className="sm:hidden flex items-center gap-3 mt-2 pl-12 text-[11px] text-gray-500">
+                    <div className="sm:hidden flex items-center gap-3 mt-2 pl-12 text-[11px] text-[#8898AA]">
                       {st.totalSpend > 0 && <span className="tabular-nums">{fmt(st.totalSpend)}</span>}
                       <span>·</span>
                       <span>{st.purchaseCount} compras</span>
@@ -488,7 +488,7 @@ export default function Suppliers() {
 
                   {/* Expanded detail */}
                   {isOpen && (
-                    <div className="px-4 pb-4 pl-4 sm:pl-16 space-y-4 bg-gray-50/30 animate-[slideDown_0.15s_ease-out]">
+                    <div className="px-4 pb-4 pl-4 sm:pl-16 space-y-4 bg-[#F6F9FC]/30 animate-[slideDown_0.15s_ease-out]">
                       {/* Stats grid */}
                       {st.purchaseCount > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3">
@@ -501,11 +501,11 @@ export default function Suppliers() {
 
                       {/* Top product */}
                       {st.topProduct && (
-                        <div className="bg-white border border-gray-100 rounded-lg px-3 py-2">
-                          <p className="text-[11px] text-gray-400 mb-0.5">Producto mas comprado</p>
+                        <div className="bg-white border border-[#EEF2F6] rounded-lg px-3 py-2">
+                          <p className="text-[11px] text-[#A9B6C6] mb-0.5">Producto mas comprado</p>
                           <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-800 truncate">{st.topProduct.name}</p>
-                            <p className="text-xs text-gray-500 tabular-nums flex-shrink-0 ml-2">{st.topProduct.quantity} uds</p>
+                            <p className="text-sm text-[#1e3a5f] truncate">{st.topProduct.name}</p>
+                            <p className="text-xs text-[#8898AA] tabular-nums flex-shrink-0 ml-2">{st.topProduct.quantity} uds</p>
                           </div>
                         </div>
                       )}
@@ -514,20 +514,20 @@ export default function Suppliers() {
                       {st.recent.length > 0 && (
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Compras recientes</p>
-                            <Link to={localePath('/finance/purchases')} className="text-[11px] text-blue-500 hover:text-blue-700">Ver todas →</Link>
+                            <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium">Compras recientes</p>
+                            <Link to={localePath('/finance/purchases')} className="text-[11px] text-[#0284C7] hover:text-[#0369A1]">Ver todas →</Link>
                           </div>
-                          <div className="bg-white border border-gray-100 rounded-lg divide-y divide-gray-50">
+                          <div className="bg-white border border-[#EEF2F6] rounded-lg divide-y divide-gray-50">
                             {st.recent.map(p => (
                               <div key={p.id} className="px-3 py-2 flex items-center justify-between">
                                 <div className="min-w-0">
-                                  <p className="text-sm text-gray-800">{fmtDate(p.date)}</p>
-                                  <p className="text-[11px] text-gray-400">
+                                  <p className="text-sm text-[#1e3a5f]">{fmtDate(p.date)}</p>
+                                  <p className="text-[11px] text-[#A9B6C6]">
                                     {p.items.length} ite{p.items.length !== 1 ? 'ms' : 'm'}
                                     {p.status === 'cancelled' && <span className="ml-1 text-red-400">· cancelada</span>}
                                   </p>
                                 </div>
-                                <p className="text-sm font-medium text-gray-900 tabular-nums flex-shrink-0 ml-2">{fmt(p.total || 0)}</p>
+                                <p className="text-sm font-medium text-[#1e3a5f] tabular-nums flex-shrink-0 ml-2">{fmt(p.total || 0)}</p>
                               </div>
                             ))}
                           </div>
@@ -536,26 +536,26 @@ export default function Suppliers() {
 
                       {/* Contact data */}
                       <div>
-                        <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium mb-1.5">Contacto</p>
-                        <div className="bg-white border border-gray-100 rounded-lg px-3 py-2 space-y-1">
+                        <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium mb-1.5">Contacto</p>
+                        <div className="bg-white border border-[#EEF2F6] rounded-lg px-3 py-2 space-y-1">
                           {(s.contactName || s.phone || s.email || s.address) ? (
                             <>
                               {s.contactName && <ContactRow label="Persona" value={s.contactName} />}
-                              {s.phone && <ContactRow label="Telefono" value={<a href={`tel:${s.phone}`} className="text-blue-500 hover:text-blue-700">{s.phone}</a>} />}
-                              {s.email && <ContactRow label="Email" value={<a href={`mailto:${s.email}`} className="text-blue-500 hover:text-blue-700">{s.email}</a>} />}
+                              {s.phone && <ContactRow label="Telefono" value={<a href={`tel:${s.phone}`} className="text-[#0284C7] hover:text-[#0369A1]">{s.phone}</a>} />}
+                              {s.email && <ContactRow label="Email" value={<a href={`mailto:${s.email}`} className="text-[#0284C7] hover:text-[#0369A1]">{s.email}</a>} />}
                               {s.address && <ContactRow label="Direccion" value={s.address} />}
                             </>
                           ) : (
-                            <p className="text-xs text-gray-400">Sin datos de contacto</p>
+                            <p className="text-xs text-[#A9B6C6]">Sin datos de contacto</p>
                           )}
                         </div>
                       </div>
 
                       {s.notes && (
                         <div>
-                          <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium mb-1.5">Notas</p>
-                          <div className="bg-white border border-gray-100 rounded-lg px-3 py-2">
-                            <p className="text-xs text-gray-600 whitespace-pre-wrap">{s.notes}</p>
+                          <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium mb-1.5">Notas</p>
+                          <div className="bg-white border border-[#EEF2F6] rounded-lg px-3 py-2">
+                            <p className="text-xs text-[#425466] whitespace-pre-wrap">{s.notes}</p>
                           </div>
                         </div>
                       )}
@@ -578,17 +578,17 @@ export default function Suppliers() {
 function InlineStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="text-right">
-      <p className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</p>
-      <p className="text-sm font-medium text-gray-700 tabular-nums">{value}</p>
+      <p className="text-[10px] text-[#A9B6C6] uppercase tracking-wider">{label}</p>
+      <p className="text-sm font-medium text-[#425466] tabular-nums">{value}</p>
     </div>
   )
 }
 
 function DetailStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-lg px-3 py-2">
-      <p className="text-[11px] text-gray-400">{label}</p>
-      <p className="text-sm font-semibold text-gray-900 tabular-nums">{value}</p>
+    <div className="bg-white border border-[#EEF2F6] rounded-lg px-3 py-2">
+      <p className="text-[11px] text-[#A9B6C6]">{label}</p>
+      <p className="text-sm font-semibold text-[#1e3a5f] tabular-nums">{value}</p>
     </div>
   )
 }
@@ -596,8 +596,8 @@ function DetailStat({ label, value }: { label: string; value: string }) {
 function ContactRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="text-gray-400 w-20 flex-shrink-0">{label}</span>
-      <span className="text-gray-700 min-w-0">{value}</span>
+      <span className="text-[#A9B6C6] w-20 flex-shrink-0">{label}</span>
+      <span className="text-[#425466] min-w-0">{value}</span>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 # Shopifree — Blog completo
 
 Contenido íntegro de los artículos publicados en https://shopifree.app/es/blog.
-Generado el 2026-07-26. 19 artículos.
+Generado el 2026-07-27. 19 artículos.
 
 Shopifree es una plataforma para crear tiendas online y catálogos digitales
 gratis, con pedidos por WhatsApp y sin comisión por venta, dirigida a pequeños

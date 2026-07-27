@@ -1,45 +1,21 @@
-import { useEffect, useState, useMemo, type JSX } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { usePresence } from '../../hooks/usePresence'
-import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import { useNewOrdersCount } from '../../hooks/useNewOrdersCount'
-import { useSidebar } from '../../contexts/SidebarContext'
 import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
 import SetupAlerts from './SetupAlerts'
-import ModeSwitcher from '../finance/ModeSwitcher'
 import { chatService } from '../../lib/chatService'
+import AppChrome, { type NavElement } from '../layout/AppChrome'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
   PaletteIcon, SettingsIcon, GlobeIcon, TagIcon, CreditCardIcon, PhoneIcon,
   IntegrationsIcon, UserIcon, ChatIcon, HelpIcon,
 } from '../layout/sharedIcons'
-
-// Tipos para la navegacion
-interface NavItem {
-  name: string
-  href: string
-  icon: (props: { active?: boolean }) => JSX.Element
-  badge?: number
-}
-
-type NavElement = NavItem | 'separator'
-
-
-/** Tres barras con CSS, sin SVG. */
-function MenuIcon() {
-  return (
-    <span className="flex flex-col justify-between" style={{ width: 18, height: 12 }}>
-      {[0, 1, 2].map(i => (
-        <span key={i} style={{ height: 2, borderRadius: 1, background: 'currentColor' }} />
-      ))}
-    </span>
-  )
-}
 
 const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
@@ -49,11 +25,8 @@ export default function DashboardLayout() {
   const { user, firebaseUser, store, loading, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  // Mobile sidebar state is now shared through AppShell's SidebarProvider
-  const { setOpen: setSidebarOpen } = useSidebar()
 
   const isNative = Capacitor.isNativePlatform()
-  const showUpgrade = useShowUpgradeUI()
 
   // Track presence for any user with a store
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
@@ -162,276 +135,100 @@ export default function DashboardLayout() {
     return null
   }
 
-  const SidebarContent = () => (
-    <>
-      {/* Navigation */}
-      <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
-        {navigation.map((item, index) => {
-          // Render separator
-          if (item === 'separator') {
-            return <div key={`separator-${index}`} className="my-1.5" />
-          }
-
-          const isActive = isItemActive(item.href)
-          const isChatItem = item.href.includes('support-chats')
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              // Activo en azul, igual que el mockup de dashboard de la landing.
-              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[0.82rem] transition-colors relative ${
-                isActive
-                  ? 'bg-[#E0F2FE] text-[#0284C7] font-semibold'
-                  : 'text-[#425466] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] font-medium'
-              }`}
-            >
-              {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full" style={{ background: '#0284C7' }} />}
-              <item.icon />
-              <span className="flex-1">{item.name}</span>
-              {isChatItem && totalUnread > 0 && (
-                <span className={`min-w-[18px] h-[18px] px-1 text-[0.62rem] font-semibold rounded-full flex items-center justify-center ${
-                  isActive ? 'bg-[#0284C7] text-white' : 'bg-[#DC2626] text-white'
-                }`}>
-                  {totalUnread > 9 ? '9+' : totalUnread}
-                </span>
-              )}
-              {!isChatItem && (item.badge ?? 0) > 0 && (
-                <span className={`min-w-[18px] h-[18px] px-1 text-[0.62rem] font-semibold rounded-full flex items-center justify-center ${
-                  isActive ? 'bg-[#0284C7] text-white' : 'bg-[#DC2626] text-white'
-                }`}>
-                  {(item.badge ?? 0) > 9 ? '9+' : item.badge}
-                </span>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* User section */}
-      <div className="px-3 pt-3 pb-5 border-t border-[#EEF2F6]">
-        <div className="flex items-center gap-2.5">
-          {user.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.firstName || user.email}
-              className="w-7 h-7 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#E1E8EF' }}>
-              <span className="text-[0.68rem] font-semibold text-[#425466]">
-                {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
-              </span>
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-[0.8rem] font-semibold text-[#1e3a5f] truncate">
-              {user.firstName && user.lastName
-                ? `${user.firstName} ${user.lastName}`
-                : user.firstName || user.email
-              }
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-[0.72rem] font-semibold text-[#A9B6C6] hover:text-[#DC2626] transition-colors px-2 py-1 rounded-lg hover:bg-[#FEF2F2] shrink-0"
-          >
-            {t('nav.logout')}
-          </button>
-        </div>
-      </div>
-    </>
-  )
-
-  // Native uses the same layout as web mobile (hamburger + lateral sidebar).
   return (
-    // La tipografia del rediseno se aplica aca y no en `body`: el mismo
-    // index.html sirve las tiendas de los clientes, y 33 de los 87 temas no
-    // declaran fontFamily — heredarian esta y les cambiaria el aspecto a
-    // storefronts en vivo. La landing y el blog ya se la ponen por su cuenta.
-    <div
-      className="min-h-screen bg-[#fafbfc]"
-      style={{ fontFamily: "'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif" }}
-    >
-      {/* Mobile header - status bar area + header bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40">
-        {/* Status bar background - matches header seamlessly */}
-        <div className="bg-white" style={{ height: 'env(safe-area-inset-top)' }} />
-        {/* Header bar */}
-        <div className="h-12 bg-white flex items-center justify-between px-4 border-b border-[#EEF2F6]">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-1.5 text-[#425466] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] rounded-lg transition-colors"
+    <AppChrome
+      mode="ecommerce"
+      navigation={navigation}
+      isItemActive={isItemActive}
+      homeHref={localePath('/dashboard')}
+      accountHref={localePath('/dashboard/account')}
+      isAdmin={isAdmin}
+      adminHref={localePath('/admin')}
+      store={store}
+      user={user}
+      onLogout={handleLogout}
+      logoutLabel={t('nav.logout')}
+      // Los chats de admin llevan su propio contador global, no el del item.
+      badgeFor={item => (item.href.includes('support-chats') ? totalUnread : undefined)}
+      topBarLeft={
+        store && (
+          <Link
+            to={localePath('/dashboard/plan')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.68rem] font-semibold ${
+              store.plan === 'business'
+                ? 'bg-[#FEF3C7] text-[#B45309]'
+                : store.plan === 'pro'
+                  ? 'bg-[#E0F2FE] text-[#0284C7]'
+                  : 'bg-[#F1F5F9] text-[#8898AA]'
+            }`}
           >
-            <MenuIcon />
-          </button>
-          <div className="flex items-center gap-1.5">
-            <Link to={localePath('/dashboard')}>
-              <img src="/newlogo.png" alt="Shopifree" className="h-[26px]" />
-            </Link>
-            {store && (
-              showUpgrade ? (
-                <Link
-                  to={localePath('/finance/subscription')}
-                  className={`px-2 py-0.5 rounded-full text-[0.62rem] font-semibold capitalize ${
-                    store.plan === 'free' ? 'bg-[#F1F5F9] text-[#8898AA]'
-                    : store.plan === 'pro' ? 'bg-[#E0F2FE] text-[#0284C7]'
-                    : 'bg-[#FEF3C7] text-[#B45309]'
-                  }`}
-                >
-                  {store.plan}
-                </Link>
-              ) : (
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[0.62rem] font-semibold capitalize ${
-                    store.plan === 'free' ? 'bg-[#F1F5F9] text-[#8898AA]'
-                    : store.plan === 'pro' ? 'bg-[#E0F2FE] text-[#0284C7]'
-                    : 'bg-[#FEF3C7] text-[#B45309]'
-                  }`}
-                >
-                  {store.plan}
-                </span>
-              )
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            {/* Open storefront */}
-            {store && (
-              <a
-                href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[0.95rem] leading-none text-[#425466] hover:text-[#0284C7] hover:bg-[#F6F9FC] transition-colors"
-                title={store.customDomain || `${store.subdomain}.shopifree.app`}
-              >
-                &#8599;
-              </a>
-            )}
-            {!isAdmin && (
-              <button onClick={() => setChatOpen(true)} className="relative w-8 h-8 flex items-center justify-center">
-                <img src="/chat-support.png" alt="Soporte" className="w-6 h-6 object-contain" />
-                {chatUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
-                    {chatUnread > 9 ? '9+' : chatUnread}
-                  </span>
-                )}
-              </button>
-            )}
-            <Link to={localePath('/dashboard/account')} className="w-8 h-8 flex items-center justify-center">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.firstName || user.email} className="w-7 h-7 rounded-lg object-cover" />
-              ) : (
-                <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#E1E8EF' }}>
-                  <span className="text-[0.68rem] font-semibold text-[#425466]">
-                    {user.firstName ? user.firstName[0].toUpperCase() : user.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile sidebar is rendered by AppShell so it persists across mode switches */}
-
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-[#EEF2F6]">
-        <div className="flex flex-col h-full">
-          {/* Logo + Mode Switcher */}
-          <div className="px-4 pt-5 pb-3 border-b border-[#EEF2F6] space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <Link to={localePath('/dashboard')}>
-                <img src="/newlogo.png" alt="Shopifree" className="h-10" />
-              </Link>
-              {isAdmin && (
-                <Link
-                  to={localePath('/admin')}
-                  className="px-1.5 py-0.5 rounded-md text-[0.6rem] font-bold tracking-wide transition-colors"
-                  style={{ background: '#F1F5F9', color: '#A9B6C6' }}
-                  title="Admin"
-                >
-                  ADM
-                </Link>
-              )}
-            </div>
-            <ModeSwitcher mode="ecommerce" isAdmin={isAdmin} />
-          </div>
-
-          <SidebarContent />
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="lg:pl-60 lg:!pt-0" style={{ paddingTop: isNative ? 'calc(3rem + env(safe-area-inset-top))' : '3rem' }}>
-        {/* Desktop top bar */}
-        {store && (
-          <div className="hidden lg:flex items-center justify-between px-8 py-2.5 border-b border-[#EEF2F6] bg-white sticky top-0 z-10">
-            <div className="flex items-center gap-3">
-              <Link
-                to={localePath('/dashboard/plan')}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.68rem] font-semibold ${
-                  store.plan === 'business' ? 'bg-[#FEF3C7] text-[#B45309]' :
-                  store.plan === 'pro' ? 'bg-[#E0F2FE] text-[#0284C7]' :
-                  'bg-[#F1F5F9] text-[#8898AA]'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  store.plan === 'business' ? 'bg-[#D97706]' :
-                  store.plan === 'pro' ? 'bg-[#0284C7]' :
-                  'bg-[#A9B6C6]'
-                }`} />
-                {store.plan === 'business' ? 'Business' : store.plan === 'pro' ? 'Pro' : 'Free'}
-              </Link>
-            </div>
-            <div className="flex items-center gap-1">
-              <a
-                href={store.customDomain ? `https://${store.customDomain}` : `https://${store.subdomain}.shopifree.app`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[0.74rem] font-medium text-[#8898AA] hover:text-[#0284C7] hover:bg-[#F6F9FC] rounded-lg transition-colors"
-              >
-                {store.customDomain || `${store.subdomain}.shopifree.app`}
-                <span className="text-[0.85rem] leading-none">&#8599;</span>
-              </a>
-              <button
-                onClick={() => setChatOpen(!chatOpen)}
-                className="relative p-1.5 rounded-lg hover:bg-[#F6F9FC] transition-colors"
-                title="Soporte"
-              >
-                <img src="/chat-support.png" alt="Soporte" className="w-5 h-5 object-contain" />
-                {chatUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
-                    {chatUnread > 9 ? '9+' : chatUnread}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-        <div className="p-4 sm:p-6 lg:pt-5 lg:pb-8 lg:px-8">
-          {store && <PlanBanner store={store} />}
-          {store && <SetupAlerts store={store} />}
-          <Outlet />
-        </div>
-      </main>
-
-      {/* Floating chat button - desktop */}
-      {!isAdmin && !chatOpen && (
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                store.plan === 'business'
+                  ? 'bg-[#D97706]'
+                  : store.plan === 'pro'
+                    ? 'bg-[#0284C7]'
+                    : 'bg-[#A9B6C6]'
+              }`}
+            />
+            {store.plan === 'business' ? 'Business' : store.plan === 'pro' ? 'Pro' : 'Free'}
+          </Link>
+        )
+      }
+      topBarRight={
         <button
-          onClick={() => setChatOpen(true)}
-          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-[14px] bg-white items-center justify-center transition-all hover:scale-105 active:scale-95"
-          style={{ border: '1px solid #E6EBF1', boxShadow: '0 12px 32px -16px rgba(30,58,95,.45)' }}
+          onClick={() => setChatOpen(!chatOpen)}
+          className="relative p-1.5 rounded-lg hover:bg-[#F6F9FC] transition-colors"
+          title="Soporte"
         >
-          <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
+          <img src="/chat-support.png" alt="Soporte" className="w-5 h-5 object-contain" />
           {chatUnread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
               {chatUnread > 9 ? '9+' : chatUnread}
             </span>
           )}
         </button>
-      )}
-
-      {/* Chat modal for web layout (hidden for admin) */}
-      {!isAdmin && <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />}
-    </div>
+      }
+      mobileActions={
+        !isAdmin && (
+          <button onClick={() => setChatOpen(true)} className="relative w-8 h-8 flex items-center justify-center">
+            <img src="/chat-support.png" alt="Soporte" className="w-6 h-6 object-contain" />
+            {chatUnread > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
+                {chatUnread > 9 ? '9+' : chatUnread}
+              </span>
+            )}
+          </button>
+        )
+      }
+      beforeContent={
+        <>
+          {store && <PlanBanner store={store} />}
+          {store && <SetupAlerts store={store} />}
+        </>
+      }
+      overlays={
+        <>
+          {/* Boton flotante de soporte, solo escritorio */}
+          {!isAdmin && !chatOpen && (
+            <button
+              onClick={() => setChatOpen(true)}
+              className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-[14px] bg-white items-center justify-center transition-all hover:scale-105 active:scale-95"
+              style={{ border: '1px solid #E6EBF1', boxShadow: '0 12px 32px -16px rgba(30,58,95,.45)' }}
+            >
+              <img src="/chat-support.png" alt="Soporte" className="w-7 h-7 object-contain" />
+              {chatUnread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center">
+                  {chatUnread > 9 ? '9+' : chatUnread}
+                </span>
+              )}
+            </button>
+          )}
+          {!isAdmin && <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />}
+        </>
+      }
+    >
+      <Outlet />
+    </AppChrome>
   )
 }

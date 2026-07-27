@@ -16,11 +16,11 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  sale: 'bg-blue-50 text-blue-600',
+  sale: 'bg-[#F0F9FF] text-[#0284C7]',
   purchase: 'bg-green-50 text-green-600',
   adjustment: 'bg-amber-50 text-amber-600',
   production: 'bg-purple-50 text-purple-600',
-  transfer: 'bg-gray-100 text-gray-600',
+  transfer: 'bg-[#F1F5F9] text-[#425466]',
 }
 
 export default function StockMovements() {
@@ -121,22 +121,22 @@ export default function StockMovements() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Movimientos de stock</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Historial de entradas y salidas de inventario</p>
+        <h1 className="text-xl font-semibold text-[#1e3a5f]">Movimientos de stock</h1>
+        <p className="text-sm text-[#8898AA] mt-0.5">Historial de entradas y salidas de inventario</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Movimientos</p>
-          <p className="text-lg font-semibold text-gray-900">{stats.total}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Movimientos</p>
+          <p className="text-lg font-semibold text-[#1e3a5f]">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Entradas</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Entradas</p>
           <p className="text-lg font-semibold text-green-600">+{stats.entries}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Salidas</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Salidas</p>
           <p className="text-lg font-semibold text-red-500">-{stats.exits}</p>
         </div>
       </div>
@@ -144,17 +144,17 @@ export default function StockMovements() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por producto o motivo..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+            className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-[#F1F5F9] rounded-lg p-0.5">
           {periodFilters.map(p => (
             <button key={p.key} onClick={() => setPeriodFilter(p.key)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                periodFilter === p.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                periodFilter === p.key ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#8898AA] hover:text-[#425466]'
               }`}>
               {p.label}
             </button>
@@ -167,7 +167,7 @@ export default function StockMovements() {
         {typeFilters.map(f => (
           <button key={f.key} onClick={() => setTypeFilter(f.key)}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              typeFilter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'
+              typeFilter === f.key ? 'bg-[#1e3a5f] text-white' : 'bg-[#F1F5F9] text-[#8898AA] hover:text-[#425466]'
             }`}>
             {f.label}
           </button>
@@ -175,18 +175,18 @@ export default function StockMovements() {
       </div>
 
       {/* Movements list */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-[#A9B6C6]">
               {movements.length === 0 ? 'Sin movimientos de stock registrados' : 'Sin resultados para los filtros seleccionados'}
             </p>
             {movements.length === 0 && (
-              <p className="text-xs text-gray-300 mt-1">Los movimientos se crean automaticamente al ajustar stock, registrar compras o recibir pedidos</p>
+              <p className="text-xs text-[#C3CFDB] mt-1">Los movimientos se crean automaticamente al ajustar stock, registrar compras o recibir pedidos</p>
             )}
           </div>
         ) : (
@@ -196,53 +196,53 @@ export default function StockMovements() {
               const variantLabel = m.variationName && m.optionValue ? `${m.variationName}: ${m.optionValue}` : null
 
               return (
-                <div key={m.id} className="px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                <div key={m.id} className="px-4 py-3 hover:bg-[#F6F9FC]/50 transition-colors">
                   {/* Mobile */}
                   <div className="sm:hidden space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${TYPE_COLORS[m.type] || 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${TYPE_COLORS[m.type] || 'bg-[#F1F5F9] text-[#8898AA]'}`}>
                           {TYPE_LABELS[m.type] || m.type}
                         </span>
-                        <p className="text-sm text-gray-900 truncate">{m.productName}</p>
+                        <p className="text-sm text-[#1e3a5f] truncate">{m.productName}</p>
                       </div>
                       <p className={`text-sm font-medium tabular-nums flex-shrink-0 ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
                         {isPositive ? '+' : ''}{m.quantity}
                       </p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <div className="flex items-center gap-2 text-xs text-[#A9B6C6]">
                         {variantLabel && <span>{variantLabel}</span>}
                         {m.reason && <span>{variantLabel ? '·' : ''} {m.reason}</span>}
                       </div>
-                      <p className="text-[11px] text-gray-400">{formatDate(m.createdAt as Date)}</p>
+                      <p className="text-[11px] text-[#A9B6C6]">{formatDate(m.createdAt as Date)}</p>
                     </div>
                   </div>
 
                   {/* Desktop */}
                   <div className="hidden sm:grid grid-cols-12 gap-4 items-center">
                     <div className="col-span-1">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${TYPE_COLORS[m.type] || 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${TYPE_COLORS[m.type] || 'bg-[#F1F5F9] text-[#8898AA]'}`}>
                         {TYPE_LABELS[m.type] || m.type}
                       </span>
                     </div>
                     <div className="col-span-3 min-w-0">
-                      <p className="text-sm text-gray-900 truncate">{m.productName}</p>
-                      {variantLabel && <p className="text-[11px] text-gray-400">{variantLabel}</p>}
+                      <p className="text-sm text-[#1e3a5f] truncate">{m.productName}</p>
+                      {variantLabel && <p className="text-[11px] text-[#A9B6C6]">{variantLabel}</p>}
                     </div>
                     <div className="col-span-2 text-right">
                       <p className={`text-sm font-medium tabular-nums ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
                         {isPositive ? '+' : ''}{m.quantity}
                       </p>
                     </div>
-                    <div className="col-span-2 text-right text-xs text-gray-400 tabular-nums">
+                    <div className="col-span-2 text-right text-xs text-[#A9B6C6] tabular-nums">
                       {m.previousStock} → {m.newStock}
                     </div>
                     <div className="col-span-2 min-w-0">
-                      <p className="text-xs text-gray-400 truncate">{m.reason || '-'}</p>
+                      <p className="text-xs text-[#A9B6C6] truncate">{m.reason || '-'}</p>
                     </div>
                     <div className="col-span-2 text-right">
-                      <p className="text-[11px] text-gray-400">{formatDate(m.createdAt as Date)}</p>
+                      <p className="text-[11px] text-[#A9B6C6]">{formatDate(m.createdAt as Date)}</p>
                     </div>
                   </div>
                 </div>

@@ -203,9 +203,9 @@ export default function Production() {
 
   const statusStyles: Record<string, string> = {
     planned: 'bg-amber-50 text-amber-600',
-    in_progress: 'bg-blue-50 text-blue-600',
+    in_progress: 'bg-[#F0F9FF] text-[#0284C7]',
     completed: 'bg-green-50 text-green-600',
-    cancelled: 'bg-gray-100 text-gray-400',
+    cancelled: 'bg-[#F1F5F9] text-[#A9B6C6]',
   }
   const statusLabels: Record<string, string> = {
     planned: 'Planificada',
@@ -215,15 +215,15 @@ export default function Production() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" /></div>
+    return <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" /></div>
   }
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Produccion</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Registra produccion para reponer stock</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Produccion</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">Registra produccion para reponer stock</p>
         </div>
         <button onClick={() => { setShowForm(!showForm); if (showForm) resetForm() }}
           className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
@@ -233,41 +233,41 @@ export default function Production() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200/60 p-4 space-y-4 animate-[slideDown_0.2s_ease-out]">
-          <h3 className="text-sm font-medium text-gray-900">Nueva orden de produccion</h3>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 space-y-4 animate-[slideDown_0.2s_ease-out]">
+          <h3 className="text-sm font-medium text-[#1e3a5f]">Nueva orden de produccion</h3>
 
           {/* Product selector */}
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Producto</label>
+            <label className="text-xs text-[#8898AA] mb-1 block">Producto</label>
             {!selectedProduct ? (
               <>
                 <input type="text" value={productSearch} onChange={e => setProductSearch(e.target.value)}
                   placeholder="Buscar producto..." autoFocus
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-2 focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
-                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-50">
+                  className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm mb-2 focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                <div className="max-h-48 overflow-y-auto border border-[#E6EBF1] rounded-lg divide-y divide-gray-50">
                   {filteredProducts.slice(0, 10).map(p => (
                     <button key={p.id} onClick={() => { setSelectedProductId(p.id); setProductSearch('') }}
-                      className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left">
+                      className="w-full px-3 py-2 flex items-center gap-3 hover:bg-[#F6F9FC] transition-colors text-left">
                       {p.image ? <img src={p.image} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
-                        : <div className="w-7 h-7 rounded bg-gray-100 flex-shrink-0" />}
+                        : <div className="w-7 h-7 rounded bg-[#F1F5F9] flex-shrink-0" />}
                       <div className="min-w-0">
-                        <p className="text-sm text-gray-900 truncate">{p.name}</p>
-                        <p className="text-[11px] text-gray-400">{p.sku || 'Sin SKU'}</p>
+                        <p className="text-sm text-[#1e3a5f] truncate">{p.name}</p>
+                        <p className="text-[11px] text-[#A9B6C6]">{p.sku || 'Sin SKU'}</p>
                       </div>
                     </button>
                   ))}
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3 p-3 bg-[#F6F9FC] rounded-lg">
                 {selectedProduct.image ? <img src={selectedProduct.image} alt="" className="w-9 h-9 rounded-lg object-cover" />
-                  : <div className="w-9 h-9 rounded-lg bg-gray-200" />}
+                  : <div className="w-9 h-9 rounded-lg bg-[#E1E8EF]" />}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{selectedProduct.name}</p>
-                  <p className="text-xs text-gray-400">{selectedProduct.sku || 'Sin SKU'}</p>
+                  <p className="text-sm font-medium text-[#1e3a5f]">{selectedProduct.name}</p>
+                  <p className="text-xs text-[#A9B6C6]">{selectedProduct.sku || 'Sin SKU'}</p>
                 </div>
                 <button onClick={() => { setSelectedProductId(''); setComboQuantities({}) }}
-                  className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 hover:bg-gray-200 rounded-md">Cambiar</button>
+                  className="text-xs text-[#A9B6C6] hover:text-[#425466] px-2 py-1 hover:bg-[#E1E8EF] rounded-md">Cambiar</button>
               </div>
             )}
           </div>
@@ -276,12 +276,12 @@ export default function Production() {
           {selectedProduct && hasCombos && (
             <div className="animate-[slideDown_0.15s_ease-out] space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-gray-500">Combinaciones a producir</label>
+                <label className="text-xs text-[#8898AA]">Combinaciones a producir</label>
                 <div className="flex items-center gap-2">
                   <button type="button"
                     onClick={() => setComboQuantities({})}
                     disabled={comboQtyTotal === 0}
-                    className="text-[11px] text-gray-400 hover:text-gray-600 disabled:opacity-40">
+                    className="text-[11px] text-[#A9B6C6] hover:text-[#425466] disabled:opacity-40">
                     Limpiar
                   </button>
                 </div>
@@ -290,16 +290,16 @@ export default function Production() {
               {/* Combo search */}
               {selectedProduct.combinations!.length > 6 && (
                 <div className="relative">
-                  <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
                   <input type="text" value={comboSearch} onChange={e => setComboSearch(e.target.value)}
                     placeholder="Buscar combinacion..."
-                    className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                    className="w-full pl-8 pr-3 py-1.5 border border-[#E6EBF1] rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                 </div>
               )}
 
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-[#E6EBF1] rounded-lg overflow-hidden">
                 <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
                   {selectedProduct.combinations!
                     .filter(c => c.available)
@@ -312,17 +312,17 @@ export default function Production() {
                       const label = Object.values(combo.options).join(' / ')
                       const qty = parseInt(comboQuantities[combo.id]) || 0
                       return (
-                        <div key={combo.id} className={`px-3 py-2 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-blue-50/30' : ''}`}>
+                        <div key={combo.id} className={`px-3 py-2 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-[#F0F9FF]/30' : ''}`}>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm text-gray-800 truncate">{label}</p>
-                            <p className="text-[11px] text-gray-400">Stock actual: {combo.stock}{combo.sku ? ` · ${combo.sku}` : ''}</p>
+                            <p className="text-sm text-[#1e3a5f] truncate">{label}</p>
+                            <p className="text-[11px] text-[#A9B6C6]">Stock actual: {combo.stock}{combo.sku ? ` · ${combo.sku}` : ''}</p>
                           </div>
                           <input type="number" min="0"
                             value={comboQuantities[combo.id] || ''}
                             onChange={e => setComboQuantities(prev => ({ ...prev, [combo.id]: e.target.value }))}
                             placeholder="0"
                             className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 ${
-                              qty > 0 ? 'border-blue-300 bg-white' : 'border-gray-200'
+                              qty > 0 ? 'border-blue-300 bg-white' : 'border-[#E6EBF1]'
                             }`} />
                         </div>
                       )
@@ -330,13 +330,13 @@ export default function Production() {
                 </div>
               </div>
               <div className="flex items-center justify-between px-1 text-[11px]">
-                <span className="text-gray-400">
+                <span className="text-[#A9B6C6]">
                   {(() => {
                     const n = selectedProduct.combinations!.filter(c => (parseInt(comboQuantities[c.id]) || 0) > 0).length
                     return `${n} combinacion${n === 1 ? '' : 'es'} seleccionada${n === 1 ? '' : 's'}`
                   })()}
                 </span>
-                <span className="text-gray-600 font-medium">Total: {comboQtyTotal} uds</span>
+                <span className="text-[#425466] font-medium">Total: {comboQtyTotal} uds</span>
               </div>
             </div>
           )}
@@ -346,22 +346,22 @@ export default function Production() {
             <div className={`grid grid-cols-1 ${hasCombos ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-3 animate-[slideDown_0.15s_ease-out]`}>
               {!hasCombos && (
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Cantidad a producir</label>
+                  <label className="text-xs text-[#8898AA] mb-1 block">Cantidad a producir</label>
                   <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="0"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                    className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                 </div>
               )}
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Almacen destino</label>
+                <label className="text-xs text-[#8898AA] mb-1 block">Almacen destino</label>
                 <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                  className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                   {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Notas</label>
+                <label className="text-xs text-[#8898AA] mb-1 block">Notas</label>
                 <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Opcional"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                  className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
               </div>
             </div>
           )}
@@ -379,27 +379,27 @@ export default function Production() {
       )}
 
       {/* Orders list */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
         {orders.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">Sin ordenes de produccion</p>
-            <p className="text-xs text-gray-300 mt-1">Crea una orden para reponer stock de productos que produces internamente</p>
+            <p className="text-sm text-[#A9B6C6]">Sin ordenes de produccion</p>
+            <p className="text-xs text-[#C3CFDB] mt-1">Crea una orden para reponer stock de productos que produces internamente</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
             {orders.map(order => (
-              <div key={order.id} className="px-4 py-3 hover:bg-gray-50/50 transition-colors">
+              <div key={order.id} className="px-4 py-3 hover:bg-[#F6F9FC]/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${statusStyles[order.status]}`}>
                       {statusLabels[order.status]}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm text-gray-900 truncate">
+                      <p className="text-sm text-[#1e3a5f] truncate">
                         {order.productName}
-                        {order.optionValue && <span className="text-gray-400"> — {order.optionValue}</span>}
+                        {order.optionValue && <span className="text-[#A9B6C6]"> — {order.optionValue}</span>}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[#A9B6C6]">
                         {order.quantity} uds
                         {order.warehouseName && ` · ${order.warehouseName}`}
                         {order.notes && ` · ${order.notes}`}
@@ -407,7 +407,7 @@ export default function Production() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-[11px] text-[#A9B6C6]">
                       {(order.createdAt as Date).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
                     </p>
                     {order.status === 'planned' && (
@@ -418,7 +418,7 @@ export default function Production() {
                           {completing === order.id ? '...' : 'Completar'}
                         </button>
                         <button onClick={() => handleCancel(order.id)}
-                          className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 rounded-md hover:bg-gray-100 transition-colors">
+                          className="px-2 py-1 text-xs text-[#A9B6C6] hover:text-red-500 rounded-md hover:bg-[#F1F5F9] transition-colors">
                           Cancelar
                         </button>
                       </>

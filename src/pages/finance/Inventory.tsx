@@ -10,7 +10,7 @@ type StockFilter = 'all' | 'low' | 'out' | 'ok'
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
-    <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <svg className={`w-4 h-4 text-[#A9B6C6] transition-transform ${open ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
     </svg>
   )
@@ -625,14 +625,14 @@ export default function Inventory() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Inventario</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{stats.tracked} productos con control de stock</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Inventario</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">{stats.tracked} productos con control de stock</p>
         </div>
         <div className="flex items-center gap-2">
           {bulkMode ? (
             <>
               <button onClick={() => { setBulkMode(false); setBulkChanges({}); setBulkComboChanges({}); setBulkWarehouseId('') }}
-                className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
+                className="px-3 py-2 text-sm text-[#8898AA] hover:text-[#425466]">
                 Cancelar
               </button>
               <button onClick={handleBulkSave} disabled={bulkSaving || bulkChangeCount === 0 || !bulkWarehouseId}
@@ -643,7 +643,7 @@ export default function Inventory() {
           ) : (
             <>
               <Link to={localePath('/finance/inventory/diagnostic')}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                 Diagnostico
               </Link>
               <button onClick={() => setBulkMode(true)}
@@ -696,27 +696,27 @@ export default function Inventory() {
 
       {/* Bulk mode banner with warehouse selector */}
       {bulkMode && (
-        <div className="bg-blue-50 border border-blue-200/60 rounded-xl px-4 py-3 animate-[slideDown_0.2s_ease-out] space-y-2">
+        <div className="bg-[#F0F9FF] border border-blue-200/60 rounded-xl px-4 py-3 animate-[slideDown_0.2s_ease-out] space-y-2">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-[#0369A1]">
               {bulkWarehouseId
                 ? 'Modo recuento: edita el stock de cada combinacion en el almacen seleccionado.'
                 : 'Selecciona un almacen para empezar el recuento.'}
             </p>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-blue-700 font-medium">Almacen:</label>
+              <label className="text-xs text-[#0369A1] font-medium">Almacen:</label>
               <div className="relative">
                 <select
                   value={bulkWarehouseId}
                   onChange={e => { setBulkWarehouseId(e.target.value); setBulkChanges({}); setBulkComboChanges({}) }}
-                  className="appearance-none pl-3 pr-8 py-1.5 border border-blue-200 bg-white rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300/40 focus:border-blue-400 transition-colors cursor-pointer min-w-[180px]"
+                  className="appearance-none pl-3 pr-8 py-1.5 border border-blue-200 bg-white rounded-lg text-sm text-[#425466] focus:outline-none focus:ring-2 focus:ring-blue-300/40 focus:border-[#38bdf8] transition-colors cursor-pointer min-w-[180px]"
                 >
                   <option value="">Seleccionar almacen...</option>
                   {warehouses.map(w => (
                     <option key={w.id} value={w.id}>{w.name}</option>
                   ))}
                 </select>
-                <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                 </svg>
               </div>
@@ -727,35 +727,35 @@ export default function Inventory() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Unidades totales</p>
-          <p className="text-lg font-semibold text-gray-900">{stats.totalUnits.toLocaleString()}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Unidades totales</p>
+          <p className="text-lg font-semibold text-[#1e3a5f]">{stats.totalUnits.toLocaleString()}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Valor del inventario</p>
-          <p className="text-lg font-semibold text-gray-900">{fmt(stats.totalValue)}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Valor del inventario</p>
+          <p className="text-lg font-semibold text-[#1e3a5f]">{fmt(stats.totalValue)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Bajo stock</p>
-          <p className={`text-lg font-semibold ${stats.lowStock > 0 ? 'text-amber-600' : 'text-gray-900'}`}>{stats.lowStock}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Bajo stock</p>
+          <p className={`text-lg font-semibold ${stats.lowStock > 0 ? 'text-amber-600' : 'text-[#1e3a5f]'}`}>{stats.lowStock}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-          <p className="text-[11px] text-gray-400 mb-1">Sin stock</p>
-          <p className={`text-lg font-semibold ${stats.outOfStock > 0 ? 'text-red-500' : 'text-gray-900'}`}>{stats.outOfStock}</p>
+        <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+          <p className="text-[11px] text-[#A9B6C6] mb-1">Sin stock</p>
+          <p className={`text-lg font-semibold ${stats.outOfStock > 0 ? 'text-red-500' : 'text-[#1e3a5f]'}`}>{stats.outOfStock}</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre, SKU o codigo..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
+            className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
         </div>
         <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+          className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
           <option value="">Todas las categorias</option>
           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
@@ -766,10 +766,10 @@ export default function Inventory() {
         <button
           onClick={() => setOnlyTracked(!onlyTracked)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-            onlyTracked ? 'bg-[#1e3a5f] text-white' : 'bg-gray-100 text-gray-500'
+            onlyTracked ? 'bg-[#1e3a5f] text-white' : 'bg-[#F1F5F9] text-[#8898AA]'
           }`}
         >
-          <div className={`w-3 h-3 rounded border flex items-center justify-center ${onlyTracked ? 'border-white/40 bg-white/20' : 'border-gray-300'}`}>
+          <div className={`w-3 h-3 rounded border flex items-center justify-center ${onlyTracked ? 'border-white/40 bg-white/20' : 'border-[#D8E2EC]'}`}>
             {onlyTracked && <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>}
           </div>
           Solo con stock
@@ -778,29 +778,29 @@ export default function Inventory() {
         {stockFilters.map(f => (
           <button key={f.key} onClick={() => setStockFilter(f.key)}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              stockFilter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'
+              stockFilter === f.key ? 'bg-[#1e3a5f] text-white' : 'bg-[#F1F5F9] text-[#8898AA] hover:text-[#425466]'
             }`}>
             {f.label}
-            {f.count !== undefined && f.count > 0 && <span className={`ml-1.5 ${stockFilter === f.key ? 'text-gray-300' : 'text-gray-400'}`}>{f.count}</span>}
+            {f.count !== undefined && f.count > 0 && <span className={`ml-1.5 ${stockFilter === f.key ? 'text-[#C3CFDB]' : 'text-[#A9B6C6]'}`}>{f.count}</span>}
           </button>
         ))}
         </div>
       </div>
 
       {/* Products list */}
-      <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+      <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-gray-400">No se encontraron productos</p>
+            <p className="text-sm text-[#A9B6C6]">No se encontraron productos</p>
           </div>
         ) : (
           <>
             {/* Table header - desktop */}
-            <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2.5 border-b border-gray-100 text-[11px] text-gray-400 uppercase tracking-wider font-medium">
+            <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2.5 border-b border-[#EEF2F6] text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium">
               <div className="col-span-4">Producto</div>
               <div className="col-span-2 text-right">Stock</div>
               <div className="col-span-2 text-right">Costo</div>
@@ -822,7 +822,7 @@ export default function Inventory() {
 
                 return (
                   <div key={product.id}>
-                    <div className="px-4 py-3 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    <div className="px-4 py-3 hover:bg-[#F6F9FC]/50 transition-colors cursor-pointer"
                       onClick={() => !bulkMode && product.trackStock && toggleExpand(product.id)}>
 
                       {/* Mobile */}
@@ -830,10 +830,10 @@ export default function Inventory() {
                         <div className="flex items-center gap-3 min-w-0">
                           {product.trackStock && !bulkMode && <ChevronIcon open={isExpanded} />}
                           {product.image ? <img src={product.image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                            : <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />}
+                            : <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] flex-shrink-0" />}
                           <div className="min-w-0">
-                            <p className="text-sm text-gray-900 truncate">{product.name}</p>
-                            <p className="text-xs text-gray-400">{product.sku || 'Sin SKU'}</p>
+                            <p className="text-sm text-[#1e3a5f] truncate">{product.name}</p>
+                            <p className="text-xs text-[#A9B6C6]">{product.sku || 'Sin SKU'}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -843,16 +843,16 @@ export default function Inventory() {
                               onChange={e => setBulkChanges(prev => ({ ...prev, [product.id]: e.target.value }))}
                               className={`w-16 px-2 py-1 text-sm text-right border rounded-md ${
                                 bulkChanges[product.id] !== undefined && parseInt(bulkChanges[product.id]) !== productWhStock
-                                  ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+                                  ? 'border-[#38bdf8] bg-[#F0F9FF]' : 'border-[#E6EBF1]'
                               }`}
                               onClick={e => e.stopPropagation()} />
                           ) : bulkMode && product.trackStock && productHasCombos ? (
                             <div className="text-right">
-                              <p className="text-[11px] text-gray-400">{product.combinations!.length} combinaciones</p>
+                              <p className="text-[11px] text-[#A9B6C6]">{product.combinations!.length} combinaciones</p>
                             </div>
                           ) : (
                             <div className="text-right">
-                              <p className="text-sm font-medium text-gray-900">{product.trackStock ? stock : '--'}</p>
+                              <p className="text-sm font-medium text-[#1e3a5f]">{product.trackStock ? stock : '--'}</p>
                               <StatusBadge status={status} />
                             </div>
                           )}
@@ -860,28 +860,28 @@ export default function Inventory() {
                           {!bulkMode && product.trackStock && (
                             <div className="relative">
                               <button onClick={e => { e.stopPropagation(); setMenuOpenId(menuOpenId === product.id ? null : product.id) }}
-                                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
+                                className="p-1.5 text-[#A9B6C6] hover:text-[#425466] rounded-md hover:bg-[#F1F5F9] transition-colors">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
                                 </svg>
                               </button>
                               {menuOpenId === product.id && (
-                                <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 animate-[slideDown_0.1s_ease-out]"
+                                <div className="absolute right-0 top-8 z-20 bg-white border border-[#E6EBF1] rounded-lg shadow-sm py-1 w-40 animate-[slideDown_0.1s_ease-out]"
                                   onClick={e => e.stopPropagation()}>
                                   {!hasVariants && !productHasCombos && (
                                     <button onClick={() => { setAdjustingId(product.id); setAdjustValue(String(stock)); setMenuOpenId(null); toggleExpand(product.id) }}
-                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      className="w-full px-3 py-2 text-left text-xs text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                                       Ajustar stock
                                     </button>
                                   )}
                                   {warehouses.length >= 2 && (
                                     <button onClick={() => openTransfer(product)}
-                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      className="w-full px-3 py-2 text-left text-xs text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                                       Transferir
                                     </button>
                                   )}
                                   <button onClick={() => { toggleExpand(product.id); setMenuOpenId(null) }}
-                                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                    className="w-full px-3 py-2 text-left text-xs text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                                     {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
                                   </button>
                                 </div>
@@ -896,11 +896,11 @@ export default function Inventory() {
                         <div className="col-span-4 flex items-center gap-3 min-w-0">
                           {product.trackStock && !bulkMode && <ChevronIcon open={isExpanded} />}
                           {product.image ? <img src={product.image} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
-                            : <div className="w-9 h-9 rounded-lg bg-gray-100 flex-shrink-0" />}
+                            : <div className="w-9 h-9 rounded-lg bg-[#F1F5F9] flex-shrink-0" />}
                           <div className="min-w-0">
-                            <p className="text-sm text-gray-900 truncate">{product.name}</p>
-                            <p className="text-xs text-gray-400">{product.sku || 'Sin SKU'}
-                              {hasVariants && <span className="ml-1 text-gray-300">({product.variations!.reduce((n, v) => n + v.options.length, 0)} var.)</span>}
+                            <p className="text-sm text-[#1e3a5f] truncate">{product.name}</p>
+                            <p className="text-xs text-[#A9B6C6]">{product.sku || 'Sin SKU'}
+                              {hasVariants && <span className="ml-1 text-[#C3CFDB]">({product.variations!.reduce((n, v) => n + v.options.length, 0)} var.)</span>}
                             </p>
                           </div>
                         </div>
@@ -911,7 +911,7 @@ export default function Inventory() {
                               onChange={e => setBulkChanges(prev => ({ ...prev, [product.id]: e.target.value }))}
                               className={`w-20 px-2 py-1 text-sm text-right border rounded-md ml-auto block ${
                                 bulkChanges[product.id] !== undefined && parseInt(bulkChanges[product.id]) !== productWhStock
-                                  ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+                                  ? 'border-[#38bdf8] bg-[#F0F9FF]' : 'border-[#E6EBF1]'
                               }`}
                               onClick={e => e.stopPropagation()} />
                           ) : isAdjusting ? (
@@ -920,59 +920,59 @@ export default function Inventory() {
                                 value={adjustValue}
                                 onChange={e => setAdjustValue(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') handleInlineAdjust(product); if (e.key === 'Escape') setAdjustingId(null) }}
-                                className="w-16 px-2 py-1 text-sm text-right border border-blue-400 bg-blue-50 rounded-md"
+                                className="w-16 px-2 py-1 text-sm text-right border border-[#38bdf8] bg-[#F0F9FF] rounded-md"
                                 onClick={e => e.stopPropagation()} />
                               <button onClick={e => { e.stopPropagation(); handleInlineAdjust(product) }}
                                 disabled={adjustSaving}
-                                className="p-1 text-blue-500 hover:text-blue-700 transition-colors">
+                                className="p-1 text-[#0284C7] hover:text-[#0369A1] transition-colors">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                 </svg>
                               </button>
                               <button onClick={e => { e.stopPropagation(); setAdjustingId(null) }}
-                                className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                                className="p-1 text-[#A9B6C6] hover:text-[#425466] transition-colors">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                                 </svg>
                               </button>
                             </div>
                           ) : (
-                            <p className="text-sm font-medium text-gray-900">{product.trackStock ? stock : '--'}</p>
+                            <p className="text-sm font-medium text-[#1e3a5f]">{product.trackStock ? stock : '--'}</p>
                           )}
                         </div>
                         <div className="col-span-2 text-right">
-                          <p className="text-sm text-gray-600">{fmt(cost)}</p>
+                          <p className="text-sm text-[#425466]">{fmt(cost)}</p>
                         </div>
                         <div className="col-span-2 text-right">
-                          <p className="text-sm text-gray-600">{product.trackStock ? fmt(value) : '--'}</p>
+                          <p className="text-sm text-[#425466]">{product.trackStock ? fmt(value) : '--'}</p>
                         </div>
                         <div className="col-span-2 flex items-center justify-end gap-2">
                           <StatusBadge status={status} />
                           {!bulkMode && product.trackStock && (
                             <div className="relative">
                               <button onClick={e => { e.stopPropagation(); setMenuOpenId(menuOpenId === product.id ? null : product.id) }}
-                                className="p-1 text-gray-300 hover:text-gray-500 rounded-md hover:bg-gray-100 transition-colors">
+                                className="p-1 text-[#C3CFDB] hover:text-[#8898AA] rounded-md hover:bg-[#F1F5F9] transition-colors">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
                                 </svg>
                               </button>
                               {menuOpenId === product.id && (
-                                <div className="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 animate-[slideDown_0.1s_ease-out]"
+                                <div className="absolute right-0 top-8 z-20 bg-white border border-[#E6EBF1] rounded-lg shadow-sm py-1 w-40 animate-[slideDown_0.1s_ease-out]"
                                   onClick={e => e.stopPropagation()}>
                                   {!hasVariants && !productHasCombos && (
                                     <button onClick={() => { setAdjustingId(product.id); setAdjustValue(String(stock)); setMenuOpenId(null) }}
-                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      className="w-full px-3 py-2 text-left text-xs text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                                       Ajustar stock
                                     </button>
                                   )}
                                   {warehouses.length >= 2 && (
                                     <button onClick={() => openTransfer(product)}
-                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                      className="w-full px-3 py-2 text-left text-xs text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                                       Transferir
                                     </button>
                                   )}
                                   <button onClick={() => { toggleExpand(product.id); setMenuOpenId(null) }}
-                                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                                    className="w-full px-3 py-2 text-left text-xs text-[#425466] hover:bg-[#F6F9FC] transition-colors">
                                     {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
                                   </button>
                                 </div>
@@ -985,8 +985,8 @@ export default function Inventory() {
 
                     {/* Bulk mode: per-combination inputs for selected warehouse */}
                     {bulkMode && bulkWarehouseId && productHasCombos && product.trackStock && (
-                      <div className="border-t border-gray-100 bg-blue-50/20 px-4 py-3 animate-[slideDown_0.15s_ease-out]">
-                        <p className="text-[11px] text-gray-500 uppercase tracking-wider font-medium mb-2">
+                      <div className="border-t border-[#EEF2F6] bg-[#F0F9FF]/20 px-4 py-3 animate-[slideDown_0.15s_ease-out]">
+                        <p className="text-[11px] text-[#8898AA] uppercase tracking-wider font-medium mb-2">
                           Combinaciones - stock en {warehouses.find(w => w.id === bulkWarehouseId)?.name}
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -997,10 +997,10 @@ export default function Inventory() {
                             const inputVal = editedRaw ?? String(cur)
                             const changed = editedRaw !== undefined && editedRaw !== '' && parseInt(editedRaw) !== cur
                             return (
-                              <div key={combo.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-white border border-gray-100 rounded-md">
+                              <div key={combo.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-white border border-[#EEF2F6] rounded-md">
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-xs text-gray-700 truncate">{comboLabel}</p>
-                                  <p className="text-[10px] text-gray-400">Actual: {cur}</p>
+                                  <p className="text-xs text-[#425466] truncate">{comboLabel}</p>
+                                  <p className="text-[10px] text-[#A9B6C6]">Actual: {cur}</p>
                                 </div>
                                 <input
                                   type="number"
@@ -1011,7 +1011,7 @@ export default function Inventory() {
                                     [product.id]: { ...(prev[product.id] || {}), [combo.id]: e.target.value }
                                   }))}
                                   className={`w-16 px-2 py-1 text-sm text-right border rounded-md ${
-                                    changed ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+                                    changed ? 'border-[#38bdf8] bg-[#F0F9FF]' : 'border-[#E6EBF1]'
                                   }`}
                                 />
                               </div>
@@ -1023,22 +1023,22 @@ export default function Inventory() {
 
                     {/* Expanded: Sucursales > Almacenes > Variantes */}
                     {isExpanded && !bulkMode && (
-                      <div className="border-t border-gray-100 bg-gray-50/20 px-4 py-3 space-y-2 animate-[slideDown_0.15s_ease-out]">
-                        <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium pl-1">Stock por Sucursal y Almacen</p>
+                      <div className="border-t border-[#EEF2F6] bg-[#F6F9FC]/20 px-4 py-3 space-y-2 animate-[slideDown_0.15s_ease-out]">
+                        <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium pl-1">Stock por Sucursal y Almacen</p>
                         {branches.length === 0 ? (
-                          <p className="text-xs text-gray-400 pl-1">Sin sucursales configuradas</p>
+                          <p className="text-xs text-[#A9B6C6] pl-1">Sin sucursales configuradas</p>
                         ) : (
                           branches.map(branch => {
                             const branchWarehouses = warehouses.filter(w => w.branchId === branch.id)
                             return (
-                              <div key={branch.id} className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+                              <div key={branch.id} className="bg-white rounded-lg border border-[#EEF2F6] overflow-hidden">
                                 {/* Branch header */}
-                                <div className="px-3 py-2 bg-gray-50/80 border-b border-gray-100">
-                                  <p className="text-xs font-medium text-gray-700">{branch.name}</p>
+                                <div className="px-3 py-2 bg-[#F6F9FC] border-b border-[#EEF2F6]">
+                                  <p className="text-xs font-medium text-[#425466]">{branch.name}</p>
                                 </div>
                                 {/* Warehouses in branch */}
                                 {branchWarehouses.length === 0 ? (
-                                  <p className="px-3 py-2 text-[11px] text-gray-400">Sin almacenes</p>
+                                  <p className="px-3 py-2 text-[11px] text-[#A9B6C6]">Sin almacenes</p>
                                 ) : (
                                   <div className="divide-y divide-gray-50">
                                     {branchWarehouses.map(w => {
@@ -1056,7 +1056,7 @@ export default function Inventory() {
                                       return (
                                         <div key={w.id}>
                                           <div
-                                            className={`px-3 py-2 flex items-center justify-between ${showsBreakdown ? 'cursor-pointer hover:bg-gray-50/60' : ''}`}
+                                            className={`px-3 py-2 flex items-center justify-between ${showsBreakdown ? 'cursor-pointer hover:bg-[#F6F9FC]/60' : ''}`}
                                             onClick={() => {
                                               if (!showsBreakdown) return
                                               setCollapsedWarehouses(prev => {
@@ -1069,17 +1069,17 @@ export default function Inventory() {
                                           >
                                             <div className="flex items-center gap-2">
                                               {showsBreakdown && (
-                                                <svg className={`w-3 h-3 text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <svg className={`w-3 h-3 text-[#A9B6C6] transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                                                 </svg>
                                               )}
-                                              <svg className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                              <svg className="w-3.5 h-3.5 text-[#C3CFDB]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5M10.5 21H3m1.125-9.75H3.375c-.621 0-1.125-.504-1.125-1.125V3.375c0-.621.504-1.125 1.125-1.125h17.25c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125H4.125Z" />
                                               </svg>
-                                              <p className="text-xs text-gray-600">{w.name}</p>
-                                              {w.isDefault && <span className="px-1 py-0.5 bg-blue-50 text-blue-500 text-[9px] font-medium rounded">Principal</span>}
+                                              <p className="text-xs text-[#425466]">{w.name}</p>
+                                              {w.isDefault && <span className="px-1 py-0.5 bg-[#F0F9FF] text-[#0284C7] text-[9px] font-medium rounded">Principal</span>}
                                             </div>
-                                            <p className="text-xs font-medium text-gray-700">{wStock} total</p>
+                                            <p className="text-xs font-medium text-[#425466]">{wStock} total</p>
                                           </div>
                                           {/* Combinations per warehouse */}
                                           {hasCombinations(product) && !isCollapsed && (
@@ -1090,8 +1090,8 @@ export default function Inventory() {
                                                 const isZero = comboWStock === 0
                                                 return (
                                                   <div key={combo.id} className="flex items-center justify-between py-0.5">
-                                                    <p className={`text-[11px] ${isZero ? 'text-gray-300' : 'text-gray-600'}`}>{comboLabel}</p>
-                                                    <p className={`text-[11px] font-medium tabular-nums ${isZero ? 'text-gray-300' : 'text-gray-700'}`}>{comboWStock}</p>
+                                                    <p className={`text-[11px] ${isZero ? 'text-[#C3CFDB]' : 'text-[#425466]'}`}>{comboLabel}</p>
+                                                    <p className={`text-[11px] font-medium tabular-nums ${isZero ? 'text-[#C3CFDB]' : 'text-[#425466]'}`}>{comboWStock}</p>
                                                   </div>
                                                 )
                                               })}
@@ -1106,10 +1106,10 @@ export default function Inventory() {
                                                   const isZero = optStock === 0
                                                   return (
                                                     <div key={`${variation.id}-${option.id}`} className="flex items-center justify-between py-0.5">
-                                                      <p className={`text-[11px] ${isZero ? 'text-gray-300' : 'text-gray-500'}`}>
-                                                        <span className="text-gray-400">{variation.name}:</span> {option.value}
+                                                      <p className={`text-[11px] ${isZero ? 'text-[#C3CFDB]' : 'text-[#8898AA]'}`}>
+                                                        <span className="text-[#A9B6C6]">{variation.name}:</span> {option.value}
                                                       </p>
-                                                      <p className={`text-[11px] font-medium tabular-nums ${isZero ? 'text-gray-300' : 'text-gray-700'}`}>{optStock}</p>
+                                                      <p className={`text-[11px] font-medium tabular-nums ${isZero ? 'text-[#C3CFDB]' : 'text-[#425466]'}`}>{optStock}</p>
                                                     </div>
                                                   )
                                                 })
@@ -1130,13 +1130,13 @@ export default function Inventory() {
 
                         {/* Legacy variants without combinations */}
                         {hasVariants && !hasCombinations(product) && warehouses.length === 0 && (
-                          <div className="bg-white rounded-lg border border-gray-100 p-3 space-y-1">
-                            <p className="text-[11px] text-gray-400 mb-1">Variantes</p>
+                          <div className="bg-white rounded-lg border border-[#EEF2F6] p-3 space-y-1">
+                            <p className="text-[11px] text-[#A9B6C6] mb-1">Variantes</p>
                             {product.variations!.map(variation =>
                               variation.options.map(option => (
                                 <div key={`${variation.id}-${option.id}`} className="flex items-center justify-between py-0.5">
-                                  <p className="text-[11px] text-gray-500">{variation.name}: {option.value}</p>
-                                  <p className="text-[11px] font-medium text-gray-700">{option.stock ?? 0}</p>
+                                  <p className="text-[11px] text-[#8898AA]">{variation.name}: {option.value}</p>
+                                  <p className="text-[11px] font-medium text-[#425466]">{option.stock ?? 0}</p>
                                 </div>
                               ))
                             )}
@@ -1159,14 +1159,14 @@ export default function Inventory() {
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50" onClick={() => setTransferProduct(null)} />
           <div className="fixed inset-x-4 top-[10%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg z-50 animate-[slideDown_0.2s_ease-out]">
-            <div className="bg-white rounded-xl shadow-2xl border border-gray-200/60 max-h-[80vh] flex flex-col">
+            <div className="bg-white rounded-xl shadow-2xl border border-[#E6EBF1] max-h-[80vh] flex flex-col">
               {/* Header */}
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="px-5 py-4 border-b border-[#EEF2F6] flex items-center justify-between flex-shrink-0">
                 <div>
-                  <h2 className="text-sm font-medium text-gray-900">Transferir stock</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">{transferProduct.name}</p>
+                  <h2 className="text-sm font-medium text-[#1e3a5f]">Transferir stock</h2>
+                  <p className="text-xs text-[#A9B6C6] mt-0.5">{transferProduct.name}</p>
                 </div>
-                <button onClick={() => setTransferProduct(null)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+                <button onClick={() => setTransferProduct(null)} className="p-1.5 text-[#A9B6C6] hover:text-[#425466] hover:bg-[#F1F5F9] rounded-md transition-colors">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                   </svg>
@@ -1178,9 +1178,9 @@ export default function Inventory() {
                 {/* Warehouses */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Desde</label>
+                    <label className="text-xs text-[#8898AA] mb-1 block">Desde</label>
                     <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty(''); setTransferComboQtys({}); setTransferSearch('') }}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                      className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                       <option value="">Seleccionar almacen</option>
                       {warehouses.map(w => {
                         const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
@@ -1192,9 +1192,9 @@ export default function Inventory() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Hacia</label>
+                    <label className="text-xs text-[#8898AA] mb-1 block">Hacia</label>
                     <select value={transferTo} onChange={e => setTransferTo(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
+                      className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                       <option value="">Seleccionar almacen</option>
                       {warehouses.filter(w => w.id !== transferFrom).map(w => {
                         const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
@@ -1209,15 +1209,15 @@ export default function Inventory() {
 
                 {/* Note */}
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Motivo (opcional)</label>
+                  <label className="text-xs text-[#8898AA] mb-1 block">Motivo (opcional)</label>
                   <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Ej: Reposicion sucursal norte"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                    className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                 </div>
 
                 {/* Quantity: simple product */}
                 {transferFrom && transferTo && !transferHasCombos && (
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Cantidad <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
+                    <label className="text-xs text-[#8898AA] mb-1 block">Cantidad <span className="text-[#A9B6C6]">(disponible: {transferAvailable})</span></label>
                     <input type="number" min="1" max={transferAvailable} value={transferQty}
                       onChange={e => {
                         const raw = e.target.value
@@ -1227,7 +1227,7 @@ export default function Inventory() {
                         setTransferQty(String(Math.min(n, transferAvailable)))
                       }}
                       placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                      className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                   </div>
                 )}
 
@@ -1235,18 +1235,18 @@ export default function Inventory() {
                 {transferFrom && transferTo && transferHasCombos && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs text-gray-500">Combinaciones <span className="text-gray-400">(disponible: {transferAvailable})</span></label>
+                      <label className="text-xs text-[#8898AA]">Combinaciones <span className="text-[#A9B6C6]">(disponible: {transferAvailable})</span></label>
                     </div>
                     {/* Search */}
                     <div className="relative mb-2">
-                      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                       </svg>
                       <input type="text" value={transferSearch} onChange={e => setTransferSearch(e.target.value)}
                         placeholder="Buscar combinacion..."
-                        className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
+                        className="w-full pl-8 pr-3 py-1.5 border border-[#E6EBF1] rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                     </div>
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-[#E6EBF1] rounded-lg overflow-hidden">
                       <div className="divide-y divide-gray-50 max-h-56 overflow-y-auto">
                         {transferProduct.combinations!
                           .filter(c => {
@@ -1260,10 +1260,10 @@ export default function Inventory() {
                             const comboAvailable = combo.warehouseStock?.[transferFrom] ?? 0
                             const exceeds = qty > comboAvailable
                             return (
-                              <div key={combo.id} className={`px-3 py-2.5 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-blue-50/30' : ''}`}>
+                              <div key={combo.id} className={`px-3 py-2.5 flex items-center justify-between gap-3 ${qty > 0 ? 'bg-[#F0F9FF]/30' : ''}`}>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-sm text-gray-800">{comboLabel}</p>
-                                  <p className="text-[11px] text-gray-400">Stock: {comboAvailable}</p>
+                                  <p className="text-sm text-[#1e3a5f]">{comboLabel}</p>
+                                  <p className="text-[11px] text-[#A9B6C6]">Stock: {comboAvailable}</p>
                                 </div>
                                 <input type="number" min="0" max={comboAvailable}
                                   disabled={comboAvailable === 0}
@@ -1280,9 +1280,9 @@ export default function Inventory() {
                                     setTransferComboQtys(prev => ({ ...prev, [combo.id]: String(clamped) }))
                                   }}
                                   placeholder="0"
-                                  className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 disabled:bg-gray-50 disabled:text-gray-400 ${
+                                  className={`w-20 px-2.5 py-1.5 border rounded-lg text-sm text-right focus:ring-1 focus:ring-[#1e3a5f]/10 disabled:bg-[#F6F9FC] disabled:text-[#A9B6C6] ${
                                     exceeds ? 'border-red-300 bg-red-50' :
-                                    qty > 0 ? 'border-blue-300 bg-white' : 'border-gray-200'
+                                    qty > 0 ? 'border-blue-300 bg-white' : 'border-[#E6EBF1]'
                                   }`} />
                               </div>
                             )
@@ -1294,14 +1294,14 @@ export default function Inventory() {
               </div>
 
               {/* Footer */}
-              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="px-5 py-3 border-t border-[#EEF2F6] flex items-center justify-between flex-shrink-0">
                 <div>
                   {transferTotalQty > 0 && (
-                    <p className="text-sm text-gray-700"><span className="font-medium">{transferTotalQty}</span> unidades a transferir</p>
+                    <p className="text-sm text-[#425466]"><span className="font-medium">{transferTotalQty}</span> unidades a transferir</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setTransferProduct(null)} className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
+                  <button onClick={() => setTransferProduct(null)} className="px-3 py-2 text-sm text-[#8898AA] hover:text-[#425466]">Cancelar</button>
                   <button onClick={handleTransfer} disabled={transferSaving || !transferIsValid}
                     className="px-5 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium disabled:opacity-40">
                     {transferSaving ? 'Transfiriendo...' : 'Transferir'}
@@ -1317,7 +1317,7 @@ export default function Inventory() {
 }
 
 function StatusBadge({ status }: { status: 'ok' | 'low' | 'out' | 'untracked' }) {
-  const styles = { ok: 'bg-green-50 text-green-600', low: 'bg-amber-50 text-amber-600', out: 'bg-red-50 text-red-500', untracked: 'bg-gray-50 text-gray-400' }
+  const styles = { ok: 'bg-green-50 text-green-600', low: 'bg-amber-50 text-amber-600', out: 'bg-red-50 text-red-500', untracked: 'bg-[#F6F9FC] text-[#A9B6C6]' }
   const labels = { ok: 'Normal', low: 'Bajo', out: 'Agotado', untracked: 'Sin control' }
   return <span className={`inline-flex px-2 py-0.5 rounded-md text-[11px] font-medium ${styles[status]}`}>{labels[status]}</span>
 }

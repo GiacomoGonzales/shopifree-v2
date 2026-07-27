@@ -282,14 +282,14 @@ export default function FinanceDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Resumen</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Panel de control financiero</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Resumen</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">Panel de control financiero</p>
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-[#F1F5F9] rounded-lg p-0.5">
           {periods.map(p => (
             <button key={p.key} onClick={() => setPeriod(p.key)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                period === p.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                period === p.key ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#8898AA] hover:text-[#425466]'
               }`}>
               {p.label}
             </button>
@@ -299,7 +299,7 @@ export default function FinanceDashboard() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-[#1e3a5f]" />
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D8E2EC] border-t-[#1e3a5f]" />
         </div>
       ) : (
         <>
@@ -327,29 +327,29 @@ export default function FinanceDashboard() {
           </div>
 
           {/* Compact P&L */}
-          <div className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-5">
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-medium text-gray-900">Estado de resultados</h2>
-              <Link to={localePath('/finance/cashflow')} className="text-xs text-blue-500 hover:text-blue-700">Ver detalle →</Link>
+              <h2 className="text-sm font-medium text-[#1e3a5f]">Estado de resultados</h2>
+              <Link to={localePath('/finance/cashflow')} className="text-xs text-[#0284C7] hover:text-[#0369A1]">Ver detalle →</Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <PnLCell label="Ingresos (cobrado)" value={fmt(current.collected)} sub={current.invoiced !== current.collected ? `facturado ${fmt(current.invoiced)}` : undefined} color="text-green-600" />
-              <PnLCell label="Utilidad bruta" value={fmt(current.grossProfit)} sub={`margen ${current.grossMarginPct.toFixed(1)}%`} color={current.grossProfit >= 0 ? 'text-gray-900' : 'text-red-500'} />
-              <PnLCell label="Utilidad neta" value={fmt(current.netProfit)} sub={`margen ${current.netMarginPct.toFixed(1)}%`} color={current.netProfit >= 0 ? 'text-gray-900' : 'text-red-500'} emphasis />
+              <PnLCell label="Utilidad bruta" value={fmt(current.grossProfit)} sub={`margen ${current.grossMarginPct.toFixed(1)}%`} color={current.grossProfit >= 0 ? 'text-[#1e3a5f]' : 'text-red-500'} />
+              <PnLCell label="Utilidad neta" value={fmt(current.netProfit)} sub={`margen ${current.netMarginPct.toFixed(1)}%`} color={current.netProfit >= 0 ? 'text-[#1e3a5f]' : 'text-red-500'} emphasis />
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-4 text-[11px]">
+            <div className="mt-3 pt-3 border-t border-[#EEF2F6] grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-4 text-[11px]">
               <div className="flex justify-between sm:block">
-                <span className="text-gray-400">− COGS</span>
-                <span className="text-gray-600 sm:ml-2 tabular-nums">{fmt(current.cogs)}</span>
+                <span className="text-[#A9B6C6]">− COGS</span>
+                <span className="text-[#425466] sm:ml-2 tabular-nums">{fmt(current.cogs)}</span>
               </div>
               <div className="flex justify-between sm:block">
-                <span className="text-gray-400">− Gastos op.</span>
-                <span className="text-gray-600 sm:ml-2 tabular-nums">{fmt(current.opex)}</span>
+                <span className="text-[#A9B6C6]">− Gastos op.</span>
+                <span className="text-[#425466] sm:ml-2 tabular-nums">{fmt(current.opex)}</span>
               </div>
               {cancelPct > 0 && (
                 <div className="flex justify-between sm:block">
-                  <span className="text-gray-400">Cancelacion</span>
-                  <span className="text-gray-600 sm:ml-2 tabular-nums">{cancelPct.toFixed(1)}%</span>
+                  <span className="text-[#A9B6C6]">Cancelacion</span>
+                  <span className="text-[#425466] sm:ml-2 tabular-nums">{cancelPct.toFixed(1)}%</span>
                 </div>
               )}
             </div>
@@ -357,20 +357,20 @@ export default function FinanceDashboard() {
 
           {/* Chart + Top products */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200/60 p-4">
+            <div className="lg:col-span-2 bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-medium text-gray-900">Ingresos vs gastos por dia</h2>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Ingresos vs gastos por dia</h2>
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-[#8898AA]">
                     <span className="w-2 h-2 rounded-sm bg-[#1e3a5f]" /> Ingresos
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-[#8898AA]">
                     <span className="w-2 h-2 rounded-sm bg-red-400" /> Gastos
                   </span>
                 </div>
               </div>
               {chartData.length === 0 || maxBar === 0 ? (
-                <div className="flex items-center justify-center h-40 text-sm text-gray-400">Sin datos</div>
+                <div className="flex items-center justify-center h-40 text-sm text-[#A9B6C6]">Sin datos</div>
               ) : (
                 <div className="flex items-end gap-1 h-40">
                   {chartData.map((d, i) => {
@@ -379,7 +379,7 @@ export default function FinanceDashboard() {
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center justify-end group relative">
                         <div className="absolute bottom-full mb-2 hidden group-hover:block z-10">
-                          <div className="bg-gray-900 text-white text-[10px] px-2 py-1 rounded-md whitespace-nowrap">
+                          <div className="bg-[#1e3a5f] text-white text-[10px] px-2 py-1 rounded-md whitespace-nowrap">
                             <div>{d.label}</div>
                             <div>Ingresos: {fmt(d.income)}</div>
                             <div>Gastos: {fmt(d.expenses)}</div>
@@ -388,16 +388,16 @@ export default function FinanceDashboard() {
                         </div>
                         <div className="w-full flex items-end justify-center gap-[1px]">
                           <div
-                            className={`w-1/2 rounded-t transition-all ${d.income > 0 ? 'bg-[#1e3a5f] hover:bg-[#2d6cb5]' : 'bg-gray-100'}`}
+                            className={`w-1/2 rounded-t transition-all ${d.income > 0 ? 'bg-[#1e3a5f] hover:bg-[#2d6cb5]' : 'bg-[#F1F5F9]'}`}
                             style={{ height: `${Math.max(incomeH, d.income > 0 ? 4 : 2)}px`, minHeight: d.income > 0 ? 4 : 0 }}
                           />
                           <div
-                            className={`w-1/2 rounded-t transition-all ${d.expenses > 0 ? 'bg-red-400 hover:bg-red-500' : 'bg-gray-100'}`}
+                            className={`w-1/2 rounded-t transition-all ${d.expenses > 0 ? 'bg-red-400 hover:bg-red-500' : 'bg-[#F1F5F9]'}`}
                             style={{ height: `${Math.max(expenseH, d.expenses > 0 ? 4 : 2)}px`, minHeight: d.expenses > 0 ? 4 : 0 }}
                           />
                         </div>
                         {(chartData.length <= 7 || i % Math.ceil(chartData.length / 7) === 0) && (
-                          <p className="text-[9px] text-gray-400 mt-1 truncate w-full text-center">{d.label}</p>
+                          <p className="text-[9px] text-[#A9B6C6] mt-1 truncate w-full text-center">{d.label}</p>
                         )}
                       </div>
                     )
@@ -407,25 +407,25 @@ export default function FinanceDashboard() {
             </div>
 
             {/* Top products */}
-            <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-gray-900">Top productos</h2>
-                <Link to={localePath('/dashboard/analytics')} className="text-[11px] text-blue-500 hover:text-blue-700">Ver mas →</Link>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Top productos</h2>
+                <Link to={localePath('/dashboard/analytics')} className="text-[11px] text-[#0284C7] hover:text-[#0369A1]">Ver mas →</Link>
               </div>
               {topProducts.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">Sin ventas</p>
+                <p className="text-sm text-[#A9B6C6] text-center py-8">Sin ventas</p>
               ) : (
                 <div className="space-y-3">
                   {topProducts.map((p, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-[11px] text-gray-400 w-4 flex-shrink-0">{i + 1}.</span>
+                        <span className="text-[11px] text-[#A9B6C6] w-4 flex-shrink-0">{i + 1}.</span>
                         <div className="min-w-0">
-                          <p className="text-sm text-gray-900 truncate">{p.name}</p>
-                          <p className="text-[11px] text-gray-400">{p.qty} uds</p>
+                          <p className="text-sm text-[#1e3a5f] truncate">{p.name}</p>
+                          <p className="text-[11px] text-[#A9B6C6]">{p.qty} uds</p>
                         </div>
                       </div>
-                      <p className="text-sm font-medium text-gray-700 flex-shrink-0 ml-2 tabular-nums">{fmt(p.revenue)}</p>
+                      <p className="text-sm font-medium text-[#425466] flex-shrink-0 ml-2 tabular-nums">{fmt(p.revenue)}</p>
                     </div>
                   ))}
                 </div>
@@ -435,28 +435,28 @@ export default function FinanceDashboard() {
 
           {/* OPEX breakdown + Por cobrar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-gray-900">Gastos operativos por categoria</h2>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Gastos operativos por categoria</h2>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-400">{fmt(current.opex)}</p>
-                  <Link to={localePath('/finance/expenses')} className="text-[11px] text-blue-500 hover:text-blue-700">Gestionar →</Link>
+                  <p className="text-xs text-[#A9B6C6]">{fmt(current.opex)}</p>
+                  <Link to={localePath('/finance/expenses')} className="text-[11px] text-[#0284C7] hover:text-[#0369A1]">Gestionar →</Link>
                 </div>
               </div>
               {opexByCategory.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">Sin gastos operativos</p>
+                <p className="text-sm text-[#A9B6C6] text-center py-6">Sin gastos operativos</p>
               ) : (
                 <div className="space-y-2.5">
                   {opexByCategory.map(([cat, amount]) => (
                     <div key={cat}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-600">{cat}</span>
-                        <span className="text-xs font-medium text-gray-700 tabular-nums">
+                        <span className="text-xs text-[#425466]">{cat}</span>
+                        <span className="text-xs font-medium text-[#425466] tabular-nums">
                           {fmt(amount)}
-                          <span className="ml-2 text-gray-400 font-normal">{((amount / current.opex) * 100).toFixed(0)}%</span>
+                          <span className="ml-2 text-[#A9B6C6] font-normal">{((amount / current.opex) * 100).toFixed(0)}%</span>
                         </span>
                       </div>
-                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
                         <div className="h-full bg-red-400 rounded-full" style={{ width: `${(amount / current.opex) * 100}%` }} />
                       </div>
                     </div>
@@ -465,13 +465,13 @@ export default function FinanceDashboard() {
               )}
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200/60 p-4">
+            <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-gray-900">Por cobrar</h2>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Por cobrar</h2>
                 <p className="text-xs font-medium text-amber-600 tabular-nums">{fmt(current.pendingRevenue)}</p>
               </div>
               {pendingOrders.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">Sin pedidos pendientes</p>
+                <p className="text-sm text-[#A9B6C6] text-center py-6">Sin pedidos pendientes</p>
               ) : (
                 <div className="space-y-1.5">
                   {pendingOrders.slice(0, 5).map(order => {
@@ -484,14 +484,14 @@ export default function FinanceDashboard() {
                       <div key={order.id} className="flex items-center justify-between py-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-medium rounded">{statusLabel}</span>
-                          <p className="text-sm text-gray-700 truncate">#{order.orderNumber} · {order.customer?.name || 'Cliente'}</p>
+                          <p className="text-sm text-[#425466] truncate">#{order.orderNumber} · {order.customer?.name || 'Cliente'}</p>
                         </div>
-                        <p className="text-sm font-medium text-gray-900 flex-shrink-0 ml-2 tabular-nums">{fmt(order.total || 0)}</p>
+                        <p className="text-sm font-medium text-[#1e3a5f] flex-shrink-0 ml-2 tabular-nums">{fmt(order.total || 0)}</p>
                       </div>
                     )
                   })}
                   {pendingOrders.length > 5 && (
-                    <Link to={localePath('/dashboard/orders')} className="block text-center text-[11px] text-blue-500 hover:text-blue-700 pt-2">
+                    <Link to={localePath('/dashboard/orders')} className="block text-center text-[11px] text-[#0284C7] hover:text-[#0369A1] pt-2">
                       Ver {pendingOrders.length - 5} mas →
                     </Link>
                   )}
@@ -523,19 +523,19 @@ function KPICard({
   const accentClass = accent === 'green' ? 'text-green-600'
     : accent === 'red' ? 'text-red-500'
     : accent === 'blue' ? 'text-[#1e3a5f]'
-    : 'text-gray-900'
+    : 'text-[#1e3a5f]'
   const positiveIsGood = !inverted
-  let deltaClass = 'text-gray-400'
+  let deltaClass = 'text-[#A9B6C6]'
   if (delta.direction === 'up') deltaClass = positiveIsGood ? 'text-green-600' : 'text-red-500'
   if (delta.direction === 'down') deltaClass = positiveIsGood ? 'text-red-500' : 'text-green-600'
   const arrow = delta.direction === 'up' ? '↑' : delta.direction === 'down' ? '↓' : '→'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-4">
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
+    <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
+      <p className="text-[11px] text-[#A9B6C6] mb-1">{label}</p>
       <p className={`text-xl font-semibold ${accentClass}`}>{value}</p>
       <div className="flex items-center justify-between mt-1 gap-2">
-        {sub && <p className="text-[11px] text-gray-400 truncate">{sub}</p>}
+        {sub && <p className="text-[11px] text-[#A9B6C6] truncate">{sub}</p>}
         <p className={`text-[11px] ${deltaClass} whitespace-nowrap flex-shrink-0 ml-auto`}>
           {arrow} {fmtPct(delta.pct)}
         </p>
@@ -553,13 +553,13 @@ function MiniStat({
   amount?: string
   highlight?: 'amber'
 }) {
-  const valueClass = highlight === 'amber' ? 'text-amber-600' : 'text-gray-900'
+  const valueClass = highlight === 'amber' ? 'text-amber-600' : 'text-[#1e3a5f]'
   return (
-    <div className="bg-white rounded-xl border border-gray-200/60 p-3">
-      <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
+    <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-3">
+      <p className="text-[11px] text-[#A9B6C6] mb-0.5">{label}</p>
       <p className={`text-lg font-semibold ${valueClass}`}>{value}</p>
-      {amount && <p className="text-[11px] text-gray-500 tabular-nums">{amount}</p>}
-      {sub && !amount && <p className="text-[11px] text-gray-400">{sub}</p>}
+      {amount && <p className="text-[11px] text-[#8898AA] tabular-nums">{amount}</p>}
+      {sub && !amount && <p className="text-[11px] text-[#A9B6C6]">{sub}</p>}
     </div>
   )
 }
@@ -574,10 +574,10 @@ function PnLCell({
   emphasis?: boolean
 }) {
   return (
-    <div className={emphasis ? 'bg-gray-50 rounded-lg px-3 py-2' : ''}>
-      <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
+    <div className={emphasis ? 'bg-[#F6F9FC] rounded-lg px-3 py-2' : ''}>
+      <p className="text-[11px] text-[#A9B6C6] mb-0.5">{label}</p>
       <p className={`text-lg font-semibold tabular-nums ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-gray-400 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[11px] text-[#A9B6C6] mt-0.5">{sub}</p>}
     </div>
   )
 }
