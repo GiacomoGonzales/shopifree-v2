@@ -18,6 +18,7 @@
 
 import { auth } from '../lib/firebase'
 import { apiUrl } from './apiBase'
+import { compressImage } from './compressImage'
 
 // === Feature flag ===
 // ACTIVADO PARA TODOS (piloto validado): todas las subidas NUEVAS van a
@@ -54,6 +55,14 @@ export interface UploadOptions {
   quality?: string
   /** Tienda a la que pertenece la subida (para el flag por tienda). */
   storeId?: string
+  /**
+   * Lado largo máximo en px antes de subir. Default 2048, que cubre de sobra
+   * la galería de producto. Los heroes se sirven a todo el ancho y piden más
+   * (ver SIZE_CONFIGS.hero en cloudinary.ts).
+   */
+  maxDimension?: number
+  /** Sube el archivo tal cual, sin redimensionar ni reencodar. */
+  skipCompression?: boolean
 }
 
 /**
@@ -115,21 +124,28 @@ async function uploadToR2(file: File | Blob, folder: string): Promise<string> {
 }
 
 /**
- * Sube una imagen (idealmente ya comprimida a webp) y devuelve su URL pública.
+ * Sube una imagen y devuelve su URL pública.
  * - Cuentas con el flag activo: R2, con respaldo Cloudinary si falla.
  * - Resto: Cloudinary, como siempre.
+ *
+ * Comprime SIEMPRE antes de subir (salvo `skipCompression`). Esto es lo que
+ * mantiene la subida por debajo del límite de body de Vercel: sin comprimir,
+ * cualquier foto de más de ~3.2 MB fallaba en R2 y se iba al respaldo de
+ * Cloudinary en silencio.
  */
 export async function uploadImage(
   file: File | Blob,
-  { folder = 'uploads', quality, storeId }: UploadOptions = {}
+  { folder = 'uploads', quality, storeId, maxDimension, skipCompression }: UploadOptions = {}
 ): Promise<string> {
+  const payload = skipCompression ? file : await compressImage(file, { maxDimension })
+
   if (shouldUploadToR2(storeId)) {
     try {
-      return await uploadToR2(file, folder)
+      return await uploadToR2(payload, folder)
     } catch (e) {
       console.warn('⚠️ Subida a R2 falló, usando Cloudinary de respaldo:', e instanceof Error ? e.message : e)
-      return uploadToCloudinary(file, { folder, quality })
+      return uploadToCloudinary(payload, { folder, quality })
     }
   }
-  return uploadToCloudinary(file, { folder, quality })
+  return uploadToCloudinary(payload, { folder, quality })
 }

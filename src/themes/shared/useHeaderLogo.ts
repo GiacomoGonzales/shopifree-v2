@@ -1,3 +1,4 @@
+import { optimizeImage } from '../../utils/cloudinary'
 import { useLogoOrientation } from './useLogoOrientation'
 
 type SquareStyle = 'circle' | 'rounded'
@@ -37,11 +38,13 @@ export function useHeaderLogo(
   options: Options = {}
 ) {
   const { squareStyle = 'circle' } = options
+  // Ojo: la sonda de orientación/transparencia lee píxeles del canvas, así que
+  // recibe la URL CRUDA. Solo se optimiza el `src` que termina en el <img>.
   const orient = useLogoOrientation(store.logo)
 
   if (store.logoLandscape) {
     return {
-      src: store.logoLandscape,
+      src: optimizeImage(store.logoLandscape, 'logo'),
       showName: false,
       loaded: true,
       isLandscape: true as const,
@@ -57,7 +60,7 @@ export function useHeaderLogo(
   }
 
   return {
-    src: store.logo,
+    src: optimizeImage(store.logo, 'logo'),
     showName: orient.showName,
     loaded: orient.loaded,
     isLandscape: false as const,

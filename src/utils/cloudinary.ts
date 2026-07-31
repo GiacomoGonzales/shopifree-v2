@@ -1,9 +1,14 @@
 /**
- * Cloudinary image optimization utilities
- * Transforms Cloudinary URLs to include optimization parameters
+ * Utilidades de optimización de imágenes.
+ *
+ * Soporta DOS proveedores en paralelo durante la migración:
+ *  - Cloudflare (R2 + Image Transformations) → `/cdn-cgi/image/<opts>/<key>`
+ *  - Cloudinary (legacy)                     → `/upload/<transforms>/<id>`
+ *
+ * Cualquier URL que no sea de ninguno de los dos se devuelve intacta.
  */
 
-type ImageSize = 'thumbnail' | 'category' | 'card' | 'gallery' | 'hero'
+type ImageSize = 'thumbnail' | 'category' | 'logo' | 'card' | 'gallery' | 'hero'
 
 interface SizeConfig {
   width: number
@@ -18,6 +23,11 @@ const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
   // at 2x DPR. Pair with getImageSrcSet(url, 'category') so the browser can
   // serve a 640px file on retina screens without us hardcoding HTML width.
   category: { width: 320, height: 320, crop: 'fill' },
+  // `logo`: cabecera de tienda en los 87 temas (useHeaderLogo). Cubre los dos
+  // casos: cuadrado a 48px CSS (400 alcanza hasta 8x DPR) y apaisado a 200px
+  // CSS (400 = 2x retina). Va con `limit` y NO con `fill`: recortar un logo le
+  // comería contenido, y el <img> ya usa object-contain.
+  logo: { width: 400, crop: 'limit' },
   card: { width: 600, crop: 'limit' },  // Only limit width, preserve aspect ratio
   gallery: { width: 1000, crop: 'limit' },  // Higher quality for detail view
   // Hero: bumped from 1600 to 2560 to cover modern retina desktops.
@@ -26,7 +36,92 @@ const SIZE_CONFIGS: Record<ImageSize, SizeConfig> = {
   hero: { width: 2560, crop: 'limit' },
 }
 
-// Widths used for responsive hero images (srcset). Each gets its own Cloudinary transform.
+// ============================================
+// CLOUDFLARE IMAGE TRANSFORMATIONS (R2)
+// ============================================
+
+/**
+ * Feature flag. ACTIVO desde el 31/07/2026.
+ *
+ * Requiere Transformations habilitado en la zona de Cloudflare (dashboard →
+ * Images → Transformations → enable for zone). Si se apaga allá, `/cdn-cgi/
+ * image/...` devuelve 404 y NINGUNA imagen de R2 se ve: en ese caso poner esto
+ * en `false` y las URLs vuelven a servirse sin transformar.
+ *
+ * Nota para el futuro: al habilitarlo en Cloudflare, el endpoint tardó ~9 horas
+ * en responder 200. Un 404 recién activado NO significa que no funcione — hay
+ * que darle tiempo antes de descartar la configuración.
+ *
+ * Para verificar el estado de la zona sin desplegar nada:
+ *   curl -sSI "https://shopifreemedia.site/cdn-cgi/image/width=200,format=auto/<key>"
+ */
+const CF_TRANSFORMS_ENABLED = true
+
+/**
+ * Hosts que sirven el bucket R2. El valor por defecto es el dominio público
+ * actual (`R2_PUBLIC_URL` en Vercel); se puede sobrescribir con una lista
+ * separada por comas si algún día cambia o convive con otro.
+ */
+const R2_HOSTS = (
+  (import.meta.env.VITE_R2_PUBLIC_HOSTS as string | undefined) || 'shopifreemedia.site'
+)
+  .split(',')
+  .map(h => h.trim().toLowerCase())
+  .filter(Boolean)
+
+/**
+ * Calidad de entrega. Cloudflare no tiene equivalente a `q_auto` de Cloudinary,
+ * así que va un número fijo. 82 es el punto donde deja de notarse la diferencia
+ * a simple vista en fotos de producto.
+ */
+const CF_QUALITY = 82
+
+/** Equivalencias de recorte Cloudinary → Cloudflare. */
+const CF_FIT: Record<SizeConfig['crop'], string> = {
+  fill: 'cover',        // c_fill: recorta para llenar el marco exacto
+  limit: 'scale-down',  // c_limit: entra en el ancho, nunca agranda
+  fit: 'contain',       // c_fit: entra completa, sin recortar
+}
+
+/** ¿La URL la sirve nuestro bucket R2 y podemos transformarla? */
+function isR2(url: string): boolean {
+  if (!CF_TRANSFORMS_ENABLED) return false
+  try {
+    return R2_HOSTS.includes(new URL(url).hostname.toLowerCase())
+  } catch {
+    return false
+  }
+}
+
+/** Lista de opciones de Cloudflare para un ancho/alto/recorte dados. */
+function cfOptions(crop: SizeConfig['crop'], width: number, height?: number): string {
+  const opts = [`format=auto`, `fit=${CF_FIT[crop]}`, `width=${width}`]
+  if (height) opts.push(`height=${height}`)
+  opts.push(`quality=${CF_QUALITY}`)
+  return opts.join(',')
+}
+
+/**
+ * Inserta `/cdn-cgi/image/<opts>/` entre el host y la key.
+ *
+ *   https://shopifreemedia.site/shopifree/products/foo.jpg
+ *   → https://shopifreemedia.site/cdn-cgi/image/format=auto,width=600/shopifree/products/foo.jpg
+ */
+function cfTransform(url: string, options: string): string {
+  try {
+    const u = new URL(url)
+    const path = u.pathname.replace(/^\//, '')
+    // Idempotente: si ya está transformada, no la envolvemos de nuevo.
+    if (path.startsWith('cdn-cgi/')) return url
+    return `${u.origin}/cdn-cgi/image/${options}/${path}${u.search}`
+  } catch {
+    return url
+  }
+}
+
+// ============================================
+
+// Widths used for responsive hero images (srcset). Each gets its own transform.
 // Browser picks closest width based on viewport + DPR.
 const HERO_WIDTHS = [800, 1280, 1920, 2560, 3840]
 
@@ -48,12 +143,16 @@ const GALLERY_WIDTHS = [400, 700, 1000, 1500]
 export function optimizeImage(url: string | undefined, size: ImageSize = 'card'): string {
   if (!url) return ''
 
+  const config = SIZE_CONFIGS[size]
+
+  if (isR2(url)) {
+    return cfTransform(url, cfOptions(config.crop, config.width, config.height))
+  }
+
   // Only transform Cloudinary URLs
   if (!url.includes('res.cloudinary.com')) {
     return url
   }
-
-  const config = SIZE_CONFIGS[size]
 
   // Build transformation string
   const transforms = [
@@ -75,11 +174,18 @@ export function optimizeImage(url: string | undefined, size: ImageSize = 'card')
  * Returns srcset string for 1x, 2x pixel densities
  */
 export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'): string {
-  if (!url || !url.includes('res.cloudinary.com')) {
-    return ''
-  }
+  if (!url) return ''
 
   const config = SIZE_CONFIGS[size]
+
+  if (isR2(url)) {
+    const h = config.height
+    const at = (w: number, hh?: number) => cfTransform(url, cfOptions(config.crop, w, hh))
+    return `${at(config.width, h)} 1x, ${at(config.width * 2, h ? h * 2 : undefined)} 2x`
+  }
+
+  if (!url.includes('res.cloudinary.com')) return ''
+
   const width1x = config.width
   const width2x = config.width * 2
 
@@ -118,7 +224,13 @@ export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'
  *   />
  */
 export function getHeroSrcSet(url: string | undefined): string {
-  if (!url || !url.includes('res.cloudinary.com')) return ''
+  if (!url) return ''
+  if (isR2(url)) {
+    return HERO_WIDTHS
+      .map(w => `${cfTransform(url, cfOptions('limit', w))} ${w}w`)
+      .join(', ')
+  }
+  if (!url.includes('res.cloudinary.com')) return ''
   return HERO_WIDTHS
     .map(w => {
       const transforms = `c_limit,w_${w},q_auto,f_auto`
@@ -137,7 +249,13 @@ export function getHeroSrcSet(url: string | undefined): string {
  * wasteful on small phones and slightly undersized on retina desktops.
  */
 export function getGallerySrcSet(url: string | undefined): string {
-  if (!url || !url.includes('res.cloudinary.com')) return ''
+  if (!url) return ''
+  if (isR2(url)) {
+    return GALLERY_WIDTHS
+      .map(w => `${cfTransform(url, cfOptions('limit', w))} ${w}w`)
+      .join(', ')
+  }
+  if (!url.includes('res.cloudinary.com')) return ''
   return GALLERY_WIDTHS
     .map(w => {
       const transforms = `c_limit,w_${w},q_auto,f_auto`

@@ -251,7 +251,9 @@ export default function Branding() {
     return uploadToStorage(file, {
       folder: `shopifree/${folder}`,
       storeId: store?.id,
-      ...(highQuality ? { quality: 'auto:good' } : {}),
+      // Los heroes se sirven a todo el ancho de la pantalla (SIZE_CONFIGS.hero
+      // = 2560), así que necesitan más margen que el tope general de 2048.
+      ...(highQuality ? { quality: 'auto:good', maxDimension: 2560 } : {}),
     })
   }
 
