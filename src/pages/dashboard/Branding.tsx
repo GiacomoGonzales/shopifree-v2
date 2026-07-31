@@ -253,7 +253,7 @@ export default function Branding() {
       storeId: store?.id,
       // Los heroes se sirven a todo el ancho de la pantalla (SIZE_CONFIGS.hero
       // = 2560), así que necesitan más margen que el tope general de 2048.
-      ...(highQuality ? { quality: 'auto:good', maxDimension: 2560 } : {}),
+      ...(highQuality ? { maxDimension: 2560 } : {}),
     })
   }
 

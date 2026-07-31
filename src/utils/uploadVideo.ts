@@ -1,9 +1,9 @@
 /**
  * uploadVideo — subida de videos NUEVOS a Cloudflare Stream.
  *
- * Igual estrategia que las imágenes: arranca en una allowlist (piloto) y, cuando
- * esté validado, se pone STREAM_FOR_ALL = true. Mientras tanto, el resto sigue
- * subiendo a Cloudinary como antes.
+ * Todos los videos van a Stream. Cloudinary ya no recibe videos nuevos: el
+ * flag de piloto y la rama de respaldo se quitaron el 31/07/2026, una vez
+ * validado.
  *
  * Flujo de subida directa a Stream:
  *  1) /api/stream-upload-url da una uploadURL one-time + el uid del video.
@@ -14,19 +14,6 @@
 
 import { auth } from '../lib/firebase'
 import { apiUrl } from './apiBase'
-
-// ACTIVADO PARA TODOS (piloto validado): todos los videos nuevos van a
-// Cloudflare Stream. Cloudinary deja de recibir videos nuevos.
-const STREAM_FOR_ALL = true
-const STREAM_EMAIL_ALLOWLIST: string[] = [
-  'giiacomo@gmail.com', // piloto (ya cubierto por FOR_ALL)
-]
-
-export function shouldUploadToStream(): boolean {
-  if (STREAM_FOR_ALL) return true
-  const email = (auth?.currentUser?.email || '').toLowerCase()
-  return !!email && STREAM_EMAIL_ALLOWLIST.some(e => e.toLowerCase() === email)
-}
 
 /** Sube un video a Cloudflare Stream y devuelve la URL del manifest HLS. */
 export async function uploadVideoToStream(file: File): Promise<string> {

@@ -1,60 +1,29 @@
 /**
  * uploadImage — punto único de subida de imágenes NUEVAS.
  * =====================================================
- * Objetivo de la migración Cloudinary → Cloudflare R2 (egress $0):
- * que las imágenes nuevas vayan a R2 sin arriesgar el SaaS en vivo.
+ * Todas las imágenes van a Cloudflare R2 (egress $0). Cloudinary quedó fuera
+ * del camino de subida: no recibe nada nuevo.
  *
- * Estrategia (idéntica a la que funcionó en Cobrify):
- *  - Feature flag `shouldUploadToR2()`: arranca en una allowlist (cuentas de
- *    prueba) y, cuando esté validado, se pone `R2_UPLOAD_FOR_ALL = true`.
- *  - Si la subida a R2 falla por lo que sea, cae a Cloudinary automáticamente
- *    (respaldo) → el usuario nunca se queda sin poder subir.
- *  - El servido no cambia: optimizeImage() ya deja pasar sin tocar las URLs
- *    que no son de Cloudinary (incluidas las de R2).
+ * Historia, para que no se repita: hasta el 31/07/2026 había un respaldo que
+ * mandaba a Cloudinary cuando R2 fallaba. Como el límite de body de Vercel es
+ * ~4.5 MB y base64 infla ~1.37x, TODA foto de más de ~3.2 MB fallaba en R2 y
+ * terminaba en Cloudinary en silencio (solo un console.warn). Así siguió
+ * creciendo una cuenta que se suponía migrada.
  *
- * NOTA: el flag arranca OFF (allowlist vacía, FOR_ALL=false). No cambia nada en
- * producción hasta que se agregue una cuenta o se active para todos.
+ * Ahora compressImage() deja cualquier foto en ~200-300 KB antes de subir, así
+ * que el límite de Vercel dejó de ser alcanzable y el respaldo perdió sentido.
+ * En su lugar hay un reintento: si R2 falla por algo transitorio (red, cold
+ * start), se reintenta; si falla de verdad, el error sube al usuario en vez de
+ * desviarse a otro proveedor.
  */
 
 import { auth } from '../lib/firebase'
 import { apiUrl } from './apiBase'
 import { compressImage } from './compressImage'
 
-// === Feature flag ===
-// ACTIVADO PARA TODOS (piloto validado): todas las subidas NUEVAS van a
-// Cloudflare R2. Cloudinary queda solo como RESPALDO de emergencia (si la
-// subida a R2 fallara, el fallback en uploadImage() usa Cloudinary para que
-// el usuario nunca se quede sin poder subir).
-const R2_UPLOAD_FOR_ALL = true
-
-// storeId de las tiendas de prueba que ya suben a R2 (piloto).
-const R2_UPLOAD_ALLOWLIST: string[] = []
-
-// Emails de prueba: si el usuario logueado es uno de estos, sube a R2 sin
-// importar en qué tienda esté.
-const R2_UPLOAD_EMAIL_ALLOWLIST: string[] = [
-  'giiacomo@gmail.com', // piloto: solo esta cuenta sube a R2; el resto sigue en Cloudinary
-]
-
-export function shouldUploadToR2(storeId?: string): boolean {
-  if (R2_UPLOAD_FOR_ALL) return true
-  if (storeId && R2_UPLOAD_ALLOWLIST.includes(storeId)) return true
-  const email = (auth?.currentUser?.email || '').toLowerCase()
-  if (email && R2_UPLOAD_EMAIL_ALLOWLIST.some(e => e.toLowerCase() === email)) return true
-  return false
-}
-
-// === Cloudinary (subida unsigned, centralizada) ===
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined
-
 export interface UploadOptions {
-  /** Carpeta/prefijo. En Cloudinary se usa como `folder`; en R2 como prefijo de la key. */
+  /** Carpeta/prefijo de la key en R2. */
   folder?: string
-  /** Solo Cloudinary: 'auto:good', etc. (en R2 no aplica, se sube tal cual). */
-  quality?: string
-  /** Tienda a la que pertenece la subida (para el flag por tienda). */
-  storeId?: string
   /**
    * Lado largo máximo en px antes de subir. Default 2048, que cubre de sobra
    * la galería de producto. Los heroes se sirven a todo el ancho y piden más
@@ -65,33 +34,14 @@ export interface UploadOptions {
   skipCompression?: boolean
 }
 
-/**
- * Sube un archivo a Cloudinary vía unsigned upload. Devuelve la secure_url.
- * Centraliza la lógica que hoy está duplicada en ~8 componentes.
- */
-export async function uploadToCloudinary(file: File | Blob, opts: UploadOptions = {}): Promise<string> {
-  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    throw new Error('Cloudinary no configurado (VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET)')
+/** Error de subida que conserva el código HTTP para decidir si reintentar. */
+class UploadError extends Error {
+  constructor(message: string, readonly status?: number) {
+    super(message)
+    this.name = 'UploadError'
   }
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-  if (opts.folder) formData.append('folder', opts.folder)
-  if (opts.quality) formData.append('quality', opts.quality)
-
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-    { method: 'POST', body: formData }
-  )
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}))
-    throw new Error(e?.error?.message || 'Error al subir imagen a Cloudinary')
-  }
-  const data = await res.json()
-  return data.secure_url as string
 }
 
-// === R2 (vía proxy en Vercel) ===
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -107,7 +57,8 @@ function blobToBase64(blob: Blob): Promise<string> {
 
 async function uploadToR2(file: File | Blob, folder: string): Promise<string> {
   const token = await auth?.currentUser?.getIdToken()
-  if (!token) throw new Error('No autenticado para subir a R2')
+  // 401 para que isRetryable() no lo reintente: sin sesión no mejora esperando.
+  if (!token) throw new UploadError('No autenticado para subir a R2', 401)
   const dataBase64 = await blobToBase64(file)
   const res = await fetch(apiUrl('/api/upload-image-r2'), {
     method: 'POST',
@@ -116,36 +67,52 @@ async function uploadToR2(file: File | Blob, folder: string): Promise<string> {
   })
   if (!res.ok) {
     const e = await res.json().catch(() => ({}))
-    throw new Error(e?.error || `R2 HTTP ${res.status}`)
+    throw new UploadError(e?.error || `R2 HTTP ${res.status}`, res.status)
   }
   const data = await res.json()
-  if (!data?.url) throw new Error('R2 no devolvió URL')
+  if (!data?.url) throw new UploadError('R2 no devolvió URL')
   return data.url as string
 }
 
 /**
- * Sube una imagen y devuelve su URL pública.
- * - Cuentas con el flag activo: R2, con respaldo Cloudinary si falla.
- * - Resto: Cloudinary, como siempre.
+ * Un 4xx no mejora reintentando: la imagen es muy grande, el tipo no está
+ * soportado o el token no sirve. Solo se reintentan fallos de red y 5xx.
+ */
+function isRetryable(err: unknown): boolean {
+  if (err instanceof UploadError && typeof err.status === 'number') {
+    return err.status >= 500
+  }
+  return true // fetch rechazado = problema de red
+}
+
+const RETRY_DELAYS_MS = [800, 2000]
+
+/**
+ * Sube una imagen a R2 y devuelve su URL pública.
  *
- * Comprime SIEMPRE antes de subir (salvo `skipCompression`). Esto es lo que
- * mantiene la subida por debajo del límite de body de Vercel: sin comprimir,
- * cualquier foto de más de ~3.2 MB fallaba en R2 y se iba al respaldo de
- * Cloudinary en silencio.
+ * Comprime siempre antes de subir (salvo `skipCompression`). Si la subida
+ * falla por algo transitorio reintenta dos veces; si igual falla, lanza para
+ * que el llamador muestre el error.
  */
 export async function uploadImage(
   file: File | Blob,
-  { folder = 'uploads', quality, storeId, maxDimension, skipCompression }: UploadOptions = {}
+  { folder = 'uploads', maxDimension, skipCompression }: UploadOptions = {}
 ): Promise<string> {
   const payload = skipCompression ? file : await compressImage(file, { maxDimension })
 
-  if (shouldUploadToR2(storeId)) {
+  let lastError: unknown
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
     try {
       return await uploadToR2(payload, folder)
-    } catch (e) {
-      console.warn('⚠️ Subida a R2 falló, usando Cloudinary de respaldo:', e instanceof Error ? e.message : e)
-      return uploadToCloudinary(payload, { folder, quality })
+    } catch (err) {
+      lastError = err
+      if (attempt === RETRY_DELAYS_MS.length || !isRetryable(err)) break
+      console.warn(
+        `Subida a R2 falló (intento ${attempt + 1}), reintentando:`,
+        err instanceof Error ? err.message : err
+      )
+      await new Promise(r => setTimeout(r, RETRY_DELAYS_MS[attempt]))
     }
   }
-  return uploadToCloudinary(payload, { folder, quality })
+  throw lastError instanceof Error ? lastError : new UploadError('Error subiendo la imagen')
 }
