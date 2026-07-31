@@ -1,6 +1,7 @@
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { Link } from 'react-router-dom'
+import { optimizeImage } from '../../utils/cloudinary'
 
 export default function StorePrivacy() {
   const { theme, store, language } = useTheme()
@@ -16,7 +17,7 @@ export default function StorePrivacy() {
         <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {store.logo ? (
-              <img src={store.logo} alt={storeName} className="w-8 h-8 object-contain rounded-full" />
+              <img src={optimizeImage(store.logo, 'logo')} alt={storeName} className="w-8 h-8 object-contain rounded-full" />
             ) : (
               <div
                 className="w-8 h-8 flex items-center justify-center rounded-full"

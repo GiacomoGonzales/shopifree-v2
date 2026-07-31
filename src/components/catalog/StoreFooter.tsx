@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { optimizeImage } from '../../utils/cloudinary'
 
 interface StoreFooterProps {
   onWhatsAppClick?: () => void
@@ -23,14 +24,14 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
               {store.logoLandscape ? (
                 // Horizontal logo already contains the brand name — render wide, no circle, no name text.
                 <img
-                  src={store.logoLandscape}
+                  src={optimizeImage(store.logoLandscape, 'logo')}
                   alt={store.name}
                   className="h-12 w-auto max-w-[180px] object-contain"
                 />
               ) : (
                 <>
                   {store.logo ? (
-                    <img src={store.logo} alt={store.name} className="w-12 h-12 object-contain rounded-full" />
+                    <img src={optimizeImage(store.logo, 'logo')} alt={store.name} className="w-12 h-12 object-contain rounded-full" />
                   ) : (
                     <div
                       className="w-12 h-12 flex items-center justify-center"
