@@ -2,6 +2,7 @@ import { useTheme } from '../ThemeContext'
 import type { Product, ProductVariation } from '../../../types'
 import { getThemeTranslations } from '../../../themes/shared/translations'
 import { isOptionAvailable } from '../../../lib/variants'
+import { optimizeImage } from '../../../utils/cloudinary'
 
 interface VariantSelectorProps {
   variations: ProductVariation[]
@@ -123,7 +124,9 @@ export default function VariantSelector({ variations, selected, onChange, trackS
                         textDecoration: variantOutOfStock ? 'line-through' : 'none',
                       }}
                     >
-                      <img src={option.image} alt={option.value} className="w-6 h-6 rounded object-cover" style={{ opacity: variantOutOfStock ? 0.5 : 1 }} />
+                      {/* `thumbnail` (160x160, recorte cuadrado) coincide con el object-cover
+                          de 24px CSS y cubre pantallas retina de sobra. */}
+                      <img src={optimizeImage(option.image, 'thumbnail')} alt={option.value} className="w-6 h-6 rounded object-cover" style={{ opacity: variantOutOfStock ? 0.5 : 1 }} />
                       {option.value}
                     </button>
                   )
