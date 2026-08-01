@@ -26,6 +26,55 @@ const GOOGLE_SERVER_CLIENT_ID =
 // Apple Services ID (bundle id used as audience on iOS).
 const APPLE_CLIENT_ID = 'app.shopifree.mobile'
 
+// ── Inicialización del plugin de login social ──────────────────────────
+// Se guarda la promesa a nivel de módulo por dos motivos:
+//  1) `login()` la espera, así un toque rápido en el botón no llega antes de
+//     que el proveedor esté registrado.
+//  2) Si falla, se limpia para que el siguiente intento reintente en vez de
+//     quedar roto para toda la sesión.
+let socialLoginInit: Promise<void> | null = null
+
+async function doInitSocialLogin(): Promise<void> {
+  const { SocialLogin } = await import('@capgo/capacitor-social-login')
+  const platform = Capacitor.getPlatform()
+
+  // CUIDADO al tocar esto. En Android el plugin procesa `apple` ANTES que
+  // `google` dentro de initialize(), y ante cualquier problema con Apple hace
+  // `return` — abortando el resto. Como en iOS mandamos `redirectUrl: ''` a
+  // propósito (indica flujo nativo, sin redirect), en Android ese string vacío
+  // disparaba "apple.android.redirectUrl is null or empty" y Google nunca
+  // quedaba registrado: el login fallaba con "Cannot find provider 'google'".
+  // Apple Sign-In solo se ofrece en iOS, así que en Android no se manda.
+  await SocialLogin.initialize({
+    google: platform === 'ios'
+      ? {
+          iOSClientId: GOOGLE_IOS_CLIENT_ID,
+          iOSServerClientId: GOOGLE_SERVER_CLIENT_ID,
+          webClientId: GOOGLE_SERVER_CLIENT_ID,
+          mode: 'online',
+        }
+      : {
+          // Android solo necesita el client ID web (el de servidor).
+          webClientId: GOOGLE_SERVER_CLIENT_ID,
+          mode: 'online',
+        },
+    ...(platform === 'ios'
+      ? { apple: { clientId: APPLE_CLIENT_ID, redirectUrl: '' } }
+      : {}),
+  })
+}
+
+/** Inicializa el plugin una sola vez. Reintenta si la vez anterior falló. */
+function ensureSocialLogin(): Promise<void> {
+  if (!socialLoginInit) {
+    socialLoginInit = doInitSocialLogin().catch((err) => {
+      socialLoginInit = null
+      throw err
+    })
+  }
+  return socialLoginInit
+}
+
 interface AuthContextType {
   firebaseUser: FirebaseUser | null
   user: User | null
@@ -96,21 +145,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // because it crashed on iPhone 17 Pro Max + iOS 26 during Apple review.
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      import('@capgo/capacitor-social-login').then(({ SocialLogin }) => {
-        SocialLogin.initialize({
-          google: {
-            iOSClientId: GOOGLE_IOS_CLIENT_ID,
-            iOSServerClientId: GOOGLE_SERVER_CLIENT_ID,
-            webClientId: GOOGLE_SERVER_CLIENT_ID,
-            mode: 'online',
-          },
-          apple: {
-            clientId: APPLE_CLIENT_ID,
-            redirectUrl: '', // empty string = native iOS flow, no redirect
-          },
-        }).catch((err) => {
-          console.error('[useAuth] SocialLogin.initialize failed:', err)
-        })
+      // Adelanta el trabajo; si falla, el login lo reintenta y ahí sí el error
+      // llega al usuario en vez de quedar solo en consola.
+      ensureSocialLogin().catch((err) => {
+        console.error('[useAuth] SocialLogin.initialize failed:', err)
       })
     }
   }, [])
@@ -145,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (): Promise<FirebaseUser> => {
     if (Capacitor.isNativePlatform()) {
       // Native iOS/Android: use the Capgo Social Login plugin.
+      await ensureSocialLogin()
       const { SocialLogin } = await import('@capgo/capacitor-social-login')
       const response = await SocialLogin.login({
         provider: 'google',
@@ -183,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const rawNonce = generateRawNonce()
       const hashedNonce = await sha256Hex(rawNonce)
 
+      await ensureSocialLogin()
       const { SocialLogin } = await import('@capgo/capacitor-social-login')
       const response = await SocialLogin.login({
         provider: 'apple',

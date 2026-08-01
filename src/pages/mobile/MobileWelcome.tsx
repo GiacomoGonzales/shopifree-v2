@@ -41,8 +41,10 @@ export default function MobileWelcome() {
         if (store) {
           navigate(localePath('/dashboard'), { replace: true })
         } else {
-          // Native: no register flow in-app, stay at /login.
-          navigate(localePath(isNative ? '/login' : '/register'), { replace: true })
+          // Autenticado pero sin tienda: va a /register, que detecta el caso y
+          // salta directo al paso 2 (crear la tienda). Antes en nativo se
+          // mandaba a /login, que rebotaba de vuelta a /register igual.
+          navigate(localePath('/register'), { replace: true })
         }
       } else {
         // Not authenticated: reveal welcome first, then fade splash
@@ -98,15 +100,26 @@ export default function MobileWelcome() {
         className="flex-shrink-0 px-6 space-y-3"
         style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
       >
+        {/* Acción principal: crear cuenta. El registro funciona entero dentro
+            de la app (Register.tsx tiene los dos pasos), así que no hay motivo
+            para mandar a la web como se hacía antes. */}
         <button
-          onClick={() => navigate(localePath('/login'))}
+          onClick={() => navigate(localePath('/register'))}
           className="w-full py-[14px] bg-[#1e3a5f] text-white font-semibold text-[15px] rounded-2xl active:scale-[0.98] transition-transform shadow-sm"
         >
-          {t('mobile.haveAccount', { defaultValue: 'Iniciar sesión' })}
+          {t('mobile.startFree', { defaultValue: 'Empezar gratis' })}
+        </button>
+
+        {/* Secundaria: los que ya tienen cuenta */}
+        <button
+          onClick={() => navigate(localePath('/login'))}
+          className="w-full py-[14px] bg-white text-[#1e3a5f] font-semibold text-[15px] rounded-2xl border border-slate-200 active:scale-[0.98] transition-transform"
+        >
+          {t('mobile.haveAccount', { defaultValue: 'Ya tengo cuenta' })}
         </button>
 
         <p className="text-center text-[13px] text-slate-500 leading-snug">
-          {t('mobile.createOnWeb', { defaultValue: '¿No tenés cuenta? Creala en shopifree.app' })}
+          {t('mobile.noCreditCard', { defaultValue: 'Sin tarjeta de crédito. Gratis para siempre.' })}
         </p>
       </div>
     </div>
