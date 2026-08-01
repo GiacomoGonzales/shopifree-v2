@@ -189,7 +189,7 @@ export default function Products() {
     setUploadingCategoryImage(true)
     try {
       // Stage the URL — it only persists to Firestore when the user clicks Save.
-      const url = await uploadToStorage(file, { folder: 'shopifree/categories', storeId: store?.id })
+      const url = await uploadToStorage(file, { folder: 'shopifree/categories' })
       setNewCategoryImage(url)
     } catch (error) {
       console.error('Error uploading category image:', error)
@@ -323,7 +323,7 @@ export default function Products() {
 
     setUploadingProductId(productId)
     try {
-      const imageUrl = await uploadToStorage(file, { folder: 'shopifree/products', storeId: store.id })
+      const imageUrl = await uploadToStorage(file, { folder: 'shopifree/products' })
 
       // Update product in Firebase
       await productService.update(store.id, productId, { image: imageUrl })

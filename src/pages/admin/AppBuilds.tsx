@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
+import { transformR2 } from '../../utils/cloudinary'
 
 interface BuildInfo {
   status?: 'idle' | 'queued' | 'running' | 'success' | 'failed'
@@ -653,54 +654,73 @@ interface DetailsModalProps {
   onTriggerScreenshot: () => void
 }
 
-// Inject sizing transforms after `/upload/` so a Cloudinary-hosted icon is
-// served as a 512×512 PNG with transparent padding (`c_pad,b_transparent`)
-// — exactly what Play Console asks for in Store listing → Icon. `f_png`
-// forces the format regardless of the source extension. Returns the input
-// unchanged if it isn't a Cloudinary URL.
-function cloudinary512(url: string): string {
-  if (!url.includes('/image/upload/')) return url
-  return url.replace('/image/upload/', '/image/upload/c_pad,b_transparent,w_512,h_512,f_png/')
+// Genera el ícono 512×512 con relleno transparente que Play Console pide en
+// Store listing → Icon.
+//
+// OJO con el formato: Play exige PNG de 32 bits, y Cloudflare NO puede
+// convertir a PNG al entregar (ignora `format=png` y preserva el formato de
+// origen — verificado el 01/08/2026). Por eso el ícono se sube ya en PNG desde
+// MiApp.tsx (`mimeType: 'image/png'`); acá solo se redimensiona y se rellena,
+// y el PNG se conserva. Si algún ícono viejo quedó en otro formato, hay que
+// volver a subirlo.
+//
+// Devuelve la URL sin tocar si no se pudo transformar, para no romper la
+// pantalla: el operador verá el original y podrá adaptarlo a mano.
+function appIcon512(url: string): string {
+  const cf = transformR2(url, 'width=512,height=512,fit=pad,background=transparent')
+  if (cf) return cf
+  // Legacy Cloudinary (ya no debería quedar ninguno tras la migración).
+  if (url.includes('/image/upload/')) {
+    return url.replace('/image/upload/', '/image/upload/c_pad,b_transparent,w_512,h_512,f_png/')
+  }
+  return url
 }
 
-// Normalize a hex color to Cloudinary's `rgb:RRGGBB` format. Strips the
-// leading `#`, expands shorthand (#abc → aabbcc), pads/truncates to six
-// chars, and falls back to a neutral dark slate when the input is missing
-// or malformed so the transform URL is always valid.
-function toCloudinaryRgb(hex: string | undefined, fallback: string): string {
+// Normaliza un color hex a `#rrggbb`. Expande la forma corta (#abc → #aabbcc)
+// y cae a un slate oscuro neutro si viene vacío o malformado, para que la URL
+// de transformación siempre sea válida.
+function normalizeHex(hex: string | undefined, fallback: string): string {
   const raw = (hex ?? fallback).replace('#', '').trim()
-  let normalized = raw
-  if (raw.length === 3) {
-    normalized = raw.split('').map(c => c + c).join('')
-  }
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    normalized = fallback.replace('#', '')
-  }
-  return `rgb:${normalized.toLowerCase()}`
+  const expanded = raw.length === 3 ? raw.split('').map(c => c + c).join('') : raw
+  const valid = /^[0-9a-fA-F]{6}$/.test(expanded) ? expanded : fallback.replace('#', '')
+  return `#${valid.toLowerCase()}`
 }
 
-// Build a 1024×500 Play Store feature graphic from the merchant's app icon
-// and brand color, server-side via Cloudinary. The icon is square (~1024×
-// 1024); `c_pad,w_1024,h_500,b_<brand>` scales it to fit the 500px height
-// (yielding 500×500 centered) and pads the remaining 524px of width with
-// the brand color, so the result reads as "logo on brand-colored banner."
-// Picks primaryColor over splashColor (splash is usually white and would
-// flatten the whole banner). Returns null when we lack either input.
-function cloudinaryFeatureGraphic(
+// Arma el feature graphic 1024×500 de Play Store a partir del ícono y el color
+// de marca. El ícono es cuadrado (~1024×1024); `fit=pad` lo escala para entrar
+// en los 500px de alto (queda 500×500 centrado) y rellena los 524px restantes
+// de ancho con el color de marca: "logo sobre banner de la marca".
+//
+// Play acepta JPEG o PNG de 24 bits para el feature graphic, así que no importa
+// que Cloudflare devuelva JPEG al aplanar la transparencia contra el fondo
+// opaco (a diferencia del ícono, que sí debe ser PNG).
+//
+// Prefiere primaryColor; usa splashColor solo si el primario es el default
+// genérico de Shopifree (el splash suele ser blanco y aplanaría el banner).
+// Devuelve null si falta el ícono o no se pudo transformar.
+function buildFeatureGraphic(
   url: string | undefined,
   primaryColor: string | undefined,
   splashColor: string | undefined,
 ): string | null {
-  if (!url || !url.includes('/image/upload/')) return null
-  // Prefer primaryColor; fall back to splashColor only if primary is the
-  // generic Shopifree default. Final fallback is the same dark slate.
+  if (!url) return null
   const FALLBACK = '#1e3a5f'
   const isShopifreeDefault = (primaryColor || '').toLowerCase() === FALLBACK
   const chosen = isShopifreeDefault && splashColor && splashColor.toLowerCase() !== '#ffffff'
     ? splashColor
     : (primaryColor || splashColor || FALLBACK)
-  const bg = toCloudinaryRgb(chosen, FALLBACK)
-  return url.replace('/image/upload/', `/image/upload/c_pad,w_1024,h_500,b_${bg},f_png/`)
+  const bg = normalizeHex(chosen, FALLBACK)
+
+  // `#` va escapado: sin encodear, Cloudflare corta la URL en el fragmento.
+  const cf = transformR2(url, `width=1024,height=500,fit=pad,background=${encodeURIComponent(bg)}`)
+  if (cf) return cf
+
+  // Legacy Cloudinary.
+  if (url.includes('/image/upload/')) {
+    const rgb = `rgb:${bg.replace('#', '')}`
+    return url.replace('/image/upload/', `/image/upload/c_pad,w_1024,h_500,b_${rgb},f_png/`)
+  }
+  return null
 }
 
 function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot }: DetailsModalProps) {
@@ -709,8 +729,8 @@ function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot
   const appName = store.appConfig?.appName || store.name
   const packageName = `app.shopifree.store.${store.subdomain.replace(/[^a-z0-9]/gi, '')}`
   const privacyUrl = `https://${store.subdomain}.shopifree.app/privacy`
-  const icon512 = appIcon ? cloudinary512(appIcon) : null
-  const featureGraphic = cloudinaryFeatureGraphic(
+  const icon512 = appIcon ? appIcon512(appIcon) : null
+  const featureGraphic = buildFeatureGraphic(
     appIcon,
     store.appConfig?.primaryColor,
     store.appConfig?.splashColor,

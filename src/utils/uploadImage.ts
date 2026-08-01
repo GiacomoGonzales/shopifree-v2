@@ -19,7 +19,7 @@
 
 import { auth } from '../lib/firebase'
 import { apiUrl } from './apiBase'
-import { compressImage } from './compressImage'
+import { compressImage, type OutputMime } from './compressImage'
 
 export interface UploadOptions {
   /** Carpeta/prefijo de la key en R2. */
@@ -30,15 +30,24 @@ export interface UploadOptions {
    * (ver SIZE_CONFIGS.hero en cloudinary.ts).
    */
   maxDimension?: number
+  /**
+   * Formato de salida. Default WebP. Usar 'image/png' cuando el destino lo
+   * exige (ver el ícono de la app en MiApp.tsx).
+   */
+  mimeType?: OutputMime
   /** Sube el archivo tal cual, sin redimensionar ni reencodar. */
   skipCompression?: boolean
 }
 
 /** Error de subida que conserva el código HTTP para decidir si reintentar. */
 class UploadError extends Error {
-  constructor(message: string, readonly status?: number) {
+  // Campo explícito y no parámetro-propiedad: el proyecto compila con
+  // `erasableSyntaxOnly`, que prohíbe la forma abreviada en el constructor.
+  status?: number
+  constructor(message: string, status?: number) {
     super(message)
     this.name = 'UploadError'
+    this.status = status
   }
 }
 
@@ -96,9 +105,9 @@ const RETRY_DELAYS_MS = [800, 2000]
  */
 export async function uploadImage(
   file: File | Blob,
-  { folder = 'uploads', maxDimension, skipCompression }: UploadOptions = {}
+  { folder = 'uploads', maxDimension, mimeType, skipCompression }: UploadOptions = {}
 ): Promise<string> {
-  const payload = skipCompression ? file : await compressImage(file, { maxDimension })
+  const payload = skipCompression ? file : await compressImage(file, { maxDimension, mimeType })
 
   let lastError: unknown
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {

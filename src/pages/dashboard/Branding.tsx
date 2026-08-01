@@ -250,7 +250,6 @@ export default function Branding() {
   const uploadImage = (file: File, folder: string, highQuality = false): Promise<string> => {
     return uploadToStorage(file, {
       folder: `shopifree/${folder}`,
-      storeId: store?.id,
       // Los heroes se sirven a todo el ancho de la pantalla (SIZE_CONFIGS.hero
       // = 2560), así que necesitan más margen que el tope general de 2048.
       ...(highQuality ? { maxDimension: 2560 } : {}),

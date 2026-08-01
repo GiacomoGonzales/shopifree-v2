@@ -119,6 +119,20 @@ function cfTransform(url: string, options: string): string {
   }
 }
 
+/**
+ * Escape hatch para casos que no encajan en los presets de SIZE_CONFIGS:
+ * recibe las opciones de Cloudflare tal cual (ej. `fit=pad` con `background`,
+ * que solo usa la generación de assets para Play Console).
+ *
+ * Devuelve `null` cuando la URL no es de R2 o el flag está apagado, para que
+ * el llamador decida el respaldo en vez de recibir una URL intacta que parece
+ * transformada.
+ */
+export function transformR2(url: string | undefined, options: string): string | null {
+  if (!url || !isR2(url)) return null
+  return cfTransform(url, options)
+}
+
 // ============================================
 
 // Widths used for responsive hero images (srcset). Each gets its own transform.

@@ -100,14 +100,17 @@ export default function MiApp() {
     })
   }, [store?.id])
 
-  // Upload icon to Cloudinary
+  // Sube el ícono de la app. Va en PNG a propósito: Play Console exige PNG de
+  // 32 bits para el ícono de 512x512, y Cloudflare no puede convertir a PNG al
+  // entregar (ignora `format=png` y preserva el formato de origen). Si acá se
+  // guardara WebP, AppBuilds no podría generar un ícono válido.
   const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !store) return
 
     setUploadingIcon(true)
     try {
-      const url = await uploadToStorage(file, { folder: 'shopifree/app-icons', storeId: store.id })
+      const url = await uploadToStorage(file, { folder: 'shopifree/app-icons', mimeType: 'image/png' })
       setIcon(url)
     } catch {
       showToast(t('miApp.toast.iconError'), 'error')

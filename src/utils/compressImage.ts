@@ -36,11 +36,25 @@ const SKIP_TYPES = new Set(['image/gif', 'image/svg+xml'])
 // 50 MP, y el timeout hace que se suba el original en vez de colgarse.
 const DECODE_TIMEOUT_MS = 30_000
 
+export type OutputMime = 'image/webp' | 'image/png'
+
 export interface CompressOptions {
   /** Lado largo máximo en px. Default: DEFAULT_MAX_DIMENSION. */
   maxDimension?: number
-  /** Calidad WebP 0-1. Default: DEFAULT_QUALITY. */
+  /** Calidad 0-1 (la ignora el encoder PNG). Default: DEFAULT_QUALITY. */
   quality?: number
+  /**
+   * Formato de salida. Default WebP.
+   *
+   * Usar 'image/png' cuando el destino lo exige. Caso concreto: el ícono de
+   * Play Console debe ser PNG de 32 bits, y Cloudflare NO puede forzar PNG al
+   * entregar — `format=png` se ignora y preserva el formato de origen. La
+   * única forma de garantizarlo es guardar el original ya en PNG.
+   *
+   * Cuando se pide un formato explícito no se aplica la regla de "si engorda,
+   * gana el original": cumplir el formato importa más que los bytes.
+   */
+  mimeType?: OutputMime
 }
 
 /**
@@ -132,15 +146,16 @@ async function drawScaled(img: HTMLImageElement, width: number, height: number):
   return canvas
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
-  return new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality))
+function canvasToBlob(canvas: HTMLCanvasElement, type: OutputMime, quality: number): Promise<Blob | null> {
+  return new Promise(resolve => canvas.toBlob(resolve, type, quality))
 }
 
-/** Cambia la extensión del nombre a .webp, conservando el resto. */
-function webpName(file: File | Blob): string {
+/** Cambia la extensión del nombre para que coincida con el formato de salida. */
+function renameTo(file: File | Blob, type: OutputMime): string {
+  const ext = type === 'image/png' ? 'png' : 'webp'
   const original = (file as File).name
-  if (!original) return 'image.webp'
-  return original.replace(/\.[^./\\]+$/, '') + '.webp'
+  if (!original) return `image.${ext}`
+  return original.replace(/\.[^./\\]+$/, '') + '.' + ext
 }
 
 /**
@@ -166,8 +181,12 @@ export async function compressImage(
 
 async function compressOne(
   file: File | Blob,
-  { maxDimension = DEFAULT_MAX_DIMENSION, quality = DEFAULT_QUALITY }: CompressOptions
+  { maxDimension = DEFAULT_MAX_DIMENSION, quality = DEFAULT_QUALITY, mimeType }: CompressOptions
 ): Promise<File | Blob> {
+  const outType: OutputMime = mimeType || 'image/webp'
+  // Si el llamador impuso un formato, cumplirlo manda sobre ahorrar bytes.
+  const formatoImpuesto = !!mimeType
+
   try {
     const img = await loadImage(file)
     const { width, height } = targetSize(img.naturalWidth, img.naturalHeight, maxDimension)
@@ -176,16 +195,16 @@ async function compressOne(
     const canvas = await drawScaled(img, width, height)
     if (!canvas) return file
 
-    const blob = await canvasToBlob(canvas, quality)
-    // toBlob devuelve null si falla, y en navegadores sin encoder WebP puede
-    // devolver un PNG silenciosamente. En ambos casos preferimos el original
-    // antes que subir algo peor de lo que entró.
-    if (!blob || blob.type !== 'image/webp') return file
+    const blob = await canvasToBlob(canvas, outType, quality)
+    // toBlob devuelve null si falla, y ante un formato no soportado puede
+    // devolver otra cosa en silencio. En ambos casos preferimos el original
+    // antes que subir algo distinto de lo que se pidió.
+    if (!blob || blob.type !== outType) return file
 
     // Una imagen que ya venía optimizada puede engordar al reencodar.
-    if (blob.size >= file.size) return file
+    if (!formatoImpuesto && blob.size >= file.size) return file
 
-    return new File([blob], webpName(file), { type: 'image/webp' })
+    return new File([blob], renameTo(file, outType), { type: outType })
   } catch {
     return file
   }
