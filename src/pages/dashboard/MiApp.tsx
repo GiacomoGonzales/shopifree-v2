@@ -10,6 +10,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import AppDownloadCard from '../../components/dashboard/AppDownloadCard'
 import type { StoreAppConfig, StoreAppPublishInfo } from '../../types'
 import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
+import { apiUrl } from '../../utils/apiBase'
 
 interface NotificationHistory {
   id: string
@@ -186,7 +187,7 @@ export default function MiApp() {
       })
 
       // Notify admin via email
-      fetch('/api/send-email', {
+      fetch(apiUrl('/api/send-email'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,7 +213,7 @@ export default function MiApp() {
     if (!store || !firebaseUser || !pushTitle.trim() || !pushBody.trim()) return
     setSending(true)
     try {
-      const res = await fetch('/api/push', {
+      const res = await fetch(apiUrl('/api/push'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

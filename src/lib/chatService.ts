@@ -5,6 +5,7 @@ import {
   type Unsubscribe
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { apiUrl } from '../utils/apiBase'
 
 export interface ChatMessage {
   id: string
@@ -257,7 +258,7 @@ export const chatService = {
 
   // Request AI response for a user message
   async requestAIResponse(chatId: string, storeId: string, userMessage: string, userId: string): Promise<{ escalated: boolean; skipped?: boolean }> {
-    const res = await fetch('/api/ai-chat', {
+    const res = await fetch(apiUrl('/api/ai-chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chatId, storeId, userMessage, userId }),

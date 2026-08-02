@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { apiUrl } from '../../utils/apiBase'
 
 interface RecentOrder {
   firstName: string
@@ -31,7 +32,7 @@ export default function SocialProofToast() {
   // Fetch orders once
   useEffect(() => {
     if (store.plan === 'free' || !store.socialProof?.enabled) return
-    fetch(`/api/push?storeId=${store.id}`)
+    fetch(apiUrl(`/api/push?storeId=${store.id}`))
       .then(res => res.json())
       .then(data => {
         if (data.orders?.length) setOrders(data.orders)
