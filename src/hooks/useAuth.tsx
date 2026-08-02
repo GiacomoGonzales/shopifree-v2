@@ -185,9 +185,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Native iOS/Android: use the Capgo Social Login plugin.
       await ensureSocialLogin()
       const { SocialLogin } = await import('@capgo/capacitor-social-login')
+
+      // En Android NO se mandan scopes. El plugin ya agrega por su cuenta
+      // userinfo.email, userinfo.profile y openid — justo lo que pedíamos —, y
+      // pasar cualquier array de scopes lo obliga a exigir que MainActivity
+      // implemente ModifiedMainActivityForSocialLoginPlugin, si no rechaza con
+      // "You CANNOT use scopes without modifying the main activity".
+      // En iOS se dejan como estaban: ahí funciona y pasó la revisión de Apple.
       const response = await SocialLogin.login({
         provider: 'google',
-        options: { scopes: ['email', 'profile'] },
+        options: Capacitor.getPlatform() === 'android'
+          ? {}
+          : { scopes: ['email', 'profile'] },
       })
 
       if (response.provider !== 'google' || response.result.responseType !== 'online') {
