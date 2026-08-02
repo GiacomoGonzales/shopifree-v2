@@ -42,7 +42,10 @@ const SupportChats = lazy(() => import('./pages/dashboard/SupportChats'))
 const MoreMenu = lazy(() => import('./pages/dashboard/MoreMenu'))
 const Help = lazy(() => import('./pages/dashboard/Help'))
 const MiApp = lazy(() => import('./pages/dashboard/MiApp'))
-const Dropshipping = lazy(() => import('./pages/dashboard/Dropshipping'))
+// Dropshipping quedó en pausa (01/08/2026): la ruta muestra ComingSoon hasta
+// que se revise el rendimiento y la configuración de la página. La
+// implementación sigue en src/pages/dashboard/Dropshipping.tsx — para
+// reactivarla, volver a importarla acá y apuntar la ruta de vuelta.
 
 // Storefront catalog (pulls all themes — the single heaviest chunk)
 const Catalog = lazy(() => import('./pages/catalog/Catalog'))
@@ -247,7 +250,7 @@ function AppRoutes() {
             <Route path="api" element={<Navigate to="../integrations?tab=api" replace />} />
             <Route path="mi-app" element={<MiApp />} />
             <Route path="coupons" element={<Coupons />} />
-            <Route path="dropshipping" element={<Dropshipping />} />
+            <Route path="dropshipping" element={<ComingSoon />} />
             {/* Account & Plan */}
             <Route path="account" element={<Account />} />
             <Route path="plan" element={<Plan />} />

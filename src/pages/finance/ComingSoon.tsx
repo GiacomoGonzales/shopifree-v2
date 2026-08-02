@@ -10,6 +10,7 @@ const PAGE_NAMES: Record<string, string> = {
   production: 'Produccion',
   branches: 'Sucursales',
   reports: 'Reportes',
+  dropshipping: 'Dropshipping',
 }
 
 export default function ComingSoon() {
