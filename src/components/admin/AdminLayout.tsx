@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 
@@ -70,6 +71,14 @@ function MediaIcon() {
   )
 }
 
+function BackIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M15 19l-7-7 7-7" />
+    </svg>
+  )
+}
+
 function MenuIcon() {
   return (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,6 +113,25 @@ export default function AdminLayout() {
     { name: 'Media', path: localePath('/admin/media'), icon: MediaIcon },
     { name: 'Feedback', path: localePath('/admin/feedback'), icon: FeedbackIcon },
   ], [localePath])
+
+  // Barra de estado en nativo. Sin esto, en Android 15 (edge-to-edge forzado
+  // para targetSdk 35+) la WebView dibuja debajo de la barra de estado y la
+  // cabecera móvil —con el botón del menú— queda tapada: el admin se veía sin
+  // ninguna navegación. Mismo tratamiento que DashboardLayout, incluido el
+  // re-aplicar al rotar, porque el sistema lo resetea.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    const applyStatusBar = () => {
+      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+        StatusBar.setStyle({ style: Style.Light })
+        StatusBar.setOverlaysWebView({ overlay: false })
+        StatusBar.setBackgroundColor({ color: '#ffffff' })
+      })
+    }
+    applyStatusBar()
+    window.addEventListener('resize', applyStatusBar)
+    return () => window.removeEventListener('resize', applyStatusBar)
+  }, [])
 
   // Check admin access
   useEffect(() => {
@@ -206,21 +234,34 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-12 bg-white border-b border-gray-200 z-40 flex items-center justify-between px-4">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-1.5 -ml-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-        >
-          <MenuIcon />
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-gray-900">Shopifree</span>
-          <span className="px-1.5 py-0.5 bg-black text-white text-[10px] rounded-sm font-medium tracking-wide">
-            ADMIN
-          </span>
+      {/* Mobile header. El padding de área segura es el cinturón por si la
+          barra de estado igual se superpone (en ese caso env() > 0); cuando no
+          se superpone vale 0 y no cambia nada. */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40 pt-[env(safe-area-inset-top)]">
+        <div className="h-12 flex items-center justify-between px-4">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Abrir menú"
+            className="p-1.5 -ml-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <MenuIcon />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-gray-900">Shopifree</span>
+            <span className="px-1.5 py-0.5 bg-black text-white text-[10px] rounded-sm font-medium tracking-wide">
+              ADMIN
+            </span>
+          </div>
+          {/* Salida rápida al panel del comerciante: sin esto, desde el admin
+              en el teléfono no había forma de volver sin abrir el menú. */}
+          <Link
+            to={localePath('/dashboard')}
+            aria-label="Volver al panel"
+            className="p-1.5 -mr-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <BackIcon />
+          </Link>
         </div>
-        <div className="w-8" />
       </div>
 
       {/* Mobile sidebar overlay */}
@@ -237,7 +278,7 @@ export default function AdminLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full pt-[env(safe-area-inset-top)]">
           {/* Logo + Close */}
           <div className="flex items-center justify-between h-12 px-4 border-b border-gray-200">
             <div className="flex items-center gap-2">
@@ -276,7 +317,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:pl-60 pt-12 lg:pt-0">
+      <main className="lg:pl-60 pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>

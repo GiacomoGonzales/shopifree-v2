@@ -368,7 +368,8 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
         onPaste={handlePaste}
         className={`fixed z-[60] bg-white shadow-2xl flex flex-col transition-all duration-300 ease-out
           inset-0
-          lg:inset-auto lg:bottom-6 lg:right-6 lg:w-[380px] lg:h-[520px] lg:rounded-2xl
+          pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]
+          lg:inset-auto lg:bottom-6 lg:right-6 lg:w-[380px] lg:h-[520px] lg:rounded-2xl lg:pt-0 lg:pb-0
           ${open ? 'translate-y-0 lg:scale-100 lg:opacity-100' : 'translate-y-full lg:translate-y-0 lg:scale-95 lg:opacity-0 lg:pointer-events-none'}
           ${dragging ? 'ring-2 ring-[#007AFF] ring-inset' : ''}
         `}
