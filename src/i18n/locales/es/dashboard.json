@@ -1408,21 +1408,6 @@
       "saving": "Guardando...",
       "saved": "Configuración guardada"
     },
-    "publishInfo": {
-      "title": "Correos de tester (verificadores)",
-      "subtitle": "Antes de que tu app sea visible para todos en Play Store, Google exige una fase de prueba cerrada. Necesitamos {{count}} correos de Gmail (tuyos, de tu equipo, familia, amigos) que prueben la app durante 14 días continuos. Recién después la podemos publicar abierto al público.",
-      "requirement12": "Mínimo {{count}} correos distintos de Gmail",
-      "requirement14Days": "Tienen que mantenerla 14 días instalada",
-      "testerPlaceholder": "ejemplo@gmail.com",
-      "addTester": "Agregar",
-      "removeTester": "Quitar",
-      "empty": "No has agregado correos todavía.",
-      "invalidEmail": "Ese correo no parece válido.",
-      "counter": "{{count}} de {{required}} correos agregados",
-      "counterMet": "{{count}} correos agregados — listo",
-      "missing": "Faltan {{count}}",
-      "needMoreTesters": "Te faltan {{count}} correos para llegar al mínimo de {{required}} que pide Google. Agrega los correos antes de solicitar publicación."
-    },
     "status": {
       "title": "Estado de la app",
       "none": "Sin solicitar",
@@ -1443,9 +1428,6 @@
       "noLinks": "Los links estarán disponibles cuando tu app sea publicada",
       "scanToDownload": "Escaneá este QR con el celular para descargar",
       "downloadQr": "Descargar QR",
-      "androidTestingTitle": "Tu app de Android está en pruebas cerradas",
-      "androidTestingBody": "Google Play exige que al menos 12 testers instalen tu app desde este link y la mantengan en su celular durante 14 días continuos antes de publicarla a producción. Compartí el link y el QR con tus testers.",
-      "androidTestingTesters": "{{count}} de 12 testers",
       "androidTestingPlayBadge": "EN PRUEBAS"
     },
     "push": {
