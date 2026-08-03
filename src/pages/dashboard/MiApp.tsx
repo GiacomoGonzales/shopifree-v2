@@ -213,15 +213,20 @@ export default function MiApp() {
     if (!store || !firebaseUser || !pushTitle.trim() || !pushBody.trim()) return
     setSending(true)
     try {
+      // El endpoint verifica el ID token y deriva el dueño de ahí; ya no
+      // alcanza con mandar el ownerId en el cuerpo.
+      const idToken = await firebaseUser.getIdToken()
       const res = await fetch(apiUrl('/api/push'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`
+        },
         body: JSON.stringify({
           action: 'send',
           storeId: store.id,
           title: pushTitle.trim(),
-          body: pushBody.trim(),
-          ownerId: firebaseUser.uid
+          body: pushBody.trim()
         })
       })
       const data = await res.json()

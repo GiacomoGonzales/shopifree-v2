@@ -10,6 +10,7 @@ import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
 import SetupAlerts from './SetupAlerts'
 import { chatService } from '../../lib/chatService'
+import { useOwnerPushNotifications } from '../../hooks/usePushNotifications'
 import AppChrome, { type NavElement } from '../layout/AppChrome'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
@@ -27,6 +28,13 @@ export default function DashboardLayout() {
   const location = useLocation()
 
   const isNative = Capacitor.isNativePlatform()
+
+  // Registra el teléfono del dueño para recibir avisos de pedidos nuevos, y al
+  // tocar el aviso abre la lista de pedidos. La Cloud Function notifyNewOrder
+  // manda `orderId` y `storeId` en el payload.
+  useOwnerPushNotifications(firebaseUser?.uid, () => {
+    navigate(localePath('/dashboard/orders'))
+  })
 
   // Track presence for any user with a store
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')

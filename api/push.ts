@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
 import { createHash } from 'crypto'
@@ -48,6 +49,48 @@ async function recentOrders(storeId: string) {
   return { status: 200, data: { orders } }
 }
 
+/**
+ * Devuelve el uid del Firebase ID token del header, o null si no hay/no sirve.
+ */
+async function uidFromRequest(req: VercelRequest): Promise<string | null> {
+  const header = req.headers.authorization || ''
+  const idToken = header.startsWith('Bearer ') ? header.slice(7) : ''
+  if (!idToken) return null
+  try {
+    getDb() // asegura que firebase-admin esté inicializado
+    return (await getAuth().verifyIdToken(idToken)).uid
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Token del DUEÑO de la tienda, para avisarle de pedidos nuevos.
+ *
+ * Va a `users/{uid}/pushTokens`, deliberadamente SEPARADO de
+ * `stores/{storeId}/pushTokens`, que son los dispositivos de los CLIENTES que
+ * navegan el catálogo. Mezclarlos haría que un "tenés un pedido nuevo" le
+ * llegue a toda la clientela.
+ */
+async function registerOwnerToken(body: { token: string; platform: string }, uid: string) {
+  const { token, platform } = body
+  if (!token || !platform) {
+    return { status: 400, data: { error: 'Missing required parameters: token, platform' } }
+  }
+
+  const firestore = getDb()
+  const tokenHash = createHash('sha256').update(token).digest('hex').slice(0, 20)
+
+  await firestore
+    .collection('users')
+    .doc(uid)
+    .collection('pushTokens')
+    .doc(tokenHash)
+    .set({ token, platform, updatedAt: new Date() }, { merge: true })
+
+  return { status: 200, data: { success: true } }
+}
+
 async function registerToken(body: { storeId: string; token: string; platform: string }) {
   const { storeId, token, platform } = body
 
@@ -68,11 +111,19 @@ async function registerToken(body: { storeId: string; token: string; platform: s
   return { status: 200, data: { success: true } }
 }
 
-async function sendNotification(body: { storeId: string; title: string; body: string; ownerId: string }) {
-  const { storeId, title, body: notifBody, ownerId } = body
+/**
+ * Difusión del dueño hacia los CLIENTES de su tienda (desde Mi App).
+ *
+ * `uid` sale de verificar el Firebase ID token, no del cuerpo del pedido.
+ * Antes se comparaba un `ownerId` que mandaba el propio cliente, así que
+ * cualquiera que conociera un par storeId + ownerId podía mandarle
+ * notificaciones a la clientela de esa tienda.
+ */
+async function sendNotification(body: { storeId: string; title: string; body: string }, uid: string) {
+  const { storeId, title, body: notifBody } = body
 
-  if (!storeId || !title || !notifBody || !ownerId) {
-    return { status: 400, data: { error: 'Missing required parameters: storeId, title, body, ownerId' } }
+  if (!storeId || !title || !notifBody) {
+    return { status: 400, data: { error: 'Missing required parameters: storeId, title, body' } }
   }
 
   const firestore = getDb()
@@ -83,7 +134,7 @@ async function sendNotification(body: { storeId: string; title: string; body: st
     return { status: 404, data: { error: 'Store not found' } }
   }
   const storeData = storeDoc.data()
-  if (storeData?.ownerId !== ownerId) {
+  if (storeData?.ownerId !== uid) {
     return { status: 403, data: { error: 'Not authorized' } }
   }
 
@@ -154,7 +205,7 @@ async function sendNotification(body: { storeId: string; title: string; body: st
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
 
@@ -182,14 +233,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let result: { status: number; data: Record<string, unknown> }
 
     switch (action) {
+      // Dispositivo de un CLIENTE navegando el catálogo. Sin auth a propósito:
+      // los compradores no tienen sesión.
       case 'register-token':
         result = await registerToken(body as Parameters<typeof registerToken>[0])
         break
-      case 'send':
-        result = await sendNotification(body as Parameters<typeof sendNotification>[0])
+
+      // Las dos siguientes son del DUEÑO y exigen sesión.
+      case 'register-owner-token': {
+        const uid = await uidFromRequest(req)
+        if (!uid) return res.status(401).json({ error: 'No autenticado' })
+        result = await registerOwnerToken(body as Parameters<typeof registerOwnerToken>[0], uid)
         break
+      }
+      case 'send': {
+        const uid = await uidFromRequest(req)
+        if (!uid) return res.status(401).json({ error: 'No autenticado' })
+        result = await sendNotification(body as Parameters<typeof sendNotification>[0], uid)
+        break
+      }
       default:
-        return res.status(400).json({ error: 'Invalid action. Use "register-token" or "send"' })
+        return res.status(400).json({ error: 'Invalid action. Use "register-token", "register-owner-token" or "send"' })
     }
 
     return res.status(result.status).json(result.data)

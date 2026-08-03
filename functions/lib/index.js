@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.expireTrials = exports.adminGetDashboardStats = exports.adminGetAllUsers = exports.adminUpdateStorePlan = exports.adminGetAllStores = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
+exports.notifyNewOrder = exports.expireTrials = exports.adminGetDashboardStats = exports.adminGetAllUsers = exports.adminUpdateStorePlan = exports.adminGetAllStores = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
@@ -411,7 +411,7 @@ exports.expireTrials = functions.pubsub
     .schedule('0 8 * * *') // 8:00 UTC = 3:00 AM Colombia
     .timeZone('America/Bogota')
     .onRun(async () => {
-    var _a, _b;
+    var _a, _b, _c;
     const now = new Date();
     console.log(`[expireTrials] Running at ${now.toISOString()}`);
     // Find stores with expired free trials (trialEndsAt < now)
@@ -428,6 +428,22 @@ exports.expireTrials = functions.pubsub
         if (((_a = store.subscription) === null || _a === void 0 ? void 0 : _a.status) === 'active' || ((_b = store.subscription) === null || _b === void 0 ? void 0 : _b.status) === 'trialing') {
             continue;
         }
+        // Skip admin-comped stores (planExpiresAt is set via the admin panel):
+        //   - null          → indefinite comp, never downgrade
+        //   - future Date   → comp still valid
+        //   - absent / past → fall through to the downgrade below
+        const hasCompField = Object.prototype.hasOwnProperty.call(store, 'planExpiresAt');
+        if (hasCompField) {
+            if (store.planExpiresAt === null) {
+                continue; // indefinite admin comp
+            }
+            const compEnd = ((_c = store.planExpiresAt) === null || _c === void 0 ? void 0 : _c.toDate)
+                ? store.planExpiresAt.toDate()
+                : new Date(store.planExpiresAt);
+            if (compEnd.getTime() > now.getTime()) {
+                continue; // comp still valid
+            }
+        }
         // Downgrade to free
         batch.update(doc.ref, {
             plan: 'free',
@@ -442,5 +458,104 @@ exports.expireTrials = functions.pubsub
     }
     console.log(`[expireTrials] Completed. Downgraded ${expiredCount} stores.`);
     return null;
+});
+// ============================================
+// AVISO AL DUEÑO: PEDIDO NUEVO
+// ============================================
+/**
+ * Dispara al crearse un pedido y le manda una push al dueño de la tienda.
+ *
+ * Por qué un trigger de Firestore y no una llamada desde el cliente: el pedido
+ * lo crea el navegador del COMPRADOR. Si el aviso dependiera de él, se perdería
+ * cuando cierra la pestaña, y habría que darle permiso de notificar a otra
+ * persona. Acá se ejecuta siempre, sin importar el medio de pago (WhatsApp,
+ * MercadoPago, Stripe, transferencia o manual).
+ *
+ * Los tokens salen de `users/{ownerId}/pushTokens`, que son los dispositivos
+ * del dueño. NO de `stores/{storeId}/pushTokens`, que son los clientes.
+ */
+exports.notifyNewOrder = functions.firestore
+    .document('stores/{storeId}/orders/{orderId}')
+    .onCreate(async (snap, context) => {
+    var _a, _b;
+    const { storeId, orderId } = context.params;
+    const order = snap.data();
+    try {
+        const storeSnap = await db.collection('stores').doc(storeId).get();
+        if (!storeSnap.exists) {
+            console.warn(`[notifyNewOrder] Store ${storeId} not found`);
+            return null;
+        }
+        const store = storeSnap.data() || {};
+        const ownerId = store.ownerId;
+        if (!ownerId) {
+            console.warn(`[notifyNewOrder] Store ${storeId} has no ownerId`);
+            return null;
+        }
+        const tokensSnap = await db
+            .collection('users')
+            .doc(ownerId)
+            .collection('pushTokens')
+            .get();
+        if (tokensSnap.empty) {
+            // Normal: el dueño todavía no abrió la app o no dio permiso.
+            console.log(`[notifyNewOrder] Owner ${ownerId} has no devices registered`);
+            return null;
+        }
+        // El total se formatea con la moneda de la tienda. Si falta, se manda el
+        // número pelado antes que un símbolo equivocado.
+        const currency = store.currency;
+        const total = typeof order.total === 'number' ? order.total : null;
+        const amount = total === null
+            ? ''
+            : currency
+                ? ` · ${currency} ${total.toFixed(2)}`
+                : ` · ${total.toFixed(2)}`;
+        const customerName = ((_b = (_a = order.customer) === null || _a === void 0 ? void 0 : _a.name) === null || _b === void 0 ? void 0 : _b.split(' ')[0]) || '';
+        const itemCount = Array.isArray(order.items) ? order.items.length : 0;
+        const itemsLabel = itemCount === 1 ? '1 producto' : `${itemCount} productos`;
+        const title = 'Nuevo pedido';
+        const body = `${order.orderNumber || 'Pedido'}${customerName ? ` de ${customerName}` : ''} · ${itemsLabel}${amount}`;
+        const tokens = tokensSnap.docs.map(d => d.data().token).filter(Boolean);
+        if (tokens.length === 0)
+            return null;
+        const messaging = admin.messaging();
+        const staleDocIds = [];
+        for (let i = 0; i < tokens.length; i += 500) {
+            const batch = tokens.slice(i, i + 500);
+            const response = await messaging.sendEachForMulticast({
+                tokens: batch,
+                notification: { title, body },
+                // Lo lee el handler de "tap" en la app para abrir el pedido.
+                data: { type: 'new-order', storeId, orderId },
+                android: { priority: 'high', notification: { sound: 'default' } },
+                apns: { payload: { aps: { sound: 'default' } } }
+            });
+            response.responses.forEach((resp, idx) => {
+                var _a;
+                if (!resp.success && ((_a = resp.error) === null || _a === void 0 ? void 0 : _a.code) === 'messaging/registration-token-not-registered') {
+                    const doc = tokensSnap.docs[i + idx];
+                    if (doc)
+                        staleDocIds.push(doc.id);
+                }
+            });
+        }
+        // Limpia los tokens de apps desinstaladas para no reintentar por siempre.
+        if (staleDocIds.length > 0) {
+            const writeBatch = db.batch();
+            for (const id of staleDocIds) {
+                writeBatch.delete(db.collection('users').doc(ownerId).collection('pushTokens').doc(id));
+            }
+            await writeBatch.commit();
+        }
+        console.log(`[notifyNewOrder] ${orderId} → ${tokens.length} devices, ${staleDocIds.length} stale`);
+        return null;
+    }
+    catch (err) {
+        // Nunca reventar: el pedido ya está guardado y la notificación es
+        // secundaria. Si lanzáramos, Firestore reintentaría y podría duplicar.
+        console.error('[notifyNewOrder] Error:', err);
+        return null;
+    }
 });
 //# sourceMappingURL=index.js.map
