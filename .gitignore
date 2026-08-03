@@ -56,3 +56,6 @@ ios/DerivedData/
 
 # prerendered/ SI se versiona: es el HTML que sirve Vercel a los
 # rastreadores de IA, porque su build no puede ejecutar un navegador.
+
+# TypeScript incremental build cache
+*.tsbuildinfo

@@ -2001,7 +2001,10 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn bg-white">
+    // El padding superior es el área segura: sin esto, en Android 15 (que
+    // fuerza edge-to-edge con targetSdk 35+) la vista previa arranca debajo de
+    // la barra de estado. Cuando la barra no se superpone, env() vale 0.
+    <div className="fixed inset-0 z-50 flex flex-col animate-fadeIn bg-white pt-[env(safe-area-inset-top)]">
       {/* Full screen theme preview */}
       <div className="flex-1 overflow-auto">
         <ThemeComponent
@@ -2011,8 +2014,10 @@ function ThemePreviewModal({ themeId, store, products, categories, onClose, onSe
         />
       </div>
 
-      {/* Floating bottom bar - subtle pill design */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+      {/* Floating bottom bar - subtle pill design.
+          El bottom suma el área segura para que la píldora no quede pegada a
+          la barra de gestos del teléfono. */}
+      <div className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50">
         <div className="flex items-center gap-2 px-2 py-2 bg-black/70 backdrop-blur-md rounded-full shadow-2xl border border-white/10">
           {/* Close button */}
           <button
