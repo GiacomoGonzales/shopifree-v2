@@ -572,7 +572,7 @@ export default function AppBuilds() {
                     <div className="text-[11px]">
                       <span className="font-medium text-gray-700">URL de testing cerrado</span>
                       <p className="text-gray-500">
-                        Si la app sigue en closed testing (12 testers × 14 dias antes de producción), dejá esto marcado. Al merchant le aparece una guía explicando qué hacer con el link. Desmarcá cuando ya sea URL pública.
+                        Marcá esto si el link todavía apunta a una pista de prueba y no a la ficha pública de Play. Desmarcá cuando la app ya esté en producción.
                       </p>
                     </div>
                   </label>
