@@ -17,6 +17,10 @@ export default function Login() {
   const navigate = useNavigate()
   const isIOS = Capacitor.getPlatform() === 'ios'
 
+  // `loading` cubre el ida y vuelta del proveedor; `firebaseUser` cubre el
+  // tramo posterior (cargar tienda + redirigir). Ver el comentario del overlay.
+  const busy = loading || authLoading || !!firebaseUser
+
   // Redirect authenticated users. Native users without a store go to /register
   // so they can finish signing up in-app (Register handles "authenticated but
   // no store" by advancing to step 2). Previously native users landed here
@@ -84,8 +88,14 @@ export default function Login() {
         <LanguageSelector />
       </div>
 
-      {/* Loading overlay */}
-      {loading && (
+      {/* Loading overlay.
+          Se mantiene hasta que realmente navegamos, no hasta que termina el
+          login. Autenticarse es solo el primer paso: después useAuth todavía
+          tiene que traer el usuario y la tienda de Firestore, y recién ahí el
+          efecto de arriba redirige. Ese hueco son 2-3 segundos en los que el
+          formulario volvía a aparecer vacío, como si el login hubiera fallado.
+          Con `firebaseUser` ya presente sabemos que la salida es inminente. */}
+      {busy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin" />

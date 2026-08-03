@@ -441,8 +441,23 @@ export default function Register() {
     return t('register.step3')
   }
 
+  // Entre que el proveedor social devuelve la sesión y que useAuth termina de
+  // traer usuario y tienda de Firestore pasan 2-3 segundos. Sin esto, el paso 1
+  // volvía a verse vacío en ese hueco antes de saltar al paso 2, como si el
+  // registro no hubiera funcionado. Solo aplica al paso 1: el 3 tiene su propia
+  // animación de progreso.
+  const resolvingAuth = step === 1 && (authLoading || !!firebaseUser)
+
   return (
     <div className="fixed inset-0 bg-white flex flex-col justify-center px-6 overflow-y-auto">
+      {resolvingAuth && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin" />
+            <p className="text-sm text-[#1e3a5f] font-medium">{t('register.creating')}</p>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center items-center gap-4 mb-2">
           <Link to={localePath('/')}>
