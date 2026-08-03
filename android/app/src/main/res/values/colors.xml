@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de acento de las notificaciones. Android tiñe con él el ícono
+         blanco de la barra de estado y el encabezado de la notificación.
+         Es el azul de marca de Shopifree. -->
+    <color name="notification_color">#1e3a5f</color>
+</resources>

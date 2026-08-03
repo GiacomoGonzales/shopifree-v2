@@ -34,6 +34,19 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Ícono y color de las notificaciones push.
+             Sin esto Android usa el ícono de la app y lo aplasta a una mancha
+             gris, porque en la barra de estado solo respeta el canal alfa. El
+             drawable es la bolsa de Shopifree en blanco sobre transparente,
+             generada desde public/icon-512.png (que ya trae la silueta en su
+             alfa) a las cinco densidades. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
     </application>
 
     <!-- Permissions -->
