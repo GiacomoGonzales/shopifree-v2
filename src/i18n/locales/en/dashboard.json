@@ -1453,6 +1453,14 @@
       "error": "Error saving",
       "requested": "Request sent successfully",
       "iconError": "Error uploading icon"
+    },
+    "banner": {
+      "title": "We build your app and publish it on Google Play and the App Store",
+      "body": "With your brand, your icon and your catalog. You fill in the details below and we handle the rest: we build it, sign it and submit it to both stores.",
+      "step1": "You configure your app",
+      "step2": "We build it for you",
+      "step3": "It goes live on the stores",
+      "note": "Your catalog updates itself inside the app. No need to republish every time you change a product."
     }
   },
   "planBanner": {

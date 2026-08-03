@@ -1454,6 +1454,14 @@
       "error": "Error al guardar",
       "requested": "Solicitud enviada correctamente",
       "iconError": "Error al subir el ícono"
+    },
+    "banner": {
+      "title": "Creamos tu app y la publicamos en Google Play y App Store",
+      "body": "Con tu marca, tu ícono y tu catálogo. Vos completás los datos acá abajo y nosotros nos encargamos del resto: la construimos, la firmamos y la subimos a las dos tiendas.",
+      "step1": "Configurás tu app",
+      "step2": "Nosotros la construimos",
+      "step3": "Se publica en las tiendas",
+      "note": "Tu catálogo se actualiza solo dentro de la app. No hace falta volver a publicarla cada vez que cambiás un producto."
     }
   },
   "planBanner": {

@@ -301,11 +301,42 @@ export default function MiApp() {
         <p className="mt-1 text-[#8898AA]">{t('miApp.subtitle')}</p>
       </div>
 
-      {/* Store badges banner */}
-      <div className="bg-[#1e3a5f] rounded-xl p-4 sm:p-6 relative">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-1">
-            <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto" />
+      {/* Banner de tiendas. Antes eran solo los dos logos sin una linea de
+          texto: no explicaba que hace esta pagina ni que el trabajo de
+          compilar y publicar corre por nuestra cuenta. */}
+      <div className="bg-[#1e3a5f] rounded-xl p-5 sm:p-7 text-white relative overflow-hidden">
+        {/* Formas de fondo, mismo recurso que el hero del plan Business */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+        <div className="relative flex flex-col lg:flex-row lg:items-center gap-6">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold leading-snug">
+              {t('miApp.banner.title')}
+            </h2>
+            <p className="mt-2 text-sm text-white/80 max-w-xl leading-relaxed">
+              {t('miApp.banner.body')}
+            </p>
+
+            {/* Los tres pasos. Numeros en cuadraditos, sin iconos. */}
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+              {(['step1', 'step2', 'step3'] as const).map((key, i) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-md bg-white/15 text-[11px] font-bold flex items-center justify-center tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span className="text-xs sm:text-[13px] text-white/90 font-medium">
+                    {t(`miApp.banner.${key}`)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-4 text-xs text-white/60">{t('miApp.banner.note')}</p>
+          </div>
+
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <img src="/badges/google-play-badge.png" alt="Google Play" className="h-[48px] sm:h-[52px] w-auto -ml-2 lg:ml-0" />
             <img src="/badges/app-store-badge.svg" alt="App Store" className="h-[33px] sm:h-[36px] w-auto" />
           </div>
         </div>
