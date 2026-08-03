@@ -38,6 +38,13 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow write: if false; // Only backend can write subscriptions
       }
+
+      // Dispositivos del dueño, para avisarle de pedidos nuevos. Los escribe
+      // api/push.ts y los lee la Cloud Function notifyNewOrder, ambos con el
+      // Admin SDK. El cliente no los necesita nunca.
+      match /pushTokens/{tokenId} {
+        allow read, write: if false;
+      }
     }
 
     // Stores collection
@@ -115,6 +122,21 @@ service cloud.firestore {
         allow create: if isStoreOwner(storeId);
         allow update: if isStoreOwner(storeId);
         allow delete: if isStoreOwner(storeId);
+      }
+
+      // Historial de notificaciones push enviadas a los clientes de la tienda.
+      // Lo escribe SOLO el backend (api/push.ts con el Admin SDK, que se saltea
+      // estas reglas); el dueño lo lee desde Mi App. Faltaba la regla, así que
+      // esa pantalla tiraba "Missing or insufficient permissions".
+      match /notifications/{notificationId} {
+        allow read: if isStoreOwnerOrAdmin(storeId);
+        allow write: if false;
+      }
+
+      // Dispositivos de clientes suscritos a las push de esta tienda. Los
+      // gestiona solo el backend; nadie los lee desde el cliente.
+      match /pushTokens/{tokenId} {
+        allow read, write: if false;
       }
 
       // Stock movements subcollection (finance module)
