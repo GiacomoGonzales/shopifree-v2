@@ -22,7 +22,17 @@ export const auth = Capacitor.isNativePlatform()
 
 // Enable Firestore persistence for faster subsequent loads
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  // Sin esto, escribir un campo opcional en `undefined` lanza
+  // "Unsupported field value: undefined" ANTES de salir a la red, y el usuario
+  // ve un error genérico sin pista de la causa. Es lo que rompía crear una
+  // categoría sin foto desde el 12/05/2026: Products.tsx manda
+  // `image: newCategoryImage`, que es undefined cuando no se subió ninguna.
+  //
+  // Con el flag, los campos en undefined simplemente NO se escriben, que es lo
+  // que se quiere al crear. Para BORRAR un campo existente hay que seguir
+  // mandando `null` — el código ya lo hace así (ver categoryService.update).
+  ignoreUndefinedProperties: true
 })
 
 export const storage = getStorage(app)
