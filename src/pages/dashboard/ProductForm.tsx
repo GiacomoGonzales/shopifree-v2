@@ -634,7 +634,17 @@ export default function ProductForm() {
         await productService.update(store.id, productId, cleanProductData as Parameters<typeof productService.update>[2])
         showToast(t('productForm.updated'), 'success')
       } else {
-        await productService.create(store.id, cleanProductData as Parameters<typeof productService.create>[1])
+        // `order` con la marca de tiempo, no el 0 por defecto de
+        // productService.create. Con 0 en todos, el catálogo no tenía con qué
+        // desempatar y mostraba los productos en orden de ID; peor todavía, el
+        // arrastre filtrado por categoría se volvía una operación nula.
+        // El valor solo importa como posición relativa: al ser creciente, los
+        // productos nuevos quedan al final. El primer arrastre renumera todo
+        // de 0 a n-1 y estos valores desaparecen.
+        await productService.create(store.id, {
+          ...cleanProductData,
+          order: Date.now(),
+        } as Parameters<typeof productService.create>[1])
         showToast(t('productForm.created'), 'success')
       }
 

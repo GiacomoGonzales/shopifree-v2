@@ -222,31 +222,49 @@ export default function Products() {
 
     const reordered = arrayMove(sourceList, oldIndex, newIndex)
 
-    // Con una categoria seleccionada solo se reparten las posiciones globales
-    // que ya ocupaban esos productos. Antes se renumeraba 0..n-1 dentro de la
-    // categoria, asi que sus `order` chocaban con los de las demas categorias y
-    // el orden general de la tienda quedaba arbitrario. Sin filtro se renumera
-    // todo de corrido, que ademas normaliza cualquier empate previo.
-    const updatedItems = selectedCategory
-      ? (() => {
-          const slots = sourceList.map(p => p.order ?? 0).sort((a, b) => a - b)
-          return reordered.map((p, i) => ({ ...p, order: slots[i] }))
-        })()
-      : reordered.map((p, i) => ({ ...p, order: i }))
-
-    // Update local state - merge back with products not in current filter
+    // Se renumera SIEMPRE la lista completa, 0..n-1.
+    //
+    // La version anterior, con una categoria seleccionada, repartia entre los
+    // productos movidos "los slots que ya ocupaban": slots = sus `order`
+    // actuales, ordenados. Eso falla en cuanto hay empates, y los empates son
+    // la norma: ProductForm nunca asignaba `order` al crear, asi que
+    // productService.create le ponia 0 a todo. Con slots = [0,0,0...] se
+    // reescribia 0 en todos y en Firestore no cambiaba nada — pero el estado
+    // local si se reordenaba, asi que en el panel parecia haber funcionado y en
+    // la tienda no pasaba nada. Ese era el reporte.
+    //
+    // Renumerando todo, ademas, cada arrastre normaliza de una vez los empates
+    // heredados de la tienda.
+    const fullSorted = [...products].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    let nextFull: typeof products
     if (selectedCategory) {
-      const otherProducts = products.filter(p => !sourceList.some(sp => sp.id === p.id))
-      setProducts([...otherProducts, ...updatedItems].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
+      // Los productos del filtro conservan los HUECOS que ocupaban en la lista
+      // global (por posicion, no por valor de `order`), y adentro van en el
+      // nuevo orden. Los de otras categorias no se mueven de lugar.
+      const slots = sourceList
+        .map(p => fullSorted.findIndex(q => q.id === p.id))
+        .filter(i => i !== -1)
+        .sort((a, b) => a - b)
+      nextFull = [...fullSorted]
+      slots.forEach((slot, i) => { nextFull[slot] = reordered[i] })
     } else {
-      setProducts(updatedItems)
+      nextFull = reordered
     }
 
-    // Persist to Firestore
+    const updatedAll = nextFull.map((p, i) => ({ ...p, order: i }))
+    setProducts(updatedAll)
+
+    // Solo se escriben los que realmente cambiaron de posicion.
+    const changed = updatedAll.filter(p => {
+      const before = products.find(q => q.id === p.id)
+      return before?.order !== p.order
+    })
+    if (changed.length === 0) return
+
     setIsReordering(true)
     try {
       await Promise.all(
-        updatedItems.map(p => productService.update(store.id, p.id, { order: p.order }))
+        changed.map(p => productService.update(store.id, p.id, { order: p.order }))
       )
     } catch (error) {
       console.error('Error reordering products:', error)
