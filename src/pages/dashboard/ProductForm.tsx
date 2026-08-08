@@ -135,9 +135,17 @@ export default function ProductForm() {
   const businessType = normalizeBusinessType(store?.businessType)
   const features = getBusinessTypeFeatures(businessType)
 
-  // Variant pricing: when combinations exist, the product is priced per-variant.
-  // Hide the global price/comparePrice fields and show a "From X" summary instead.
-  const hasVariantsWithPricing = features.showVariants && combinations.length > 0
+  // Precio por variante: solo cuando alguna combinación tiene precio PROPIO.
+  //
+  // Antes bastaba con que existiera cualquier combinación, y eso rompía el caso
+  // más común: variantes de solo color o talla, sin precio propio. Esos
+  // productos siguen teniendo un precio global —el tipo lo dice: en
+  // VariantCombination, `price?` significa "si no tiene, usa el del producto"—,
+  // pero el formulario los pasaba a modo por-variante, escondía el precio
+  // anterior y no lo guardaba. Resultado: el producto se publicaba sin
+  // descuento y sin el precio tachado en la vitrina.
+  const hasVariantsWithPricing =
+    features.showVariants && combinations.some(c => typeof c.price === 'number' && c.price > 0)
   const variantBasePrice = price ? parseFloat(price) : undefined
   const variantPrices = hasVariantsWithPricing
     ? combinations
@@ -508,8 +516,11 @@ export default function ProductForm() {
         productData.video = null
       }
       if (categoryId) productData.categoryId = categoryId
-      // Skip the global comparePrice when the product is priced per-variant.
-      if (comparePrice && !hasVariantsWithPricing) productData.comparePrice = parseFloat(comparePrice)
+      // El precio anterior es del PRODUCTO, no de cada variante: aplica igual
+      // cuando el precio se define por variante (la vitrina muestra "desde X"
+      // tachando este valor). Antes se descartaba en ese caso y el comerciante
+      // perdía el descuento sin ningún aviso.
+      if (comparePrice) productData.comparePrice = parseFloat(comparePrice)
       if (cost) productData.cost = parseFloat(cost)
       if (sku) productData.sku = sku
       if (barcode) productData.barcode = barcode
@@ -1004,6 +1015,27 @@ export default function ProductForm() {
                       </span>
                     )}
                   </div>
+
+                  {/* El precio anterior sigue siendo del producto: la vitrina
+                      muestra "desde X" con este valor tachado al lado. */}
+                  {features.showComparePrice && (
+                    <div className="mt-4 pt-4 border-t border-[#1e3a5f]/10">
+                      <label htmlFor="comparePrice" className={LABEL}>
+                        {t('productForm.pricing.comparePrice')}
+                      </label>
+                      <input
+                        id="comparePrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={comparePrice}
+                        onChange={(e) => setComparePrice(e.target.value)}
+                        placeholder="0.00"
+                        className={INPUT}
+                      />
+                      <p className="text-xs text-[#A9B6C6] mt-1">{t('productForm.pricing.comparePriceHint')}</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
