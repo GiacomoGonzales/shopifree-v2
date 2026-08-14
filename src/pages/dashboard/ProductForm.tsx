@@ -749,7 +749,7 @@ export default function ProductForm() {
             necesitan unos interruptores y dos campos numericos.
             `items-start` evita que las tarjetas se estiren para igualar la
             altura de la otra columna. */}
-        <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${
+        <div className={`grid grid-cols-1 gap-3.5 sm:gap-4 items-start ${
           features.showModifiers
             // Con los modificadores a la derecha, las dos columnas cargan peso
             // parecido y conviene repartir mas parejo. El editor de grupos
@@ -758,7 +758,7 @@ export default function ProductForm() {
             : 'lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]'
         }`}>
           {/* Left Column - Basic Info */}
-          <div className="space-y-4 sm:space-y-5 min-w-0">
+          <div className="space-y-3 sm:space-y-4 min-w-0">
             {/* Image upload - Multiple images */}
             <div className={CARD}>
               <div className="flex items-center justify-between mb-3">
@@ -979,7 +979,7 @@ export default function ProductForm() {
 
             {/* Basic Fields */}
             <div className={CARD}>
-              <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.basic.title')}</h2>
+              <h2 className={`${SECTION_TITLE} mb-3`}>{t('productForm.basic.title')}</h2>
               <div className="space-y-4">
                 {/* Name */}
                 <div>
@@ -1026,7 +1026,7 @@ export default function ProductForm() {
             {/* Pricing — unified card: Price + Compare + Cost.
                 Replaced by a "priced by variants" summary when combinations exist. */}
             <div className={CARD}>
-              <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.pricing.title')}</h2>
+              <h2 className={`${SECTION_TITLE} mb-3`}>{t('productForm.pricing.title')}</h2>
               {hasVariantsWithPricing ? (
                 <div className="rounded-lg border border-dashed border-[#1e3a5f]/30 bg-[#1e3a5f]/5 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
@@ -1155,7 +1155,7 @@ export default function ProductForm() {
                 (even when the store has zero categories) so the merchant can
                 create one inline without leaving the form. */}
             <div className={CARD}>
-                <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.catalog.title')}</h2>
+                <h2 className={`${SECTION_TITLE} mb-3`}>{t('productForm.catalog.title')}</h2>
                 <div className="space-y-4">
                   {/* Category — always visible, with inline create */}
                   <div>
@@ -1327,14 +1327,14 @@ export default function ProductForm() {
               Solo se pega cuando NO lleva los modificadores: con el editor
               adentro la columna es alta y quedaria con scroll propio anidado,
               que es peor que dejarla desplazar con la pagina. */}
-          <div className={`space-y-4 sm:space-y-5 min-w-0 ${
+          <div className={`space-y-3 sm:space-y-4 min-w-0 ${
             features.showModifiers
               ? ''
               : 'lg:sticky lg:top-[67px] lg:max-h-[calc(100vh-83px)] lg:overflow-y-auto lg:pr-1'
           }`}>
             {/* Visibility */}
             <div className={CARD}>
-              <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.visibility.title')}</h2>
+              <h2 className={`${SECTION_TITLE} mb-3`}>{t('productForm.visibility.title')}</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-[#F6F9FC]">
                   <span className="text-sm text-[#1e3a5f] font-medium">
