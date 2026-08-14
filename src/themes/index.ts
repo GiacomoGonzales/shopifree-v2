@@ -1243,6 +1243,21 @@ export const themes: Theme[] = [
     isNew: true,
     createdAt: new Date('2026-06-06'),
     colors: { primary: '#F2994A', background: '#FFF6E9', accent: '#5FB89A' }
+  },
+  {
+    id: 'fiesta',
+    name: 'Fiesta',
+    description: 'Morado y dorado con contornos blancos gruesos y tipografia redonda, con aire de sticker. Para pizzerias, heladerias y comida para compartir.',
+    thumbnail: '/themes/fiesta.webp',
+    category: 'restaurant',
+    isPremium: false,
+    isNew: true,
+    createdAt: new Date('2026-08-14'),
+    colors: {
+      primary: '#6D21CE',
+      background: '#FFF7E6',
+      accent: '#FFC42E'
+    }
   }
 ]
 
