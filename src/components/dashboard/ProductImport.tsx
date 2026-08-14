@@ -237,7 +237,7 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
       // Food
       tiempo_prep_min: 15,
       tiempo_prep_max: 25,
-      modificadores: 'Tipo de pan:Pan brioche|Pan integral;Extras:Queso extra:+5|Tocino:+8',
+      modificadores: 'Tipo de pan(1):Pan brioche|Pan integral;Terminos(1):Jugoso|A punto;Extras(0-3):Queso extra:+5|Tocino:+8',
       // Tech
       modelo: 'BT-500',
       garantia_meses: 12,
@@ -286,7 +286,7 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
       variant_2_options: 'Black, White, Blue',
       prep_time_min: 15,
       prep_time_max: 25,
-      modifiers: 'Bread type:Brioche|Whole wheat;Extras:Extra cheese:+5|Bacon:+8',
+      modifiers: 'Bread(1):Brioche|Whole wheat;Doneness(1):Medium|Well done;Extras(0-3):Extra cheese:+5|Bacon:+8',
       model: 'BT-500',
       warranty_months: 12,
       specifications: 'Bluetooth:5.0;Battery:20h;Driver:40mm',
@@ -358,8 +358,31 @@ const parseVariations = (row: Record<string, unknown>): ProductVariation[] => {
   return variations
 }
 
+/**
+ * Regla de selección de un grupo, escrita entre paréntesis tras el nombre.
+ *
+ *   "Extras"              → opcional, sin tope (0 .. cantidad de opciones)
+ *   "Escoge Un Tamaño(1)" → exactamente 1, obligatorio
+ *   "Elige 2 cremas(2)"   → exactamente 2, obligatorio
+ *   "Salsas(0-3)"         → opcional, hasta 3
+ *   "Mitades(1-2)"        → obligatorio, entre 1 y 2
+ *
+ * `required` se deduce de que el mínimo sea mayor a cero, igual que hace el
+ * formulario al marcar la casilla de obligatorio. Sin paréntesis se mantiene
+ * el comportamiento anterior, así que las plantillas viejas siguen valiendo.
+ */
+const parseGroupRule = (raw: string): { name: string; min: number; max?: number } => {
+  const m = raw.match(/^(.*?)\s*\(\s*(\d+)\s*(?:-\s*(\d+)\s*)?\)\s*$/)
+  if (!m) return { name: raw.trim(), min: 0 }
+  const name = m[1].trim()
+  const a = parseInt(m[2], 10)
+  const b = m[3] !== undefined ? parseInt(m[3], 10) : undefined
+  // Un solo número significa "exactamente n": mínimo y máximo iguales.
+  return b === undefined ? { name, min: a, max: a } : { name, min: a, max: b }
+}
+
 // Parse modifiers from import row
-// Format: "Grupo:Opcion1|Opcion2:+precio;OtroGrupo:Opcion"
+// Format: "Grupo(min-max):Opcion1|Opcion2:+precio;OtroGrupo:Opcion"
 const parseModifiers = (row: Record<string, unknown>): ModifierGroup[] => {
   const modifiersStr = String(row['modificadores'] || row['modifiers'] || '').trim()
   if (!modifiersStr) return []
@@ -371,7 +394,8 @@ const parseModifiers = (row: Record<string, unknown>): ModifierGroup[] => {
     const parts = groupStr.split(':')
     if (parts.length < 2) return
 
-    const groupName = parts[0].trim()
+    const rule = parseGroupRule(parts[0])
+    const groupName = rule.name
     const optionsStr = parts.slice(1).join(':') // Rejoin in case option has price with :
 
     if (!groupName) return
@@ -396,12 +420,17 @@ const parseModifiers = (row: Record<string, unknown>): ModifierGroup[] => {
     }).filter(opt => opt.name)
 
     if (options.length > 0) {
+      // El tope nunca puede superar la cantidad de opciones, y el minimo nunca
+      // al tope: una regla imposible dejaria el producto sin poder agregarse
+      // al carrito, porque la vitrina bloquea el boton hasta cumplirla.
+      const maxSelect = Math.min(rule.max ?? options.length, options.length)
+      const minSelect = Math.min(rule.min, maxSelect)
       groups.push({
         id: `mod-group-${Date.now()}-${groupIndex}`,
         name: groupName,
-        required: false,
-        minSelect: 0,
-        maxSelect: options.length,
+        required: minSelect > 0,
+        minSelect,
+        maxSelect,
         options
       })
     }
