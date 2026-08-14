@@ -749,7 +749,14 @@ export default function ProductForm() {
             necesitan unos interruptores y dos campos numericos.
             `items-start` evita que las tarjetas se estiren para igualar la
             altura de la otra columna. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] gap-4 sm:gap-5 items-start">
+        <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${
+          features.showModifiers
+            // Con los modificadores a la derecha, las dos columnas cargan peso
+            // parecido y conviene repartir mas parejo. El editor de grupos
+            // necesita aire para el nombre, el minimo y el maximo.
+            ? 'lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)]'
+            : 'lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]'
+        }`}>
           {/* Left Column - Basic Info */}
           <div className="space-y-4 sm:space-y-5 min-w-0">
             {/* Image upload - Multiple images */}
@@ -1271,9 +1278,11 @@ export default function ProductForm() {
                     defaultOpen={hasIndustryData}
                   >
                     <div className="space-y-6">
-                      {features.showModifiers && (
-                        <ModifiersSection modifierGroups={modifierGroups} onChange={setModifierGroups} />
-                      )}
+                      {/* Los modificadores NO van aca: en gastronomia son la
+                          seccion que mas se toca, asi que suben a su propia
+                          tarjeta en la columna derecha. Meterlos aca los dejaba
+                          a cuatro niveles de cajas anidadas (rubro > seccion >
+                          grupo > opciones) y al final de una columna larga. */}
                       {features.showPrepTime && (
                         <PrepTimeSection prepTime={prepTime} onChange={setPrepTime} />
                       )}
@@ -1311,12 +1320,18 @@ export default function ProductForm() {
 
           </div>
 
-          {/* Right Column - Visibility + Business Type Sections + Advanced Options.
-              Se queda pegada arriba al desplazar: la columna izquierda es larga
-              y antes había que subir hasta el principio para tocar un
-              interruptor. `max-h` + scroll propio evita que, si el rubro suma
-              secciones, el final quede inalcanzable debajo del borde. */}
-          <div className="space-y-4 sm:space-y-5 min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1">
+          {/* Columna derecha: ajustes y, en gastronomia, los modificadores.
+              El sticky arranca en 67px = 51 del header (que tambien es sticky)
+              mas 16 de aire. Con top-4 la tarjeta de visibilidad quedaba
+              tapada por el header al desplazar.
+              Solo se pega cuando NO lleva los modificadores: con el editor
+              adentro la columna es alta y quedaria con scroll propio anidado,
+              que es peor que dejarla desplazar con la pagina. */}
+          <div className={`space-y-4 sm:space-y-5 min-w-0 ${
+            features.showModifiers
+              ? ''
+              : 'lg:sticky lg:top-[67px] lg:max-h-[calc(100vh-83px)] lg:overflow-y-auto lg:pr-1'
+          }`}>
             {/* Visibility */}
             <div className={CARD}>
               <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.visibility.title')}</h2>
@@ -1352,6 +1367,15 @@ export default function ProductForm() {
                 </div>
               </div>
             </div>
+
+            {/* Modificadores (gastronomia): tarjeta propia, arriba de todo lo
+                demas. En una pizzeria son la seccion mas usada del formulario
+                —tamaños, tipo de masa, extras— y estaban al fondo de la columna
+                izquierda, dentro del acordeon del rubro. */}
+            {/* Sin envoltorio: ModifiersSection ya trae su propia tarjeta. */}
+            {features.showModifiers && (
+              <ModifiersSection modifierGroups={modifierGroups} onChange={setModifierGroups} />
+            )}
 
             {/* Inventory — Track stock toggle, SKU, Barcode + initial stock and warehouse.
                 Cost moved to the Pricing card. Brand moved to the Catalog card.

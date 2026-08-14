@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ModifierGroup, ModifierOption } from '../../../types'
-import { CARD, INPUT, LABEL, SECTION_HINT, SECTION_TITLE } from './tokens'
+import { CARD, INPUT, INPUT_SM, LABEL, SECTION_HINT, SECTION_TITLE } from './tokens'
 
 interface ModifiersSectionProps {
   modifierGroups: ModifierGroup[]
@@ -173,9 +173,16 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                     />
                   </div>
 
-                  {/* Group Settings */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2">
+                  {/* Ajustes del grupo.
+                      Obligatorio ocupa su propia fila y minimo/maximo van a la
+                      par: la seccion ahora vive en la columna derecha, mas
+                      angosta, y en tres columnas las etiquetas "Min. seleccion"
+                      y "Max. seleccion" se partian en dos renglones. */}
+                  <div className="space-y-3">
+                    <label
+                      htmlFor={`required-${group.id}`}
+                      className="flex items-center gap-2 cursor-pointer w-fit"
+                    >
                       <input
                         type="checkbox"
                         id={`required-${group.id}`}
@@ -183,42 +190,45 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                         onChange={(e) =>
                           updateGroup(group.id, {
                             required: e.target.checked,
-                            minSelect: e.target.checked ? 1 : 0,
+                            minSelect: e.target.checked ? Math.max(1, group.minSelect) : 0,
                           })
                         }
                         className="w-4 h-4 rounded border-[#D8E2EC] text-[#2d6cb5] focus:ring-[#38bdf8]"
                       />
-                      <label htmlFor={`required-${group.id}`} className="text-sm text-[#425466]">
+                      <span className={LABEL + ' mb-0'}>
                         {t('productForm.modifiers.isRequired', 'Obligatorio')}
-                      </label>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#8898AA] mb-1">
-                        {t('productForm.modifiers.minSelect', 'Min. seleccion')}
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={group.minSelect}
-                        onChange={(e) =>
-                          updateGroup(group.id, { minSelect: parseInt(e.target.value) || 0 })
-                        }
-                        className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#8898AA] mb-1">
-                        {t('productForm.modifiers.maxSelect', 'Max. seleccion')}
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={group.maxSelect}
-                        onChange={(e) =>
-                          updateGroup(group.id, { maxSelect: parseInt(e.target.value) || 1 })
-                        }
-                        className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#38bdf8] focus:border-[#38bdf8]"
-                      />
+                      </span>
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className={LABEL}>
+                          {t('productForm.modifiers.minSelect', 'Min. seleccion')}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={group.minSelect}
+                          onChange={(e) =>
+                            updateGroup(group.id, { minSelect: parseInt(e.target.value) || 0 })
+                          }
+                          className={INPUT_SM}
+                        />
+                      </div>
+                      <div>
+                        <label className={LABEL}>
+                          {t('productForm.modifiers.maxSelect', 'Max. seleccion')}
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={group.maxSelect}
+                          onChange={(e) =>
+                            updateGroup(group.id, { maxSelect: parseInt(e.target.value) || 1 })
+                          }
+                          className={INPUT_SM}
+                        />
+                      </div>
                     </div>
                   </div>
 
