@@ -97,6 +97,35 @@ function isRetryable(err: unknown): boolean {
 const RETRY_DELAYS_MS = [800, 2000]
 
 /**
+ * Copia una imagen desde una URL externa a R2 y devuelve la URL propia.
+ *
+ * La descarga la hace el SERVIDOR: el origen normalmente no manda cabeceras
+ * CORS, así que el navegador no podría leerla, y de paso el archivo no tiene
+ * que atravesar el límite de body de Vercel.
+ *
+ * Se usa al importar catálogos con fotos alojadas en otro lado. Sin esto las
+ * imágenes quedarían apuntando a un servidor ajeno, fuera de la optimización
+ * de Cloudflare y a merced de que ese origen las siga sirviendo.
+ */
+export async function uploadImageFromUrl(sourceUrl: string, folder = 'uploads'): Promise<string> {
+  const token = await auth?.currentUser?.getIdToken()
+  if (!token) throw new UploadError('No autenticado', 401)
+
+  const res = await fetch(apiUrl('/api/upload-image-r2'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ sourceUrl, folder }),
+  })
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}))
+    throw new UploadError(e?.error || `HTTP ${res.status}`, res.status)
+  }
+  const data = await res.json()
+  if (!data?.url) throw new UploadError('R2 no devolvió URL')
+  return data.url as string
+}
+
+/**
  * Sube una imagen a R2 y devuelve su URL pública.
  *
  * Comprime siempre antes de subir (salvo `skipCompression`). Si la subida

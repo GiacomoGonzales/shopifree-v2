@@ -5,6 +5,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 import { useAuth } from '../../hooks/useAuth'
 import { productService, categoryService } from '../../lib/firebase'
+import { uploadImageFromUrl } from '../../utils/uploadImage'
 import { useToast } from '../ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import { getBusinessTypeFeatures, type BusinessType } from '../../config/businessTypes'
@@ -25,6 +26,8 @@ interface ImportProduct {
   category?: string
   active?: boolean
   featured?: boolean
+  /** URL externa de la foto; se copia a R2 al importar. */
+  imageUrl?: string
   // Fashion: Variations
   variations?: ProductVariation[]
   // Food: Modifiers and prep time
@@ -66,6 +69,7 @@ const getTemplateColumns = (businessType: BusinessType, lang: 'es' | 'en' = 'es'
       categoria: 'categoria',
       activo: 'activo',
       destacado: 'destacado',
+      imagen: 'imagen',
       // Inventory
       sku: 'sku',
       codigo_barras: 'codigo_barras',
@@ -106,6 +110,7 @@ const getTemplateColumns = (businessType: BusinessType, lang: 'es' | 'en' = 'es'
       categoria: 'category',
       activo: 'active',
       destacado: 'featured',
+      imagen: 'image',
       sku: 'sku',
       codigo_barras: 'barcode',
       stock: 'stock',
@@ -184,7 +189,10 @@ const getTemplateColumns = (businessType: BusinessType, lang: 'es' | 'en' = 'es'
     columns.push(l.cantidad_disponible)
   }
 
-  columns.push(l.activo, l.destacado)
+  // `imagen` va para todos los rubros: una URL publica que el servidor copia a
+  // R2 durante la importacion. Sin esta columna, migrar una carta desde otra
+  // plataforma dejaba todos los productos sin foto.
+  columns.push(l.activo, l.destacado, l.imagen)
 
   return columns
 }
@@ -242,7 +250,8 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
       instrucciones_personalizacion: 'Puedes elegir el color de las cuerdas',
       cantidad_disponible: 5,
       activo: 'si',
-      destacado: 'no'
+      destacado: 'no',
+      imagen: 'https://ejemplo.com/foto.jpg'
     },
     en: {
       name: businessType === 'food' ? 'Classic burger' :
@@ -287,7 +296,8 @@ const getExampleRow = (businessType: BusinessType, lang: 'es' | 'en' = 'es') => 
       customization_instructions: 'You can choose the rope color',
       available_quantity: 5,
       active: 'yes',
-      featured: 'no'
+      featured: 'no',
+      image: 'https://example.com/photo.jpg'
     }
   }
 
@@ -523,6 +533,7 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
             category: String(row['categoria'] || row['category'] || row['Categoria'] || '').trim() || undefined,
             active: ['si', 'yes', '1', 'true', 'activo'].includes(String(row['activo'] || row['active'] || 'si').toLowerCase()),
             featured: ['si', 'yes', '1', 'true'].includes(String(row['destacado'] || row['featured'] || 'no').toLowerCase()),
+            imageUrl: String(row['imagen'] || row['image'] || '').trim() || undefined,
           }
 
           // Parse business-type specific fields
@@ -713,6 +724,8 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
     let successCount = 0
     const importErrors: string[] = []
 
+    const imageErrors: string[] = []
+
     for (let i = 0; i < products.length; i++) {
       const product = products[i]
       try {
@@ -720,6 +733,22 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
         let categoryId: string | null = null
         if (product.category) {
           categoryId = categoryMap.get(product.category.toLowerCase()) || null
+        }
+
+        // La foto se copia a R2 desde su URL de origen. Se hace del lado del
+        // servidor porque el origen casi nunca manda CORS.
+        //
+        // Si falla, el producto se importa igual, sin imagen: perder 73
+        // productos porque una URL murió sería mucho peor que perder una foto.
+        // El fallo queda contado en `imageErrors` y se avisa al final.
+        let importedImage: string | undefined
+        if (product.imageUrl) {
+          try {
+            importedImage = await uploadImageFromUrl(product.imageUrl, 'shopifree/products')
+          } catch (err) {
+            imageErrors.push(product.name)
+            console.warn(`[import] No pude traer la foto de "${product.name}":`, err)
+          }
         }
 
         // Build product data, only including defined values
@@ -730,7 +759,8 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
           tags: product.tags ? product.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
           active: product.active ?? true,
           featured: product.featured ?? false,
-          images: [],
+          images: importedImage ? [importedImage] : [],
+          ...(importedImage ? { image: importedImage } : {}),
         }
 
         // Add optional fields only if they have values
@@ -819,6 +849,16 @@ export default function ProductImport({ onClose, onSuccess, categories }: Produc
     const newCategoriesMsg = categoriesToCreate.length > 0
       ? ` (${categoriesToCreate.length} categoria${categoriesToCreate.length !== 1 ? 's' : ''} creada${categoriesToCreate.length !== 1 ? 's' : ''})`
       : ''
+
+    // Las fotos que no se pudieron traer se avisan aparte: el producto quedo
+    // creado y solo hay que cargarle la imagen a mano, que no es lo mismo que
+    // un producto que no entro.
+    if (imageErrors.length > 0) {
+      showToast(
+        `${imageErrors.length} foto${imageErrors.length !== 1 ? 's' : ''} no se pudo descargar. Los productos se crearon sin imagen.`,
+        'info'
+      )
+    }
 
     if (successCount === products.length) {
       showToast(`${successCount} productos importados${newCategoriesMsg}`, 'success')
