@@ -704,7 +704,9 @@ export default function ProductForm() {
   }
 
   return (
-    <div className="text-[#1e3a5f]">
+    // Tope de ancho: sin esto, en un monitor grande el formulario se estira a
+    // lo ancho de la pantalla y los campos quedan como renglones larguísimos.
+    <div className="text-[#1e3a5f] max-w-[1180px]">
       {/* Header */}
       <div className="mb-5 text-[#1e3a5f]">
         <h1 className="text-lg sm:text-xl font-semibold tracking-tight">
@@ -736,10 +738,20 @@ export default function ProductForm() {
             internos (inputs, selects, textareas, botones). className="contents"
             elimina el layout del fieldset para no romper el grid. */}
         <fieldset disabled={isApiManaged} className="contents">
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        {/* Dos columnas ASIMETRICAS.
+            Con grid-cols-2 las dos mitades median lo mismo, pero el contenido
+            no: a la izquierda van seis secciones pesadas (fotos, video, datos,
+            precios, catalogo, campos del rubro) y a la derecha tres livianas
+            (visibilidad, inventario, envio). La derecha se quedaba sin
+            contenido a media pagina y dejaba media pantalla vacia, mientras la
+            izquierda se estiraba hacia abajo.
+            Ahora la izquierda toma ~64% y la derecha ~36%, que es lo que
+            necesitan unos interruptores y dos campos numericos.
+            `items-start` evita que las tarjetas se estiren para igualar la
+            altura de la otra columna. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] gap-4 sm:gap-5 items-start">
           {/* Left Column - Basic Info */}
-          <div className="space-y-4 sm:space-y-5">
+          <div className="space-y-4 sm:space-y-5 min-w-0">
             {/* Image upload - Multiple images */}
             <div className={CARD}>
               <div className="flex items-center justify-between mb-3">
@@ -1299,8 +1311,12 @@ export default function ProductForm() {
 
           </div>
 
-          {/* Right Column - Visibility + Business Type Sections + Advanced Options */}
-          <div className="space-y-4 sm:space-y-5">
+          {/* Right Column - Visibility + Business Type Sections + Advanced Options.
+              Se queda pegada arriba al desplazar: la columna izquierda es larga
+              y antes había que subir hasta el principio para tocar un
+              interruptor. `max-h` + scroll propio evita que, si el rubro suma
+              secciones, el final quede inalcanzable debajo del borde. */}
+          <div className="space-y-4 sm:space-y-5 min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1">
             {/* Visibility */}
             <div className={CARD}>
               <h2 className={`${SECTION_TITLE} mb-4`}>{t('productForm.visibility.title')}</h2>
