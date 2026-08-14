@@ -1247,16 +1247,16 @@ export const themes: Theme[] = [
   {
     id: 'fiesta',
     name: 'Fiesta',
-    description: 'Morado y dorado con contornos blancos gruesos y tipografia redonda, con aire de sticker. Para pizzerias, heladerias y comida para compartir.',
+    description: 'Pizzeria nocturna: todo morado con porciones flotando, queso goteando del header y una mascota panda. Dorado para lo importante.',
     thumbnail: '/themes/fiesta.webp',
     category: 'restaurant',
     isPremium: false,
     isNew: true,
     createdAt: new Date('2026-08-14'),
     colors: {
-      primary: '#6D21CE',
-      background: '#FFF7E6',
-      accent: '#FFC42E'
+      primary: '#FFC42E',
+      background: '#2A0A55',
+      accent: '#A06BFF'
     }
   }
 ]

@@ -52,12 +52,16 @@ export default function ThemeShot() {
   const { themeId } = useParams<{ themeId: string }>()
   const [params] = useSearchParams()
   const lang = params.get('lang') || 'es'
+  // ?nohero=1: renderiza el tema sin foto de portada, para verificar la rama
+  // alternativa del hero (varios temas dibujan una escena propia ahi). No lo
+  // usa el generador de miniaturas, asi que no altera ningun artefacto.
+  const noHero = params.get('nohero') === '1'
 
   const demoStore = {
     id: 'demo', name: 'AURELIA', subdomain: 'aurelia',
     about: { slogan: 'Diseño que enamora a primera vista' },
-    heroImage: img('hero'),
-    heroImageMobile: img('hero-mobile'),
+    heroImage: noHero ? undefined : img('hero'),
+    heroImageMobile: noHero ? undefined : img('hero-mobile'),
     currency: 'PEN', language: lang, whatsapp: '51999999999',
     plan: 'business', themeId, themeSettings: { hideFilters: false },
     shipping: { enabled: true }, createdAt: new Date('2021-01-01'),
