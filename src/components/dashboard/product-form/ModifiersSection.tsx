@@ -1,7 +1,45 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { ModifierGroup, ModifierOption } from '../../../types'
 import { CARD, INPUT, INPUT_SM, LABEL, SECTION_HINT, SECTION_TITLE } from './tokens'
+
+/** Agarre de arrastre con puntos CSS — mismo patron que Products.tsx, sin SVG. */
+function GripDots({ tone = '#C3CFDB' }: { tone?: string }) {
+  return (
+    <span
+      className="block shrink-0"
+      style={{
+        width: 10,
+        height: 15,
+        backgroundImage: `radial-gradient(${tone} 1.1px, transparent 1.3px)`,
+        backgroundSize: '5px 5px',
+      }}
+    />
+  )
+}
+
+/**
+ * Envoltorio sortable generico: expone el ref de nodo y los listeners para
+ * que el AGARRE sea solo el grip, no la fila entera — asi los inputs de
+ * adentro se pueden seguir seleccionando y editando sin iniciar un arrastre.
+ */
+function Sortable({ id, children }: {
+  id: string
+  children: (p: {
+    handleProps: Record<string, unknown>
+    isDragging: boolean
+  }) => React.ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return (
+    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 }}>
+      {children({ handleProps: { ...attributes, ...listeners }, isDragging })}
+    </div>
+  )
+}
 
 interface ModifiersSectionProps {
   modifierGroups: ModifierGroup[]
@@ -15,6 +53,35 @@ function generateId(): string {
 export default function ModifiersSection({ modifierGroups, onChange }: ModifiersSectionProps) {
   const { t } = useTranslation('dashboard')
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
+
+  // Mismos umbrales que el reordenamiento de productos: 5px de distancia con
+  // puntero (un clic normal no arrastra) y 200ms de presion en tactil.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+
+  // El orden ES el orden del array: el selector de la tienda pinta grupos y
+  // opciones tal cual llegan, asi que reordenar aca ya se refleja al guardar.
+  const handleGroupDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const from = modifierGroups.findIndex(g => g.id === active.id)
+    const to = modifierGroups.findIndex(g => g.id === over.id)
+    if (from === -1 || to === -1) return
+    onChange(arrayMove(modifierGroups, from, to))
+  }
+
+  const handleOptionDragEnd = (groupId: string) => (e: DragEndEvent) => {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const group = modifierGroups.find(g => g.id === groupId)
+    if (!group) return
+    const from = group.options.findIndex(o => o.id === active.id)
+    const to = group.options.findIndex(o => o.id === over.id)
+    if (from === -1 || to === -1) return
+    updateGroup(groupId, { options: arrayMove(group.options, from, to) })
+  }
 
   const addGroup = () => {
     const newGroup: ModifierGroup = {
@@ -105,11 +172,14 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
           </p>
         </div>
       ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleGroupDragEnd}>
+        <SortableContext items={modifierGroups.map(g => g.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-4">
           {modifierGroups.map((group) => (
+            <Sortable key={group.id} id={group.id}>
+            {({ handleProps }) => (
             <div
-              key={group.id}
-              className="border border-[#E6EBF1] rounded-xl overflow-hidden"
+              className="border border-[#E6EBF1] rounded-xl overflow-hidden bg-white"
             >
               {/* Group Header */}
               <div
@@ -119,6 +189,17 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                 }
               >
                 <div className="flex items-center gap-3">
+                  {/* Agarre: solo esta zona inicia el arrastre del grupo.
+                      stopPropagation para que agarrar no abra/cierre el
+                      acordeon. */}
+                  <span
+                    {...handleProps}
+                    onClick={(e) => e.stopPropagation()}
+                    className="cursor-grab active:cursor-grabbing touch-none py-1 -my-1"
+                    aria-label={t('productForm.modifiers.dragGroup', 'Arrastrar para reordenar el grupo')}
+                  >
+                    <GripDots />
+                  </span>
                   <span
                     className="shrink-0"
                     style={{
@@ -268,12 +349,25 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                         {t('productForm.modifiers.noOptions', 'Agrega opciones a este grupo')}
                       </p>
                     ) : (
+                      /* Contexto de arrastre PROPIO por grupo: los listeners
+                         viven solo en los agarres, asi que no choca con el
+                         contexto de los grupos de afuera. */
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOptionDragEnd(group.id)}>
+                      <SortableContext items={group.options.map(o => o.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2">
                         {group.options.map((option) => (
+                          <Sortable key={option.id} id={option.id}>
+                          {({ handleProps: optHandle }) => (
                           <div
-                            key={option.id}
                             className="flex items-center gap-3 p-3 bg-[#F6F9FC] rounded-lg"
                           >
+                            <span
+                              {...optHandle}
+                              className="cursor-grab active:cursor-grabbing touch-none py-1 -my-1"
+                              aria-label={t('productForm.modifiers.dragOption', 'Arrastrar para reordenar la opcion')}
+                            >
+                              <GripDots />
+                            </span>
                             <input
                               type="text"
                               value={option.name}
@@ -320,15 +414,23 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                               &times;
                             </button>
                           </div>
+                          )}
+                          </Sortable>
                         ))}
                       </div>
+                      </SortableContext>
+                      </DndContext>
                     )}
                   </div>
                 </div>
               )}
             </div>
+            )}
+            </Sortable>
           ))}
         </div>
+        </SortableContext>
+        </DndContext>
       )}
     </div>
   )
