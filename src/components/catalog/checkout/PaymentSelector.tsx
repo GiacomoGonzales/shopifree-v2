@@ -1,4 +1,4 @@
-import { useState, useImperativeHandle, forwardRef } from 'react'
+import { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
 import { useTheme } from '../ThemeContext'
 import { getEffectivePlan } from '../../../lib/stripe'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
@@ -52,6 +52,20 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
 
   const firstAvailable: PaymentMethod = hasWhatsApp ? 'whatsapp' : hasMercadoPago ? 'mercadopago' : hasStripe ? 'stripe' : hasPayPal ? 'paypal' : hasGoCuotas ? 'gocuotas' : 'whatsapp'
   const [selected, setSelected] = useState<PaymentMethod>(firstAvailable)
+
+  // Avisar la seleccion INICIAL al padre.
+  //
+  // Que metodos hay disponibles se decide aca, asi que el padre no puede
+  // adivinar cual quedo preseleccionado: arrancaba asumiendo 'whatsapp'. En una
+  // tienda que apago WhatsApp y dejo solo MercadoPago, el radio mostraba
+  // MercadoPago pero el padre seguia creyendo 'whatsapp', y el boton decia
+  // "Enviar pedido" en vez de "Ir al pago". onSelectionChange solo se disparaba
+  // al hacer clic, y el cliente no hace clic en la opcion que ya viene marcada.
+  useEffect(() => {
+    onSelectionChange?.(firstAvailable)
+    // Solo al montar: despues manda el clic del usuario.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useImperativeHandle(ref, () => ({
     submit: () => {
