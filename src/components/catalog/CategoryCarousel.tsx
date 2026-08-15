@@ -87,6 +87,10 @@ export default function CategoryCarousel({
   const { theme, language } = useTheme()
   const t = getThemeTranslations(language)
   const navRef = useRef<HTMLElement>(null)
+  /** Marcador no-sticky para conocer la posicion real de la barra. */
+  const anchorRef = useRef<HTMLDivElement>(null)
+  /** Destino pendiente: se decide en el clic y se aplica tras el re-render. */
+  const pendingScrollRef = useRef<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [headerHeight, setHeaderHeight] = useState<number | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -149,14 +153,43 @@ export default function CategoryCarousel({
   // footer de la categoria nueva en vez de los primeros productos.
   // Solo scrollea si esta debajo del area — si esta arriba (viendo el
   // hero) lo dejamos donde esta.
+  //
+  // La posicion se toma del MARCADOR, no del <nav>: el nav es sticky y una vez
+  // pegado reporta su posicion desplazada, de modo que el destino crecia junto
+  // con el scroll y la condicion de abajo casi nunca se cumplia. Ese era el
+  // motivo de que uno se quedara en el footer al cambiar de categoria.
   const handleCategoryChange = (categoryId: string | null) => {
-    onCategoryChange(categoryId)
-    if (!navRef.current) return
-    const targetY = Math.max(0, navRef.current.offsetTop - (headerHeight ?? 0))
-    if (window.scrollY > targetY + 4) {
-      window.scrollTo({ top: targetY, behavior: 'smooth' })
+    const anchor = anchorRef.current
+    if (anchor) {
+      const targetY = Math.max(0, anchor.getBoundingClientRect().top + window.scrollY - (headerHeight ?? 0))
+      // La decision se toma ANTES de cambiar de categoria, con la posicion en
+      // la que esta el usuario ahora. El scroll en si se ejecuta en el efecto
+      // de abajo.
+      if (window.scrollY > targetY + 4) pendingScrollRef.current = targetY
     }
+    onCategoryChange(categoryId)
   }
+
+  // El scroll se hace DESPUES de que React pinta la categoria nueva.
+  //
+  // Hacerlo dentro del onClick no alcanzaba: al filtrar, la pagina se acorta
+  // (de 11.000 a 2.600 px en una carta grande) y el navegador recorta el
+  // scroll al nuevo maximo. Ese recorte llegaba encima del desplazamiento
+  // suave y lo dejaba justo al final de la pagina — el footer que se veia.
+  // Corriendo aca, la altura definitiva ya esta aplicada y el destino se
+  // respeta.
+  useEffect(() => {
+    const targetY = pendingScrollRef.current
+    if (targetY === null) return
+    pendingScrollRef.current = null
+    // Salto instantaneo, no 'smooth'. Dos motivos:
+    //  - Confiabilidad: el desplazamiento suave se puede ignorar o cancelar,
+    //    y cuando eso pasa falla en silencio. Aca se cancelaba al acortarse
+    //    la pagina al filtrar, que es el bug que se venia arrastrando.
+    //  - Sensacion: animar 9.000 px de recorrido tarda y marea; tocar una
+    //    categoria deberia dejarte arriba ya.
+    window.scrollTo({ top: targetY, behavior: 'auto' })
+  }, [activeCategory])
 
   const hasSearch = products && onSelectProduct
   if (categories.length === 0 && !hasSearch) return null
@@ -168,6 +201,12 @@ export default function CategoryCarousel({
 
   return (
     <>
+      {/* Marcador de posicion real de la barra.
+          El <nav> es sticky, y de un elemento pegado el navegador reporta su
+          posicion DESPLAZADA, no la original: al medirlo scrolleado abajo daba
+          un valor que crecia con el scroll. Este div mide 0px y no es sticky,
+          asi que conserva la posicion de siempre y sirve de referencia. */}
+      <div ref={anchorRef} aria-hidden="true" />
       <nav
         ref={navRef}
         className={headerHeight === null ? `sticky ${stickyTop} z-40` : 'sticky z-40'}
