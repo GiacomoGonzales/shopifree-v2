@@ -150,20 +150,16 @@ export default function Orders() {
     fetchOrders()
   }, [store, showToast, t])
 
-  // Orders with online payment (MercadoPago/Stripe) that were never paid are abandoned carts
-  // Abandoned cart = online payment with no payment attempt AND order still pending
-  // Note: failed payments are NOT abandoned carts - they're real attempts that failed
-  const isAbandonedCart = (order: Order) =>
-    (order.paymentMethod === 'mercadopago' || order.paymentMethod === 'stripe') &&
-    order.paymentStatus !== 'paid' &&
-    order.paymentStatus !== 'failed' &&
-    order.status === 'pending'
-
-  // Real orders = exclude abandoned carts AND (by default) test orders.
-  // Toggling hideTestOrders=false in the filter panel brings test orders
-  // back into view so they can be cleaned up or audited.
+  // Los pedidos online sin pagar (MercadoPago/Stripe) YA NO se esconden.
+  // Antes se filtraban como "carrito abandonado", pero eso producia un
+  // fantasma: la campana y el contador de pedidos nuevos los contaban (y la
+  // notificacion push llegaba), mientras la lista no los mostraba — el
+  // comerciante escuchaba un pedido que no podia encontrar. Y son accionables:
+  // con el badge ambar "Pago pendiente" puede contactar al cliente que no
+  // completo el cobro. Del dinero no ensucian nada: la caja solo suma
+  // paymentStatus === 'paid'.
   const realOrders = useMemo(
-    () => orders.filter(o => !isAbandonedCart(o) && (!hideTestOrders || !o.isTest)),
+    () => orders.filter(o => !hideTestOrders || !o.isTest),
     [orders, hideTestOrders]
   )
 

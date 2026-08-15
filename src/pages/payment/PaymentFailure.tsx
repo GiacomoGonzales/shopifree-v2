@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { apiUrl } from '../../utils/apiBase'
 import { useCustomHeadHtml, useCustomBodyHtml } from '../../hooks/useCustomHeadHtml'
 
 interface PendingOrder {
@@ -39,23 +38,22 @@ export default function PaymentFailure() {
   useCustomHeadHtml(pendingOrder?.customHeadHtml)
   useCustomBodyHtml(pendingOrder?.customBodyHtml)
 
-  // Mark the order as payment failed (fallback in case webhook doesn't arrive)
+  // Marca el pago como fallido VIA API. El updateDoc directo que había acá
+  // fallaba siempre en silencio: el comprador es anónimo y las reglas de
+  // Firestore solo dejan actualizar pedidos al dueño. Y al cancelar en la
+  // pasarela sin pagar, MercadoPago no suele mandar webhook, así que el pedido
+  // quedaba 'pending' eternamente (e invisible en el panel de la época).
   useEffect(() => {
     if (!pendingOrder || markedRef.current) return
     markedRef.current = true
 
-    const markFailed = async () => {
-      try {
-        const orderRef = doc(db, 'stores', pendingOrder.storeId, 'orders', pendingOrder.orderId)
-        await updateDoc(orderRef, {
-          paymentStatus: 'failed',
-          updatedAt: new Date()
-        })
-      } catch (error) {
-        console.error('Error marking order as failed:', error)
-      }
-    }
-    markFailed()
+    fetch(apiUrl('/api/mark-payment-failed'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeId: pendingOrder.storeId, orderId: pendingOrder.orderId }),
+    }).catch((error) => {
+      console.error('Error marking order as failed:', error)
+    })
   }, [pendingOrder])
 
   const t = getThemeTranslations(pendingOrder?.language)
