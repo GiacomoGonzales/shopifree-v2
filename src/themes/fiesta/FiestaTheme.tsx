@@ -346,7 +346,17 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
               </div>
             </div>
           </div>
-          <CheeseDrip />
+          {/* El goteo cuelga FUERA del flujo (top-full), por dos motivos:
+              1) CategoryCarousel mide la altura del header para calcular su
+                 sticky. Con el goteo adentro, la barra arrancaba donde este
+                 terminaba y quedaba un borde/hueco entre ambos.
+              2) Colgado en absoluto, el header mide 22px menos, la barra se
+                 pega 22px mas arriba y el queso queda DERRAMADO ENCIMA de la
+                 barra de categorias (header z-50 > barra z-40).
+              pointer-events-none: es decoracion, que no tape clicks. */}
+          <div className="absolute inset-x-0 top-full pointer-events-none">
+            <CheeseDrip />
+          </div>
         </header>
 
         {/* Hero */}
