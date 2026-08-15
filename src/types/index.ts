@@ -129,6 +129,10 @@ export interface Store {
   planExpiresAt?: Date
   trialEndsAt?: Date              // Free Pro trial (no card required)
   onboardingDismissed?: boolean   // User dismissed onboarding checklist
+  // Paso "comparte tu tienda" del checklist, ya cumplido. Vive en la tienda y
+  // no en localStorage para que no reaparezca al entrar desde otro navegador,
+  // otro dispositivo o la app.
+  linkShared?: boolean
   emailsSent?: string[]           // Track which email sequences have been sent ('welcome', 'trial-reminder', 'trial-expired')
   subscription?: StoreSubscription
 

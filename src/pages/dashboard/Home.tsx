@@ -369,7 +369,9 @@ export default function DashboardHome() {
   useEffect(() => {
     if (!store) return
     setOnboardingDismissed(!!store.onboardingDismissed)
-    setLinkShared(localStorage.getItem(`linkShared_${store.id}`) === 'true')
+    // Se acepta la marca vieja de localStorage para no hacer repetir el paso a
+    // quien ya lo habia hecho en este navegador antes del cambio.
+    setLinkShared(!!store.linkShared || localStorage.getItem(`linkShared_${store.id}`) === 'true')
   }, [store])
 
   /* Catálogo, categorías y últimos pedidos: no dependen del periodo. */
@@ -482,10 +484,27 @@ export default function DashboardHome() {
     await updateDoc(doc(db, 'stores', store.id), { onboardingDismissed: true, updatedAt: new Date() })
   }, [store])
 
-  const markLinkShared = useCallback(() => {
+  /**
+   * Marca el paso "comparte tu tienda" como hecho, para siempre.
+   *
+   * Se guarda en la tienda, no en localStorage. Antes iba en localStorage y por
+   * eso el paso reaparecia una y otra vez: ese almacenamiento es por navegador
+   * y por dispositivo, asi que copiar el link en la computadora no contaba al
+   * abrir el panel desde el celular, desde la app o desde otro navegador. El
+   * "Ocultar" del checklist ya se guardaba en la tienda; esto usa el mismo
+   * camino.
+   *
+   * El estado local se marca primero para que la lista responda al instante,
+   * sin esperar a Firestore.
+   */
+  const markLinkShared = useCallback(async () => {
     if (!store) return
     setLinkShared(true)
-    localStorage.setItem(`linkShared_${store.id}`, 'true')
+    try {
+      await updateDoc(doc(db, 'stores', store.id), { linkShared: true, updatedAt: new Date() })
+    } catch {
+      // Si la escritura falla, al menos queda marcado en esta sesion.
+    }
   }, [store])
 
   /* Prueba gratuita: un solo aviso, activo o vencido. */
