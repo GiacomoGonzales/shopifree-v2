@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../ThemeContext'
+import { formatPrice } from '../../../lib/currency'
 import type { ModifierGroup } from '../../../types'
 
 export interface SelectedModifier {
@@ -19,7 +20,7 @@ interface ModifierSelectorProps {
 }
 
 export default function ModifierSelector({ modifierGroups, onChange, language = 'es' }: ModifierSelectorProps) {
-  const { theme } = useTheme()
+  const { theme, store } = useTheme()
   const [selections, setSelections] = useState<Record<string, string[]>>({})
 
   // Initialize selections with empty arrays for each group
@@ -218,7 +219,10 @@ export default function ModifierSelector({ modifierGroups, onChange, language = 
                         className="text-sm"
                         style={{ color: theme.colors.textMuted }}
                       >
-                        +${option.price.toFixed(2)}
+                        {/* formatPrice con la moneda de la tienda: antes el
+                            "$" iba literal y una tienda en soles mostraba el
+                            producto en S/ y los adicionales en dolares. */}
+                        +{formatPrice(option.price, store.currency)}
                       </span>
                     )}
                   </button>
