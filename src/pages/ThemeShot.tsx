@@ -63,7 +63,10 @@ export default function ThemeShot() {
     heroImage: noHero ? undefined : img('hero'),
     heroImageMobile: noHero ? undefined : img('hero-mobile'),
     currency: 'PEN', language: lang, whatsapp: '51999999999',
-    plan: 'business', themeId, themeSettings: { hideFilters: false },
+    // ?layout=sections|masonry|...: fuerza un productLayout para verificar
+    // layouts en cualquier tema. Igual que ?nohero: opt-in, el generador de
+    // miniaturas no lo usa y el render por defecto queda identico.
+    plan: 'business', themeId, themeSettings: { hideFilters: false, ...(params.get('layout') ? { productLayout: params.get('layout') as 'grid' } : {}) },
     shipping: { enabled: true }, createdAt: new Date('2021-01-01'),
   } as unknown as Store
 

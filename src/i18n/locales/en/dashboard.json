@@ -704,7 +704,9 @@
       "list": "List",
       "listDesc": "Horizontal cards",
       "upgradeMessage": "Upgrade your plan for more layouts.",
-      "viewPlans": "View plans"
+      "viewPlans": "View plans",
+      "sections": "Category sections",
+      "sectionsDesc": "Each category with its title and products, menu style"
     },
     "pagination": {
       "title": "Product pagination",

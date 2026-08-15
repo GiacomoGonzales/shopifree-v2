@@ -75,6 +75,67 @@ export default function ProductGrid({
   const scrollReveal = theme.effects.scrollReveal ?? false
   const layout = theme.effects.productLayout ?? 'grid'
 
+  const gridClass = `grid grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-4 md:gap-8`
+
+  // Layout "secciones por categoria": la portada muestra cada categoria como
+  // una seccion con su titulo y su propia grilla, estilo carta de restaurante.
+  //
+  // - Agrupa sobre la lista COMPLETA (sin paginacion): partir una carta por
+  //   la mitad de una categoria confunde mas de lo que ahorra. Por eso esta
+  //   rama retorna directo, sin los controles de paginado.
+  // - Si los productos visibles caen en una sola categoria (tipicamente
+  //   porque hay un filtro de categoria activo en el carrusel), un titulo
+  //   unico seria redundante: cae a la grilla normal de abajo.
+  // - Se respeta el orden de `categories` (el del panel) y, dentro de cada
+  //   seccion, el orden de los productos.
+  if (layout === 'sections' && categories && categories.length > 0) {
+    const porCategoria = categories
+      .map(cat => ({ cat, items: products.filter(p => p.categoryId === cat.id) }))
+      .filter(g => g.items.length > 0)
+    const sinCategoria = products.filter(p => !p.categoryId || !categories.some(c => c.id === p.categoryId))
+
+    const grupos = porCategoria.length + (sinCategoria.length > 0 ? 1 : 0)
+    if (grupos > 1) {
+      const renderCards = (items: Product[]) => (
+        <div className={gridClass}>
+          {items.map((product, index) => (
+            <ScrollRevealItem key={product.id} enabled={scrollReveal} index={index}>
+              <ProductCard product={product} onSelect={onSelectProduct} onQuickAdd={onQuickAdd} />
+            </ScrollRevealItem>
+          ))}
+        </div>
+      )
+      return (
+        <div className="space-y-10 md:space-y-14">
+          {porCategoria.map(({ cat, items }) => (
+            <section key={cat.id}>
+              <div className="flex items-baseline gap-2.5 mb-4 md:mb-5">
+                <h2
+                  className="text-xl md:text-2xl"
+                  style={{ fontFamily: theme.fonts.heading, fontWeight: 700, color: theme.colors.text }}
+                >
+                  {cat.name}
+                </h2>
+                <span className="text-sm" style={{ color: theme.colors.textMuted }}>
+                  {items.length}
+                </span>
+              </div>
+              {renderCards(items)}
+            </section>
+          ))}
+          {sinCategoria.length > 0 && (
+            <section>
+              {/* Sin nombre de categoria que mostrar: un separador fino evita
+                  inventar un titulo tipo "Otros" que el comerciante no puso. */}
+              <div className="mb-4 md:mb-5 border-t" style={{ borderColor: theme.colors.border }} />
+              {renderCards(sinCategoria)}
+            </section>
+          )}
+        </div>
+      )
+    }
+  }
+
   // Render the product layout
   let layoutContent: React.ReactNode
 
@@ -87,7 +148,6 @@ export default function ProductGrid({
   } else if (layout === 'list') {
     layoutContent = <ListLayout products={displayedItems} onSelectProduct={onSelectProduct} onQuickAdd={onQuickAdd} scrollReveal={scrollReveal} />
   } else {
-    const gridClass = `grid grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} gap-4 md:gap-8`
     layoutContent = (
       <div className={gridClass}>
         {displayedItems.map((product, index) => (

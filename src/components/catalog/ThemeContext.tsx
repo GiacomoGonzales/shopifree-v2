@@ -51,7 +51,7 @@ export interface ThemeConfig {
     darkMode: boolean         // Is this a dark theme
     scrollReveal?: boolean    // Animate products on scroll into viewport
     imageSwapOnHover?: boolean // Show second image on card hover
-    productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
+    productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list' | 'sections'
     paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
     productViewMode?: 'drawer' | 'reels'
     // Premium effects

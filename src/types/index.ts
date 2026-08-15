@@ -93,7 +93,7 @@ export interface Store {
     fontFamily?: string
     scrollReveal?: boolean
     imageSwapOnHover?: boolean
-    productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list'
+    productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list' | 'sections'
     paginationType?: 'none' | 'load-more' | 'infinite-scroll' | 'classic'
     productViewMode?: 'drawer' | 'reels'
     hideFilters?: boolean         // Ocultar la barra de filtros del catalogo publico

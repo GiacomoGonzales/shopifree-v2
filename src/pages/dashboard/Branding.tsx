@@ -904,6 +904,17 @@ export default function Branding() {
                       <line x1="13" y1="16" x2="18" y2="16" strokeLinecap="round" />
                     </svg>
                   )},
+                  { id: 'sections' as const, icon: (
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <line x1="3" y1="4" x2="12" y2="4" strokeLinecap="round" />
+                      <rect x="3" y="7" width="5" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="10" y="7" width="5" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="17" y="7" width="4" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="3" y1="15" x2="12" y2="15" strokeLinecap="round" />
+                      <rect x="3" y="18" width="5" height="3" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="10" y="18" width="5" height="3" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )},
                 ] as const).map((layout) => {
                   const isSelected = (store.themeSettings?.productLayout || 'grid') === layout.id
                   const isPremium = layout.id !== 'grid'

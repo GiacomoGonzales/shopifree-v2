@@ -705,7 +705,9 @@
       "list": "Lista",
       "listDesc": "Tarjetas horizontales",
       "upgradeMessage": "Mejora tu plan para acceder a más diseños.",
-      "viewPlans": "Ver planes"
+      "viewPlans": "Ver planes",
+      "sections": "Secciones por categoria",
+      "sectionsDesc": "Cada categoria con su titulo y sus productos, estilo carta de restaurante"
     },
     "pagination": {
       "title": "Paginación de productos",
