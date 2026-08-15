@@ -66,7 +66,7 @@ export default function CustomOrderInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={t.placeholder}
         rows={3}
-        className="w-full px-4 py-3 text-sm resize-none transition-all focus:outline-none"
+        className="w-full px-4 py-3 text-base sm:text-sm resize-none transition-all focus:outline-none"
         style={{
           backgroundColor: theme.effects.darkMode
             ? 'rgba(255,255,255,0.05)'

@@ -225,7 +225,7 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, disc
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder={t.couponCode}
-                      className="flex-1 px-3 py-2 text-sm border outline-none"
+                      className="flex-1 px-3 py-2 text-base sm:text-sm border outline-none"
                       style={{
                         borderColor: couponError ? '#ef4444' : theme.colors.border,
                         borderRadius: theme.radius.sm,

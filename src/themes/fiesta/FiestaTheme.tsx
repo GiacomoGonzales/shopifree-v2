@@ -442,12 +442,16 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
         <TrustBar />
         <FlashSaleBar />
 
+        {/* Subrayado en vez de pastilla: la pastilla dorada rellena gritaba
+            demasiado contra el morado. La activa lleva texto claro y una
+            barrita dorada debajo. */}
         <CategoryCarousel
           categories={categories}
           activeCategory={activeFilters.categoryId}
           onCategoryChange={(id) => setFilter('categoryId', id)}
           products={products}
           onSelectProduct={handleSelectProduct}
+          variant="underline"
         />
 
         <main className="py-8 md:py-10 relative">

@@ -34,7 +34,7 @@ import SearchModal from './SearchModal'
  * default which is the closest thing to the legacy look.
  */
 
-type Variant = 'pill' | 'circle' | 'square' | 'tile'
+type Variant = 'pill' | 'circle' | 'square' | 'tile' | 'underline'
 
 interface CategoryCarouselProps {
   categories: Category[]
@@ -164,7 +164,7 @@ export default function CategoryCarousel({
   const isIconVariant = variant === 'circle' || variant === 'square'
   // Tighter vertical rhythm for pill (text-only feel), more breathing room
   // for variants where each item has an image + label stack.
-  const verticalPadding = variant === 'pill' ? 'py-3' : variant === 'tile' ? 'py-3' : 'py-4'
+  const verticalPadding = variant === 'pill' || variant === 'underline' ? 'py-3' : variant === 'tile' ? 'py-3' : 'py-4'
 
   return (
     <>
@@ -312,6 +312,35 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
   // Optimized image URL only generated when we'll actually render it.
   const optimized = image ? optimizeImage(image, 'category') : ''
   const srcSet = image ? getImageSrcSet(image, 'category') : ''
+
+  // Subrayado sutil en lugar de pastilla rellena: para temas donde el relleno
+  // con el color primario grita demasiado. La categoria activa solo aclara el
+  // texto y muestra una barrita del color primario debajo.
+  if (variant === 'underline') {
+    return (
+      <button
+        onClick={onClick}
+        className="flex-shrink-0 flex items-center gap-2 px-3 py-2 text-sm transition-all duration-200"
+        style={{
+          color: isActive ? theme.colors.text : theme.colors.textMuted,
+          fontWeight: isActive ? 600 : 400,
+          borderBottom: `2.5px solid ${isActive ? theme.colors.primary : 'transparent'}`,
+          marginBottom: '-2.5px',
+        }}
+      >
+        {image && !isAll && (
+          <img
+            src={optimized}
+            srcSet={srcSet}
+            alt=""
+            className="w-6 h-6 rounded-full object-cover -ml-1"
+            loading="lazy"
+          />
+        )}
+        <span>{name}</span>
+      </button>
+    )
+  }
 
   if (variant === 'pill') {
     return (
