@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db, analyticsService } from '../../lib/firebase'
 import { getThemeComponent } from '../../themes/components'
@@ -9,6 +9,10 @@ import type { Store, Product, Category } from '../../types'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { Capacitor } from '@capacitor/core'
 import { getPlanLimits, getEffectivePlan } from '../../lib/stripe'
+
+/** Layouts de catalogo validos para la vista previa por URL (?layout=). */
+const LAYOUTS_VALIDOS = ['grid', 'masonry', 'magazine', 'carousel', 'list', 'sections'] as const
+type LayoutId = (typeof LAYOUTS_VALIDOS)[number]
 
 interface CatalogProps {
   subdomainStore?: string
@@ -115,6 +119,7 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
   const slug = subdomainStore || storeSlug
   const cacheKey = customDomain || slug || ''
   const cached = useRef(getCachedStore(cacheKey)).current
+  const [searchParams] = useSearchParams()
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -326,6 +331,25 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
     })
   }, [loading, store, splashGone])
 
+  // Vista previa de layout: ?layout=sections prueba un diseño de catalogo sin
+  // guardarlo. Sirve para decidir antes de cambiarlo en Apariencia, que si
+  // escribe en Firestore y afecta a la tienda publica al instante.
+  //
+  // El valor se valida contra la lista conocida: viene de la URL y termina en
+  // la config del tema, asi que no se pasa crudo.
+  //
+  // Va ARRIBA de los returns tempranos: un hook despues de un return
+  // condicional se saltea en el render de carga y rompe el orden de hooks.
+  const previewStore = useMemo(() => {
+    if (!store) return null
+    const pedido = searchParams.get('layout')
+    if (!pedido || !LAYOUTS_VALIDOS.includes(pedido as LayoutId)) return store
+    return {
+      ...store,
+      themeSettings: { ...store.themeSettings, productLayout: pedido as LayoutId },
+    }
+  }, [store, searchParams])
+
   // Store not found
   if (!store && !loading) {
     return (
@@ -359,6 +383,7 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
   // rendered alongside so it can fade out smoothly once the theme paints.
   const ThemeComponent = store ? getThemeComponent(store.themeId || 'minimal') : null
 
+
   // Find initial product from URL slug (for /p/:productSlug routes)
   const initialProduct = productSlug
     ? products.find(p => p.slug === productSlug) || null
@@ -366,11 +391,13 @@ export default function Catalog({ subdomainStore, customDomain, productSlug: pro
 
   return (
     <>
-      {store && ThemeComponent && (
+      {previewStore && ThemeComponent && (
         <>
-          <StoreSEO store={store} products={products} categories={categories} product={initialProduct} />
+          {/* El SEO usa la tienda REAL: la vista previa no debe influir en lo
+              que se indexa ni en los datos estructurados. */}
+          <StoreSEO store={store!} products={products} categories={categories} product={initialProduct} />
           <ThemeComponent
-            store={store}
+            store={previewStore}
             products={products}
             categories={categories}
             onWhatsAppClick={handleWhatsAppClick}
