@@ -108,23 +108,25 @@ const outlined = (extra: React.CSSProperties = {}): React.CSSProperties => ({
 // SVGs PROPIOS DEL TEMA
 // =====================================================
 
-/** Porcion de pizza: masa dorada, queso claro, pepperoni rojo como el logo. */
+/**
+ * Silueta de porcion de pizza, monocroma. Una sola forma en `currentColor`
+ * con los pepperoni CALADOS (fillRule evenodd): el color lo decide quien la
+ * usa, y a baja opacidad funciona como marca de agua sobre el morado.
+ */
 function PizzaSlice({ size = 44, rotate = 0, className = '', style = {} }: {
   size?: number; rotate?: number; className?: string; style?: React.CSSProperties
 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" className={className}
+         fill="currentColor"
          style={{ transform: `rotate(${rotate}deg)`, ...style }} aria-hidden="true">
-      {/* triangulo de queso */}
-      <path d="M32 58 L10 14 Q32 4 54 14 Z" fill="#FFDF8E" stroke="#fff" strokeWidth="3" strokeLinejoin="round" />
-      {/* borde de masa */}
-      <path d="M10 14 Q32 4 54 14 L51 21 Q32 12 13 21 Z" fill={DORADO} />
-      {/* pepperoni */}
-      <circle cx="32" cy="28" r="5.5" fill="#E8442E" />
-      <circle cx="24" cy="40" r="4.5" fill="#E8442E" />
-      <circle cx="40" cy="40" r="4.5" fill="#E8442E" />
-      {/* gota de queso que cae del vertice */}
-      <path d="M30 50 Q32 58 34 50 Q33 47 32 47 Q31 47 30 50Z" fill="#FFDF8E" />
+      <path
+        fillRule="evenodd"
+        d="M32 60 L8 16 Q32 4 56 16 Z
+           M32 22 a5.5 5.5 0 1 0 0.001 0 Z
+           M23 35 a4.5 4.5 0 1 0 0.001 0 Z
+           M39 35 a4.5 4.5 0 1 0 0.001 0 Z"
+      />
     </svg>
   )
 }
@@ -278,9 +280,10 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                style={{ background: `radial-gradient(circle, ${DORADO} 0%, transparent 60%)` }} />
           <div className="absolute bottom-[-140px] left-[-120px] w-96 h-96 rounded-full opacity-[0.14]"
                style={{ background: `radial-gradient(circle, ${MORADO_CLARO} 0%, transparent 65%)` }} />
+          {/* Siluetas blancas a muy baja opacidad: marca de agua, no caricatura. */}
           {slicesFlotantes.map((s, i) => (
-            <div key={i} className="absolute fiesta-bob opacity-[0.32]"
-                 style={{ top: s.top, left: s.left, ['--rot' as string]: `${s.rotate}deg`, ['--dur' as string]: `${s.dur}s`, ['--delay' as string]: `${s.delay}s` }}>
+            <div key={i} className="absolute fiesta-bob opacity-[0.10]"
+                 style={{ top: s.top, left: s.left, color: '#ffffff', ['--rot' as string]: `${s.rotate}deg`, ['--dur' as string]: `${s.dur}s`, ['--delay' as string]: `${s.delay}s` }}>
               <PizzaSlice size={s.size} />
             </div>
           ))}
@@ -374,8 +377,10 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                 <div className="relative fiesta-bob" style={{ ['--dur' as string]: '9s' }}>
                   <PandaFace size={200} />
                 </div>
-                {/* la porcion que esta mordiendo */}
-                <div className="absolute -left-6 bottom-2 rotate-[-24deg]">
+                {/* la porcion que esta mordiendo: silueta en tinta, como los
+                    parches del panda, con un halo blanco para despegarla */}
+                <div className="absolute -left-6 bottom-2 rotate-[-24deg]"
+                     style={{ color: TINTA, filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px #fff)' }}>
                   <PizzaSlice size={72} />
                 </div>
               </div>
@@ -417,7 +422,7 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                         style={{ fontFamily: fiestaTheme.fonts.heading, fontWeight: 700, color: TINTA }}>
                     {store.name}
                   </span>
-                  <PizzaSlice size={20} rotate={i % 2 ? 25 : -15} />
+                  <PizzaSlice size={20} rotate={i % 2 ? 25 : -15} style={{ color: TINTA }} />
                 </span>
               ))}
             </div>
