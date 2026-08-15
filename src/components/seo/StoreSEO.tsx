@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { transformR2 } from '../../utils/cloudinary'
 import Seo from './Seo'
 import { useCustomHeadHtml, useCustomBodyHtml } from '../../hooks/useCustomHeadHtml'
 import type { Store, Product, Category } from '../../types'
@@ -28,75 +29,44 @@ function getCatalogSuffix(lang?: string): string {
   }
 }
 
-// Update favicon dynamically by manipulating the DOM directly
-// This is more reliable than Helmet for favicons because it replaces existing links
+/**
+ * Pone el logo de la tienda como favicon y como apple-touch-icon.
+ *
+ * Antes esto dibujaba el logo en un canvas para redondearle las esquinas. Eso
+ * exige cargar la imagen con crossOrigin, y el bucket R2 no devuelve cabecera
+ * CORS: el logo vive en shopifreemedia.site y la tienda en otro dominio, asi
+ * que el intento fallaba SIEMPRE, en todas las tiendas. Habia un onerror que
+ * reponia el favicon sin redondear —por eso el favicon si se veia— pero que
+ * omitia el apple-touch-icon, presente solo en la rama de exito. Resultado:
+ * al agregar la tienda a la pantalla de inicio en iOS no salia el logo.
+ *
+ * Se saca el canvas. No cambia lo que se ve (el redondeado no llegaba a
+ * aplicarse nunca) y deja de ensuciar la consola de cada tienda con dos
+ * errores de CORS por carga. Para recuperar el redondeado hay que habilitar
+ * CORS en el bucket; mientras no exista, este codigo seria decorativo.
+ */
 function updateFavicon(logoUrl: string) {
-  // Load the image and create a rounded version using canvas
-  const img = new Image()
-  img.crossOrigin = 'anonymous'
+  // Se pide el logo ya reducido: el original pesa ~27 KB y a 64px son ~3 KB.
+  // format=auto entrega AVIF/WebP a los navegadores modernos, que conservan
+  // la transparencia del logo.
+  const iconUrl = transformR2(logoUrl, 'format=auto,width=64,quality=90') || logoUrl
+  const appleUrl = transformR2(logoUrl, 'format=auto,width=180,quality=90') || logoUrl
 
-  img.onload = () => {
-    // Create canvas for rounded favicon
-    const size = 64 // Favicon size
-    const canvas = document.createElement('canvas')
-    canvas.width = size
-    canvas.height = size
-    const ctx = canvas.getContext('2d')
-
-    if (ctx) {
-      // Draw rounded rectangle clip path
-      const radius = size * 0.2 // 20% corner radius
-      ctx.beginPath()
-      ctx.moveTo(radius, 0)
-      ctx.lineTo(size - radius, 0)
-      ctx.quadraticCurveTo(size, 0, size, radius)
-      ctx.lineTo(size, size - radius)
-      ctx.quadraticCurveTo(size, size, size - radius, size)
-      ctx.lineTo(radius, size)
-      ctx.quadraticCurveTo(0, size, 0, size - radius)
-      ctx.lineTo(0, radius)
-      ctx.quadraticCurveTo(0, 0, radius, 0)
-      ctx.closePath()
-      ctx.clip()
-
-      // Draw the image
-      ctx.drawImage(img, 0, 0, size, size)
-
-      // Convert to data URL
-      const roundedFaviconUrl = canvas.toDataURL('image/png')
-
-      // Remove all existing favicon links
-      const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
-      existingFavicons.forEach(el => el.remove())
-
-      // Create new favicon link with rounded image
-      const link = document.createElement('link')
-      link.rel = 'icon'
-      link.type = 'image/png'
-      link.href = roundedFaviconUrl
-      document.head.appendChild(link)
-
-      // Also add apple-touch-icon
-      const appleLink = document.createElement('link')
-      appleLink.rel = 'apple-touch-icon'
-      appleLink.href = roundedFaviconUrl
-      document.head.appendChild(appleLink)
-    }
-  }
-
-  img.onerror = () => {
-    // Fallback: use original URL if canvas fails
-    const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
-    existingFavicons.forEach(el => el.remove())
+  const setIcons = (faviconHref: string, appleHref: string) => {
+    document.querySelectorAll('link[rel*="icon"]').forEach(el => el.remove())
 
     const link = document.createElement('link')
     link.rel = 'icon'
-    link.type = 'image/png'
-    link.href = logoUrl
+    link.href = faviconHref
     document.head.appendChild(link)
+
+    const appleLink = document.createElement('link')
+    appleLink.rel = 'apple-touch-icon'
+    appleLink.href = appleHref
+    document.head.appendChild(appleLink)
   }
 
-  img.src = logoUrl
+  setIcons(iconUrl, appleUrl)
 }
 
 export default function StoreSEO({ store, products, categories, product }: StoreSEOProps) {

@@ -46,7 +46,17 @@ export function useLogoOrientation(logoUrl?: string) {
 
     let cancelled = false
     const img = new Image()
-    img.crossOrigin = 'anonymous'
+    // SIN crossOrigin a proposito. Se pedia para poder leer pixeles del canvas
+    // (la sonda de transparencia), pero el bucket R2 no manda cabecera CORS:
+    // con crossOrigin puesto la imagen no cargaba NUNCA, se disparaba onerror
+    // y el hook entero caia al fallback. Consecuencia real: todo logo
+    // horizontal se trataba como cuadrado y terminaba recortado en un circulo
+    // de 48x48 (ver useHeaderLogo).
+    //
+    // Sin crossOrigin la imagen carga bien y `isHorizontal` —que solo necesita
+    // las dimensiones— vuelve a funcionar. La sonda de alpha queda igual que
+    // hoy: el canvas sale "tainted", getImageData lanza y el catch devuelve
+    // opaco, que es exactamente el valor que se venia usando.
 
     img.onload = () => {
       if (cancelled) return
