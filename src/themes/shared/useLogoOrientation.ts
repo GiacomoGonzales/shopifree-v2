@@ -45,66 +45,90 @@ export function useLogoOrientation(logoUrl?: string) {
     }
 
     let cancelled = false
-    const img = new Image()
-    // SIN crossOrigin a proposito. Se pedia para poder leer pixeles del canvas
-    // (la sonda de transparencia), pero el bucket R2 no manda cabecera CORS:
-    // con crossOrigin puesto la imagen no cargaba NUNCA, se disparaba onerror
-    // y el hook entero caia al fallback. Consecuencia real: todo logo
-    // horizontal se trataba como cuadrado y terminaba recortado en un circulo
-    // de 48x48 (ver useHeaderLogo).
-    //
-    // Sin crossOrigin la imagen carga bien y `isHorizontal` —que solo necesita
-    // las dimensiones— vuelve a funcionar. La sonda de alpha queda igual que
-    // hoy: el canvas sale "tainted", getImageData lanza y el catch devuelve
-    // opaco, que es exactamente el valor que se venia usando.
 
-    img.onload = () => {
+    const finish = (result: ProbeResult) => {
       if (cancelled) return
+      cache.set(logoUrl, result)
+      setState(result)
+      setLoaded(true)
+    }
 
-      const isHorizontal = img.naturalWidth > img.naturalHeight * 1.4
+    /** Alpha de las cuatro esquinas. Lanza si el canvas quedo "tainted". */
+    const probeAlpha = (img: HTMLImageElement): boolean => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return false
+      ctx.drawImage(img, 0, 0)
+      const w = canvas.width
+      const h = canvas.height
+      // Sample a small block at each corner (1x1 is too noisy with JPEG artifacts,
+      // but inset by a few pixels handles faint edge gradients).
+      const inset = Math.min(2, Math.floor(Math.min(w, h) * 0.02))
+      const samples = [
+        ctx.getImageData(inset, inset, 1, 1).data[3],
+        ctx.getImageData(w - 1 - inset, inset, 1, 1).data[3],
+        ctx.getImageData(inset, h - 1 - inset, 1, 1).data[3],
+        ctx.getImageData(w - 1 - inset, h - 1 - inset, 1, 1).data[3],
+      ]
+      return samples.every(a => a < 10)
+    }
 
-      // Probe corner alpha via canvas. Requires CORS-enabled image source.
-      let isTransparent = false
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = img.naturalWidth
-        canvas.height = img.naturalHeight
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.drawImage(img, 0, 0)
-          const w = canvas.width
-          const h = canvas.height
-          // Sample a small block at each corner (1x1 is too noisy with JPEG artifacts,
-          // but inset by a few pixels handles faint edge gradients).
-          const inset = Math.min(2, Math.floor(Math.min(w, h) * 0.02))
-          const samples = [
-            ctx.getImageData(inset, inset, 1, 1).data[3],
-            ctx.getImageData(w - 1 - inset, inset, 1, 1).data[3],
-            ctx.getImageData(inset, h - 1 - inset, 1, 1).data[3],
-            ctx.getImageData(w - 1 - inset, h - 1 - inset, 1, 1).data[3],
-          ]
-          isTransparent = samples.every(a => a < 10)
+    /**
+     * Carga en dos intentos.
+     *
+     * 1) Con crossOrigin: permite leer pixeles y detectar transparencia. Exige
+     *    que el origen mande cabecera CORS (el bucket R2 ya la manda).
+     * 2) Sin crossOrigin, solo si el primero falla: la imagen carga igual y se
+     *    mide la orientacion, que es lo unico que necesita las dimensiones.
+     *
+     * El reintento es la parte importante. Antes solo existia el intento con
+     * crossOrigin, y como el bucket no mandaba CORS la imagen no cargaba nunca:
+     * saltaba onerror y el hook devolvia el fallback, de modo que TODO logo
+     * horizontal se trataba como cuadrado. Un fallo de CORS —hoy, o el dia que
+     * alguien apunte un logo a otro dominio— ahora solo cuesta la deteccion de
+     * transparencia, no la orientacion.
+     */
+    const cargar = (conCors: boolean) => {
+      const img = new Image()
+      if (conCors) img.crossOrigin = 'anonymous'
+
+      img.onload = () => {
+        if (cancelled) return
+        const isHorizontal = img.naturalWidth > img.naturalHeight * 1.4
+        let isTransparent = false
+        if (conCors) {
+          try {
+            isTransparent = probeAlpha(img)
+          } catch {
+            /* canvas tainted pese al crossOrigin: se asume opaco */
+          }
         }
-      } catch {
-        // Tainted canvas (CORS) or other error — fall back to opaque. Logos hosted
-        // on the same origin as the app, or on CORS-enabled Firebase Storage, work.
+        finish({ isHorizontal, isTransparent })
       }
 
-      const result: ProbeResult = { isHorizontal, isTransparent }
-      cache.set(logoUrl, result)
-      setState(result)
-      setLoaded(true)
+      img.onerror = () => {
+        if (cancelled) return
+        if (conCors) {
+          cargar(false)   // reintento sin CORS: al menos se mide la orientacion
+          return
+        }
+        finish({ isHorizontal: false, isTransparent: false })
+      }
+
+      // Con crossOrigin se agrega ?cors=1, un sufijo FIJO (no un cache-buster,
+      // asi que se cachea normal). Sin el, el navegador reusa la entrada que
+      // ya tiene guardada de una carga SIN CORS —sin cabecera
+      // Access-Control-Allow-Origin— y la comprobacion falla aunque el
+      // servidor hoy si la mande. Las imagenes van marcadas immutable a un
+      // año: esperar a que expire el cache no era opcion.
+      img.src = conCors
+        ? logoUrl + (logoUrl.includes('?') ? '&' : '?') + 'cors=1'
+        : logoUrl
     }
 
-    img.onerror = () => {
-      if (cancelled) return
-      const result: ProbeResult = { isHorizontal: false, isTransparent: false }
-      cache.set(logoUrl, result)
-      setState(result)
-      setLoaded(true)
-    }
-
-    img.src = logoUrl
+    cargar(true)
 
     return () => { cancelled = true }
   }, [logoUrl])

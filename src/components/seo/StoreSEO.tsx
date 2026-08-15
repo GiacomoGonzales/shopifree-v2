@@ -32,18 +32,19 @@ function getCatalogSuffix(lang?: string): string {
 /**
  * Pone el logo de la tienda como favicon y como apple-touch-icon.
  *
- * Antes esto dibujaba el logo en un canvas para redondearle las esquinas. Eso
- * exige cargar la imagen con crossOrigin, y el bucket R2 no devuelve cabecera
- * CORS: el logo vive en shopifreemedia.site y la tienda en otro dominio, asi
- * que el intento fallaba SIEMPRE, en todas las tiendas. Habia un onerror que
- * reponia el favicon sin redondear —por eso el favicon si se veia— pero que
- * omitia el apple-touch-icon, presente solo en la rama de exito. Resultado:
- * al agregar la tienda a la pantalla de inicio en iOS no salia el logo.
+ * Orden a proposito:
  *
- * Se saca el canvas. No cambia lo que se ve (el redondeado no llegaba a
- * aplicarse nunca) y deja de ensuciar la consola de cada tienda con dos
- * errores de CORS por carga. Para recuperar el redondeado hay que habilitar
- * CORS en el bucket; mientras no exista, este codigo seria decorativo.
+ * 1) Se ponen AMBOS iconos con la URL directa. No necesita CORS, funciona
+ *    siempre, y es lo que se ve si el paso 2 no llega o falla.
+ * 2) Se intenta una version con esquinas redondeadas via canvas. Eso exige
+ *    cargar la imagen con crossOrigin; el bucket R2 ya manda cabecera CORS.
+ *    Si algo falla, no se toca nada: los iconos del paso 1 siguen puestos.
+ *
+ * Antes esto era al reves: el canvas era el camino principal y un onerror
+ * reponia el favicon sin redondear. Ese fallback omitia el apple-touch-icon
+ * —solo existia en la rama de exito— asi que al agregar la tienda a la
+ * pantalla de inicio en iOS no salia el logo. Con el orden invertido, el
+ * redondeado es una mejora opcional y no puede llevarse nada puesto.
  */
 function updateFavicon(logoUrl: string) {
   // Se pide el logo ya reducido: el original pesa ~27 KB y a 64px son ~3 KB.
@@ -66,7 +67,51 @@ function updateFavicon(logoUrl: string) {
     document.head.appendChild(appleLink)
   }
 
+  // 1) Inmediato, sin CORS.
   setIcons(iconUrl, appleUrl)
+
+  // 2) Mejora: esquinas redondeadas. Si falla, quedan los iconos de arriba.
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = () => {
+    const size = 180   // se genera al tamano del apple-touch-icon y sirve para ambos
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const radius = size * 0.2
+    ctx.beginPath()
+    ctx.moveTo(radius, 0)
+    ctx.lineTo(size - radius, 0)
+    ctx.quadraticCurveTo(size, 0, size, radius)
+    ctx.lineTo(size, size - radius)
+    ctx.quadraticCurveTo(size, size, size - radius, size)
+    ctx.lineTo(radius, size)
+    ctx.quadraticCurveTo(0, size, 0, size - radius)
+    ctx.lineTo(0, radius)
+    ctx.quadraticCurveTo(0, 0, radius, 0)
+    ctx.closePath()
+    ctx.clip()
+    ctx.drawImage(img, 0, 0, size, size)
+
+    try {
+      const redondeado = canvas.toDataURL('image/png')
+      setIcons(redondeado, redondeado)
+    } catch {
+      /* canvas tainted: se queda el logo sin redondear, que ya esta puesto */
+    }
+  }
+  // Sin onerror: si la carga con CORS falla no hay nada que reponer.
+  //
+  // El sufijo ?cors=1 no es un cache-buster: es FIJO, asi que se cachea
+  // normal. Existe para que la peticion con crossOrigin no reuse la entrada
+  // que el navegador ya tiene guardada de una carga SIN CORS. Esa entrada
+  // vieja no trae Access-Control-Allow-Origin y hace fallar la comprobacion,
+  // aunque el servidor hoy si mande la cabecera. Con las imagenes marcadas
+  // immutable a un año, esperar a que expire no era opcion.
+  img.src = appleUrl + (appleUrl.includes('?') ? '&' : '?') + 'cors=1'
 }
 
 export default function StoreSEO({ store, products, categories, product }: StoreSEOProps) {
