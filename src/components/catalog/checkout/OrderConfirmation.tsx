@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { formatModifierNames, groupModifierOptions } from '../../../lib/modifiers'
 import { Capacitor } from '@capacitor/core'
 import { useTheme } from '../ThemeContext'
 import type { Order } from '../../../types'
@@ -197,7 +198,7 @@ ${order.paymentStatus === 'paid' ? `<p style="text-align:center;color:#16a34a;fo
               {/* Modifiers */}
               {item.selectedModifiers && item.selectedModifiers.length > 0 && (
                 <p className="text-xs" style={{ color: theme.colors.textMuted }}>
-                  {item.selectedModifiers.flatMap(m => m.options.map(o => o.name)).join(', ')}
+                  {formatModifierNames(item.selectedModifiers)}
                 </p>
               )}
               <div className="flex justify-between items-center mt-0.5">
@@ -367,8 +368,10 @@ function buildWhatsAppUrl(whatsapp: string, order: Order, currency: string, t: T
       }
       if (item.selectedModifiers?.length) {
         item.selectedModifiers.forEach(mod => {
-          mod.options.forEach(opt => {
-            msg += `   + ${opt.name}${opt.price > 0 ? ` (+${sym}${opt.price.toFixed(2)})` : ''}\n`
+          groupModifierOptions(mod.options).forEach(opt => {
+            const nombre = opt.qty > 1 ? `${opt.qty}x ${opt.name}` : opt.name
+            const precio = opt.price > 0 ? ` (+${sym}${(opt.price * opt.qty).toFixed(2)})` : ''
+            msg += `   + ${nombre}${precio}\n`
           })
         })
       }

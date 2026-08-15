@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatModifierNames } from '../../../lib/modifiers'
 import { useTheme } from '../ThemeContext'
 import type { CartItem } from '../../../hooks/useCart'
 import type { Coupon } from '../../../types'
@@ -142,9 +143,7 @@ export default function OrderSummary({ items, totalPrice, shippingCost = 0, disc
                     className="text-xs mt-0.5"
                     style={{ color: theme.colors.textMuted }}
                   >
-                    {item.selectedModifiers
-                      .flatMap(mod => mod.options.map(o => o.name))
-                      .join(', ')}
+                    {formatModifierNames(item.selectedModifiers)}
                   </p>
                 )}
 

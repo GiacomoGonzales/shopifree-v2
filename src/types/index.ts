@@ -494,6 +494,12 @@ export interface ModifierGroup {
   required: boolean             // Obligatorio?
   minSelect: number             // Mínimo a seleccionar (0 si opcional)
   maxSelect: number             // Máximo a seleccionar
+  // Multiopción: permite repetir la MISMA opción ("Elige 2 cremas" → 2x
+  // mayonesa). En la selección guardada la opción aparece duplicada, así los
+  // conteos y las sumas de precio existentes siguen valiendo sin cambios.
+  // Solo tiene efecto con maxSelect > 1. Opcional: los grupos viejos no lo
+  // tienen y se comportan igual que siempre.
+  allowRepeat?: boolean
   options: ModifierOption[]
 }
 

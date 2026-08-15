@@ -40,8 +40,13 @@ export default function ModifierSelector({ modifierGroups, onChange, language = 
     modifierGroups.forEach(group => {
       const selectedOptionIds = selections[group.id] || []
       if (selectedOptionIds.length > 0) {
-        const selectedOptions = group.options
-          .filter(opt => selectedOptionIds.includes(opt.id))
+        // Se mapea id→opcion PRESERVANDO duplicados: en los grupos
+        // multiopcion la misma opcion aparece N veces en la seleccion y cada
+        // aparicion cuenta y se cobra. El filter(includes) anterior las
+        // colapsaba a una.
+        const selectedOptions = selectedOptionIds
+          .map(id => group.options.find(opt => opt.id === id))
+          .filter((opt): opt is typeof group.options[number] => !!opt)
           .map(opt => ({
             id: opt.id,
             name: opt.name,
@@ -86,6 +91,25 @@ export default function ModifierSelector({ modifierGroups, onChange, language = 
       return { ...prev, [groupId]: [...current, optionId] }
     })
   }
+
+  // Multiopcion: suma/quita UNA unidad de la opcion (puede repetirse).
+  const changeQty = (groupId: string, optionId: string, delta: 1 | -1, maxSelect: number) => {
+    setSelections(prev => {
+      const current = prev[groupId] || []
+      if (delta === 1) {
+        if (current.length >= maxSelect) return prev
+        return { ...prev, [groupId]: [...current, optionId] }
+      }
+      const idx = current.indexOf(optionId)
+      if (idx === -1) return prev
+      const next = [...current]
+      next.splice(idx, 1)
+      return { ...prev, [groupId]: next }
+    })
+  }
+
+  const optionQty = (groupId: string, optionId: string) =>
+    (selections[groupId] || []).filter(id => id === optionId).length
 
   const isSelected = (groupId: string, optionId: string) => {
     return (selections[groupId] || []).includes(optionId)
@@ -174,6 +198,71 @@ export default function ModifierSelector({ modifierGroups, onChange, language = 
               {group.options.filter(opt => opt.available).map(option => {
                 const selected = isSelected(group.id, option.id)
                 const atMax = count >= group.maxSelect && !selected
+
+                // Multiopcion: fila con stepper (− qty +) en vez de toggle.
+                // La misma opcion puede sumarse varias veces hasta el tope
+                // del GRUPO (count, no por opcion).
+                if (group.allowRepeat && group.maxSelect > 1) {
+                  const qty = optionQty(group.id, option.id)
+                  const groupFull = count >= group.maxSelect
+                  return (
+                    <div
+                      key={option.id}
+                      className="w-full flex items-center justify-between p-3 transition-all"
+                      style={{
+                        backgroundColor: qty > 0
+                          ? theme.effects.darkMode ? 'rgba(255,255,255,0.1)' : theme.colors.surfaceHover
+                          : 'transparent',
+                        borderRadius: theme.radius.md,
+                        border: `1px solid ${qty > 0 ? theme.colors.primary : theme.colors.border}`,
+                        opacity: groupFull && qty === 0 ? 0.45 : 1,
+                      }}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm truncate" style={{ color: theme.colors.text }}>
+                          {option.name}
+                        </span>
+                        {option.price > 0 && (
+                          <span className="text-sm shrink-0" style={{ color: theme.colors.textMuted }}>
+                            +{formatPrice(option.price, store.currency)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        {qty > 0 && (
+                          <>
+                            <button
+                              type="button"
+                              aria-label={`Quitar ${option.name}`}
+                              onClick={() => changeQty(group.id, option.id, -1, group.maxSelect)}
+                              className="w-7 h-7 flex items-center justify-center rounded-full text-base leading-none transition-opacity hover:opacity-80"
+                              style={{ border: `1.5px solid ${theme.colors.primary}`, color: theme.colors.primary }}
+                            >
+                              −
+                            </button>
+                            <span className="text-sm min-w-[1.2rem] text-center tabular-nums font-semibold"
+                                  style={{ color: theme.colors.text }}>
+                              {qty}
+                            </span>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          aria-label={`Agregar ${option.name}`}
+                          disabled={groupFull}
+                          onClick={() => changeQty(group.id, option.id, 1, group.maxSelect)}
+                          className="w-7 h-7 flex items-center justify-center rounded-full text-base leading-none transition-opacity hover:opacity-80 disabled:opacity-35"
+                          style={{
+                            backgroundColor: theme.colors.primary,
+                            color: theme.colors.textInverted,
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )
+                }
 
                 return (
                   <button

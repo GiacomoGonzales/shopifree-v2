@@ -200,6 +200,22 @@ export default function ModifiersSection({ modifierGroups, onChange }: Modifiers
                       </span>
                     </label>
 
+                    <label
+                      htmlFor={`repeat-${group.id}`}
+                      className="flex items-center gap-2 cursor-pointer w-fit"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`repeat-${group.id}`}
+                        checked={group.allowRepeat ?? false}
+                        onChange={(e) => updateGroup(group.id, { allowRepeat: e.target.checked })}
+                        className="w-4 h-4 rounded border-[#D8E2EC] text-[#2d6cb5] focus:ring-[#38bdf8]"
+                      />
+                      <span className={LABEL + ' mb-0'}>
+                        {t('productForm.modifiers.allowRepeat', 'Multiopción: se puede repetir la misma opción (ej. 2x mayonesa)')}
+                      </span>
+                    </label>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className={LABEL}>

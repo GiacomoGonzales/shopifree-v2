@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { formatModifierNames } from '../../lib/modifiers'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { orderService } from '../../lib/firebase'
@@ -1208,7 +1209,7 @@ export default function Orders() {
                         )}
                         {item.selectedModifiers && item.selectedModifiers.length > 0 && (
                           <p className="text-xs text-[#425466] mt-0.5">
-                            + {item.selectedModifiers.flatMap(m => m.options.map(o => o.name)).join(', ')}
+                            + {formatModifierNames(item.selectedModifiers)}
                           </p>
                         )}
                         <p className="text-sm text-[#8898AA] mt-0.5">x{item.quantity}</p>

@@ -366,19 +366,22 @@ const parseVariations = (row: Record<string, unknown>): ProductVariation[] => {
  *   "Elige 2 cremas(2)"   → exactamente 2, obligatorio
  *   "Salsas(0-3)"         → opcional, hasta 3
  *   "Mitades(1-2)"        → obligatorio, entre 1 y 2
+ *   "Elige 2 cremas(2*)"  → exactamente 2, multiopción: puede repetirse la
+ *                           misma opción (2x mayonesa)
  *
  * `required` se deduce de que el mínimo sea mayor a cero, igual que hace el
  * formulario al marcar la casilla de obligatorio. Sin paréntesis se mantiene
  * el comportamiento anterior, así que las plantillas viejas siguen valiendo.
  */
-const parseGroupRule = (raw: string): { name: string; min: number; max?: number } => {
-  const m = raw.match(/^(.*?)\s*\(\s*(\d+)\s*(?:-\s*(\d+)\s*)?\)\s*$/)
+const parseGroupRule = (raw: string): { name: string; min: number; max?: number; repeat?: boolean } => {
+  const m = raw.match(/^(.*?)\s*\(\s*(\d+)\s*(?:-\s*(\d+)\s*)?(\*?)\s*\)\s*$/)
   if (!m) return { name: raw.trim(), min: 0 }
   const name = m[1].trim()
   const a = parseInt(m[2], 10)
   const b = m[3] !== undefined ? parseInt(m[3], 10) : undefined
+  const repeat = m[4] === '*'
   // Un solo número significa "exactamente n": mínimo y máximo iguales.
-  return b === undefined ? { name, min: a, max: a } : { name, min: a, max: b }
+  return b === undefined ? { name, min: a, max: a, repeat } : { name, min: a, max: b, repeat }
 }
 
 // Parse modifiers from import row
@@ -431,6 +434,7 @@ const parseModifiers = (row: Record<string, unknown>): ModifierGroup[] => {
         required: minSelect > 0,
         minSelect,
         maxSelect,
+        ...(rule.repeat && maxSelect > 1 ? { allowRepeat: true } : {}),
         options
       })
     }

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { groupModifierOptions } from '../lib/modifiers'
 import { Capacitor } from '@capacitor/core'
 import type { Store, Order, OrderItem, Coupon } from '../types'
 import type { CartItem } from './useCart'
@@ -577,8 +578,12 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
       // Show selected modifiers if any
       if (item.selectedModifiers && item.selectedModifiers.length > 0) {
         item.selectedModifiers.forEach(mod => {
-          mod.options.forEach(opt => {
-            message += `   + ${opt.name}${opt.price > 0 ? ` (+${currencySymbol}${opt.price.toFixed(2)})` : ''}\n`
+          // Agrupado: en multiopcion la misma opcion se repite y queda
+          // mejor "+ 2x Mayonesa" que dos lineas identicas.
+          groupModifierOptions(mod.options).forEach(opt => {
+            const nombre = opt.qty > 1 ? `${opt.qty}x ${opt.name}` : opt.name
+            const precio = opt.price > 0 ? ` (+${currencySymbol}${(opt.price * opt.qty).toFixed(2)})` : ''
+            message += `   + ${nombre}${precio}\n`
           })
         })
       }

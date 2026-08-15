@@ -1,4 +1,5 @@
 import type { CartItem } from '../../hooks/useCart'
+import { formatModifierNames } from '../../lib/modifiers'
 import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/cloudinary'
 import { useTheme } from './ThemeContext'
@@ -151,7 +152,7 @@ export default function CartDrawer({
                     {/* Show selected modifiers */}
                     {item.selectedModifiers && item.selectedModifiers.length > 0 && (
                       <p className="text-xs mt-1" style={{ color: theme.colors.textMuted }}>
-                        {item.selectedModifiers.map(m => m.options.map(o => o.name).join(', ')).join('; ')}
+                        {formatModifierNames(item.selectedModifiers)}
                       </p>
                     )}
 
