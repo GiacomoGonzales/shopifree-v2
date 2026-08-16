@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import OrderReceptionBoard from '../../components/dashboard/OrderReceptionBoard'
+import { useReceptionMode } from '../../hooks/useReceptionMode'
 import { formatModifierNames } from '../../lib/modifiers'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
@@ -126,6 +128,7 @@ export default function Orders() {
 
   const lang = i18n.language?.startsWith('es') ? 'es' : 'en'
   const currencySymbol = getCurrencySymbol(store?.currency || 'USD')
+  const { activo: receptionMode } = useReceptionMode(store?.id)
 
   // Clear the "new orders" badge as soon as the user opens this page.
   useEffect(() => {
@@ -825,6 +828,24 @@ export default function Orders() {
         </p>
       )}
 
+      {/* Modo recepcion: en vez de la tabla, un tablero de tres etapas con
+          botones grandes, para la tablet del mostrador. Se monta aca arriba y
+          se sale temprano, de modo que la vista normal queda intacta y sigue
+          disponible apagando el modo en Configuracion.
+          Usa `orders` y no `filteredOrders`: el tablero ya filtra por etapa, y
+          un filtro de estado a medio poner dejaria columnas vacias sin que se
+          entienda por que. */}
+      {receptionMode ? (
+        <OrderReceptionBoard
+          orders={orders.filter(o => !o.isTest)}
+          onSelectOrder={setSelectedOrder}
+          onStatusChange={handleStatusChange}
+          updatingId={updatingStatus}
+          currency={store?.currency || 'USD'}
+          formatPrice={(amount) => `${currencySymbol}${amount.toFixed(2)}`}
+        />
+      ) : (
+      <>
       {/* Orders list */}
       {filteredOrders.length === 0 ? (
         <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-12 text-center">
@@ -1081,6 +1102,8 @@ export default function Orders() {
             </div>
           )}
         </div>
+      )}
+      </>
       )}
 
       {/* Order detail modal */}

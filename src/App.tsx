@@ -22,7 +22,7 @@ const Register = lazy(() => import('./pages/auth/Register'))
 
 // Dashboard
 const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout'))
-const DashboardHome = lazy(() => import('./pages/dashboard/Home'))
+const DashboardHome = lazy(() => import('./pages/dashboard/DashboardIndex'))
 const Products = lazy(() => import('./pages/dashboard/Products'))
 const ProductForm = lazy(() => import('./pages/dashboard/ProductForm'))
 const Settings = lazy(() => import('./pages/dashboard/Settings'))

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useReceptionMode } from '../../hooks/useReceptionMode'
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
@@ -42,6 +43,9 @@ export default function Settings() {
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
   const [store, setStore] = useState<Store | null>(null)
+  // Modo recepcion: no pasa por el boton Guardar. Es un ajuste de este
+  // dispositivo y se aplica al instante, como un interruptor de sistema.
+  const { activo: modoRecepcion, cambiar: cambiarModoRecepcion } = useReceptionMode(store?.id)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -1261,6 +1265,43 @@ export default function Settings() {
                   )}
                 </>
               )}
+            </div>
+          </div>
+
+          {/* Modo recepcion de pedidos — ajuste de ESTE dispositivo */}
+          <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">Recepcion de pedidos</h2>
+            <p className="text-sm text-[#8898AA] mb-4">
+              Convierte esta pantalla en un tablero para atender pedidos, pensado para la tablet del mostrador o la cocina
+            </p>
+
+            <div className="flex items-start justify-between gap-4 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-[#1e3a5f]">Modo recepcion de pedidos</p>
+                <p className="text-xs text-[#8898AA] mt-0.5">
+                  Al entrar se abre directo en Pedidos, y los pedidos se ven como un tablero de
+                  tres etapas —Nuevos, En preparacion, Listos— con botones grandes.
+                </p>
+                {/* Se aclara el alcance: es la duda que aparece apenas se ve el
+                    interruptor, y evita que alguien lo active en su celular
+                    esperando que le cambie la tablet. */}
+                <p className="text-xs text-[#A9B6C6] mt-1.5">
+                  Se aplica solo a este dispositivo. Tus otros telefonos, tablets o computadoras
+                  siguen como estan.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => cambiarModoRecepcion(!modoRecepcion)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+                  modoRecepcion ? 'bg-[#1e3a5f]' : 'bg-[#E1E8EF]'
+                }`}
+                aria-label="Activar modo recepcion de pedidos"
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  modoRecepcion ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
             </div>
           </div>
 
