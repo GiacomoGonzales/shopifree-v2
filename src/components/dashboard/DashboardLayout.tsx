@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
+import { useOrderAlarm } from '../../hooks/useOrderAlarm'
+import { useReceptionMode } from '../../hooks/useReceptionMode'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
@@ -40,6 +42,10 @@ export default function DashboardLayout() {
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
   usePresence(store?.id)
   const newOrders = useNewOrdersCount(store?.id)
+  // La alarma vive en el layout, no en Pedidos: en modo recepcion tiene que
+  // sonar aunque el encargado se haya ido a Productos a corregir un precio.
+  const { activo: modoRecepcion } = useReceptionMode(store?.id)
+  const { sonando, pendientes, silenciar } = useOrderAlarm(store?.id, modoRecepcion)
   const [totalUnread, setTotalUnread] = useState(0)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatUnread, setChatUnread] = useState(0)
@@ -217,6 +223,33 @@ export default function DashboardLayout() {
       }
       overlays={
         <>
+          {/* Alarma de pedidos sin atender (modo recepcion).
+              Arriba y ancha a proposito: el aviso tiene que verse desde lejos
+              en una tablet de mostrador, no ser un puntito en una esquina.
+              Silenciar calla la tanda actual; si entra otro pedido, vuelve. */}
+          {sonando && (
+            <div className="fixed top-0 inset-x-0 z-[60] bg-[#D97706] text-white px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+              <span className="font-semibold text-[0.95rem]">
+                {pendientes === 1 ? '1 pedido sin atender' : `${pendientes} pedidos sin atender`}
+              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <Link
+                  to={localePath('/dashboard/orders')}
+                  className="px-3.5 py-1.5 rounded-full bg-white text-[#B45309] text-sm font-semibold"
+                >
+                  Ver
+                </Link>
+                <button
+                  type="button"
+                  onClick={silenciar}
+                  className="px-3.5 py-1.5 rounded-full border border-white/60 text-sm font-medium"
+                >
+                  Silenciar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Boton flotante de soporte, solo escritorio */}
           {!isAdmin && !chatOpen && (
             <button
