@@ -1,0 +1,19 @@
+/* Estilos del modo edicion de <EditableText>. Solo se cargan en el editor en
+   vivo, asi que la tienda publica no los trae. */
+.live-edit-text {
+  outline: 1.5px dashed transparent;
+  outline-offset: 3px;
+  border-radius: 4px;
+  cursor: text;
+  transition: outline-color 0.15s;
+}
+.live-edit-text:hover {
+  outline-color: rgba(59, 130, 246, 0.6);
+}
+.live-edit-text:focus {
+  outline: 2px solid #3b82f6;
+}
+.live-edit-text:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.45;
+}

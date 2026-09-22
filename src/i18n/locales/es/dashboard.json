@@ -1493,5 +1493,26 @@
     "error": "Error",
     "success": "Éxito",
     "clear": "Limpiar"
+  },
+  "liveEditor": {
+    "title": "Editor en vivo",
+    "hint": "Haz clic en cualquier texto de tu tienda para editarlo. Los colores se cambian en el panel.",
+    "open": "Editar en vivo",
+    "openHint": "Cambia textos y colores directamente sobre tu tienda",
+    "exit": "Volver",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "discard": "Descartar",
+    "saved": "Cambios guardados",
+    "saveError": "No se pudieron guardar los cambios",
+    "confirmExit": "Tienes cambios sin guardar. ¿Salir de todas formas?",
+    "noStore": "No encontramos tu tienda.",
+    "themeNotice": "Por ahora el editor en vivo funciona completo con el tema Minimal. Con tu tema actual solo puedes editar la barra de anuncio.",
+    "header": "Header",
+    "announcement": "Barra de anuncio",
+    "background": "Fondo",
+    "text": "Texto",
+    "show": "Mostrar",
+    "reset": "Restablecer"
   }
 }

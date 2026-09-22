@@ -91,6 +91,8 @@ export interface Store {
     primaryColor?: string
     secondaryColor?: string
     fontFamily?: string
+    headerBackground?: string     // Fondo del header (editor en vivo). Hoy solo lo lee el tema Minimal.
+    headerText?: string           // Color del texto e iconos del header
     scrollReveal?: boolean
     imageSwapOnHover?: boolean
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list' | 'sections'

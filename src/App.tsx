@@ -42,6 +42,7 @@ const SupportChats = lazy(() => import('./pages/dashboard/SupportChats'))
 const MoreMenu = lazy(() => import('./pages/dashboard/MoreMenu'))
 const Help = lazy(() => import('./pages/dashboard/Help'))
 const MiApp = lazy(() => import('./pages/dashboard/MiApp'))
+const LiveEditor = lazy(() => import('./pages/dashboard/LiveEditor'))
 // Dropshipping quedó en pausa (01/08/2026): la ruta muestra ComingSoon hasta
 // que se revise el rendimiento y la configuración de la página. La
 // implementación sigue en src/pages/dashboard/Dropshipping.tsx — para
@@ -241,6 +242,7 @@ function AppRoutes() {
             <Route path="analytics" element={<Analytics />} />
             {/* Mi Tienda */}
             <Route path="branding" element={<Branding />} />
+            <Route path="editor" element={<LiveEditor />} />
             <Route path="settings" element={<Settings />} />
             <Route path="domain" element={<Domain />} />
             <Route path="payments" element={<Payments />} />

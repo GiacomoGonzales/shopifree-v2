@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, type JSX } from 'react'
 import { collection, query, where, getDocs, doc, updateDoc, limit } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { useLanguage } from '../../hooks/useLanguage'
 import { Capacitor } from '@capacitor/core'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -96,6 +98,7 @@ export default function Branding() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { showToast } = useToast()
+  const { localePath } = useLanguage()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -553,9 +556,21 @@ export default function Branding() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('branding.title')}</h1>
-        <p className="text-[#425466] mt-1">{t('branding.subtitle')}</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">{t('branding.title')}</h1>
+          <p className="text-[#425466] mt-1">{t('branding.subtitle')}</p>
+        </div>
+        <Link
+          to={localePath('/dashboard/editor')}
+          title={t('liveEditor.openHint')}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[#1e3a5f] rounded-xl hover:bg-[#2d4a6f] transition-colors shrink-0"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+          </svg>
+          {t('liveEditor.open')}
+        </Link>
       </div>
 
       {/* Selector de tema. Son 86: antes se pintaban todos, repartidos en seis

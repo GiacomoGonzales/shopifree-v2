@@ -1492,5 +1492,26 @@
     "error": "Error",
     "success": "Success",
     "clear": "Clear"
+  },
+  "liveEditor": {
+    "title": "Live editor",
+    "hint": "Click any text on your store to edit it. Change colors in the panel.",
+    "open": "Edit live",
+    "openHint": "Change texts and colors right on your store",
+    "exit": "Back",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "discard": "Discard",
+    "saved": "Changes saved",
+    "saveError": "Couldn't save your changes",
+    "confirmExit": "You have unsaved changes. Leave anyway?",
+    "noStore": "We couldn't find your store.",
+    "themeNotice": "For now the live editor fully works with the Minimal theme. With your current theme you can only edit the announcement bar.",
+    "header": "Header",
+    "announcement": "Announcement bar",
+    "background": "Background",
+    "text": "Text",
+    "show": "Show",
+    "reset": "Reset"
   }
 }

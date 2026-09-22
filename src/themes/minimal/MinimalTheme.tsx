@@ -15,6 +15,8 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
+  useLiveEdit,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -97,6 +99,10 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
+  const editing = useLiveEdit()
+  // Colores del header elegidos en el editor en vivo. Sin ellos, el header de siempre.
+  const headerBg = store.themeSettings?.headerBackground
+  const headerText = store.themeSettings?.headerText
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -121,21 +127,29 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
         <AnnouncementBar />
 
         {/* Header */}
-        <header className={`sticky top-0 z-50 transition-all duration-500 ${
-          scrolled ? 'bg-white/90 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.05)]' : 'bg-white'
-        }`}>
+        <header
+          className={`sticky top-0 z-50 transition-all duration-500 ${
+            headerBg
+              ? (scrolled ? 'shadow-[0_1px_0_rgba(0,0,0,0.05)]' : '')
+              : (scrolled ? 'bg-white/90 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.05)]' : 'bg-white')
+          }`}
+          style={{ backgroundColor: headerBg, color: headerText }}
+        >
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className={`font-medium tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}>
-                {store.name}
-              </span>}
+              {showName && <EditableText
+                path="name"
+                value={store.name}
+                required
+                className={`font-medium tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}
+              />}
             </div>
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-50 transition-colors"
             >
-              <svg className="w-[22px] h-[22px] text-gray-800" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <svg className={`w-[22px] h-[22px] ${headerText ? '' : 'text-gray-800'}`} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
               {totalItems > 0 && (
@@ -162,12 +176,23 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
             )}
             <div className={`${(store.heroImage || store.heroImageMobile) ? 'text-left' : 'text-center py-8 md:py-16'}`}>
               {!(store.heroImage || store.heroImageMobile) && (
-                <h1 className="text-4xl md:text-6xl font-light tracking-tight text-gray-900 mb-4">{store.name}</h1>
+                <EditableText
+                  as="h1"
+                  path="name"
+                  value={store.name}
+                  required
+                  className="text-4xl md:text-6xl font-light tracking-tight text-gray-900 mb-4"
+                />
               )}
-              {store.about?.slogan && (
-                <p className={`text-gray-500 ${(store.heroImage || store.heroImageMobile) ? 'text-base md:text-lg' : 'text-lg md:text-xl'} max-w-2xl ${(store.heroImage || store.heroImageMobile) ? '' : 'mx-auto'}`}>
-                  {store.about.slogan}
-                </p>
+              {/* En el editor el eslogan se muestra aunque este vacio, para poder escribirlo. */}
+              {(store.about?.slogan || editing) && (
+                <EditableText
+                  as="p"
+                  path="about.slogan"
+                  value={store.about?.slogan}
+                  placeholder="Agrega un eslogan"
+                  className={`text-gray-500 ${(store.heroImage || store.heroImageMobile) ? 'text-base md:text-lg' : 'text-lg md:text-xl'} max-w-2xl ${(store.heroImage || store.heroImageMobile) ? '' : 'mx-auto'}`}
+                />
               )}
             </div>
           </div>
