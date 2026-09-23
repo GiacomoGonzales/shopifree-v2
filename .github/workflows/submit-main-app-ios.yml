@@ -1,0 +1,52 @@
+name: Submit main app for review (iOS)
+
+# Envia a revision de App Store un build de la app principal que YA esta en
+# TestFlight, sin volver a compilar. Sirve para reintentar si el envio de
+# "Build main app (iOS)" fallo (el build quedo subido) o para mandar un build
+# viejo. Usa la lane `submit_review` del Fastfile.
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildNumber:
+        description: 'Numero de build ya subido a TestFlight (CFBundleVersion)'
+        required: true
+        type: string
+      versionName:
+        description: 'Version de App Store (CFBundleShortVersionString, e.g. 1.1.0)'
+        required: true
+        type: string
+      releaseNotes:
+        description: 'Texto de "Novedades"'
+        required: true
+        type: string
+
+jobs:
+  submit:
+    runs-on: macos-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Fastlane
+        run: gem install fastlane --no-document
+
+      - name: Decode App Store Connect API key
+        env:
+          APPSTORE_API_KEY_CONTENT: ${{ secrets.APPSTORE_API_KEY_CONTENT }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_API_KEY_CONTENT" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey.p8
+
+      - name: Submit for App Store review
+        working-directory: ios/App
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          BUILD_NUMBER: ${{ github.event.inputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          RELEASE_NOTES: ${{ github.event.inputs.releaseNotes }}
+          BUNDLE_ID: app.shopifree.mobile
+        run: fastlane submit_review

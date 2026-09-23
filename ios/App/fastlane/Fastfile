@@ -158,24 +158,45 @@ platform :ios do
     notes = ENV["RELEASE_NOTES"].to_s.strip
     UI.user_error!("RELEASE_NOTES is required to submit for review") if notes.empty?
 
-    upload_to_app_store(
+    bundle_id = ENV["BUNDLE_ID"]
+    common = {
       api_key: api_key,
-      app_identifier: ENV["BUNDLE_ID"],
+      app_identifier: bundle_id,
       app_version: ENV["VERSION_NAME"],
       build_number: ENV["BUILD_NUMBER"],
       platform: "ios",
       skip_binary_upload: true,
       skip_screenshots: true,
-      release_notes: { "default" => notes },
-      submit_for_review: true,
+      # La ficha (descripcion, capturas) no se toca: sin carpeta de metadata,
+      # deliver no sabria en que idiomas poner las notas (ver paso 2).
+      skip_metadata: true,
       force: true, # sin el reporte HTML de confirmacion (CI no es interactivo)
-      run_precheck_before_submit: false,
+      run_precheck_before_submit: false
+    }
+
+    # 1) Crear la version (si no existe) y asociarle el build.
+    upload_to_app_store(common.merge(submit_for_review: false))
+
+    # 2) "Novedades" en cada idioma de la ficha: Apple no deja enviar a revision
+    # una version sin whatsNew en alguno de sus idiomas.
+    require "spaceship"
+    app = Spaceship::ConnectAPI::App.find(bundle_id)
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("No se encontro la version editable #{ENV['VERSION_NAME']}") if version.nil?
+    version.get_app_store_version_localizations.each do |localization|
+      UI.message("Novedades para #{localization.locale}")
+      localization.update(attributes: { whats_new: notes })
+    end
+
+    # 3) Enviar a revision.
+    upload_to_app_store(common.merge(
+      submit_for_review: true,
       submission_information: {
         # Solo HTTPS / cifrado estandar del sistema: exento de export compliance.
         export_compliance_uses_encryption: false,
         add_id_info_uses_idfa: false,
         content_rights_contains_third_party_content: false
       }
-    )
+    ))
   end
 end
