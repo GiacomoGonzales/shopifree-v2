@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useEffect } from 'react'
+import { createContext, useContext, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
@@ -6,6 +6,7 @@ import { setPixelDefaultCurrency } from '../../lib/pixels'
 import { getHeaderColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, getCornerStyle, CORNER_STYLES, readableTextOn } from '../../themes/shared/themeColors'
 import { getHeadingFont, getBodyFont, googleFontsUrl, fontOverridesCss } from '../../themes/shared/fonts'
 import { useLiveEditContext } from './liveEditContext'
+import { applySectionLayout, getSectionLayout } from './sectionLayout'
 
 /**
  * Theme configuration that each theme provides
@@ -187,6 +188,23 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
 
   // En el editor en vivo, contarle al panel los colores originales de este tema.
   const liveEdit = useLiveEditContext()
+
+  // Secciones (mostrar/ocultar/ordenar): se aplican sobre el DOM ya pintado del
+  // tema, antes de mostrarlo. Sin dependencias a proposito: el tema puede
+  // cambiar sus bloques en cualquier render (por ejemplo, sin foto de portada).
+  const storeRef = useRef<HTMLDivElement>(null)
+  const sectionLayout = getSectionLayout(store)
+  const lastSectionsInfo = useRef('')
+  useLayoutEffect(() => {
+    const root = storeRef.current?.querySelector<HTMLElement>(':scope > .min-h-screen')
+    if (!root) return
+    const info = applySectionLayout(root, sectionLayout)
+    const key = JSON.stringify(info)
+    if (liveEdit?.onSectionsInfo && key !== lastSectionsInfo.current) {
+      lastSectionsInfo.current = key
+      liveEdit.onSectionsInfo(info)
+    }
+  })
   useEffect(() => {
     liveEdit?.onThemeInfo?.({
       background: theme.colors.background,
@@ -210,7 +228,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
     }}>
       <BusinessTypeProvider businessType={store.businessType} language={language}>
         {/* display: contents — el wrapper no participa del layout (sticky, min-h-screen siguen igual). */}
-        <div data-sf-store="" style={{ display: 'contents' }}>
+        <div ref={storeRef} data-sf-store="" style={{ display: 'contents' }}>
           {/* Sin `precedence`: con ese atributo React 19 pausa el pintado hasta
               que carga la hoja, y en el editor eso re-ejecutaba efectos y
               perdia el borrador. Asi es un <link> comun, como en los temas. */}

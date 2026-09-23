@@ -1,5 +1,6 @@
 import type { Store } from '../../types'
 import type { ThemeBaseColors } from '../../components/catalog/liveEditContext'
+import type { SectionsInfo } from '../../components/catalog/sectionLayout'
 
 /**
  * Piezas que comparten el editor en vivo (/dashboard/editor) y su vista de
@@ -43,6 +44,7 @@ export type PreviewMessage =
   | { type: 'sf-history'; action: 'undo' | 'redo' }
   | { type: 'sf-edit-product'; productId: string }
   | { type: 'sf-theme-info'; colors: ThemeBaseColors }
+  | { type: 'sf-sections-info'; info: SectionsInfo }
 
 /** Atajo de deshacer/rehacer, fuera de campos de texto (ahi manda el del navegador). */
 export function historyActionFromKey(e: KeyboardEvent): 'undo' | 'redo' | null {

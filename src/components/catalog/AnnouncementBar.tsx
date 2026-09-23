@@ -29,6 +29,7 @@ export default function AnnouncementBar() {
 
   return (
     <div
+      data-sf-section="announcement"
       className="relative py-3 text-sm animate-fadeIn overflow-hidden"
       style={{ backgroundColor: bgColor, color: textColor }}
     >

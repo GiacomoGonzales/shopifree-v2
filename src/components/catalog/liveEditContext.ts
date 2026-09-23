@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { SectionsInfo } from './sectionLayout'
 
 /**
  * Modo "editor en vivo". Solo existe dentro del editor del dashboard
@@ -24,6 +25,8 @@ interface LiveEditContextValue {
   onEditProduct?: (productId: string) => void
   /** El tema avisa sus colores originales: el editor los usa de referencia (y para saber si es oscuro). */
   onThemeInfo?: (colors: ThemeBaseColors) => void
+  /** El tema avisa que secciones tiene y si se pueden ordenar (panel "Secciones"). */
+  onSectionsInfo?: (info: SectionsInfo) => void
 }
 
 export const LiveEditContext = createContext<LiveEditContextValue | null>(null)

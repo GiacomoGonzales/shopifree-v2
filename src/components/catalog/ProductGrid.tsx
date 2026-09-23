@@ -49,7 +49,7 @@ export default function ProductGrid({
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center py-20" data-sf-products="">
         <div
           className="w-20 h-20 mx-auto mb-6 flex items-center justify-center"
           style={{
@@ -106,7 +106,7 @@ export default function ProductGrid({
         </div>
       )
       return (
-        <div className="space-y-10 md:space-y-14">
+        <div className="space-y-10 md:space-y-14" data-sf-products="">
           {porCategoria.map(({ cat, items }) => (
             <section key={cat.id}>
               <div className="flex items-baseline gap-2.5 mb-4 md:mb-5">
@@ -165,11 +165,12 @@ export default function ProductGrid({
 
   // No pagination controls needed
   if (paginationType === 'none') {
-    return <>{layoutContent}</>
+    // display: contents: el envoltorio no cambia el layout, solo lleva la marca de la seccion.
+    return <div data-sf-products="" style={{ display: 'contents' }}>{layoutContent}</div>
   }
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} data-sf-products="">
       {layoutContent}
 
       {/* Showing count */}

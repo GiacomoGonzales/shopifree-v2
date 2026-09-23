@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast'
 import { getThemeComponent } from '../../themes/components'
 import { LiveEditProvider } from '../../components/catalog'
 import type { ThemeBaseColors } from '../../components/catalog/liveEditContext'
+import { getSectionLayout, type SectionId, type SectionsInfo } from '../../components/catalog/sectionLayout'
 import { getHeaderColors, getFooterColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, getCategoryBarColors, getCornerStyle, contrastRatio, isDarkColor } from '../../themes/shared/themeColors'
 import { themes } from '../../themes'
 import type { Store, Product, Category } from '../../types'
@@ -79,13 +80,14 @@ const MERGE_MS = 1000
 const HISTORY_LIMIT = 50
 
 /** Grupos plegables del panel. */
-type PanelGroupId = 'theme' | 'brand' | 'colors' | 'bars' | 'catalog'
+type PanelGroupId = 'theme' | 'brand' | 'colors' | 'bars' | 'sections' | 'catalog'
 const OPEN_GROUPS_KEY = 'sf-live-editor-open-groups'
 
 /** A que grupo del panel pertenece un campo (para el puntito de cambios y para abrirlo solo). */
 function groupForPath(path: string): PanelGroupId {
   if (path === 'themeId') return 'theme'
   if (/^themeSettings\.(backgroundColors|primaryColors|headerColors|footerColors|categoryBarColors|surfaceColors|textColors|cornerStyles)\b/.test(path)) return 'colors'
+  if (path.startsWith('themeSettings.sectionLayouts')) return 'sections'
   if (/^themeSettings\.(productLayout|paginationType|productViewMode|scrollReveal|imageSwapOnHover|hideFilters)\b/.test(path) || path.startsWith('socialProof')) return 'catalog'
   if (/^(announcement|trustBadges|flashSale|whatsappButton)\b/.test(path)) return 'bars'
   // Nombre, eslogan, descripcion, email, direccion, imagenes y tipografia.
@@ -95,7 +97,7 @@ function groupForPath(path: string): PanelGroupId {
 function loadOpenGroups(): PanelGroupId[] {
   try {
     const raw = localStorage.getItem(OPEN_GROUPS_KEY)
-    const valid: PanelGroupId[] = ['theme', 'brand', 'colors', 'bars', 'catalog']
+    const valid: PanelGroupId[] = ['theme', 'brand', 'colors', 'bars', 'sections', 'catalog']
     if (raw) return (JSON.parse(raw) as string[]).filter((g): g is PanelGroupId => valid.includes(g as PanelGroupId))
   } catch {
     // Sin almacenamiento: se abre el primero.
@@ -173,6 +175,8 @@ export default function LiveEditor() {
   const [editingProduct, setEditingProduct] = useState<string | null>(null)
   // Colores originales del tema en pantalla, informados por su ThemeProvider.
   const [themeInfo, setThemeInfo] = useState<ThemeBaseColors | null>(null)
+  // Secciones que tiene el tema en pantalla (las informa su ThemeProvider).
+  const [sectionsInfo, setSectionsInfo] = useState<SectionsInfo | null>(null)
   const productFileInput = useRef<HTMLInputElement>(null)
   const [uploadingProduct, setUploadingProduct] = useState(false)
 
@@ -280,6 +284,7 @@ export default function LiveEditor() {
     onChange: (path: string, value: string) => { change(path, value); revealGroup(groupForPath(path)) },
     onEditProduct: (id: string) => setEditingProduct(id),
     onThemeInfo: (colors: ThemeBaseColors) => setThemeInfo(colors),
+    onSectionsInfo: (info: SectionsInfo) => setSectionsInfo(info),
   }), [change, revealGroup])
 
   const handleSave = async () => {
@@ -480,6 +485,7 @@ export default function LiveEditor() {
       else if (msg?.type === 'sf-pick-image') { fromFrame.current.pickImage(msg.field); fromFrame.current.revealGroup('brand') }
       else if (msg?.type === 'sf-edit-product') setEditingProduct(msg.productId)
       else if (msg?.type === 'sf-theme-info') setThemeInfo(msg.colors)
+      else if (msg?.type === 'sf-sections-info') setSectionsInfo(msg.info)
       else if (msg?.type === 'sf-history') fromFrame.current[msg.action]()
     }
     window.addEventListener('message', onMessage)
@@ -549,6 +555,27 @@ export default function LiveEditor() {
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
   const dirtyGroups = new Set(Object.keys(changes).map(groupForPath))
+
+  // Secciones: el orden elegido (con las que falten al final, en su orden de siempre).
+  const sectionLayout = getSectionLayout(draft)
+  const presentSections = sectionsInfo?.available || []
+  const sectionOrder: SectionId[] = [
+    ...(sectionLayout.order || []).filter(s => presentSections.includes(s)),
+    ...presentSections.filter(s => !(sectionLayout.order || []).includes(s)),
+  ]
+  const hiddenSections = sectionLayout.hidden || []
+  const sectionPath = `themeSettings.sectionLayouts.${themeId}`
+  const moveSection = (index: number, delta: number) => {
+    const next = [...sectionOrder]
+    const [item] = next.splice(index, 1)
+    next.splice(index + delta, 0, item)
+    change(`${sectionPath}.order`, next)
+  }
+  const toggleSection = (id: SectionId) => {
+    const next = hiddenSections.includes(id) ? hiddenSections.filter(s => s !== id) : [...hiddenSections, id]
+    change(`${sectionPath}.hidden`, next.length ? next : undefined)
+  }
+  const sectionsCustomized = !!(sectionLayout.order?.length || sectionLayout.hidden?.length)
   const storeUrl = draft.customDomain && draft.domainStatus === 'verified'
     ? `https://${draft.customDomain}`
     : `https://${draft.subdomain}.shopifree.app`
@@ -1218,6 +1245,82 @@ export default function LiveEditor() {
                     ))}
                   </div>
                 </>
+              )}
+            </section>
+          </PanelGroup>
+          <PanelGroup
+            id="sections"
+            title={t('liveEditor.groups.sections')}
+            hint={t('liveEditor.groupHints.sections')}
+            open={openGroups.includes('sections')}
+            dirty={dirtyGroups.has('sections')}
+            dirtyLabel={t('liveEditor.unsaved')}
+            onToggle={() => toggleGroup('sections')}
+            groupRef={el => { groupRefs.current['sections'] = el }}
+          >
+            <section>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.sections.hint')}</p>
+              {sectionsInfo && !sectionsInfo.reorderable && (
+                <p className="mb-3 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.sections.notReorderable')}</p>
+              )}
+              <ul className="space-y-1.5">
+                {sectionOrder.map((id, i) => {
+                  const hidden = hiddenSections.includes(id)
+                  const canHide = !!sectionsInfo?.hideable.includes(id)
+                  const canMove = !!sectionsInfo?.reorderable
+                  return (
+                    <li key={id} className={`flex items-center gap-2 rounded-lg border border-[#E6EBF1] px-2.5 py-2 ${hidden ? 'bg-[#F6F9FC]' : 'bg-white'}`}>
+                      <span className={`flex-1 min-w-0 text-sm truncate ${hidden ? 'text-[#8898AA] line-through' : 'text-[#1e3a5f]'}`}>
+                        {t(`liveEditor.sections.names.${id}`)}
+                      </span>
+                      {canHide && (
+                        <button
+                          onClick={() => toggleSection(id)}
+                          title={t(hidden ? 'liveEditor.sections.show' : 'liveEditor.sections.hide')}
+                          aria-label={t(hidden ? 'liveEditor.sections.show' : 'liveEditor.sections.hide')}
+                          className="p-1.5 rounded-md text-[#8898AA] hover:text-[#425466] hover:bg-gray-100"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                            {hidden
+                              ? <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                              : <><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></>}
+                          </svg>
+                        </button>
+                      )}
+                      {canMove && (
+                        <span className="flex">
+                          <button
+                            onClick={() => moveSection(i, -1)}
+                            disabled={i === 0}
+                            title={t('liveEditor.sections.up')}
+                            aria-label={t('liveEditor.sections.up')}
+                            className="p-1.5 rounded-md text-[#425466] hover:bg-gray-100 disabled:opacity-25"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+                          </button>
+                          <button
+                            onClick={() => moveSection(i, 1)}
+                            disabled={i === sectionOrder.length - 1}
+                            title={t('liveEditor.sections.down')}
+                            aria-label={t('liveEditor.sections.down')}
+                            className="p-1.5 rounded-md text-[#425466] hover:bg-gray-100 disabled:opacity-25"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                          </button>
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="mt-2 text-[0.7rem] text-[#8898AA]">{t('liveEditor.sections.barsNote')}</p>
+              {sectionsCustomized && (
+                <button
+                  onClick={() => change(sectionPath, undefined)}
+                  className="mt-3 w-full rounded-lg border border-dashed border-[#E6EBF1] p-1.5 text-[0.7rem] text-[#8898AA] hover:border-[#8898AA] hover:text-[#425466]"
+                >
+                  {t('liveEditor.sections.reset')}
+                </button>
               )}
             </section>
           </PanelGroup>

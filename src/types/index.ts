@@ -107,6 +107,8 @@ export interface Store {
     categoryBarColors?: Record<string, { background?: string; text?: string }>
     // Redondez de esquinas de las piezas compartidas por tema: 'square' | 'soft' | 'round'
     cornerStyles?: Record<string, string>
+    // Secciones por tema: orden y cuales ocultar (ver components/catalog/sectionLayout.ts)
+    sectionLayouts?: Record<string, { order?: string[]; hidden?: string[] }>
     // Tipografia de titulos por tema: id de HEADING_FONTS (themes/shared/fonts.ts)
     headingFonts?: Record<string, string>
     // Tipografia del texto general por tema: id de BODY_FONTS

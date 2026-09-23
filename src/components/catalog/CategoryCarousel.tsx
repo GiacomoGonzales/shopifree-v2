@@ -219,9 +219,10 @@ export default function CategoryCarousel({
           posicion DESPLAZADA, no la original: al medirlo scrolleado abajo daba
           un valor que crecia con el scroll. Este div mide 0px y no es sticky,
           asi que conserva la posicion de siempre y sirve de referencia. */}
-      <div ref={anchorRef} aria-hidden="true" />
+      <div ref={anchorRef} aria-hidden="true" data-sf-section="categories" />
       <nav
         ref={navRef}
+        data-sf-section="categories"
         className={headerHeight === null ? `sticky ${stickyTop} z-40` : 'sticky z-40'}
         style={{
           ...(headerHeight !== null ? { top: `${headerHeight}px` } : {}),

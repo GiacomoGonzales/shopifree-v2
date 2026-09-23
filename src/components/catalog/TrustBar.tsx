@@ -58,6 +58,7 @@ export default function TrustBar() {
 
   return (
     <div
+      data-sf-section="trust"
       className="py-4 px-4 overflow-x-auto scrollbar-hide"
       style={{ backgroundColor: theme.colors.surface }}
     >

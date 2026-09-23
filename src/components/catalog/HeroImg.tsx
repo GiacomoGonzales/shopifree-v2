@@ -44,6 +44,8 @@ const HeroImg = forwardRef<HTMLImageElement, HeroImgProps>(
         loading={loading}
         // La URL original, para que el editor sepa si es la portada de computadora o la de celular.
         data-sf-hero={editing ? src : undefined}
+        // Marca la portada para las secciones (ocultar/ordenar, ver sectionLayout).
+        data-sf-hero-img=""
         {...rest}
       />
     )

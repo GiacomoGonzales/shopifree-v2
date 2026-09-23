@@ -44,6 +44,7 @@ export default function FlashSaleBar() {
 
   return (
     <div
+      data-sf-section="flash"
       className="w-full py-2.5 px-4"
       style={{ backgroundColor: bg, color: text }}
     >
