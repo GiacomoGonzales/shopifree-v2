@@ -126,7 +126,20 @@
       "close": "Close",
       "whatsapp": "WhatsApp"
     },
-    "noPhoto": "No photo"
+    "noPhoto": "No photo",
+    "whatsNew": {
+      "badge": "New",
+      "title": "Edit your store live",
+      "description": "Change any detail of your design right on your store and see the result instantly, on desktop and on phones.",
+      "points": {
+        "texts": "Texts, logo and photos in one click",
+        "colors": "Colors, backgrounds and ready-made palettes",
+        "fonts": "Fonts and corners",
+        "phone": "Preview on iPhone, Samsung and Xiaomi"
+      },
+      "cta": "Try the editor",
+      "dismiss": "Close"
+    }
   },
   "analytics": {
     "title": "Analytics",

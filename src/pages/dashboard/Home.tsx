@@ -35,6 +35,7 @@ import { productService, analyticsService, categoryService, orderService } from 
 import { getCurrencySymbol } from '../../lib/currency'
 import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
 import type { Product, Category, Order } from '../../types'
+import WhatsNewBanner from '../../components/dashboard/WhatsNewBanner'
 
 /* ── Periodos y métricas ─────────────────────────────────────────────── */
 
@@ -665,6 +666,9 @@ export default function DashboardHome() {
             ))}
           </div>
         </div>
+
+        {/* Novedades: el editor en vivo */}
+        <WhatsNewBanner />
 
         {/* Prueba gratuita: activa o vencida, un único aviso */}
         {trial && !Capacitor.isNativePlatform() && (

@@ -126,7 +126,20 @@
       "close": "Cerrar",
       "whatsapp": "WhatsApp"
     },
-    "noPhoto": "Sin foto"
+    "noPhoto": "Sin foto",
+    "whatsNew": {
+      "badge": "Nuevo",
+      "title": "Edita tu tienda en vivo",
+      "description": "Cambia cualquier detalle de tu diseño directamente sobre tu tienda y mira el resultado al instante, en computadora y en celular.",
+      "points": {
+        "texts": "Textos, logo y fotos con un clic",
+        "colors": "Colores, fondos y paletas listas",
+        "fonts": "Tipografías y esquinas",
+        "phone": "Vista en iPhone, Samsung y Xiaomi"
+      },
+      "cta": "Probar el editor",
+      "dismiss": "Cerrar"
+    }
   },
   "analytics": {
     "title": "Estadisticas",
