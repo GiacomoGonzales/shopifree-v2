@@ -61,7 +61,7 @@ export default function WhatsNewBanner() {
         </Link>
       </div>
 
-      <div className="relative md:w-[46%] h-44 sm:h-52 md:h-auto shrink-0 bg-gradient-to-br from-[#E0F2FE] via-[#F0F9FF] to-[#EDE9FE]">
+      <div className="relative md:w-[46%] aspect-[3/2] md:aspect-auto shrink-0 bg-gradient-to-br from-[#E0F2FE] via-[#F0F9FF] to-[#EDE9FE]">
         {!imageFailed ? (
           <img
             src={IMAGE}
