@@ -33,6 +33,7 @@ const Payments = lazy(() => import('./pages/dashboard/Payments'))
 const Integrations = lazy(() => import('./pages/dashboard/Integrations'))
 const ApiDocs = lazy(() => import('./pages/ApiDocs'))
 const ThemeShot = lazy(() => import('./pages/ThemeShot'))
+const EditorPreview = lazy(() => import('./pages/EditorPreview'))
 const Coupons = lazy(() => import('./pages/dashboard/Coupons'))
 const Plan = lazy(() => import('./pages/dashboard/Plan'))
 const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
@@ -214,6 +215,9 @@ function AppRoutes() {
 
       {/* Theme thumbnail capture (used by scripts/generate-theme-thumbnails.mjs) */}
       <Route path="/theme-shot/:themeId" element={<ThemeShot />} />
+
+      {/* Vista de celular del editor en vivo: la carga /dashboard/editor en un iframe */}
+      <Route path="/editor-preview" element={<EditorPreview />} />
 
       {/* Language-prefixed routes */}
       <Route path="/:lang" element={<LanguageLayout />}>

@@ -11,6 +11,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -72,7 +73,7 @@ export default function TagTheme({ store, products, categories, onWhatsAppClick,
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate uppercase tracking-[0.15em]" style={{ fontFamily: tagTheme.fonts.heading, fontSize: '1.25rem' }}>{store.name}</span>}
+              {showName && <span className="truncate uppercase tracking-[0.15em]" style={{ fontFamily: tagTheme.fonts.heading, fontSize: '1.25rem' }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: inkT, color: '#fff' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
@@ -90,8 +91,8 @@ export default function TagTheme({ store, products, categories, onWhatsAppClick,
             <div className="relative px-6 pt-8 pb-6 text-center" style={{ backgroundColor: kraft, borderRadius: '0.75rem', boxShadow: tagTheme.shadows.lg }}>
               <span className="absolute left-1/2 -translate-x-1/2 -top-3 w-6 h-6 rounded-full" style={{ backgroundColor: paperT, border: `2px solid #A99B7E` }} />
               <p className="text-[11px] tracking-[0.35em] font-bold" style={{ color: tagRed }}>{L.tagline}</p>
-              <h1 className="uppercase leading-none my-2" style={{ fontFamily: tagTheme.fonts.heading, fontSize: 'clamp(2rem, 7vw, 3.5rem)' }}>{store.name}</h1>
-              {store.about?.slogan && <p className="text-sm" style={{ color: '#6B6253' }}>{store.about.slogan}</p>}
+              <h1 className="uppercase leading-none my-2" style={{ fontFamily: tagTheme.fonts.heading, fontSize: 'clamp(2rem, 7vw, 3.5rem)' }}><EditableText path="name" value={store.name} required /></h1>
+              {store.about?.slogan && <p className="text-sm" style={{ color: '#6B6253' }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
               <div className="mt-4 mx-auto h-8 flex items-end justify-center gap-[2px]" aria-hidden>
                 {Array.from({ length: 24 }).map((_, i) => <span key={i} style={{ width: i % 4 === 0 ? '3px' : '1px', height: '100%', backgroundColor: inkT }} />)}
               </div>

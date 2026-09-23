@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -178,7 +180,7 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
                     color: acid,
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -254,14 +256,14 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
                   textShadow: `3px 3px 0 ${punk}`
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
                 <p
                   className="mt-5 text-sm uppercase tracking-[0.3em] font-semibold"
                   style={{ color: acid }}
                 >
-                  {store.about.slogan}
+                  <EditableText path="about.slogan" value={store.about?.slogan} />
                 </p>
               )}
               {store.whatsapp && (
@@ -309,7 +311,7 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
                   textMuted: grungeTheme.colors.textMuted,
                   border: grungeTheme.colors.border,
                   background: grungeTheme.colors.background,
-                  primary: grungeTheme.colors.primary,
+                  primary: getPrimaryColor(store) || grungeTheme.colors.primary,
                   surface: grungeTheme.colors.surfaceHover,
                 }}
               />
@@ -321,7 +323,7 @@ export default function GrungeTheme({ store, products, categories, onWhatsAppCli
                   text: grungeTheme.colors.text,
                   border: grungeTheme.colors.border,
                   background: grungeTheme.colors.background,
-                  primary: grungeTheme.colors.primary,
+                  primary: getPrimaryColor(store) || grungeTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

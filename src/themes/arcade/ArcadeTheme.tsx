@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -191,7 +193,7 @@ export default function ArcadeTheme({ store, products, categories, onWhatsAppCli
                   className="arcade-glow text-xs sm:text-sm tracking-widest"
                   style={{ fontFamily: "'Press Start 2P', monospace", color: '#00FFE5' }}
                 >
-                  {store.name.toUpperCase()}
+                  <EditableText path="name" value={store.name} required className="uppercase" />
                 </span>
               )}
             </div>
@@ -230,7 +232,7 @@ export default function ArcadeTheme({ store, products, categories, onWhatsAppCli
                 <span>★ INSERT COIN ★</span>
                 <span style={{ color: '#FF00C8' }}>HIGH SCORE: {(products.length || 0).toString().padStart(4, '0')}</span>
                 <span style={{ color: '#00FFE5' }}>NEW STAGE</span>
-                <span>★ {store.name.toUpperCase()} ★</span>
+                <span>★ <EditableText path="name" value={store.name} required className="uppercase" /> ★</span>
                 <span style={{ color: '#FF00C8' }}>READY?</span>
                 <span style={{ color: '#00FFE5' }}>{(store.about?.slogan || 'PLAY ON').toUpperCase()}</span>
               </div>
@@ -259,7 +261,7 @@ export default function ArcadeTheme({ store, products, categories, onWhatsAppCli
               className="text-4xl md:text-6xl lg:text-7xl tracking-widest leading-tight arcade-glow"
               style={{ fontFamily: "'Press Start 2P', monospace", color: '#FFE600' }}
             >
-              {store.name.toUpperCase()}
+              <EditableText path="name" value={store.name} required className="uppercase" />
             </h1>
             {store.about?.slogan && (
               <p className="mt-8 text-2xl md:text-3xl tracking-wide" style={{ color: '#9C8FB8' }}>
@@ -305,7 +307,7 @@ export default function ArcadeTheme({ store, products, categories, onWhatsAppCli
                 textMuted: arcadeTheme.colors.textMuted,
                 border: arcadeTheme.colors.border,
                 background: arcadeTheme.colors.background,
-                primary: arcadeTheme.colors.primary,
+                primary: getPrimaryColor(store) || arcadeTheme.colors.primary,
                 surface: arcadeTheme.colors.surfaceHover,
               }}
             />
@@ -317,7 +319,7 @@ export default function ArcadeTheme({ store, products, categories, onWhatsAppCli
                 text: arcadeTheme.colors.text,
                 border: arcadeTheme.colors.border,
                 background: arcadeTheme.colors.background,
-                primary: arcadeTheme.colors.primary,
+                primary: getPrimaryColor(store) || arcadeTheme.colors.primary,
               }}
               className="ml-auto"
             />

@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -175,7 +177,7 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
               )}
               {showName && (
                 <h1 className="font-slate text-xl md:text-2xl font-semibold" style={{ color: '#0F172A' }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -222,11 +224,11 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-slate text-3xl font-semibold" style={{ color: '#0F172A' }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-slate text-sm mt-2" style={{ color: slateLight }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -244,11 +246,11 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-slate text-5xl font-semibold" style={{ color: '#0F172A' }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-slate text-lg mt-3" style={{ color: slateLight }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -266,11 +268,11 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
 
               <div className="max-w-3xl mx-auto px-6 pt-6">
                 <h1 className="font-slate text-4xl md:text-6xl font-semibold" style={{ color: '#0F172A' }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="font-slate text-lg md:text-xl mt-4" style={{ color: slateLight }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -320,7 +322,7 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
                 textMuted: slateTheme.colors.textMuted,
                 border: slateTheme.colors.border,
                 background: slateTheme.colors.background,
-                primary: slateTheme.colors.primary,
+                primary: getPrimaryColor(store) || slateTheme.colors.primary,
                 surface: slateTheme.colors.surfaceHover,
               }}
             />
@@ -332,7 +334,7 @@ export default function SlateTheme({ store, products, categories, onWhatsAppClic
                 text: slateTheme.colors.text,
                 border: slateTheme.colors.border,
                 background: slateTheme.colors.background,
-                primary: slateTheme.colors.primary,
+                primary: getPrimaryColor(store) || slateTheme.colors.primary,
               }}
               className="ml-auto"
             />

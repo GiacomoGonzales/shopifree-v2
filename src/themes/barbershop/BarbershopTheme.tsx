@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -175,7 +177,7 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
               )}
               {(!headerLogo || showName) && (
               <h1 className="font-barbershop-heading text-2xl md:text-3xl tracking-wider" style={{ color: gold }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>
               )}
             </div>
@@ -222,11 +224,11 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-barbershop-heading text-4xl tracking-widest" style={{ color: gold }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-barbershop-body text-sm mt-2 uppercase tracking-wider" style={{ color: textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -244,11 +246,11 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-barbershop-heading text-6xl tracking-widest" style={{ color: gold }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-barbershop-body text-lg mt-3 uppercase tracking-wider" style={{ color: textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -271,11 +273,11 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
                   Est. {new Date().getFullYear()}
                 </p>
                 <h1 className="font-barbershop-heading text-6xl md:text-8xl tracking-wider leading-none" style={{ color: white }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="font-barbershop-body text-sm md:text-base mt-5 uppercase tracking-[0.2em]" style={{ color: textMuted }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -327,7 +329,7 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
                 textMuted: barbershopTheme.colors.textMuted,
                 border: barbershopTheme.colors.border,
                 background: barbershopTheme.colors.background,
-                primary: barbershopTheme.colors.primary,
+                primary: getPrimaryColor(store) || barbershopTheme.colors.primary,
                 surface: barbershopTheme.colors.surfaceHover,
               }}
             />
@@ -339,7 +341,7 @@ export default function BarbershopTheme({ store, products, categories, onWhatsAp
                 text: barbershopTheme.colors.text,
                 border: barbershopTheme.colors.border,
                 background: barbershopTheme.colors.background,
-                primary: barbershopTheme.colors.primary,
+                primary: getPrimaryColor(store) || barbershopTheme.colors.primary,
               }}
               className="ml-auto"
             />

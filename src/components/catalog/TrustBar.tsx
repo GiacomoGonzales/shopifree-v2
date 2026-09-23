@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 import { useTheme } from './ThemeContext'
+import { EditableText } from './LiveEdit'
 import { getTrustBadgeText } from '../../themes/shared/trustBadgeDefaults'
 import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
 
@@ -51,7 +52,8 @@ export default function TrustBar() {
 
   if (!store.trustBadges?.enabled || store.plan === 'free') return null
 
-  const activeBadges = store.trustBadges.badges.filter(b => b.enabled)
+  // El indice es el de la lista completa: con el el editor sabe que insignia se edito.
+  const activeBadges = store.trustBadges.badges.map((b, index) => ({ ...b, index })).filter(b => b.enabled)
   if (activeBadges.length === 0) return null
 
   return (
@@ -69,7 +71,11 @@ export default function TrustBar() {
               className="text-xs md:text-sm font-medium whitespace-nowrap"
               style={{ color: theme.colors.textMuted }}
             >
-              {badge.text || getTrustBadgeText(badge.id, language)}
+              <EditableText
+                path={`trustBadges.badges.${badge.index}.text`}
+                value={badge.text}
+                fallback={getTrustBadgeText(badge.id, language)}
+              />
             </span>
           </div>
         ))}

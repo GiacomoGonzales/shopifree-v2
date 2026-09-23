@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -145,13 +147,14 @@ export default function ClayTheme({ store, products, categories, onWhatsAppClick
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-3">
             <div
               className="flex items-center justify-between px-4 py-2.5 rounded-full"
+              data-sf-header-surface=""
               style={{ backgroundColor: claySurface, boxShadow: claySoft }}
             >
               <div className="flex items-center gap-3 pl-1">
                 {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
                 {showName && (
                   <span style={{ fontFamily: clayTheme.fonts.heading, fontWeight: 600, fontSize: '1.25rem', color: clayInk }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </span>
                 )}
               </div>
@@ -197,7 +200,7 @@ export default function ClayTheme({ store, products, categories, onWhatsAppClick
               </div>
               {store.about?.slogan && (
                 <p className="text-center mt-6 text-lg md:text-xl" style={{ color: clayTheme.colors.textMuted, fontFamily: clayTheme.fonts.heading }}>
-                  {store.about.slogan}
+                  <EditableText path="about.slogan" value={store.about?.slogan} />
                 </p>
               )}
             </div>
@@ -213,11 +216,11 @@ export default function ClayTheme({ store, products, categories, onWhatsAppClick
               <div className="absolute -bottom-12 -right-8 w-40 h-40 rounded-full opacity-30" style={{ backgroundColor: clayPurple }} />
               <div className="relative">
                 <h1 style={{ fontFamily: clayTheme.fonts.heading, fontWeight: 700, color: clayInk }} className="text-4xl md:text-6xl">
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="mt-4 text-base md:text-lg" style={{ color: clayTheme.colors.textMuted }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.whatsapp && (
@@ -290,7 +293,7 @@ export default function ClayTheme({ store, products, categories, onWhatsAppClick
                 textMuted: clayTheme.colors.textMuted,
                 border: clayTheme.colors.border,
                 background: clayTheme.colors.surface,
-                primary: clayTheme.colors.primary,
+                primary: getPrimaryColor(store) || clayTheme.colors.primary,
                 surface: clayTheme.colors.surfaceHover,
               }}
             />
@@ -302,7 +305,7 @@ export default function ClayTheme({ store, products, categories, onWhatsAppClick
                 text: clayTheme.colors.text,
                 border: clayTheme.colors.border,
                 background: clayTheme.colors.surface,
-                primary: clayTheme.colors.primary,
+                primary: getPrimaryColor(store) || clayTheme.colors.primary,
               }}
               className="ml-auto"
             />

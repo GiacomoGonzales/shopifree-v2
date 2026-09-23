@@ -26,10 +26,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -188,7 +190,7 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
               )}
               <div>
                 {(!headerLogo || showName) && <h1 className="font-furry text-2xl md:text-3xl font-bold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
             </div>
@@ -235,11 +237,11 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-furry text-3xl font-bold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-furry-body font-semibold mt-1" style={{ color: pink }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -257,11 +259,11 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-furry text-5xl lg:text-6xl font-bold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-furry-body text-xl font-semibold mt-2" style={{ color: pink }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -297,11 +299,11 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
                 </div>
 
                 <h1 className="font-furry text-4xl md:text-6xl font-bold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-semibold mt-4 font-furry-body" style={{ color: pink }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -363,7 +365,7 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
                 textMuted: furryTheme.colors.textMuted,
                 border: furryTheme.colors.border,
                 background: furryTheme.colors.background,
-                primary: furryTheme.colors.primary,
+                primary: getPrimaryColor(store) || furryTheme.colors.primary,
                 surface: furryTheme.colors.surfaceHover,
               }}
             />
@@ -375,7 +377,7 @@ export default function FurryTheme({ store, products, categories, onWhatsAppClic
                 text: furryTheme.colors.text,
                 border: furryTheme.colors.border,
                 background: furryTheme.colors.background,
-                primary: furryTheme.colors.primary,
+                primary: getPrimaryColor(store) || furryTheme.colors.primary,
               }}
               className="ml-auto"
             />

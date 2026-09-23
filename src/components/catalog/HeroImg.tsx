@@ -1,5 +1,6 @@
 import { forwardRef, type ImgHTMLAttributes } from 'react'
 import { optimizeImage, getHeroSrcSet } from '../../utils/cloudinary'
+import { useLiveEdit } from './liveEditContext'
 
 /**
  * Drop-in replacement for `<img>` when rendering a store hero image.
@@ -25,6 +26,8 @@ interface HeroImgProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' |
 
 const HeroImg = forwardRef<HTMLImageElement, HeroImgProps>(
   ({ src, sizes = '100vw', alt = '', loading = 'eager', ...rest }, ref) => {
+    // En el editor en vivo la portada se marca para cambiarla con un clic.
+    const editing = useLiveEdit()
     // If the URL isn't a Cloudinary URL (e.g. empty/external), just render as-is
     if (!src) return null
 
@@ -39,6 +42,8 @@ const HeroImg = forwardRef<HTMLImageElement, HeroImgProps>(
         sizes={srcSet ? sizes : undefined}
         alt={alt}
         loading={loading}
+        // La URL original, para que el editor sepa si es la portada de computadora o la de celular.
+        data-sf-hero={editing ? src : undefined}
         {...rest}
       />
     )

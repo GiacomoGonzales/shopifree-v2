@@ -26,10 +26,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -171,7 +173,7 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
               )}
               <div>
                 {showName && <h1 className="font-organic text-xl md:text-2xl font-bold" style={{ color: '#2D3B2D' }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
             </div>
@@ -218,11 +220,11 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
                   <h2 className="font-organic text-3xl font-bold" style={{ color: '#2D3B2D' }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm font-medium mt-2 font-organic" style={{ color: forest }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -241,11 +243,11 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-16 text-center">
                   <h2 className="font-organic text-5xl lg:text-6xl font-bold" style={{ color: '#2D3B2D' }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-lg font-medium mt-3 font-organic" style={{ color: forest }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -281,12 +283,12 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
                 </div>
 
                 <h1 className="font-organic text-4xl md:text-6xl font-bold" style={{ color: '#2D3B2D' }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-medium mt-4 font-organic" style={{ color: forest }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -347,7 +349,7 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
                 textMuted: organicTheme.colors.textMuted,
                 border: organicTheme.colors.border,
                 background: organicTheme.colors.background,
-                primary: organicTheme.colors.primary,
+                primary: getPrimaryColor(store) || organicTheme.colors.primary,
                 surface: organicTheme.colors.surfaceHover,
               }}
             />
@@ -359,7 +361,7 @@ export default function OrganicTheme({ store, products, categories, onWhatsAppCl
                 text: organicTheme.colors.text,
                 border: organicTheme.colors.border,
                 background: organicTheme.colors.background,
-                primary: organicTheme.colors.primary,
+                primary: getPrimaryColor(store) || organicTheme.colors.primary,
               }}
               className="ml-auto"
             />

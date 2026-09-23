@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -184,7 +186,7 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
                   className="text-2xl md:text-3xl italic tracking-wide"
                   style={{ fontFamily: "'Cormorant Garamond', serif", color: '#3D2F2A' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -217,7 +219,7 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
               className="text-6xl md:text-8xl lg:text-9xl italic leading-[1.05]"
               style={{ fontFamily: "'Cormorant Garamond', serif", color: '#3D2F2A', fontWeight: 500 }}
             >
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h2>
 
             {/* Underline brush stroke */}
@@ -228,7 +230,7 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
 
             {store.about?.slogan && (
               <p className="mt-6 text-base md:text-xl italic max-w-xl mx-auto leading-relaxed" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#9A877F' }}>
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
           </div>
@@ -282,7 +284,7 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
                 textMuted: watercolorTheme.colors.textMuted,
                 border: watercolorTheme.colors.border,
                 background: watercolorTheme.colors.background,
-                primary: watercolorTheme.colors.primary,
+                primary: getPrimaryColor(store) || watercolorTheme.colors.primary,
                 surface: watercolorTheme.colors.surfaceHover,
               }}
             />
@@ -294,7 +296,7 @@ export default function WatercolorTheme({ store, products, categories, onWhatsAp
                 text: watercolorTheme.colors.text,
                 border: watercolorTheme.colors.border,
                 background: watercolorTheme.colors.background,
-                primary: watercolorTheme.colors.primary,
+                primary: getPrimaryColor(store) || watercolorTheme.colors.primary,
               }}
               className="ml-auto"
             />

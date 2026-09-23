@@ -14,6 +14,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -28,6 +29,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -198,7 +200,7 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
                     fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -274,14 +276,14 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
                 textShadow: `0 0 20px ${electricBlue}30`
               }}
             >
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h2>
             {store.about?.slogan && (
               <p
                 className="mt-4 text-lg tracking-wide"
                 style={{ color: slate }}
               >
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
             {store.whatsapp && (
@@ -338,7 +340,7 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
                   textMuted: circuitTheme.colors.textMuted,
                   border: circuitTheme.colors.border,
                   background: circuitTheme.colors.background,
-                  primary: circuitTheme.colors.primary,
+                  primary: getPrimaryColor(store) || circuitTheme.colors.primary,
                   surface: circuitTheme.colors.surfaceHover,
                 }}
               />
@@ -350,7 +352,7 @@ export default function CircuitTheme({ store, products, categories, onWhatsAppCl
                   text: circuitTheme.colors.text,
                   border: circuitTheme.colors.border,
                   background: circuitTheme.colors.background,
-                  primary: circuitTheme.colors.primary,
+                  primary: getPrimaryColor(store) || circuitTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -182,7 +184,7 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
               {(!headerLogo || showName) && (
               <div>
                 <h1 className="font-blush text-2xl md:text-3xl font-semibold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               </div>
               )}
@@ -230,11 +232,11 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
                   <h2 className="font-blush text-3xl font-semibold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm mt-2 font-blush-body" style={{ color: mutedText }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -252,11 +254,11 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-16 text-center">
                   <h2 className="font-blush text-5xl lg:text-6xl font-semibold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-wide mt-4 font-blush-body" style={{ color: mutedText }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -283,11 +285,11 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                 </div>
 
                 <h1 className="font-blush text-5xl md:text-7xl font-semibold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="text-sm tracking-wide mt-6 font-blush-body" style={{ color: mutedText }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -348,7 +350,7 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                 textMuted: blushTheme.colors.textMuted,
                 border: blushTheme.colors.border,
                 background: blushTheme.colors.background,
-                primary: blushTheme.colors.primary,
+                primary: getPrimaryColor(store) || blushTheme.colors.primary,
                 surface: blushTheme.colors.surfaceHover,
               }}
             />
@@ -360,7 +362,7 @@ export default function BlushTheme({ store, products, categories, onWhatsAppClic
                 text: blushTheme.colors.text,
                 border: blushTheme.colors.border,
                 background: blushTheme.colors.background,
-                primary: blushTheme.colors.primary,
+                primary: getPrimaryColor(store) || blushTheme.colors.primary,
               }}
               className="ml-auto"
             />

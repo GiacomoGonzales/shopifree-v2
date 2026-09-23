@@ -25,10 +25,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -165,7 +167,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                 </div>
               )}
               {showName && <h1 className="font-bold text-lg tracking-wide" style={{ color: neonGreen }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>}
             </div>
             <button
@@ -198,8 +200,8 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, ${neonGreen}40 0%, transparent 50%, ${neonCyan}30 100%)` }} />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h2 className="text-3xl font-bold neon-glow" style={{ color: neonGreen }}>{store.name}</h2>
-                  {store.about?.slogan && <p className="text-white/70 text-lg mt-2">{store.about.slogan}</p>}
+                  <h2 className="text-3xl font-bold neon-glow" style={{ color: neonGreen }}><EditableText path="name" value={store.name} required /></h2>
+                  {store.about?.slogan && <p className="text-white/70 text-lg mt-2"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
               </div>
               {/* Desktop Hero */}
@@ -209,8 +211,8 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${darkBg} 0%, transparent 50%)` }} />
                 <div className="absolute bottom-0 left-0 right-0 p-10">
                   <div className="max-w-6xl mx-auto">
-                    <h2 className="text-5xl font-bold neon-glow" style={{ color: neonGreen }}>{store.name}</h2>
-                    {store.about?.slogan && <p className="text-white/70 text-lg mt-2">{store.about.slogan}</p>}
+                    <h2 className="text-5xl font-bold neon-glow" style={{ color: neonGreen }}><EditableText path="name" value={store.name} required /></h2>
+                    {store.about?.slogan && <p className="text-white/70 text-lg mt-2"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                   </div>
                 </div>
               </div>
@@ -227,8 +229,8 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                   <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: neonGreen }}></span>
                   Online
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold neon-glow mb-4" style={{ color: neonGreen }}>{store.name}</h1>
-                {store.about?.slogan && <p className="text-xl text-white/60">{store.about.slogan}</p>}
+                <h1 className="text-4xl md:text-6xl font-bold neon-glow mb-4" style={{ color: neonGreen }}><EditableText path="name" value={store.name} required /></h1>
+                {store.about?.slogan && <p className="text-xl text-white/60"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
               </div>
             </div>
           )}
@@ -265,7 +267,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                 textMuted: neonTheme.colors.textMuted,
                 border: neonTheme.colors.border,
                 background: neonTheme.colors.background,
-                primary: neonTheme.colors.primary,
+                primary: getPrimaryColor(store) || neonTheme.colors.primary,
                 surface: neonTheme.colors.surfaceHover,
               }}
             />
@@ -277,7 +279,7 @@ export default function NeonTheme({ store, products, categories, onWhatsAppClick
                 text: neonTheme.colors.text,
                 border: neonTheme.colors.border,
                 background: neonTheme.colors.background,
-                primary: neonTheme.colors.primary,
+                primary: getPrimaryColor(store) || neonTheme.colors.primary,
               }}
               className="ml-auto"
             />

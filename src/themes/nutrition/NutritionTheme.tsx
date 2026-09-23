@@ -12,6 +12,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -75,7 +76,7 @@ export default function NutritionTheme({ store, products, categories, onWhatsApp
           <div className="max-w-3xl mx-auto px-4 h-13 flex items-center justify-between" style={{ height: '3.25rem' }}>
             <div className="flex items-center gap-2 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate font-extrabold uppercase tracking-tight" style={{ fontSize: '1.1rem' }}>{store.name}</span>}
+              {showName && <span className="truncate font-extrabold uppercase tracking-tight" style={{ fontSize: '1.1rem' }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1 text-xs font-extrabold uppercase" style={{ backgroundColor: nInk, color: '#fff' }}>
               CART · {totalItems}
@@ -98,7 +99,7 @@ export default function NutritionTheme({ store, products, categories, onWhatsApp
             <div className="border-t-8 mt-1" style={{ borderColor: nInk }} />
             <p className="text-xs font-bold mt-1">{L.amount}</p>
             <div className="flex items-baseline justify-between border-b-4 pb-1" style={{ borderColor: nInk }}>
-              <span className="font-extrabold text-lg">{store.name}</span>
+              <span className="font-extrabold text-lg"><EditableText path="name" value={store.name} required /></span>
             </div>
             <p className="text-right text-xs font-bold border-b mt-1 pb-0.5" style={{ borderColor: nInk }}>{L.daily}</p>
             {rows.map((r, i) => (
@@ -107,7 +108,7 @@ export default function NutritionTheme({ store, products, categories, onWhatsApp
                 <span className="font-bold">{r.d}</span>
               </div>
             ))}
-            {store.about?.slogan && <p className="text-[11px] mt-2" style={{ color: nutritionTheme.colors.textMuted }}>* {store.about.slogan}</p>}
+            {store.about?.slogan && <p className="text-[11px] mt-2" style={{ color: nutritionTheme.colors.textMuted }}>* <EditableText path="about.slogan" value={store.about?.slogan} /></p>}
           </div>
 
           <div className="flex items-center gap-3 mt-9 mb-4">

@@ -26,10 +26,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -173,7 +175,7 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
               )}
               <div>
                 {(!headerLogo || showName) && <h1 className="font-glam text-2xl md:text-3xl font-medium tracking-wide" style={{ color: black }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
             </div>
@@ -220,11 +222,11 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
                   <h2 className="font-glam text-3xl font-medium tracking-wide" style={{ color: black }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-[0.1em] uppercase mt-2 font-glam-body" style={{ color: charcoal }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -243,11 +245,11 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-16 text-center">
                   <h2 className="font-glam text-5xl lg:text-6xl font-medium tracking-wide" style={{ color: black }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-[0.2em] uppercase mt-4 font-glam-body" style={{ color: charcoal }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -269,12 +271,12 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
                 </div>
 
                 <h1 className="font-glam text-5xl md:text-7xl font-medium tracking-wide" style={{ color: black }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-sm tracking-[0.2em] uppercase mt-6 font-glam-body" style={{ color: charcoal }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -338,7 +340,7 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
                 textMuted: glamTheme.colors.textMuted,
                 border: glamTheme.colors.border,
                 background: glamTheme.colors.background,
-                primary: glamTheme.colors.primary,
+                primary: getPrimaryColor(store) || glamTheme.colors.primary,
                 surface: glamTheme.colors.surfaceHover,
               }}
             />
@@ -350,7 +352,7 @@ export default function GlamTheme({ store, products, categories, onWhatsAppClick
                 text: glamTheme.colors.text,
                 border: glamTheme.colors.border,
                 background: glamTheme.colors.background,
-                primary: glamTheme.colors.primary,
+                primary: getPrimaryColor(store) || glamTheme.colors.primary,
               }}
               className="ml-auto"
             />

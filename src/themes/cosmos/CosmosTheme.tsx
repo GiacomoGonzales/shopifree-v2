@@ -11,6 +11,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -25,6 +26,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -222,7 +224,7 @@ export default function CosmosTheme({ store, products, categories, onWhatsAppCli
                     backgroundSize: '300% auto',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
               <div className="flex items-center gap-3">
@@ -279,10 +281,10 @@ export default function CosmosTheme({ store, products, categories, onWhatsAppCli
                   filter: `drop-shadow(0 0 30px ${cyan}40)`,
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-6 text-base uppercase tracking-[0.4em] font-light" style={{ color: cyan, textShadow: `0 0 20px ${cyan}40` }}>{store.about.slogan}</p>
+                <p className="mt-6 text-base uppercase tracking-[0.4em] font-light" style={{ color: cyan, textShadow: `0 0 20px ${cyan}40` }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick?.()} className="inline-flex items-center gap-2 mt-10 px-7 py-3.5 rounded-lg font-medium transition-all hover:scale-105" style={{ background: '#25D366', color: '#fff', boxShadow: '0 0 30px #25D36640' }}>
@@ -322,7 +324,7 @@ export default function CosmosTheme({ store, products, categories, onWhatsAppCli
                   textMuted: cosmosTheme.colors.textMuted,
                   border: cosmosTheme.colors.border,
                   background: cosmosTheme.colors.background,
-                  primary: cosmosTheme.colors.primary,
+                  primary: getPrimaryColor(store) || cosmosTheme.colors.primary,
                   surface: cosmosTheme.colors.surfaceHover,
                 }}
               />
@@ -334,7 +336,7 @@ export default function CosmosTheme({ store, products, categories, onWhatsAppCli
                   text: cosmosTheme.colors.text,
                   border: cosmosTheme.colors.border,
                   background: cosmosTheme.colors.background,
-                  primary: cosmosTheme.colors.primary,
+                  primary: getPrimaryColor(store) || cosmosTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -27,6 +28,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -164,7 +166,7 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
                 </div>
               )}
               {showName && <h1 className="font-craft-title text-xl md:text-2xl" style={{ color: colors.text }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>}
             </div>
 
@@ -202,9 +204,9 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
-                  <h2 className="font-craft-title text-3xl text-white mb-2">{store.name}</h2>
+                  <h2 className="font-craft-title text-3xl text-white mb-2"><EditableText path="name" value={store.name} required /></h2>
                   {store.about?.slogan && (
-                    <p className="font-craft-body text-white/85 text-base">{store.about.slogan}</p>
+                    <p className="font-craft-body text-white/85 text-base"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                   )}
                 </div>
               </div>
@@ -217,9 +219,9 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
-                  <h2 className="font-craft-title text-5xl text-white mb-3">{store.name}</h2>
+                  <h2 className="font-craft-title text-5xl text-white mb-3"><EditableText path="name" value={store.name} required /></h2>
                   {store.about?.slogan && (
-                    <p className="font-craft-body text-white/85 text-lg">{store.about.slogan}</p>
+                    <p className="font-craft-body text-white/85 text-lg"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                   )}
                 </div>
               </div>
@@ -237,11 +239,11 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
 
               <div className="relative max-w-3xl mx-auto px-6 pt-8">
                 <h1 className="font-craft-title text-4xl md:text-6xl mb-4" style={{ color: colors.text }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="font-craft-body text-lg md:text-xl" style={{ color: colors.textMuted }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
               </div>
@@ -288,7 +290,7 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
                 textMuted: craftTheme.colors.textMuted,
                 border: craftTheme.colors.border,
                 background: craftTheme.colors.background,
-                primary: craftTheme.colors.primary,
+                primary: getPrimaryColor(store) || craftTheme.colors.primary,
                 surface: craftTheme.colors.surfaceHover,
               }}
             />
@@ -300,7 +302,7 @@ export default function CraftTheme({ store, products, categories, onWhatsAppClic
                 text: craftTheme.colors.text,
                 border: craftTheme.colors.border,
                 background: craftTheme.colors.background,
-                primary: craftTheme.colors.primary,
+                primary: getPrimaryColor(store) || craftTheme.colors.primary,
               }}
               className="ml-auto"
             />

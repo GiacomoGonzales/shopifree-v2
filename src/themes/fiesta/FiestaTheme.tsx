@@ -25,6 +25,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -39,6 +40,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -295,6 +297,7 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
         <header className="sticky top-0 z-50">
           <div
             className="transition-all duration-300"
+            data-sf-header-surface=""
             style={{
               backgroundColor: scrolled ? `${MORADO_FONDO}f0` : MORADO_FONDO,
               backdropFilter: scrolled ? 'blur(12px)' : undefined,
@@ -310,7 +313,7 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                   {showName && (
                     <h1 className="text-[1.4rem] leading-none truncate"
                         style={{ fontFamily: fiestaTheme.fonts.heading, fontWeight: 700, color: '#fff' }}>
-                      {store.name}
+                      <EditableText path="name" value={store.name} required />
                     </h1>
                   )}
                 </div>
@@ -401,10 +404,10 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                     textShadow: `3px 3px 0 ${TINTA}, 6px 6px 0 rgba(255,196,46,0.35)`,
                     letterSpacing: '0.01em',
                   }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="relative mt-3 text-lg font-bold" style={{ color: DORADO }}>{store.about.slogan}</p>
+                <p className="relative mt-3 text-lg font-bold" style={{ color: DORADO }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
@@ -430,7 +433,7 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                 <span key={i} className="flex items-center gap-6 shrink-0">
                   <span className="uppercase text-sm tracking-[0.18em]"
                         style={{ fontFamily: fiestaTheme.fonts.heading, fontWeight: 700, color: TINTA }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </span>
                   <PizzaSlice size={20} rotate={i % 2 ? 25 : -15} style={{ color: TINTA }} />
                 </span>
@@ -471,7 +474,7 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                   textMuted: fiestaTheme.colors.textMuted,
                   border: fiestaTheme.colors.border,
                   background: fiestaTheme.colors.background,
-                  primary: fiestaTheme.colors.primary,
+                  primary: getPrimaryColor(store) || fiestaTheme.colors.primary,
                   surface: fiestaTheme.colors.surface,
                 }}
               />
@@ -483,7 +486,7 @@ export default function FiestaTheme({ store, products, categories, onWhatsAppCli
                   text: fiestaTheme.colors.text,
                   border: fiestaTheme.colors.border,
                   background: fiestaTheme.colors.background,
-                  primary: fiestaTheme.colors.primary,
+                  primary: getPrimaryColor(store) || fiestaTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

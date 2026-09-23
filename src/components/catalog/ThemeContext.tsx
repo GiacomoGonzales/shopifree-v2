@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
 import { setPixelDefaultCurrency } from '../../lib/pixels'
+import { getHeaderColors, getPrimaryColor, readableTextOn } from '../../themes/shared/themeColors'
+import { getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
 
 /**
  * Theme configuration that each theme provides
@@ -83,6 +85,31 @@ export function useThemeOptional() {
   return useContext(ThemeContext)
 }
 
+/** Solo colores hex: el valor termina dentro de un <style> y viene del dueno de la tienda. */
+const HEX_COLOR = /^#[0-9a-f]{3,8}$/i
+
+/**
+ * CSS para los colores del header elegidos en el editor en vivo. Cada tema
+ * escribe su propio <header>, asi que en vez de tocar los 87 se pisa el color
+ * desde aca. Los elementos con fondo propio (el contador del carrito, botones
+ * rellenos) conservan su color de texto para seguir siendo legibles.
+ */
+function headerColorsCss(bg?: string, text?: string) {
+  // Algunos temas (clay, petcard, fiesta) pintan el header como una "pastilla" interna:
+  // esa pastilla, marcada con data-sf-header-surface, es la que lleva el color.
+  const rules: string[] = []
+  if (bg && HEX_COLOR.test(bg)) {
+    rules.push(`[data-sf-store] header,[data-sf-store] header [data-sf-header-surface]{background:${bg}!important}`)
+  }
+  if (text && HEX_COLOR.test(text)) {
+    rules.push(`[data-sf-store] header{color:${text}!important}`)
+    // `[class^="bg-"]` / `[class*=" bg-"]` detectan fondos reales y no `hover:bg-…`;
+    // un fondo transparente no cuenta como fondo propio.
+    rules.push(`[data-sf-store] header :where(a,button,span,p,h1,h2,h3,h4,nav,div,svg,small,strong):not(:is([class^="bg-"],[class*=" bg-"]):not([class*="bg-transparent"])):not([style*="background"]:not([style*="background-color: transparent"])),[data-sf-store] header [data-sf-header-surface]{color:inherit!important}`)
+  }
+  return rules.join('\n')
+}
+
 interface ThemeProviderProps {
   theme: ThemeConfig
   store: Store
@@ -93,11 +120,23 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   const language = store.language || 'es'
 
   // Merge store-level effect overrides into theme
+  const primary = getPrimaryColor(store)
   const mergedTheme = useMemo(() => {
     const s = store.themeSettings
-    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined && s?.paginationType === undefined && s?.productViewMode === undefined) return theme
-    return {
+    // Color principal del editor en vivo: lo leen los componentes compartidos
+    // (tarjetas, carrito, checkout). El texto encima se ajusta para que se lea.
+    const withPrimary = primary ? {
       ...theme,
+      colors: {
+        ...theme.colors,
+        primary,
+        primaryHover: `color-mix(in srgb, ${primary} 85%, black)`,
+        textInverted: readableTextOn(primary),
+      },
+    } : theme
+    if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined && s?.paginationType === undefined && s?.productViewMode === undefined) return withPrimary
+    return {
+      ...withPrimary,
       effects: {
         ...theme.effects,
         ...(s?.scrollReveal !== undefined && { scrollReveal: s.scrollReveal }),
@@ -107,7 +146,15 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(s?.productViewMode !== undefined && { productViewMode: s.productViewMode }),
       }
     }
-  }, [theme, store.themeSettings])
+  }, [theme, store.themeSettings, primary])
+
+  const headerColors = getHeaderColors(store)
+  const headingFont = getHeadingFont(store)
+  // Titulos y el nombre de la tienda (marcado por EditableText) con la tipografia elegida.
+  const fontCss = headingFont
+    ? `[data-sf-store] :is(h1,h2,h3,[data-sf-text="name"]){font-family:${headingFont.family}!important}`
+    : ''
+  const overrideCss = [headerColorsCss(headerColors.background, headerColors.text), fontCss].filter(Boolean).join('\n')
 
   // Propagate store currency to pixel helpers so tracking events use the right currency
   useEffect(() => {
@@ -122,7 +169,12 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
       language
     }}>
       <BusinessTypeProvider businessType={store.businessType} language={language}>
-        {children}
+        {/* display: contents — el wrapper no participa del layout (sticky, min-h-screen siguen igual). */}
+        <div data-sf-store="" style={{ display: 'contents' }}>
+          {headingFont && <link rel="stylesheet" href={googleFontUrl(headingFont)} precedence="default" />}
+          {overrideCss && <style>{overrideCss}</style>}
+          {children}
+        </div>
       </BusinessTypeProvider>
     </ThemeContext.Provider>
   )

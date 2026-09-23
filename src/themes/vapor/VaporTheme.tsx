@@ -24,9 +24,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -184,7 +186,7 @@ export default function VaporTheme({ store, products, categories, onWhatsAppClic
                       animation: 'glowPulse 3s ease-in-out infinite',
                     }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -244,10 +246,10 @@ export default function VaporTheme({ store, products, categories, onWhatsAppClic
                   textShadow: `0 0 40px ${purple}40, 0 0 80px ${purple}20, 0 0 120px ${warm}15`,
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-6 text-base uppercase tracking-[0.3em] font-light" style={{ color: warm, textShadow: `0 0 20px ${warm}30` }}>{store.about.slogan}</p>
+                <p className="mt-6 text-base uppercase tracking-[0.3em] font-light" style={{ color: warm, textShadow: `0 0 20px ${warm}30` }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick?.()} className="inline-flex items-center gap-2 mt-10 px-7 py-3.5 rounded-lg font-medium transition-all hover:scale-105" style={{ background: '#25D366', color: '#fff', boxShadow: '0 0 30px #25D36640' }}>
@@ -281,7 +283,7 @@ export default function VaporTheme({ store, products, categories, onWhatsAppClic
                   textMuted: vaporTheme.colors.textMuted,
                   border: vaporTheme.colors.border,
                   background: vaporTheme.colors.background,
-                  primary: vaporTheme.colors.primary,
+                  primary: getPrimaryColor(store) || vaporTheme.colors.primary,
                   surface: vaporTheme.colors.surfaceHover,
                 }}
               />
@@ -293,7 +295,7 @@ export default function VaporTheme({ store, products, categories, onWhatsAppClic
                   text: vaporTheme.colors.text,
                   border: vaporTheme.colors.border,
                   background: vaporTheme.colors.background,
-                  primary: vaporTheme.colors.primary,
+                  primary: getPrimaryColor(store) || vaporTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

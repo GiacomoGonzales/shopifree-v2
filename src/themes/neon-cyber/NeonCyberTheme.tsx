@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -182,7 +184,7 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
                     textShadow: `0 0 20px ${cyan}50`
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -277,14 +279,14 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
                 textShadow: `0 0 30px ${cyan}40`
               }}
             >
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h2>
             {store.about?.slogan && (
               <p
                 className="mt-4 text-lg tracking-wide"
                 style={{ color: '#8888aa' }}
               >
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
             {store.whatsapp && (
@@ -341,7 +343,7 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
                   textMuted: neonCyberTheme.colors.textMuted,
                   border: neonCyberTheme.colors.border,
                   background: neonCyberTheme.colors.background,
-                  primary: neonCyberTheme.colors.primary,
+                  primary: getPrimaryColor(store) || neonCyberTheme.colors.primary,
                   surface: neonCyberTheme.colors.surfaceHover,
                 }}
               />
@@ -353,7 +355,7 @@ export default function NeonCyberTheme({ store, products, categories, onWhatsApp
                   text: neonCyberTheme.colors.text,
                   border: neonCyberTheme.colors.border,
                   background: neonCyberTheme.colors.background,
-                  primary: neonCyberTheme.colors.primary,
+                  primary: getPrimaryColor(store) || neonCyberTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

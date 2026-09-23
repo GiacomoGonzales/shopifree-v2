@@ -24,10 +24,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -212,7 +214,7 @@ export default function GlacierTheme({ store, products, categories, onWhatsAppCl
                   className="text-xl font-light tracking-widest uppercase"
                   style={{ fontFamily: "'Raleway', sans-serif", color: '#0C4A6E', letterSpacing: '0.2em' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
               <div className="flex items-center gap-3">
@@ -271,10 +273,10 @@ export default function GlacierTheme({ store, products, categories, onWhatsAppCl
                   textShadow: '0 2px 20px rgba(2,132,199,0.15)',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-5 text-sm uppercase tracking-[0.4em] font-light" style={{ color: ice }}>{store.about.slogan}</p>
+                <p className="mt-5 text-sm uppercase tracking-[0.4em] font-light" style={{ color: ice }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick?.()} className="inline-flex items-center gap-2 mt-10 px-7 py-3.5 rounded-xl font-medium transition-all hover:scale-105" style={{ background: '#25D366', color: '#fff', boxShadow: '0 4px 25px #25D36630' }}>
@@ -308,7 +310,7 @@ export default function GlacierTheme({ store, products, categories, onWhatsAppCl
                   textMuted: glacierTheme.colors.textMuted,
                   border: glacierTheme.colors.border,
                   background: glacierTheme.colors.background,
-                  primary: glacierTheme.colors.primary,
+                  primary: getPrimaryColor(store) || glacierTheme.colors.primary,
                   surface: glacierTheme.colors.surfaceHover,
                 }}
               />
@@ -320,7 +322,7 @@ export default function GlacierTheme({ store, products, categories, onWhatsAppCl
                   text: glacierTheme.colors.text,
                   border: glacierTheme.colors.border,
                   background: glacierTheme.colors.background,
-                  primary: glacierTheme.colors.primary,
+                  primary: getPrimaryColor(store) || glacierTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

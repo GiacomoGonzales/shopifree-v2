@@ -15,10 +15,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -151,7 +153,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
                 <img src={headerLogo} alt={store.name} className={logoClassName} />
               )}
               {showName && <h1 className="font-serif-luxe text-2xl md:text-3xl font-semibold tracking-wide" style={{ color: darkBg }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="relative group">
@@ -177,16 +179,16 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
                 <HeroImg src={store.heroImageMobile || store.heroImage} alt="" className="w-full h-auto max-h-[400px] object-contain" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
-                  <h2 className="font-serif-luxe text-3xl text-white mb-2">{store.name}</h2>
-                  {store.about?.slogan && <p className="text-white/80 text-sm tracking-widest uppercase">{store.about.slogan}</p>}
+                  <h2 className="font-serif-luxe text-3xl text-white mb-2"><EditableText path="name" value={store.name} required /></h2>
+                  {store.about?.slogan && <p className="text-white/80 text-sm tracking-widest uppercase"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
               </div>
               <div className="hidden md:block relative overflow-hidden">
                 <HeroImg src={store.heroImage || store.heroImageMobile} alt="" className="w-full aspect-[16/5] object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
-                  <h2 className="font-serif-luxe text-5xl lg:text-6xl text-white mb-3">{store.name}</h2>
-                  {store.about?.slogan && <p className="text-white/80 text-sm tracking-[0.3em] uppercase">{store.about.slogan}</p>}
+                  <h2 className="font-serif-luxe text-5xl lg:text-6xl text-white mb-3"><EditableText path="name" value={store.name} required /></h2>
+                  {store.about?.slogan && <p className="text-white/80 text-sm tracking-[0.3em] uppercase"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
               </div>
             </>
@@ -194,8 +196,8 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
             <div className="py-20 md:py-32 text-center" style={{ backgroundColor: darkBg }}>
               <div className="max-w-4xl mx-auto px-6">
                 <div className="w-16 h-px mx-auto mb-8" style={{ backgroundColor: gold }} />
-                <h1 className="font-serif-luxe text-5xl md:text-7xl text-white mb-6">{store.name}</h1>
-                {store.about?.slogan && <p className="text-white/60 text-sm tracking-[0.3em] uppercase">{store.about.slogan}</p>}
+                <h1 className="font-serif-luxe text-5xl md:text-7xl text-white mb-6"><EditableText path="name" value={store.name} required /></h1>
+                {store.about?.slogan && <p className="text-white/60 text-sm tracking-[0.3em] uppercase"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 <div className="w-16 h-px mx-auto mt-8" style={{ backgroundColor: gold }} />
               </div>
             </div>
@@ -234,7 +236,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
                 textMuted: luxeTheme.colors.textMuted,
                 border: luxeTheme.colors.border,
                 background: luxeTheme.colors.background,
-                primary: luxeTheme.colors.primary,
+                primary: getPrimaryColor(store) || luxeTheme.colors.primary,
                 surface: luxeTheme.colors.surfaceHover,
               }}
             />
@@ -246,7 +248,7 @@ export default function LuxeTheme({ store, products, categories, onWhatsAppClick
                 text: luxeTheme.colors.text,
                 border: luxeTheme.colors.border,
                 background: luxeTheme.colors.background,
-                primary: luxeTheme.colors.primary,
+                primary: getPrimaryColor(store) || luxeTheme.colors.primary,
               }}
               className="ml-auto"
             />

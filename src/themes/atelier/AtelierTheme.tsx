@@ -28,10 +28,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -154,7 +156,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
                     className="text-xl tracking-wide"
                     style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1A1814' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -184,7 +186,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
                     className="text-3xl tracking-wide"
                     style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1A1814' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -216,11 +218,11 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
               className="text-5xl md:text-7xl lg:text-8xl font-light leading-[1.05] italic"
               style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1A1814' }}
             >
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h2>
             {store.about?.slogan && (
               <p className="mt-8 text-base md:text-lg leading-relaxed max-w-xl mx-auto" style={{ color: '#6B6253' }}>
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
             <div className="mt-12 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] uppercase" style={{ color: '#6B6253' }}>
@@ -236,7 +238,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
                 <HeroImg src={store.heroImage || store.heroImageMobile} alt={store.name} className="w-full h-full object-cover" />
               </div>
               <p className="text-center mt-4 text-xs italic" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#6B6253' }}>
-                {store.about?.slogan || store.name}, {year}
+                <EditableText path="about.slogan" value={store.about?.slogan} fallback={store.name} />, {year}
               </p>
             </div>
           )}
@@ -277,7 +279,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
                 textMuted: atelierTheme.colors.textMuted,
                 border: atelierTheme.colors.border,
                 background: atelierTheme.colors.background,
-                primary: atelierTheme.colors.primary,
+                primary: getPrimaryColor(store) || atelierTheme.colors.primary,
                 surface: atelierTheme.colors.surfaceHover,
               }}
             />
@@ -289,7 +291,7 @@ export default function AtelierTheme({ store, products, categories, onWhatsAppCl
                 text: atelierTheme.colors.text,
                 border: atelierTheme.colors.border,
                 background: atelierTheme.colors.background,
-                primary: atelierTheme.colors.primary,
+                primary: getPrimaryColor(store) || atelierTheme.colors.primary,
               }}
               className="ml-auto"
             />

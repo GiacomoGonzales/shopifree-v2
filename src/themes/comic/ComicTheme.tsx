@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -157,7 +159,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
                   className="text-2xl md:text-3xl tracking-wider"
                   style={{ fontFamily: "'Bangers', sans-serif", color: '#E63946', WebkitTextStroke: '1.5px #0F0F0F', textShadow: '3px 3px 0 #0F0F0F' }}
                 >
-                  {store.name.toUpperCase()}
+                  <EditableText path="name" value={store.name} required className="uppercase" />
                 </span>
               )}
             </div>
@@ -220,7 +222,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
                     textShadow: '5px 5px 0 #FFE600',
                   }}
                 >
-                  {store.name.toUpperCase()}
+                  <EditableText path="name" value={store.name} required className="uppercase" />
                 </h1>
                 {store.about?.slogan && (
                   <div
@@ -233,7 +235,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
                     }}
                   >
                     <p className="text-base md:text-lg" style={{ color: '#0F0F0F' }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   </div>
                 )}
@@ -314,7 +316,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
                 textMuted: comicTheme.colors.textMuted,
                 border: comicTheme.colors.border,
                 background: comicTheme.colors.background,
-                primary: comicTheme.colors.primary,
+                primary: getPrimaryColor(store) || comicTheme.colors.primary,
                 surface: comicTheme.colors.surfaceHover,
               }}
             />
@@ -326,7 +328,7 @@ export default function ComicTheme({ store, products, categories, onWhatsAppClic
                 text: comicTheme.colors.text,
                 border: comicTheme.colors.border,
                 background: comicTheme.colors.background,
-                primary: comicTheme.colors.primary,
+                primary: getPrimaryColor(store) || comicTheme.colors.primary,
               }}
               className="ml-auto"
             />

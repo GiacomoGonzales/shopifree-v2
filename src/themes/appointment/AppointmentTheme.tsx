@@ -11,6 +11,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -72,7 +73,7 @@ export default function AppointmentTheme({ store, products, categories, onWhatsA
           <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate font-bold" style={{ fontFamily: appointmentTheme.fonts.heading }}>{store.name}</span>}
+              {showName && <span className="truncate font-bold" style={{ fontFamily: appointmentTheme.fonts.heading }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors hover:opacity-90" style={{ backgroundColor: appBlue, color: '#fff' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
@@ -91,8 +92,8 @@ export default function AppointmentTheme({ store, products, categories, onWhatsA
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs tracking-[0.3em] font-semibold" style={{ color: appBlue }}>{L.book}</p>
-                  <h1 className="mt-1" style={{ fontFamily: appointmentTheme.fonts.heading, fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 700 }}>{store.name}</h1>
-                  {store.about?.slogan && <p className="text-sm mt-1" style={{ color: appointmentTheme.colors.textMuted }}>{store.about.slogan}</p>}
+                  <h1 className="mt-1" style={{ fontFamily: appointmentTheme.fonts.heading, fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 700 }}><EditableText path="name" value={store.name} required /></h1>
+                  {store.about?.slogan && <p className="text-sm mt-1" style={{ color: appointmentTheme.colors.textMuted }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
                 <div className="-rotate-6 text-center px-3 py-1.5 rounded hidden sm:block flex-shrink-0" style={{ border: `2px solid ${appGreen}`, color: appGreen }}>
                   <p className="text-[10px] font-bold tracking-widest leading-none">{L.confirmed}</p>

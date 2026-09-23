@@ -26,10 +26,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -169,7 +171,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
             <div className="flex items-center gap-3">
               {showName && (
                 <span className="hidden sm:inline" style={{ fontFamily: "'Old Standard TT', serif", textTransform: 'none', letterSpacing: 'normal', fontSize: '0.9rem', fontWeight: 700 }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </span>
               )}
               <button onClick={() => setIsCartOpen(true)} className="hover:underline underline-offset-4">
@@ -200,7 +202,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
                   className="text-center text-3xl sm:text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight"
                   style={{ fontFamily: "'Old Standard TT', serif", fontWeight: 700, color: '#1B1610' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -211,7 +213,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
                 className="text-center mt-3 text-xs md:text-base italic px-2"
                 style={{ fontFamily: "'Old Standard TT', serif", color: '#5A4F40' }}
               >
-                &mdash; {store.about.slogan} &mdash;
+                &mdash; <EditableText path="about.slogan" value={store.about?.slogan} /> &mdash;
               </p>
             )}
 
@@ -315,7 +317,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
                 textMuted: gazetteTheme.colors.textMuted,
                 border: gazetteTheme.colors.border,
                 background: gazetteTheme.colors.background,
-                primary: gazetteTheme.colors.primary,
+                primary: getPrimaryColor(store) || gazetteTheme.colors.primary,
                 surface: gazetteTheme.colors.surfaceHover,
               }}
             />
@@ -327,7 +329,7 @@ export default function GazetteTheme({ store, products, categories, onWhatsAppCl
                 text: gazetteTheme.colors.text,
                 border: gazetteTheme.colors.border,
                 background: gazetteTheme.colors.background,
-                primary: gazetteTheme.colors.primary,
+                primary: getPrimaryColor(store) || gazetteTheme.colors.primary,
               }}
               className="ml-auto"
             />

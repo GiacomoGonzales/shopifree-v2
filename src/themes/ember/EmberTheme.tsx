@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -27,6 +28,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -174,7 +176,7 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                 </div>
               )}
               {showName && <h1 className="font-ember text-xl md:text-2xl font-semibold" style={{ color: '#F5F0EB' }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>}
             </div>
 
@@ -220,11 +222,11 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-ember text-3xl font-semibold text-white">
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-ember-body text-sm mt-2" style={{ color: warmGray }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -242,11 +244,11 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-ember text-5xl font-semibold text-white">
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-ember-body text-lg mt-3" style={{ color: warmGray }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -269,11 +271,11 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                 </div>
 
                 <h1 className="font-ember text-4xl md:text-6xl font-bold text-white">
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="font-ember-body text-lg md:text-xl mt-4" style={{ color: warmGray }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -323,7 +325,7 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                 textMuted: emberTheme.colors.textMuted,
                 border: emberTheme.colors.border,
                 background: emberTheme.colors.background,
-                primary: emberTheme.colors.primary,
+                primary: getPrimaryColor(store) || emberTheme.colors.primary,
                 surface: emberTheme.colors.surfaceHover,
               }}
             />
@@ -335,7 +337,7 @@ export default function EmberTheme({ store, products, categories, onWhatsAppClic
                 text: emberTheme.colors.text,
                 border: emberTheme.colors.border,
                 background: emberTheme.colors.background,
-                primary: emberTheme.colors.primary,
+                primary: getPrimaryColor(store) || emberTheme.colors.primary,
               }}
               className="ml-auto"
             />

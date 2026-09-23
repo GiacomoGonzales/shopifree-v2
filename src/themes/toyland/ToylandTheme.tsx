@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -188,7 +190,7 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
               {showName && (
                 <div>
                   <h1 className="font-toyland text-2xl md:text-3xl font-extrabold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 </div>
               )}
@@ -236,11 +238,11 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-toyland text-3xl font-extrabold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-toyland font-bold mt-1" style={{ color: turquoise }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -259,11 +261,11 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-toyland text-5xl lg:text-6xl font-extrabold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-toyland text-xl font-bold mt-2" style={{ color: turquoise }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -306,12 +308,12 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
                 </div>
 
                 <h1 className="font-toyland text-4xl md:text-6xl font-extrabold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-bold mt-4 font-toyland" style={{ color: turquoise }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -376,7 +378,7 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
                 textMuted: toylandTheme.colors.textMuted,
                 border: toylandTheme.colors.border,
                 background: toylandTheme.colors.background,
-                primary: toylandTheme.colors.primary,
+                primary: getPrimaryColor(store) || toylandTheme.colors.primary,
                 surface: toylandTheme.colors.surfaceHover,
               }}
             />
@@ -388,7 +390,7 @@ export default function ToylandTheme({ store, products, categories, onWhatsAppCl
                 text: toylandTheme.colors.text,
                 border: toylandTheme.colors.border,
                 background: toylandTheme.colors.background,
-                primary: toylandTheme.colors.primary,
+                primary: getPrimaryColor(store) || toylandTheme.colors.primary,
               }}
               className="ml-auto"
             />

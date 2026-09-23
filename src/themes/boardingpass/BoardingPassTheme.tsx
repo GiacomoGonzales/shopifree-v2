@@ -14,6 +14,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -87,7 +88,7 @@ export default function BoardingPassTheme({ store, products, categories, onWhats
             <div className="flex items-center gap-3 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
               <svg className="w-5 h-5" style={{ color: sky }} fill="currentColor" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L11 19v-5.5L21 16z" /></svg>
-              {showName && <span className="font-bold tracking-wide truncate" style={{ fontFamily: bpTheme.fonts.heading, fontSize: '1.2rem' }}>{store.name}</span>}
+              {showName && <span className="font-bold tracking-wide truncate" style={{ fontFamily: bpTheme.fonts.heading, fontSize: '1.2rem' }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1.5 rounded text-xs font-semibold transition-colors hover:bg-white/15" style={{ border: '1px solid rgba(255,255,255,0.4)' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>

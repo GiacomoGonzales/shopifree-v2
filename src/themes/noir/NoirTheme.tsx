@@ -29,10 +29,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -191,7 +193,7 @@ export default function NoirTheme({ store, products, categories, onWhatsAppClick
                     letterSpacing: '0.15em',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
               <div className="flex items-center gap-3">
@@ -243,10 +245,10 @@ export default function NoirTheme({ store, products, categories, onWhatsAppClick
                   animation: 'glowPulse 4s ease-in-out infinite',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-5 text-sm uppercase tracking-[0.3em] font-light" style={{ color: gold }}>{store.about.slogan}</p>
+                <p className="mt-5 text-sm uppercase tracking-[0.3em] font-light" style={{ color: gold }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick?.()} className="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-lg font-medium transition-all hover:scale-105" style={{ background: '#25D366', color: '#fff', boxShadow: '0 0 30px #25D36630' }}>
@@ -280,7 +282,7 @@ export default function NoirTheme({ store, products, categories, onWhatsAppClick
                   textMuted: noirTheme.colors.textMuted,
                   border: noirTheme.colors.border,
                   background: noirTheme.colors.background,
-                  primary: noirTheme.colors.primary,
+                  primary: getPrimaryColor(store) || noirTheme.colors.primary,
                   surface: noirTheme.colors.surfaceHover,
                 }}
               />
@@ -292,7 +294,7 @@ export default function NoirTheme({ store, products, categories, onWhatsAppClick
                   text: noirTheme.colors.text,
                   border: noirTheme.colors.border,
                   background: noirTheme.colors.background,
-                  primary: noirTheme.colors.primary,
+                  primary: getPrimaryColor(store) || noirTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

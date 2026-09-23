@@ -2,6 +2,14 @@ import { Link } from 'react-router-dom'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { optimizeImage } from '../../utils/cloudinary'
+import { getFooterColors } from '../../themes/shared/themeColors'
+import { EditableText } from './LiveEdit'
+import { useLiveEdit } from './liveEditContext'
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Mezcla un color con transparencia, para derivar tonos secundarios del color de texto elegido. */
+const fade = (color: string, percent: number) => `color-mix(in srgb, ${color} ${percent}%, transparent)`
 
 interface StoreFooterProps {
   onWhatsAppClick?: () => void
@@ -10,11 +18,26 @@ interface StoreFooterProps {
 export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
   const { theme, store, language } = useTheme()
   const t = getThemeTranslations(language)
+  const editing = useLiveEdit()
+
+  // Colores elegidos en el editor en vivo para este tema. Del color de texto se
+  // derivan los tonos secundarios (texto gris, lineas, fondo de los iconos).
+  const custom = getFooterColors(store)
+  const fg = custom.text
+  const colors = {
+    text: fg || theme.colors.text,
+    muted: fg ? fade(fg, 75) : theme.colors.textMuted,
+    faint: fg ? fade(fg, 55) : theme.colors.border,
+    line: fg ? fade(fg, 20) : theme.colors.border,
+    chip: fg ? fade(fg, 12) : theme.colors.surfaceHover,
+  }
 
   return (
     <footer
       className="mt-12"
-      style={{ borderTop: `1px solid ${theme.colors.border}` }}
+      style={{ borderTop: `1px solid ${colors.line}`, backgroundColor: custom.background, color: colors.text }}
+      // En el editor los enlaces (WhatsApp, mapa, redes) no deben sacarte de la pagina.
+      onClickCapture={editing ? e => { if ((e.target as HTMLElement).closest('a')) e.preventDefault() } : undefined}
     >
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
@@ -36,25 +59,30 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
                     <div
                       className="w-12 h-12 flex items-center justify-center"
                       style={{
-                        backgroundColor: theme.colors.surfaceHover,
+                        backgroundColor: colors.chip,
                         borderRadius: theme.radius.full
                       }}
                     >
-                      <span className="text-lg font-semibold" style={{ color: theme.colors.textMuted }}>
+                      <span className="text-lg font-semibold" style={{ color: colors.muted }}>
                         {store.name.charAt(0)}
                       </span>
                     </div>
                   )}
-                  <span className="font-semibold text-lg" style={{ color: theme.colors.text }}>
-                    {store.name}
+                  <span className="font-semibold text-lg" style={{ color: colors.text }}>
+                    <EditableText path="name" value={store.name} required />
                   </span>
                 </>
               )}
             </div>
-            {store.about?.description && (
-              <p className="text-sm leading-relaxed" style={{ color: theme.colors.textMuted }}>
-                {store.about.description}
-              </p>
+            {/* En el editor la descripcion se muestra aunque este vacia, para poder escribirla. */}
+            {(store.about?.description || editing) && (
+              <div style={{ color: colors.muted }}><EditableText
+                as="p"
+                path="about.description"
+                value={store.about?.description}
+                placeholder="Cuéntale a tus clientes sobre tu negocio"
+                className="text-sm leading-relaxed"
+              /></div>
             )}
           </div>
 
@@ -62,7 +90,7 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
           <div className="space-y-4">
             <h3
               className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: theme.colors.text }}
+              style={{ color: colors.text }}
             >
               {t.contact}
             </h3>
@@ -74,24 +102,24 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
                   rel="noopener noreferrer"
                   onClick={onWhatsAppClick}
                   className="flex items-center gap-3 text-sm transition-colors"
-                  style={{ color: theme.colors.textMuted }}
+                  style={{ color: colors.muted }}
                 >
-                  <svg className="w-5 h-5" style={{ color: theme.colors.border }} fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" style={{ color: colors.faint }} fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                   </svg>
                   {store.whatsapp}
                 </a>
               )}
-              {store.email && (
+              {(store.email || editing) && (
                 <a
                   href={`mailto:${store.email}`}
                   className="flex items-center gap-3 text-sm transition-colors"
-                  style={{ color: theme.colors.textMuted }}
+                  style={{ color: colors.muted }}
                 >
-                  <svg className="w-5 h-5" style={{ color: theme.colors.border }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" style={{ color: colors.faint }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
-                  {store.email}
+                  <EditableText path="email" value={store.email} pattern={EMAIL} placeholder="tu@correo.com" />
                 </a>
               )}
               {store.location && (store.location.address || store.location.city) && (
@@ -100,14 +128,14 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-3 text-sm transition-colors"
-                  style={{ color: theme.colors.textMuted }}
+                  style={{ color: colors.muted }}
                 >
-                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: theme.colors.border }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: colors.faint }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                   </svg>
                   <span>
-                    {store.location.address && <span className="block">{store.location.address}</span>}
+                    {store.location.address && <EditableText path="location.address" value={store.location.address} className="block" />}
                     {[store.location.city, store.location.country].filter(Boolean).join(', ')}
                   </span>
                 </a>
@@ -120,7 +148,7 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
             <div className="space-y-4">
               <h3
                 className="text-sm font-semibold uppercase tracking-wide"
-                style={{ color: theme.colors.text }}
+                style={{ color: colors.text }}
               >
                 {t.followUs}
               </h3>
@@ -132,8 +160,8 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center transition-colors"
                     style={{
-                      backgroundColor: theme.colors.surfaceHover,
-                      color: theme.colors.textMuted,
+                      backgroundColor: colors.chip,
+                      color: colors.muted,
                       borderRadius: theme.radius.full
                     }}
                     title="Instagram"
@@ -150,8 +178,8 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center transition-colors"
                     style={{
-                      backgroundColor: theme.colors.surfaceHover,
-                      color: theme.colors.textMuted,
+                      backgroundColor: colors.chip,
+                      color: colors.muted,
                       borderRadius: theme.radius.full
                     }}
                     title="Facebook"
@@ -168,8 +196,8 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center transition-colors"
                     style={{
-                      backgroundColor: theme.colors.surfaceHover,
-                      color: theme.colors.textMuted,
+                      backgroundColor: colors.chip,
+                      color: colors.muted,
                       borderRadius: theme.radius.full
                     }}
                     title="TikTok"
@@ -187,16 +215,16 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
         {/* Bottom */}
         <div
           className="mt-12 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-          style={{ borderTop: `1px solid ${theme.colors.border}` }}
+          style={{ borderTop: `1px solid ${colors.line}` }}
         >
           <div className="flex items-center gap-4">
-            <p className="text-sm" style={{ color: theme.colors.border }}>
+            <p className="text-sm" style={{ color: colors.faint }}>
               © {new Date().getFullYear()} {store.name}
             </p>
             <Link
               to="/privacy"
               className="text-sm transition-colors hover:underline"
-              style={{ color: theme.colors.border }}
+              style={{ color: colors.faint }}
             >
               {t.privacyPolicy}
             </Link>
@@ -207,7 +235,7 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm transition-colors"
-              style={{ color: theme.colors.border }}
+              style={{ color: colors.faint }}
             >
               {t.poweredBy}
             </a>

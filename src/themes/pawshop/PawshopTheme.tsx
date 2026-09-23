@@ -26,10 +26,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -177,7 +179,7 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
               )}
               <div>
                 {showName && <h1 className="font-paw text-2xl md:text-3xl font-bold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
             </div>
@@ -224,11 +226,11 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-paw text-3xl font-bold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-paw font-semibold mt-1" style={{ color: deepBlue }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -247,11 +249,11 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-paw text-5xl lg:text-6xl font-bold" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-paw text-xl font-semibold mt-2" style={{ color: deepBlue }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -287,12 +289,12 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
                 </div>
 
                 <h1 className="font-paw text-4xl md:text-6xl font-bold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-semibold mt-4 font-paw" style={{ color: deepBlue }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -355,7 +357,7 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
                 textMuted: pawshopTheme.colors.textMuted,
                 border: pawshopTheme.colors.border,
                 background: pawshopTheme.colors.background,
-                primary: pawshopTheme.colors.primary,
+                primary: getPrimaryColor(store) || pawshopTheme.colors.primary,
                 surface: pawshopTheme.colors.surfaceHover,
               }}
             />
@@ -367,7 +369,7 @@ export default function PawshopTheme({ store, products, categories, onWhatsAppCl
                 text: pawshopTheme.colors.text,
                 border: pawshopTheme.colors.border,
                 background: pawshopTheme.colors.background,
-                primary: pawshopTheme.colors.primary,
+                primary: getPrimaryColor(store) || pawshopTheme.colors.primary,
               }}
               className="ml-auto"
             />

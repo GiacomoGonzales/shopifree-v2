@@ -27,9 +27,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -175,7 +177,7 @@ export default function TropicalTheme({ store, products, categories, onWhatsAppC
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -238,10 +240,10 @@ export default function TropicalTheme({ store, products, categories, onWhatsAppC
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-4 text-lg font-medium" style={{ color: '#8B6D50' }}>{store.about.slogan}</p>
+                <p className="mt-4 text-lg font-medium" style={{ color: '#8B6D50' }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a
@@ -289,7 +291,7 @@ export default function TropicalTheme({ store, products, categories, onWhatsAppC
                   textMuted: tropicalTheme.colors.textMuted,
                   border: tropicalTheme.colors.border,
                   background: tropicalTheme.colors.background,
-                  primary: tropicalTheme.colors.primary,
+                  primary: getPrimaryColor(store) || tropicalTheme.colors.primary,
                   surface: tropicalTheme.colors.surfaceHover,
                 }}
               />
@@ -301,7 +303,7 @@ export default function TropicalTheme({ store, products, categories, onWhatsAppC
                   text: tropicalTheme.colors.text,
                   border: tropicalTheme.colors.border,
                   background: tropicalTheme.colors.background,
-                  primary: tropicalTheme.colors.primary,
+                  primary: getPrimaryColor(store) || tropicalTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -158,7 +160,7 @@ export default function BauhausTheme({ store, products, categories, onWhatsAppCl
                   className="text-2xl md:text-3xl tracking-tight uppercase"
                   style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 800, color: '#0E0E0E', letterSpacing: '-0.02em' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -196,7 +198,7 @@ export default function BauhausTheme({ store, products, categories, onWhatsAppCl
                     className="text-5xl md:text-7xl lg:text-8xl leading-[0.9] uppercase tracking-tight text-white"
                     style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 900, letterSpacing: '-0.03em' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                 </div>
                 {/* Triangle */}
@@ -295,7 +297,7 @@ export default function BauhausTheme({ store, products, categories, onWhatsAppCl
                 textMuted: bauhausTheme.colors.textMuted,
                 border: bauhausTheme.colors.border,
                 background: bauhausTheme.colors.background,
-                primary: bauhausTheme.colors.primary,
+                primary: getPrimaryColor(store) || bauhausTheme.colors.primary,
                 surface: bauhausTheme.colors.surfaceHover,
               }}
             />
@@ -307,7 +309,7 @@ export default function BauhausTheme({ store, products, categories, onWhatsAppCl
                 text: bauhausTheme.colors.text,
                 border: bauhausTheme.colors.border,
                 background: bauhausTheme.colors.background,
-                primary: bauhausTheme.colors.primary,
+                primary: getPrimaryColor(store) || bauhausTheme.colors.primary,
               }}
               className="ml-auto"
             />

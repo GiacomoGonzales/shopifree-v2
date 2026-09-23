@@ -15,9 +15,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -154,7 +156,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
               )}
               {showName && (
               <span className="text-xl md:text-2xl font-black uppercase tracking-tight" style={{ color: accent }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </span>
               )}
             </div>
@@ -189,9 +191,9 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                 background: `linear-gradient(135deg, ${accent}CC 0%, transparent 50%, black 100%)`
               }} />
               <div className="absolute bottom-0 left-0 p-6">
-                <h1 className="text-4xl font-black uppercase tracking-tighter text-white leading-none">{store.name}</h1>
+                <h1 className="text-4xl font-black uppercase tracking-tighter text-white leading-none"><EditableText path="name" value={store.name} required /></h1>
                 {store.about?.slogan && (
-                  <p className="text-white/80 text-lg mt-2 max-w-lg uppercase tracking-wide font-medium">{store.about.slogan}</p>
+                  <p className="text-white/80 text-lg mt-2 max-w-lg uppercase tracking-wide font-medium"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                 )}
               </div>
             </div>
@@ -205,9 +207,9 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                 background: `linear-gradient(135deg, ${accent}CC 0%, transparent 50%, black 100%)`
               }} />
               <div className="absolute bottom-0 left-0 p-10">
-                <h1 className="text-6xl lg:text-7xl font-black uppercase tracking-tighter text-white leading-none">{store.name}</h1>
+                <h1 className="text-6xl lg:text-7xl font-black uppercase tracking-tighter text-white leading-none"><EditableText path="name" value={store.name} required /></h1>
                 {store.about?.slogan && (
-                  <p className="text-white/80 text-xl mt-2 max-w-lg uppercase tracking-wide font-medium">{store.about.slogan}</p>
+                  <p className="text-white/80 text-xl mt-2 max-w-lg uppercase tracking-wide font-medium"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                 )}
               </div>
             </div>
@@ -220,10 +222,10 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 blur-[100px] opacity-20" style={{ backgroundColor: accent }} />
             <div className="relative max-w-7xl mx-auto px-4 text-center">
               <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black uppercase tracking-tighter leading-none" style={{ color: accent }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>
               {store.about?.slogan && (
-                <p className="text-white/50 text-lg md:text-xl mt-6 uppercase tracking-widest">{store.about.slogan}</p>
+                <p className="text-white/50 text-lg md:text-xl mt-6 uppercase tracking-widest"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               <div className="w-32 h-1 mx-auto mt-8" style={{ backgroundColor: accent }} />
             </div>
@@ -261,7 +263,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                 textMuted: boldTheme.colors.textMuted,
                 border: boldTheme.colors.border,
                 background: boldTheme.colors.background,
-                primary: boldTheme.colors.primary,
+                primary: getPrimaryColor(store) || boldTheme.colors.primary,
                 surface: boldTheme.colors.surfaceHover,
               }}
             />
@@ -273,7 +275,7 @@ export default function BoldTheme({ store, products, categories, onWhatsAppClick
                 text: boldTheme.colors.text,
                 border: boldTheme.colors.border,
                 background: boldTheme.colors.background,
-                primary: boldTheme.colors.primary,
+                primary: getPrimaryColor(store) || boldTheme.colors.primary,
               }}
               className="ml-auto"
             />

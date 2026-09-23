@@ -24,9 +24,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -203,7 +205,7 @@ export default function VelvetTheme({ store, products, categories, onWhatsAppCli
                       letterSpacing: '0.1em',
                     }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -266,10 +268,10 @@ export default function VelvetTheme({ store, products, categories, onWhatsAppCli
                   letterSpacing: '0.05em',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-6 text-sm uppercase tracking-[0.4em] font-light" style={{ color: lavender }}>{store.about.slogan}</p>
+                <p className="mt-6 text-sm uppercase tracking-[0.4em] font-light" style={{ color: lavender }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {/* Ornamental line */}
               <div className="flex items-center justify-center gap-4 mt-8">
@@ -309,7 +311,7 @@ export default function VelvetTheme({ store, products, categories, onWhatsAppCli
                   textMuted: velvetTheme.colors.textMuted,
                   border: velvetTheme.colors.border,
                   background: velvetTheme.colors.background,
-                  primary: velvetTheme.colors.primary,
+                  primary: getPrimaryColor(store) || velvetTheme.colors.primary,
                   surface: velvetTheme.colors.surfaceHover,
                 }}
               />
@@ -321,7 +323,7 @@ export default function VelvetTheme({ store, products, categories, onWhatsAppCli
                   text: velvetTheme.colors.text,
                   border: velvetTheme.colors.border,
                   background: velvetTheme.colors.background,
-                  primary: velvetTheme.colors.primary,
+                  primary: getPrimaryColor(store) || velvetTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

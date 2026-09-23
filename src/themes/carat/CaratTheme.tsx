@@ -26,10 +26,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -160,7 +162,7 @@ export default function CaratTheme({ store, products, categories, onWhatsAppClic
                     color: charcoal,
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </span>
               )}
             </div>
@@ -168,7 +170,7 @@ export default function CaratTheme({ store, products, categories, onWhatsAppClic
               onClick={() => setIsCartOpen(true)}
               className="relative w-10 h-10 flex items-center justify-center rounded-full transition-colors hover:bg-black/5"
             >
-              <svg className="w-[22px] h-[22px]" fill="none" stroke={charcoal} strokeWidth={1.4} viewBox="0 0 24 24">
+              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24" style={{ color: charcoal }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
               </svg>
               {totalItems > 0 && (
@@ -198,7 +200,7 @@ export default function CaratTheme({ store, products, categories, onWhatsAppClic
                     className="absolute bottom-6 left-8 text-white max-w-md"
                     style={{ fontFamily: caratTheme.fonts.heading, fontSize: '1.6rem', fontStyle: 'italic', letterSpacing: '0.02em' }}
                   >
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
               </div>
@@ -212,11 +214,11 @@ export default function CaratTheme({ store, products, categories, onWhatsAppClic
                 style={{ fontFamily: caratTheme.fonts.heading, color: charcoal, letterSpacing: '0.08em', textTransform: 'uppercase' }}
                 className="text-4xl md:text-6xl font-medium"
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>
               {store.about?.slogan && (
                 <p className="mt-4 text-base md:text-lg" style={{ color: caratTheme.colors.textMuted, fontStyle: 'italic', fontFamily: caratTheme.fonts.heading }}>
-                  {store.about.slogan}
+                  <EditableText path="about.slogan" value={store.about?.slogan} />
                 </p>
               )}
               {store.whatsapp && (
@@ -276,7 +278,7 @@ export default function CaratTheme({ store, products, categories, onWhatsAppClic
                 textMuted: caratTheme.colors.textMuted,
                 border: caratTheme.colors.border,
                 background: caratTheme.colors.surface,
-                primary: caratTheme.colors.primary,
+                primary: getPrimaryColor(store) || caratTheme.colors.primary,
                 surface: caratTheme.colors.surfaceHover,
               }}
             />
@@ -288,7 +290,7 @@ export default function CaratTheme({ store, products, categories, onWhatsAppClic
                 text: caratTheme.colors.text,
                 border: caratTheme.colors.border,
                 background: caratTheme.colors.surface,
-                primary: caratTheme.colors.primary,
+                primary: getPrimaryColor(store) || caratTheme.colors.primary,
               }}
               className="ml-auto"
             />

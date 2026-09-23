@@ -11,6 +11,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -77,7 +78,7 @@ export default function SwatchTheme({ store, products, categories, onWhatsAppCli
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate tracking-[0.2em]" style={{ fontFamily: swatchTheme.fonts.heading, fontSize: '1.4rem' }}>{store.name}</span>}
+              {showName && <span className="truncate tracking-[0.2em]" style={{ fontFamily: swatchTheme.fonts.heading, fontSize: '1.4rem' }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase transition-colors hover:opacity-90" style={{ backgroundColor: swInk, color: '#fff' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
@@ -92,8 +93,8 @@ export default function SwatchTheme({ store, products, categories, onWhatsAppCli
           {/* Portada */}
           <div className="text-center">
             <p className="text-[11px] tracking-[0.4em]" style={{ color: swRose }}>{L.tagline}</p>
-            <h1 className="my-2" style={{ fontFamily: swatchTheme.fonts.heading, fontSize: 'clamp(2.6rem, 8vw, 4.5rem)', letterSpacing: '0.04em' }}>{store.name}</h1>
-            {store.about?.slogan && <p className="text-sm md:text-base" style={{ color: swatchTheme.colors.textMuted }}>{store.about.slogan}</p>}
+            <h1 className="my-2" style={{ fontFamily: swatchTheme.fonts.heading, fontSize: 'clamp(2.6rem, 8vw, 4.5rem)', letterSpacing: '0.04em' }}><EditableText path="name" value={store.name} required /></h1>
+            {store.about?.slogan && <p className="text-sm md:text-base" style={{ color: swatchTheme.colors.textMuted }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
           </div>
 
           {/* Carta de swatches */}

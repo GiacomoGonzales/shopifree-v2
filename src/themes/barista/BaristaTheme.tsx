@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -185,7 +187,7 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
               {(!headerLogo || showName) && (
               <div>
                 <h1 className="font-barista-heading text-2xl md:text-3xl font-bold" style={{ color: espresso }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               </div>
               )}
@@ -233,11 +235,11 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-barista-heading text-3xl font-bold" style={{ color: espresso }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-barista-heading italic font-medium mt-1" style={{ color: terracota }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -256,11 +258,11 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-barista-heading text-5xl lg:text-6xl font-bold" style={{ color: espresso }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-barista-heading text-xl italic font-medium mt-2" style={{ color: terracota }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -296,12 +298,12 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
                 </div>
 
                 <h1 className="font-barista-heading text-4xl md:text-6xl font-bold" style={{ color: espresso }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-medium mt-4 font-barista-heading italic" style={{ color: terracota }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -364,7 +366,7 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
                 textMuted: baristaTheme.colors.textMuted,
                 border: baristaTheme.colors.border,
                 background: baristaTheme.colors.background,
-                primary: baristaTheme.colors.primary,
+                primary: getPrimaryColor(store) || baristaTheme.colors.primary,
                 surface: baristaTheme.colors.surfaceHover,
               }}
             />
@@ -376,7 +378,7 @@ export default function BaristaTheme({ store, products, categories, onWhatsAppCl
                 text: baristaTheme.colors.text,
                 border: baristaTheme.colors.border,
                 background: baristaTheme.colors.background,
-                primary: baristaTheme.colors.primary,
+                primary: getPrimaryColor(store) || baristaTheme.colors.primary,
               }}
               className="ml-auto"
             />

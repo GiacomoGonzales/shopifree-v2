@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -146,7 +148,7 @@ export default function PaperCutTheme({ store, products, categories, onWhatsAppC
                   className="text-2xl md:text-3xl"
                   style={{ fontFamily: "'Patrick Hand', cursive", color: '#2A2419' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -216,11 +218,11 @@ export default function PaperCutTheme({ store, products, categories, onWhatsAppC
                 className="text-5xl md:text-7xl lg:text-8xl leading-tight"
                 style={{ fontFamily: "'Patrick Hand', cursive", color: '#2A2419', textShadow: '0 4px 0 rgba(255,253,247,0.6)' }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
                 <p className="mt-4 text-lg md:text-2xl" style={{ fontFamily: "'Patrick Hand', cursive", color: '#5A4A30' }}>
-                  {store.about.slogan}
+                  <EditableText path="about.slogan" value={store.about?.slogan} />
                 </p>
               )}
             </div>
@@ -281,7 +283,7 @@ export default function PaperCutTheme({ store, products, categories, onWhatsAppC
                 textMuted: paperCutTheme.colors.textMuted,
                 border: paperCutTheme.colors.border,
                 background: paperCutTheme.colors.background,
-                primary: paperCutTheme.colors.primary,
+                primary: getPrimaryColor(store) || paperCutTheme.colors.primary,
                 surface: paperCutTheme.colors.surfaceHover,
               }}
             />
@@ -293,7 +295,7 @@ export default function PaperCutTheme({ store, products, categories, onWhatsAppC
                 text: paperCutTheme.colors.text,
                 border: paperCutTheme.colors.border,
                 background: paperCutTheme.colors.background,
-                primary: paperCutTheme.colors.primary,
+                primary: getPrimaryColor(store) || paperCutTheme.colors.primary,
               }}
               className="ml-auto"
             />

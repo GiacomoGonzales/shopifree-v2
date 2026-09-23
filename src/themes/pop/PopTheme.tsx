@@ -15,10 +15,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -160,7 +162,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
                 </div>
               )}
               {showName && <h1 className="font-pop font-black text-xl md:text-2xl" style={{ color: dark }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="relative">
@@ -186,16 +188,16 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
                 <HeroImg src={store.heroImageMobile || store.heroImage} alt="" className="w-full h-auto max-h-[400px] object-contain" />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${dark}90 0%, transparent 60%)` }} />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
-                  <h2 className="font-pop font-black text-3xl text-white mb-2 drop-shadow-lg">{store.name}</h2>
-                  {store.about?.slogan && <p className="font-pop font-bold text-white/90">{store.about.slogan}</p>}
+                  <h2 className="font-pop font-black text-3xl text-white mb-2 drop-shadow-lg"><EditableText path="name" value={store.name} required /></h2>
+                  {store.about?.slogan && <p className="font-pop font-bold text-white/90"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
               </div>
               <div className="hidden md:block relative overflow-hidden">
                 <HeroImg src={store.heroImage || store.heroImageMobile} alt="" className="w-full aspect-[16/5] object-cover" />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, ${dark}80 0%, transparent 50%)` }} />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
-                  <h2 className="font-pop font-black text-5xl lg:text-6xl text-white mb-3 drop-shadow-lg">{store.name}</h2>
-                  {store.about?.slogan && <p className="font-pop font-bold text-xl text-white/90">{store.about.slogan}</p>}
+                  <h2 className="font-pop font-black text-5xl lg:text-6xl text-white mb-3 drop-shadow-lg"><EditableText path="name" value={store.name} required /></h2>
+                  {store.about?.slogan && <p className="font-pop font-bold text-xl text-white/90"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
               </div>
             </>
@@ -205,8 +207,8 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
               <div className="absolute bottom-10 right-10 w-32 h-32 rounded-3xl rotate-12 opacity-20" style={{ backgroundColor: light }} />
               <div className="absolute top-1/2 left-1/4 w-16 h-16 rounded-2xl -rotate-12 opacity-25" style={{ backgroundColor: light }} />
               <div className="relative max-w-4xl mx-auto px-6 text-center">
-                <h1 className="font-pop font-black text-5xl md:text-7xl text-white mb-4 drop-shadow-lg">{store.name}</h1>
-                {store.about?.slogan && <p className="font-pop font-bold text-xl md:text-2xl text-white/90">{store.about.slogan}</p>}
+                <h1 className="font-pop font-black text-5xl md:text-7xl text-white mb-4 drop-shadow-lg"><EditableText path="name" value={store.name} required /></h1>
+                {store.about?.slogan && <p className="font-pop font-bold text-xl md:text-2xl text-white/90"><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
               </div>
             </div>
           )}
@@ -243,7 +245,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
                 textMuted: popTheme.colors.textMuted,
                 border: popTheme.colors.border,
                 background: popTheme.colors.background,
-                primary: popTheme.colors.primary,
+                primary: getPrimaryColor(store) || popTheme.colors.primary,
                 surface: popTheme.colors.surfaceHover,
               }}
             />
@@ -255,7 +257,7 @@ export default function PopTheme({ store, products, categories, onWhatsAppClick,
                 text: popTheme.colors.text,
                 border: popTheme.colors.border,
                 background: popTheme.colors.background,
-                primary: popTheme.colors.primary,
+                primary: getPrimaryColor(store) || popTheme.colors.primary,
               }}
               className="ml-auto"
             />

@@ -28,6 +28,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -161,7 +162,7 @@ export default function ChatTheme({ store, products, categories, onWhatsAppClick
                 ? <img src={headerLogo} alt={store.name} className={logoClassName} />
                 : <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}>{store.name.charAt(0).toUpperCase()}</div>}
               <div className="min-w-0">
-                {showName && <p className="font-semibold leading-tight truncate">{store.name}</p>}
+                {showName && <p className="font-semibold leading-tight truncate"><EditableText path="name" value={store.name} required /></p>}
                 <span className="flex items-center gap-1.5 text-[11px] opacity-90">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#9DF5B4' }} />
                   {L.online} · {L.status}
@@ -203,7 +204,7 @@ export default function ChatTheme({ store, products, categories, onWhatsAppClick
           {/* Saludo de la tienda */}
           <div className="space-y-2 mb-4">
             <InBubble><strong>{L.hi}</strong></InBubble>
-            <div><InBubble>{store.about?.slogan || L.welcome}</InBubble></div>
+            <div><InBubble><EditableText path="about.slogan" value={store.about?.slogan} fallback={L.welcome} /></InBubble></div>
           </div>
 
           {/* Hero como imagen "compartida" */}

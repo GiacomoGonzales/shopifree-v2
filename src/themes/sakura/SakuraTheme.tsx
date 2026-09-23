@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -172,7 +174,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
               {showName && (
                 <div>
                   <h1 className="font-zen text-2xl md:text-3xl font-medium tracking-wide" style={{ color: white }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 </div>
               )}
@@ -230,11 +232,11 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
                   <h2 className="font-zen text-3xl font-medium" style={{ color: white }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-[0.15em] uppercase mt-2 font-sakura-body" style={{ color: gold }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -261,11 +263,11 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-16 text-center">
                   <h2 className="font-zen text-5xl lg:text-6xl font-medium tracking-wide" style={{ color: white }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-[0.25em] uppercase mt-4 font-sakura-body" style={{ color: gold }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -296,12 +298,12 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 </div>
 
                 <h1 className="font-zen text-5xl md:text-7xl font-medium tracking-wide" style={{ color: white }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-sm tracking-[0.3em] uppercase mt-6 font-sakura-body" style={{ color: gold }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -369,7 +371,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 textMuted: sakuraTheme.colors.textMuted,
                 border: sakuraTheme.colors.border,
                 background: sakuraTheme.colors.background,
-                primary: sakuraTheme.colors.primary,
+                primary: getPrimaryColor(store) || sakuraTheme.colors.primary,
                 surface: sakuraTheme.colors.surfaceHover,
               }}
             />
@@ -381,7 +383,7 @@ export default function SakuraTheme({ store, products, categories, onWhatsAppCli
                 text: sakuraTheme.colors.text,
                 border: sakuraTheme.colors.border,
                 background: sakuraTheme.colors.background,
-                primary: sakuraTheme.colors.primary,
+                primary: getPrimaryColor(store) || sakuraTheme.colors.primary,
               }}
               className="ml-auto"
             />

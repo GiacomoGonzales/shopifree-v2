@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -171,7 +173,7 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
               {showName && (
                 <div>
                   <h1 className="font-trattoria text-2xl md:text-3xl font-semibold italic" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 </div>
               )}
@@ -219,11 +221,11 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-trattoria text-3xl font-semibold italic" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-trattoria-body text-sm mt-1" style={{ color: terracotta }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -242,11 +244,11 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-trattoria text-5xl lg:text-6xl font-semibold italic" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-trattoria-body text-lg mt-3" style={{ color: terracotta }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -282,12 +284,12 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
                 </p>
 
                 <h1 className="font-trattoria text-5xl md:text-7xl font-semibold italic" style={{ color: darkBrown }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="font-trattoria-body text-lg mt-4" style={{ color: terracotta }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -367,7 +369,7 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
                 textMuted: trattoriaTheme.colors.textMuted,
                 border: trattoriaTheme.colors.border,
                 background: trattoriaTheme.colors.background,
-                primary: trattoriaTheme.colors.primary,
+                primary: getPrimaryColor(store) || trattoriaTheme.colors.primary,
                 surface: trattoriaTheme.colors.surfaceHover,
               }}
             />
@@ -379,7 +381,7 @@ export default function TrattoriaTheme({ store, products, categories, onWhatsApp
                 text: trattoriaTheme.colors.text,
                 border: trattoriaTheme.colors.border,
                 background: trattoriaTheme.colors.background,
-                primary: trattoriaTheme.colors.primary,
+                primary: getPrimaryColor(store) || trattoriaTheme.colors.primary,
               }}
               className="ml-auto"
             />

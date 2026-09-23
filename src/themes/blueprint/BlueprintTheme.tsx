@@ -28,10 +28,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -187,7 +189,7 @@ export default function BlueprintTheme({ store, products, categories, onWhatsApp
                   className="text-base md:text-lg font-medium tracking-wider"
                   style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#FFFFFF' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </span>
               )}
             </div>
@@ -230,11 +232,11 @@ export default function BlueprintTheme({ store, products, categories, onWhatsApp
                     className="text-4xl md:text-6xl font-semibold leading-tight"
                     style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#FFFFFF' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                   {store.about?.slogan && (
                     <p className="mt-6 text-sm md:text-base leading-relaxed" style={{ color: '#7FA4CC' }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                   <div className="mt-8 grid grid-cols-2 gap-4 text-[10px] tracking-wider uppercase" style={{ color: '#7FA4CC' }}>
@@ -313,7 +315,7 @@ export default function BlueprintTheme({ store, products, categories, onWhatsApp
                 textMuted: blueprintTheme.colors.textMuted,
                 border: blueprintTheme.colors.border,
                 background: blueprintTheme.colors.background,
-                primary: blueprintTheme.colors.primary,
+                primary: getPrimaryColor(store) || blueprintTheme.colors.primary,
                 surface: blueprintTheme.colors.surfaceHover,
               }}
             />
@@ -325,7 +327,7 @@ export default function BlueprintTheme({ store, products, categories, onWhatsApp
                 text: blueprintTheme.colors.text,
                 border: blueprintTheme.colors.border,
                 background: blueprintTheme.colors.background,
-                primary: blueprintTheme.colors.primary,
+                primary: getPrimaryColor(store) || blueprintTheme.colors.primary,
               }}
               className="ml-auto"
             />

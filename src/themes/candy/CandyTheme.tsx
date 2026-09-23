@@ -14,6 +14,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -28,6 +29,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -172,7 +174,7 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
                     color: '#4A154B',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -232,10 +234,10 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
                   color: '#4A154B',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-4 text-lg font-medium" style={{ color: '#9B59B6' }}>{store.about.slogan}</p>
+                <p className="mt-4 text-lg font-medium" style={{ color: '#9B59B6' }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a
@@ -283,7 +285,7 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
                   textMuted: candyTheme.colors.textMuted,
                   border: candyTheme.colors.border,
                   background: candyTheme.colors.background,
-                  primary: candyTheme.colors.primary,
+                  primary: getPrimaryColor(store) || candyTheme.colors.primary,
                   surface: candyTheme.colors.surfaceHover,
                 }}
               />
@@ -295,7 +297,7 @@ export default function CandyTheme({ store, products, categories, onWhatsAppClic
                   text: candyTheme.colors.text,
                   border: candyTheme.colors.border,
                   background: candyTheme.colors.background,
-                  primary: candyTheme.colors.primary,
+                  primary: getPrimaryColor(store) || candyTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

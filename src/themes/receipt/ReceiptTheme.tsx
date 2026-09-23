@@ -27,6 +27,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -162,7 +163,7 @@ export default function ReceiptTheme({ store, products, categories, onWhatsAppCl
           <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between text-xs tracking-widest">
             <div className="flex items-center gap-2 uppercase">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span style={{ fontWeight: 700 }}>{store.name}</span>}
+              {showName && <span style={{ fontWeight: 700 }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button
               onClick={() => setIsCartOpen(true)}
@@ -201,10 +202,10 @@ export default function ReceiptTheme({ store, products, categories, onWhatsAppCl
                   >
                     ★ {today} ★
                   </div>
-                  <h1 className="text-2xl md:text-4xl font-bold uppercase tracking-[0.2em]">{store.name}</h1>
+                  <h1 className="text-2xl md:text-4xl font-bold uppercase tracking-[0.2em]"><EditableText path="name" value={store.name} required /></h1>
                   {store.about?.slogan && (
                     <p className="mt-2 text-xs md:text-sm uppercase tracking-widest" style={{ color: receiptTheme.colors.textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                   <p className="mt-3 text-[11px] tracking-widest" style={{ color: receiptTheme.colors.textMuted }}>

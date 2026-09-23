@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -16,6 +17,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -143,7 +145,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                 </div>
               )}
               <div>
-                {showName && <h1 className="font-semibold text-gray-900">{store.name}</h1>}
+                {showName && <h1 className="font-semibold text-gray-900"><EditableText path="name" value={store.name} required /></h1>}
               </div>
             </div>
             <button
@@ -182,9 +184,9 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                         </svg>
                         100% Natural
                       </div>
-                      <h2 className="text-3xl font-bold text-white mb-3">{store.name}</h2>
+                      <h2 className="text-3xl font-bold text-white mb-3"><EditableText path="name" value={store.name} required /></h2>
                       {store.about?.slogan && (
-                        <p className="text-lg text-white/90">{store.about.slogan}</p>
+                        <p className="text-lg text-white/90"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                       )}
                     </div>
                   </div>
@@ -206,9 +208,9 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                         </svg>
                         100% Natural
                       </div>
-                      <h2 className="text-5xl font-bold text-white mb-3">{store.name}</h2>
+                      <h2 className="text-5xl font-bold text-white mb-3"><EditableText path="name" value={store.name} required /></h2>
                       {store.about?.slogan && (
-                        <p className="text-lg text-white/90">{store.about.slogan}</p>
+                        <p className="text-lg text-white/90"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                       )}
                     </div>
                   </div>
@@ -228,9 +230,9 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                   </svg>
                   Productos naturales
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">{store.name}</h1>
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4"><EditableText path="name" value={store.name} required /></h1>
                 {store.about?.slogan && (
-                  <p className="text-xl text-white/90 font-light">{store.about.slogan}</p>
+                  <p className="text-xl text-white/90 font-light"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                 )}
               </div>
             </div>
@@ -267,7 +269,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                 textMuted: freshTheme.colors.textMuted,
                 border: freshTheme.colors.border,
                 background: freshTheme.colors.background,
-                primary: freshTheme.colors.primary,
+                primary: getPrimaryColor(store) || freshTheme.colors.primary,
                 surface: freshTheme.colors.surfaceHover,
               }}
             />
@@ -279,7 +281,7 @@ export default function FreshTheme({ store, products, categories, onWhatsAppClic
                 text: freshTheme.colors.text,
                 border: freshTheme.colors.border,
                 background: freshTheme.colors.background,
-                primary: freshTheme.colors.primary,
+                primary: getPrimaryColor(store) || freshTheme.colors.primary,
               }}
               className="ml-auto"
             />

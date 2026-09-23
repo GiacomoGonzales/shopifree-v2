@@ -27,9 +27,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -191,7 +193,7 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -264,10 +266,10 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-4 text-lg" style={{ color: '#c4a0e8' }}>{store.about.slogan}</p>
+                <p className="mt-4 text-lg" style={{ color: '#c4a0e8' }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a
@@ -321,7 +323,7 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
                   textMuted: vaporwaveTheme.colors.textMuted,
                   border: vaporwaveTheme.colors.border,
                   background: vaporwaveTheme.colors.background,
-                  primary: vaporwaveTheme.colors.primary,
+                  primary: getPrimaryColor(store) || vaporwaveTheme.colors.primary,
                   surface: vaporwaveTheme.colors.surfaceHover,
                 }}
               />
@@ -333,7 +335,7 @@ export default function VaporwaveTheme({ store, products, categories, onWhatsApp
                   text: vaporwaveTheme.colors.text,
                   border: vaporwaveTheme.colors.border,
                   background: vaporwaveTheme.colors.background,
-                  primary: vaporwaveTheme.colors.primary,
+                  primary: getPrimaryColor(store) || vaporwaveTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

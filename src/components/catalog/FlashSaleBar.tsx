@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { EditableText } from './LiveEdit'
+import { useLiveEdit } from './liveEditContext'
 
-function getTimeRemaining(endDate: string) {
-  const total = new Date(endDate).getTime() - Date.now()
+function getTimeRemaining(endDate: string, now: number) {
+  const total = new Date(endDate).getTime() - now
   if (total <= 0) return null
   const seconds = Math.floor((total / 1000) % 60)
   const minutes = Math.floor((total / 1000 / 60) % 60)
@@ -16,26 +18,27 @@ export default function FlashSaleBar() {
   const { store, theme, language } = useTheme()
   const t = getThemeTranslations(language)
   const flashSale = store.flashSale
+  const editing = useLiveEdit()
 
-  const [time, setTime] = useState(() =>
-    flashSale?.endDate ? getTimeRemaining(flashSale.endDate) : null
-  )
+  // El reloj avanza cada segundo y el tiempo restante se calcula al pintar:
+  // asi un cambio de fecha (en el editor) se ve al instante, sin esperar el tick.
+  const [now, setNow] = useState(() => Date.now())
+  const time = flashSale?.endDate ? getTimeRemaining(flashSale.endDate, now) : null
+  const running = !!flashSale?.enabled && !!time
 
   useEffect(() => {
-    if (!flashSale?.enabled || !flashSale.endDate) return
-    const interval = setInterval(() => {
-      const remaining = getTimeRemaining(flashSale.endDate)
-      setTime(remaining)
-      if (!remaining) clearInterval(interval)
-    }, 1000)
+    if (!running) return
+    const interval = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(interval)
-  }, [flashSale?.enabled, flashSale?.endDate])
+  }, [running])
 
-  if (store.plan === 'free' || !flashSale?.enabled || !flashSale.endDate || !time) return null
+  // En el editor la barra se ve aunque falte la fecha o ya haya terminado, para poder editarla.
+  if (store.plan === 'free' || !flashSale?.enabled) return null
+  if (!editing && (!flashSale.endDate || !time)) return null
+  const shown = time || { days: 0, hours: 0, minutes: 0, seconds: 0 }
 
   const bg = flashSale.backgroundColor || theme.colors.primary
   const text = flashSale.textColor || theme.colors.textInverted
-  const label = flashSale.text || 'Flash Sale!'
 
   const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -45,11 +48,11 @@ export default function FlashSaleBar() {
       style={{ backgroundColor: bg, color: text }}
     >
       <div className="max-w-6xl mx-auto flex items-center justify-center gap-3 text-sm">
-        <span className="font-semibold">{label}</span>
+        <EditableText path="flashSale.text" value={flashSale.text} fallback="Flash Sale!" className="font-semibold" />
         <span>{t.flashSaleEndsIn}</span>
         <span className="font-mono font-bold tracking-wider">
-          {time.days > 0 && `${time.days}d `}
-          {pad(time.hours)}h {pad(time.minutes)}m {pad(time.seconds)}s
+          {shown.days > 0 && `${shown.days}d `}
+          {pad(shown.hours)}h {pad(shown.minutes)}m {pad(shown.seconds)}s
         </span>
       </div>
     </div>

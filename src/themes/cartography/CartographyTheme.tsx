@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -203,7 +205,7 @@ export default function CartographyTheme({ store, products, categories, onWhatsA
                   className="text-2xl md:text-3xl tracking-wide italic"
                   style={{ fontFamily: "'IM Fell English', serif", color: '#2A1F0F' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -251,11 +253,11 @@ export default function CartographyTheme({ store, products, categories, onWhatsA
                     className="text-5xl md:text-7xl leading-[1.05] italic"
                     style={{ fontFamily: "'IM Fell English', serif", color: '#2A1F0F' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="mt-5 text-base md:text-lg italic" style={{ fontFamily: "'IM Fell English', serif", color: '#5C3A1E' }}>
-                      &mdash; {store.about.slogan}
+                      &mdash; <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                   {/* Wax seal */}
@@ -327,7 +329,7 @@ export default function CartographyTheme({ store, products, categories, onWhatsA
                 textMuted: cartographyTheme.colors.textMuted,
                 border: cartographyTheme.colors.border,
                 background: cartographyTheme.colors.background,
-                primary: cartographyTheme.colors.primary,
+                primary: getPrimaryColor(store) || cartographyTheme.colors.primary,
                 surface: cartographyTheme.colors.surfaceHover,
               }}
             />
@@ -339,7 +341,7 @@ export default function CartographyTheme({ store, products, categories, onWhatsA
                 text: cartographyTheme.colors.text,
                 border: cartographyTheme.colors.border,
                 background: cartographyTheme.colors.background,
-                primary: cartographyTheme.colors.primary,
+                primary: getPrimaryColor(store) || cartographyTheme.colors.primary,
               }}
               className="ml-auto"
             />

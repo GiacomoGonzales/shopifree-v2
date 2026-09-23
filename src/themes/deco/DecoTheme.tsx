@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -27,6 +28,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -184,7 +186,7 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
               )}
               <div>
                 {showName && <h1 className="font-deco text-2xl md:text-3xl font-bold tracking-tight" style={{ color: charcoal }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
             </div>
@@ -231,11 +233,11 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-deco text-3xl font-bold tracking-tight" style={{ color: charcoal }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-deco font-medium mt-1" style={{ color: olive }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -254,11 +256,11 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-deco text-5xl lg:text-6xl font-bold tracking-tight" style={{ color: charcoal }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-deco text-xl font-medium mt-2" style={{ color: olive }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -291,12 +293,12 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
                 </div>
 
                 <h1 className="font-deco text-4xl md:text-6xl font-bold tracking-tight" style={{ color: charcoal }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-medium mt-4 font-deco" style={{ color: olive }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -357,7 +359,7 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
                 textMuted: decoTheme.colors.textMuted,
                 border: decoTheme.colors.border,
                 background: decoTheme.colors.background,
-                primary: decoTheme.colors.primary,
+                primary: getPrimaryColor(store) || decoTheme.colors.primary,
                 surface: decoTheme.colors.surfaceHover,
               }}
             />
@@ -369,7 +371,7 @@ export default function DecoTheme({ store, products, categories, onWhatsAppClick
                 text: decoTheme.colors.text,
                 border: decoTheme.colors.border,
                 background: decoTheme.colors.background,
-                primary: decoTheme.colors.primary,
+                primary: getPrimaryColor(store) || decoTheme.colors.primary,
               }}
               className="ml-auto"
             />

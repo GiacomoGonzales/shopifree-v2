@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -160,7 +162,7 @@ export default function PolaroidTheme({ store, products, categories, onWhatsAppC
                   className="text-2xl md:text-3xl"
                   style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, color: '#2B1F12' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -227,7 +229,7 @@ export default function PolaroidTheme({ store, products, categories, onWhatsAppC
                     className="text-5xl md:text-7xl"
                     style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, color: '#2B1F12' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                 </div>
               )}
@@ -281,7 +283,7 @@ export default function PolaroidTheme({ store, products, categories, onWhatsAppC
                 textMuted: polaroidTheme.colors.textMuted,
                 border: polaroidTheme.colors.border,
                 background: polaroidTheme.colors.background,
-                primary: polaroidTheme.colors.primary,
+                primary: getPrimaryColor(store) || polaroidTheme.colors.primary,
                 surface: polaroidTheme.colors.surfaceHover,
               }}
             />
@@ -293,7 +295,7 @@ export default function PolaroidTheme({ store, products, categories, onWhatsAppC
                 text: polaroidTheme.colors.text,
                 border: polaroidTheme.colors.border,
                 background: polaroidTheme.colors.background,
-                primary: polaroidTheme.colors.primary,
+                primary: getPrimaryColor(store) || polaroidTheme.colors.primary,
               }}
               className="ml-auto"
             />

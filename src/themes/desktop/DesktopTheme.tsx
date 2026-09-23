@@ -27,6 +27,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -148,7 +149,7 @@ export default function DesktopTheme({ store, products, categories, onWhatsAppCl
               {headerLogo
                 ? <img src={headerLogo} alt={store.name} className={logoClassName} />
                 : <span className="w-4 h-4 inline-block" style={{ backgroundColor: osBlue }} />}
-              {showName && <span className="font-bold truncate" style={{ fontFamily: pixel }}>{store.name}</span>}
+              {showName && <span className="font-bold truncate" style={{ fontFamily: pixel }}><EditableText path="name" value={store.name} required /></span>}
               <nav className="hidden md:flex items-center gap-3 ml-2" style={{ color: '#333' }}>
                 {L.menus.map(m => <span key={m} className="cursor-default hover:bg-black hover:text-white px-1">{m}</span>)}
               </nav>
@@ -200,7 +201,7 @@ export default function DesktopTheme({ store, products, categories, onWhatsAppCl
             <div className="flex items-center h-7 px-2 border-b-2" style={{ background: titleStripes, borderColor: osInk }}>
               <span className="w-3.5 h-3.5 border-2 bg-white" style={{ borderColor: osInk }} aria-hidden />
               <span className="mx-auto px-3 text-xs font-bold" style={{ backgroundColor: '#e8e8e8', fontFamily: pixel }}>
-                {store.name} — {L.catalog}
+                <EditableText path="name" value={store.name} required /> — {L.catalog}
               </span>
               <span className="w-3.5 h-3.5 border-2 bg-white relative" style={{ borderColor: osInk }} aria-hidden>
                 <span className="absolute inset-[2px] border" style={{ borderColor: osInk }} />
@@ -217,8 +218,8 @@ export default function DesktopTheme({ store, products, categories, onWhatsAppCl
               )}
               {!hasHero && (
                 <div className="mb-5 text-center py-8 border-2 border-dashed" style={{ borderColor: desktopTheme.colors.border }}>
-                  <h1 className="text-3xl md:text-5xl font-bold" style={{ fontFamily: pixel }}>{store.name}</h1>
-                  {store.about?.slogan && <p className="mt-2 text-sm" style={{ color: desktopTheme.colors.textMuted }}>{store.about.slogan}</p>}
+                  <h1 className="text-3xl md:text-5xl font-bold" style={{ fontFamily: pixel }}><EditableText path="name" value={store.name} required /></h1>
+                  {store.about?.slogan && <p className="mt-2 text-sm" style={{ color: desktopTheme.colors.textMuted }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>}
                 </div>
               )}
 

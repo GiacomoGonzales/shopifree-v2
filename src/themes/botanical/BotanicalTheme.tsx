@@ -28,10 +28,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -186,7 +188,7 @@ export default function BotanicalTheme({ store, products, categories, onWhatsApp
                   className="text-xl md:text-2xl tracking-wide italic"
                   style={{ fontFamily: "'Lora', serif", color: '#2C3A2A' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -239,11 +241,11 @@ export default function BotanicalTheme({ store, products, categories, onWhatsApp
               className="text-5xl md:text-7xl leading-[1.05] italic"
               style={{ fontFamily: "'Lora', serif", color: '#2C3A2A' }}
             >
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h1>
             {store.about?.slogan && (
               <p className="mt-6 text-base md:text-lg max-w-xl mx-auto leading-relaxed" style={{ color: '#6B7A5A' }}>
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
             <div className="mt-8 inline-flex items-center gap-3 text-[10px] md:text-xs tracking-[0.3em] uppercase" style={{ color: '#B8694A' }}>
@@ -296,7 +298,7 @@ export default function BotanicalTheme({ store, products, categories, onWhatsApp
                 textMuted: botanicalTheme.colors.textMuted,
                 border: botanicalTheme.colors.border,
                 background: botanicalTheme.colors.background,
-                primary: botanicalTheme.colors.primary,
+                primary: getPrimaryColor(store) || botanicalTheme.colors.primary,
                 surface: botanicalTheme.colors.surfaceHover,
               }}
             />
@@ -308,7 +310,7 @@ export default function BotanicalTheme({ store, products, categories, onWhatsApp
                 text: botanicalTheme.colors.text,
                 border: botanicalTheme.colors.border,
                 background: botanicalTheme.colors.background,
-                primary: botanicalTheme.colors.primary,
+                primary: getPrimaryColor(store) || botanicalTheme.colors.primary,
               }}
               className="ml-auto"
             />

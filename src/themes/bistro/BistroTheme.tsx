@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -160,7 +162,7 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
               {showName && (
               <div>
                 <h1 className="font-serif-bistro text-2xl md:text-3xl font-semibold" style={{ color: cream }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               </div>
               )}
@@ -208,10 +210,10 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
                   <div className="w-12 h-px mx-auto mb-4" style={{ backgroundColor: copper }} />
-                  <h2 className="font-serif-bistro text-3xl mb-2" style={{ color: cream }}>{store.name}</h2>
+                  <h2 className="font-serif-bistro text-3xl mb-2" style={{ color: cream }}><EditableText path="name" value={store.name} required /></h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-[0.15em] uppercase" style={{ color: copper }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                   <div className="w-12 h-px mx-auto mt-4" style={{ backgroundColor: copper }} />
@@ -228,10 +230,10 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20 pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-16 text-center">
                   <div className="w-20 h-px mx-auto mb-6" style={{ backgroundColor: copper }} />
-                  <h2 className="font-serif-bistro text-5xl lg:text-6xl mb-4" style={{ color: cream }}>{store.name}</h2>
+                  <h2 className="font-serif-bistro text-5xl lg:text-6xl mb-4" style={{ color: cream }}><EditableText path="name" value={store.name} required /></h2>
                   {store.about?.slogan && (
                     <p className="text-sm tracking-[0.25em] uppercase" style={{ color: copper }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                   <div className="w-20 h-px mx-auto mt-6" style={{ backgroundColor: copper }} />
@@ -260,12 +262,12 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                 </div>
 
                 <h1 className="font-serif-bistro text-5xl md:text-7xl mb-6" style={{ color: cream }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-sm tracking-[0.3em] uppercase mb-8" style={{ color: copper }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -326,7 +328,7 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                 textMuted: bistroTheme.colors.textMuted,
                 border: bistroTheme.colors.border,
                 background: bistroTheme.colors.background,
-                primary: bistroTheme.colors.primary,
+                primary: getPrimaryColor(store) || bistroTheme.colors.primary,
                 surface: bistroTheme.colors.surfaceHover,
               }}
             />
@@ -338,7 +340,7 @@ export default function BistroTheme({ store, products, categories, onWhatsAppCli
                 text: bistroTheme.colors.text,
                 border: bistroTheme.colors.border,
                 background: bistroTheme.colors.background,
-                primary: bistroTheme.colors.primary,
+                primary: getPrimaryColor(store) || bistroTheme.colors.primary,
               }}
               className="ml-auto"
             />

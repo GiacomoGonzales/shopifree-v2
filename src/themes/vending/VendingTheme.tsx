@@ -14,6 +14,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -77,7 +78,7 @@ export default function VendingTheme({ store, products, categories, onWhatsAppCl
           <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate font-extrabold uppercase tracking-wide text-white">{store.name}</span>}
+              {showName && <span className="truncate font-extrabold uppercase tracking-wide text-white"><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold uppercase" style={{ backgroundColor: coin, color: vink }}>
               {L.cart} · {totalItems}

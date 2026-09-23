@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -153,7 +155,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
                   className="text-lg font-semibold tracking-tight"
                   style={{ color: spaceGray }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -223,11 +225,11 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
               className="text-3xl md:text-4xl font-semibold tracking-tight"
               style={{ color: spaceGray }}
             >
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h2>
             {store.about?.slogan && (
               <p className="mt-3 text-lg text-gray-500">
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
             {store.whatsapp && (
@@ -281,7 +283,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
                   textMuted: minimalTechTheme.colors.textMuted,
                   border: minimalTechTheme.colors.border,
                   background: minimalTechTheme.colors.background,
-                  primary: minimalTechTheme.colors.primary,
+                  primary: getPrimaryColor(store) || minimalTechTheme.colors.primary,
                   surface: minimalTechTheme.colors.surfaceHover,
                 }}
               />
@@ -293,7 +295,7 @@ export default function MinimalTechTheme({ store, products, categories, onWhatsA
                   text: minimalTechTheme.colors.text,
                   border: minimalTechTheme.colors.border,
                   background: minimalTechTheme.colors.background,
-                  primary: minimalTechTheme.colors.primary,
+                  primary: getPrimaryColor(store) || minimalTechTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

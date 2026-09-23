@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -27,6 +28,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -173,7 +175,7 @@ export default function FolioTheme({ store, products, categories, onWhatsAppClic
                 </div>
               )}
               {showName && <h1 className="font-folio text-xl md:text-2xl font-bold" style={{ color: black }}>
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h1>}
             </div>
 
@@ -219,11 +221,11 @@ export default function FolioTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-folio text-3xl font-bold" style={{ color: black }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-folio text-sm mt-2" style={{ color: textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -241,11 +243,11 @@ export default function FolioTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-folio text-5xl font-bold" style={{ color: black }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-folio text-lg mt-3" style={{ color: textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -261,11 +263,11 @@ export default function FolioTheme({ store, products, categories, onWhatsAppClic
 
               <div className="max-w-4xl mx-auto px-6">
                 <h1 className="font-folio text-5xl md:text-8xl font-bold leading-[0.95] tracking-tight" style={{ color: black }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="font-folio text-lg md:text-xl mt-6 font-medium" style={{ color: violet }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -314,7 +316,7 @@ export default function FolioTheme({ store, products, categories, onWhatsAppClic
                 textMuted: folioTheme.colors.textMuted,
                 border: folioTheme.colors.border,
                 background: folioTheme.colors.background,
-                primary: folioTheme.colors.primary,
+                primary: getPrimaryColor(store) || folioTheme.colors.primary,
                 surface: folioTheme.colors.surfaceHover,
               }}
             />
@@ -326,7 +328,7 @@ export default function FolioTheme({ store, products, categories, onWhatsAppClic
                 text: folioTheme.colors.text,
                 border: folioTheme.colors.border,
                 background: folioTheme.colors.background,
-                primary: folioTheme.colors.primary,
+                primary: getPrimaryColor(store) || folioTheme.colors.primary,
               }}
               className="ml-auto"
             />

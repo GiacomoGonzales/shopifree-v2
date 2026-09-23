@@ -24,10 +24,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -242,7 +244,7 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
                     textShadow: `0 0 30px ${amber}40, 0 0 60px ${amber}20`,
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
               <div className="flex items-center gap-3">
@@ -300,10 +302,10 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
                   textShadow: `0 0 50px ${amber}30, 0 0 100px ${amber}15`,
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-6 text-base uppercase tracking-[0.3em] font-light" style={{ color: amber, textShadow: `0 0 15px ${amber}30` }}>{store.about.slogan}</p>
+                <p className="mt-6 text-base uppercase tracking-[0.3em] font-light" style={{ color: amber, textShadow: `0 0 15px ${amber}30` }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {/* Desert ornament */}
               <div className="flex items-center justify-center gap-3 mt-6">
@@ -343,7 +345,7 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
                   textMuted: mirageTheme.colors.textMuted,
                   border: mirageTheme.colors.border,
                   background: mirageTheme.colors.background,
-                  primary: mirageTheme.colors.primary,
+                  primary: getPrimaryColor(store) || mirageTheme.colors.primary,
                   surface: mirageTheme.colors.surfaceHover,
                 }}
               />
@@ -355,7 +357,7 @@ export default function MirageTheme({ store, products, categories, onWhatsAppCli
                   text: mirageTheme.colors.text,
                   border: mirageTheme.colors.border,
                   background: mirageTheme.colors.background,
-                  primary: mirageTheme.colors.primary,
+                  primary: getPrimaryColor(store) || mirageTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

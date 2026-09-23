@@ -16,9 +16,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -135,7 +137,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
               )}
               {(!headerLogo || showName) && (
               <div>
-                <h1 className="font-serif text-xl text-gray-900 tracking-wide">{store.name}</h1>
+                <h1 className="font-serif text-xl text-gray-900 tracking-wide"><EditableText path="name" value={store.name} required /></h1>
               </div>
               )}
             </div>
@@ -169,9 +171,9 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                   <div className="max-w-6xl mx-auto">
-                    <h2 className="font-serif text-3xl mb-2">{store.name}</h2>
+                    <h2 className="font-serif text-3xl mb-2"><EditableText path="name" value={store.name} required /></h2>
                     {store.about?.slogan && (
-                      <p className="text-lg text-white/90 font-light">{store.about.slogan}</p>
+                      <p className="text-lg text-white/90 font-light"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                     )}
                   </div>
                 </div>
@@ -186,9 +188,9 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
                   <div className="max-w-6xl mx-auto">
-                    <h2 className="font-serif text-5xl mb-2">{store.name}</h2>
+                    <h2 className="font-serif text-5xl mb-2"><EditableText path="name" value={store.name} required /></h2>
                     {store.about?.slogan && (
-                      <p className="text-xl text-white/90 font-light">{store.about.slogan}</p>
+                      <p className="text-xl text-white/90 font-light"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                     )}
                   </div>
                 </div>
@@ -203,9 +205,9 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                   </svg>
                   {t.hot}
                 </div>
-                <h1 className="font-serif text-4xl md:text-6xl text-gray-900 mb-4">{store.name}</h1>
+                <h1 className="font-serif text-4xl md:text-6xl text-gray-900 mb-4"><EditableText path="name" value={store.name} required /></h1>
                 {store.about?.slogan && (
-                  <p className="text-lg md:text-xl text-gray-600 font-light italic">"{store.about.slogan}"</p>
+                  <p className="text-lg md:text-xl text-gray-600 font-light italic">"<EditableText path="about.slogan" value={store.about?.slogan} />"</p>
                 )}
               </div>
             </div>
@@ -244,7 +246,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                 textMuted: boutiqueTheme.colors.textMuted,
                 border: boutiqueTheme.colors.border,
                 background: boutiqueTheme.colors.background,
-                primary: boutiqueTheme.colors.primary,
+                primary: getPrimaryColor(store) || boutiqueTheme.colors.primary,
                 surface: boutiqueTheme.colors.surfaceHover,
               }}
             />
@@ -256,7 +258,7 @@ export default function BoutiqueTheme({ store, products, categories, onWhatsAppC
                 text: boutiqueTheme.colors.text,
                 border: boutiqueTheme.colors.border,
                 background: boutiqueTheme.colors.background,
-                primary: boutiqueTheme.colors.primary,
+                primary: getPrimaryColor(store) || boutiqueTheme.colors.primary,
               }}
               className="ml-auto"
             />

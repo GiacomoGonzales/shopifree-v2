@@ -12,6 +12,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -78,10 +79,10 @@ export default function PetcardTheme({ store, products, categories, onWhatsAppCl
 
         <header className="sticky top-0 z-50" style={{ backgroundColor: petBg }}>
           <div className="max-w-5xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-full" style={{ backgroundColor: '#fff', boxShadow: petcardTheme.shadows.md }}>
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-full" data-sf-header-surface="" style={{ backgroundColor: '#fff', boxShadow: petcardTheme.shadows.md }}>
               <div className="flex items-center gap-2 min-w-0">
                 {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-                {showName && <span className="truncate font-extrabold" style={{ fontFamily: petcardTheme.fonts.heading, fontSize: '1.25rem' }}>{store.name}</span>}
+                {showName && <span className="truncate font-extrabold" style={{ fontFamily: petcardTheme.fonts.heading, fontSize: '1.25rem' }}><EditableText path="name" value={store.name} required /></span>}
               </div>
               <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold text-white transition-transform hover:scale-105" style={{ backgroundColor: petOrange }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
@@ -103,8 +104,8 @@ export default function PetcardTheme({ store, products, categories, onWhatsAppCl
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-widest" style={{ backgroundColor: petMint, color: '#fff' }}>
               <Paw size={13} color="#fff" /> {L.tag}
             </div>
-            <h1 className="mt-3 leading-none" style={{ fontFamily: petcardTheme.fonts.heading, fontWeight: 800, fontSize: 'clamp(2.2rem, 7vw, 3.6rem)' }}>{store.name}</h1>
-            <p className="mt-2 text-sm" style={{ color: petcardTheme.colors.textMuted }}>{store.about?.slogan || L.friend}</p>
+            <h1 className="mt-3 leading-none" style={{ fontFamily: petcardTheme.fonts.heading, fontWeight: 800, fontSize: 'clamp(2.2rem, 7vw, 3.6rem)' }}><EditableText path="name" value={store.name} required /></h1>
+            <p className="mt-2 text-sm" style={{ color: petcardTheme.colors.textMuted }}><EditableText path="about.slogan" value={store.about?.slogan} fallback={L.friend} /></p>
             {store.whatsapp && (
               <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick?.()}
                 className="inline-flex items-center gap-2 mt-5 px-6 py-2.5 rounded-full font-bold text-white transition-transform hover:scale-105"

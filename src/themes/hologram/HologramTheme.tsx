@@ -24,10 +24,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -196,7 +198,7 @@ export default function HologramTheme({ store, products, categories, onWhatsAppC
                     backgroundSize: '400% auto',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
               <div className="flex items-center gap-3">
@@ -254,10 +256,10 @@ export default function HologramTheme({ store, products, categories, onWhatsAppC
                   filter: 'drop-shadow(0 0 30px rgba(130,0,255,0.3))',
                 }}
               >
-                {store.name}
+                <EditableText path="name" value={store.name} required />
               </h2>
               {store.about?.slogan && (
-                <p className="mt-6 text-sm uppercase tracking-[0.4em] font-light" style={{ color: '#707080' }}>{store.about.slogan}</p>
+                <p className="mt-6 text-sm uppercase tracking-[0.4em] font-light" style={{ color: '#707080' }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
               )}
               {store.whatsapp && (
                 <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick?.()} className="inline-flex items-center gap-2 mt-10 px-7 py-3.5 rounded-lg font-medium transition-all hover:scale-105" style={{ background: '#25D366', color: '#fff', boxShadow: '0 0 30px #25D36640' }}>
@@ -291,7 +293,7 @@ export default function HologramTheme({ store, products, categories, onWhatsAppC
                   textMuted: hologramTheme.colors.textMuted,
                   border: hologramTheme.colors.border,
                   background: hologramTheme.colors.background,
-                  primary: hologramTheme.colors.primary,
+                  primary: getPrimaryColor(store) || hologramTheme.colors.primary,
                   surface: hologramTheme.colors.surfaceHover,
                 }}
               />
@@ -303,7 +305,7 @@ export default function HologramTheme({ store, products, categories, onWhatsAppC
                   text: hologramTheme.colors.text,
                   border: hologramTheme.colors.border,
                   background: hologramTheme.colors.background,
-                  primary: hologramTheme.colors.primary,
+                  primary: getPrimaryColor(store) || hologramTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

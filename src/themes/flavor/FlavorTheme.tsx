@@ -14,6 +14,7 @@ import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { getThemeTranslations } from '../shared/translations'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -28,6 +29,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -148,7 +150,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                   <img src={headerLogo} alt={store.name} className={logoClassName} />
                 )}
                 {showName && <h1 className="text-lg font-bold" style={{ color: colors.text }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -222,10 +224,10 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="text-center md:text-left">
                 <h2 className="text-2xl font-bold" style={{ color: colors.text }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h2>
                 {store.about?.slogan && (
-                  <p className="mt-1" style={{ color: colors.textMuted }}>{store.about.slogan}</p>
+                  <p className="mt-1" style={{ color: colors.textMuted }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                 )}
               </div>
               <div className="flex items-center justify-center md:justify-end gap-3">
@@ -290,7 +292,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                   textMuted: flavorTheme.colors.textMuted,
                   border: flavorTheme.colors.border,
                   background: flavorTheme.colors.background,
-                  primary: flavorTheme.colors.primary,
+                  primary: getPrimaryColor(store) || flavorTheme.colors.primary,
                   surface: flavorTheme.colors.surfaceHover,
                 }}
               />
@@ -302,7 +304,7 @@ export default function FlavorTheme({ store, products, categories, onWhatsAppCli
                   text: flavorTheme.colors.text,
                   border: flavorTheme.colors.border,
                   background: flavorTheme.colors.background,
-                  primary: flavorTheme.colors.primary,
+                  primary: getPrimaryColor(store) || flavorTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

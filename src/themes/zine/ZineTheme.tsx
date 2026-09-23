@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -203,7 +205,7 @@ export default function ZineTheme({ store, products, categories, onWhatsAppClick
                     display: 'inline-block',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </span>
               )}
             </div>
@@ -259,7 +261,7 @@ export default function ZineTheme({ store, products, categories, onWhatsAppClick
                     transform: 'rotate(1deg)',
                   }}
                 >
-                  &gt; {store.about.slogan}
+                  &gt; <EditableText path="about.slogan" value={store.about?.slogan} />
                 </p>
               )}
             </div>
@@ -353,7 +355,7 @@ export default function ZineTheme({ store, products, categories, onWhatsAppClick
                 textMuted: zineTheme.colors.textMuted,
                 border: zineTheme.colors.border,
                 background: zineTheme.colors.background,
-                primary: zineTheme.colors.primary,
+                primary: getPrimaryColor(store) || zineTheme.colors.primary,
                 surface: zineTheme.colors.surfaceHover,
               }}
             />
@@ -365,7 +367,7 @@ export default function ZineTheme({ store, products, categories, onWhatsAppClick
                 text: zineTheme.colors.text,
                 border: zineTheme.colors.border,
                 background: zineTheme.colors.background,
-                primary: zineTheme.colors.primary,
+                primary: getPrimaryColor(store) || zineTheme.colors.primary,
               }}
               className="ml-auto"
             />

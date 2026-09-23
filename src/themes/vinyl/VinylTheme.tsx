@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -163,7 +165,7 @@ export default function VinylTheme({ store, products, categories, onWhatsAppClic
                   className="text-2xl md:text-3xl tracking-widest"
                   style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#D4A04A' }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </span>
               )}
             </div>
@@ -198,11 +200,11 @@ export default function VinylTheme({ store, products, categories, onWhatsAppClic
                 className="text-6xl md:text-8xl leading-[0.9] tracking-wider"
                 style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#F5EDD8' }}
               >
-                {store.name.toUpperCase()}
+                <EditableText path="name" value={store.name} required className="uppercase" />
               </h1>
               {store.about?.slogan && (
                 <p className="mt-6 text-base md:text-lg max-w-md leading-relaxed" style={{ color: '#9B8B6E' }}>
-                  {store.about.slogan}
+                  <EditableText path="about.slogan" value={store.about?.slogan} />
                 </p>
               )}
               <div className="mt-8 flex items-center gap-3 text-xs tracking-widest uppercase" style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#D4A04A' }}>
@@ -275,7 +277,7 @@ export default function VinylTheme({ store, products, categories, onWhatsAppClic
                         className="text-center px-2 leading-tight"
                         style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#0E0B08', fontSize: '0.85rem', letterSpacing: '0.1em' }}
                       >
-                        {store.name.toUpperCase()}
+                        <EditableText path="name" value={store.name} required className="uppercase" />
                       </span>
                     </div>
                     <div className="absolute rounded-full" style={{ inset: '49%', backgroundColor: '#0E0B08' }} />
@@ -339,7 +341,7 @@ export default function VinylTheme({ store, products, categories, onWhatsAppClic
                 textMuted: vinylTheme.colors.textMuted,
                 border: vinylTheme.colors.border,
                 background: vinylTheme.colors.background,
-                primary: vinylTheme.colors.primary,
+                primary: getPrimaryColor(store) || vinylTheme.colors.primary,
                 surface: vinylTheme.colors.surfaceHover,
               }}
             />
@@ -351,7 +353,7 @@ export default function VinylTheme({ store, products, categories, onWhatsAppClic
                 text: vinylTheme.colors.text,
                 border: vinylTheme.colors.border,
                 background: vinylTheme.colors.background,
-                primary: vinylTheme.colors.primary,
+                primary: getPrimaryColor(store) || vinylTheme.colors.primary,
               }}
               className="ml-auto"
             />

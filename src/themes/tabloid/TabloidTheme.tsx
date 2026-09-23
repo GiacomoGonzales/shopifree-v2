@@ -14,6 +14,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -76,7 +77,7 @@ export default function TabloidTheme({ store, products, categories, onWhatsAppCl
           <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate font-bold tracking-wide uppercase" style={{ fontFamily: tabloidTheme.fonts.heading, fontSize: '1.4rem' }}>{store.name}</span>}
+              {showName && <span className="truncate font-bold tracking-wide uppercase" style={{ fontFamily: tabloidTheme.fonts.heading, fontSize: '1.4rem' }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1 text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: alarm, color: '#fff' }}>
               {L.cart} · {totalItems}
@@ -90,7 +91,7 @@ export default function TabloidTheme({ store, products, categories, onWhatsAppCl
           {/* Masthead */}
           <div className="text-center border-y-4 py-3" style={{ borderColor: inkk }}>
             <p className="text-[11px] tracking-[0.3em] font-bold" style={{ color: alarm }}>{L.extra}</p>
-            <h1 className="uppercase leading-[0.9] my-1" style={{ fontFamily: tabloidTheme.fonts.heading, fontSize: 'clamp(2.5rem, 9vw, 6rem)' }}>{store.name}</h1>
+            <h1 className="uppercase leading-[0.9] my-1" style={{ fontFamily: tabloidTheme.fonts.heading, fontSize: 'clamp(2.5rem, 9vw, 6rem)' }}><EditableText path="name" value={store.name} required /></h1>
             <div className="flex items-center justify-center gap-3 text-[11px] tracking-widest uppercase" style={{ color: tabloidTheme.colors.textMuted }}>
               <span>{L.edition} #{issue}</span><span>•</span><span>{today}</span>
             </div>
@@ -101,7 +102,7 @@ export default function TabloidTheme({ store, products, categories, onWhatsAppCl
             <div className="md:col-span-2">
               <span className="inline-block text-[11px] font-bold px-2 py-0.5 mb-2 uppercase tracking-widest" style={{ backgroundColor: alarm, color: '#fff' }}>{L.read}</span>
               <h2 className="uppercase leading-[0.95]" style={{ fontFamily: tabloidTheme.fonts.heading, fontSize: 'clamp(1.8rem, 5vw, 3.2rem)' }}>
-                {store.about?.slogan || L.headline}
+                <EditableText path="about.slogan" value={store.about?.slogan} fallback={L.headline} />
               </h2>
             </div>
             <div>
@@ -110,7 +111,7 @@ export default function TabloidTheme({ store, products, categories, onWhatsAppCl
                   <div className="overflow-hidden" style={{ border: `2px solid ${inkk}` }}>
                     <HeroImg src={store.heroImage || store.heroImageMobile} alt="" className="w-full max-h-[240px] object-cover" style={{ filter: 'grayscale(35%) contrast(1.05)' }} />
                   </div>
-                  <figcaption className="text-[11px] italic mt-1" style={{ color: tabloidTheme.colors.textMuted }}>▲ {store.name}</figcaption>
+                  <figcaption className="text-[11px] italic mt-1" style={{ color: tabloidTheme.colors.textMuted }}>▲ <EditableText path="name" value={store.name} required /></figcaption>
                 </figure>
               ) : (
                 <div className="h-full min-h-[140px] flex items-center justify-center border-2 border-dashed" style={{ borderColor: tabloidTheme.colors.border }}>

@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -186,7 +188,7 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
               {(!headerLogo || showName) && (
               <div>
                 <h1 className="font-bloom-heading text-2xl md:text-3xl font-semibold" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               </div>
               )}
@@ -234,11 +236,11 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-bloom-heading text-4xl font-semibold italic" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-bloom-heading italic mt-1" style={{ color: sage }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -257,11 +259,11 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-bloom-heading text-5xl lg:text-6xl font-semibold italic" style={{ color: darkText }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-bloom-heading text-xl italic mt-2" style={{ color: sage }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -297,12 +299,12 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
                 </div>
 
                 <h1 className="font-bloom-heading text-4xl md:text-6xl font-semibold italic" style={{ color: darkText }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl mt-4 font-bloom-heading italic" style={{ color: sage }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -365,7 +367,7 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
                 textMuted: bloomTheme.colors.textMuted,
                 border: bloomTheme.colors.border,
                 background: bloomTheme.colors.background,
-                primary: bloomTheme.colors.primary,
+                primary: getPrimaryColor(store) || bloomTheme.colors.primary,
                 surface: bloomTheme.colors.surfaceHover,
               }}
             />
@@ -377,7 +379,7 @@ export default function BloomTheme({ store, products, categories, onWhatsAppClic
                 text: bloomTheme.colors.text,
                 border: bloomTheme.colors.border,
                 background: bloomTheme.colors.background,
-                primary: bloomTheme.colors.primary,
+                primary: getPrimaryColor(store) || bloomTheme.colors.primary,
               }}
               className="ml-auto"
             />

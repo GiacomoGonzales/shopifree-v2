@@ -21,6 +21,7 @@ import {
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor, getHeaderColors } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -101,8 +102,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
   const { src: headerLogo, showName, logoClassName } = useHeaderLogo(store, { squareStyle: 'rounded' })
   const editing = useLiveEdit()
   // Colores del header elegidos en el editor en vivo. Sin ellos, el header de siempre.
-  const headerBg = store.themeSettings?.headerBackground
-  const headerText = store.themeSettings?.headerText
+  const { background: headerBg, text: headerText } = getHeaderColors(store)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -230,7 +230,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
                 textMuted: minimalTheme.colors.textMuted,
                 border: minimalTheme.colors.border,
                 background: minimalTheme.colors.background,
-                primary: minimalTheme.colors.primary,
+                primary: getPrimaryColor(store) || minimalTheme.colors.primary,
                 surface: minimalTheme.colors.surfaceHover,
               }}
             />
@@ -242,7 +242,7 @@ export default function MinimalTheme({ store, products, categories, onWhatsAppCl
                 text: minimalTheme.colors.text,
                 border: minimalTheme.colors.border,
                 background: minimalTheme.colors.background,
-                primary: minimalTheme.colors.primary,
+                primary: getPrimaryColor(store) || minimalTheme.colors.primary,
               }}
               className="ml-auto"
             />

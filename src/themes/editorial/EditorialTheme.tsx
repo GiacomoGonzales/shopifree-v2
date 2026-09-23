@@ -23,10 +23,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -160,7 +162,7 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
                       color: '#0A0A0A',
                     }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -206,11 +208,11 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
                     className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight"
                     style={{ fontFamily: "'Playfair Display', serif", color: '#0A0A0A' }}
                   >
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="mt-6 text-lg md:text-xl italic" style={{ fontFamily: "'Playfair Display', serif", color: '#0A0A0A' }}>
-                      &ldquo;{store.about.slogan}&rdquo;
+                      &ldquo;<EditableText path="about.slogan" value={store.about?.slogan} />&rdquo;
                     </p>
                   )}
                 </div>
@@ -229,11 +231,11 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
                   className="text-6xl md:text-8xl lg:text-9xl font-black leading-[0.9] tracking-tight"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h2>
                 {store.about?.slogan && (
                   <p className="mt-8 text-lg md:text-2xl italic max-w-2xl mx-auto" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    &ldquo;{store.about.slogan}&rdquo;
+                    &ldquo;<EditableText path="about.slogan" value={store.about?.slogan} />&rdquo;
                   </p>
                 )}
               </div>
@@ -281,7 +283,7 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
                 textMuted: editorialTheme.colors.textMuted,
                 border: editorialTheme.colors.border,
                 background: editorialTheme.colors.background,
-                primary: editorialTheme.colors.primary,
+                primary: getPrimaryColor(store) || editorialTheme.colors.primary,
                 surface: editorialTheme.colors.surfaceHover,
               }}
             />
@@ -293,7 +295,7 @@ export default function EditorialTheme({ store, products, categories, onWhatsApp
                 text: editorialTheme.colors.text,
                 border: editorialTheme.colors.border,
                 background: editorialTheme.colors.background,
-                primary: editorialTheme.colors.primary,
+                primary: getPrimaryColor(store) || editorialTheme.colors.primary,
               }}
               className="ml-auto"
             />

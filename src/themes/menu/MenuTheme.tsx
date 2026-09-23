@@ -11,6 +11,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -72,7 +73,7 @@ export default function MenuTheme({ store, products, categories, onWhatsAppClick
           <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate" style={{ fontFamily: menuTheme.fonts.heading, fontSize: '1.35rem' }}>{store.name}</span>}
+              {showName && <span className="truncate" style={{ fontFamily: menuTheme.fonts.heading, fontSize: '1.35rem' }}><EditableText path="name" value={store.name} required /></span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1.5 rounded text-xs font-semibold transition-colors hover:opacity-90" style={{ backgroundColor: wine, color: '#fff' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
@@ -92,9 +93,9 @@ export default function MenuTheme({ store, products, categories, onWhatsAppClick
               <span style={{ color: menuTheme.colors.accent }}>❧</span>
               <span className="h-px w-12" style={{ backgroundColor: menuTheme.colors.accent }} />
             </div>
-            <h1 style={{ fontFamily: menuTheme.fonts.heading, fontSize: 'clamp(2.4rem, 7vw, 4rem)' }}>{store.name}</h1>
+            <h1 style={{ fontFamily: menuTheme.fonts.heading, fontSize: 'clamp(2.4rem, 7vw, 4rem)' }}><EditableText path="name" value={store.name} required /></h1>
             <p className="mt-2 italic text-sm md:text-base" style={{ color: menuTheme.colors.textMuted, fontFamily: menuTheme.fonts.heading }}>
-              {store.about?.slogan || L.specialties}
+              <EditableText path="about.slogan" value={store.about?.slogan} fallback={L.specialties} />
             </p>
             <div className="flex items-center justify-center gap-3 mt-3">
               <span className="h-px w-20" style={{ backgroundColor: menuTheme.colors.border }} />

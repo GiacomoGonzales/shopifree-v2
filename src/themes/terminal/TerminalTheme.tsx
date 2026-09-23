@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -227,12 +229,12 @@ export default function TerminalTheme({ store, products, categories, onWhatsAppC
               className="text-4xl md:text-7xl tracking-tight terminal-glow leading-tight"
               style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#7CFFB2' }}
             >
-              {store.name}<span className={`${cursorOn ? 'opacity-100' : 'opacity-0'}`}>_</span>
+              <EditableText path="name" value={store.name} required /><span className={`${cursorOn ? 'opacity-100' : 'opacity-0'}`}>_</span>
             </h1>
             {store.about?.slogan && (
               <p className="mt-4 text-base md:text-lg leading-relaxed max-w-3xl" style={{ color: '#3A8A55' }}>
                 <span style={{ color: '#7CFFB2' }}>// </span>
-                {store.about.slogan}
+                <EditableText path="about.slogan" value={store.about?.slogan} />
               </p>
             )}
 
@@ -304,7 +306,7 @@ export default function TerminalTheme({ store, products, categories, onWhatsAppC
                 textMuted: terminalTheme.colors.textMuted,
                 border: terminalTheme.colors.border,
                 background: terminalTheme.colors.background,
-                primary: terminalTheme.colors.primary,
+                primary: getPrimaryColor(store) || terminalTheme.colors.primary,
                 surface: terminalTheme.colors.surfaceHover,
               }}
             />
@@ -316,7 +318,7 @@ export default function TerminalTheme({ store, products, categories, onWhatsAppC
                 text: terminalTheme.colors.text,
                 border: terminalTheme.colors.border,
                 background: terminalTheme.colors.background,
-                primary: terminalTheme.colors.primary,
+                primary: getPrimaryColor(store) || terminalTheme.colors.primary,
               }}
               className="ml-auto"
             />

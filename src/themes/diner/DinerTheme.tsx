@@ -28,10 +28,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -170,7 +172,7 @@ export default function DinerTheme({ store, products, categories, onWhatsAppClic
                     textShadow: '2px 2px 0 #1A0F0A',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -225,14 +227,14 @@ export default function DinerTheme({ store, products, categories, onWhatsAppClic
                     textShadow: '0 0 14px rgba(255,217,61,0.7), 0 0 32px rgba(255,217,61,0.4), 4px 4px 0 #D7263D',
                   }}
                 >
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h2>
                 {store.about?.slogan && (
                   <p
                     className="mt-6 text-lg md:text-2xl tracking-widest"
                     style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#FFF8E8', letterSpacing: '0.25em' }}
                   >
-                    · {store.about.slogan.toUpperCase()} ·
+                    · <EditableText path="about.slogan" value={store.about?.slogan} className="uppercase" /> ·
                   </p>
                 )}
               </div>
@@ -257,7 +259,7 @@ export default function DinerTheme({ store, products, categories, onWhatsAppClic
                 lineHeight: 1.5,
               }}
             >
-              <p className="text-center font-bold mb-1">{store.name.toUpperCase()}</p>
+              <p className="text-center font-bold mb-1"><EditableText path="name" value={store.name} required className="uppercase" /></p>
               <p className="text-center mb-2">— SINCE FOREVER —</p>
               <div className="border-t border-dashed border-black/40 my-1" />
               <p>{products.length.toString().padStart(3, '0')} ITEMS ON MENU</p>
@@ -315,7 +317,7 @@ export default function DinerTheme({ store, products, categories, onWhatsAppClic
                 textMuted: dinerTheme.colors.textMuted,
                 border: dinerTheme.colors.border,
                 background: dinerTheme.colors.background,
-                primary: dinerTheme.colors.primary,
+                primary: getPrimaryColor(store) || dinerTheme.colors.primary,
                 surface: dinerTheme.colors.surfaceHover,
               }}
             />
@@ -327,7 +329,7 @@ export default function DinerTheme({ store, products, categories, onWhatsAppClic
                 text: dinerTheme.colors.text,
                 border: dinerTheme.colors.border,
                 background: dinerTheme.colors.background,
-                primary: dinerTheme.colors.primary,
+                primary: getPrimaryColor(store) || dinerTheme.colors.primary,
               }}
               className="ml-auto"
             />

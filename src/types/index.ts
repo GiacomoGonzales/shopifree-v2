@@ -91,8 +91,14 @@ export interface Store {
     primaryColor?: string
     secondaryColor?: string
     fontFamily?: string
-    headerBackground?: string     // Fondo del header (editor en vivo). Hoy solo lo lee el tema Minimal.
-    headerText?: string           // Color del texto e iconos del header
+    // Colores del header del editor en vivo, por id de tema (ver getHeaderColors)
+    headerColors?: Record<string, { background?: string; text?: string }>
+    // Igual para el footer (compartido por todos los temas, ver StoreFooter)
+    footerColors?: Record<string, { background?: string; text?: string }>
+    // Color principal por tema (botones, precios, categorias activas...)
+    primaryColors?: Record<string, string>
+    // Tipografia de titulos por tema: id de HEADING_FONTS (themes/shared/fonts.ts)
+    headingFonts?: Record<string, string>
     scrollReveal?: boolean
     imageSwapOnHover?: boolean
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list' | 'sections'

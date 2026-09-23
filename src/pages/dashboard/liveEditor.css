@@ -17,3 +17,18 @@
   content: attr(data-placeholder);
   opacity: 0.45;
 }
+
+/* Imagenes que se cambian con un clic: el logo (header y footer) y la portada. */
+.live-edit-root header img,
+.live-edit-root footer img,
+.live-edit-root [data-sf-hero] {
+  cursor: pointer;
+  outline: 2px dashed transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s;
+}
+.live-edit-root header img:hover,
+.live-edit-root footer img:hover,
+.live-edit-root [data-sf-hero]:hover {
+  outline-color: rgba(59, 130, 246, 0.8);
+}

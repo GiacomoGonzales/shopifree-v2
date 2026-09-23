@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -170,7 +172,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
               {showName && (
                 <div>
                   <h1 className="font-taqueria text-2xl md:text-3xl font-bold" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 </div>
               )}
@@ -218,11 +220,11 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-taqueria text-3xl font-bold" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-taqueria-body font-semibold mt-1" style={{ color: orange }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -241,11 +243,11 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-taqueria text-5xl lg:text-6xl font-bold" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-taqueria-body text-xl font-semibold mt-2" style={{ color: orange }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -272,12 +274,12 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                 </div>
 
                 <h1 className="font-taqueria text-5xl md:text-7xl font-bold" style={{ color: darkBrown }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="font-taqueria-body text-xl font-semibold mt-4" style={{ color: orange }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -342,7 +344,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                 textMuted: taqueriaTheme.colors.textMuted,
                 border: taqueriaTheme.colors.border,
                 background: taqueriaTheme.colors.background,
-                primary: taqueriaTheme.colors.primary,
+                primary: getPrimaryColor(store) || taqueriaTheme.colors.primary,
                 surface: taqueriaTheme.colors.surfaceHover,
               }}
             />
@@ -354,7 +356,7 @@ export default function TaqueriaTheme({ store, products, categories, onWhatsAppC
                 text: taqueriaTheme.colors.text,
                 border: taqueriaTheme.colors.border,
                 background: taqueriaTheme.colors.background,
-                primary: taqueriaTheme.colors.primary,
+                primary: getPrimaryColor(store) || taqueriaTheme.colors.primary,
               }}
               className="ml-auto"
             />

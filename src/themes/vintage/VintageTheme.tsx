@@ -27,9 +27,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -151,7 +153,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
                 )}
                 {showName && (
                   <h1 className="text-xl tracking-wide" style={{ color: darkBrown }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h1>
                 )}
               </div>
@@ -219,10 +221,10 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
         <section className="py-10" style={{ borderBottom: `2px solid ${lightBrown}` }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-3xl tracking-wide mb-2" style={{ color: darkBrown }}>
-              {store.name}
+              <EditableText path="name" value={store.name} required />
             </h2>
             {store.about?.slogan && (
-              <p className="text-lg italic" style={{ color: brown }}>{store.about.slogan}</p>
+              <p className="text-lg italic" style={{ color: brown }}><EditableText path="about.slogan" value={store.about?.slogan} /></p>
             )}
             {/* Decorative divider */}
             <div className="flex items-center justify-center gap-3 mt-6">
@@ -281,7 +283,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
                   textMuted: vintageTheme.colors.textMuted,
                   border: vintageTheme.colors.border,
                   background: vintageTheme.colors.background,
-                  primary: vintageTheme.colors.primary,
+                  primary: getPrimaryColor(store) || vintageTheme.colors.primary,
                   surface: vintageTheme.colors.surfaceHover,
                 }}
               />
@@ -293,7 +295,7 @@ export default function VintageTheme({ store, products, categories, onWhatsAppCl
                   text: vintageTheme.colors.text,
                   border: vintageTheme.colors.border,
                   background: vintageTheme.colors.background,
-                  primary: vintageTheme.colors.primary,
+                  primary: getPrimaryColor(store) || vintageTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

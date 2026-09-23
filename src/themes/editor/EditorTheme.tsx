@@ -12,6 +12,7 @@ import { useCart } from '../../hooks/useCart'
 import {
   ThemeProvider, ProductGrid, ProductDrawer, CartDrawer, CartBar, CategoryCarousel,
   WhatsAppButton, StoreFooter, CheckoutDrawer, AnnouncementBar, TrustBar, FlashSaleBar, SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -81,7 +82,7 @@ export default function EditorTheme({ store, products, categories, onWhatsAppCli
                 <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#A6E3A1' }} />
               </span>
               {headerLogo && <img src={headerLogo} alt={store.name} className={logoClassName} />}
-              {showName && <span className="truncate text-sm" style={{ fontFamily: editorTheme.fonts.heading, color: edText }}>{store.name} — {L.open}</span>}
+              {showName && <span className="truncate text-sm" style={{ fontFamily: editorTheme.fonts.heading, color: edText }}><EditableText path="name" value={store.name} required /> — {L.open}</span>}
             </div>
             <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 px-3 py-1 rounded text-xs transition-colors hover:opacity-90" style={{ backgroundColor: edBlue, color: edBg, fontFamily: editorTheme.fonts.heading }}>
               {L.cart}({totalItems})
@@ -117,7 +118,7 @@ export default function EditorTheme({ store, products, categories, onWhatsAppCli
               <div className="p-3 sm:p-4">
                 {store.about?.slogan && (
                   <p className="text-sm mb-4" style={{ color: editorTheme.colors.textMuted, fontFamily: editorTheme.fonts.heading }}>
-                    <span style={{ color: edPink }}>const</span> <span style={{ color: edBlue }}>store</span> = <span style={{ color: edGreen }}>&quot;{store.about.slogan}&quot;</span>
+                    <span style={{ color: edPink }}>const</span> <span style={{ color: edBlue }}>store</span> = <span style={{ color: edGreen }}>&quot;<EditableText path="about.slogan" value={store.about?.slogan} />&quot;</span>
                   </p>
                 )}
                 <TrustBar />

@@ -27,10 +27,12 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
 import SortDropdown from '../shared/SortDropdown'
@@ -148,7 +150,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                   <img src={headerLogo} alt={store.name} className={logoClassName} />
                 )}
                 {showName && <h1 className="text-lg font-bold tracking-tight" style={{ color: dark }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
 
@@ -209,10 +211,10 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight" style={{ color: dark }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h2>
                 {store.about?.slogan && (
-                  <p className="mt-1 text-sm text-gray-500">{store.about.slogan}</p>
+                  <p className="mt-1 text-sm text-gray-500"><EditableText path="about.slogan" value={store.about?.slogan} /></p>
                 )}
               </div>
               {store.whatsapp && (
@@ -265,7 +267,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                   textMuted: metroTheme.colors.textMuted,
                   border: metroTheme.colors.border,
                   background: metroTheme.colors.background,
-                  primary: metroTheme.colors.primary,
+                  primary: getPrimaryColor(store) || metroTheme.colors.primary,
                   surface: metroTheme.colors.surfaceHover,
                 }}
               />
@@ -277,7 +279,7 @@ export default function MetroTheme({ store, products, categories, onWhatsAppClic
                   text: metroTheme.colors.text,
                   border: metroTheme.colors.border,
                   background: metroTheme.colors.background,
-                  primary: metroTheme.colors.primary,
+                  primary: getPrimaryColor(store) || metroTheme.colors.primary,
                 }}
                 className="ml-auto"
               />

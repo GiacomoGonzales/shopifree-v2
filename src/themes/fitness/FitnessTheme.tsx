@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Store, Product, Category } from '../../types'
 import { useCart } from '../../hooks/useCart'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import {
   ThemeProvider,
   ProductGrid,
@@ -27,6 +28,7 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import '../shared/animations.css'
@@ -176,7 +178,7 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
               )}
               <div>
                 {showName && <h1 className="font-fitness-heading text-2xl md:text-3xl font-bold uppercase tracking-wider" style={{ color: white }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>}
               </div>
             </div>
@@ -223,11 +225,11 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-fitness-heading text-4xl font-bold uppercase tracking-wider" style={{ color: white }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-fitness-body font-semibold mt-1 uppercase tracking-widest text-sm" style={{ color: red }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -246,11 +248,11 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-fitness-heading text-5xl lg:text-7xl font-bold uppercase tracking-wider" style={{ color: white }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-fitness-body text-lg font-semibold mt-2 uppercase tracking-widest" style={{ color: red }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -277,12 +279,12 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 </div>
 
                 <h1 className="font-fitness-heading text-5xl md:text-7xl font-bold uppercase tracking-wider" style={{ color: white }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
 
                 {store.about?.slogan && (
                   <p className="text-lg md:text-xl font-semibold mt-4 font-fitness-body uppercase tracking-widest" style={{ color: red }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
 
@@ -345,7 +347,7 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 textMuted: fitnessTheme.colors.textMuted,
                 border: fitnessTheme.colors.border,
                 background: fitnessTheme.colors.background,
-                primary: fitnessTheme.colors.primary,
+                primary: getPrimaryColor(store) || fitnessTheme.colors.primary,
                 surface: fitnessTheme.colors.surfaceHover,
               }}
             />
@@ -357,7 +359,7 @@ export default function FitnessTheme({ store, products, categories, onWhatsAppCl
                 text: fitnessTheme.colors.text,
                 border: fitnessTheme.colors.border,
                 background: fitnessTheme.colors.background,
-                primary: fitnessTheme.colors.primary,
+                primary: getPrimaryColor(store) || fitnessTheme.colors.primary,
               }}
               className="ml-auto"
             />

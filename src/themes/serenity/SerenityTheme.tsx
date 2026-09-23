@@ -26,9 +26,11 @@ import {
   TrustBar,
   FlashSaleBar,
   SocialProofToast,
+  EditableText,
 } from '../../components/catalog'
 import type { ThemeConfig } from '../../components/catalog'
 import { useHeaderLogo } from '../shared/useHeaderLogo'
+import { getPrimaryColor } from '../shared/themeColors'
 import '../shared/animations.css'
 import HeroImg from '../../components/catalog/HeroImg'
 import { useProductFilters } from '../shared/useProductFilters'
@@ -177,7 +179,7 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
               )}
               {showName && (
                 <h1 className="font-serenity-heading text-xl md:text-2xl font-medium" style={{ color: textDark }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
               )}
             </div>
@@ -224,11 +226,11 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h2 className="font-serenity-heading text-3xl italic" style={{ color: textDark }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-serenity-body text-sm mt-2 tracking-wide" style={{ color: textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -246,11 +248,11 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-center">
                   <h2 className="font-serenity-heading text-5xl italic" style={{ color: textDark }}>
-                    {store.name}
+                    <EditableText path="name" value={store.name} required />
                   </h2>
                   {store.about?.slogan && (
                     <p className="font-serenity-body text-lg mt-3 tracking-wide" style={{ color: textMuted }}>
-                      {store.about.slogan}
+                      <EditableText path="about.slogan" value={store.about?.slogan} />
                     </p>
                   )}
                 </div>
@@ -270,11 +272,11 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
 
               <div className="max-w-3xl mx-auto px-6 pt-6">
                 <h1 className="font-serenity-heading text-4xl md:text-6xl italic font-medium" style={{ color: textDark }}>
-                  {store.name}
+                  <EditableText path="name" value={store.name} required />
                 </h1>
                 {store.about?.slogan && (
                   <p className="font-serenity-body text-base md:text-lg mt-4 tracking-wide font-light" style={{ color: textMuted }}>
-                    {store.about.slogan}
+                    <EditableText path="about.slogan" value={store.about?.slogan} />
                   </p>
                 )}
                 {store.about?.description && (
@@ -326,7 +328,7 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
                 textMuted: serenityTheme.colors.textMuted,
                 border: serenityTheme.colors.border,
                 background: serenityTheme.colors.background,
-                primary: serenityTheme.colors.primary,
+                primary: getPrimaryColor(store) || serenityTheme.colors.primary,
                 surface: serenityTheme.colors.surfaceHover,
               }}
             />
@@ -338,7 +340,7 @@ export default function SerenityTheme({ store, products, categories, onWhatsAppC
                 text: serenityTheme.colors.text,
                 border: serenityTheme.colors.border,
                 background: serenityTheme.colors.background,
-                primary: serenityTheme.colors.primary,
+                primary: getPrimaryColor(store) || serenityTheme.colors.primary,
               }}
               className="ml-auto"
             />

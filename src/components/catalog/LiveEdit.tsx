@@ -12,13 +12,18 @@ interface EditableTextProps {
   placeholder?: string
   /** Campos obligatorios (el nombre de la tienda) no se pueden dejar vacios. */
   required?: boolean
+  /** Texto del tema que se muestra cuando el campo esta vacio (en el editor tambien, como texto normal). */
+  fallback?: string
+  /** Si el texto no pasa esta prueba (por ejemplo, un email mal escrito) se descarta. */
+  pattern?: RegExp
 }
 
-export function EditableText({ path, value, as: Tag = 'span', className, placeholder, required }: EditableTextProps) {
+export function EditableText({ path, value, as: Tag = 'span', className, placeholder, required, fallback, pattern }: EditableTextProps) {
   const ctx = useContext(LiveEditContext)
   const ref = useRef<HTMLElement>(null)
 
-  if (!ctx) return <Tag className={className}>{value}</Tag>
+  // data-sf-text marca el campo (por ejemplo, para aplicar la tipografia de titulos al nombre).
+  if (!ctx) return <Tag className={className} data-sf-text={path}>{value || fallback}</Tag>
 
   // No es un input controlado: React no toca el contenido mientras se escribe
   // (si no, el cursor saltaria al inicio). El valor se confirma al salir.
@@ -26,8 +31,10 @@ export function EditableText({ path, value, as: Tag = 'span', className, placeho
     const el = ref.current
     if (!el) return
     const next = (el.textContent || '').replace(/\s+/g, ' ').trim()
-    if (required && !next) {
-      el.textContent = value || ''
+    // Dejar el texto por defecto del tema tal cual no es un cambio.
+    if (!value && fallback && next === fallback) return
+    if ((required && !next) || (next && pattern && !pattern.test(next))) {
+      el.textContent = value || fallback || ''
       return
     }
     if (next !== (value || '')) ctx.onChange(path, next)
@@ -38,7 +45,7 @@ export function EditableText({ path, value, as: Tag = 'span', className, placeho
       e.preventDefault()
       ref.current?.blur()
     } else if (e.key === 'Escape') {
-      if (ref.current) ref.current.textContent = value || ''
+      if (ref.current) ref.current.textContent = value || fallback || ''
       ref.current?.blur()
     }
   }
@@ -53,12 +60,13 @@ export function EditableText({ path, value, as: Tag = 'span', className, placeho
       suppressContentEditableWarning
       spellCheck={false}
       data-placeholder={placeholder}
+      data-sf-text={path}
       onBlur={commit}
       onKeyDown={handleKeyDown}
-      onClick={(e: MouseEvent) => e.stopPropagation()}
+      onClick={(e: MouseEvent) => { e.stopPropagation(); e.preventDefault() }}
       className={`${className || ''} live-edit-text`}
     >
-      {value}
+      {value || fallback}
     </Tag>
   )
 }
