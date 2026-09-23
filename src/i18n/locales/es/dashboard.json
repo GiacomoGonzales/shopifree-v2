@@ -1623,6 +1623,21 @@
       "square": "Rectas",
       "soft": "Suaves",
       "round": "Redondas"
-    }
+    },
+    "groups": {
+      "theme": "Tema",
+      "brand": "Marca",
+      "colors": "Colores y estilo",
+      "bars": "Barras y botones",
+      "catalog": "Catálogo"
+    },
+    "groupHints": {
+      "theme": "Tema y paletas sugeridas",
+      "brand": "Logo, portadas, textos y tipografía",
+      "colors": "Fondo, principal, header, footer, categorías, tarjetas y esquinas",
+      "bars": "Anuncio, insignias, oferta flash y WhatsApp",
+      "catalog": "Diseño de productos, paginación, vista y efectos"
+    },
+    "unsaved": "Cambios sin guardar"
   }
 }

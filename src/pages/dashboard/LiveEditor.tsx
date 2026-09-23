@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import type { ChangeEvent, MouseEvent } from 'react'
+import type { ChangeEvent, MouseEvent, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { collection, query, where, getDocs, doc, updateDoc, deleteField, limit } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
@@ -76,6 +76,31 @@ interface Snapshot { draft: Store; changes: Changes; productEdits: ProductEdits 
 const MERGE_MS = 1000
 const HISTORY_LIMIT = 50
 
+/** Grupos plegables del panel. */
+type PanelGroupId = 'theme' | 'brand' | 'colors' | 'bars' | 'catalog'
+const OPEN_GROUPS_KEY = 'sf-live-editor-open-groups'
+
+/** A que grupo del panel pertenece un campo (para el puntito de cambios y para abrirlo solo). */
+function groupForPath(path: string): PanelGroupId {
+  if (path === 'themeId') return 'theme'
+  if (/^themeSettings\.(backgroundColors|primaryColors|headerColors|footerColors|categoryBarColors|surfaceColors|textColors|cornerStyles)\b/.test(path)) return 'colors'
+  if (/^themeSettings\.(productLayout|paginationType|productViewMode|scrollReveal|imageSwapOnHover|hideFilters)\b/.test(path) || path.startsWith('socialProof')) return 'catalog'
+  if (/^(announcement|trustBadges|flashSale|whatsappButton)\b/.test(path)) return 'bars'
+  // Nombre, eslogan, descripcion, email, direccion, imagenes y tipografia.
+  return 'brand'
+}
+
+function loadOpenGroups(): PanelGroupId[] {
+  try {
+    const raw = localStorage.getItem(OPEN_GROUPS_KEY)
+    const valid: PanelGroupId[] = ['theme', 'brand', 'colors', 'bars', 'catalog']
+    if (raw) return (JSON.parse(raw) as string[]).filter((g): g is PanelGroupId => valid.includes(g as PanelGroupId))
+  } catch {
+    // Sin almacenamiento: se abre el primero.
+  }
+  return ['theme']
+}
+
 function getIn(obj: object, path: string): unknown {
   return path.split('.').reduce<unknown>((acc, key) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[key] : undefined), obj)
 }
@@ -118,6 +143,19 @@ export default function LiveEditor() {
   const [recovery, setRecovery] = useState<StoredDraft | null>(null)
   // En pantallas chicas el panel se abre y se cierra desde abajo para dejarle lugar a la tienda.
   const [panelOpen, setPanelOpen] = useState(false)
+  // Grupos abiertos del panel (se recuerdan en este navegador).
+  const [openGroups, setOpenGroups] = useState<PanelGroupId[]>(loadOpenGroups)
+  const groupRefs = useRef<Partial<Record<PanelGroupId, HTMLElement | null>>>({})
+  useEffect(() => {
+    try { localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(openGroups)) } catch { /* idem */ }
+  }, [openGroups])
+  const toggleGroup = (id: PanelGroupId) =>
+    setOpenGroups(prev => (prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]))
+  // Al editar algo en la tienda se abre (y se muestra) el grupo que le corresponde.
+  const revealGroup = useCallback((id: PanelGroupId) => {
+    setOpenGroups(prev => (prev.includes(id) ? prev : [...prev, id]))
+    requestAnimationFrame(() => groupRefs.current[id]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
+  }, [])
   const [editingProduct, setEditingProduct] = useState<string | null>(null)
   // Colores originales del tema en pantalla, informados por su ThemeProvider.
   const [themeInfo, setThemeInfo] = useState<ThemeBaseColors | null>(null)
@@ -224,10 +262,10 @@ export default function LiveEditor() {
   const change = useCallback((path: string, value: unknown) => changeMany([[path, value]], path), [changeMany])
 
   const liveEdit = useMemo(() => ({
-    onChange: (path: string, value: string) => change(path, value),
+    onChange: (path: string, value: string) => { change(path, value); revealGroup(groupForPath(path)) },
     onEditProduct: (id: string) => setEditingProduct(id),
     onThemeInfo: (colors: ThemeBaseColors) => setThemeInfo(colors),
-  }), [change])
+  }), [change, revealGroup])
 
   const handleSave = async () => {
     if (!draft || !dirty) return
@@ -412,18 +450,19 @@ export default function LiveEditor() {
     e.preventDefault()
     e.stopPropagation()
     pickImage(field)
+    revealGroup('brand')
   }
 
   // Vista de celular: lo que manda el iframe (ediciones, imagenes, deshacer).
-  const fromFrame = useRef({ change, pickImage, undo, redo })
-  useEffect(() => { fromFrame.current = { change, pickImage, undo, redo } })
+  const fromFrame = useRef({ change, pickImage, undo, redo, revealGroup })
+  useEffect(() => { fromFrame.current = { change, pickImage, undo, redo, revealGroup } })
   useEffect(() => {
     const onMessage = (e: MessageEvent<PreviewMessage>) => {
       if (e.origin !== window.location.origin || e.source !== frame.current?.contentWindow) return
       const msg = e.data
       if (msg?.type === 'sf-ready') setFrameReady(true)
-      else if (msg?.type === 'sf-change') fromFrame.current.change(msg.path, msg.value)
-      else if (msg?.type === 'sf-pick-image') fromFrame.current.pickImage(msg.field)
+      else if (msg?.type === 'sf-change') { fromFrame.current.change(msg.path, msg.value); fromFrame.current.revealGroup(groupForPath(msg.path)) }
+      else if (msg?.type === 'sf-pick-image') { fromFrame.current.pickImage(msg.field); fromFrame.current.revealGroup('brand') }
       else if (msg?.type === 'sf-edit-product') setEditingProduct(msg.productId)
       else if (msg?.type === 'sf-theme-info') setThemeInfo(msg.colors)
       else if (msg?.type === 'sf-history') fromFrame.current[msg.action]()
@@ -491,6 +530,7 @@ export default function LiveEditor() {
   const headingFont = getHeadingFont(draft)
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
+  const dirtyGroups = new Set(Object.keys(changes).map(groupForPath))
   const storeUrl = draft.customDomain && draft.domainStatus === 'verified'
     ? `https://${draft.customDomain}`
     : `https://${draft.subdomain}.shopifree.app`
@@ -625,501 +665,550 @@ export default function LiveEditor() {
         </button>
 
         {/* Panel */}
-        <aside className={`${panelOpen ? 'block' : 'hidden'} md:block w-full md:w-72 shrink-0 max-h-[55vh] md:max-h-none overflow-auto bg-white md:border-l border-[#E6EBF1] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-6`}>
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f] mb-3">{t('liveEditor.theme')}</h2>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => stepTheme(-1)}
-                className="p-2 rounded-lg border border-[#E6EBF1] hover:bg-gray-50 shrink-0"
-                title={t('liveEditor.prevTheme')}
-              >
-                <svg className="w-4 h-4 text-[#425466]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <select
-                value={themeId}
-                onChange={e => change('themeId', e.target.value)}
-                className="min-w-0 flex-1 px-2 py-2 text-sm border border-[#E6EBF1] rounded-lg bg-white focus:outline-none focus:border-[#1e3a5f]"
-              >
-                {themes.map(th => (
-                  <option key={th.id} value={th.id}>{th.name}{th.isPremium ? ' ★' : ''}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => stepTheme(1)}
-                className="p-2 rounded-lg border border-[#E6EBF1] hover:bg-gray-50 shrink-0"
-                title={t('liveEditor.nextTheme')}
-              >
-                <svg className="w-4 h-4 text-[#425466]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-            {themeLocked ? (
-              <p className="mt-2 text-[0.7rem] text-amber-700">
-                {t('liveEditor.themePremiumHint')}{' '}
-                <a href={localePath('/dashboard/plan')} className="font-semibold underline">{t('liveEditor.upgrade')}</a>
-              </p>
-            ) : changes.themeId !== undefined && (
-              <p className="mt-2 text-[0.7rem] text-[#8898AA]">{t('liveEditor.themeUnsaved')}</p>
-            )}
-          </section>
+        <aside className={`${panelOpen ? 'block' : 'hidden'} md:block w-full md:w-72 shrink-0 max-h-[55vh] md:max-h-none overflow-auto bg-white md:border-l border-[#E6EBF1] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2`}>
+          <PanelGroup
+            id="theme"
+            title={t('liveEditor.groups.theme')}
+            hint={t('liveEditor.groupHints.theme')}
+            open={openGroups.includes('theme')}
+            dirty={dirtyGroups.has('theme')}
+            dirtyLabel={t('liveEditor.unsaved')}
+            onToggle={() => toggleGroup('theme')}
+            groupRef={el => { groupRefs.current['theme'] = el }}
+          >
+            <section>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => stepTheme(-1)}
+                  className="p-2 rounded-lg border border-[#E6EBF1] hover:bg-gray-50 shrink-0"
+                  title={t('liveEditor.prevTheme')}
+                >
+                  <svg className="w-4 h-4 text-[#425466]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <select
+                  value={themeId}
+                  onChange={e => change('themeId', e.target.value)}
+                  className="min-w-0 flex-1 px-2 py-2 text-sm border border-[#E6EBF1] rounded-lg bg-white focus:outline-none focus:border-[#1e3a5f]"
+                >
+                  {themes.map(th => (
+                    <option key={th.id} value={th.id}>{th.name}{th.isPremium ? ' ★' : ''}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => stepTheme(1)}
+                  className="p-2 rounded-lg border border-[#E6EBF1] hover:bg-gray-50 shrink-0"
+                  title={t('liveEditor.nextTheme')}
+                >
+                  <svg className="w-4 h-4 text-[#425466]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              {themeLocked ? (
+                <p className="mt-2 text-[0.7rem] text-amber-700">
+                  {t('liveEditor.themePremiumHint')}{' '}
+                  <a href={localePath('/dashboard/plan')} className="font-semibold underline">{t('liveEditor.upgrade')}</a>
+                </p>
+              ) : changes.themeId !== undefined && (
+                <p className="mt-2 text-[0.7rem] text-[#8898AA]">{t('liveEditor.themeUnsaved')}</p>
+              )}
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.images')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.imagesHint')}</p>
-            {(Object.keys(IMAGE_FIELDS) as ImageField[]).map(field => (
-              <ImageSlot
-                key={field}
-                label={t(`liveEditor.image.${field}`)}
-                src={draft[field]}
-                wide={field !== 'logo'}
-                uploading={uploading === field}
-                onChange={() => pickImage(field)}
-                onRemove={() => change(field, undefined)}
-                changeLabel={t('liveEditor.change')}
-                removeLabel={t('liveEditor.remove')}
-                uploadingLabel={t('liveEditor.uploading')}
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.palettes')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.palettesHint')}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {PALETTES.map(palette => {
+                  const active = getPrimaryColor(draft) === palette.primary
+                    && headerColors.background === palette.header.background
+                    && footerColors.background === palette.footer.background
+                  return (
+                    <button
+                      key={palette.id}
+                      onClick={() => changeMany(paletteEntries(themeId, palette, themeIsDark))}
+                      className={`text-left rounded-lg border p-1.5 transition-colors ${active ? 'border-[#1e3a5f] ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] hover:border-[#8898AA]'}`}
+                    >
+                      <div className="flex h-6 rounded overflow-hidden border border-black/5">
+                        <span className="flex-1" style={{ backgroundColor: palette.header.background }} />
+                        <span className="flex-1" style={{ backgroundColor: palette.primary }} />
+                        <span className="flex-1" style={{ backgroundColor: palette.footer.background }} />
+                      </div>
+                      <span className="block mt-1 text-[0.7rem] text-[#425466]">{t(`liveEditor.palette.${palette.id}`)}</span>
+                    </button>
+                  )
+                })}
+                <button
+                  onClick={() => changeMany(paletteEntries(themeId, null, false))}
+                  className="rounded-lg border border-dashed border-[#E6EBF1] p-1.5 text-[0.7rem] text-[#8898AA] hover:border-[#8898AA] hover:text-[#425466]"
+                >
+                  {t('liveEditor.paletteReset')}
+                </button>
+              </div>
+            </section>
+          </PanelGroup>
+          <PanelGroup
+            id="brand"
+            title={t('liveEditor.groups.brand')}
+            hint={t('liveEditor.groupHints.brand')}
+            open={openGroups.includes('brand')}
+            dirty={dirtyGroups.has('brand')}
+            dirtyLabel={t('liveEditor.unsaved')}
+            onToggle={() => toggleGroup('brand')}
+            groupRef={el => { groupRefs.current['brand'] = el }}
+          >
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.images')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.imagesHint')}</p>
+              {(Object.keys(IMAGE_FIELDS) as ImageField[]).map(field => (
+                <ImageSlot
+                  key={field}
+                  label={t(`liveEditor.image.${field}`)}
+                  src={draft[field]}
+                  wide={field !== 'logo'}
+                  uploading={uploading === field}
+                  onChange={() => pickImage(field)}
+                  onRemove={() => change(field, undefined)}
+                  changeLabel={t('liveEditor.change')}
+                  removeLabel={t('liveEditor.remove')}
+                  uploadingLabel={t('liveEditor.uploading')}
+                />
+              ))}
+              <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={handleFileChosen} />
+            </section>
+
+            {/* Respaldo: algunos temas muestran el nombre como decoracion (iniciales,
+                marquesinas) o esconden el eslogan si esta vacio. Desde aca siempre se puede. */}
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f] mb-3">{t('liveEditor.texts')}</h2>
+              <TextField
+                label={t('liveEditor.name')}
+                value={draft.name}
+                onChange={v => change('name', v)}
               />
-            ))}
-            <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={handleFileChosen} />
-          </section>
+              <TextField
+                label={t('liveEditor.slogan')}
+                value={draft.about?.slogan || ''}
+                onChange={v => change('about.slogan', v)}
+              />
+              <TextField
+                label={t('liveEditor.description')}
+                value={draft.about?.description || ''}
+                onChange={v => change('about.description', v)}
+                multiline
+              />
+            </section>
 
-          {/* Respaldo: algunos temas muestran el nombre como decoracion (iniciales,
-              marquesinas) o esconden el eslogan si esta vacio. Desde aca siempre se puede. */}
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f] mb-3">{t('liveEditor.texts')}</h2>
-            <TextField
-              label={t('liveEditor.name')}
-              value={draft.name}
-              onChange={v => change('name', v)}
-            />
-            <TextField
-              label={t('liveEditor.slogan')}
-              value={draft.about?.slogan || ''}
-              onChange={v => change('about.slogan', v)}
-            />
-            <TextField
-              label={t('liveEditor.description')}
-              value={draft.about?.description || ''}
-              onChange={v => change('about.description', v)}
-              multiline
-            />
-          </section>
-
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.palettes')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.palettesHint')}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {PALETTES.map(palette => {
-                const active = getPrimaryColor(draft) === palette.primary
-                  && headerColors.background === palette.header.background
-                  && footerColors.background === palette.footer.background
-                return (
-                  <button
-                    key={palette.id}
-                    onClick={() => changeMany(paletteEntries(themeId, palette, themeIsDark))}
-                    className={`text-left rounded-lg border p-1.5 transition-colors ${active ? 'border-[#1e3a5f] ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] hover:border-[#8898AA]'}`}
-                  >
-                    <div className="flex h-6 rounded overflow-hidden border border-black/5">
-                      <span className="flex-1" style={{ backgroundColor: palette.header.background }} />
-                      <span className="flex-1" style={{ backgroundColor: palette.primary }} />
-                      <span className="flex-1" style={{ backgroundColor: palette.footer.background }} />
-                    </div>
-                    <span className="block mt-1 text-[0.7rem] text-[#425466]">{t(`liveEditor.palette.${palette.id}`)}</span>
-                  </button>
-                )
-              })}
-              <button
-                onClick={() => changeMany(paletteEntries(themeId, null, false))}
-                className="rounded-lg border border-dashed border-[#E6EBF1] p-1.5 text-[0.7rem] text-[#8898AA] hover:border-[#8898AA] hover:text-[#425466]"
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.font')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.fontHint')}</p>
+              <select
+                value={headingFont?.id || ''}
+                onChange={e => change(`themeSettings.headingFonts.${themeId}`, e.target.value || undefined)}
+                className="w-full px-2 py-2 text-sm border border-[#E6EBF1] rounded-lg bg-white focus:outline-none focus:border-[#1e3a5f]"
               >
-                {t('liveEditor.paletteReset')}
-              </button>
-            </div>
-          </section>
+                <option value="">{t('liveEditor.fontTheme')}</option>
+                {HEADING_FONTS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
+              </select>
+              {headingFont && (
+                <>
+                  <link rel="stylesheet" href={googleFontUrl(headingFont)} precedence="default" />
+                  <p className="mt-2 text-xl text-[#1e3a5f] truncate" style={{ fontFamily: headingFont.family }}>{draft.name}</p>
+                </>
+              )}
+            </section>
+          </PanelGroup>
+          <PanelGroup
+            id="colors"
+            title={t('liveEditor.groups.colors')}
+            hint={t('liveEditor.groupHints.colors')}
+            open={openGroups.includes('colors')}
+            dirty={dirtyGroups.has('colors')}
+            dirtyLabel={t('liveEditor.unsaved')}
+            onToggle={() => toggleGroup('colors')}
+            groupRef={el => { groupRefs.current['colors'] = el }}
+          >
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.pageBackground')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.pageBackgroundHint')}</p>
+              <ColorField
+                label={t('liveEditor.background')}
+                value={background}
+                fallback={themeBackground}
+                onChange={v => change(`themeSettings.backgroundColors.${themeId}`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              {backgroundClashes && (
+                <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  {t(themeIsDark ? 'liveEditor.backgroundClashDark' : 'liveEditor.backgroundClashLight')}
+                </p>
+              )}
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.pageBackground')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.pageBackgroundHint')}</p>
-            <ColorField
-              label={t('liveEditor.background')}
-              value={background}
-              fallback={themeBackground}
-              onChange={v => change(`themeSettings.backgroundColors.${themeId}`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            {backgroundClashes && (
-              <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                {t(themeIsDark ? 'liveEditor.backgroundClashDark' : 'liveEditor.backgroundClashLight')}
-              </p>
-            )}
-          </section>
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.primary')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.primaryHint')}</p>
+              <ColorField
+                label={t('liveEditor.primaryLabel')}
+                value={getPrimaryColor(draft)}
+                fallback={hexOr(themeInfo?.primary, hexOr(currentTheme?.colors?.primary, '#111827'))}
+                onChange={v => change(`themeSettings.primaryColors.${themeId}`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.surfaces')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.surfacesHint')}</p>
-            <ColorField
-              label={t('liveEditor.surface')}
-              value={surfaceColor}
-              fallback={themeSurface}
-              onChange={v => change(`themeSettings.surfaceColors.${themeId}`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            <ColorField
-              label={t('liveEditor.text')}
-              value={textColor}
-              fallback={themeText}
-              onChange={v => change(`themeSettings.textColors.${themeId}`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            {surfaceTextClash && (
-              <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
-            )}
-          </section>
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.header')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.headerPerTheme', { theme: themeName })}</p>
+              <ColorField
+                label={t('liveEditor.background')}
+                value={headerColors.background}
+                fallback="#ffffff"
+                onChange={v => change(`themeSettings.headerColors.${themeId}.background`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              <ColorField
+                label={t('liveEditor.text')}
+                value={headerColors.text}
+                fallback="#111827"
+                onChange={v => change(`themeSettings.headerColors.${themeId}.text`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.categoryBar')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.categoryBarHint')}</p>
-            <ColorField
-              label={t('liveEditor.background')}
-              value={barColors.background}
-              fallback={background || themeBackground}
-              onChange={v => change(`themeSettings.categoryBarColors.${themeId}.background`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            <ColorField
-              label={t('liveEditor.text')}
-              value={barColors.text}
-              fallback={themeText}
-              onChange={v => change(`themeSettings.categoryBarColors.${themeId}.text`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            {barClash && (
-              <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
-            )}
-          </section>
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.footer')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.headerPerTheme', { theme: themeName })}</p>
+              <ColorField
+                label={t('liveEditor.background')}
+                value={footerColors.background}
+                fallback={currentTheme?.colors?.background || '#ffffff'}
+                onChange={v => change(`themeSettings.footerColors.${themeId}.background`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              <ColorField
+                label={t('liveEditor.text')}
+                value={footerColors.text}
+                fallback="#111827"
+                onChange={v => change(`themeSettings.footerColors.${themeId}.text`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.corners')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.cornersHint')}</p>
-            <div className="grid grid-cols-4 gap-1.5">
-              {([undefined, 'square', 'soft', 'round'] as const).map(style => {
-                const active = corners === style
-                const radius = style === 'square' ? '0' : style === 'soft' ? '6px' : style === 'round' ? '14px' : '4px'
-                return (
-                  <button
-                    key={style || 'theme'}
-                    onClick={() => change(`themeSettings.cornerStyles.${themeId}`, style)}
-                    className={`flex flex-col items-center gap-1 rounded-lg border p-1.5 text-[0.65rem] ${active ? 'border-[#1e3a5f] text-[#1e3a5f] font-semibold ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] text-[#425466]'}`}
-                  >
-                    <span className={`w-8 h-6 border-2 ${style ? 'border-[#1e3a5f]' : 'border-dashed border-[#8898AA]'}`} style={{ borderRadius: radius }} />
-                    {t(`liveEditor.corner.${style || 'theme'}`)}
-                  </button>
-                )
-              })}
-            </div>
-          </section>
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.categoryBar')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.categoryBarHint')}</p>
+              <ColorField
+                label={t('liveEditor.background')}
+                value={barColors.background}
+                fallback={background || themeBackground}
+                onChange={v => change(`themeSettings.categoryBarColors.${themeId}.background`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              <ColorField
+                label={t('liveEditor.text')}
+                value={barColors.text}
+                fallback={themeText}
+                onChange={v => change(`themeSettings.categoryBarColors.${themeId}.text`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              {barClash && (
+                <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
+              )}
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.primary')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.primaryHint')}</p>
-            <ColorField
-              label={t('liveEditor.primaryLabel')}
-              value={getPrimaryColor(draft)}
-              fallback={hexOr(themeInfo?.primary, hexOr(currentTheme?.colors?.primary, '#111827'))}
-              onChange={v => change(`themeSettings.primaryColors.${themeId}`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-          </section>
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.surfaces')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.surfacesHint')}</p>
+              <ColorField
+                label={t('liveEditor.surface')}
+                value={surfaceColor}
+                fallback={themeSurface}
+                onChange={v => change(`themeSettings.surfaceColors.${themeId}`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              <ColorField
+                label={t('liveEditor.text')}
+                value={textColor}
+                fallback={themeText}
+                onChange={v => change(`themeSettings.textColors.${themeId}`, v)}
+                resetLabel={t('liveEditor.reset')}
+              />
+              {surfaceTextClash && (
+                <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
+              )}
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.font')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.fontHint')}</p>
-            <select
-              value={headingFont?.id || ''}
-              onChange={e => change(`themeSettings.headingFonts.${themeId}`, e.target.value || undefined)}
-              className="w-full px-2 py-2 text-sm border border-[#E6EBF1] rounded-lg bg-white focus:outline-none focus:border-[#1e3a5f]"
-            >
-              <option value="">{t('liveEditor.fontTheme')}</option>
-              {HEADING_FONTS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-            </select>
-            {headingFont && (
-              <>
-                <link rel="stylesheet" href={googleFontUrl(headingFont)} precedence="default" />
-                <p className="mt-2 text-xl text-[#1e3a5f] truncate" style={{ fontFamily: headingFont.family }}>{draft.name}</p>
-              </>
-            )}
-          </section>
+            <section>
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.corners')}</h2>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.cornersHint')}</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {([undefined, 'square', 'soft', 'round'] as const).map(style => {
+                  const active = corners === style
+                  const radius = style === 'square' ? '0' : style === 'soft' ? '6px' : style === 'round' ? '14px' : '4px'
+                  return (
+                    <button
+                      key={style || 'theme'}
+                      onClick={() => change(`themeSettings.cornerStyles.${themeId}`, style)}
+                      className={`flex flex-col items-center gap-1 rounded-lg border p-1.5 text-[0.65rem] ${active ? 'border-[#1e3a5f] text-[#1e3a5f] font-semibold ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] text-[#425466]'}`}
+                    >
+                      <span className={`w-8 h-6 border-2 ${style ? 'border-[#1e3a5f]' : 'border-dashed border-[#8898AA]'}`} style={{ borderRadius: radius }} />
+                      {t(`liveEditor.corner.${style || 'theme'}`)}
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          </PanelGroup>
+          <PanelGroup
+            id="bars"
+            title={t('liveEditor.groups.bars')}
+            hint={t('liveEditor.groupHints.bars')}
+            open={openGroups.includes('bars')}
+            dirty={dirtyGroups.has('bars')}
+            dirtyLabel={t('liveEditor.unsaved')}
+            onToggle={() => toggleGroup('bars')}
+            groupRef={el => { groupRefs.current['bars'] = el }}
+          >
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.announcement')}</h2>
+                <label className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!announcement?.enabled}
+                    onChange={e => change('announcement.enabled', e.target.checked)}
+                  />
+                  {t('liveEditor.show')}
+                </label>
+              </div>
+              {announcement?.enabled && (
+                <>
+                  <ColorField
+                    label={t('liveEditor.background')}
+                    value={announcement.backgroundColor}
+                    fallback="#111827"
+                    onChange={v => change('announcement.backgroundColor', v)}
+                    resetLabel={t('liveEditor.reset')}
+                  />
+                  <ColorField
+                    label={t('liveEditor.text')}
+                    value={announcement.textColor}
+                    fallback="#ffffff"
+                    onChange={v => change('announcement.textColor', v)}
+                    resetLabel={t('liveEditor.reset')}
+                  />
+                  <TextField
+                    label={t('branding.announcement.link')}
+                    value={announcement.link || ''}
+                    onChange={v => change('announcement.link', v)}
+                  />
+                  <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
+                    <input
+                      type="checkbox"
+                      disabled={!paidPlan}
+                      checked={announcement.mode === 'marquee'}
+                      onChange={e => change('announcement.mode', e.target.checked ? 'marquee' : 'static')}
+                    />
+                    {t('branding.announcement.marquee')}{!paidPlan && ' ★'}
+                  </label>
+                  {announcement.mode === 'marquee' && paidPlan && (
+                    <p className="mt-1 text-[0.7rem] text-[#8898AA]">{t('liveEditor.marqueeHint')}</p>
+                  )}
+                </>
+              )}
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.header')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.headerPerTheme', { theme: themeName })}</p>
-            <ColorField
-              label={t('liveEditor.background')}
-              value={headerColors.background}
-              fallback="#ffffff"
-              onChange={v => change(`themeSettings.headerColors.${themeId}.background`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            <ColorField
-              label={t('liveEditor.text')}
-              value={headerColors.text}
-              fallback="#111827"
-              onChange={v => change(`themeSettings.headerColors.${themeId}.text`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-          </section>
+            <section>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.trustBadges')}</h2>
+                <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
+                  <input type="checkbox" disabled={!paidPlan} checked={!!trustBadges?.enabled} onChange={e => toggleTrustBadges(e.target.checked)} />
+                  {t('liveEditor.show')}
+                </label>
+              </div>
+              {!paidPlan ? (
+                <PlanNote text={t('liveEditor.paidOnly')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} />
+              ) : trustBadges?.enabled && (
+                <>
+                  <p className="text-[0.7rem] text-[#8898AA] mb-2">{t('liveEditor.trustBadgesHint')}</p>
+                  <div className="space-y-1.5">
+                    {trustBadges.badges.map((badge, i) => (
+                      <label key={badge.id} className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
+                        <input type="checkbox" checked={badge.enabled} onChange={e => change(`trustBadges.badges.${i}.enabled`, e.target.checked)} />
+                        <span className="truncate">{badge.text || getTrustBadgeText(badge.id, draft.language || 'es')}</span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
 
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.footer')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.headerPerTheme', { theme: themeName })}</p>
-            <ColorField
-              label={t('liveEditor.background')}
-              value={footerColors.background}
-              fallback={currentTheme?.colors?.background || '#ffffff'}
-              onChange={v => change(`themeSettings.footerColors.${themeId}.background`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-            <ColorField
-              label={t('liveEditor.text')}
-              value={footerColors.text}
-              fallback="#111827"
-              onChange={v => change(`themeSettings.footerColors.${themeId}.text`, v)}
-              resetLabel={t('liveEditor.reset')}
-            />
-          </section>
+            <section>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.flashSale')}</h2>
+                <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
+                  <input type="checkbox" disabled={!paidPlan} checked={!!flashSale?.enabled} onChange={e => change('flashSale.enabled', e.target.checked)} />
+                  {t('liveEditor.show')}
+                </label>
+              </div>
+              {!paidPlan ? (
+                <PlanNote text={t('liveEditor.paidOnly')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} />
+              ) : flashSale?.enabled && (
+                <>
+                  <p className="text-[0.7rem] text-[#8898AA] mb-2">{t('liveEditor.flashSaleHint')}</p>
+                  <label className="block mb-3">
+                    <span className="text-xs text-[#425466]">{t('liveEditor.flashSaleEnd')}</span>
+                    <input
+                      type="datetime-local"
+                      value={toLocalInput(flashSale.endDate)}
+                      onChange={e => e.target.value && change('flashSale.endDate', new Date(e.target.value).toISOString())}
+                      className="mt-1 w-full px-3 py-2 text-sm border border-[#E6EBF1] rounded-lg focus:outline-none focus:border-[#1e3a5f]"
+                    />
+                  </label>
+                  {flashSale.endDate && new Date(flashSale.endDate).getTime() < Date.now() && (
+                    <p className="-mt-2 mb-3 text-[0.7rem] text-amber-700">{t('liveEditor.flashSaleEnded')}</p>
+                  )}
+                  <ColorField
+                    label={t('liveEditor.background')}
+                    value={flashSale.backgroundColor}
+                    fallback={getPrimaryColor(draft) || currentTheme?.colors?.primary || '#111827'}
+                    onChange={v => change('flashSale.backgroundColor', v)}
+                    resetLabel={t('liveEditor.reset')}
+                  />
+                  <ColorField
+                    label={t('liveEditor.text')}
+                    value={flashSale.textColor}
+                    fallback="#ffffff"
+                    onChange={v => change('flashSale.textColor', v)}
+                    resetLabel={t('liveEditor.reset')}
+                  />
+                </>
+              )}
+            </section>
 
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.announcement')}</h2>
-              <label className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!announcement?.enabled}
-                  onChange={e => change('announcement.enabled', e.target.checked)}
-                />
-                {t('liveEditor.show')}
-              </label>
-            </div>
-            {announcement?.enabled && (
-              <>
-                <ColorField
-                  label={t('liveEditor.background')}
-                  value={announcement.backgroundColor}
-                  fallback="#111827"
-                  onChange={v => change('announcement.backgroundColor', v)}
-                  resetLabel={t('liveEditor.reset')}
-                />
-                <ColorField
-                  label={t('liveEditor.text')}
-                  value={announcement.textColor}
-                  fallback="#ffffff"
-                  onChange={v => change('announcement.textColor', v)}
-                  resetLabel={t('liveEditor.reset')}
-                />
-                <TextField
-                  label={t('branding.announcement.link')}
-                  value={announcement.link || ''}
-                  onChange={v => change('announcement.link', v)}
-                />
+            <section>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.whatsapp.title')}</h2>
+                <label className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={draft.whatsappButton?.enabled !== false}
+                    onChange={e => change('whatsappButton.enabled', e.target.checked ? undefined : false)}
+                  />
+                  {t('liveEditor.show')}
+                </label>
+              </div>
+              {!draft.whatsapp ? (
+                <p className="text-[0.7rem] text-amber-700">
+                  {t('liveEditor.whatsapp.noNumber')}{' '}
+                  <a href={localePath('/dashboard/settings')} className="font-semibold underline">{t('liveEditor.whatsapp.settings')}</a>
+                </p>
+              ) : draft.whatsappButton?.enabled !== false && (
+                <>
+                  <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.whatsapp.hint')}</p>
+                  <ColorField
+                    label={t('liveEditor.whatsapp.color')}
+                    value={draft.whatsappButton?.color}
+                    fallback="#25D366"
+                    onChange={v => change('whatsappButton.color', v)}
+                    resetLabel={t('liveEditor.reset')}
+                  />
+                  <TextField
+                    label={t('liveEditor.whatsapp.label')}
+                    value={draft.whatsappButton?.label || ''}
+                    onChange={v => change('whatsappButton.label', v)}
+                  />
+                  <TextField
+                    label={t('liveEditor.whatsapp.message')}
+                    value={draft.whatsappButton?.message || ''}
+                    onChange={v => change('whatsappButton.message', v)}
+                    multiline
+                  />
+                  <div className="flex items-center gap-2 text-xs text-[#425466]">
+                    <span>{t('liveEditor.whatsapp.position')}</span>
+                    {(['left', 'right'] as const).map(side => (
+                      <button
+                        key={side}
+                        onClick={() => change('whatsappButton.position', side === 'right' ? undefined : side)}
+                        className={`px-2.5 py-1 rounded-md border ${(draft.whatsappButton?.position || 'right') === side ? 'border-[#1e3a5f] text-[#1e3a5f] font-semibold' : 'border-[#E6EBF1]'}`}
+                      >
+                        {t(`liveEditor.whatsapp.${side}`)}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          </PanelGroup>
+          <PanelGroup
+            id="catalog"
+            title={t('liveEditor.groups.catalog')}
+            hint={t('liveEditor.groupHints.catalog')}
+            open={openGroups.includes('catalog')}
+            dirty={dirtyGroups.has('catalog')}
+            dirtyLabel={t('liveEditor.unsaved')}
+            onToggle={() => toggleGroup('catalog')}
+            groupRef={el => { groupRefs.current['catalog'] = el }}
+          >
+            <section>
+              <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.catalogHint')}</p>
+              <SelectField
+                label={t('branding.layout.title')}
+                value={draft.themeSettings?.productLayout || 'grid'}
+                onChange={v => change('themeSettings.productLayout', v)}
+                options={(['grid', 'masonry', 'magazine', 'carousel', 'list', 'sections'] as const).map(id => ({
+                  value: id, label: t(`branding.layout.${id}`), locked: id !== 'grid' && !paidPlan,
+                }))}
+              />
+              <SelectField
+                label={t('branding.pagination.title')}
+                value={draft.themeSettings?.paginationType || 'none'}
+                onChange={v => change('themeSettings.paginationType', v)}
+                options={([['none', 'none'], ['load-more', 'loadMore'], ['infinite-scroll', 'infiniteScroll'], ['classic', 'classic']] as const).map(([id, key]) => ({
+                  value: id, label: t(`branding.pagination.${key}`), locked: id !== 'none' && !paidPlan,
+                }))}
+              />
+              <SelectField
+                label={t('branding.viewMode.title')}
+                value={draft.themeSettings?.productViewMode || 'drawer'}
+                onChange={v => change('themeSettings.productViewMode', v)}
+                options={(['drawer', 'reels'] as const).map(id => ({
+                  value: id, label: t(`branding.viewMode.${id}`), locked: id === 'reels' && !paidPlan,
+                }))}
+              />
+              <div className="space-y-2 mt-1">
+                {([
+                  ['scrollReveal', t('branding.effects.scrollReveal'), true],
+                  ['imageSwapOnHover', t('branding.effects.imageSwap'), true],
+                  ['hideFilters', t('branding.catalog.hideFilters'), false],
+                ] as const).map(([key, label, paidOnly]) => (
+                  <label key={key} className={`flex items-center gap-2 text-xs text-[#425466] ${paidOnly && !paidPlan ? 'opacity-50' : 'cursor-pointer'}`}>
+                    <input
+                      type="checkbox"
+                      disabled={paidOnly && !paidPlan}
+                      checked={!!draft.themeSettings?.[key]}
+                      onChange={e => change(`themeSettings.${key}`, e.target.checked)}
+                    />
+                    {label}{paidOnly && !paidPlan && ' ★'}
+                  </label>
+                ))}
                 <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
                   <input
                     type="checkbox"
                     disabled={!paidPlan}
-                    checked={announcement.mode === 'marquee'}
-                    onChange={e => change('announcement.mode', e.target.checked ? 'marquee' : 'static')}
+                    checked={!!draft.socialProof?.enabled}
+                    onChange={e => change('socialProof.enabled', e.target.checked)}
                   />
-                  {t('branding.announcement.marquee')}{!paidPlan && ' ★'}
+                  {t('branding.socialProof.title')}{!paidPlan && ' ★'}
                 </label>
-                {announcement.mode === 'marquee' && paidPlan && (
-                  <p className="mt-1 text-[0.7rem] text-[#8898AA]">{t('liveEditor.marqueeHint')}</p>
-                )}
-              </>
-            )}
-          </section>
-
-          <section>
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.trustBadges')}</h2>
-              <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
-                <input type="checkbox" disabled={!paidPlan} checked={!!trustBadges?.enabled} onChange={e => toggleTrustBadges(e.target.checked)} />
-                {t('liveEditor.show')}
-              </label>
-            </div>
-            {!paidPlan ? (
-              <PlanNote text={t('liveEditor.paidOnly')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} />
-            ) : trustBadges?.enabled && (
-              <>
-                <p className="text-[0.7rem] text-[#8898AA] mb-2">{t('liveEditor.trustBadgesHint')}</p>
-                <div className="space-y-1.5">
-                  {trustBadges.badges.map((badge, i) => (
-                    <label key={badge.id} className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
-                      <input type="checkbox" checked={badge.enabled} onChange={e => change(`trustBadges.badges.${i}.enabled`, e.target.checked)} />
-                      <span className="truncate">{badge.text || getTrustBadgeText(badge.id, draft.language || 'es')}</span>
-                    </label>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
-
-          <section>
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.flashSale')}</h2>
-              <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
-                <input type="checkbox" disabled={!paidPlan} checked={!!flashSale?.enabled} onChange={e => change('flashSale.enabled', e.target.checked)} />
-                {t('liveEditor.show')}
-              </label>
-            </div>
-            {!paidPlan ? (
-              <PlanNote text={t('liveEditor.paidOnly')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} />
-            ) : flashSale?.enabled && (
-              <>
-                <p className="text-[0.7rem] text-[#8898AA] mb-2">{t('liveEditor.flashSaleHint')}</p>
-                <label className="block mb-3">
-                  <span className="text-xs text-[#425466]">{t('liveEditor.flashSaleEnd')}</span>
-                  <input
-                    type="datetime-local"
-                    value={toLocalInput(flashSale.endDate)}
-                    onChange={e => e.target.value && change('flashSale.endDate', new Date(e.target.value).toISOString())}
-                    className="mt-1 w-full px-3 py-2 text-sm border border-[#E6EBF1] rounded-lg focus:outline-none focus:border-[#1e3a5f]"
-                  />
-                </label>
-                {flashSale.endDate && new Date(flashSale.endDate).getTime() < Date.now() && (
-                  <p className="-mt-2 mb-3 text-[0.7rem] text-amber-700">{t('liveEditor.flashSaleEnded')}</p>
-                )}
-                <ColorField
-                  label={t('liveEditor.background')}
-                  value={flashSale.backgroundColor}
-                  fallback={getPrimaryColor(draft) || currentTheme?.colors?.primary || '#111827'}
-                  onChange={v => change('flashSale.backgroundColor', v)}
-                  resetLabel={t('liveEditor.reset')}
-                />
-                <ColorField
-                  label={t('liveEditor.text')}
-                  value={flashSale.textColor}
-                  fallback="#ffffff"
-                  onChange={v => change('flashSale.textColor', v)}
-                  resetLabel={t('liveEditor.reset')}
-                />
-              </>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.catalog')}</h2>
-            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.catalogHint')}</p>
-            <SelectField
-              label={t('branding.layout.title')}
-              value={draft.themeSettings?.productLayout || 'grid'}
-              onChange={v => change('themeSettings.productLayout', v)}
-              options={(['grid', 'masonry', 'magazine', 'carousel', 'list', 'sections'] as const).map(id => ({
-                value: id, label: t(`branding.layout.${id}`), locked: id !== 'grid' && !paidPlan,
-              }))}
-            />
-            <SelectField
-              label={t('branding.pagination.title')}
-              value={draft.themeSettings?.paginationType || 'none'}
-              onChange={v => change('themeSettings.paginationType', v)}
-              options={([['none', 'none'], ['load-more', 'loadMore'], ['infinite-scroll', 'infiniteScroll'], ['classic', 'classic']] as const).map(([id, key]) => ({
-                value: id, label: t(`branding.pagination.${key}`), locked: id !== 'none' && !paidPlan,
-              }))}
-            />
-            <SelectField
-              label={t('branding.viewMode.title')}
-              value={draft.themeSettings?.productViewMode || 'drawer'}
-              onChange={v => change('themeSettings.productViewMode', v)}
-              options={(['drawer', 'reels'] as const).map(id => ({
-                value: id, label: t(`branding.viewMode.${id}`), locked: id === 'reels' && !paidPlan,
-              }))}
-            />
-            <div className="space-y-2 mt-1">
-              {([
-                ['scrollReveal', t('branding.effects.scrollReveal'), true],
-                ['imageSwapOnHover', t('branding.effects.imageSwap'), true],
-                ['hideFilters', t('branding.catalog.hideFilters'), false],
-              ] as const).map(([key, label, paidOnly]) => (
-                <label key={key} className={`flex items-center gap-2 text-xs text-[#425466] ${paidOnly && !paidPlan ? 'opacity-50' : 'cursor-pointer'}`}>
-                  <input
-                    type="checkbox"
-                    disabled={paidOnly && !paidPlan}
-                    checked={!!draft.themeSettings?.[key]}
-                    onChange={e => change(`themeSettings.${key}`, e.target.checked)}
-                  />
-                  {label}{paidOnly && !paidPlan && ' ★'}
-                </label>
-              ))}
-              <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
-                <input
-                  type="checkbox"
-                  disabled={!paidPlan}
-                  checked={!!draft.socialProof?.enabled}
-                  onChange={e => change('socialProof.enabled', e.target.checked)}
-                />
-                {t('branding.socialProof.title')}{!paidPlan && ' ★'}
-              </label>
-            </div>
-            {!paidPlan && (
-              <div className="mt-2"><PlanNote text={t('liveEditor.starPaid')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} /></div>
-            )}
-          </section>
-
-          <section>
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.whatsapp.title')}</h2>
-              <label className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={draft.whatsappButton?.enabled !== false}
-                  onChange={e => change('whatsappButton.enabled', e.target.checked ? undefined : false)}
-                />
-                {t('liveEditor.show')}
-              </label>
-            </div>
-            {!draft.whatsapp ? (
-              <p className="text-[0.7rem] text-amber-700">
-                {t('liveEditor.whatsapp.noNumber')}{' '}
-                <a href={localePath('/dashboard/settings')} className="font-semibold underline">{t('liveEditor.whatsapp.settings')}</a>
-              </p>
-            ) : draft.whatsappButton?.enabled !== false && (
-              <>
-                <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.whatsapp.hint')}</p>
-                <ColorField
-                  label={t('liveEditor.whatsapp.color')}
-                  value={draft.whatsappButton?.color}
-                  fallback="#25D366"
-                  onChange={v => change('whatsappButton.color', v)}
-                  resetLabel={t('liveEditor.reset')}
-                />
-                <TextField
-                  label={t('liveEditor.whatsapp.label')}
-                  value={draft.whatsappButton?.label || ''}
-                  onChange={v => change('whatsappButton.label', v)}
-                />
-                <TextField
-                  label={t('liveEditor.whatsapp.message')}
-                  value={draft.whatsappButton?.message || ''}
-                  onChange={v => change('whatsappButton.message', v)}
-                  multiline
-                />
-                <div className="flex items-center gap-2 text-xs text-[#425466]">
-                  <span>{t('liveEditor.whatsapp.position')}</span>
-                  {(['left', 'right'] as const).map(side => (
-                    <button
-                      key={side}
-                      onClick={() => change('whatsappButton.position', side === 'right' ? undefined : side)}
-                      className={`px-2.5 py-1 rounded-md border ${(draft.whatsappButton?.position || 'right') === side ? 'border-[#1e3a5f] text-[#1e3a5f] font-semibold' : 'border-[#E6EBF1]'}`}
-                    >
-                      {t(`liveEditor.whatsapp.${side}`)}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
+              </div>
+              {!paidPlan && (
+                <div className="mt-2"><PlanNote text={t('liveEditor.starPaid')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} /></div>
+              )}
+            </section>
+          </PanelGroup>
         </aside>
       </div>
 
@@ -1154,6 +1243,43 @@ export default function LiveEditor() {
           }}
         />
       )}
+    </div>
+  )
+}
+
+interface PanelGroupProps {
+  id: PanelGroupId
+  title: string
+  hint: string
+  open: boolean
+  dirty: boolean
+  onToggle: () => void
+  groupRef: (el: HTMLElement | null) => void
+  dirtyLabel: string
+  children: ReactNode
+}
+
+function PanelGroup({ id, title, hint, open, dirty, onToggle, groupRef, dirtyLabel, children }: PanelGroupProps) {
+  return (
+    <div ref={groupRef} className="border border-[#E6EBF1] rounded-xl scroll-mt-2">
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={`panel-group-${id}`}
+        className="w-full flex items-center gap-2 px-3 py-2.5 text-left rounded-xl hover:bg-[#F6F9FC]"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 text-[0.85rem] font-semibold text-[#1e3a5f]">
+            {title}
+            {dirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={dirtyLabel} aria-label={dirtyLabel} />}
+          </span>
+          {!open && <span className="block text-[0.7rem] text-[#8898AA] truncate">{hint}</span>}
+        </span>
+        <svg className={`w-4 h-4 shrink-0 text-[#8898AA] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      {open && <div id={`panel-group-${id}`} className="px-3 pb-4 pt-1 space-y-6">{children}</div>}
     </div>
   )
 }

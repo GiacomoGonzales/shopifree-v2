@@ -1622,6 +1622,21 @@
       "square": "Square",
       "soft": "Soft",
       "round": "Round"
-    }
+    },
+    "groups": {
+      "theme": "Theme",
+      "brand": "Brand",
+      "colors": "Colors & style",
+      "bars": "Bars & buttons",
+      "catalog": "Catalog"
+    },
+    "groupHints": {
+      "theme": "Theme and suggested palettes",
+      "brand": "Logo, covers, texts and font",
+      "colors": "Background, main color, header, footer, categories, cards and corners",
+      "bars": "Announcement, badges, flash sale and WhatsApp",
+      "catalog": "Product layout, pagination, view and effects"
+    },
+    "unsaved": "Unsaved changes"
   }
 }
