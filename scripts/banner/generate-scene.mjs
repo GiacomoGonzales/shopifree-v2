@@ -13,13 +13,14 @@ import path from 'node:path'
 const OUT = path.resolve('scripts/banner/scene.png')
 const PROMPT = `High-end tech advertising key visual, photorealistic 3D render, wide 3:2 composition.
 A sleek modern silver aluminum laptop (MacBook Pro style) floating in mid-air, lid open, slightly tilted, seen from a
-dynamic three-quarter angle from the front-left, with a soft diffuse shadow far below it.
+dynamic three-quarter angle from the front-left, with a soft diffuse shadow below it.
 The laptop display is completely filled edge-to-edge with a flat, uniform, pure chroma-key green (#00FF00) — no
 reflections, no gradients, no content, no glare on the green area. The whole screen rectangle must be fully visible.
-Place the laptop in the right 60% of the frame, fairly large (screen occupying about half of the image height),
-leaving the left 40% as calm empty dark background.
-Background: deep navy blue studio gradient (#0b1b33 to #1e3a5f), soft sky-blue (#38bdf8) rim light on the laptop
-edges, a faint blue glow behind it and a few tiny floating light particles. Premium, modern, clean, high contrast,
+The laptop is LARGE and dominant: it occupies the right 65% of the frame, the screen takes about 60% of the image
+height, the laptop almost touching the right edge but fully inside the frame. Leave the left 35% as calm empty background.
+Background: bright, luminous medium blue studio gradient (from #2563eb-ish royal blue at the top right to a softer
+#1e4f8f blue at the bottom left), clearly lighter than navy, with a large soft white-blue light glow behind the laptop,
+gentle rim light on the laptop edges and a few tiny floating light particles. Premium, modern, clean, optimistic,
 Apple-keynote-like product shot. No text, no logos, no watermark.`
 
 function readKey() {

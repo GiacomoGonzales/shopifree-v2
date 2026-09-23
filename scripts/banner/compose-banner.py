@@ -107,5 +107,12 @@ glow.putalpha(glow_alpha)
 base.alpha_composite(glow, (-8, -8))
 base.alpha_composite(layer)
 
+# 6) Recorte alrededor de la laptop (sin el vacio de la izquierda ni el de abajo):
+# en el banner la imagen ocupa todo el alto, asi que cuanto menos margen, mas grande se ve.
+left = max(0, min(p[0] for p in quad) - int(W * 0.26))
+top = max(0, min(p[1] for p in quad) - int(H * 0.09))
+bottom = min(H, max(p[1] for p in quad) + int(H * 0.26))
+base = base.crop((left, top, W, bottom))
 base.convert('RGB').save(OUT, 'WEBP', quality=90, method=6)
+print('recorte final:', base.size)
 print('Listo:', OUT)

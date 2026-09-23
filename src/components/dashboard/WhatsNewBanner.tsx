@@ -34,7 +34,7 @@ export default function WhatsNewBanner() {
     <div
       className="relative overflow-hidden rounded-[18px] text-white"
       // Mismo azul que el fondo de la imagen, para que no se note donde empieza.
-      style={{ background: 'linear-gradient(160deg, #000b17 0%, #001122 55%, #001a31 100%)', boxShadow: '0 24px 48px -28px rgba(0,17,34,.9)' }}
+      style={{ background: 'linear-gradient(160deg, #185398 0%, #1e69b2 55%, #237bc2 100%)', boxShadow: '0 24px 48px -28px rgba(24,83,152,.9)' }}
     >
       {/* Imagen: arriba en celular; en pantallas grandes ocupa toda la tarjeta y el texto va encima a la izquierda. */}
       <div className={`relative aspect-[3/2] md:aspect-auto md:absolute md:inset-0 ${imageFailed ? 'hidden md:block' : ''}`}>
@@ -48,14 +48,14 @@ export default function WhatsNewBanner() {
             className="absolute inset-0 w-full h-full object-cover md:left-auto md:w-auto md:max-w-none md:[mask-image:linear-gradient(to_right,transparent,black_22%)]"
           />
         )}
-        {/* Brillo celeste de fondo (se ve tambien sin imagen) */}
-        <div className="absolute -right-24 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-[#38bdf8]/20 blur-3xl pointer-events-none" />
+        {/* Brillo claro de fondo (se ve tambien sin imagen) */}
+        <div className="absolute -right-24 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-[#7dd3fc]/25 blur-3xl pointer-events-none" />
         {/* Degradado para que el texto siempre se lea sobre la imagen */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#001122] via-transparent to-transparent md:bg-gradient-to-r md:from-[#000d1b] md:from-25% md:via-[#000d1b]/40 md:via-45% md:to-transparent md:to-60%" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1e69b2] via-transparent to-transparent md:bg-gradient-to-r md:from-[#185398] md:from-20% md:via-[#185398]/40 md:via-40% md:to-transparent md:to-55%" />
       </div>
 
       <div className="relative p-6 sm:p-8 md:p-10 md:min-h-[360px] lg:min-h-[400px] md:max-w-[52%] flex flex-col justify-center">
-        <span className="self-start inline-flex items-center gap-1.5 px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wider rounded-full bg-[#38bdf8] text-[#0b1b33]">
+        <span className="self-start inline-flex items-center gap-1.5 px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wider rounded-full bg-white text-[#185398]">
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 2l1.8 5.6L19.5 9l-5.7 1.8L12 16.5l-1.8-5.7L4.5 9l5.7-1.4L12 2zm7 11l.9 2.6 2.6.9-2.6.9L19 20l-.9-2.6-2.6-.9 2.6-.9L19 13z" />
           </svg>
@@ -64,13 +64,13 @@ export default function WhatsNewBanner() {
         <h2 className="mt-4 text-2xl sm:text-3xl lg:text-[2.6rem] font-bold tracking-tight leading-[1.1]">
           {t('home.whatsNew.title')}
         </h2>
-        <p className="mt-3 text-[0.95rem] sm:text-base text-white/75 font-normal max-w-md">
+        <p className="mt-3 text-[0.95rem] sm:text-base text-white/85 font-normal max-w-md">
           {t('home.whatsNew.description')}
         </p>
         <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 text-[0.85rem] text-white/85">
           {(['texts', 'colors', 'fonts', 'phone'] as const).map(key => (
             <li key={key} className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#38bdf8] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-4 h-4 text-[#7dd3fc] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               {t(`home.whatsNew.points.${key}`)}
@@ -79,8 +79,8 @@ export default function WhatsNewBanner() {
         </ul>
         <Link
           to={localePath('/dashboard/editor')}
-          className="mt-6 self-start inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-[#0b1b33] text-sm font-bold transition-transform hover:scale-[1.03]"
-          style={{ boxShadow: '0 12px 30px -10px rgba(56,189,248,.6)' }}
+          className="mt-6 self-start inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-[#185398] text-sm font-bold transition-transform hover:scale-[1.03]"
+          style={{ boxShadow: '0 12px 30px -10px rgba(10,40,90,.55)' }}
         >
           {t('home.whatsNew.cta')}
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
