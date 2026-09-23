@@ -695,7 +695,7 @@ export default function LiveEditor() {
         </button>
 
         {/* Panel */}
-        <aside className={`${panelOpen ? 'block' : 'hidden'} md:block w-full md:w-72 shrink-0 max-h-[55vh] md:max-h-none overflow-auto bg-white md:border-l border-[#E6EBF1] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2`}>
+        <aside className={`${panelOpen ? 'block' : 'hidden'} md:block w-full md:w-80 lg:w-96 shrink-0 max-h-[55vh] md:max-h-none overflow-auto bg-white md:border-l border-[#E6EBF1] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2`}>
           <PanelGroup
             id="theme"
             title={t('liveEditor.groups.theme')}
@@ -928,58 +928,64 @@ export default function LiveEditor() {
             <section>
               <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.header')}</h2>
               <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.headerPerTheme', { theme: themeName })}</p>
-              <ColorField
-                label={t('liveEditor.background')}
-                value={headerColors.background}
-                fallback="#ffffff"
-                onChange={v => change(`themeSettings.headerColors.${themeId}.background`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
-              <ColorField
-                label={t('liveEditor.text')}
-                value={headerColors.text}
-                fallback="#111827"
-                onChange={v => change(`themeSettings.headerColors.${themeId}.text`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
+              <div className="grid grid-cols-2 gap-x-3">
+                <ColorField
+                  label={t('liveEditor.background')}
+                  value={headerColors.background}
+                  fallback="#ffffff"
+                  onChange={v => change(`themeSettings.headerColors.${themeId}.background`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+                <ColorField
+                  label={t('liveEditor.text')}
+                  value={headerColors.text}
+                  fallback="#111827"
+                  onChange={v => change(`themeSettings.headerColors.${themeId}.text`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+              </div>
             </section>
 
             <section>
               <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.footer')}</h2>
               <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.headerPerTheme', { theme: themeName })}</p>
-              <ColorField
-                label={t('liveEditor.background')}
-                value={footerColors.background}
-                fallback={currentTheme?.colors?.background || '#ffffff'}
-                onChange={v => change(`themeSettings.footerColors.${themeId}.background`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
-              <ColorField
-                label={t('liveEditor.text')}
-                value={footerColors.text}
-                fallback="#111827"
-                onChange={v => change(`themeSettings.footerColors.${themeId}.text`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
+              <div className="grid grid-cols-2 gap-x-3">
+                <ColorField
+                  label={t('liveEditor.background')}
+                  value={footerColors.background}
+                  fallback={currentTheme?.colors?.background || '#ffffff'}
+                  onChange={v => change(`themeSettings.footerColors.${themeId}.background`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+                <ColorField
+                  label={t('liveEditor.text')}
+                  value={footerColors.text}
+                  fallback="#111827"
+                  onChange={v => change(`themeSettings.footerColors.${themeId}.text`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+              </div>
             </section>
 
             <section>
               <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.categoryBar')}</h2>
               <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.categoryBarHint')}</p>
-              <ColorField
-                label={t('liveEditor.background')}
-                value={barColors.background}
-                fallback={background || themeBackground}
-                onChange={v => change(`themeSettings.categoryBarColors.${themeId}.background`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
-              <ColorField
-                label={t('liveEditor.text')}
-                value={barColors.text}
-                fallback={themeText}
-                onChange={v => change(`themeSettings.categoryBarColors.${themeId}.text`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
+              <div className="grid grid-cols-2 gap-x-3">
+                <ColorField
+                  label={t('liveEditor.background')}
+                  value={barColors.background}
+                  fallback={background || themeBackground}
+                  onChange={v => change(`themeSettings.categoryBarColors.${themeId}.background`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+                <ColorField
+                  label={t('liveEditor.text')}
+                  value={barColors.text}
+                  fallback={themeText}
+                  onChange={v => change(`themeSettings.categoryBarColors.${themeId}.text`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+              </div>
               {barClash && (
                 <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
               )}
@@ -988,20 +994,22 @@ export default function LiveEditor() {
             <section>
               <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.surfaces')}</h2>
               <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.surfacesHint')}</p>
-              <ColorField
-                label={t('liveEditor.surface')}
-                value={surfaceColor}
-                fallback={themeSurface}
-                onChange={v => change(`themeSettings.surfaceColors.${themeId}`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
-              <ColorField
-                label={t('liveEditor.text')}
-                value={textColor}
-                fallback={themeText}
-                onChange={v => change(`themeSettings.textColors.${themeId}`, v)}
-                resetLabel={t('liveEditor.reset')}
-              />
+              <div className="grid grid-cols-2 gap-x-3">
+                <ColorField
+                  label={t('liveEditor.surface')}
+                  value={surfaceColor}
+                  fallback={themeSurface}
+                  onChange={v => change(`themeSettings.surfaceColors.${themeId}`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+                <ColorField
+                  label={t('liveEditor.text')}
+                  value={textColor}
+                  fallback={themeText}
+                  onChange={v => change(`themeSettings.textColors.${themeId}`, v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+              </div>
               {surfaceTextClash && (
                 <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
               )}
@@ -1052,20 +1060,22 @@ export default function LiveEditor() {
               </div>
               {announcement?.enabled && (
                 <>
-                  <ColorField
-                    label={t('liveEditor.background')}
-                    value={announcement.backgroundColor}
-                    fallback="#111827"
-                    onChange={v => change('announcement.backgroundColor', v)}
-                    resetLabel={t('liveEditor.reset')}
-                  />
-                  <ColorField
-                    label={t('liveEditor.text')}
-                    value={announcement.textColor}
-                    fallback="#ffffff"
-                    onChange={v => change('announcement.textColor', v)}
-                    resetLabel={t('liveEditor.reset')}
-                  />
+                  <div className="grid grid-cols-2 gap-x-3">
+                    <ColorField
+                      label={t('liveEditor.background')}
+                      value={announcement.backgroundColor}
+                      fallback="#111827"
+                      onChange={v => change('announcement.backgroundColor', v)}
+                      resetLabel={t('liveEditor.reset')}
+                    />
+                    <ColorField
+                      label={t('liveEditor.text')}
+                      value={announcement.textColor}
+                      fallback="#ffffff"
+                      onChange={v => change('announcement.textColor', v)}
+                      resetLabel={t('liveEditor.reset')}
+                    />
+                  </div>
                   <TextField
                     label={t('branding.announcement.link')}
                     value={announcement.link || ''}
@@ -1137,20 +1147,22 @@ export default function LiveEditor() {
                   {flashSale.endDate && new Date(flashSale.endDate).getTime() < Date.now() && (
                     <p className="-mt-2 mb-3 text-[0.7rem] text-amber-700">{t('liveEditor.flashSaleEnded')}</p>
                   )}
-                  <ColorField
-                    label={t('liveEditor.background')}
-                    value={flashSale.backgroundColor}
-                    fallback={getPrimaryColor(draft) || currentTheme?.colors?.primary || '#111827'}
-                    onChange={v => change('flashSale.backgroundColor', v)}
-                    resetLabel={t('liveEditor.reset')}
-                  />
-                  <ColorField
-                    label={t('liveEditor.text')}
-                    value={flashSale.textColor}
-                    fallback="#ffffff"
-                    onChange={v => change('flashSale.textColor', v)}
-                    resetLabel={t('liveEditor.reset')}
-                  />
+                  <div className="grid grid-cols-2 gap-x-3">
+                    <ColorField
+                      label={t('liveEditor.background')}
+                      value={flashSale.backgroundColor}
+                      fallback={getPrimaryColor(draft) || currentTheme?.colors?.primary || '#111827'}
+                      onChange={v => change('flashSale.backgroundColor', v)}
+                      resetLabel={t('liveEditor.reset')}
+                    />
+                    <ColorField
+                      label={t('liveEditor.text')}
+                      value={flashSale.textColor}
+                      fallback="#ffffff"
+                      onChange={v => change('flashSale.textColor', v)}
+                      resetLabel={t('liveEditor.reset')}
+                    />
+                  </div>
                 </>
               )}
             </section>
@@ -1451,7 +1463,7 @@ interface ColorFieldProps {
 
 function ColorField({ label, value, fallback, onChange, resetLabel }: ColorFieldProps) {
   return (
-    <div className="flex items-center gap-3 mb-3">
+    <div className="flex items-center gap-2.5 mb-3 min-w-0">
       <input
         type="color"
         value={value || fallback}
@@ -1463,8 +1475,15 @@ function ColorField({ label, value, fallback, onChange, resetLabel }: ColorField
         <p className="text-[0.7rem] text-[#8898AA] font-mono">{value || '—'}</p>
       </div>
       {value && (
-        <button onClick={() => onChange(undefined)} className="text-[0.7rem] text-[#8898AA] hover:text-[#425466]">
-          {resetLabel}
+        <button
+          onClick={() => onChange(undefined)}
+          title={resetLabel}
+          aria-label={resetLabel}
+          className="p-1 rounded-md text-[#8898AA] hover:text-[#425466] hover:bg-gray-100 shrink-0"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
         </button>
       )}
     </div>
