@@ -1582,6 +1582,13 @@
       "hiddenHint": "Oculto: desaparece de la vista previa y de tu tienda al guardar.",
       "fullForm": "Más opciones (variantes, stock…)",
       "done": "Listo"
-    }
+    },
+    "viewStore": "Ver mi tienda publicada",
+    "recovery": "Tienes cambios sin guardar del {{when}}.",
+    "recover": "Recuperar",
+    "recoverDismiss": "Descartar",
+    "panelOpen": "Editar diseño",
+    "panelClose": "Cerrar panel",
+    "saveShort": "Guardar"
   }
 }

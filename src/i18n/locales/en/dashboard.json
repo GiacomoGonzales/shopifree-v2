@@ -1581,6 +1581,13 @@
       "hiddenHint": "Hidden: it disappears from the preview and your store when you save.",
       "fullForm": "More options (variants, stock…)",
       "done": "Done"
-    }
+    },
+    "viewStore": "View my live store",
+    "recovery": "You have unsaved changes from {{when}}.",
+    "recover": "Recover",
+    "recoverDismiss": "Discard",
+    "panelOpen": "Edit design",
+    "panelClose": "Close panel",
+    "saveShort": "Save"
   }
 }

@@ -19,6 +19,7 @@ import { ALL_BADGE_IDS, getTrustBadgeText } from '../../themes/shared/trustBadge
 import { HEADING_FONTS, getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
 import { PALETTES, paletteEntries } from './palettes'
 import ProductQuickEdit from './ProductQuickEdit'
+import { saveDraft, loadDraft, clearDraft, type StoredDraft } from './draftStorage'
 import { imageFieldFromClick, historyActionFromKey, toCloneable, type ImageField, type PreviewMessage } from './liveEditorShared'
 import '../../themes/shared/animations.css'
 import './liveEditor.css'
@@ -112,6 +113,10 @@ export default function LiveEditor() {
   // Estado actual para la foto del historial: `change` es estable (lo usan los
   // textos del tema y subidas que terminan tarde) y no puede leerlo del render.
   const [productEdits, setProductEdits] = useState<ProductEdits>({})
+  // Borrador que quedo guardado en el navegador de una sesion anterior sin guardar.
+  const [recovery, setRecovery] = useState<StoredDraft | null>(null)
+  // En pantallas chicas el panel se abre y se cierra desde abajo para dejarle lugar a la tienda.
+  const [panelOpen, setPanelOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<string | null>(null)
   const productFileInput = useRef<HTMLInputElement>(null)
   const [uploadingProduct, setUploadingProduct] = useState(false)
@@ -136,6 +141,7 @@ export default function LiveEditor() {
         const store = { ...(snap.docs[0].data() as Store), id: snap.docs[0].id }
         setSaved(store)
         setDraft(store)
+        setRecovery(loadDraft(store.id))
         setLoading(false)
 
         // La vista previa no necesita el catalogo completo.
@@ -308,6 +314,30 @@ export default function LiveEditor() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Copia del borrador en el navegador mientras haya cambios. Mientras se
+  // decide si recuperar uno anterior, no se toca (si no, se pisaria).
+  useEffect(() => {
+    if (!saved || recovery) return
+    if (dirty) saveDraft(saved.id, { changes, productEdits })
+    else clearDraft(saved.id)
+  }, [saved, recovery, dirty, changes, productEdits])
+
+  const recoverDraft = () => {
+    if (!saved || !recovery) return
+    const restored = Object.entries(recovery.changes).reduce<Store>((acc, [path, value]) => setIn(acc, path, value), saved)
+    current.current = { draft: restored, changes: recovery.changes, productEdits: recovery.productEdits }
+    setDraft(restored)
+    setChanges(recovery.changes)
+    setProductEdits(recovery.productEdits)
+    resetHistory()
+    setRecovery(null)
+  }
+
+  const dismissRecovery = () => {
+    if (saved) clearDraft(saved.id)
+    setRecovery(null)
+  }
+
   const handleDiscard = () => {
     setDraft(saved)
     setChanges({})
@@ -433,6 +463,9 @@ export default function LiveEditor() {
   const headingFont = getHeadingFont(draft)
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
+  const storeUrl = draft.customDomain && draft.domainStatus === 'verified'
+    ? `https://${draft.customDomain}`
+    : `https://${draft.subdomain}.shopifree.app`
   const paidPlan = draft.plan !== 'free'
   const trustBadges = draft.trustBadges
   const flashSale = draft.flashSale
@@ -451,7 +484,7 @@ export default function LiveEditor() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#F6F9FC] pt-[env(safe-area-inset-top)]">
       {/* Barra superior */}
-      <div className="flex items-center gap-3 px-4 h-14 bg-white border-b border-[#E6EBF1] shrink-0">
+      <div className="flex items-center gap-1 sm:gap-3 px-2 sm:px-4 h-14 bg-white border-b border-[#E6EBF1] shrink-0">
         <button onClick={handleExit} className="p-2 -ml-2 rounded-lg hover:bg-gray-100" title={t('liveEditor.exit')}>
           <svg className="w-5 h-5 text-[#425466]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -489,6 +522,17 @@ export default function LiveEditor() {
             </svg>
           </button>
         </div>
+        <a
+          href={storeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 rounded-lg hover:bg-gray-100"
+          title={t('liveEditor.viewStore')}
+        >
+          <svg className="w-5 h-5 text-[#425466]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </a>
         {dirty && (
           <button onClick={handleDiscard} disabled={saving} className="px-3 py-2 text-sm text-[#425466] rounded-lg hover:bg-gray-100">
             {t('liveEditor.discard')}
@@ -497,11 +541,26 @@ export default function LiveEditor() {
         <button
           onClick={handleSave}
           disabled={!dirty || saving}
-          className="px-4 py-2 text-sm font-medium text-white bg-[#1e3a5f] rounded-lg disabled:opacity-40"
+          className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-[#1e3a5f] rounded-lg disabled:opacity-40"
         >
-          {saving ? t('liveEditor.saving') : t('liveEditor.save')}
+          {saving ? t('liveEditor.saving') : (
+            <>
+              <span className="sm:hidden">{t('liveEditor.saveShort')}</span>
+              <span className="hidden sm:inline">{t('liveEditor.save')}</span>
+            </>
+          )}
         </button>
       </div>
+
+      {recovery && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 bg-amber-50 border-b border-amber-200 text-sm text-amber-900 shrink-0">
+          <span className="flex-1 min-w-[200px]">
+            {t('liveEditor.recovery', { when: new Date(recovery.savedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) })}
+          </span>
+          <button onClick={recoverDraft} className="font-semibold underline">{t('liveEditor.recover')}</button>
+          <button onClick={dismissRecovery} className="text-amber-700 hover:underline">{t('liveEditor.recoverDismiss')}</button>
+        </div>
+      )}
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">
         {/* Vista previa. El transform hace que los elementos `fixed` del tema
@@ -526,8 +585,19 @@ export default function LiveEditor() {
           </div>
         )}
 
-        {/* Panel de colores */}
-        <aside className="w-full md:w-72 shrink-0 max-h-[40vh] md:max-h-none overflow-auto bg-white border-t md:border-t-0 md:border-l border-[#E6EBF1] p-4 space-y-6">
+        {/* En el celular, el panel se abre desde abajo. */}
+        <button
+          onClick={() => setPanelOpen(o => !o)}
+          className="md:hidden flex items-center justify-center gap-2 py-2.5 bg-white border-t border-[#E6EBF1] text-sm font-medium text-[#1e3a5f] shrink-0"
+        >
+          {panelOpen ? t('liveEditor.panelClose') : t('liveEditor.panelOpen')}
+          <svg className={`w-4 h-4 transition-transform ${panelOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+          </svg>
+        </button>
+
+        {/* Panel */}
+        <aside className={`${panelOpen ? 'block' : 'hidden'} md:block w-full md:w-72 shrink-0 max-h-[55vh] md:max-h-none overflow-auto bg-white md:border-l border-[#E6EBF1] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-6`}>
           <section>
             <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f] mb-3">{t('liveEditor.theme')}</h2>
             <div className="flex items-center gap-1.5">
