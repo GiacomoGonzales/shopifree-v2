@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
 import { setPixelDefaultCurrency } from '../../lib/pixels'
-import { getHeaderColors, getPrimaryColor, readableTextOn } from '../../themes/shared/themeColors'
+import { getHeaderColors, getPrimaryColor, getBackgroundColor, readableTextOn } from '../../themes/shared/themeColors'
 import { getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
 
 /**
@@ -121,17 +121,26 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
 
   // Merge store-level effect overrides into theme
   const primary = getPrimaryColor(store)
+  const background = getBackgroundColor(store)
   const mergedTheme = useMemo(() => {
     const s = store.themeSettings
-    // Color principal del editor en vivo: lo leen los componentes compartidos
-    // (tarjetas, carrito, checkout). El texto encima se ajusta para que se lea.
-    const withPrimary = primary ? {
+    // Colores del editor en vivo que leen los componentes compartidos (tarjetas,
+    // carrito, checkout). El principal lleva texto negro o blanco segun se lea
+    // mejor. El fondo tambien pinta las "superficies" cuando el tema las tenia
+    // iguales al fondo (tarjetas y cajones sin color propio).
+    const withPrimary = primary || background ? {
       ...theme,
       colors: {
         ...theme.colors,
-        primary,
-        primaryHover: `color-mix(in srgb, ${primary} 85%, black)`,
-        textInverted: readableTextOn(primary),
+        ...(primary && {
+          primary,
+          primaryHover: `color-mix(in srgb, ${primary} 85%, black)`,
+          textInverted: readableTextOn(primary),
+        }),
+        ...(background && {
+          background,
+          ...(theme.colors.surface === theme.colors.background && { surface: background }),
+        }),
       },
     } : theme
     if (s?.scrollReveal === undefined && s?.imageSwapOnHover === undefined && s?.productLayout === undefined && s?.paginationType === undefined && s?.productViewMode === undefined) return withPrimary
@@ -146,7 +155,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(s?.productViewMode !== undefined && { productViewMode: s.productViewMode }),
       }
     }
-  }, [theme, store.themeSettings, primary])
+  }, [theme, store.themeSettings, primary, background])
 
   const headerColors = getHeaderColors(store)
   const headingFont = getHeadingFont(store)
@@ -154,7 +163,12 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   const fontCss = headingFont
     ? `[data-sf-store] :is(h1,h2,h3,[data-sf-text="name"]){font-family:${headingFont.family}!important}`
     : ''
-  const overrideCss = [headerColorsCss(headerColors.background, headerColors.text), fontCss].filter(Boolean).join('\n')
+  // Fondo de pagina: todos los temas arman su pagina en un contenedor min-h-screen
+  // justo adentro de este provider. Pisa tambien degradados/texturas del fondo.
+  const backgroundCss = background && HEX_COLOR.test(background)
+    ? `[data-sf-store]>.min-h-screen{background:${background}!important}`
+    : ''
+  const overrideCss = [headerColorsCss(headerColors.background, headerColors.text), fontCss, backgroundCss].filter(Boolean).join('\n')
 
   // Propagate store currency to pixel helpers so tracking events use the right currency
   useEffect(() => {

@@ -1558,7 +1558,7 @@
     "fontHint": "For headings and your store name. Each theme keeps its own.",
     "fontTheme": "Theme default",
     "palettes": "Suggested palettes",
-    "palettesHint": "Main color, header and footer in one click. You can fine-tune each one afterwards.",
+    "palettesHint": "Background, main color, header and footer in one click. You can fine-tune each one afterwards.",
     "palette": {
       "classic": "Classic",
       "ocean": "Ocean",
@@ -1588,6 +1588,22 @@
     "recoverDismiss": "Discard",
     "panelOpen": "Edit design",
     "panelClose": "Close panel",
-    "saveShort": "Save"
+    "saveShort": "Save",
+    "pageBackground": "Page background",
+    "pageBackgroundHint": "Your store's background, cards and cart. Each theme keeps its own.",
+    "backgroundClashLight": "This theme has dark text: with such a dark background it may be hard to read. Check the preview.",
+    "backgroundClashDark": "This theme has light text: with such a light background it may be hard to read. Check the preview.",
+    "whatsapp": {
+      "title": "WhatsApp button",
+      "hint": "Applies to your whole store. You can also click the button's text to edit it.",
+      "color": "Color",
+      "label": "Text (empty = icon only)",
+      "message": "Message you receive when they write",
+      "position": "Side",
+      "left": "Left",
+      "right": "Right",
+      "noNumber": "Add your WhatsApp number to show the button.",
+      "settings": "Go to Settings"
+    }
   }
 }

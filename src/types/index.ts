@@ -63,6 +63,7 @@ export interface Store {
 
   // === CONTACTO ===
   whatsapp: string
+  whatsappButton?: StoreWhatsAppButton  // Boton flotante de WhatsApp (editor en vivo)
   email?: string
   instagram?: string
   facebook?: string
@@ -97,6 +98,8 @@ export interface Store {
     footerColors?: Record<string, { background?: string; text?: string }>
     // Color principal por tema (botones, precios, categorias activas...)
     primaryColors?: Record<string, string>
+    // Fondo de la pagina por tema
+    backgroundColors?: Record<string, string>
     // Tipografia de titulos por tema: id de HEADING_FONTS (themes/shared/fonts.ts)
     headingFonts?: Record<string, string>
     scrollReveal?: boolean
@@ -180,6 +183,14 @@ export interface StoreCatalogSettings {
   showOutOfStock?: boolean      // If true, show products with stock 0 in catalog (with "Agotado" badge). If false, they are hidden. Default true.
   showLowStockBadge?: boolean   // If true, show a "low stock" badge on cards when remaining units are at/below threshold. Default false.
   lowStockThreshold?: number    // Number of units considered "low stock". Default 5.
+}
+
+export interface StoreWhatsAppButton {
+  enabled?: boolean             // false = oculto (por defecto se muestra)
+  color?: string                // hex; por defecto el verde de WhatsApp
+  label?: string                // texto junto al icono ("¿Te ayudo?"); vacio = solo icono
+  message?: string              // mensaje prellenado; vacio = saludo + nombre de la tienda
+  position?: 'right' | 'left'
 }
 
 export interface StoreAnnouncement {

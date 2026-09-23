@@ -9,7 +9,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { getThemeComponent } from '../../themes/components'
 import { LiveEditProvider } from '../../components/catalog'
-import { getHeaderColors, getFooterColors, getPrimaryColor } from '../../themes/shared/themeColors'
+import { getHeaderColors, getFooterColors, getPrimaryColor, getBackgroundColor, isDarkColor } from '../../themes/shared/themeColors'
 import { themes } from '../../themes'
 import type { Store, Product, Category } from '../../types'
 import ImageCropModal from '../../components/dashboard/ImageCropModal'
@@ -460,6 +460,11 @@ export default function LiveEditor() {
   }
   const themeLocked = !!currentTheme?.isPremium && draft.plan === 'free'
   const headerColors = getHeaderColors(draft)
+  // Temas oscuros llevan texto claro escrito a mano: un fondo claro los dejaria ilegibles (y al reves).
+  const themeBackground = currentTheme?.colors?.background || '#ffffff'
+  const themeIsDark = isDarkColor(themeBackground)
+  const background = getBackgroundColor(draft)
+  const backgroundClashes = !!background && isDarkColor(background) !== themeIsDark
   const headingFont = getHeadingFont(draft)
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
@@ -692,7 +697,7 @@ export default function LiveEditor() {
                 return (
                   <button
                     key={palette.id}
-                    onClick={() => changeMany(paletteEntries(themeId, palette))}
+                    onClick={() => changeMany(paletteEntries(themeId, palette, themeIsDark))}
                     className={`text-left rounded-lg border p-1.5 transition-colors ${active ? 'border-[#1e3a5f] ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] hover:border-[#8898AA]'}`}
                   >
                     <div className="flex h-6 rounded overflow-hidden border border-black/5">
@@ -705,12 +710,29 @@ export default function LiveEditor() {
                 )
               })}
               <button
-                onClick={() => changeMany(paletteEntries(themeId, null))}
+                onClick={() => changeMany(paletteEntries(themeId, null, false))}
                 className="rounded-lg border border-dashed border-[#E6EBF1] p-1.5 text-[0.7rem] text-[#8898AA] hover:border-[#8898AA] hover:text-[#425466]"
               >
                 {t('liveEditor.paletteReset')}
               </button>
             </div>
+          </section>
+
+          <section>
+            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.pageBackground')}</h2>
+            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.pageBackgroundHint')}</p>
+            <ColorField
+              label={t('liveEditor.background')}
+              value={background}
+              fallback={themeBackground}
+              onChange={v => change(`themeSettings.backgroundColors.${themeId}`, v)}
+              resetLabel={t('liveEditor.reset')}
+            />
+            {backgroundClashes && (
+              <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                {t(themeIsDark ? 'liveEditor.backgroundClashDark' : 'liveEditor.backgroundClashLight')}
+              </p>
+            )}
           </section>
 
           <section>
@@ -878,6 +900,60 @@ export default function LiveEditor() {
                   onChange={v => change('flashSale.textColor', v)}
                   resetLabel={t('liveEditor.reset')}
                 />
+              </>
+            )}
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.whatsapp.title')}</h2>
+              <label className="flex items-center gap-2 text-xs text-[#425466] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={draft.whatsappButton?.enabled !== false}
+                  onChange={e => change('whatsappButton.enabled', e.target.checked ? undefined : false)}
+                />
+                {t('liveEditor.show')}
+              </label>
+            </div>
+            {!draft.whatsapp ? (
+              <p className="text-[0.7rem] text-amber-700">
+                {t('liveEditor.whatsapp.noNumber')}{' '}
+                <a href={localePath('/dashboard/settings')} className="font-semibold underline">{t('liveEditor.whatsapp.settings')}</a>
+              </p>
+            ) : draft.whatsappButton?.enabled !== false && (
+              <>
+                <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.whatsapp.hint')}</p>
+                <ColorField
+                  label={t('liveEditor.whatsapp.color')}
+                  value={draft.whatsappButton?.color}
+                  fallback="#25D366"
+                  onChange={v => change('whatsappButton.color', v)}
+                  resetLabel={t('liveEditor.reset')}
+                />
+                <TextField
+                  label={t('liveEditor.whatsapp.label')}
+                  value={draft.whatsappButton?.label || ''}
+                  onChange={v => change('whatsappButton.label', v)}
+                />
+                <TextField
+                  label={t('liveEditor.whatsapp.message')}
+                  value={draft.whatsappButton?.message || ''}
+                  onChange={v => change('whatsappButton.message', v)}
+                  multiline
+                />
+                <div className="flex items-center gap-2 text-xs text-[#425466]">
+                  <span>{t('liveEditor.whatsapp.position')}</span>
+                  {(['left', 'right'] as const).map(side => (
+                    <button
+                      key={side}
+                      onClick={() => change('whatsappButton.position', side === 'right' ? undefined : side)}
+                      className={`px-2.5 py-1 rounded-md border ${(draft.whatsappButton?.position || 'right') === side ? 'border-[#1e3a5f] text-[#1e3a5f] font-semibold' : 'border-[#E6EBF1]'}`}
+                    >
+                      {t(`liveEditor.whatsapp.${side}`)}
+                    </button>
+                  ))}
+                </div>
               </>
             )}
           </section>
