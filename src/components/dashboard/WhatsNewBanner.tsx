@@ -33,7 +33,8 @@ export default function WhatsNewBanner() {
   return (
     <div
       className="relative overflow-hidden rounded-[18px] text-white"
-      style={{ background: 'linear-gradient(135deg, #0b1b33 0%, #13294b 55%, #1e3a5f 100%)', boxShadow: '0 24px 48px -28px rgba(11,27,51,.85)' }}
+      // Mismo azul que el fondo de la imagen, para que no se note donde empieza.
+      style={{ background: 'linear-gradient(160deg, #000b17 0%, #001122 55%, #001a31 100%)', boxShadow: '0 24px 48px -28px rgba(0,17,34,.9)' }}
     >
       {/* Imagen: arriba en celular; en pantallas grandes ocupa toda la tarjeta y el texto va encima a la izquierda. */}
       <div className={`relative aspect-[3/2] md:aspect-auto md:absolute md:inset-0 ${imageFailed ? 'hidden md:block' : ''}`}>
@@ -42,13 +43,15 @@ export default function WhatsNewBanner() {
             src={IMAGE}
             alt=""
             onError={() => setImageFailed(true)}
-            className="absolute inset-0 w-full h-full object-cover md:object-right"
+            // En celular cubre el recuadro; en pantallas grandes ocupa todo el alto a la
+            // derecha y su borde izquierdo se funde con el fondo.
+            className="absolute inset-0 w-full h-full object-cover md:left-auto md:w-auto md:max-w-none md:[mask-image:linear-gradient(to_right,transparent,black_22%)]"
           />
         )}
         {/* Brillo celeste de fondo (se ve tambien sin imagen) */}
         <div className="absolute -right-24 top-1/2 -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-[#38bdf8]/20 blur-3xl pointer-events-none" />
         {/* Degradado para que el texto siempre se lea sobre la imagen */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b1b33] via-transparent to-transparent md:bg-gradient-to-r md:from-[#0b1b33] md:via-[#0b1b33]/80 md:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#001122] via-transparent to-transparent md:bg-gradient-to-r md:from-[#000d1b] md:from-25% md:via-[#000d1b]/40 md:via-45% md:to-transparent md:to-60%" />
       </div>
 
       <div className="relative p-6 sm:p-8 md:p-10 md:min-h-[360px] lg:min-h-[400px] md:max-w-[52%] flex flex-col justify-center">
