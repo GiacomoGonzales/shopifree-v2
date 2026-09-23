@@ -6,6 +6,7 @@ import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import { PrepTimeDisplay, DurationDisplay, AvailabilityBadge } from './business-type'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { useLiveEditContext } from './liveEditContext'
 
 export type ProductCardVariant = 'default' | 'masonry' | 'horizontal' | 'featured'
 
@@ -16,7 +17,33 @@ interface ProductCardProps {
   variant?: ProductCardVariant
 }
 
-export default function ProductCard({ product, onSelect, onQuickAdd, variant = 'default' }: ProductCardProps) {
+/**
+ * En el editor en vivo cada tarjeta lleva un boton "Editar" que abre la edicion
+ * rapida del producto. En la tienda publica es la tarjeta de siempre, sin envoltorio.
+ */
+export default function ProductCard(props: ProductCardProps) {
+  const liveEdit = useLiveEditContext()
+  const { language } = useTheme()
+  if (!liveEdit?.onEditProduct) return <ProductCardView {...props} />
+  const onEdit = liveEdit.onEditProduct
+  return (
+    <div className="relative h-full">
+      <ProductCardView {...props} />
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); e.preventDefault(); onEdit(props.product.id) }}
+        className="absolute top-2 right-2 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/95 text-[#1e3a5f] text-xs font-semibold shadow-md border border-black/5 hover:bg-white"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+        </svg>
+        {language === 'en' ? 'Edit' : 'Editar'}
+      </button>
+    </div>
+  )
+}
+
+function ProductCardView({ product, onSelect, onQuickAdd, variant = 'default' }: ProductCardProps) {
   const { theme, currency, language, store } = useTheme()
   const { features } = useBusinessType()
   const t = getThemeTranslations(language)

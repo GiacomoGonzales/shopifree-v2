@@ -1556,6 +1556,31 @@
     "paidOnly": "Available on paid plans.",
     "font": "Heading font",
     "fontHint": "For headings and your store name. Each theme keeps its own.",
-    "fontTheme": "Theme default"
+    "fontTheme": "Theme default",
+    "palettes": "Suggested palettes",
+    "palettesHint": "Main color, header and footer in one click. You can fine-tune each one afterwards.",
+    "palette": {
+      "classic": "Classic",
+      "ocean": "Ocean",
+      "terracotta": "Terracotta",
+      "forest": "Forest",
+      "rose": "Rose",
+      "gold": "Golden night",
+      "lavender": "Lavender"
+    },
+    "paletteReset": "Theme colors",
+    "product": {
+      "title": "Edit product",
+      "close": "Close",
+      "photo": "Main photo",
+      "name": "Name",
+      "price": "Price",
+      "comparePrice": "Previous price (struck through)",
+      "description": "Description",
+      "visible": "Visible on the store",
+      "hiddenHint": "Hidden: it disappears from the preview and your store when you save.",
+      "fullForm": "More options (variants, stock…)",
+      "done": "Done"
+    }
   }
 }

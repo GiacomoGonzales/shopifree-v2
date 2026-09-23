@@ -47,7 +47,10 @@ export default function EditorPreview() {
     }
   }, [])
 
-  const liveEdit = useMemo(() => ({ onChange: (path: string, value: string) => send({ type: 'sf-change', path, value }) }), [])
+  const liveEdit = useMemo(() => ({
+    onChange: (path: string, value: string) => send({ type: 'sf-change', path, value }),
+    onEditProduct: (productId: string) => send({ type: 'sf-edit-product', productId }),
+  }), [])
 
   if (!state) return null
 

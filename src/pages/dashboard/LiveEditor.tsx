@@ -17,6 +17,8 @@ import { uploadImage } from '../../utils/uploadImage'
 import { optimizeImage } from '../../utils/cloudinary'
 import { ALL_BADGE_IDS, getTrustBadgeText } from '../../themes/shared/trustBadgeDefaults'
 import { HEADING_FONTS, getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
+import { PALETTES, paletteEntries } from './palettes'
+import ProductQuickEdit from './ProductQuickEdit'
 import { imageFieldFromClick, historyActionFromKey, toCloneable, type ImageField, type PreviewMessage } from './liveEditorShared'
 import '../../themes/shared/animations.css'
 import './liveEditor.css'
@@ -64,7 +66,9 @@ const IMAGE_FIELDS: Record<ImageField, { aspect: number | null; folder: 'logos' 
 }
 
 type Changes = Record<string, unknown>
-interface Snapshot { draft: Store; changes: Changes }
+/** Cambios pendientes de productos, por id. Se guardan en su propio documento. */
+type ProductEdits = Record<string, Partial<Product>>
+interface Snapshot { draft: Store; changes: Changes; productEdits: ProductEdits }
 
 /** Cambios seguidos al mismo campo dentro de este lapso cuentan como un solo paso de "deshacer". */
 const MERGE_MS = 1000
@@ -107,10 +111,21 @@ export default function LiveEditor() {
   const lastEdit = useRef<{ path: string; at: number } | null>(null)
   // Estado actual para la foto del historial: `change` es estable (lo usan los
   // textos del tema y subidas que terminan tarde) y no puede leerlo del render.
-  const current = useRef<{ draft: Store | null; changes: Changes }>({ draft: null, changes: {} })
-  useEffect(() => { current.current = { draft, changes } }, [draft, changes])
+  const [productEdits, setProductEdits] = useState<ProductEdits>({})
+  const [editingProduct, setEditingProduct] = useState<string | null>(null)
+  const productFileInput = useRef<HTMLInputElement>(null)
+  const [uploadingProduct, setUploadingProduct] = useState(false)
 
-  const dirty = Object.keys(changes).length > 0
+  const current = useRef<{ draft: Store | null; changes: Changes; productEdits: ProductEdits }>({ draft: null, changes: {}, productEdits: {} })
+  useEffect(() => { current.current = { draft, changes, productEdits } }, [draft, changes, productEdits])
+
+  const dirty = Object.keys(changes).length > 0 || Object.keys(productEdits).length > 0
+
+  // Productos tal como se ven con los cambios pendientes. Los ocultos salen de la vista previa, como en la tienda.
+  const previewProducts = useMemo(
+    () => products.map(p => (productEdits[p.id] ? { ...p, ...productEdits[p.id] } : p)).filter(p => p.active !== false),
+    [products, productEdits]
+  )
 
   useEffect(() => {
     if (!firebaseUser) return
@@ -151,32 +166,58 @@ export default function LiveEditor() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [dirty])
 
-  const change = useCallback((path: string, value: unknown) => {
+  // Aplica uno o varios cambios como un solo paso de deshacer. `mergeKey`: cambios
+  // seguidos con la misma clave (escribir, arrastrar un color) se juntan en un paso.
+  const changeMany = useCallback((entries: Array<[string, unknown]>, mergeKey?: string) => {
     const snapshot = current.current
     if (!snapshot.draft) return
-    // Escribir una palabra o arrastrar el selector de color es un solo paso, no uno por evento.
     const now = Date.now()
-    const merge = lastEdit.current?.path === path && now - lastEdit.current.at < MERGE_MS
-    lastEdit.current = { path, at: now }
+    const merge = !!mergeKey && lastEdit.current?.path === mergeKey && now - lastEdit.current.at < MERGE_MS
+    lastEdit.current = mergeKey ? { path: mergeKey, at: now } : null
     if (!merge) {
-      setPast(prev => [...prev.slice(-(HISTORY_LIMIT - 1)), { draft: snapshot.draft!, changes: snapshot.changes }])
+      setPast(prev => [...prev.slice(-(HISTORY_LIMIT - 1)), { draft: snapshot.draft!, changes: snapshot.changes, productEdits: snapshot.productEdits }])
     }
     setFuture([])
 
-    const nextDraft = setIn(snapshot.draft, path, value)
-    const savePath = savePathFor(nextDraft, path)
-    const saveValue = getIn(nextDraft, savePath)
+    let nextDraft = snapshot.draft
     const nextChanges = { ...snapshot.changes }
-    // Si el valor vuelve a ser el guardado, ya no es un cambio pendiente.
-    if (saved && sameValue(getIn(saved, savePath), saveValue)) delete nextChanges[savePath]
-    else nextChanges[savePath] = saveValue
+    for (const [path, value] of entries) {
+      nextDraft = setIn(nextDraft, path, value)
+      const savePath = savePathFor(nextDraft, path)
+      const saveValue = getIn(nextDraft, savePath)
+      // Si el valor vuelve a ser el guardado, ya no es un cambio pendiente.
+      if (saved && sameValue(getIn(saved, savePath), saveValue)) delete nextChanges[savePath]
+      else nextChanges[savePath] = saveValue
+    }
     // Al dia ya, por si llega otro cambio antes del proximo render.
-    current.current = { draft: nextDraft, changes: nextChanges }
+    current.current = { ...snapshot, draft: nextDraft, changes: nextChanges }
     setDraft(nextDraft)
     setChanges(nextChanges)
   }, [saved])
 
-  const liveEdit = useMemo(() => ({ onChange: (path: string, value: string) => change(path, value) }), [change])
+  // Cambio a un producto: mismo historial que el resto (Ctrl+Z lo deshace).
+  const changeProduct = useCallback((id: string, patch: Partial<Product>, field: string) => {
+    const snapshot = current.current
+    if (!snapshot.draft) return
+    const mergeKey = `product:${id}:${field}`
+    const now = Date.now()
+    const merge = lastEdit.current?.path === mergeKey && now - lastEdit.current.at < MERGE_MS
+    lastEdit.current = { path: mergeKey, at: now }
+    if (!merge) {
+      setPast(prev => [...prev.slice(-(HISTORY_LIMIT - 1)), { draft: snapshot.draft!, changes: snapshot.changes, productEdits: snapshot.productEdits }])
+    }
+    setFuture([])
+    const nextEdits = { ...snapshot.productEdits, [id]: { ...snapshot.productEdits[id], ...patch } }
+    current.current = { ...snapshot, productEdits: nextEdits }
+    setProductEdits(nextEdits)
+  }, [])
+
+  const change = useCallback((path: string, value: unknown) => changeMany([[path, value]], path), [changeMany])
+
+  const liveEdit = useMemo(() => ({
+    onChange: (path: string, value: string) => change(path, value),
+    onEditProduct: (id: string) => setEditingProduct(id),
+  }), [change])
 
   const handleSave = async () => {
     if (!draft || !dirty) return
@@ -196,7 +237,7 @@ export default function LiveEditor() {
       // los dos (activar las insignias y despues tocar una), va solo el padre:
       // Firestore rechaza escribir las dos rutas a la vez.
       const paths = Object.keys(changes)
-      const payload = Object.fromEntries(
+      const payload: Record<string, unknown> = Object.fromEntries(
         paths
           .filter(path => !paths.some(other => path.startsWith(other + '.')))
           .map(path => {
@@ -204,7 +245,14 @@ export default function LiveEditor() {
             return [path, value === undefined || value === '' ? deleteField() : value]
           })
       )
-      await updateDoc(doc(db, 'stores', draft.id), { ...payload, updatedAt: new Date() })
+      if (paths.length) await updateDoc(doc(db, 'stores', draft.id), { ...payload, updatedAt: new Date() })
+      // Productos: uno por documento. Un precio anterior vacio se borra del producto.
+      await Promise.all(Object.entries(productEdits).map(([id, patch]) => {
+        const data = Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, v === undefined ? deleteField() : v]))
+        return updateDoc(doc(db, 'stores', draft.id, 'products', id), { ...data, updatedAt: new Date() })
+      }))
+      setProducts(prev => prev.map(p => (productEdits[p.id] ? { ...p, ...productEdits[p.id] } : p)))
+      setProductEdits({})
       setSaved(draft)
       setChanges({})
       // El historial se armo contra lo guardado antes: despues de guardar ya no sirve.
@@ -227,20 +275,22 @@ export default function LiveEditor() {
   const undo = () => {
     const prev = past[past.length - 1]
     if (!prev || !draft) return
-    setFuture(f => [{ draft, changes }, ...f])
+    setFuture(f => [{ draft, changes, productEdits }, ...f])
     setPast(p => p.slice(0, -1))
     setDraft(prev.draft)
     setChanges(prev.changes)
+    setProductEdits(prev.productEdits)
     lastEdit.current = null
   }
 
   const redo = () => {
     const next = future[0]
     if (!next || !draft) return
-    setPast(p => [...p, { draft, changes }])
+    setPast(p => [...p, { draft, changes, productEdits }])
     setFuture(f => f.slice(1))
     setDraft(next.draft)
     setChanges(next.changes)
+    setProductEdits(next.productEdits)
     lastEdit.current = null
   }
 
@@ -261,7 +311,28 @@ export default function LiveEditor() {
   const handleDiscard = () => {
     setDraft(saved)
     setChanges({})
+    setProductEdits({})
     resetHistory()
+  }
+
+  // Foto principal del producto: como en Productos, es la primera de la galeria.
+  const handleProductFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    const id = editingProduct
+    if (!file || !id) return
+    setUploadingProduct(true)
+    try {
+      const url = await uploadImage(file, { folder: 'shopifree/products' })
+      const base = products.find(p => p.id === id)
+      const gallery = productEdits[id]?.images ?? base?.images ?? (base?.image ? [base.image] : [])
+      changeProduct(id, { image: url, images: [url, ...gallery.slice(1)] }, 'image')
+    } catch (error) {
+      console.error('Error uploading product image:', error)
+      showToast(t('liveEditor.uploadError'), 'error')
+    } finally {
+      setUploadingProduct(false)
+    }
   }
 
   const pickImage = (field: ImageField) => {
@@ -319,6 +390,7 @@ export default function LiveEditor() {
       if (msg?.type === 'sf-ready') setFrameReady(true)
       else if (msg?.type === 'sf-change') fromFrame.current.change(msg.path, msg.value)
       else if (msg?.type === 'sf-pick-image') fromFrame.current.pickImage(msg.field)
+      else if (msg?.type === 'sf-edit-product') setEditingProduct(msg.productId)
       else if (msg?.type === 'sf-history') fromFrame.current[msg.action]()
     }
     window.addEventListener('message', onMessage)
@@ -328,9 +400,9 @@ export default function LiveEditor() {
   // Cada cambio del borrador se le manda al iframe.
   useEffect(() => {
     if (device !== 'mobile' || !frameReady || !draft) return
-    const message: PreviewMessage = { type: 'sf-state', store: toCloneable(draft), products: toCloneable(products), categories: toCloneable(categories) }
+    const message: PreviewMessage = { type: 'sf-state', store: toCloneable(draft), products: toCloneable(previewProducts), categories: toCloneable(categories) }
     frame.current?.contentWindow?.postMessage(message, window.location.origin)
-  }, [device, frameReady, draft, products, categories])
+  }, [device, frameReady, draft, previewProducts, categories])
 
   const handleExit = () => {
     if (dirty && !window.confirm(t('liveEditor.confirmExit'))) return
@@ -448,7 +520,7 @@ export default function LiveEditor() {
           <div className="relative flex-1 min-h-0 [transform:translateZ(0)] bg-white">
             <div className="absolute inset-0 overflow-auto live-edit-root" onClickCapture={handlePreviewClick}>
               <LiveEditProvider value={liveEdit}>
-                <ThemeComponent store={draft} products={products} categories={categories} />
+                <ThemeComponent store={draft} products={previewProducts} categories={categories} />
               </LiveEditProvider>
             </div>
           </div>
@@ -537,6 +609,38 @@ export default function LiveEditor() {
               onChange={v => change('about.description', v)}
               multiline
             />
+          </section>
+
+          <section>
+            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.palettes')}</h2>
+            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.palettesHint')}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {PALETTES.map(palette => {
+                const active = getPrimaryColor(draft) === palette.primary
+                  && headerColors.background === palette.header.background
+                  && footerColors.background === palette.footer.background
+                return (
+                  <button
+                    key={palette.id}
+                    onClick={() => changeMany(paletteEntries(themeId, palette))}
+                    className={`text-left rounded-lg border p-1.5 transition-colors ${active ? 'border-[#1e3a5f] ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] hover:border-[#8898AA]'}`}
+                  >
+                    <div className="flex h-6 rounded overflow-hidden border border-black/5">
+                      <span className="flex-1" style={{ backgroundColor: palette.header.background }} />
+                      <span className="flex-1" style={{ backgroundColor: palette.primary }} />
+                      <span className="flex-1" style={{ backgroundColor: palette.footer.background }} />
+                    </div>
+                    <span className="block mt-1 text-[0.7rem] text-[#425466]">{t(`liveEditor.palette.${palette.id}`)}</span>
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => changeMany(paletteEntries(themeId, null))}
+                className="rounded-lg border border-dashed border-[#E6EBF1] p-1.5 text-[0.7rem] text-[#8898AA] hover:border-[#8898AA] hover:text-[#425466]"
+              >
+                {t('liveEditor.paletteReset')}
+              </button>
+            </div>
           </section>
 
           <section>
@@ -709,6 +813,23 @@ export default function LiveEditor() {
           </section>
         </aside>
       </div>
+
+      {editingProduct && (() => {
+        const base = products.find(p => p.id === editingProduct)
+        if (!base) return null
+        return (
+          <ProductQuickEdit
+            key={editingProduct}
+            product={{ ...base, ...productEdits[editingProduct] }}
+            uploading={uploadingProduct}
+            onChange={(patch, field) => changeProduct(editingProduct, patch, field)}
+            onPickImage={() => productFileInput.current?.click()}
+            onClose={() => setEditingProduct(null)}
+            fullFormHref={localePath(`/dashboard/products/${editingProduct}`)}
+          />
+        )
+      })()}
+      <input ref={productFileInput} type="file" accept="image/*" className="hidden" onChange={handleProductFile} />
 
       {cropSrc && imageField && (
         <ImageCropModal

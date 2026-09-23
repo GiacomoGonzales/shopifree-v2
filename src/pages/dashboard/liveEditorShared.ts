@@ -40,6 +40,7 @@ export type PreviewMessage =
   | { type: 'sf-change'; path: string; value: string }
   | { type: 'sf-pick-image'; field: ImageField }
   | { type: 'sf-history'; action: 'undo' | 'redo' }
+  | { type: 'sf-edit-product'; productId: string }
 
 /** Atajo de deshacer/rehacer, fuera de campos de texto (ahi manda el del navegador). */
 export function historyActionFromKey(e: KeyboardEvent): 'undo' | 'redo' | null {
