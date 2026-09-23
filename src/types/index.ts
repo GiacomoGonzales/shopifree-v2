@@ -103,6 +103,10 @@ export interface Store {
     // Superficies (tarjetas, ficha de producto, carrito, checkout) y texto de esas piezas, por tema
     surfaceColors?: Record<string, string>
     textColors?: Record<string, string>
+    // Barra de categorias (fondo y texto) por tema
+    categoryBarColors?: Record<string, { background?: string; text?: string }>
+    // Redondez de esquinas de las piezas compartidas por tema: 'square' | 'soft' | 'round'
+    cornerStyles?: Record<string, string>
     // Tipografia de titulos por tema: id de HEADING_FONTS (themes/shared/fonts.ts)
     headingFonts?: Record<string, string>
     scrollReveal?: boolean

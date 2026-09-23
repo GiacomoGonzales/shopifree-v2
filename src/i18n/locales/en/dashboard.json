@@ -1612,6 +1612,16 @@
     "marqueeHint": "In the editor the bar stays still so you can edit the text; on your store it scrolls.",
     "catalog": "Catalog",
     "catalogHint": "How your products look and load. Applies to your whole store.",
-    "starPaid": "Options marked ★ are on paid plans."
+    "starPaid": "Options marked ★ are on paid plans.",
+    "categoryBar": "Category bar",
+    "categoryBarHint": "Background and text of the category bar. The selected category uses the main color. Each theme keeps its own.",
+    "corners": "Corners",
+    "cornersHint": "Roundness of cards, buttons, cart and checkout. Each theme keeps its own.",
+    "corner": {
+      "theme": "Theme",
+      "square": "Square",
+      "soft": "Soft",
+      "round": "Round"
+    }
   }
 }

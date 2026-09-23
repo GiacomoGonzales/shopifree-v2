@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
 import { setPixelDefaultCurrency } from '../../lib/pixels'
-import { getHeaderColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, readableTextOn } from '../../themes/shared/themeColors'
+import { getHeaderColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, getCornerStyle, CORNER_STYLES, readableTextOn } from '../../themes/shared/themeColors'
 import { getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
 import { useLiveEditContext } from './liveEditContext'
 
@@ -125,6 +125,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   const background = getBackgroundColor(store)
   const surface = getSurfaceColor(store)
   const text = getTextColor(store)
+  const corners = getCornerStyle(store)
   const mergedTheme = useMemo(() => {
     const s = store.themeSettings
     // Colores del editor en vivo que leen los componentes compartidos (tarjetas,
@@ -133,8 +134,9 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
     // iguales al fondo (tarjetas y cajones sin color propio).
     // Superficie y texto elegidos: de ellos salen tambien el hover de las
     // superficies, el texto secundario y las lineas, para que combinen.
-    const withPrimary = primary || background || surface || text ? {
+    const withPrimary = primary || background || surface || text || corners ? {
       ...theme,
+      ...(corners && { radius: { ...CORNER_STYLES[corners] } }),
       colors: {
         ...theme.colors,
         ...(primary && {
@@ -169,7 +171,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(s?.productViewMode !== undefined && { productViewMode: s.productViewMode }),
       }
     }
-  }, [theme, store.themeSettings, primary, background, surface, text])
+  }, [theme, store.themeSettings, primary, background, surface, text, corners])
 
   const headerColors = getHeaderColors(store)
   const headingFont = getHeadingFont(store)

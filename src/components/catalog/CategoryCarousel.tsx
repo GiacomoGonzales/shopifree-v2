@@ -2,6 +2,9 @@ import { useRef, useState, useEffect } from 'react'
 import type { Category, Product } from '../../types'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { getCategoryBarColors, getCornerStyle } from '../../themes/shared/themeColors'
+
+interface BarColors { background: string; text: string; textMuted: string; border: string }
 import { optimizeImage, getImageSrcSet } from '../../utils/cloudinary'
 import SearchModal from './SearchModal'
 
@@ -84,7 +87,7 @@ export default function CategoryCarousel({
   stickyTop = 'top-16',
   variant = 'pill'
 }: CategoryCarouselProps) {
-  const { theme, language } = useTheme()
+  const { theme, language, store } = useTheme()
   const t = getThemeTranslations(language)
   const navRef = useRef<HTMLElement>(null)
   /** Marcador no-sticky para conocer la posicion real de la barra. */
@@ -194,6 +197,16 @@ export default function CategoryCarousel({
   const hasSearch = products && onSelectProduct
   if (categories.length === 0 && !hasSearch) return null
 
+  // Colores propios de la barra (editor en vivo). Sin ellos, los del tema.
+  const barColors = getCategoryBarColors(store)
+  const customRadius = getCornerStyle(store) ? theme.radius.lg : undefined
+  const bar: BarColors = {
+    background: barColors.background || theme.colors.background,
+    text: barColors.text || theme.colors.text,
+    textMuted: barColors.text ? `color-mix(in srgb, ${barColors.text} 70%, transparent)` : theme.colors.textMuted,
+    border: barColors.text ? `color-mix(in srgb, ${barColors.text} 15%, transparent)` : theme.colors.border,
+  }
+
   const isIconVariant = variant === 'circle' || variant === 'square'
   // Tighter vertical rhythm for pill (text-only feel), more breathing room
   // for variants where each item has an image + label stack.
@@ -212,12 +225,13 @@ export default function CategoryCarousel({
         className={headerHeight === null ? `sticky ${stickyTop} z-40` : 'sticky z-40'}
         style={{
           ...(headerHeight !== null ? { top: `${headerHeight}px` } : {}),
-          backgroundColor: theme.effects.headerBlur
+          // Con color propio la barra es solida; si no, el vidrio esmerilado del tema.
+          backgroundColor: theme.effects.headerBlur && !barColors.background
             ? (theme.effects.darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)')
-            : theme.colors.background,
-          backdropFilter: theme.effects.headerBlur ? 'blur(12px)' : undefined,
-          borderTop: `1px solid ${theme.colors.border}`,
-          borderBottom: `1px solid ${theme.colors.border}`
+            : bar.background,
+          backdropFilter: theme.effects.headerBlur && !barColors.background ? 'blur(12px)' : undefined,
+          borderTop: `1px solid ${bar.border}`,
+          borderBottom: `1px solid ${bar.border}`
         }}
       >
         <div className="max-w-6xl mx-auto px-4 md:px-6 relative">
@@ -230,9 +244,9 @@ export default function CategoryCarousel({
               onClick={() => scrollByDelta(-220)}
               className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-90"
               style={{
-                backgroundColor: theme.colors.background,
-                color: theme.colors.text,
-                boxShadow: `0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px ${theme.colors.border}`,
+                backgroundColor: bar.background,
+                color: bar.text,
+                boxShadow: `0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px ${bar.border}`,
               }}
               aria-label="Scroll categories left"
             >
@@ -249,9 +263,9 @@ export default function CategoryCarousel({
               onClick={() => scrollByDelta(220)}
               className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-90"
               style={{
-                backgroundColor: theme.colors.background,
-                color: theme.colors.text,
-                boxShadow: `0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px ${theme.colors.border}`,
+                backgroundColor: bar.background,
+                color: bar.text,
+                boxShadow: `0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px ${bar.border}`,
               }}
               aria-label="Scroll categories right"
             >
@@ -277,7 +291,7 @@ export default function CategoryCarousel({
                   isIconVariant ? 'w-16 h-16 self-center' : variant === 'tile' ? 'w-9 h-9 self-center' : 'w-9 h-9'
                 }`}
                 style={{
-                  color: theme.colors.textMuted,
+                  color: bar.textMuted,
                   borderRadius: theme.radius.full,
                 }}
                 aria-label={t.searchProducts}
@@ -298,6 +312,8 @@ export default function CategoryCarousel({
                   name={t.all}
                   onClick={() => handleCategoryChange(null)}
                   theme={theme}
+                  bar={bar}
+                  customRadius={customRadius}
                 />
 
                 {categories.map(cat => (
@@ -309,6 +325,8 @@ export default function CategoryCarousel({
                     image={cat.image}
                     onClick={() => handleCategoryChange(cat.id)}
                     theme={theme}
+                    bar={bar}
+                    customRadius={customRadius}
                   />
                 ))}
               </>
@@ -345,9 +363,13 @@ interface ItemProps {
   image?: string
   onClick: () => void
   theme: ReturnType<typeof useTheme>['theme']
+  /** Colores de la barra (propios del editor en vivo o los del tema). */
+  bar: BarColors
+  /** Redondez elegida en el editor para cuadrados y mosaicos; sin elegir, la de siempre. */
+  customRadius?: string
 }
 
-function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }: ItemProps) {
+function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme, bar, customRadius }: ItemProps) {
   // Optimized image URL only generated when we'll actually render it.
   const optimized = image ? optimizeImage(image, 'category') : ''
   const srcSet = image ? getImageSrcSet(image, 'category') : ''
@@ -361,7 +383,7 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
         onClick={onClick}
         className="flex-shrink-0 flex items-center gap-2 px-3 py-2 text-sm transition-all duration-200"
         style={{
-          color: isActive ? theme.colors.text : theme.colors.textMuted,
+          color: isActive ? bar.text : bar.textMuted,
           fontWeight: isActive ? 600 : 400,
           borderBottom: `2.5px solid ${isActive ? theme.colors.primary : 'transparent'}`,
           marginBottom: '-2.5px',
@@ -388,7 +410,7 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
         className="flex-shrink-0 flex items-center gap-2 px-5 py-2 text-sm transition-all duration-200"
         style={{
           backgroundColor: isActive ? theme.colors.primary : 'transparent',
-          color: isActive ? theme.colors.textInverted : theme.colors.textMuted,
+          color: isActive ? theme.colors.textInverted : bar.textMuted,
           borderRadius: theme.radius.full,
           fontWeight: isActive ? 500 : 400
         }}
@@ -409,7 +431,7 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
 
   if (variant === 'circle' || variant === 'square') {
     const shape: 'circle' | 'square' = variant === 'circle' ? 'circle' : 'square'
-    const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-xl'
+    const shapeClass = shape === 'circle' ? 'rounded-full' : customRadius ? '' : 'rounded-xl'
 
     return (
       <button
@@ -419,8 +441,9 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
         <div
           className={`w-16 h-16 overflow-hidden ${shapeClass} transition-all duration-200`}
           style={{
+            ...(shape === 'square' && customRadius ? { borderRadius: customRadius } : {}),
             boxShadow: isActive
-              ? `0 0 0 2.5px ${theme.colors.background}, 0 0 0 5px ${theme.colors.primary}`
+              ? `0 0 0 2.5px ${bar.background}, 0 0 0 5px ${theme.colors.primary}`
               : undefined,
           }}
         >
@@ -454,7 +477,7 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
         <span
           className="text-xs text-center leading-tight max-w-[68px] line-clamp-2"
           style={{
-            color: isActive ? theme.colors.text : theme.colors.textMuted,
+            color: isActive ? bar.text : bar.textMuted,
             fontWeight: isActive ? 600 : 400,
           }}
         >
@@ -468,10 +491,11 @@ function CategoryItem({ variant, isActive, isAll, name, image, onClick, theme }:
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 relative w-36 h-20 rounded-xl overflow-hidden transition-all duration-200"
+      className={`flex-shrink-0 relative w-36 h-20 ${customRadius ? '' : 'rounded-xl'} overflow-hidden transition-all duration-200`}
       style={{
+        ...(customRadius ? { borderRadius: customRadius } : {}),
         boxShadow: isActive
-          ? `0 0 0 2.5px ${theme.colors.background}, 0 0 0 5px ${theme.colors.primary}`
+          ? `0 0 0 2.5px ${bar.background}, 0 0 0 5px ${theme.colors.primary}`
           : undefined,
       }}
     >

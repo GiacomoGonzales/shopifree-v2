@@ -1613,6 +1613,16 @@
     "marqueeHint": "En el editor la barra se muestra fija para poder editar el texto; en tu tienda se mueve.",
     "catalog": "Catálogo",
     "catalogHint": "Cómo se ven y se cargan tus productos. Aplica a toda la tienda.",
-    "starPaid": "Las opciones con ★ son de los planes de pago."
+    "starPaid": "Las opciones con ★ son de los planes de pago.",
+    "categoryBar": "Barra de categorías",
+    "categoryBarHint": "Fondo y texto de la barra de categorías. La categoría elegida usa el color principal. Cada tema guarda los suyos.",
+    "corners": "Esquinas",
+    "cornersHint": "Redondez de tarjetas, botones, carrito y checkout. Cada tema guarda la suya.",
+    "corner": {
+      "theme": "Del tema",
+      "square": "Rectas",
+      "soft": "Suaves",
+      "round": "Redondas"
+    }
   }
 }

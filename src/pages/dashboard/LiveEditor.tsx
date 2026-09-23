@@ -10,7 +10,7 @@ import { useToast } from '../../components/ui/Toast'
 import { getThemeComponent } from '../../themes/components'
 import { LiveEditProvider } from '../../components/catalog'
 import type { ThemeBaseColors } from '../../components/catalog/liveEditContext'
-import { getHeaderColors, getFooterColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, contrastRatio, isDarkColor } from '../../themes/shared/themeColors'
+import { getHeaderColors, getFooterColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, getCategoryBarColors, getCornerStyle, contrastRatio, isDarkColor } from '../../themes/shared/themeColors'
 import { themes } from '../../themes'
 import type { Store, Product, Category } from '../../types'
 import ImageCropModal from '../../components/dashboard/ImageCropModal'
@@ -484,6 +484,10 @@ export default function LiveEditor() {
     contrastRatio(effectiveText, surfaceColor || themeSurface),
     contrastRatio(effectiveText, background || themeBackground),
   ) < 3
+  const barColors = getCategoryBarColors(draft)
+  const barClash = !!(barColors.background || barColors.text) &&
+    contrastRatio(barColors.text || themeText, barColors.background || background || themeBackground) < 3
+  const corners = getCornerStyle(draft)
   const headingFont = getHeadingFont(draft)
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
@@ -774,6 +778,49 @@ export default function LiveEditor() {
             {surfaceTextClash && (
               <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
             )}
+          </section>
+
+          <section>
+            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.categoryBar')}</h2>
+            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.categoryBarHint')}</p>
+            <ColorField
+              label={t('liveEditor.background')}
+              value={barColors.background}
+              fallback={background || themeBackground}
+              onChange={v => change(`themeSettings.categoryBarColors.${themeId}.background`, v)}
+              resetLabel={t('liveEditor.reset')}
+            />
+            <ColorField
+              label={t('liveEditor.text')}
+              value={barColors.text}
+              fallback={themeText}
+              onChange={v => change(`themeSettings.categoryBarColors.${themeId}.text`, v)}
+              resetLabel={t('liveEditor.reset')}
+            />
+            {barClash && (
+              <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
+            )}
+          </section>
+
+          <section>
+            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.corners')}</h2>
+            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.cornersHint')}</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {([undefined, 'square', 'soft', 'round'] as const).map(style => {
+                const active = corners === style
+                const radius = style === 'square' ? '0' : style === 'soft' ? '6px' : style === 'round' ? '14px' : '4px'
+                return (
+                  <button
+                    key={style || 'theme'}
+                    onClick={() => change(`themeSettings.cornerStyles.${themeId}`, style)}
+                    className={`flex flex-col items-center gap-1 rounded-lg border p-1.5 text-[0.65rem] ${active ? 'border-[#1e3a5f] text-[#1e3a5f] font-semibold ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] text-[#425466]'}`}
+                  >
+                    <span className={`w-8 h-6 border-2 ${style ? 'border-[#1e3a5f]' : 'border-dashed border-[#8898AA]'}`} style={{ borderRadius: radius }} />
+                    {t(`liveEditor.corner.${style || 'theme'}`)}
+                  </button>
+                )
+              })}
+            </div>
           </section>
 
           <section>

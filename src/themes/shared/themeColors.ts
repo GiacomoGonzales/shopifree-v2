@@ -62,3 +62,25 @@ export function contrastRatio(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
   return (hi + 0.05) / (lo + 0.05)
 }
+
+/** Colores de la barra de categorias elegidos para el tema activo. */
+export function getCategoryBarColors(store: Pick<Store, 'themeId' | 'themeSettings'>) {
+  return store.themeSettings?.categoryBarColors?.[store.themeId || 'minimal'] || {}
+}
+
+/**
+ * Redondez de esquinas. Las piezas compartidas (tarjetas, botones, ficha del
+ * producto, carrito, checkout, pastillas) leen theme.radius: se reemplaza entero.
+ */
+export const CORNER_STYLES = {
+  square: { sm: '0', md: '0', lg: '0', xl: '0', full: '0.25rem' },
+  soft: { sm: '0.375rem', md: '0.5rem', lg: '0.75rem', xl: '1rem', full: '9999px' },
+  round: { sm: '0.75rem', md: '1rem', lg: '1.5rem', xl: '2rem', full: '9999px' },
+} as const
+
+export type CornerStyle = keyof typeof CORNER_STYLES
+
+export function getCornerStyle(store: Pick<Store, 'themeId' | 'themeSettings'>): CornerStyle | undefined {
+  const id = store.themeSettings?.cornerStyles?.[store.themeId || 'minimal']
+  return id && id in CORNER_STYLES ? (id as CornerStyle) : undefined
+}
