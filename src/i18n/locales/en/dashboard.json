@@ -1684,6 +1684,15 @@
       "down": "Move down",
       "barsNote": "The header, announcement bar and footer stay in place. Badges and flash sale show up here when you turn them on in \"Bars & buttons\".",
       "reset": "Theme order"
+    },
+    "ai": {
+      "suggest": "Suggest with AI",
+      "more": "Other options",
+      "loading": "Thinking…",
+      "error": "Couldn't generate right now. Try again in a moment.",
+      "limit": "You've reached today's suggestion limit. Come back tomorrow.",
+      "businessOnly": "AI texts: Business plan only.",
+      "announcementText": "Announcement text"
     }
   }
 }

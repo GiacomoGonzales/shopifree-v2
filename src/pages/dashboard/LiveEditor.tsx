@@ -21,6 +21,8 @@ import { ALL_BADGE_IDS, getTrustBadgeText } from '../../themes/shared/trustBadge
 import { HEADING_FONTS, BODY_FONTS, FONT_PAIRS, getHeadingFont, getBodyFont, googleFontsUrl } from '../../themes/shared/fonts'
 import { PALETTES, paletteEntries } from './palettes'
 import ProductQuickEdit from './ProductQuickEdit'
+import AiSuggest from './AiSuggest'
+import { getEffectivePlan } from '../../lib/stripe'
 import PhoneFrame from './PhoneFrame'
 import { DEVICES, DEFAULT_DEVICE } from './devices'
 import { saveDraft, loadDraft, clearDraft, type StoredDraft } from './draftStorage'
@@ -555,6 +557,9 @@ export default function LiveEditor() {
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
   const dirtyGroups = new Set(Object.keys(changes).map(groupForPath))
+  // Textos con IA: solo plan Business (el servidor tambien lo valida).
+  const aiEnabled = getEffectivePlan(draft) === 'business'
+  const aiProps = { storeId: draft.id, enabled: aiEnabled, upgradeHref: localePath('/dashboard/plan') }
 
   // Secciones: el orden elegido (con las que falten al final, en su orden de siempre).
   const sectionLayout = getSectionLayout(draft)
@@ -848,12 +853,14 @@ export default function LiveEditor() {
                 label={t('liveEditor.slogan')}
                 value={draft.about?.slogan || ''}
                 onChange={v => change('about.slogan', v)}
+                extra={<AiSuggest {...aiProps} field="slogan" onPick={s => change('about.slogan', s)} />}
               />
               <TextField
                 label={t('liveEditor.description')}
                 value={draft.about?.description || ''}
                 onChange={v => change('about.description', v)}
                 multiline
+                extra={<AiSuggest {...aiProps} field="description" onPick={s => change('about.description', s)} />}
               />
             </section>
 
@@ -1102,6 +1109,10 @@ export default function LiveEditor() {
                       onChange={v => change('announcement.textColor', v)}
                       resetLabel={t('liveEditor.reset')}
                     />
+                  </div>
+                  <div className="mb-3">
+                    <span className="text-xs text-[#425466]">{t('liveEditor.ai.announcementText')}</span>
+                    <AiSuggest {...aiProps} field="announcement" onPick={s => change('announcement.text', s)} />
                   </div>
                   <TextField
                     label={t('branding.announcement.link')}
@@ -1406,6 +1417,7 @@ export default function LiveEditor() {
             onPickImage={() => productFileInput.current?.click()}
             onClose={() => setEditingProduct(null)}
             fullFormHref={localePath(`/dashboard/products/${editingProduct}`)}
+            aiSuggest={<AiSuggest {...aiProps} field="productDescription" productId={editingProduct} onPick={s => changeProduct(editingProduct, { description: s }, 'description')} />}
           />
         )
       })()}
@@ -1541,17 +1553,22 @@ interface TextFieldProps {
   value: string
   onChange: (value: string) => void
   multiline?: boolean
+  /** Algo debajo del campo (por ejemplo, las sugerencias con IA). */
+  extra?: ReactNode
 }
 
-function TextField({ label, value, onChange, multiline }: TextFieldProps) {
+function TextField({ label, value, onChange, multiline, extra }: TextFieldProps) {
   const className = 'mt-1 w-full px-3 py-2 text-sm border border-[#E6EBF1] rounded-lg focus:outline-none focus:border-[#1e3a5f]'
   return (
-    <label className="block mb-3">
-      <span className="text-xs text-[#425466]">{label}</span>
-      {multiline
-        ? <textarea value={value} onChange={e => onChange(e.target.value)} rows={3} className={`${className} resize-none`} />
-        : <input type="text" value={value} onChange={e => onChange(e.target.value)} className={className} />}
-    </label>
+    <div className="mb-3">
+      <label className="block">
+        <span className="text-xs text-[#425466]">{label}</span>
+        {multiline
+          ? <textarea value={value} onChange={e => onChange(e.target.value)} rows={3} className={`${className} resize-none`} />
+          : <input type="text" value={value} onChange={e => onChange(e.target.value)} className={className} />}
+      </label>
+      {extra}
+    </div>
   )
 }
 

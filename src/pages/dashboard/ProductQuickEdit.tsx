@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Product } from '../../types'
 import { optimizeImage } from '../../utils/cloudinary'
@@ -15,6 +16,8 @@ interface Props {
   onPickImage: () => void
   onClose: () => void
   fullFormHref: string
+  /** "Sugerir con IA" para la descripcion (lo arma el editor). */
+  aiSuggest?: ReactNode
 }
 
 const INPUT = 'mt-1 w-full px-3 py-2 text-sm border border-[#E6EBF1] rounded-lg focus:outline-none focus:border-[#1e3a5f]'
@@ -26,7 +29,7 @@ const toPrice = (raw: string) => {
   return Number.isFinite(n) && n >= 0 ? n : undefined
 }
 
-export default function ProductQuickEdit({ product, uploading, onChange, onPickImage, onClose, fullFormHref }: Props) {
+export default function ProductQuickEdit({ product, uploading, onChange, onPickImage, onClose, fullFormHref, aiSuggest }: Props) {
   const { t } = useTranslation('dashboard')
   const hidden = product.active === false
 
@@ -112,6 +115,7 @@ export default function ProductQuickEdit({ product, uploading, onChange, onPickI
             className={`${INPUT} resize-none`}
           />
         </label>
+        <div className="-mt-2 mb-3">{aiSuggest}</div>
 
         <label className="flex items-center gap-2 mb-4 text-sm text-[#425466] cursor-pointer">
           <input type="checkbox" checked={!hidden} onChange={e => onChange({ active: e.target.checked }, 'active')} />

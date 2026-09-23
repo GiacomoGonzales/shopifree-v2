@@ -1685,6 +1685,15 @@
       "down": "Bajar",
       "barsNote": "El header, la barra de anuncio y el footer quedan fijos. Las insignias y la oferta flash aparecen acá cuando las activas en \"Barras y botones\".",
       "reset": "Orden del tema"
+    },
+    "ai": {
+      "suggest": "Sugerir con IA",
+      "more": "Otras opciones",
+      "loading": "Pensando…",
+      "error": "No se pudo generar ahora. Prueba de nuevo en un momento.",
+      "limit": "Llegaste al límite de sugerencias de hoy. Vuelve mañana.",
+      "businessOnly": "Textos con IA: solo en el plan Business.",
+      "announcementText": "Texto del anuncio"
     }
   }
 }
