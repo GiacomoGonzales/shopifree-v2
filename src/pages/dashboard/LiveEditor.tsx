@@ -20,6 +20,8 @@ import { ALL_BADGE_IDS, getTrustBadgeText } from '../../themes/shared/trustBadge
 import { HEADING_FONTS, BODY_FONTS, FONT_PAIRS, getHeadingFont, getBodyFont, googleFontsUrl } from '../../themes/shared/fonts'
 import { PALETTES, paletteEntries } from './palettes'
 import ProductQuickEdit from './ProductQuickEdit'
+import PhoneFrame from './PhoneFrame'
+import { DEVICES, DEFAULT_DEVICE } from './devices'
 import { saveDraft, loadDraft, clearDraft, type StoredDraft } from './draftStorage'
 import { imageFieldFromClick, historyActionFromKey, toCloneable, type ImageField, type PreviewMessage } from './liveEditorShared'
 import '../../themes/shared/animations.css'
@@ -131,6 +133,15 @@ export default function LiveEditor() {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
   const frame = useRef<HTMLIFrameElement>(null)
   const [frameReady, setFrameReady] = useState(false)
+  // Modelo de celular de la vista previa (se recuerda en este navegador).
+  const [phoneId, setPhoneId] = useState(() => {
+    try { return localStorage.getItem('sf-live-editor-phone') || DEFAULT_DEVICE.id } catch { return DEFAULT_DEVICE.id }
+  })
+  const phone = DEVICES.find(d => d.id === phoneId) || DEFAULT_DEVICE
+  const choosePhone = (id: string) => {
+    setPhoneId(id)
+    try { localStorage.setItem('sf-live-editor-phone', id) } catch { /* sin almacenamiento */ }
+  }
 
   // Deshacer / rehacer: fotos del borrador antes de cada cambio.
   const [past, setPast] = useState<Snapshot[]>([])
@@ -641,14 +652,26 @@ export default function LiveEditor() {
         {/* Vista previa. El transform hace que los elementos `fixed` del tema
             (carrito, WhatsApp) queden dentro de este recuadro y no tapen el panel. */}
         {device === 'mobile' ? (
-          <div className="relative flex-1 min-h-0 flex items-center justify-center p-4 overflow-auto">
-            {/* Marco de telefono: 390x844 es el tamano de un iPhone actual. */}
-            <iframe
-              ref={frame}
-              src="/editor-preview"
-              title={t('liveEditor.device.mobile')}
-              className="w-[390px] h-[844px] max-h-full shrink-0 bg-white rounded-[2.5rem] border-[10px] border-[#1e293b] shadow-2xl"
-            />
+          <div className="relative flex-1 min-h-0 flex flex-col items-center bg-[#F6F9FC]">
+            <div className="shrink-0 flex items-center gap-2 pt-3 pb-1">
+              <select
+                value={phone.id}
+                onChange={e => choosePhone(e.target.value)}
+                aria-label={t('liveEditor.phoneModel')}
+                className="px-3 py-1.5 text-sm font-medium text-[#1e3a5f] border border-[#E6EBF1] rounded-full bg-white shadow-sm focus:outline-none focus:border-[#1e3a5f]"
+              >
+                {DEVICES.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
+              </select>
+              <span className="text-xs text-[#8898AA] tabular-nums">{phone.width} × {phone.height}</span>
+            </div>
+            <PhoneFrame device={phone} statusBg={background || themeBackground}>
+              <iframe
+                ref={frame}
+                src="/editor-preview"
+                title={t('liveEditor.device.mobile')}
+                className="absolute inset-0 w-full h-full border-0 bg-white"
+              />
+            </PhoneFrame>
           </div>
         ) : (
           <div className="relative flex-1 min-h-0 [transform:translateZ(0)] bg-white">
