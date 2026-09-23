@@ -28,8 +28,9 @@ export default function WhatsAppButton({ whatsapp, storeName, onClick, visible =
   const iconColor = config?.color ? readableTextOn(config.color) : '#ffffff'
   const label = config?.label?.trim()
   const side = config?.position === 'left' ? 'left-6' : 'right-6'
-  // En el editor el boton no abre WhatsApp: se hace clic para editar su texto.
-  const withLabel = !!label || editing
+  // Con texto es una pastilla; sin texto, el circulo de siempre (tambien en el
+  // editor, para que se vea igual que la tienda: el texto se escribe en el panel).
+  const withLabel = !!label
 
   return (
     <a
@@ -47,7 +48,6 @@ export default function WhatsAppButton({ whatsapp, storeName, onClick, visible =
         <EditableText
           path="whatsappButton.label"
           value={label}
-          placeholder={language === 'en' ? 'Add text' : 'Agregar texto'}
           className="font-semibold text-sm whitespace-nowrap"
         />
       )}

@@ -46,3 +46,19 @@ export const isDarkColor = (hex: string) => luminance(hex) < 0.2
 export function getBackgroundColor(store: Pick<Store, 'themeId' | 'themeSettings'>): string | undefined {
   return store.themeSettings?.backgroundColors?.[store.themeId || 'minimal']
 }
+
+/** Color de las superficies (tarjetas, ficha de producto, carrito, checkout) para el tema activo. */
+export function getSurfaceColor(store: Pick<Store, 'themeId' | 'themeSettings'>): string | undefined {
+  return store.themeSettings?.surfaceColors?.[store.themeId || 'minimal']
+}
+
+/** Color de texto de las piezas compartidas para el tema activo. */
+export function getTextColor(store: Pick<Store, 'themeId' | 'themeSettings'>): string | undefined {
+  return store.themeSettings?.textColors?.[store.themeId || 'minimal']
+}
+
+/** Contraste WCAG entre dos colores (1 = iguales, 21 = negro sobre blanco). */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}

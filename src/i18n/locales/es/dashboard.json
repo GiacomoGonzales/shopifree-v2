@@ -1596,7 +1596,7 @@
     "backgroundClashDark": "Este tema tiene los textos claros: con un fondo tan claro podrían no leerse. Revisa la vista previa.",
     "whatsapp": {
       "title": "Botón de WhatsApp",
-      "hint": "Aplica a toda tu tienda. También puedes hacer clic en el texto del botón para editarlo.",
+      "hint": "Aplica a toda tu tienda. Si le pones texto, también puedes editarlo con un clic en el botón.",
       "color": "Color",
       "label": "Texto (vacío = solo el ícono)",
       "message": "Mensaje que te llega al escribirte",
@@ -1605,6 +1605,14 @@
       "right": "Derecha",
       "noNumber": "Agrega tu número de WhatsApp para mostrar el botón.",
       "settings": "Ir a Configuración"
-    }
+    },
+    "surfaces": "Tarjetas, carrito y checkout",
+    "surfacesHint": "Fondo y texto de las tarjetas de producto, el detalle del producto, el carrito, el checkout y el buscador. Cada tema guarda los suyos.",
+    "surface": "Fondo",
+    "surfaceClash": "El texto y el fondo tienen casi el mismo tono: podría no leerse. Revisa la vista previa.",
+    "marqueeHint": "En el editor la barra se muestra fija para poder editar el texto; en tu tienda se mueve.",
+    "catalog": "Catálogo",
+    "catalogHint": "Cómo se ven y se cargan tus productos. Aplica a toda la tienda.",
+    "starPaid": "Las opciones con ★ son de los planes de pago."
   }
 }

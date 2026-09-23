@@ -1595,7 +1595,7 @@
     "backgroundClashDark": "This theme has light text: with such a light background it may be hard to read. Check the preview.",
     "whatsapp": {
       "title": "WhatsApp button",
-      "hint": "Applies to your whole store. You can also click the button's text to edit it.",
+      "hint": "Applies to your whole store. Once it has text, you can also click the button to edit it.",
       "color": "Color",
       "label": "Text (empty = icon only)",
       "message": "Message you receive when they write",
@@ -1604,6 +1604,14 @@
       "right": "Right",
       "noNumber": "Add your WhatsApp number to show the button.",
       "settings": "Go to Settings"
-    }
+    },
+    "surfaces": "Cards, cart and checkout",
+    "surfacesHint": "Background and text for product cards, product details, cart, checkout and search. Each theme keeps its own.",
+    "surface": "Background",
+    "surfaceClash": "Text and background are almost the same tone: it may be hard to read. Check the preview.",
+    "marqueeHint": "In the editor the bar stays still so you can edit the text; on your store it scrolls.",
+    "catalog": "Catalog",
+    "catalogHint": "How your products look and load. Applies to your whole store.",
+    "starPaid": "Options marked ★ are on paid plans."
   }
 }

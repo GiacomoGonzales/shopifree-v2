@@ -13,6 +13,7 @@ import type { MouseEvent } from 'react'
 import type { Store, Product, Category } from '../types'
 import { getThemeComponent } from '../themes/components'
 import { LiveEditProvider } from '../components/catalog'
+import type { ThemeBaseColors } from '../components/catalog/liveEditContext'
 import { imageFieldFromClick, historyActionFromKey, type PreviewMessage } from './dashboard/liveEditorShared'
 import '../themes/shared/animations.css'
 import './dashboard/liveEditor.css'
@@ -50,6 +51,7 @@ export default function EditorPreview() {
   const liveEdit = useMemo(() => ({
     onChange: (path: string, value: string) => send({ type: 'sf-change', path, value }),
     onEditProduct: (productId: string) => send({ type: 'sf-edit-product', productId }),
+    onThemeInfo: (colors: ThemeBaseColors) => send({ type: 'sf-theme-info', colors }),
   }), [])
 
   if (!state) return null

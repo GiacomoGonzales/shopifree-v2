@@ -3,8 +3,9 @@ import type { ReactNode } from 'react'
 import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
 import { setPixelDefaultCurrency } from '../../lib/pixels'
-import { getHeaderColors, getPrimaryColor, getBackgroundColor, readableTextOn } from '../../themes/shared/themeColors'
+import { getHeaderColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, readableTextOn } from '../../themes/shared/themeColors'
 import { getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
+import { useLiveEditContext } from './liveEditContext'
 
 /**
  * Theme configuration that each theme provides
@@ -122,13 +123,17 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
   // Merge store-level effect overrides into theme
   const primary = getPrimaryColor(store)
   const background = getBackgroundColor(store)
+  const surface = getSurfaceColor(store)
+  const text = getTextColor(store)
   const mergedTheme = useMemo(() => {
     const s = store.themeSettings
     // Colores del editor en vivo que leen los componentes compartidos (tarjetas,
     // carrito, checkout). El principal lleva texto negro o blanco segun se lea
     // mejor. El fondo tambien pinta las "superficies" cuando el tema las tenia
     // iguales al fondo (tarjetas y cajones sin color propio).
-    const withPrimary = primary || background ? {
+    // Superficie y texto elegidos: de ellos salen tambien el hover de las
+    // superficies, el texto secundario y las lineas, para que combinen.
+    const withPrimary = primary || background || surface || text ? {
       ...theme,
       colors: {
         ...theme.colors,
@@ -140,6 +145,15 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(background && {
           background,
           ...(theme.colors.surface === theme.colors.background && { surface: background }),
+        }),
+        ...(surface && {
+          surface,
+          surfaceHover: `color-mix(in srgb, ${surface} 92%, #808080)`,
+        }),
+        ...(text && {
+          text,
+          textMuted: `color-mix(in srgb, ${text} 65%, transparent)`,
+          border: `color-mix(in srgb, ${text} 15%, transparent)`,
         }),
       },
     } : theme
@@ -155,7 +169,7 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
         ...(s?.productViewMode !== undefined && { productViewMode: s.productViewMode }),
       }
     }
-  }, [theme, store.themeSettings, primary, background])
+  }, [theme, store.themeSettings, primary, background, surface, text])
 
   const headerColors = getHeaderColors(store)
   const headingFont = getHeadingFont(store)
@@ -169,6 +183,17 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
     ? `[data-sf-store]>.min-h-screen{background:${background}!important}`
     : ''
   const overrideCss = [headerColorsCss(headerColors.background, headerColors.text), fontCss, backgroundCss].filter(Boolean).join('\n')
+
+  // En el editor en vivo, contarle al panel los colores originales de este tema.
+  const liveEdit = useLiveEditContext()
+  useEffect(() => {
+    liveEdit?.onThemeInfo?.({
+      background: theme.colors.background,
+      surface: theme.colors.surface,
+      text: theme.colors.text,
+      primary: theme.colors.primary,
+    })
+  }, [liveEdit, theme])
 
   // Propagate store currency to pixel helpers so tracking events use the right currency
   useEffect(() => {

@@ -9,7 +9,8 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { getThemeComponent } from '../../themes/components'
 import { LiveEditProvider } from '../../components/catalog'
-import { getHeaderColors, getFooterColors, getPrimaryColor, getBackgroundColor, isDarkColor } from '../../themes/shared/themeColors'
+import type { ThemeBaseColors } from '../../components/catalog/liveEditContext'
+import { getHeaderColors, getFooterColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, contrastRatio, isDarkColor } from '../../themes/shared/themeColors'
 import { themes } from '../../themes'
 import type { Store, Product, Category } from '../../types'
 import ImageCropModal from '../../components/dashboard/ImageCropModal'
@@ -118,6 +119,8 @@ export default function LiveEditor() {
   // En pantallas chicas el panel se abre y se cierra desde abajo para dejarle lugar a la tienda.
   const [panelOpen, setPanelOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<string | null>(null)
+  // Colores originales del tema en pantalla, informados por su ThemeProvider.
+  const [themeInfo, setThemeInfo] = useState<ThemeBaseColors | null>(null)
   const productFileInput = useRef<HTMLInputElement>(null)
   const [uploadingProduct, setUploadingProduct] = useState(false)
 
@@ -223,6 +226,7 @@ export default function LiveEditor() {
   const liveEdit = useMemo(() => ({
     onChange: (path: string, value: string) => change(path, value),
     onEditProduct: (id: string) => setEditingProduct(id),
+    onThemeInfo: (colors: ThemeBaseColors) => setThemeInfo(colors),
   }), [change])
 
   const handleSave = async () => {
@@ -421,6 +425,7 @@ export default function LiveEditor() {
       else if (msg?.type === 'sf-change') fromFrame.current.change(msg.path, msg.value)
       else if (msg?.type === 'sf-pick-image') fromFrame.current.pickImage(msg.field)
       else if (msg?.type === 'sf-edit-product') setEditingProduct(msg.productId)
+      else if (msg?.type === 'sf-theme-info') setThemeInfo(msg.colors)
       else if (msg?.type === 'sf-history') fromFrame.current[msg.action]()
     }
     window.addEventListener('message', onMessage)
@@ -460,11 +465,25 @@ export default function LiveEditor() {
   }
   const themeLocked = !!currentTheme?.isPremium && draft.plan === 'free'
   const headerColors = getHeaderColors(draft)
+  // Colores originales del tema: los que informa el tema en pantalla (exactos) o,
+  // hasta que llegan, los de la lista de temas. Solo hex: van a un <input type="color">.
+  const hexOr = (value: string | undefined, fallback: string) => (value && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback)
+  const themeBackground = hexOr(themeInfo?.background, hexOr(currentTheme?.colors?.background, '#ffffff'))
   // Temas oscuros llevan texto claro escrito a mano: un fondo claro los dejaria ilegibles (y al reves).
-  const themeBackground = currentTheme?.colors?.background || '#ffffff'
   const themeIsDark = isDarkColor(themeBackground)
+  const themeText = hexOr(themeInfo?.text, themeIsDark ? '#f5f5f5' : '#111827')
+  const themeSurface = hexOr(themeInfo?.surface, themeBackground)
   const background = getBackgroundColor(draft)
   const backgroundClashes = !!background && isDarkColor(background) !== themeIsDark
+  // El texto de las piezas compartidas va sobre la superficie (ficha, carrito) y
+  // sobre el fondo (nombres y precios de la grilla): tiene que leerse en los dos.
+  const surfaceColor = getSurfaceColor(draft)
+  const textColor = getTextColor(draft)
+  const effectiveText = textColor || themeText
+  const surfaceTextClash = !!(surfaceColor || textColor) && Math.min(
+    contrastRatio(effectiveText, surfaceColor || themeSurface),
+    contrastRatio(effectiveText, background || themeBackground),
+  ) < 3
   const headingFont = getHeadingFont(draft)
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
@@ -736,12 +755,34 @@ export default function LiveEditor() {
           </section>
 
           <section>
+            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.surfaces')}</h2>
+            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.surfacesHint')}</p>
+            <ColorField
+              label={t('liveEditor.surface')}
+              value={surfaceColor}
+              fallback={themeSurface}
+              onChange={v => change(`themeSettings.surfaceColors.${themeId}`, v)}
+              resetLabel={t('liveEditor.reset')}
+            />
+            <ColorField
+              label={t('liveEditor.text')}
+              value={textColor}
+              fallback={themeText}
+              onChange={v => change(`themeSettings.textColors.${themeId}`, v)}
+              resetLabel={t('liveEditor.reset')}
+            />
+            {surfaceTextClash && (
+              <p className="-mt-1 text-[0.7rem] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">{t('liveEditor.surfaceClash')}</p>
+            )}
+          </section>
+
+          <section>
             <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.primary')}</h2>
             <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.primaryHint')}</p>
             <ColorField
               label={t('liveEditor.primaryLabel')}
               value={getPrimaryColor(draft)}
-              fallback={currentTheme?.colors?.primary || '#111827'}
+              fallback={hexOr(themeInfo?.primary, hexOr(currentTheme?.colors?.primary, '#111827'))}
               onChange={v => change(`themeSettings.primaryColors.${themeId}`, v)}
               resetLabel={t('liveEditor.reset')}
             />
@@ -832,6 +873,23 @@ export default function LiveEditor() {
                   onChange={v => change('announcement.textColor', v)}
                   resetLabel={t('liveEditor.reset')}
                 />
+                <TextField
+                  label={t('branding.announcement.link')}
+                  value={announcement.link || ''}
+                  onChange={v => change('announcement.link', v)}
+                />
+                <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
+                  <input
+                    type="checkbox"
+                    disabled={!paidPlan}
+                    checked={announcement.mode === 'marquee'}
+                    onChange={e => change('announcement.mode', e.target.checked ? 'marquee' : 'static')}
+                  />
+                  {t('branding.announcement.marquee')}{!paidPlan && ' ★'}
+                </label>
+                {announcement.mode === 'marquee' && paidPlan && (
+                  <p className="mt-1 text-[0.7rem] text-[#8898AA]">{t('liveEditor.marqueeHint')}</p>
+                )}
               </>
             )}
           </section>
@@ -901,6 +959,64 @@ export default function LiveEditor() {
                   resetLabel={t('liveEditor.reset')}
                 />
               </>
+            )}
+          </section>
+
+          <section>
+            <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.catalog')}</h2>
+            <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.catalogHint')}</p>
+            <SelectField
+              label={t('branding.layout.title')}
+              value={draft.themeSettings?.productLayout || 'grid'}
+              onChange={v => change('themeSettings.productLayout', v)}
+              options={(['grid', 'masonry', 'magazine', 'carousel', 'list', 'sections'] as const).map(id => ({
+                value: id, label: t(`branding.layout.${id}`), locked: id !== 'grid' && !paidPlan,
+              }))}
+            />
+            <SelectField
+              label={t('branding.pagination.title')}
+              value={draft.themeSettings?.paginationType || 'none'}
+              onChange={v => change('themeSettings.paginationType', v)}
+              options={([['none', 'none'], ['load-more', 'loadMore'], ['infinite-scroll', 'infiniteScroll'], ['classic', 'classic']] as const).map(([id, key]) => ({
+                value: id, label: t(`branding.pagination.${key}`), locked: id !== 'none' && !paidPlan,
+              }))}
+            />
+            <SelectField
+              label={t('branding.viewMode.title')}
+              value={draft.themeSettings?.productViewMode || 'drawer'}
+              onChange={v => change('themeSettings.productViewMode', v)}
+              options={(['drawer', 'reels'] as const).map(id => ({
+                value: id, label: t(`branding.viewMode.${id}`), locked: id === 'reels' && !paidPlan,
+              }))}
+            />
+            <div className="space-y-2 mt-1">
+              {([
+                ['scrollReveal', t('branding.effects.scrollReveal'), true],
+                ['imageSwapOnHover', t('branding.effects.imageSwap'), true],
+                ['hideFilters', t('branding.catalog.hideFilters'), false],
+              ] as const).map(([key, label, paidOnly]) => (
+                <label key={key} className={`flex items-center gap-2 text-xs text-[#425466] ${paidOnly && !paidPlan ? 'opacity-50' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    disabled={paidOnly && !paidPlan}
+                    checked={!!draft.themeSettings?.[key]}
+                    onChange={e => change(`themeSettings.${key}`, e.target.checked)}
+                  />
+                  {label}{paidOnly && !paidPlan && ' ★'}
+                </label>
+              ))}
+              <label className={`flex items-center gap-2 text-xs text-[#425466] ${paidPlan ? 'cursor-pointer' : 'opacity-50'}`}>
+                <input
+                  type="checkbox"
+                  disabled={!paidPlan}
+                  checked={!!draft.socialProof?.enabled}
+                  onChange={e => change('socialProof.enabled', e.target.checked)}
+                />
+                {t('branding.socialProof.title')}{!paidPlan && ' ★'}
+              </label>
+            </div>
+            {!paidPlan && (
+              <div className="mt-2"><PlanNote text={t('liveEditor.starPaid')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} /></div>
             )}
           </section>
 
@@ -992,6 +1108,29 @@ export default function LiveEditor() {
         />
       )}
     </div>
+  )
+}
+
+interface SelectFieldProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  /** `locked`: opcion de plan de pago; se ve con ★ y no se puede elegir en el plan gratis. */
+  options: Array<{ value: string; label: string; locked?: boolean }>
+}
+
+function SelectField({ label, value, onChange, options }: SelectFieldProps) {
+  return (
+    <label className="block mb-3">
+      <span className="text-xs text-[#425466]">{label}</span>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="mt-1 w-full px-2 py-2 text-sm border border-[#E6EBF1] rounded-lg bg-white focus:outline-none focus:border-[#1e3a5f]"
+      >
+        {options.map(o => <option key={o.value} value={o.value} disabled={o.locked}>{o.label}{o.locked ? ' ★' : ''}</option>)}
+      </select>
+    </label>
   )
 }
 
