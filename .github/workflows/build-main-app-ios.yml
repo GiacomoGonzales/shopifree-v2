@@ -19,11 +19,21 @@ on:
         required: false
         default: '1.0.0'
         type: string
+      submitForReview:
+        description: 'Enviar a revision de App Store al terminar (espera a que Apple procese el build)'
+        required: false
+        default: false
+        type: boolean
+      releaseNotes:
+        description: 'Texto de "Novedades" (obligatorio si se envia a revision)'
+        required: false
+        type: string
 
 jobs:
   build:
     runs-on: macos-latest
-    timeout-minutes: 45
+    # Enviar a revision espera a que Apple procese el build (suele tardar 5-30 min).
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
@@ -104,7 +114,9 @@ jobs:
           VERSION_NAME: ${{ github.event.inputs.versionName }}
           BUNDLE_ID: app.shopifree.mobile
           APP_NAME: Shopifree
+          SUBMIT_FOR_REVIEW: ${{ github.event.inputs.submitForReview }}
         run: fastlane release
+
 
       - name: Locate IPA artifact
         id: ipa
@@ -134,6 +146,19 @@ jobs:
           name: shopifree-ios-ipa
           path: ${{ steps.ipa.outputs.path }}
           retention-days: 30
+
+      # Al final: si falla el envio, el build ya quedo en TestFlight y guardado.
+      - name: Submit for App Store review
+        if: ${{ github.event.inputs.submitForReview == 'true' }}
+        working-directory: ios/App
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          BUILD_NUMBER: ${{ steps.versioning.outputs.buildNumber }}
+          VERSION_NAME: ${{ github.event.inputs.versionName }}
+          RELEASE_NOTES: ${{ github.event.inputs.releaseNotes }}
+          BUNDLE_ID: app.shopifree.mobile
+        run: fastlane submit_review
 
       - name: Mark Firestore status = failed (on failure)
         if: failure()
