@@ -1554,8 +1554,8 @@
     "flashSaleEnd": "Ends on",
     "flashSaleEnded": "This date has passed: the bar isn't shown on your store.",
     "paidOnly": "Available on paid plans.",
-    "font": "Heading font",
-    "fontHint": "For headings and your store name. Each theme keeps its own.",
+    "font": "Fonts",
+    "fontHint": "One for headings and your store name, another for the rest of the text. Each theme keeps its own.",
     "fontTheme": "Theme default",
     "palettes": "Suggested palettes",
     "palettesHint": "Background, main color, header and footer in one click. You can fine-tune each one afterwards.",
@@ -1637,6 +1637,20 @@
       "bars": "Announcement, badges, flash sale and WhatsApp",
       "catalog": "Product layout, pagination, view and effects"
     },
-    "unsaved": "Unsaved changes"
+    "unsaved": "Unsaved changes",
+    "fontHeadings": "Headings",
+    "fontBody": "Text",
+    "fontsTheme": "Theme fonts",
+    "fontDecorative": "decorative",
+    "fontDecorativeHint": "It's decorative: used for headings and the name. Product cards, cart and checkout use the text font so they stay readable.",
+    "fontSample": "Urban sneakers · $129.90 · Add to cart",
+    "fontPair": {
+      "elegant": "Elegant",
+      "modern": "Modern",
+      "friendly": "Friendly",
+      "editorial": "Editorial",
+      "classic": "Classic",
+      "bold": "Bold"
+    }
   }
 }

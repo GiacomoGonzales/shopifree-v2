@@ -1555,8 +1555,8 @@
     "flashSaleEnd": "Termina el",
     "flashSaleEnded": "Esta fecha ya pasó: en tu tienda la barra no se muestra.",
     "paidOnly": "Disponible en los planes de pago.",
-    "font": "Tipografía de títulos",
-    "fontHint": "Para los títulos y el nombre de tu tienda. Cada tema guarda la suya.",
+    "font": "Tipografía",
+    "fontHint": "Una para los títulos y el nombre de tu tienda, otra para el resto del texto. Cada tema guarda las suyas.",
     "fontTheme": "La del tema",
     "palettes": "Paletas sugeridas",
     "palettesHint": "Fondo, color principal, header y footer en un clic. Después puedes ajustar cada uno.",
@@ -1638,6 +1638,20 @@
       "bars": "Anuncio, insignias, oferta flash y WhatsApp",
       "catalog": "Diseño de productos, paginación, vista y efectos"
     },
-    "unsaved": "Cambios sin guardar"
+    "unsaved": "Cambios sin guardar",
+    "fontHeadings": "Títulos",
+    "fontBody": "Texto",
+    "fontsTheme": "Tipografías del tema",
+    "fontDecorative": "decorativa",
+    "fontDecorativeHint": "Es decorativa: se usa en títulos y en el nombre. Las tarjetas de producto, el carrito y el checkout usan la del texto para que se lean bien.",
+    "fontSample": "Zapatillas urbanas · S/ 129.90 · Agregar al carrito",
+    "fontPair": {
+      "elegant": "Elegante",
+      "modern": "Moderna",
+      "friendly": "Amigable",
+      "editorial": "Editorial",
+      "classic": "Clásica",
+      "bold": "Impacto"
+    }
   }
 }

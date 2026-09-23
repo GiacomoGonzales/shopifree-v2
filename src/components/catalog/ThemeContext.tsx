@@ -4,7 +4,7 @@ import type { Store } from '../../types'
 import { BusinessTypeProvider } from '../../hooks/useBusinessType'
 import { setPixelDefaultCurrency } from '../../lib/pixels'
 import { getHeaderColors, getPrimaryColor, getBackgroundColor, getSurfaceColor, getTextColor, getCornerStyle, CORNER_STYLES, readableTextOn } from '../../themes/shared/themeColors'
-import { getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
+import { getHeadingFont, getBodyFont, googleFontsUrl, fontOverridesCss } from '../../themes/shared/fonts'
 import { useLiveEditContext } from './liveEditContext'
 
 /**
@@ -175,10 +175,9 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
 
   const headerColors = getHeaderColors(store)
   const headingFont = getHeadingFont(store)
-  // Titulos y el nombre de la tienda (marcado por EditableText) con la tipografia elegida.
-  const fontCss = headingFont
-    ? `[data-sf-store] :is(h1,h2,h3,[data-sf-text="name"]){font-family:${headingFont.family}!important}`
-    : ''
+  const bodyFont = getBodyFont(store)
+  const chosenFonts = [headingFont, bodyFont].filter((f): f is NonNullable<typeof f> => !!f)
+  const fontCss = fontOverridesCss(headingFont, bodyFont)
   // Fondo de pagina: todos los temas arman su pagina en un contenedor min-h-screen
   // justo adentro de este provider. Pisa tambien degradados/texturas del fondo.
   const backgroundCss = background && HEX_COLOR.test(background)
@@ -212,7 +211,10 @@ export function ThemeProvider({ theme, store, children }: ThemeProviderProps) {
       <BusinessTypeProvider businessType={store.businessType} language={language}>
         {/* display: contents — el wrapper no participa del layout (sticky, min-h-screen siguen igual). */}
         <div data-sf-store="" style={{ display: 'contents' }}>
-          {headingFont && <link rel="stylesheet" href={googleFontUrl(headingFont)} precedence="default" />}
+          {/* Sin `precedence`: con ese atributo React 19 pausa el pintado hasta
+              que carga la hoja, y en el editor eso re-ejecutaba efectos y
+              perdia el borrador. Asi es un <link> comun, como en los temas. */}
+          {chosenFonts.length > 0 && <link rel="stylesheet" href={googleFontsUrl(chosenFonts)} />}
           {overrideCss && <style>{overrideCss}</style>}
           {children}
         </div>

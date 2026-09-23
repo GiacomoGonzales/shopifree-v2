@@ -28,7 +28,8 @@ export default function CartDrawer({
   const t = getThemeTranslations(language)
 
   return (
-    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose}>
+    // data-sf-ui: parte de la compra; las tipografias decorativas no la tocan (ver ThemeContext).
+    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose} data-sf-ui="">
       <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}

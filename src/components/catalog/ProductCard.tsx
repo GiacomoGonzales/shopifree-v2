@@ -163,7 +163,7 @@ function ProductCardView({ product, onSelect, onQuickAdd, variant = 'default' }:
         </div>
         {/* Info */}
         <div className="flex-1 py-3 pr-3 flex flex-col justify-center min-w-0">
-          <h3 className="font-medium line-clamp-2 leading-snug mb-1" style={{ color: theme.colors.text }}>
+          <h3 data-sf-ui="" className="font-medium line-clamp-2 leading-snug mb-1" style={{ color: theme.colors.text }}>
             {product.name}
           </h3>
           {product.shortDescription && (
@@ -388,7 +388,7 @@ function ProductCardView({ product, onSelect, onQuickAdd, variant = 'default' }:
 
       {/* Info */}
       <div className="space-y-1">
-        <h3
+        <h3 data-sf-ui=""
           className="font-medium line-clamp-2 leading-snug transition-colors"
           style={{ color: theme.colors.text }}
         >

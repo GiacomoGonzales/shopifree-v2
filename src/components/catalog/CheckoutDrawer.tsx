@@ -303,6 +303,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
 
       {/* Drawer */}
       <div
+        data-sf-ui=""
         className="checkout-drawer fixed inset-y-0 right-0 w-full max-w-md z-[71] flex flex-col animate-slideInRight"
         style={{ backgroundColor: theme.colors.background }}
       >

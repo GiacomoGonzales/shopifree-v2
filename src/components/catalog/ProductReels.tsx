@@ -692,7 +692,7 @@ export default function ProductReels({ initialProduct, onClose, onAddToCart, onO
   }
 
   return (
-    <div ref={rootRef} className="fixed inset-0 z-[70] overflow-hidden" style={{ backgroundColor: '#000' }}>
+    <div ref={rootRef} className="fixed inset-0 z-[70] overflow-hidden" style={{ backgroundColor: '#000' }} data-sf-ui="">
       {/* Swipeable area */}
       <div
         ref={containerRef}

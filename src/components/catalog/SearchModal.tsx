@@ -70,7 +70,7 @@ export default function SearchModal({ products, onSelectProduct, onClose }: Sear
   }
 
   return (
-    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose} data-sf-ui="">
       <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}

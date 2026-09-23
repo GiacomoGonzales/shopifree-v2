@@ -225,7 +225,8 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                             (features.showVariants && (activeProduct.variations?.length ?? 0) > 0)
 
   return (
-    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={handleCloseDrawer}>
+    // data-sf-ui: parte de la compra; las tipografias decorativas no la tocan (ver ThemeContext).
+    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={handleCloseDrawer} data-sf-ui="">
       <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}

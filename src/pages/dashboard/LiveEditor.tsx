@@ -17,7 +17,7 @@ import ImageCropModal from '../../components/dashboard/ImageCropModal'
 import { uploadImage } from '../../utils/uploadImage'
 import { optimizeImage } from '../../utils/cloudinary'
 import { ALL_BADGE_IDS, getTrustBadgeText } from '../../themes/shared/trustBadgeDefaults'
-import { HEADING_FONTS, getHeadingFont, googleFontUrl } from '../../themes/shared/fonts'
+import { HEADING_FONTS, BODY_FONTS, FONT_PAIRS, getHeadingFont, getBodyFont, googleFontsUrl } from '../../themes/shared/fonts'
 import { PALETTES, paletteEntries } from './palettes'
 import ProductQuickEdit from './ProductQuickEdit'
 import { saveDraft, loadDraft, clearDraft, type StoredDraft } from './draftStorage'
@@ -139,6 +139,9 @@ export default function LiveEditor() {
   // Estado actual para la foto del historial: `change` es estable (lo usan los
   // textos del tema y subidas que terminan tarde) y no puede leerlo del render.
   const [productEdits, setProductEdits] = useState<ProductEdits>({})
+  // La tienda se carga una sola vez por usuario. Si el efecto vuelve a correr
+  // (renovacion de la sesion, o React reconectando efectos) no se pisa el borrador.
+  const loadedFor = useRef<string | null>(null)
   // Borrador que quedo guardado en el navegador de una sesion anterior sin guardar.
   const [recovery, setRecovery] = useState<StoredDraft | null>(null)
   // En pantallas chicas el panel se abre y se cierra desde abajo para dejarle lugar a la tienda.
@@ -174,7 +177,8 @@ export default function LiveEditor() {
   )
 
   useEffect(() => {
-    if (!firebaseUser) return
+    if (!firebaseUser || loadedFor.current === firebaseUser.uid) return
+    loadedFor.current = firebaseUser.uid
     const load = async () => {
       try {
         const snap = await getDocs(query(collection(db, 'stores'), where('ownerId', '==', firebaseUser.uid)))
@@ -528,6 +532,9 @@ export default function LiveEditor() {
     contrastRatio(barColors.text || themeText, barColors.background || background || themeBackground) < 3
   const corners = getCornerStyle(draft)
   const headingFont = getHeadingFont(draft)
+  const bodyFont = getBodyFont(draft)
+  // Todas las tipografias del panel (combinaciones incluidas) cargadas para las muestras.
+  const panelFontsUrl = googleFontsUrl([...HEADING_FONTS, ...BODY_FONTS])
   const footerColors = getFooterColors(draft)
   const announcement = draft.announcement
   const dirtyGroups = new Set(Object.keys(changes).map(groupForPath))
@@ -803,19 +810,56 @@ export default function LiveEditor() {
             <section>
               <h2 className="text-[0.8rem] font-semibold text-[#1e3a5f]">{t('liveEditor.font')}</h2>
               <p className="text-[0.7rem] text-[#8898AA] mb-3">{t('liveEditor.fontHint')}</p>
-              <select
+              <link rel="stylesheet" href={panelFontsUrl} />
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {FONT_PAIRS.map(pair => {
+                  const h = HEADING_FONTS.find(f => f.id === pair.heading)!
+                  const b = BODY_FONTS.find(f => f.id === pair.body)!
+                  const active = headingFont?.id === pair.heading && bodyFont?.id === pair.body
+                  return (
+                    <button
+                      key={pair.id}
+                      onClick={() => changeMany([
+                        [`themeSettings.headingFonts.${themeId}`, pair.heading],
+                        [`themeSettings.bodyFonts.${themeId}`, pair.body],
+                      ])}
+                      className={`text-left rounded-lg border px-2 py-1.5 ${active ? 'border-[#1e3a5f] ring-2 ring-[#1e3a5f]/20' : 'border-[#E6EBF1] hover:border-[#8898AA]'}`}
+                    >
+                      <span className="block text-base leading-tight text-[#1e3a5f] truncate" style={{ fontFamily: h.family }}>{t(`liveEditor.fontPair.${pair.id}`)}</span>
+                      <span className="block text-[0.68rem] text-[#425466] truncate" style={{ fontFamily: b.family }}>{h.label} + {b.label}</span>
+                    </button>
+                  )
+                })}
+                <button
+                  onClick={() => changeMany([
+                    [`themeSettings.headingFonts.${themeId}`, undefined],
+                    [`themeSettings.bodyFonts.${themeId}`, undefined],
+                  ])}
+                  className="col-span-2 rounded-lg border border-dashed border-[#E6EBF1] p-1.5 text-[0.7rem] text-[#8898AA] hover:border-[#8898AA] hover:text-[#425466]"
+                >
+                  {t('liveEditor.fontsTheme')}
+                </button>
+              </div>
+              <SelectField
+                label={t('liveEditor.fontHeadings')}
                 value={headingFont?.id || ''}
-                onChange={e => change(`themeSettings.headingFonts.${themeId}`, e.target.value || undefined)}
-                className="w-full px-2 py-2 text-sm border border-[#E6EBF1] rounded-lg bg-white focus:outline-none focus:border-[#1e3a5f]"
-              >
-                <option value="">{t('liveEditor.fontTheme')}</option>
-                {HEADING_FONTS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-              </select>
-              {headingFont && (
-                <>
-                  <link rel="stylesheet" href={googleFontUrl(headingFont)} precedence="default" />
-                  <p className="mt-2 text-xl text-[#1e3a5f] truncate" style={{ fontFamily: headingFont.family }}>{draft.name}</p>
-                </>
+                onChange={v => change(`themeSettings.headingFonts.${themeId}`, v || undefined)}
+                options={[{ value: '', label: t('liveEditor.fontTheme') }, ...HEADING_FONTS.map(f => ({ value: f.id, label: f.label + (f.decorative ? ` · ${t('liveEditor.fontDecorative')}` : '') }))]}
+              />
+              {headingFont?.decorative && (
+                <p className="-mt-2 mb-3 text-[0.7rem] text-[#8898AA]">{t('liveEditor.fontDecorativeHint')}</p>
+              )}
+              <SelectField
+                label={t('liveEditor.fontBody')}
+                value={bodyFont?.id || ''}
+                onChange={v => change(`themeSettings.bodyFonts.${themeId}`, v || undefined)}
+                options={[{ value: '', label: t('liveEditor.fontTheme') }, ...BODY_FONTS.map(f => ({ value: f.id, label: f.label }))]}
+              />
+              {(headingFont || bodyFont) && (
+                <div className="rounded-lg bg-[#F6F9FC] p-2.5">
+                  <p className="text-lg leading-tight text-[#1e3a5f] truncate" style={headingFont ? { fontFamily: headingFont.family } : undefined}>{draft.name}</p>
+                  <p className="text-xs text-[#425466] mt-1" style={bodyFont ? { fontFamily: bodyFont.family } : undefined}>{t('liveEditor.fontSample')}</p>
+                </div>
               )}
             </section>
           </PanelGroup>

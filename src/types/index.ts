@@ -109,6 +109,8 @@ export interface Store {
     cornerStyles?: Record<string, string>
     // Tipografia de titulos por tema: id de HEADING_FONTS (themes/shared/fonts.ts)
     headingFonts?: Record<string, string>
+    // Tipografia del texto general por tema: id de BODY_FONTS
+    bodyFonts?: Record<string, string>
     scrollReveal?: boolean
     imageSwapOnHover?: boolean
     productLayout?: 'grid' | 'masonry' | 'magazine' | 'carousel' | 'list' | 'sections'
