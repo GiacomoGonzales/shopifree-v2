@@ -5,8 +5,8 @@
  *  - Las fotos que suben los comerciantes vienen del celular a 3-6 MB y
  *    3000-6000 px de lado. Se mostraban en cards de ~250 px.
  *  - Vercel corta el body en ~4.5 MB y base64 infla ~1.37x, así que todo
- *    archivo de más de ~3.2 MB fallaba la subida a R2 y caía al respaldo de
- *    Cloudinary sin que nadie se enterara (solo un console.warn).
+ *    archivo de más de ~3.2 MB fallaba la subida a R2 y caía a un proveedor
+ *    de respaldo sin que nadie se enterara (solo un console.warn).
  *
  * Reduciendo el lado largo a 2048 px y reencodando a WebP q82, una foto de
  * 5.6 MB queda en ~250 KB: nunca más se acerca al límite de Vercel y el

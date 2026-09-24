@@ -887,7 +887,10 @@
       "localCost": "Costo envío local",
       "localCostHint": "Envíos dentro de tu zona",
       "nationalCost": "Costo envío nacional",
-      "nationalCostHint": "Envíos a otras zonas"
+      "nationalCostHint": "Envíos a otras zonas",
+      "askDistrictLabel": "Pedir {{label}} en el checkout",
+      "askDistrictHint": "Si lo desactivas, tus clientes no tendrán que elegir {{label}} al comprar.",
+      "askDistrictLocked": "Se pide siempre porque tus envíos cubren solo algunos distritos ({{label}})."
     },
     "contact": {
       "title": "Contacto y redes sociales",

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { isStreamVideo } from '../../utils/cloudinary'
+import { isStreamVideo } from '../../utils/media'
 
 interface ReelVideoProps {
-  hlsUrl: string                     // HLS manifest (Cloudflare Stream). Cloudinary => se usa fallbackUrl.
-  fallbackUrl: string                // Optimized MP4 URL (Cloudinary q_auto:eco,f_auto)
+  hlsUrl: string                     // HLS manifest (Cloudflare Stream). Si no es Stream se usa fallbackUrl.
+  fallbackUrl: string                // URL directa del video (mp4) para lo que no es Stream
   isCurrent: boolean                 // True only for the active slide
   isMuted: boolean                   // Shared mute state across all reels
   videoRefCallback?: (el: HTMLVideoElement | null) => void
@@ -17,16 +17,8 @@ interface ReelVideoProps {
  * element so they don't burn bandwidth, and only mount their source when they
  * become the active slide.
  *
- * HLS adaptive streaming was attempted but rolled back — Cloudinary's
- * predefined streaming profiles (sp_hd, sp_full_hd) cap renditions by their
- * longer dimension, which produces undersized variants for portrait 9:16
- * sources. Re-enabling HLS will require either a custom streaming profile
- * defined in the Cloudinary dashboard or eager transformations specifying
- * vertical-aware rendition sizes. The hlsUrl prop and hls.js dependency are
- * kept so we can swap it back in without an API change.
- *
- * For now the optimized MP4 (q_auto:eco,f_auto) handles delivery, which still
- * gives ~30-40% bandwidth savings over the original q_auto-only URL.
+ * Videos de Cloudflare Stream se reproducen por HLS adaptativo; cualquier otra
+ * URL se asigna directo al <video>.
  */
 export default function ReelVideo({
   hlsUrl,
@@ -69,7 +61,7 @@ export default function ReelVideo({
       return () => { cancelled = true; hls?.destroy() }
     }
 
-    // Cloudinary (videos viejos) → mp4 directo, como antes.
+    // Cualquier otra URL → mp4 directo.
     video.src = fallbackUrl
   }, [isCurrent, hlsUrl, fallbackUrl])
 

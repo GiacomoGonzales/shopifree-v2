@@ -102,7 +102,8 @@ const DeliverySelector = forwardRef<DeliverySelectorRef, Props>(({ data, store, 
   const cityFieldLabel = cityLabel[countryCode]?.[storeLang] || cityLabel[countryCode]?.es || t.city
 
   // Districts for selected state and city (only for countries with district data)
-  const countryHasDistricts = hasDistricts(countryCode)
+  // La tienda puede no pedir barrio/distrito; si cubre solo ciertos distritos se sigue pidiendo.
+  const countryHasDistricts = hasDistricts(countryCode) && (store.shipping?.askDistrict !== false || allowedDistricts.length > 0)
   const allDistrictsForCity = countryHasDistricts ? getDistricts(countryCode, effectiveState, effectiveCity) : []
   const availableDistricts = (() => {
     if (!effectiveState || !effectiveCity) return allDistrictsForCity

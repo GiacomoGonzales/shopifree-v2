@@ -13,7 +13,7 @@ interface StoreInfo {
 }
 
 // Image queued in the input area. `preview` is a local blob URL we show
-// immediately; `url` is the Cloudinary URL we get back after upload.
+// immediately; `url` is the R2 URL we get back after upload.
 // Send is gated until every entry has a `url`, so we never ship a
 // half-uploaded attachment to a recipient.
 interface PendingImage {
@@ -89,7 +89,7 @@ export default function SupportChats() {
   const [togglingPause, setTogglingPause] = useState(false)
   const [dragging, setDragging] = useState(false)
   // Per-image pending state — each entry tracks its own upload progress
-  // and resulting Cloudinary URL, so the user can paste/drop several
+  // and resulting R2 URL, so the user can paste/drop several
   // images at once and remove individual ones before sending.
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -404,13 +404,12 @@ export default function SupportChats() {
 
     try {
       const uploadedUrl = await uploadToStorage(file, { folder: 'chat' })
-      const data = { secure_url: uploadedUrl }
-      if (data.secure_url) {
+      if (uploadedUrl) {
         setPendingImages(prev => prev.map(p =>
-          p.id === id ? { ...p, url: data.secure_url, uploading: false } : p
+          p.id === id ? { ...p, url: uploadedUrl, uploading: false } : p
         ))
       } else {
-        // Cloudinary rejected the upload — drop the entry and free the
+        // The upload was rejected — drop the entry and free the
         // blob preview rather than leave a broken thumbnail in the queue.
         URL.revokeObjectURL(preview)
         setPendingImages(prev => prev.filter(p => p.id !== id))
@@ -502,7 +501,7 @@ export default function SupportChats() {
     if (!isRetry) {
       setText('')
       // Free the blob URLs of the queued previews and clear the queue.
-      // The Cloudinary URLs we're about to send live on independently.
+      // The R2 URLs we're about to send live on independently.
       setPendingImages(prev => {
         prev.forEach(p => URL.revokeObjectURL(p.preview))
         return []

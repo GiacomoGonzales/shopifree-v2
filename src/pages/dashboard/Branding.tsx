@@ -253,8 +253,7 @@ export default function Branding() {
     fetchStore()
   }, [firebaseUser])
 
-  // Sube vía el helper central: para la cuenta piloto va a Cloudflare R2,
-  // para el resto sigue yendo a Cloudinary (mismo folder/calidad de antes).
+  // Sube vía el helper central a Cloudflare R2.
   const uploadImage = (file: File, folder: string, highQuality = false): Promise<string> => {
     return uploadToStorage(file, {
       folder: `shopifree/${folder}`,

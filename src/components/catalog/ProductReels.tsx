@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
-import { optimizeImage, optimizeReelVideo, optimizeReelVideoHLS } from '../../utils/cloudinary'
+import { optimizeImage, optimizeReelVideo, optimizeReelVideoHLS } from '../../utils/media'
 import ReelVideo from './ReelVideo'
 import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'

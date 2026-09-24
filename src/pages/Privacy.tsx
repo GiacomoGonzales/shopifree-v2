@@ -52,7 +52,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">3. Almacenamiento de datos</h2>
             <p>
-              Tu informacion se almacena de forma segura en servidores de Google Firebase y Vercel.
+              Tu informacion se almacena de forma segura en servidores de Google Firebase y Vercel; las imagenes y videos, en Cloudflare (R2 y Stream).
               Implementamos medidas de seguridad estandar de la industria para proteger tus datos
               contra acceso no autorizado, alteracion o destruccion.
             </p>
@@ -62,7 +62,7 @@ export default function Privacy() {
             <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">4. Compartir informacion</h2>
             <p>No vendemos, alquilamos ni compartimos tu informacion personal con terceros, excepto:</p>
             <ul className="list-disc pl-6 space-y-1 mt-2">
-              <li>Proveedores de servicio necesarios para operar la plataforma (Firebase, Cloudinary, Vercel)</li>
+              <li>Proveedores de servicio necesarios para operar la plataforma (Firebase, Cloudflare, Vercel)</li>
               <li>Cuando sea requerido por ley o proceso legal</li>
               <li>Para proteger los derechos y seguridad de Shopifree y sus usuarios</li>
             </ul>

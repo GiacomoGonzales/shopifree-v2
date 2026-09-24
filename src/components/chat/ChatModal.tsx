@@ -185,10 +185,9 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
 
     try {
       const uploadedUrl = await uploadToStorage(file, { folder: 'chat' })
-      const data = { secure_url: uploadedUrl }
-      if (data.secure_url) {
+      if (uploadedUrl) {
         setPendingImages(prev => prev.map(p =>
-          p.id === id ? { ...p, url: data.secure_url, uploading: false } : p
+          p.id === id ? { ...p, url: uploadedUrl, uploading: false } : p
         ))
       } else {
         URL.revokeObjectURL(preview)

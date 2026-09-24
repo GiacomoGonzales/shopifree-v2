@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import type { Product } from '../../types'
 import { formatPrice } from '../../lib/currency'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 import { useTheme } from './ThemeContext'
 import { useBusinessType } from '../../hooks/useBusinessType'
 import { PrepTimeDisplay, DurationDisplay, AvailabilityBadge } from './business-type'

@@ -62,7 +62,7 @@ function StoreLoader({ name }: { logo?: string; name?: string }) {
 const SPLASH_COLOR = (import.meta.env.VITE_SPLASH_COLOR as string) || '#ffffff'
 // Prefer the locally-bundled `whitelabel-splash-logo.png` (written by
 // build-config.ts from the same trimmed source as the system splash icon) so
-// the overlay shows pixel-identical content. Fall back to the raw Cloudinary
+// the overlay shows pixel-identical content. Fall back to the raw logo
 // URL only if the local asset is missing — that path keeps a visible "logo
 // shrink" between system splash and overlay because the raw upload may have
 // asymmetric transparent padding.

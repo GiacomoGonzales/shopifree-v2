@@ -210,6 +210,7 @@ export default function Settings() {
             : { allowedDistricts: null }),
           ...(shipping.localCost != null ? { localCost: shipping.localCost } : { localCost: null }),
           ...(shipping.nationalCost != null ? { nationalCost: shipping.nationalCost } : { nationalCost: null }),
+          askDistrict: shipping.askDistrict !== false,
           internationalShipping: shipping.internationalShipping || false,
           ...(shipping.internationalCost != null ? { internationalCost: shipping.internationalCost } : { internationalCost: null }),
         },
@@ -776,6 +777,40 @@ export default function Settings() {
               {/* Shipping cost toggle - only relevant if delivery is enabled */}
               {shipping.deliveryEnabled !== false && (
                 <>
+                  {/* Pedir barrio/distrito en el checkout (solo países con esa lista) */}
+                  {hasDistricts(location.country) && (() => {
+                    const locked = (shipping.coverageMode === 'zones' || shipping.coverageMode === 'local') && (shipping.allowedDistricts?.length || 0) > 0
+                    const on = locked || shipping.askDistrict !== false
+                    const label = districtLabel[location.country]?.[language === 'en' ? 'en' : language === 'pt' ? 'pt' : 'es'] || 'Distrito'
+                    return (
+                      <>
+                        <hr className="border-[#E6EBF1]" />
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="font-medium text-[#1e3a5f]">{t('settings.shipping.askDistrictLabel', { label })}</p>
+                            <p className="text-sm text-[#8898AA]">
+                              {locked ? t('settings.shipping.askDistrictLocked', { label: label.toLowerCase() }) : t('settings.shipping.askDistrictHint', { label: label.toLowerCase() })}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={locked}
+                            onClick={() => setShipping({ ...shipping, askDistrict: !on })}
+                            className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
+                              on ? 'bg-[#38bdf8]' : 'bg-[#E1E8EF]'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
+                                on ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </>
+                    )
+                  })()}
+
                   <hr className="border-[#E6EBF1]" />
 
                   <div className="flex items-center justify-between gap-4">

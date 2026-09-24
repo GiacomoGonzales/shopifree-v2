@@ -1,7 +1,7 @@
 import type { CartItem } from '../../hooks/useCart'
 import { formatModifierNames } from '../../lib/modifiers'
 import { formatPrice } from '../../lib/currency'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { getDisplayImage } from '../../lib/variants'

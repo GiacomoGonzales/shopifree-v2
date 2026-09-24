@@ -5,7 +5,7 @@ import { getThemeTranslations } from '../../themes/shared/translations'
 import { getCategoryBarColors, getCornerStyle } from '../../themes/shared/themeColors'
 
 interface BarColors { background: string; text: string; textMuted: string; border: string }
-import { optimizeImage, getImageSrcSet } from '../../utils/cloudinary'
+import { optimizeImage, getImageSrcSet } from '../../utils/media'
 import SearchModal from './SearchModal'
 
 /**

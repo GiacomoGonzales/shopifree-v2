@@ -43,10 +43,10 @@ export interface Store {
   domainDnsRecords?: DnsRecord[]
 
   // === BRANDING ===
-  logo?: string                 // URL Cloudinary — square/icon logo (favicon, footer circle, app icon, social share)
-  logoLandscape?: string        // URL Cloudinary — optional horizontal logo with brand name baked in. When present, header uses it and hides the store name text.
-  heroImage?: string            // URL Cloudinary - Desktop (2560x800 recomendado)
-  heroImageMobile?: string      // URL Cloudinary - Móvil (1200x800 recomendado, ratio 3:2)
+  logo?: string                 // URL R2 — square/icon logo (favicon, footer circle, app icon, social share)
+  logoLandscape?: string        // URL R2 — optional horizontal logo with brand name baked in. When present, header uses it and hides the store name text.
+  heroImage?: string            // URL R2 - Desktop (2560x800 recomendado)
+  heroImageMobile?: string      // URL R2 - Móvil (1200x800 recomendado, ratio 3:2)
   favicon?: string
 
   // === TIRA PUBLICITARIA ===
@@ -354,6 +354,7 @@ export interface StoreShipping {
   allowedZones?: string[]       // lista de departamentos/estados permitidos (modo zones)
   allowedProvinces?: string[]   // lista de provincias: "Departamento|Provincia"
   allowedDistricts?: string[]   // lista de distritos: "Departamento|Provincia|Distrito"
+  askDistrict?: boolean         // default true; false = el checkout no pide barrio/distrito (si no hay filtro por distritos)
   localCost?: number            // costo envío local (misma zona que la tienda)
   nationalCost?: number         // costo envío nacional (otras zonas)
   // Dropshipping: auto-calculate from CJ freight + margin
@@ -838,7 +839,7 @@ export interface TrendComparison {
 // ============================================
 export interface StoreAppConfig {
   appName: string
-  icon?: string              // URL Cloudinary
+  icon?: string              // URL R2
   primaryColor: string
   secondaryColor: string
   splashColor: string

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { optimizeImage, getGallerySrcSet } from '../../utils/cloudinary'
+import { optimizeImage, getGallerySrcSet } from '../../utils/media'
 
 // Sizes attribute matches the gallery layout: full viewport on mobile,
 // roughly half the viewport on desktop where the page splits into a

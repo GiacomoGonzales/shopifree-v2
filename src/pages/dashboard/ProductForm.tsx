@@ -12,7 +12,7 @@ import { useToast } from '../../components/ui/Toast'
 import HelpTip from '../../components/ui/HelpTip'
 import { canAddProduct, getMaxImagesPerProduct, canUploadVideo, getEffectivePlan } from '../../lib/stripe'
 import { getBusinessTypeFeatures, normalizeBusinessType } from '../../hooks/useBusinessType'
-import { getVideoThumbnail } from '../../utils/cloudinary'
+import { getVideoThumbnail } from '../../utils/media'
 import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 import { uploadVideoToStream } from '../../utils/uploadVideo'
 import { formatPrice } from '../../lib/currency'
@@ -287,7 +287,7 @@ export default function ProductForm() {
     setUploading(true)
 
     try {
-      // Helper central: cuenta piloto → Cloudflare R2; resto → Cloudinary.
+      // Helper central: sube a Cloudflare R2.
       const uploadPromises = filesToUpload.map((file) =>
         uploadToStorage(file, { folder: 'shopifree/products' })
       )

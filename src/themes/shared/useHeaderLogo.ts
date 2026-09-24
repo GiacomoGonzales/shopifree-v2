@@ -1,4 +1,4 @@
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 import { useLogoOrientation } from './useLogoOrientation'
 
 type SquareStyle = 'circle' | 'rounded'

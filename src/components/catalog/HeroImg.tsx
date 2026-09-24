@@ -1,5 +1,5 @@
 import { forwardRef, type ImgHTMLAttributes } from 'react'
-import { optimizeImage, getHeroSrcSet } from '../../utils/cloudinary'
+import { optimizeImage, getHeroSrcSet } from '../../utils/media'
 import { useLiveEdit } from './liveEditContext'
 
 /**
@@ -10,7 +10,7 @@ import { useLiveEdit } from './liveEditContext'
  *   optimal resolution for the viewport + DPR combo. This is the fix for
  *   blurry hero images on large retina desktops.
  * - Falls back to the `hero` preset (2560w) for the base `src`.
- * - Auto-converts to WebP/AVIF via Cloudinary's `f_auto`.
+ * - Auto-converts to WebP/AVIF via Cloudflare's `format=auto` (R2 URLs).
  * - Defaults `sizes="100vw"` because heroes nearly always span the viewport
  *   (override via prop if a specific theme differs).
  *
@@ -28,7 +28,7 @@ const HeroImg = forwardRef<HTMLImageElement, HeroImgProps>(
   ({ src, sizes = '100vw', alt = '', loading = 'eager', ...rest }, ref) => {
     // En el editor en vivo la portada se marca para cambiarla con un clic.
     const editing = useLiveEdit()
-    // If the URL isn't a Cloudinary URL (e.g. empty/external), just render as-is
+    // Si la URL no es de R2 (ej. externa), optimizeImage la devuelve tal cual
     if (!src) return null
 
     const optimizedSrc = optimizeImage(src, 'hero')

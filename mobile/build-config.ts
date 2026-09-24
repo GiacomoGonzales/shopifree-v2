@@ -168,7 +168,7 @@ async function generateIcons(logoUrl: string, bgColor: string) {
   // public/whitelabel-splash-logo.png — same trimmed logo on a transparent canvas,
   // served from the WebView so the React splash overlay (Catalog.tsx) can render
   // pixel-identical content as the system splash. Without this, the overlay loads
-  // the original Cloudinary URL — which often has asymmetric transparent padding —
+  // the original logo URL — which often has asymmetric transparent padding —
   // and shows a visibly smaller logo than the system splash.
   const publicDir = resolve(process.cwd(), 'public')
   if (existsSync(publicDir)) {
@@ -235,7 +235,7 @@ async function generateSplashScreens(logoUrl: string, bgColor: string, storeName
   const rawLogoBuffer = await downloadImage(logoUrl)
 
   // Trim transparent/uniform edges before compositing so the logo lands at the
-  // exact geometric center of the splash. Source PNGs from Cloudinary often
+  // exact geometric center of the splash. Uploaded source PNGs often
   // have asymmetric padding that otherwise shifts the visible logo off-center
   // (this was the cause of the "splash pushed down/sideways" reports).
   const logoBuffer = await sharp(rawLogoBuffer)

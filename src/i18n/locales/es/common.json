@@ -20,5 +20,15 @@
     "select": "Idioma",
     "es": "Español",
     "en": "English"
+  },
+  "appStores": {
+    "appStoreTop": "Descárgalo en el",
+    "appStoreAria": "Descargar Shopifree en el App Store",
+    "playStoreTop": "Disponible en",
+    "playStoreAria": "Descargar Shopifree en Google Play",
+    "alsoOnPhone": "También en tu celular:",
+    "footerTitle": "Descarga la app",
+    "cardTitle": "Tu tienda en el bolsillo",
+    "cardText": "Descarga la app de Shopifree para recibir pedidos al instante, cargar productos con fotos de tu celular y ver tus ventas desde el celular."
   }
 }

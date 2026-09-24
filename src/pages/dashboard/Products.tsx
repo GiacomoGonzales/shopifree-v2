@@ -13,7 +13,7 @@ import { getCurrencySymbol } from '../../lib/currency'
 import { canAddProduct, canAddCategory, getRemainingProducts, getRemainingCategories, getPlanLimits, getEffectivePlan, PLAN_FEATURES } from '../../lib/stripe'
 import ProductImport from '../../components/dashboard/ProductImport'
 import StockEditModal from '../../components/dashboard/StockEditModal'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 import type { Product, Category } from '../../types'
 
@@ -1007,7 +1007,7 @@ export default function Products() {
               {editingCategory ? t('products.categories.editTitle') : t('products.categories.newTitle')}
             </h3>
             <form onSubmit={handleSaveCategory}>
-              {/* Imagen opcional. El recorte cuadrado lo aplica Cloudinary al
+              {/* Imagen opcional. El recorte cuadrado lo aplica Cloudflare al
                   renderizar, así que sirve cualquier imagen. */}
               <div className="flex items-start gap-3 mb-4">
                 <div

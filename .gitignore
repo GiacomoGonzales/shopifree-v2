@@ -59,3 +59,7 @@ ios/DerivedData/
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Reportes locales del script de migración a Cloudflare
+scripts/.migration-report-*.json
+.vercel

@@ -2,7 +2,7 @@ import { useTheme } from '../ThemeContext'
 import type { Product, ProductVariation } from '../../../types'
 import { getThemeTranslations } from '../../../themes/shared/translations'
 import { isOptionAvailable } from '../../../lib/variants'
-import { optimizeImage } from '../../../utils/cloudinary'
+import { optimizeImage } from '../../../utils/media'
 
 interface VariantSelectorProps {
   variations: ProductVariation[]

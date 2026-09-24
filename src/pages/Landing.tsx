@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import AppStoreButtons from '../components/common/AppStoreButtons'
 import { useLanguage } from '../hooks/useLanguage'
 import { useAuth } from '../hooks/useAuth'
 import LanguageSelector from '../components/common/LanguageSelector'
@@ -368,6 +369,10 @@ export default function Landing() {
                 <a href="#como-funciona" className="slp-btn slp-secondary">
                   {t('common:buttons.seeHowItWorks')}
                 </a>
+              </div>
+              <div className="slpr mt-7" style={{ transitionDelay: '.28s' }}>
+                <p className="text-sm font-medium mb-2.5" style={{ color: 'var(--muted)' }}>{t('common:appStores.alsoOnPhone')}</p>
+                <AppStoreButtons />
               </div>
             </div>
 
@@ -1095,6 +1100,8 @@ export default function Landing() {
               <p className="text-sm leading-relaxed max-w-xs" style={{ color: 'var(--body)' }}>
                 {t('hero.subtitle')}
               </p>
+              <p className="mt-6 mb-3 text-[0.78rem] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--muted)' }}>{t('common:appStores.footerTitle')}</p>
+              <AppStoreButtons size="sm" />
             </div>
             <div>
               <h4 className="text-[0.78rem] font-bold uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--muted)' }}>{t('footer.product')}</h4>

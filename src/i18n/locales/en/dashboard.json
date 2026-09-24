@@ -886,7 +886,10 @@
       "localCost": "Local shipping cost",
       "localCostHint": "Deliveries within your zone",
       "nationalCost": "National shipping cost",
-      "nationalCostHint": "Deliveries to other zones"
+      "nationalCostHint": "Deliveries to other zones",
+      "askDistrictLabel": "Ask for {{label}} at checkout",
+      "askDistrictHint": "If you turn it off, customers won’t have to choose a {{label}} when buying.",
+      "askDistrictLocked": "Always asked because your delivery covers only some areas ({{label}})."
     },
     "contact": {
       "title": "Contact and social media",

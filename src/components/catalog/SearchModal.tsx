@@ -3,7 +3,7 @@ import type { Product } from '../../types'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { formatPrice } from '../../lib/currency'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 
 interface SearchModalProps {
   products: Product[]

@@ -20,5 +20,15 @@
     "select": "Language",
     "es": "Español",
     "en": "English"
+  },
+  "appStores": {
+    "appStoreTop": "Download on the",
+    "appStoreAria": "Download Shopifree on the App Store",
+    "playStoreTop": "Get it on",
+    "playStoreAria": "Get Shopifree on Google Play",
+    "alsoOnPhone": "Also on your phone:",
+    "footerTitle": "Get the app",
+    "cardTitle": "Your store in your pocket",
+    "cardText": "Download the Shopifree app to get orders instantly, add products with your phone photos and check your sales from your phone."
   }
 }

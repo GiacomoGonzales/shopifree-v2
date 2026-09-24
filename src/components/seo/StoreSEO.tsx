@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { transformR2 } from '../../utils/cloudinary'
+import { transformR2 } from '../../utils/media'
 import Seo from './Seo'
 import { useCustomHeadHtml, useCustomBodyHtml } from '../../hooks/useCustomHeadHtml'
 import type { Store, Product, Category } from '../../types'

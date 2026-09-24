@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 import { getFooterColors } from '../../themes/shared/themeColors'
 import { EditableText } from './LiveEdit'
 import { useLiveEdit } from './liveEditContext'

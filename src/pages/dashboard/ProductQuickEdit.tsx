@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Product } from '../../types'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 
 /**
  * Edicion rapida de un producto desde el editor en vivo. Cada cambio se aplica

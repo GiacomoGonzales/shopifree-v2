@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
-import { transformR2 } from '../../utils/cloudinary'
+import { transformR2 } from '../../utils/media'
 
 interface BuildInfo {
   status?: 'idle' | 'queued' | 'running' | 'success' | 'failed'
@@ -668,12 +668,7 @@ interface DetailsModalProps {
 // pantalla: el operador verá el original y podrá adaptarlo a mano.
 function appIcon512(url: string): string {
   const cf = transformR2(url, 'width=512,height=512,fit=pad,background=transparent')
-  if (cf) return cf
-  // Legacy Cloudinary (ya no debería quedar ninguno tras la migración).
-  if (url.includes('/image/upload/')) {
-    return url.replace('/image/upload/', '/image/upload/c_pad,b_transparent,w_512,h_512,f_png/')
-  }
-  return url
+  return cf || url
 }
 
 // Normaliza un color hex a `#rrggbb`. Expande la forma corta (#abc → #aabbcc)
@@ -712,15 +707,7 @@ function buildFeatureGraphic(
   const bg = normalizeHex(chosen, FALLBACK)
 
   // `#` va escapado: sin encodear, Cloudflare corta la URL en el fragmento.
-  const cf = transformR2(url, `width=1024,height=500,fit=pad,background=${encodeURIComponent(bg)}`)
-  if (cf) return cf
-
-  // Legacy Cloudinary.
-  if (url.includes('/image/upload/')) {
-    const rgb = `rgb:${bg.replace('#', '')}`
-    return url.replace('/image/upload/', `/image/upload/c_pad,w_1024,h_500,b_${rgb},f_png/`)
-  }
-  return null
+  return transformR2(url, `width=1024,height=500,fit=pad,background=${encodeURIComponent(bg)}`)
 }
 
 function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot }: DetailsModalProps) {

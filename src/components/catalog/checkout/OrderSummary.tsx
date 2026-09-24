@@ -5,7 +5,7 @@ import type { CartItem } from '../../../hooks/useCart'
 import type { Coupon } from '../../../types'
 import type { ThemeTranslations } from '../../../themes/shared/translations'
 import { formatPrice } from '../../../lib/currency'
-import { optimizeImage } from '../../../utils/cloudinary'
+import { optimizeImage } from '../../../utils/media'
 
 interface Props {
   items: CartItem[]

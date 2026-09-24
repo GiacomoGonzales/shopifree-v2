@@ -1,7 +1,7 @@
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { Link } from 'react-router-dom'
-import { optimizeImage } from '../../utils/cloudinary'
+import { optimizeImage } from '../../utils/media'
 
 export default function StorePrivacy() {
   const { theme, store, language } = useTheme()

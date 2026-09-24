@@ -1,14 +1,11 @@
 /**
  * uploadImage — punto único de subida de imágenes NUEVAS.
  * =====================================================
- * Todas las imágenes van a Cloudflare R2 (egress $0). Cloudinary quedó fuera
- * del camino de subida: no recibe nada nuevo.
+ * Todas las imágenes van a Cloudflare R2 (egress $0).
  *
- * Historia, para que no se repita: hasta el 31/07/2026 había un respaldo que
- * mandaba a Cloudinary cuando R2 fallaba. Como el límite de body de Vercel es
- * ~4.5 MB y base64 infla ~1.37x, TODA foto de más de ~3.2 MB fallaba en R2 y
- * terminaba en Cloudinary en silencio (solo un console.warn). Así siguió
- * creciendo una cuenta que se suponía migrada.
+ * Historia: hasta el 31/07/2026 había un respaldo a Cloudinary cuando R2
+ * fallaba, y las fotos de más de ~3.2 MB (límite de body de Vercel) caían ahí
+ * en silencio.
  *
  * Ahora compressImage() deja cualquier foto en ~200-300 KB antes de subir, así
  * que el límite de Vercel dejó de ser alcanzable y el respaldo perdió sentido.
@@ -27,7 +24,7 @@ export interface UploadOptions {
   /**
    * Lado largo máximo en px antes de subir. Default 2048, que cubre de sobra
    * la galería de producto. Los heroes se sirven a todo el ancho y piden más
-   * (ver SIZE_CONFIGS.hero en cloudinary.ts).
+   * (ver SIZE_CONFIGS.hero en media.ts).
    */
   maxDimension?: number
   /**

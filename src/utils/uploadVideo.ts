@@ -1,9 +1,8 @@
 /**
  * uploadVideo — subida de videos NUEVOS a Cloudflare Stream.
  *
- * Todos los videos van a Stream. Cloudinary ya no recibe videos nuevos: el
- * flag de piloto y la rama de respaldo se quitaron el 31/07/2026, una vez
- * validado.
+ * Todos los videos van a Stream (el flag de piloto y la rama de respaldo se
+ * quitaron el 31/07/2026).
  *
  * Flujo de subida directa a Stream:
  *  1) /api/stream-upload-url da una uploadURL one-time + el uid del video.

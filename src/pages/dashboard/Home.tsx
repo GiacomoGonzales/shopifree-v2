@@ -36,6 +36,7 @@ import { getCurrencySymbol } from '../../lib/currency'
 import { PLAN_FEATURES, getEffectivePlan } from '../../lib/stripe'
 import type { Product, Category, Order } from '../../types'
 import WhatsNewBanner from '../../components/dashboard/WhatsNewBanner'
+import AppStoreButtons from '../../components/common/AppStoreButtons'
 
 /* ── Periodos y métricas ─────────────────────────────────────────────── */
 
@@ -670,6 +671,17 @@ export default function DashboardHome() {
 
         {/* Novedades: el editor en vivo */}
         <WhatsNewBanner />
+
+        {/* La app para el celular (en la app nativa AppStoreButtons no se muestra) */}
+        {!Capacitor.isNativePlatform() && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-[14px] p-4 sm:p-5 bg-white" style={{ border: '1px solid #E6EBF1', boxShadow: '0 10px 28px -22px rgba(30,58,95,.4)' }}>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-[#1e3a5f]">{t('common:appStores.cardTitle')}</h3>
+              <p className="text-[0.82rem] mt-1 font-normal text-[#425466]">{t('common:appStores.cardText')}</p>
+            </div>
+            <AppStoreButtons size="sm" className="shrink-0" />
+          </div>
+        )}
 
         {/* Prueba gratuita: activa o vencida, un único aviso */}
         {trial && !Capacitor.isNativePlatform() && (

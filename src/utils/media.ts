@@ -1,11 +1,10 @@
 /**
  * Utilidades de optimización de imágenes.
  *
- * Soporta DOS proveedores en paralelo durante la migración:
- *  - Cloudflare (R2 + Image Transformations) → `/cdn-cgi/image/<opts>/<key>`
- *  - Cloudinary (legacy)                     → `/upload/<transforms>/<id>`
+ *  - Imágenes: Cloudflare R2 + Image Transformations → `/cdn-cgi/image/<opts>/<key>`
+ *  - Videos:   Cloudflare Stream (HLS + miniaturas)
  *
- * Cualquier URL que no sea de ninguno de los dos se devuelve intacta.
+ * Cualquier URL que no sea de R2/Stream se devuelve intacta.
  */
 
 type ImageSize = 'thumbnail' | 'category' | 'logo' | 'card' | 'gallery' | 'hero'
@@ -70,17 +69,17 @@ const R2_HOSTS = (
   .filter(Boolean)
 
 /**
- * Calidad de entrega. Cloudflare no tiene equivalente a `q_auto` de Cloudinary,
- * así que va un número fijo. 82 es el punto donde deja de notarse la diferencia
+ * Calidad de entrega. Cloudflare no tiene calidad automática, así que va un
+ * número fijo. 82 es el punto donde deja de notarse la diferencia
  * a simple vista en fotos de producto.
  */
 const CF_QUALITY = 82
 
-/** Equivalencias de recorte Cloudinary → Cloudflare. */
+/** Modo de recorte de cada preset → `fit` de Cloudflare. */
 const CF_FIT: Record<SizeConfig['crop'], string> = {
-  fill: 'cover',        // c_fill: recorta para llenar el marco exacto
-  limit: 'scale-down',  // c_limit: entra en el ancho, nunca agranda
-  fit: 'contain',       // c_fit: entra completa, sin recortar
+  fill: 'cover',        // recorta para llenar el marco exacto
+  limit: 'scale-down',  // entra en el ancho, nunca agranda
+  fit: 'contain',       // entra completa, sin recortar
 }
 
 /** ¿La URL la sirve nuestro bucket R2 y podemos transformarla? */
@@ -145,84 +144,29 @@ const HERO_WIDTHS = [800, 1280, 1920, 2560, 3840]
 const GALLERY_WIDTHS = [400, 700, 1000, 1500]
 
 /**
- * Optimizes a Cloudinary URL by adding transformation parameters
- * - Converts to WebP/AVIF automatically based on browser support
- * - Compresses with auto quality
- * - Resizes based on the specified size preset
+ * Optimiza una imagen de R2 con Cloudflare Image Transformations:
+ * formato automático (WebP/AVIF), calidad fija y tamaño según el preset.
  *
- * @param url - Original Cloudinary URL
- * @param size - Size preset: 'thumbnail' | 'card' | 'gallery' | 'hero'
- * @returns Optimized URL with transformations, or original URL if not Cloudinary
+ * @param url - URL original (R2)
+ * @param size - Preset de tamaño (ver SIZE_CONFIGS)
+ * @returns URL transformada, o la original si no es de R2
  */
 export function optimizeImage(url: string | undefined, size: ImageSize = 'card'): string {
   if (!url) return ''
-
+  if (!isR2(url)) return url
   const config = SIZE_CONFIGS[size]
-
-  if (isR2(url)) {
-    return cfTransform(url, cfOptions(config.crop, config.width, config.height))
-  }
-
-  // Only transform Cloudinary URLs
-  if (!url.includes('res.cloudinary.com')) {
-    return url
-  }
-
-  // Build transformation string
-  const transforms = [
-    `c_${config.crop}`,
-    `w_${config.width}`,
-    config.height ? `h_${config.height}` : null,
-    'q_auto',
-    'f_auto',
-  ].filter(Boolean).join(',')
-
-  // Insert transformations after /upload/
-  // URL format: https://res.cloudinary.com/xxx/image/upload/v123/folder/file.jpg
-  // Result:     https://res.cloudinary.com/xxx/image/upload/c_fill,w_400,h_500,q_auto,f_auto/v123/folder/file.jpg
-  return url.replace('/upload/', `/upload/${transforms}/`)
+  return cfTransform(url, cfOptions(config.crop, config.width, config.height))
 }
 
 /**
- * Generates srcset for responsive images
- * Returns srcset string for 1x, 2x pixel densities
+ * Genera el srcset 1x/2x de una imagen de R2 (vacío si no es de R2).
  */
 export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'): string {
-  if (!url) return ''
-
+  if (!url || !isR2(url)) return ''
   const config = SIZE_CONFIGS[size]
-
-  if (isR2(url)) {
-    const h = config.height
-    const at = (w: number, hh?: number) => cfTransform(url, cfOptions(config.crop, w, hh))
-    return `${at(config.width, h)} 1x, ${at(config.width * 2, h ? h * 2 : undefined)} 2x`
-  }
-
-  if (!url.includes('res.cloudinary.com')) return ''
-
-  const width1x = config.width
-  const width2x = config.width * 2
-
-  const transforms1x = [
-    `c_${config.crop}`,
-    `w_${width1x}`,
-    config.height ? `h_${config.height}` : null,
-    'q_auto',
-    'f_auto',
-  ].filter(Boolean).join(',')
-
-  const transforms2x = [
-    `c_${config.crop}`,
-    `w_${width2x}`,
-    config.height ? `h_${Math.round(config.height * 2)}` : null,
-    'q_auto',
-    'f_auto',
-  ].filter(Boolean).join(',')
-
-  const url1x = url.replace('/upload/', `/upload/${transforms1x}/`)
-  const url2x = url.replace('/upload/', `/upload/${transforms2x}/`)
-
-  return `${url1x} 1x, ${url2x} 2x`
+  const h = config.height
+  const at = (w: number, hh?: number) => cfTransform(url, cfOptions(config.crop, w, hh))
+  return `${at(config.width, h)} 1x, ${at(config.width * 2, h ? h * 2 : undefined)} 2x`
 }
 
 /**
@@ -238,19 +182,9 @@ export function getImageSrcSet(url: string | undefined, size: ImageSize = 'card'
  *   />
  */
 export function getHeroSrcSet(url: string | undefined): string {
-  if (!url) return ''
-  if (isR2(url)) {
-    return HERO_WIDTHS
-      .map(w => `${cfTransform(url, cfOptions('limit', w))} ${w}w`)
-      .join(', ')
-  }
-  if (!url.includes('res.cloudinary.com')) return ''
+  if (!url || !isR2(url)) return ''
   return HERO_WIDTHS
-    .map(w => {
-      const transforms = `c_limit,w_${w},q_auto,f_auto`
-      const transformedUrl = url.replace('/upload/', `/upload/${transforms}/`)
-      return `${transformedUrl} ${w}w`
-    })
+    .map(w => `${cfTransform(url, cfOptions('limit', w))} ${w}w`)
     .join(', ')
 }
 
@@ -263,19 +197,9 @@ export function getHeroSrcSet(url: string | undefined): string {
  * wasteful on small phones and slightly undersized on retina desktops.
  */
 export function getGallerySrcSet(url: string | undefined): string {
-  if (!url) return ''
-  if (isR2(url)) {
-    return GALLERY_WIDTHS
-      .map(w => `${cfTransform(url, cfOptions('limit', w))} ${w}w`)
-      .join(', ')
-  }
-  if (!url.includes('res.cloudinary.com')) return ''
+  if (!url || !isR2(url)) return ''
   return GALLERY_WIDTHS
-    .map(w => {
-      const transforms = `c_limit,w_${w},q_auto,f_auto`
-      const transformedUrl = url.replace('/upload/', `/upload/${transforms}/`)
-      return `${transformedUrl} ${w}w`
-    })
+    .map(w => `${cfTransform(url, cfOptions('limit', w))} ${w}w`)
     .join(', ')
 }
 
@@ -296,63 +220,33 @@ function streamUid(url: string): string | null {
 }
 
 /**
- * Optimizes a video URL for Reels (9:16 vertical format).
- * - Cloudflare Stream: devuelve la URL tal cual (el player usa HLS adaptativo).
- * - Cloudinary: recorta a 9:16 + comprime (fallback mp4 para sin-HLS).
+ * URL de video para Reels. Cloudflare Stream entrega HLS adaptativo, así que
+ * se devuelve tal cual; cualquier otra URL también queda intacta.
  */
 export function optimizeReelVideo(videoUrl: string | undefined | null): string {
-  if (!videoUrl) return ''
-  if (isStreamVideo(videoUrl)) return videoUrl
-  if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
-  const transforms = 'c_fill,w_720,h_1280,g_center,q_auto:eco,f_auto'
-  return videoUrl.replace('/upload/', `/upload/${transforms}/`)
+  return videoUrl || ''
 }
 
 /**
- * Returns an HLS (.m3u8) Cloudinary URL for adaptive bitrate streaming.
- * The player downloads only the chunks it needs for the current playback
- * position, instead of the full mp4. Combined with `sp_hd` we cap renditions
- * at 720p, which matches our 9:16 crop and prevents wasted bandwidth on big
- * displays.
+ * URL HLS (.m3u8) para streaming adaptativo. Cloudflare Stream ya entrega el
+ * manifest HLS, así que se devuelve tal cual.
  *
- * Cost note: the FIRST request to this URL triggers a one-time HLS conversion
- * on Cloudinary's side (uses transformation credits). Subsequent requests are
- * served from cache. With ~120 videos in the platform, the one-time cost is
- * trivial (<1 credit total).
- *
- * Native HLS support: iOS Safari, macOS Safari (set src on <video> directly).
- * For Chrome/Edge/Firefox, use hls.js to attach the manifest to the video.
+ * HLS nativo: iOS Safari, macOS Safari (src directo en <video>).
+ * En Chrome/Edge/Firefox se usa hls.js para adjuntar el manifest al video.
  */
 export function optimizeReelVideoHLS(videoUrl: string | undefined | null): string {
-  if (!videoUrl) return ''
-  // Cloudflare Stream ya entrega el manifest HLS — devolverlo tal cual.
-  if (isStreamVideo(videoUrl)) return videoUrl
-  if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
-  // Crop first, then sp_full_hd generates renditions up to 1080p tall.
-  // For our 720x1280 source the max rendition is ~608x1080 (capped to 1080
-  // in the longer dimension while preserving aspect), which is sharper than
-  // sp_hd's max of ~405x720. Custom profiles tuned for portrait video would
-  // be ideal but require creating one in the Cloudinary dashboard; sp_full_hd
-  // is the best built-in profile for 9:16 reels.
-  const transforms = 'c_fill,w_720,h_1280,g_center/sp_full_hd'
-  const withTransforms = videoUrl.replace('/upload/', `/upload/${transforms}/`)
-  // Replace source extension with .m3u8 — Cloudinary uses the URL extension
-  // to decide the output container.
-  return withTransforms.replace(/\.(mp4|webm|mov|avi|m4v)$/i, '.m3u8')
+  return videoUrl || ''
 }
 
 /**
- * Generates a thumbnail from a Cloudinary video URL (first frame)
- * Uses Cloudinary transformations to extract a JPG from frame 0
+ * Miniatura de un video. Cloudflare Stream la genera en
+ * /thumbnails/thumbnail.jpg; otras URLs se devuelven intactas.
  */
 export function getVideoThumbnail(videoUrl: string | undefined | null): string {
   if (!videoUrl) return ''
-  // Cloudflare Stream genera la miniatura en /thumbnails/thumbnail.jpg
   if (isStreamVideo(videoUrl)) {
     const uid = streamUid(videoUrl)
     return uid ? `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg` : ''
   }
-  if (!videoUrl.includes('res.cloudinary.com')) return videoUrl
-  const transforms = 'c_fill,w_600,h_600,q_auto,f_jpg,so_0'
-  return videoUrl.replace('/upload/', `/upload/${transforms}/`).replace(/\.(mp4|webm|mov)$/i, '.jpg')
+  return videoUrl
 }
