@@ -224,7 +224,18 @@ platform :ios do
     group = app.get_beta_groups.find { |g| g.name == group_name }
     if group.nil?
       UI.message("Creando grupo interno '#{group_name}' con acceso a todos los builds…")
-      group = app.create_beta_group(group_name: group_name, is_internal_group: true, has_access_to_all_builds: true)
+      # Pedido propio: create_beta_group de fastlane tambien manda los campos de
+      # enlace publico, y Apple los rechaza en grupos internos
+      # ("Public link limit cannot be applied to internal group").
+      Spaceship::ConnectAPI.test_flight_request_client.post("v1/betaGroups", {
+        data: {
+          type: "betaGroups",
+          attributes: { name: group_name, isInternalGroup: true, hasAccessToAllBuilds: true },
+          relationships: { app: { data: { type: "apps", id: app.id } } }
+        }
+      })
+      group = app.get_beta_groups.find { |g| g.name == group_name }
+      UI.user_error!("No se pudo crear el grupo '#{group_name}'") if group.nil?
     end
 
     UI.message("Agregando #{email} al grupo '#{group.name}'…")
