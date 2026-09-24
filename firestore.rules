@@ -137,7 +137,7 @@ service cloud.firestore {
       // dominio propio solo lo escribe api/domain.ts, y 'pro' (trial) exige
       // que el marcador trials/{uid} NO exista antes de la escritura (no se
       // puede borrar: borrar y recrear la tienda ya no regala otro trial).
-      // El cliente nuevo lo crea en el mismo batch; las apps nativas viejas
+      // El cliente nuevo lo crea justo despues de la tienda; las apps nativas viejas
       // (bundle de HEAD, ya en las stores) no lo crean, así que NO se exige
       // existsAfter: el cron diario (api/send-email.ts) rellena el marcador de
       // toda tienda con trialEndsAt.

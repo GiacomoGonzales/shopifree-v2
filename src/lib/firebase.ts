@@ -132,9 +132,8 @@ export const storeService = {
       }
     }
 
-    // Trial Pro: uno por cuenta. firestore.rules exige crear trials/{uid} en el
-    // mismo batch que la tienda 'pro'; si la cuenta ya uso su trial (borro y
-    // recreo la tienda) arranca en free.
+    // Trial Pro: uno por cuenta. Si la cuenta ya uso su trial (existe
+    // trials/{uid}: borro y recreo la tienda) arranca en free.
     let storeData: Partial<Store> = data
     const isTrial = data.plan === 'pro' && !!data.trialEndsAt
     if (isTrial) {
@@ -159,9 +158,6 @@ export const storeService = {
         createdAt: new Date(),
         updatedAt: new Date()
       })
-      if (withTrialMarker) {
-        batch.set(doc(db, 'trials', storeId), { storeId, createdAt: new Date() })
-      }
       await batch.commit()
     } catch (err) {
       // Store write failed after we claimed the name — release the claim so
@@ -170,6 +166,12 @@ export const storeService = {
         await deleteDoc(doc(db, 'subdomains', data.subdomain)).catch(() => {})
       }
       throw err
+    }
+
+    // Marcador del trial aparte y sin frenar el alta: con reglas viejas (sin
+    // /trials) la escritura se rechaza y el cron diario lo rellena igual.
+    if (withTrialMarker) {
+      await setDoc(doc(db, 'trials', storeId), { storeId, createdAt: new Date() }).catch(() => {})
     }
 
     // Create default branch + warehouse
