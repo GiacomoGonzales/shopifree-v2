@@ -41,12 +41,18 @@ const PaymentSelector = forwardRef<PaymentSelectorRef, Props>(({
   // toggle on. We trust their save step to have validated against PayPal
   // already; the worst case (creds revoked since save) is a 401 on capture
   // which the success page surfaces as a paid=false error.
-  const hasPayPal = cardPaymentsAllowed && !!(store.payments?.paypal?.enabled && store.payments?.paypal?.clientId && store.payments?.paypal?.clientSecret)
+  // El secret ya no esta en el doc publico (payment_secrets): secretConfigured
+  // lo reemplaza; clientSecret queda solo para tiendas aun no migradas.
+  const hasPayPal = cardPaymentsAllowed && !!(
+    store.payments?.paypal?.enabled &&
+    store.payments?.paypal?.clientId &&
+    (store.payments?.paypal?.secretConfigured || store.payments?.paypal?.clientSecret)
+  )
   // Go Cuotas — only surfaces in Argentine stores with credentials configured.
   const hasGoCuotas = cardPaymentsAllowed && !!(
     store.payments?.gocuotas?.enabled &&
     store.payments?.gocuotas?.email &&
-    store.payments?.gocuotas?.password &&
+    (store.payments?.gocuotas?.secretConfigured || store.payments?.gocuotas?.password) &&
     store.location?.country?.toUpperCase() === 'AR'
   )
 

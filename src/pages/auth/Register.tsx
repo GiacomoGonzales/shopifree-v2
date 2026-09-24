@@ -287,18 +287,18 @@ export default function Register() {
       // Send welcome email (non-blocking, fire-and-forget). apiUrl() resolves
       // to https://shopifree.app on Capacitor native and vite dev, where a
       // relative /api/* path has no server behind it and failed silently.
-      fetch(apiUrl('/api/send-email'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'welcome',
-          email: userEmail,
-          storeName,
-          subdomain,
-          storeId,
-          lang: currentLang
-        })
-      }).catch(() => {})
+      // El endpoint exige ID token y toma nombre/subdominio/email del servidor.
+      firebaseUser.getIdToken()
+        .then(idToken => fetch(apiUrl('/api/send-email'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({
+            type: 'welcome',
+            storeId,
+            lang: currentLang
+          })
+        }))
+        .catch(() => {})
 
       // Refresh store data in context
       await refreshStore()

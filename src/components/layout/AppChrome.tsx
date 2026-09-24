@@ -18,6 +18,7 @@ import { Capacitor } from '@capacitor/core'
 import { useSidebar } from '../../contexts/SidebarContext'
 import ModeSwitcher from '../finance/ModeSwitcher'
 import type { Store } from '../../types'
+import { getEffectivePlan } from '../../lib/stripe'
 
 export interface NavItem {
   name: string
@@ -226,7 +227,8 @@ export default function AppChrome({
             <Link to={homeHref}>
               <img src="/newlogo.png" alt="Shopifree" className="h-[26px]" />
             </Link>
-            {store && <PlanBadge plan={store.plan} />}
+            {/* Plan efectivo: una prueba vencida ya se ve como free (tambien en la app nativa) */}
+            {store && <PlanBadge plan={getEffectivePlan(store)} />}
           </div>
           <div className="flex items-center gap-1.5">
             {store && (

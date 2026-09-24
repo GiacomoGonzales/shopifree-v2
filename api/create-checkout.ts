@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 
 // Initialize Firebase Admin (only once)
@@ -24,11 +25,84 @@ const PRICES: Record<string, string> = {
   business_yearly: process.env.STRIPE_PRICE_BUSINESS_YEARLY!
 }
 
+const DEFAULT_ORIGIN = 'https://shopifree.app'
+
+// Solo redirigimos (success/cancel/return) a origenes nuestros. El header
+// Origin lo controla el cliente: sin whitelist, cualquiera podia armar un
+// checkout/portal de Stripe que vuelve a un dominio arbitrario.
+function resolveOrigin(req: VercelRequest): string {
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : ''
+  if (!origin) return DEFAULT_ORIGIN
+  if (origin === 'https://shopifree.app' || origin === 'https://www.shopifree.app') return origin
+  // Dev local (vite) — solo http con puerto, NO el https://localhost de Capacitor Android
+  if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) return origin
+  // Previews de Vercel de este proyecto
+  if (/^https:\/\/shopifree-v2(-[a-z0-9-]+)?\.vercel\.app$/.test(origin)) return origin
+  return DEFAULT_ORIGIN
+}
+
+// La app redirige /dashboard/* a /es/dashboard y pierde path + query, asi que
+// las URLs de vuelta tienen que llevar el prefijo de idioma.
+function resolveLang(value: unknown): 'es' | 'en' {
+  return value === 'en' ? 'en' : 'es'
+}
+
+function planUrl(origin: string, lang: 'es' | 'en', query = ''): string {
+  return `${origin}/${lang}/dashboard/plan${query}`
+}
+
+// Verifica el Firebase ID token del header Authorization (Bearer).
+async function getCaller(req: VercelRequest): Promise<{ uid: string; email: string | null } | null> {
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+  if (!token) return null
+  try {
+    const decoded = await getAuth().verifyIdToken(token)
+    return { uid: decoded.uid, email: decoded.email || null }
+  } catch (err) {
+    console.error('[create-checkout] verifyIdToken failed:', err)
+    return null
+  }
+}
+
+// users/{uid}.stripeCustomerId lo puede escribir el propio usuario (reglas de
+// Firestore), asi que no alcanza para confiar en el: confirmamos contra Stripe
+// que el customer fue creado para este uid (metadata.userId).
+async function getVerifiedUserCustomerId(uid: string): Promise<string | null> {
+  const userDoc = await db.collection('users').doc(uid).get()
+  const customerId = userDoc.data()?.stripeCustomerId
+  if (!customerId || typeof customerId !== 'string') return null
+  try {
+    const customer = await stripe.customers.retrieve(customerId)
+    if ((customer as Stripe.DeletedCustomer).deleted) return null
+    if ((customer as Stripe.Customer).metadata?.userId !== uid) {
+      console.warn(`[create-checkout] users/${uid}.stripeCustomerId=${customerId} belongs to another user — ignoring`)
+      return null
+    }
+    return customerId
+  } catch (err) {
+    console.error(`[create-checkout] customers.retrieve(${customerId}) failed:`, err)
+    return null
+  }
+}
+
+// Customer de Stripe para el caller. Prioridad: el de la suscripcion de la
+// tienda (store.subscription lo escribe solo el servidor) y despues el del
+// usuario verificado contra Stripe.
+async function resolveCustomerId(
+  uid: string,
+  store: FirebaseFirestore.DocumentData | undefined
+): Promise<string | null> {
+  const storeCustomer = store?.subscription?.stripeCustomerId
+  if (typeof storeCustomer === 'string' && storeCustomer) return storeCustomer
+  return getVerifiedUserCustomerId(uid)
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
@@ -38,29 +112,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { action } = req.body
+  const { action } = req.body || {}
+
+  // Auth obligatoria para portal y checkout: el uid sale del token, nunca del body.
+  const caller = await getCaller(req)
+  if (!caller) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+  const userId = caller.uid
+
+  const origin = resolveOrigin(req)
+  const lang = resolveLang(req.body?.lang)
 
   // ── Portal session ──────────────────────────────────────────────
   if (action === 'portal') {
     try {
-      const { userId } = req.body
+      const { storeId } = req.body || {}
 
-      if (!userId) {
-        return res.status(400).json({ error: 'Missing userId' })
+      // storeId es opcional (clientes viejos solo mandaban userId). Si viene,
+      // la tienda tiene que ser del caller; si no, usamos la tienda del caller.
+      let store: FirebaseFirestore.DocumentData | undefined
+      if (storeId) {
+        const storeDoc = await db.collection('stores').doc(String(storeId)).get()
+        store = storeDoc.data()
+        if (!store || store.ownerId !== userId) {
+          return res.status(403).json({ error: 'Forbidden' })
+        }
+      } else {
+        const owned = await db.collection('stores').where('ownerId', '==', userId).limit(1).get()
+        store = owned.empty ? undefined : owned.docs[0].data()
       }
 
-      const userDoc = await db.collection('users').doc(userId).get()
-      const userData = userDoc.data()
-
-      if (!userData?.stripeCustomerId) {
+      const customerId = await resolveCustomerId(userId, store)
+      if (!customerId) {
         return res.status(400).json({ error: 'No subscription found' })
       }
 
-      const origin = req.headers.origin || 'https://shopifree.app'
-
       const session = await stripe.billingPortal.sessions.create({
-        customer: userData.stripeCustomerId,
-        return_url: `${origin}/dashboard/plan`
+        customer: customerId,
+        return_url: planUrl(origin, lang)
       })
 
       return res.status(200).json({ url: session.url })
@@ -72,10 +162,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── Checkout session (default) ──────────────────────────────────
   try {
-    const { storeId, plan, billing, userId, email, applyDiscount } = req.body
+    const { storeId, plan, billing, applyDiscount } = req.body || {}
+    const email: string | null = caller.email || (typeof req.body?.email === 'string' ? req.body.email : null)
 
-    if (!storeId || !plan || !billing || !userId || !email) {
+    if (!storeId || !plan || !billing || !email) {
       return res.status(400).json({ error: 'Missing required parameters' })
+    }
+
+    // La tienda tiene que ser del caller: sin esto se podia apuntar la
+    // suscripcion (metadata.storeId) a una tienda ajena.
+    const storeDoc = await db.collection('stores').doc(String(storeId)).get()
+    const store = storeDoc.data()
+    if (!store || store.ownerId !== userId) {
+      return res.status(403).json({ error: 'Forbidden' })
     }
 
     // Get price ID
@@ -86,10 +185,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid plan or billing cycle' })
     }
 
-    // Check if user already has a Stripe customer ID
-    const userDoc = await db.collection('users').doc(userId).get()
-    const userData = userDoc.data()
-    let customerId = userData?.stripeCustomerId
+    // Customer de Stripe ya existente (verificado) para este usuario/tienda
+    let customerId = await resolveCustomerId(userId, store)
 
     // Create customer if doesn't exist
     if (!customerId) {
@@ -103,9 +200,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       customerId = customer.id
 
       // Save customer ID to user document
-      await db.collection('users').doc(userId).update({
+      await db.collection('users').doc(userId).set({
         stripeCustomerId: customerId
-      })
+      }, { merge: true })
     }
 
     // We do NOT cancel existing subs here. Sibling cleanup happens in the
@@ -124,9 +221,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // → trial killer): if any sub arrives with trial_end in the future,
     // we immediately set trial_end='now'. That catches Price-level default
     // trials, Smart Retries, manual Dashboard edits, etc.
-
-    // Get origin for redirect URLs
-    const origin = req.headers.origin || 'https://shopifree.app'
 
     // ── Duplicate-sub guard (Capa 3) ───────────────────────────────
     // If the customer already has a LIVE subscription for this store
@@ -156,13 +250,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log(`[create-checkout] Customer ${customerId} already has live sub ${liveSubForStore.id} (status=${liveSubForStore.status}) for store ${storeId} — redirecting to Billing Portal instead of creating duplicate`)
       const portal = await stripe.billingPortal.sessions.create({
         customer: customerId,
-        return_url: `${origin}/dashboard/plan`
+        return_url: planUrl(origin, lang)
       })
       return res.status(200).json({ url: portal.url, redirectedToPortal: true })
     }
 
     // Handle 50% first month discount (only for monthly billing)
-    const useDiscount = applyDiscount && billing === 'monthly'
+    //
+    // La elegibilidad se calcula en el servidor (antes se confiaba en
+    // body.applyDiscount y cualquiera se llevaba 50% en cada alta). Mismo
+    // criterio que Plan.tsx qualifiesForDiscount: tuvo el trial de alta y le
+    // quedan <= 5 dias o ya vencio; ademas, nunca tuvo una suscripcion real
+    // (ni en la tienda ni en Stripe) ni facturas pagas. Un primer pago fallido
+    // (incomplete/incomplete_expired) no consume el descuento.
+    const NOT_REAL_SUB = ['incomplete', 'incomplete_expired']
+    const trialEndRaw = store.trialEndsAt
+    const trialEnd: Date | null = trialEndRaw
+      ? (typeof trialEndRaw.toDate === 'function' ? trialEndRaw.toDate() : new Date(trialEndRaw))
+      : null
+    const inDiscountWindow = !!trialEnd && !isNaN(trialEnd.getTime())
+      && Date.now() >= trialEnd.getTime() - 5 * 24 * 60 * 60 * 1000
+    const hadStoreSub = !!store.subscription?.stripeSubscriptionId
+      && !NOT_REAL_SUB.includes(String(store.subscription?.status || ''))
+    const hadStripeSub = existingSubs.data.some(s =>
+      s.metadata.storeId === storeId && !NOT_REAL_SUB.includes(s.status)
+    )
+    let eligibleForDiscount = inDiscountWindow && !hadStoreSub && !hadStripeSub
+    if (eligibleForDiscount && applyDiscount && billing === 'monthly') {
+      const paid = await stripe.invoices.list({ customer: customerId, status: 'paid', limit: 1 })
+      if (paid.data.length > 0) eligibleForDiscount = false
+    }
+    if (applyDiscount && !eligibleForDiscount) {
+      console.warn(`[create-checkout] applyDiscount ignored for store ${storeId}: not eligible`)
+    }
+    const useDiscount = !!applyDiscount && eligibleForDiscount && billing === 'monthly'
     let couponId: string | undefined
 
     if (useDiscount) {
@@ -193,8 +314,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       ],
       mode: 'subscription',
-      success_url: `${origin}/dashboard/plan?success=true`,
-      cancel_url: `${origin}/dashboard/plan?canceled=true`,
+      success_url: planUrl(origin, lang, '?success=true'),
+      cancel_url: planUrl(origin, lang, '?canceled=true'),
       metadata: {
         storeId,
         userId,

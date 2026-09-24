@@ -9,7 +9,7 @@ import { apiUrl } from '../../utils/apiBase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
-import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
+import { PLAN_FEATURES, getEffectivePlan, type PlanType } from '../../lib/stripe'
 import type { User } from '../../types'
 import { uploadImage as uploadToStorage } from '../../utils/uploadImage'
 
@@ -56,7 +56,8 @@ export default function Account() {
   const isGoogleUser = firebaseUser?.providerData?.some(p => p.providerId === 'google.com') && !firebaseUser?.providerData?.some(p => p.providerId === 'password')
 
   // Subscription summary (displayed on the compact "My Plan" card that links to /finance/subscription)
-  const currentPlan = (store?.plan || 'free') as PlanType
+  // Plan efectivo: una prueba vencida se muestra como Gratis aunque store.plan no se haya actualizado
+  const currentPlan: PlanType = store ? getEffectivePlan(store) : 'free'
   const planInfo = PLAN_FEATURES[currentPlan]
   const subscription = store?.subscription
   const hasActiveSubscription = subscription?.status === 'active'
@@ -484,7 +485,7 @@ export default function Account() {
               </div>
               {!Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-1 text-sm font-medium text-[#2d6cb5] group-hover:text-[#1e3a5f] flex-shrink-0 whitespace-nowrap">
-                  {currentPlan === 'free' ? 'Suscribirme' : t('subscription.changePlan')}
+                  {currentPlan === 'free' ? t('plan.buttons.subscribe') : t('subscription.changePlan')}
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                   </svg>

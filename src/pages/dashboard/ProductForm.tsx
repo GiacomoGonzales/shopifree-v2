@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import { productService, categoryService, db } from '../../lib/firebase'
 import { collection, query, orderBy, getDocs } from 'firebase/firestore'
 import type { Warehouse } from '../../types'
@@ -165,6 +166,8 @@ export default function ProductForm() {
   if (fieldErrors.name) validationErrors.push(t('productForm.basic.name'))
   if (fieldErrors.price) validationErrors.push(t('productForm.basic.price'))
   const isNative = Capacitor.isNativePlatform()
+  // En la app nativa no hay CTAs de compra/upgrade (App Store 3.1.1).
+  const showUpgrade = useShowUpgradeUI()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -444,7 +447,7 @@ export default function ProductForm() {
       const limitCheck = canAddProduct(effectivePlan, productCount)
       if (!limitCheck.allowed) {
         showToast(limitCheck.message || t('productForm.limitReached'), 'error')
-        navigate(localePath('/dashboard/plan'))
+        if (showUpgrade) navigate(localePath('/dashboard/plan'))
         return
       }
     }
@@ -857,17 +860,17 @@ export default function ProductForm() {
                   </div>
                 </div>
               ) : (
-                maxImages === 1 && !Capacitor.isNativePlatform() ? (
+                maxImages === 1 && showUpgrade ? (
                   <div className={NOTE} style={NOTE_BORDER}>
                     <p className="text-[0.82rem] font-semibold">{t('productForm.photos.wantMore')}</p>
                     <p className="text-[0.76rem] font-normal text-[#8898AA] mt-0.5">{t('productForm.photos.proImages')}</p>
-                    <a
-                      href={localePath('/dashboard/plan')}
+                    <Link
+                      to={localePath('/dashboard/plan')}
                       className="inline-block mt-2.5 px-3 py-1.5 rounded-lg text-white text-[0.76rem] font-semibold transition-opacity hover:opacity-90"
                       style={{ background: '#1e3a5f' }}
                     >
                       {t('productForm.photos.upgradeForMore')}
-                    </a>
+                    </Link>
                   </div>
                 ) : (
                   <div className="text-center py-4 rounded-xl bg-[#F6F9FC]" style={{ border: '1px solid #E6EBF1' }}>
@@ -966,13 +969,15 @@ export default function ProductForm() {
                 <div className={NOTE} style={NOTE_BORDER}>
                   <p className="text-[0.82rem] font-semibold">{t('productForm.video.proTitle')}</p>
                   <p className="text-[0.76rem] font-normal text-[#8898AA] mt-0.5">{t('productForm.video.proDescription')}</p>
-                  <a
-                    href={localePath('/dashboard/plan')}
-                    className="inline-block mt-2.5 px-3 py-1.5 rounded-lg text-white text-[0.76rem] font-semibold transition-opacity hover:opacity-90"
-                    style={{ background: '#1e3a5f' }}
-                  >
-                    {t('productForm.video.upgradeToPro')}
-                  </a>
+                  {showUpgrade && (
+                    <Link
+                      to={localePath('/dashboard/plan')}
+                      className="inline-block mt-2.5 px-3 py-1.5 rounded-lg text-white text-[0.76rem] font-semibold transition-opacity hover:opacity-90"
+                      style={{ background: '#1e3a5f' }}
+                    >
+                      {t('productForm.video.upgradeToPro')}
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

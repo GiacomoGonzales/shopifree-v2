@@ -941,7 +941,8 @@
       "free": "Free",
       "upgrade": "Subscribe",
       "processing": "Processing...",
-      "downgrade": "Switch to Free"
+      "downgrade": "Switch to Free",
+      "subscribe": "Subscribe"
     },
     "badge": {
       "popular": "Popular",
@@ -987,7 +988,60 @@
       "paymentError": "Error processing payment. Please try again.",
       "noSubscription": "No active subscription found",
       "portalError": "Error opening subscription portal"
-    }
+    },
+    "renewsOn": "Renews on {{date}}",
+    "expiresOn": "Expires on {{date}}",
+    "trialSuffix": "Trial",
+    "currency": "USD",
+    "comingSoon": "Coming soon",
+    "trialChargeNotice": "If you subscribe now, you'll be charged today and your free trial ends right away. If you don't subscribe, your store moves to the Free plan when the trial ends, at no charge.",
+    "planName": {
+      "free": "Free",
+      "pro": "Pro",
+      "business": "Business"
+    },
+    "featureList": {
+      "free": [
+        "Sell up to {{products}} products",
+        "Receive orders via WhatsApp",
+        "Your own store link",
+        "QR code to share",
+        "{{images}} photo per product",
+        "Up to {{categories}} categories"
+      ],
+      "pro": [
+        "Sell up to {{products}} products",
+        "Accept card payments online",
+        "Discount coupons",
+        "Your own .com domain",
+        "{{images}} photos per product",
+        "Get to know your customers"
+      ],
+      "business": [
+        "Everything in Pro",
+        "Unlimited products",
+        "Your brand, without Shopifree",
+        "Android and iPhone app for your store",
+        "Priority support"
+      ]
+    },
+    "comingSoonList": {
+      "free": [],
+      "pro": [],
+      "business": [
+        "Dropshipping (CJ, Printful...)"
+      ]
+    },
+    "freeCard": {
+      "forever": "forever",
+      "afterTrial": "When your trial ends, your store automatically moves to this plan, at no charge.",
+      "current": "This is your current plan. You can upgrade anytime."
+    },
+    "activation": {
+      "pending": "Payment received. Activating your plan…",
+      "slow": "We received your payment. Activation can take a few minutes: reload the page in a moment. If it doesn't activate, email us at admin@shopifree.app."
+    },
+    "nativeInfo": "Your subscription is managed on the web."
   },
   "payments": {
     "title": "Payments",
@@ -1486,7 +1540,14 @@
     "subscriptionEnded": "Your subscription ended. Renew your plan to get the Pro features back.",
     "upgrade": "Upgrade plan",
     "renew": "Renew",
-    "updatePayment": "Update payment"
+    "updatePayment": "Update payment",
+    "native": {
+      "trialExpiring": "Your free trial ends in {{days}} day(s).",
+      "cancelAtPeriodEnd": "Your plan cancels on {{date}}.",
+      "pastDue": "There's a problem with your subscription payment. Some features may stop being available.",
+      "trialExpired": "Your free trial has ended. Your store is on the Free plan.",
+      "subscriptionEnded": "Your subscription ended. Your store is on the Free plan."
+    }
   },
   "setupAlerts": {
     "noWhatsapp": "Your WhatsApp number isn't configured yet. Customers need it to send you orders.",

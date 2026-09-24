@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
+import { getEffectivePlan } from '../../lib/stripe'
 import { useLanguage } from '../../hooks/useLanguage'
 
 const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
@@ -145,7 +146,7 @@ export default function MoreMenu() {
       )}
 
       {/* Plan badge - hidden on native iOS app */}
-      {!Capacitor.isNativePlatform() && (store?.plan === 'free' || !store?.plan) && (
+      {!Capacitor.isNativePlatform() && (!store?.plan || getEffectivePlan(store) === 'free') && (
         <Link
           to={localePath('/dashboard/plan')}
           className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#F0F9FF] border border-[#38bdf8]/20 active:opacity-80 transition-all"

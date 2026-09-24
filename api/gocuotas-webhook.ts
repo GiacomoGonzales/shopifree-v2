@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
-import { decrementOrderStockAdmin } from './_shared/order-stock.js'
+import { timingSafeEqual } from 'crypto'
+import { getCheckout, amountsMatch, markOrderPaid, markOrderFailed, type OrderDoc } from './_shared/orderTotal.js'
 
 let db: Firestore
 
@@ -40,6 +41,20 @@ function pickField(payload: Record<string, unknown>, candidates: string[]): stri
   return null
 }
 
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a)
+  const bb = Buffer.from(b)
+  return ab.length === bb.length && timingSafeEqual(ab, bb)
+}
+
+/**
+ * Seguridad: Go Cuotas no firma los webhooks ni documenta una API para
+ * re-consultar el estado del checkout, así que el body no alcanza. La URL del
+ * webhook la arma create-gocuotas-checkout con ?orderId=…&token=… donde el
+ * token es secreto por pedido y vive en stores/{storeId}/payment_checkouts
+ * (server-only). Sin token válido el evento se ignora. Además se compara
+ * amount_in_cents con el monto que calculó el servidor.
+ */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Webhooks are server-to-server, but allow OPTIONS for any pre-flight tooling.
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -50,12 +65,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    // storeId comes via query string (we baked it into the webhook URL when creating the checkout)
-    const storeId = (req.query.storeId as string) || ''
+    // storeId/orderId/token vienen en el query string (los pusimos en la URL del webhook al crear el checkout)
+    const storeId = typeof req.query.storeId === 'string' ? req.query.storeId : ''
+    const queryOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : ''
+    const token = typeof req.query.token === 'string' ? req.query.token : ''
     const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>
 
     // Always log — we don't have a published spec, so capturing real payloads is essential during onboarding.
-    console.log('[gocuotas-webhook] received:', { storeId, body })
+    console.log('[gocuotas-webhook] received:', { storeId, orderId: queryOrderId, body })
 
     if (!storeId) {
       return res.status(400).json({ error: 'Missing storeId in query string' })
@@ -64,56 +81,68 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Go Cuotas sends a flat payload like:
     // { order_reference_id, status, order_id, number_of_installments, amount_in_cents }
     // (alternate field names are accepted for safety)
-    const orderId = pickField(body, ['order_reference_id', 'orderReferenceId', 'reference'])
-    if (!orderId) {
+    const bodyOrderId = pickField(body, ['order_reference_id', 'orderReferenceId', 'reference'])
+    const orderId = queryOrderId || bodyOrderId
+    if (!orderId || orderId.includes('/')) {
       console.error('[gocuotas-webhook] no order_reference_id in payload:', body)
       return res.status(200).json({ received: true, warning: 'no order reference' })
+    }
+    if (bodyOrderId && bodyOrderId !== orderId) {
+      console.warn('[gocuotas-webhook] order reference mismatch', { queryOrderId, bodyOrderId })
+      return res.status(200).json({ received: true, warning: 'order mismatch' })
+    }
+
+    const firestore = getDb()
+
+    // Token secreto por pedido (webhooks sin token = checkouts viejos o falsos → se ignoran)
+    const checkout = await getCheckout(firestore, storeId, orderId)
+    if (!checkout?.gocuotasToken || !token || !safeEqual(token, checkout.gocuotasToken)) {
+      console.warn('[gocuotas-webhook] invalid or missing token — ignoring', { storeId, orderId })
+      return res.status(200).json({ received: true, warning: 'unauthorized' })
     }
 
     const status = (pickField(body, ['status', 'state', 'payment_status', 'order_status']) || '').toLowerCase()
     const goCuotasOrderId = pickField(body, ['order_id', 'id', 'gocuotas_order_id'])
     const installments = pickField(body, ['number_of_installments', 'installments'])
+    const amountInCents = pickField(body, ['amount_in_cents'])
 
-    const firestore = getDb()
     const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
     const orderDoc = await orderRef.get()
     if (!orderDoc.exists) {
       console.error('[gocuotas-webhook] order not found:', { storeId, orderId })
       return res.status(200).json({ received: true, warning: 'order not found' })
     }
-
-    const updateData: Record<string, unknown> = {
-      paymentMethod: 'gocuotas',
-      updatedAt: new Date()
-    }
-    if (goCuotasOrderId) updateData.paymentId = goCuotasOrderId
-    if (installments) updateData.paymentNote = `Go Cuotas - ${installments} cuotas`
+    const order = orderDoc.data() as OrderDoc
 
     // "approved" is the only success status confirmed by the Go Cuotas docs.
     // Other Rails-style verbs are accepted defensively.
-    let confirmed = false
     if (/^(approved|paid|delivered|succeeded|confirmed|completed)$/.test(status)) {
-      updateData.paymentStatus = 'paid'
-      updateData.status = 'confirmed'
-      updateData.paidAt = new Date()
-      confirmed = true
-    } else if (/^(rejected|failed|cancell?ed|discarded|denied)$/.test(status)) {
-      updateData.paymentStatus = 'failed'
-    }
-
-    await orderRef.update(updateData)
-
-    // Apply stock server-side on confirmation (storefront can't write products).
-    // Idempotent via stockDecremented, so Go Cuotas retries don't double-count.
-    if (confirmed) {
-      try {
-        const did = await decrementOrderStockAdmin(firestore, storeId, orderId)
-        if (did) console.log('[gocuotas-webhook] stock decremented for paid order:', orderId)
-      } catch (err) {
-        console.error('[gocuotas-webhook] stock decrement failed:', err)
+      // Monto: si Go Cuotas lo manda, tiene que coincidir con lo que calculó el servidor
+      if (amountInCents && typeof checkout.amount === 'number'
+        && !amountsMatch(Number(amountInCents) / 100, checkout.amount, checkout.currency || 'ARS')) {
+        console.error('[gocuotas-webhook] amount mismatch', { orderId, amountInCents, expected: checkout.amount })
+        if (order.paymentStatus !== 'paid') {
+          await orderRef.update({ paymentReview: 'gocuotas:amount', updatedAt: new Date() })
+        }
+        return res.status(200).json({ received: true, warning: 'amount mismatch' })
       }
+      // pending|failed → paid; stock y cupón una sola vez (idempotente con reintentos)
+      const r = await markOrderPaid(firestore, storeId, orderId, {
+        paymentMethod: 'gocuotas',
+        ...(goCuotasOrderId && { paymentId: goCuotasOrderId }),
+        ...(installments && { paymentNote: `Go Cuotas - ${installments} cuotas` }),
+      })
+      console.log('[gocuotas-webhook] order paid:', { orderId, status, result: r })
+    } else if (/^(rejected|failed|cancell?ed|discarded|denied)$/.test(status)) {
+      // Solo pending → failed; nunca pisa un pedido pagado
+      const changed = await markOrderFailed(firestore, storeId, orderId, {
+        paymentMethod: 'gocuotas',
+        ...(goCuotasOrderId && { paymentId: goCuotasOrderId }),
+      })
+      console.log('[gocuotas-webhook] order failed:', { orderId, status, changed })
+    } else {
+      console.log('[gocuotas-webhook] status without change:', { orderId, status })
     }
-    console.log('[gocuotas-webhook] order updated:', { orderId, status, updateData })
 
     return res.status(200).json({ received: true })
   } catch (error) {

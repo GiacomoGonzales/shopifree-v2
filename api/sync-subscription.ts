@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { getFirestore, Firestore, FieldValue } from 'firebase-admin/firestore'
+import { getPlanFromStripePrice, subscriptionPlanAction, hasActiveManualRestoration, type StoreCompData } from './_shared/plan.js'
+import { isAdminToken } from './_shared/admin.js'
 
 let db: Firestore
 
@@ -26,17 +28,6 @@ function getStripe(): Stripe {
   return new Stripe(process.env.STRIPE_SECRET_KEY!)
 }
 
-function getPlanFromPrice(priceId: string): string {
-  const prices: Record<string, string> = {
-    [process.env.STRIPE_PRICE_PRO_MONTHLY || '']: 'pro',
-    [process.env.STRIPE_PRICE_PRO_YEARLY || '']: 'pro',
-    [process.env.STRIPE_PRICE_BUSINESS_MONTHLY || '']: 'business',
-    [process.env.STRIPE_PRICE_BUSINESS_YEARLY || '']: 'business'
-  }
-  return prices[priceId] || 'pro'
-}
-
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   const authHeader = req.headers.authorization
@@ -52,7 +43,7 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
     const { getAuth } = await import('firebase-admin/auth')
     const decoded = await getAuth().verifyIdToken(token)
     console.log('[verifyAdmin] decoded email:', decoded.email)
-    return ADMIN_EMAILS.includes(decoded.email || '')
+    return isAdminToken(decoded)
   } catch (err) {
     console.error('[verifyAdmin] Error:', err)
     return false
@@ -60,7 +51,7 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
 }
 
 // Resolve the authenticated caller's uid + email from the Bearer token.
-async function getCaller(req: VercelRequest): Promise<{ uid: string; email: string | null } | null> {
+async function getCaller(req: VercelRequest): Promise<{ uid: string; email: string | null; isAdmin: boolean } | null> {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return null
   try {
@@ -68,7 +59,7 @@ async function getCaller(req: VercelRequest): Promise<{ uid: string; email: stri
     getDb()
     const { getAuth } = await import('firebase-admin/auth')
     const decoded = await getAuth().verifyIdToken(token)
-    return { uid: decoded.uid, email: decoded.email || null }
+    return { uid: decoded.uid, email: decoded.email || null, isAdmin: isAdminToken(decoded) }
   } catch (err) {
     console.error('[getCaller] Error:', err)
     return null
@@ -89,13 +80,13 @@ async function handleCancel(req: VercelRequest, res: VercelResponse) {
   if (!caller) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
-  const isOwner = caller.uid === storeId
-  const isAdmin = ADMIN_EMAILS.includes(caller.email || '')
+  const storeDoc = await getDb().collection('stores').doc(storeId).get()
+  const isOwner = caller.uid === storeId || (storeDoc.exists && storeDoc.data()?.ownerId === caller.uid)
+  const isAdmin = caller.isAdmin
   if (!isOwner && !isAdmin) {
     return res.status(403).json({ error: 'Forbidden' })
   }
 
-  const storeDoc = await getDb().collection('stores').doc(storeId).get()
   if (!storeDoc.exists) {
     return res.status(404).json({ error: 'Store not found' })
   }
@@ -120,7 +111,15 @@ async function handleCancel(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({ success: true, canceled: true, subscriptionId })
 }
 
-// POST /api/sync-subscription { action: 'sync', storeId } - Sync subscription from Stripe
+// CRON_SECRET (Bearer) — para llamadas server-to-server / crons. Fail closed
+// si la env var no esta configurada.
+function isCronCall(req: VercelRequest): boolean {
+  const cronSecret = process.env.CRON_SECRET
+  return !!cronSecret && req.headers.authorization === `Bearer ${cronSecret}`
+}
+
+// POST /api/sync-subscription { action: 'sync', storeId } - Sync subscription from Stripe.
+// Autorizado para el dueno de la tienda, un admin o CRON_SECRET.
 async function handleSync(req: VercelRequest, res: VercelResponse) {
   const { storeId } = req.body
 
@@ -128,14 +127,33 @@ async function handleSync(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'storeId is required' })
   }
 
+  let authorized = isCronCall(req)
+  let caller: { uid: string; email: string | null; isAdmin: boolean } | null = null
+  if (!authorized) {
+    caller = await getCaller(req)
+    if (!caller) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+  }
+
   // Get store from Firebase
-  const storeDoc = await getDb().collection('stores').doc(storeId).get()
+  const storeRef = getDb().collection('stores').doc(storeId)
+  const storeDoc = await storeRef.get()
+
+  if (caller) {
+    const isOwner = storeDoc.exists && storeDoc.data()?.ownerId === caller.uid
+    const isAdmin = caller.isAdmin
+    authorized = isOwner || isAdmin
+  }
+  if (!authorized) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
 
   if (!storeDoc.exists) {
     return res.status(404).json({ error: 'Store not found' })
   }
 
-  const store = storeDoc.data()
+  const store = storeDoc.data() as StoreCompData & FirebaseFirestore.DocumentData
   const subscriptionId = store?.subscription?.stripeSubscriptionId
 
   if (!subscriptionId) {
@@ -145,12 +163,8 @@ async function handleSync(req: VercelRequest, res: VercelResponse) {
   // Fetch subscription from Stripe
   const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
-  const priceId = subscription.items.data[0]?.price.id
-
-  const isActive = subscription.status === 'active' || subscription.status === 'trialing'
-  const plan = isActive ? getPlanFromPrice(priceId) : 'free'
-
   const item = subscription.items.data[0]
+  const priceId = item?.price.id
   const periodEnd = item?.current_period_end
     ? new Date(Number(item.current_period_end) * 1000)
     : null
@@ -162,10 +176,7 @@ async function handleSync(req: VercelRequest, res: VercelResponse) {
     ? new Date(Number(subscription.trial_end) * 1000)
     : null
 
-  // Update store in Firebase
-  await getDb().collection('stores').doc(storeId).set({
-    plan,
-    planExpiresAt: periodEnd,
+  const update: Record<string, unknown> = {
     subscription: {
       stripeCustomerId: subscription.customer as string,
       stripeSubscriptionId: subscription.id,
@@ -177,7 +188,39 @@ async function handleSync(req: VercelRequest, res: VercelResponse) {
       ...(trialEnd && { trialEnd })
     },
     updatedAt: new Date()
-  }, { merge: true })
+  }
+
+  // Misma politica que el webhook (api/_shared/plan.ts):
+  //  - active/trialing → plan segun el price (price desconocido: no se toca el plan);
+  //  - past_due → se mantiene el plan (Stripe sigue reintentando);
+  //  - incomplete/incomplete_expired → primer pago nunca cobrado: se saca de
+  //    store.subscription y NO se toca el plan (trial/comp intactos);
+  //  - unpaid/canceled/paused → free, salvo manualRestoration vigente.
+  const action = subscriptionPlanAction(subscription.status)
+  if (subscription.status === 'incomplete' || subscription.status === 'incomplete_expired') {
+    update.subscription = FieldValue.delete()
+    update.lastSubscriptionAttempt = {
+      stripeSubscriptionId: subscription.id,
+      status: subscription.status,
+      updatedAt: new Date(),
+    }
+  } else if (action === 'grant') {
+    const paidPlan = getPlanFromStripePrice(priceId)
+    if (paidPlan) {
+      update.plan = paidPlan
+      update.planExpiresAt = periodEnd
+    } else {
+      console.error(`[sync-subscription] Unknown price ${priceId} on sub ${subscription.id} (store ${storeId}) — plan not changed`)
+    }
+  } else if (action === 'downgrade' && !hasActiveManualRestoration(store)) {
+    update.plan = 'free'
+    update.planExpiresAt = null
+  }
+
+  // Update store in Firebase
+  await storeRef.set(update, { merge: true })
+
+  const plan = (update.plan as string | undefined) ?? store.plan ?? 'free'
 
   return res.status(200).json({
     success: true,

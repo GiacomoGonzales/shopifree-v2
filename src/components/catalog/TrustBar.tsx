@@ -3,6 +3,7 @@ import { useTheme } from './ThemeContext'
 import { EditableText } from './LiveEdit'
 import { getTrustBadgeText } from '../../themes/shared/trustBadgeDefaults'
 import type { TrustBadgeId } from '../../themes/shared/trustBadgeDefaults'
+import { getEffectivePlan } from '../../lib/stripe'
 
 const badgeIcons: Record<TrustBadgeId, JSX.Element> = {
   shipping: (
@@ -50,7 +51,7 @@ const badgeIcons: Record<TrustBadgeId, JSX.Element> = {
 export default function TrustBar() {
   const { store, theme, language } = useTheme()
 
-  if (!store.trustBadges?.enabled || store.plan === 'free') return null
+  if (!store.trustBadges?.enabled || getEffectivePlan(store) === 'free') return null
 
   // El indice es el de la lista completa: con el el editor sabe que insignia se edito.
   const activeBadges = store.trustBadges.badges.map((b, index) => ({ ...b, index })).filter(b => b.enabled)

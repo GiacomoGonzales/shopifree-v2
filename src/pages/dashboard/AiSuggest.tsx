@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { auth } from '../../lib/firebase'
 import { apiUrl } from '../../utils/apiBase'
 
@@ -16,7 +17,8 @@ interface Props {
   productId?: string
   /** Plan Business activo. */
   enabled: boolean
-  upgradeHref: string
+  /** Ruta localizada al plan; sin ella (app nativa) no se muestra el link de upgrade. */
+  upgradeHref?: string
   onPick: (text: string) => void
 }
 
@@ -29,8 +31,10 @@ export default function AiSuggest({ storeId, field, productId, enabled, upgradeH
   if (!enabled) {
     return (
       <p className="mt-1 text-[0.7rem] text-[#8898AA]">
-        ✨ {t('liveEditor.ai.businessOnly')}{' '}
-        <a href={upgradeHref} className="font-semibold text-[#2d6cb5] hover:underline">{t('liveEditor.upgrade')}</a>
+        ✨ {t('liveEditor.ai.businessOnly')}
+        {upgradeHref && (
+          <>{' '}<Link to={upgradeHref} className="font-semibold text-[#2d6cb5] hover:underline">{t('liveEditor.upgrade')}</Link></>
+        )}
       </p>
     )
   }

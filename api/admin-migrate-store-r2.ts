@@ -3,6 +3,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { isAdminToken } from './_shared/admin.js'
 
 /**
  * Migración Cloudinary → Cloudflare R2, UNA tienda a la vez (admin).
@@ -18,12 +19,11 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
  * - `limit` corta el trabajo por llamada para no exceder el timeout; la UI
  *   vuelve a llamar hasta que `remaining` sea 0.
  *
- * Auth: Firebase ID token de un admin (ADMIN_EMAILS).
+ * Auth: Firebase ID token de un admin (ADMIN_EMAILS con email verificado).
  * Env: FIREBASE_*, R2_ACCOUNT_ID, R2_BUCKET, R2_PUBLIC_URL,
  *      R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
  */
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 // Campos de imagen por documento (no incluye `video`: eso va a Stream aparte).
 const STORE_SCALAR_FIELDS = ['logo', 'logoLandscape', 'heroImage', 'heroImageMobile']
@@ -130,14 +130,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Auth admin
     const token = (req.headers.authorization || '').replace('Bearer ', '')
     if (!token) return res.status(401).json({ error: 'No autenticado' })
-    let email = ''
+    let isAdmin = false
     try {
       const decoded = await getAuth().verifyIdToken(token)
-      email = decoded.email || ''
+      isAdmin = isAdminToken(decoded)
     } catch {
       return res.status(401).json({ error: 'Token inválido' })
     }
-    if (!ADMIN_EMAILS.includes(email)) return res.status(403).json({ error: 'Solo admin' })
+    if (!isAdmin) return res.status(403).json({ error: 'Solo admin' })
 
     const { storeId, dryRun = false, limit = 60 } = (req.body || {}) as {
       storeId?: string; dryRun?: boolean; limit?: number

@@ -4,7 +4,7 @@ import {
   getDocs,
   type Unsubscribe
 } from 'firebase/firestore'
-import { db } from './firebase'
+import { db, auth } from './firebase'
 import { apiUrl } from '../utils/apiBase'
 
 export interface ChatMessage {
@@ -258,9 +258,12 @@ export const chatService = {
 
   // Request AI response for a user message
   async requestAIResponse(chatId: string, storeId: string, userMessage: string, userId: string): Promise<{ escalated: boolean; skipped?: boolean }> {
+    // El endpoint toma el uid del ID token (userId queda solo por compatibilidad)
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) return { escalated: false }
     const res = await fetch(apiUrl('/api/ai-chat'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
       body: JSON.stringify({ chatId, storeId, userMessage, userId }),
     })
     if (!res.ok) {

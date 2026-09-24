@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { apiUrl } from '../../utils/apiBase'
+import { getEffectivePlan } from '../../lib/stripe'
 
 interface RecentOrder {
   firstName: string
@@ -29,16 +30,19 @@ export default function SocialProofToast() {
   const [dismissed, setDismissed] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Plan efectivo (trial vencido = free), no el guardado
+  const isFreePlan = getEffectivePlan(store) === 'free'
+
   // Fetch orders once
   useEffect(() => {
-    if (store.plan === 'free' || !store.socialProof?.enabled) return
+    if (isFreePlan || !store.socialProof?.enabled) return
     fetch(apiUrl(`/api/push?storeId=${store.id}`))
       .then(res => res.json())
       .then(data => {
         if (data.orders?.length) setOrders(data.orders)
       })
       .catch(() => {})
-  }, [store.id, store.plan, store.socialProof?.enabled])
+  }, [store.id, isFreePlan, store.socialProof?.enabled])
 
   // Cycle toasts
   useEffect(() => {
@@ -67,7 +71,7 @@ export default function SocialProofToast() {
     }
   }, [orders.length, dismissed])
 
-  if (store.plan === 'free' || !store.socialProof?.enabled || !orders.length || !visible) {
+  if (isFreePlan || !store.socialProof?.enabled || !orders.length || !visible) {
     return null
   }
 

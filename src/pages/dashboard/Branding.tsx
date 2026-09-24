@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from '../../hooks/useLanguage'
 import { Capacitor } from '@capacitor/core'
 import { db } from '../../lib/firebase'
+import { getEffectivePlan } from '../../lib/stripe'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ui/Toast'
 import { themes } from '../../themes'
@@ -102,6 +103,9 @@ export default function Branding() {
   const { localePath } = useLanguage()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
+  // Plan efectivo (no store.plan guardado): una prueba vencida se ve como Gratis
+  // aunque el cron todavia no haya actualizado la tienda.
+  const isFreePlan = !!store && getEffectivePlan(store) === 'free'
 
   // Logo (square/icon — used for favicon, footer circle, app icon, social)
   const [logo, setLogo] = useState('')
@@ -662,7 +666,7 @@ export default function Branding() {
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
               {visibleThemes.map(theme => {
                 const isSelected = selectedTheme === theme.id
-                const isLocked = !!theme.isPremium && store?.plan === 'free'
+                const isLocked = !!theme.isPremium && isFreePlan
                 return (
                   <div
                     key={theme.id}
@@ -870,7 +874,7 @@ export default function Branding() {
             <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.layout.title')}</h2>
-                {store.plan === 'free' && (
+                {isFreePlan && (
                   <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
@@ -934,7 +938,7 @@ export default function Branding() {
                 ] as const).map((layout) => {
                   const isSelected = (store.themeSettings?.productLayout || 'grid') === layout.id
                   const isPremium = layout.id !== 'grid'
-                  const isDisabled = isPremium && store.plan === 'free'
+                  const isDisabled = isPremium && isFreePlan
 
                   return (
                     <button
@@ -982,16 +986,16 @@ export default function Branding() {
               </div>
 
               {/* Upgrade prompt for free plan */}
-              {store.plan === 'free' && !Capacitor.isNativePlatform() && (
+              {isFreePlan && !Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
                   <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   <p className="text-sm text-[#1e3a5f]">
                     {t('branding.layout.upgradeMessage')}{' '}
-                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                    <Link to={localePath('/dashboard/plan')} className="font-semibold text-[#2d6cb5] hover:underline">
                       {t('branding.layout.viewPlans')}
-                    </a>
+                    </Link>
                   </p>
                 </div>
               )}
@@ -1003,7 +1007,7 @@ export default function Branding() {
             <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.pagination.title')}</h3>
-                {store.plan === 'free' && (
+                {isFreePlan && (
                   <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
@@ -1037,7 +1041,7 @@ export default function Branding() {
                 ] as const).map((option) => {
                   const isSelected = (store.themeSettings?.paginationType || 'none') === option.id
                   const isPremium = option.id !== 'none'
-                  const isDisabled = isPremium && store.plan === 'free'
+                  const isDisabled = isPremium && isFreePlan
                   const labelKey = option.id === 'load-more' ? 'loadMore' : option.id === 'infinite-scroll' ? 'infiniteScroll' : option.id
                   const descKey = option.id === 'load-more' ? 'loadMoreDesc' : option.id === 'infinite-scroll' ? 'infiniteScrollDesc' : `${option.id}Desc`
 
@@ -1087,16 +1091,16 @@ export default function Branding() {
               </div>
 
               {/* Upgrade prompt for free plan */}
-              {store.plan === 'free' && !Capacitor.isNativePlatform() && (
+              {isFreePlan && !Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
                   <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   <p className="text-sm text-[#1e3a5f]">
                     {t('branding.pagination.upgradeMessage')}{' '}
-                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                    <Link to={localePath('/dashboard/plan')} className="font-semibold text-[#2d6cb5] hover:underline">
                       {t('branding.pagination.viewPlans')}
-                    </a>
+                    </Link>
                   </p>
                 </div>
               )}
@@ -1108,7 +1112,7 @@ export default function Branding() {
             <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.viewMode.title')}</h3>
-                {store.plan === 'free' && (
+                {isFreePlan && (
                   <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
@@ -1131,7 +1135,7 @@ export default function Branding() {
                   ), labelKey: 'reels', descKey: 'reelsDesc', premium: true },
                 ] as const).map((option) => {
                   const isSelected = (store.themeSettings?.productViewMode || 'drawer') === option.id
-                  const isDisabled = option.premium && store.plan === 'free'
+                  const isDisabled = option.premium && isFreePlan
 
                   return (
                     <button
@@ -1178,16 +1182,16 @@ export default function Branding() {
                 })}
               </div>
 
-              {store.plan === 'free' && !Capacitor.isNativePlatform() && (
+              {isFreePlan && !Capacitor.isNativePlatform() && (
                 <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-4">
                   <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   <p className="text-sm text-[#1e3a5f]">
                     {t('branding.viewMode.upgradeMessage')}{' '}
-                    <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                    <Link to={localePath('/dashboard/plan')} className="font-semibold text-[#2d6cb5] hover:underline">
                       {t('branding.viewMode.viewPlans')}
-                    </a>
+                    </Link>
                   </p>
                 </div>
               )}
@@ -1199,7 +1203,7 @@ export default function Branding() {
             <div className="border-t border-[#E6EBF1] pt-6 mt-6">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-medium text-[#1e3a5f]">{t('branding.effects.title')}</h3>
-                {store.plan === 'free' && (
+                {isFreePlan && (
                   <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                     PRO
                   </span>
@@ -1209,7 +1213,7 @@ export default function Branding() {
 
               <div className="space-y-3">
                 {/* Scroll Reveal */}
-                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-[#F6F9FC] border-[#E6EBF1]' : 'bg-white border-[#E6EBF1]'}`}>
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${isFreePlan ? 'bg-[#F6F9FC] border-[#E6EBF1]' : 'bg-white border-[#E6EBF1]'}`}>
                   <div className="flex-1 mr-4">
                     <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.scrollReveal')}</span>
                     <p className="text-xs text-[#8898AA] mt-0.5">{t('branding.effects.scrollRevealDesc')}</p>
@@ -1218,7 +1222,7 @@ export default function Branding() {
                     <input
                       type="checkbox"
                       checked={store.themeSettings?.scrollReveal || false}
-                      disabled={store.plan === 'free'}
+                      disabled={isFreePlan}
                       onChange={async (e) => {
                         const newValue = e.target.checked
                         try {
@@ -1235,7 +1239,7 @@ export default function Branding() {
                       className="sr-only peer"
                     />
                     <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                      store.plan === 'free'
+                      isFreePlan
                         ? 'bg-[#E1E8EF] cursor-not-allowed'
                         : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                     }`}></div>
@@ -1243,7 +1247,7 @@ export default function Branding() {
                 </div>
 
                 {/* Image Swap on Hover */}
-                <div className={`flex items-center justify-between p-3 rounded-xl border ${store.plan === 'free' ? 'bg-[#F6F9FC] border-[#E6EBF1]' : 'bg-white border-[#E6EBF1]'}`}>
+                <div className={`flex items-center justify-between p-3 rounded-xl border ${isFreePlan ? 'bg-[#F6F9FC] border-[#E6EBF1]' : 'bg-white border-[#E6EBF1]'}`}>
                   <div className="flex-1 mr-4">
                     <span className="font-medium text-sm text-[#1e3a5f]">{t('branding.effects.imageSwap')}</span>
                     <p className="text-xs text-[#8898AA] mt-0.5">{t('branding.effects.imageSwapDesc')}</p>
@@ -1252,7 +1256,7 @@ export default function Branding() {
                     <input
                       type="checkbox"
                       checked={store.themeSettings?.imageSwapOnHover || false}
-                      disabled={store.plan === 'free'}
+                      disabled={isFreePlan}
                       onChange={async (e) => {
                         const newValue = e.target.checked
                         try {
@@ -1269,7 +1273,7 @@ export default function Branding() {
                       className="sr-only peer"
                     />
                     <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                      store.plan === 'free'
+                      isFreePlan
                         ? 'bg-[#E1E8EF] cursor-not-allowed'
                         : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                     }`}></div>
@@ -1277,16 +1281,16 @@ export default function Branding() {
                 </div>
 
                 {/* Upgrade prompt for free plan */}
-                {store.plan === 'free' && !Capacitor.isNativePlatform() && (
+                {isFreePlan && !Capacitor.isNativePlatform() && (
                   <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl">
                     <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     <p className="text-sm text-[#1e3a5f]">
                       {t('branding.effects.upgradeMessage')}{' '}
-                      <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                      <Link to={localePath('/dashboard/plan')} className="font-semibold text-[#2d6cb5] hover:underline">
                         {t('branding.effects.viewPlans')}
-                      </a>
+                      </Link>
                     </p>
                   </div>
                 )}
@@ -1447,7 +1451,7 @@ export default function Branding() {
             {/* Header */}
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-lg font-semibold text-[#1e3a5f]">{t('branding.conversion.title')}</h2>
-              {store.plan === 'free' && (
+              {isFreePlan && (
                 <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
                   PRO
                 </span>
@@ -1467,12 +1471,12 @@ export default function Branding() {
                       <input
                         type="checkbox"
                         checked={announcement.enabled}
-                        disabled={store.plan === 'free'}
+                        disabled={isFreePlan}
                         onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
                       <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                        store.plan === 'free'
+                        isFreePlan
                           ? 'bg-[#E1E8EF] cursor-not-allowed'
                           : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
@@ -1480,7 +1484,7 @@ export default function Branding() {
                   </div>
                   <p className="text-sm text-[#8898AA] mb-4">{t('branding.announcement.description')}</p>
 
-                  {announcement.enabled && store.plan !== 'free' && (
+                  {announcement.enabled && !isFreePlan && (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
@@ -1599,12 +1603,12 @@ export default function Branding() {
                       <input
                         type="checkbox"
                         checked={flashSale.enabled}
-                        disabled={store.plan === 'free'}
+                        disabled={isFreePlan}
                         onChange={(e) => setFlashSale({ ...flashSale, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
                       <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                        store.plan === 'free'
+                        isFreePlan
                           ? 'bg-[#E1E8EF] cursor-not-allowed'
                           : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
@@ -1612,7 +1616,7 @@ export default function Branding() {
                   </div>
                   <p className="text-sm text-[#8898AA] mb-4">{t('branding.flashSale.description')}</p>
 
-                  {flashSale.enabled && store.plan !== 'free' && (
+                  {flashSale.enabled && !isFreePlan && (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-[#425466] mb-1">{t('branding.flashSale.endDate')}</label>
@@ -1701,12 +1705,12 @@ export default function Branding() {
                       <input
                         type="checkbox"
                         checked={trustBadges.enabled}
-                        disabled={store.plan === 'free'}
+                        disabled={isFreePlan}
                         onChange={(e) => setTrustBadges({ ...trustBadges, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
                       <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                        store.plan === 'free'
+                        isFreePlan
                           ? 'bg-[#E1E8EF] cursor-not-allowed'
                           : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
@@ -1714,7 +1718,7 @@ export default function Branding() {
                   </div>
                   <p className="text-sm text-[#8898AA] mb-4">{t('branding.trustBadges.description')}</p>
 
-                  {trustBadges.enabled && store.plan !== 'free' && (
+                  {trustBadges.enabled && !isFreePlan && (
                     <>
                       {/* Badge cards grid */}
                       <div className="grid grid-cols-2 gap-3">
@@ -1785,12 +1789,12 @@ export default function Branding() {
                       <input
                         type="checkbox"
                         checked={socialProof.enabled}
-                        disabled={store.plan === 'free'}
+                        disabled={isFreePlan}
                         onChange={(e) => setSocialProof({ ...socialProof, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
                       <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                        store.plan === 'free'
+                        isFreePlan
                           ? 'bg-[#E1E8EF] cursor-not-allowed'
                           : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
                       }`}></div>
@@ -1801,22 +1805,22 @@ export default function Branding() {
             </div>
 
             {/* Upgrade prompt (free only) */}
-            {store.plan === 'free' && !Capacitor.isNativePlatform() && (
+            {isFreePlan && !Capacitor.isNativePlatform() && (
               <div className="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-xl mt-6">
                 <svg className="w-5 h-5 text-[#2d6cb5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <p className="text-sm text-[#1e3a5f]">
                   {t('branding.effects.upgradeMessage')}{' '}
-                  <a href="/dashboard/plan" className="font-semibold text-[#2d6cb5] hover:underline">
+                  <Link to={localePath('/dashboard/plan')} className="font-semibold text-[#2d6cb5] hover:underline">
                     {t('branding.effects.viewPlans')}
-                  </a>
+                  </Link>
                 </p>
               </div>
             )}
 
             {/* Save button - right aligned */}
-            {store.plan !== 'free' && (
+            {!isFreePlan && (
               <div className="flex justify-end mt-6">
                 <button
                   onClick={handleSaveConversion}

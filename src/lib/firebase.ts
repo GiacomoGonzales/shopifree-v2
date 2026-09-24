@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth'
 import { Capacitor } from '@capacitor/core'
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, runTransaction, type DocumentData } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, limit, Timestamp, runTransaction, writeBatch, type DocumentData } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import type { User, Store, Product, Category, Order, Coupon, AnalyticsEventMetadata, AnalyticsSummary, DailyStats, TopProduct, DeviceStats, ReferrerStats, RevenueMetrics } from '../types'
 
@@ -132,10 +132,25 @@ export const storeService = {
       }
     }
 
+    // Trial Pro: uno por cuenta. firestore.rules exige crear trials/{uid} en el
+    // mismo batch que la tienda 'pro'; si la cuenta ya uso su trial (borro y
+    // recreo la tienda) arranca en free.
+    let storeData: Partial<Store> = data
+    const isTrial = data.plan === 'pro' && !!data.trialEndsAt
+    if (isTrial) {
+      const trialSnap = await getDoc(doc(db, 'trials', storeId)).catch(() => null)
+      if (trialSnap?.exists()) {
+        storeData = { ...data, plan: 'free' }
+        delete storeData.trialEndsAt
+      }
+    }
+    const withTrialMarker = storeData.plan === 'pro' && !!storeData.trialEndsAt
+
     try {
-      await setDoc(doc(db, 'stores', storeId), {
-        ...data,
-        plan: data.plan || 'free', // Use provided plan or default to free
+      const batch = writeBatch(db)
+      batch.set(doc(db, 'stores', storeId), {
+        ...storeData,
+        plan: storeData.plan || 'free', // Use provided plan or default to free
         stats: {
           totalProducts: 0,
           totalOrders: 0,
@@ -144,6 +159,10 @@ export const storeService = {
         createdAt: new Date(),
         updatedAt: new Date()
       })
+      if (withTrialMarker) {
+        batch.set(doc(db, 'trials', storeId), { storeId, createdAt: new Date() })
+      }
+      await batch.commit()
     } catch (err) {
       // Store write failed after we claimed the name — release the claim so
       // the subdomain isn't stranded pointing at a store that doesn't exist.

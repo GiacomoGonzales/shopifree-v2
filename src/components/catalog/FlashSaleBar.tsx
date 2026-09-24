@@ -3,6 +3,7 @@ import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { EditableText } from './LiveEdit'
 import { useLiveEdit } from './liveEditContext'
+import { getEffectivePlan } from '../../lib/stripe'
 
 function getTimeRemaining(endDate: string, now: number) {
   const total = new Date(endDate).getTime() - now
@@ -33,7 +34,7 @@ export default function FlashSaleBar() {
   }, [running])
 
   // En el editor la barra se ve aunque falte la fecha o ya haya terminado, para poder editarla.
-  if (store.plan === 'free' || !flashSale?.enabled) return null
+  if (getEffectivePlan(store) === 'free' || !flashSale?.enabled) return null
   if (!editing && (!flashSale.endDate || !time)) return null
   const shown = time || { days: 0, hours: 0, minutes: 0, seconds: 0 }
 

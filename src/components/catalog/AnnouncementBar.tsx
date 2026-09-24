@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTheme } from './ThemeContext'
 import { EditableText } from './LiveEdit'
 import { useLiveEdit } from './liveEditContext'
+import { getEffectivePlan } from '../../lib/stripe'
 
 export default function AnnouncementBar() {
   const { store, theme } = useTheme()
@@ -14,7 +15,7 @@ export default function AnnouncementBar() {
   const bgColor = store.announcement.backgroundColor || theme.colors.primary
   const textColor = store.announcement.textColor || theme.colors.textInverted
   // El marquee repite el texto 16 veces y se mueve: en el editor se muestra fijo para poder editarlo.
-  const mode = store.announcement.mode === 'marquee' && store.plan !== 'free' && !editing ? 'marquee' : 'static'
+  const mode = store.announcement.mode === 'marquee' && getEffectivePlan(store) !== 'free' && !editing ? 'marquee' : 'static'
   const text = store.announcement.text
 
   const textContent = editing ? (

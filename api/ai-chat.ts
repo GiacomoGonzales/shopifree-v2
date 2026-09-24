@@ -1,8 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, type Firestore, FieldValue } from 'firebase-admin/firestore'
+import { getAuth } from 'firebase-admin/auth'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildSystemPrompt } from './_shared/sofia-knowledge.js'
+import { hasPaidEffectivePlan } from './_shared/plan.js'
+import { checkIpRateLimit, checkRateLimit } from './_shared/orderTotal.js'
 
 let db: Firestore
 
@@ -37,7 +40,7 @@ const SYSTEM_PROMPT = buildSystemPrompt()
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
@@ -47,13 +50,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { chatId, storeId, userMessage, userId } = req.body as RequestBody
+  const { chatId, storeId, userMessage, userId: bodyUserId } = (req.body || {}) as RequestBody
 
-  if (!chatId || !storeId || !userMessage || !userId) {
+  if (!chatId || !storeId || !userMessage || typeof userMessage !== 'string') {
     return res.status(400).json({ error: 'Missing required parameters' })
   }
 
   const firestore = getDb()
+
+  // El uid sale del Firebase ID token, no del body: antes body.userId y
+  // storeId los elegia el caller y se podia leer el contexto de otra tienda
+  // (plan, productos, pedidos) y gastar tokens de Anthropic sin cuenta.
+  //
+  // Compat: las apps nativas ya publicadas (bundle viejo) llaman sin token y
+  // mandan body.userId. Se acepta SOLO sin header Authorization (un token
+  // invalido sigue siendo 401), con rate limit por IP y por chat, y con los
+  // mismos chequeos de abajo (chat.userId y store.ownerId == userId). La
+  // respuesta no devuelve contexto: Sofia escribe en el chat, que solo lee su
+  // dueno, asi que lo peor es gastar tokens (acotado por el rate limit).
+  const authHeader = req.headers.authorization || ''
+  let userId: string
+  if (authHeader.startsWith('Bearer ')) {
+    try {
+      userId = (await getAuth().verifyIdToken(authHeader.slice(7))).uid
+    } catch {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+  } else if (!authHeader && typeof bodyUserId === 'string' && bodyUserId) {
+    if (
+      !(await checkIpRateLimit(firestore, req, 'ai-chat-legacy', 20))
+      || !(await checkRateLimit(firestore, 'ai-chat-legacy-chat', String(chatId), 15, 600))
+    ) {
+      return res.status(429).json({ error: 'Too many requests' })
+    }
+    userId = bodyUserId
+  } else {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
 
   try {
     // Verify chat belongs to user
@@ -75,6 +108,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fetch store context
     const storeDoc = await firestore.collection('stores').doc(storeId).get()
     const storeData = storeDoc.exists ? storeDoc.data() : null
+    // Solo el contexto de la tienda propia
+    if (storeData && storeData.ownerId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
 
     // Fetch products and recent orders in parallel
     const [productsSnap, ordersSnap] = await Promise.all([
@@ -98,7 +135,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let contextBlock = `\n## Contexto de la tienda del usuario`
     if (storeData) {
       contextBlock += `\n- Nombre: ${storeData.name || 'Sin nombre'}`
-      contextBlock += `\n- Plan actual: ${storeData.plan || 'free'}`
+      // Plan efectivo (no el guardado: una prueba vencida puede seguir como 'pro'
+      // hasta que corra el cron) + estado de la prueba, para que Sofía no
+      // ofrezca pruebas que no existen.
+      const effectivePlan = hasPaidEffectivePlan(storeData) ? (storeData.plan || 'free') : 'free'
+      const trialEnd: Date | null = storeData.trialEndsAt?.toDate?.() ?? null
+      let planNote = ''
+      if (!storeData.subscription && trialEnd) {
+        planNote = trialEnd.getTime() > Date.now()
+          ? ` (en su prueba gratis de 7 días de Pro, termina el ${trialEnd.toISOString().slice(0, 10)})`
+          : ' (ya usó su prueba gratis; no tiene otra)'
+      } else if (storeData.subscription?.status) {
+        planNote = ` (suscripción Stripe: ${storeData.subscription.status}${storeData.subscription.cancelAtPeriodEnd ? ', se cancela al fin del periodo' : ''})`
+      }
+      contextBlock += `\n- Plan actual: ${effectivePlan}${planNote}`
       contextBlock += `\n- Productos: ${products.length} productos`
       if (products.length > 0) {
         contextBlock += `\n- Algunos productos: ${products.slice(0, 10).map(p => `${p.name} ($${p.price})`).join(', ')}`

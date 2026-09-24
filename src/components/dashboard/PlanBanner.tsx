@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
+import { getEffectivePlan } from '../../lib/stripe'
+import { toPlanDate } from '../../lib/plans'
 import type { Store } from '../../types'
 
 type BannerType = 'warning' | 'error' | 'info'
@@ -37,9 +39,17 @@ const BANNER_STYLES: Record<BannerType, { bg: string; border: string; text: stri
   },
 }
 
-function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, unknown>) => string): BannerConfig | null {
+// `native`: en la app nativa el aviso es solo texto (sin boton ni link de compra,
+// Guideline 3.1.1 de Apple), con textos que no invitan a comprar.
+function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, unknown>) => string, native: boolean): BannerConfig | null {
   const now = new Date()
   const sub = store.subscription
+  // Mensaje: en nativo usamos la variante informativa (planBanner.native.*)
+  const msg = (key: string, opts?: Record<string, unknown>) =>
+    t(native ? `planBanner.native.${key}` : `planBanner.${key}`, opts)
+  // Plan efectivo: si la prueba vencio pero el cron no bajo store.plan todavia,
+  // igual cuenta como 'free'.
+  const effectivePlan = getEffectivePlan(store)
   // A merchant has paid in the past as soon as Stripe ever wrote a sub id
   // for their store — this is what distinguishes "trial expired" from
   // "subscription ended", which previously surfaced the same misleading
@@ -51,19 +61,18 @@ function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, un
   if (sub?.status === 'past_due') {
     return {
       type: 'error',
-      message: t('planBanner.pastDue'),
+      message: msg('pastDue'),
       action: t('planBanner.updatePayment'),
     }
   }
 
   // 2. Scheduled to cancel at period end — still active right now, but warn.
-  if (sub?.cancelAtPeriodEnd && sub?.status === 'active' && sub?.currentPeriodEnd) {
-    const endDate = sub.currentPeriodEnd instanceof Date
-      ? sub.currentPeriodEnd
-      : new Date(sub.currentPeriodEnd)
+  // currentPeriodEnd es un timestamp anidado: new Date(Timestamp) daba "Invalid Date".
+  const periodEnd = toPlanDate(sub?.currentPeriodEnd)
+  if (sub?.cancelAtPeriodEnd && sub?.status === 'active' && periodEnd) {
     return {
       type: 'warning',
-      message: t('planBanner.cancelAtPeriodEnd', { date: endDate.toLocaleDateString() }),
+      message: msg('cancelAtPeriodEnd', { date: periodEnd.toLocaleDateString() }),
       action: t('planBanner.renew'),
     }
   }
@@ -71,35 +80,33 @@ function getBannerConfig(store: Store, t: (key: string, opts?: Record<string, un
   // 3. Subscription terminated (canceled/incomplete_expired) and merchant
   // dropped to free — distinct copy from the trial-expired case so paid
   // customers don't see "Tu prueba gratuita ha terminado".
-  if (everPaid && store.plan === 'free' &&
+  if (everPaid && effectivePlan === 'free' &&
       (sub?.status === 'canceled' || sub?.status === 'incomplete_expired')) {
     return {
       type: 'info',
-      message: t('planBanner.subscriptionEnded'),
+      message: msg('subscriptionEnded'),
       action: t('planBanner.renew'),
     }
   }
 
   // 4. Free trial winding down (≤5 days left).
-  if (store.trialEndsAt && !everPaid) {
-    const trialEnd = store.trialEndsAt instanceof Date
-      ? store.trialEndsAt
-      : new Date(store.trialEndsAt)
+  const trialEnd = toPlanDate(store.trialEndsAt)
+  if (trialEnd && !everPaid) {
     const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
     if (daysLeft > 0 && daysLeft <= 5) {
       return {
         type: 'warning',
-        message: t('planBanner.trialExpiring', { days: daysLeft }),
+        message: msg('trialExpiring', { days: daysLeft }),
         action: t('planBanner.upgrade'),
       }
     }
 
     // 5. Trial expired without ever paying, now on free plan.
-    if (daysLeft <= 0 && store.plan === 'free') {
+    if (daysLeft <= 0 && effectivePlan === 'free') {
       return {
         type: 'info',
-        message: t('planBanner.trialExpired'),
+        message: msg('trialExpired'),
         action: t('planBanner.upgrade'),
       }
     }
@@ -114,11 +121,12 @@ export default function PlanBanner({ store }: { store: Store }) {
   const showUpgrade = useShowUpgradeUI()
   const [dismissed, setDismissed] = useState(false)
 
-  const banner = useMemo(() => getBannerConfig(store, t), [store, t])
+  const banner = useMemo(() => getBannerConfig(store, t, !showUpgrade), [store, t, showUpgrade])
 
-  // Hide the entire banner on iOS — the CTA leads to upgrade pages
-  // that Apple forbids linking to external payment.
-  if (!banner || dismissed || !showUpgrade) return null
+  // En la app nativa (showUpgrade = false) el aviso se muestra igual (estado del
+  // plan, pago fallido), pero solo como texto: sin boton hacia la pagina de
+  // planes, porque Apple no permite llevar a compras externas.
+  if (!banner || dismissed) return null
 
   const styles = BANNER_STYLES[banner.type]
 
@@ -146,13 +154,15 @@ export default function PlanBanner({ store }: { store: Store }) {
         {banner.message}
       </p>
 
-      {/* Action button */}
-      <Link
-        to={localePath('/dashboard/plan')}
-        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${styles.button}`}
-      >
-        {banner.action}
-      </Link>
+      {/* Action button (solo web) */}
+      {showUpgrade && (
+        <Link
+          to={localePath('/dashboard/plan')}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${styles.button}`}
+        >
+          {banner.action}
+        </Link>
+      )}
 
       {/* Dismiss */}
       <button

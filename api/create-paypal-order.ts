@@ -3,6 +3,8 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { paypalFetch, isPayPalSupportedCurrency, getConversionRate, type MerchantCredentials } from '../src/lib/paypal-server.js'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
+import { getPaymentSecrets } from './_shared/paymentSecrets.js'
+import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, round2, amountsMatch } from './_shared/orderTotal.js'
 
 /**
  * Creates a PayPal order using the merchant's own credentials. Called by the
@@ -11,11 +13,10 @@ import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
  *
  * Body: {
  *   storeId, orderId, orderNumber,
- *   items: [{ name, quantity, unit_price, currency }],
- *   total: number,
- *   currency: string,
  *   origin: string
  * }
+ * (items/total/currency del cliente se IGNORAN: el monto y los ítems salen
+ * del pedido recalculado en el servidor — api/_shared/orderTotal.ts)
  */
 
 if (!getApps().length) {
@@ -52,21 +53,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       storeId,
       orderId,
       orderNumber,
-      items,
-      total,
-      currency,
       origin,
     } = req.body as {
       storeId?: string
       orderId?: string
       orderNumber?: string | number
-      items?: { name: string; quantity: number; unit_price: number; currency?: string }[]
-      total?: number
-      currency?: string
       origin?: string
     }
 
-    if (!storeId || !orderId || !items || items.length === 0 || total === undefined || !currency) {
+    if (!storeId || !orderId) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
@@ -80,6 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const store = storeSnap.data() as {
       name?: string
+      currency?: string
       payments?: {
         paypal?: {
           enabled?: boolean
@@ -90,13 +86,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
     const pp = store.payments?.paypal
-    if (!pp?.enabled || !pp?.clientId || !pp?.clientSecret) {
+    // Secreto server-only (doc privado, con fallback al campo legacy)
+    const ppSecret = (await getPaymentSecrets(db, storeId, store)).paypal?.clientSecret
+    if (!pp?.enabled || !pp?.clientId || !ppSecret) {
       return res.status(400).json({ error: 'Store does not have PayPal configured' })
+    }
+
+    // Anti-abuso: límite por IP y por pedido
+    if (!(await checkIpRateLimit(db, req, 'paypal-order'))) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.' })
+    }
+
+    // Monto calculado en el servidor (pedido existente, pendiente, total verificado)
+    const payable = await loadPayableOrder(db, storeId, orderId, store as Record<string, unknown>, 'paypal')
+    if (!payable.ok) {
+      return res.status(payable.status).json({ error: payable.error, code: payable.code })
+    }
+    const { pricing } = payable
+    const currency = pricing.currency
+
+    if (!(await bumpCheckoutAttempts(db, storeId, orderId, 'attempts', 10))) {
+      return res.status(429).json({ error: 'Demasiados intentos para este pedido.' })
     }
 
     const creds: MerchantCredentials = {
       clientId: pp.clientId,
-      secret: pp.clientSecret,
+      secret: ppSecret,
       env: pp.sandbox ? 'sandbox' : 'live',
     }
     const baseOrigin = origin || 'https://shopifree.app'
@@ -107,7 +122,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       paypal: '1',
       orderId,
       storeId,
-      orderNumber: String(orderNumber ?? ''),
+      orderNumber: String(orderNumber ?? payable.order.orderNumber ?? ''),
     }).toString()
 
     // PayPal only accepts a fixed set of currencies for /v2/checkout/orders.
@@ -115,65 +130,95 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // we transparently convert to USD using ECB rates from Frankfurter when
     // needed. The Firestore order keeps its original currency for our books.
     let payCurrency = currency
-    let payTotal = total
-    let payItems = items
+    let rate = 1
     if (!isPayPalSupportedCurrency(currency)) {
       try {
-        const rate = await getConversionRate(currency, 'USD')
+        rate = await getConversionRate(currency, 'USD')
         payCurrency = 'USD'
-        payTotal = total * rate
-        payItems = items.map(it => ({ ...it, unit_price: it.unit_price * rate }))
-        console.log(`[paypal] converting ${currency}→USD at rate ${rate} (total ${total} → $${payTotal.toFixed(2)})`)
+        console.log(`[paypal] converting ${currency}→USD at rate ${rate} (total ${pricing.total})`)
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown'
         return res.status(502).json({ error: `Cannot convert ${currency} to USD for PayPal: ${msg}` })
       }
     }
 
-    // PayPal validates that breakdown components sum exactly to amount.value
-    // and item_total equals the sum of (unit_amount × quantity) for the items
-    // array. The frontend sends `total` already inclusive of shipping, so we
-    // have to back out shipping = total - itemSubtotal to keep the math
-    // balanced. Round to 2 decimals to dodge JS float drift; any leftover
-    // cent gets folded into shipping so the totals line up.
-    const round2 = (n: number) => Math.round(n * 100) / 100
-    const grandTotal = round2(payTotal)
-    const itemSubtotal = round2(payItems.reduce((sum, it) => sum + it.unit_price * it.quantity, 0))
-    const shippingAmount = round2(Math.max(0, grandTotal - itemSubtotal))
+    // PayPal valida que item_total = Σ(unit_amount × quantity) y que
+    // amount = item_total + shipping − discount EXACTO. Antes el descuento del
+    // cupón no iba en el breakdown y PayPal rechazaba los pedidos con cupón.
+    // Cada componente se convierte y redondea por separado, y el total se arma
+    // desde esos componentes ya redondeados para que siempre cuadre.
+    // (JPY/HUF/TWD no admiten decimales en PayPal.)
+    const noDecimals = ['JPY', 'HUF', 'TWD'].includes(payCurrency)
+    const roundPay = (n: number) => noDecimals ? Math.round(n) : round2(n)
+    const fmt = (n: number) => noDecimals ? String(Math.round(n)) : n.toFixed(2)
+    const payLines = pricing.lines.map(l => ({ ...l, unit: roundPay(l.unitPrice * rate) }))
+    const itemTotal = roundPay(payLines.reduce((sum, l) => sum + l.unit * l.quantity, 0))
+    const shippingAmount = roundPay(pricing.shipping * rate)
+    const discountAmount = Math.min(roundPay(pricing.discount * rate), itemTotal)
+    const grandTotal = roundPay(itemTotal + shippingAmount - discountAmount)
+    if (!(grandTotal > 0)) {
+      return res.status(400).json({ error: 'Invalid order total' })
+    }
 
+    // Una orden PayPal por pedido: si ya existe con el mismo monto y sigue
+    // abierta, se reutiliza su link de aprobación.
+    const prev = payable.checkout
+    if (prev?.paypalOrderId && typeof prev.payAmount === 'number' && prev.payCurrency === payCurrency
+      && amountsMatch(prev.payAmount, grandTotal, payCurrency)) {
+      try {
+        const existing = await paypalFetch<PayPalOrder>(creds, `/v2/checkout/orders/${encodeURIComponent(prev.paypalOrderId)}`)
+        const link = existing.links?.find(l => l.rel === 'approve' || l.rel === 'payer-action')
+        if ((existing.status === 'CREATED' || existing.status === 'PAYER_ACTION_REQUIRED') && link) {
+          return res.status(200).json({ paypalOrderId: existing.id, approveUrl: link.href })
+        }
+      } catch (err) {
+        console.warn('[paypal] could not reuse previous PayPal order:', err instanceof Error ? err.message : err)
+      }
+    }
+
+    const usePayItems = payLines.length <= 100
     const order = await paypalFetch<PayPalOrder>(creds, '/v2/checkout/orders', {
       method: 'POST',
-      paypalRequestId: `${storeId}:${orderId}`,
+      // Idempotencia por pedido + monto (si el monto cambia es otra orden)
+      paypalRequestId: `${storeId}:${orderId}:${fmt(grandTotal)}${payCurrency}`,
       body: {
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: orderId,
           custom_id: orderId,
-          invoice_id: String(orderNumber ?? orderId),
+          invoice_id: String(orderNumber ?? payable.order.orderNumber ?? orderId),
           amount: {
             currency_code: payCurrency,
-            value: grandTotal.toFixed(2),
+            value: fmt(grandTotal),
             breakdown: {
               item_total: {
                 currency_code: payCurrency,
-                value: itemSubtotal.toFixed(2),
+                value: fmt(itemTotal),
               },
               ...(shippingAmount > 0 && {
                 shipping: {
                   currency_code: payCurrency,
-                  value: shippingAmount.toFixed(2),
+                  value: fmt(shippingAmount),
+                },
+              }),
+              ...(discountAmount > 0 && {
+                discount: {
+                  currency_code: payCurrency,
+                  value: fmt(discountAmount),
                 },
               }),
             },
           },
-          items: payItems.slice(0, 100).map(it => ({
-            name: (it.name || 'Item').slice(0, 127),
-            quantity: String(it.quantity),
-            unit_amount: {
-              currency_code: payCurrency,
-              value: it.unit_price.toFixed(2),
-            },
-          })),
+          ...(usePayItems && {
+            items: payLines.map(it => ({
+              name: (it.name || 'Item').slice(0, 127),
+              quantity: String(it.quantity),
+              unit_amount: {
+                currency_code: payCurrency,
+                value: fmt(it.unit),
+              },
+            })),
+          }),
         }],
         application_context: {
           return_url: `${baseOrigin}/payment/success?${params}`,
@@ -183,6 +228,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           brand_name: store.name || 'Shopifree',
         },
       },
+    })
+
+    // Doc server-only: lo que esperamos que PayPal cobre, para verificar la
+    // captura (process-paypal-payment) y el webhook.
+    await saveCheckout(db, storeId, orderId, {
+      gateway: 'paypal',
+      amount: pricing.total,
+      currency,
+      payAmount: grandTotal,
+      payCurrency,
+      couponId: pricing.coupon?.id || null,
+      paypalOrderId: order.id,
     })
 
     const approveLink = order.links.find(l => l.rel === 'approve' || l.rel === 'payer-action')
