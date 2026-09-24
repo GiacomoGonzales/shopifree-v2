@@ -1,0 +1,41 @@
+name: Add TestFlight tester (iOS)
+
+# Agrega un probador interno a la app principal en TestFlight (grupo
+# "Equipo Shopifree", con acceso a todos los builds). El correo tiene que ser
+# de un usuario del equipo en App Store Connect. Usa la lane `add_tester`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Apple ID del probador (usuario de App Store Connect)'
+        required: true
+        type: string
+
+jobs:
+  add:
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Fastlane
+        run: gem install fastlane --no-document
+
+      - name: Decode App Store Connect API key
+        env:
+          APPSTORE_API_KEY_CONTENT: ${{ secrets.APPSTORE_API_KEY_CONTENT }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPSTORE_API_KEY_CONTENT" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey.p8
+
+      - name: Add tester
+        working-directory: ios/App
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          TESTER_EMAIL: ${{ github.event.inputs.email }}
+          BUNDLE_ID: app.shopifree.mobile
+        run: fastlane add_tester

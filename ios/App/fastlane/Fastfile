@@ -199,4 +199,43 @@ platform :ios do
       }
     ))
   end
+  # Agrega un probador interno de TestFlight a la app principal. Los probadores
+  # internos tienen que ser usuarios del equipo en App Store Connect; el grupo
+  # tiene acceso a todos los builds, asi cada build nuevo les llega solo.
+  #
+  # Expects env vars: BUNDLE_ID, TESTER_EMAIL, (TESTER_FIRST_NAME, TESTER_LAST_NAME),
+  # APPSTORE_API_KEY_ID, APPSTORE_API_ISSUER_ID.
+  desc "Add an internal TestFlight tester"
+  lane :add_tester do
+    app_store_connect_api_key(
+      key_id: ENV["APPSTORE_API_KEY_ID"],
+      issuer_id: ENV["APPSTORE_API_ISSUER_ID"],
+      key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey.p8"),
+      in_house: false
+    )
+    email = ENV["TESTER_EMAIL"].to_s.strip
+    UI.user_error!("TESTER_EMAIL is required") if email.empty?
+
+    require "spaceship"
+    app = Spaceship::ConnectAPI::App.find(ENV["BUNDLE_ID"])
+    UI.user_error!("App #{ENV['BUNDLE_ID']} not found in App Store Connect") if app.nil?
+
+    group_name = "Equipo Shopifree"
+    group = app.get_beta_groups.find { |g| g.name == group_name }
+    if group.nil?
+      UI.message("Creando grupo interno '#{group_name}' con acceso a todos los builds…")
+      group = app.create_beta_group(group_name: group_name, is_internal_group: true, has_access_to_all_builds: true)
+    end
+
+    UI.message("Agregando #{email} al grupo '#{group.name}'…")
+    group.post_bulk_beta_tester_assignments(beta_testers: [{
+      email: email,
+      firstName: ENV["TESTER_FIRST_NAME"].to_s.empty? ? "Probador" : ENV["TESTER_FIRST_NAME"],
+      lastName: ENV["TESTER_LAST_NAME"].to_s.empty? ? "Shopifree" : ENV["TESTER_LAST_NAME"]
+    }])
+
+    tester = app.get_beta_testers(filter: { email: email }).first
+    UI.user_error!("Apple no registro al probador #{email}") if tester.nil?
+    UI.success("#{email} agregado. Estado de la invitacion: #{tester.invite_type || 'enviada'}")
+  end
 end
