@@ -33,7 +33,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { productService, analyticsService, categoryService, orderService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
-import { PLAN_FEATURES, type PlanType } from '../../lib/stripe'
+import { PLAN_FEATURES, getEffectivePlan } from '../../lib/stripe'
 import type { Product, Category, Order } from '../../types'
 import WhatsNewBanner from '../../components/dashboard/WhatsNewBanner'
 
@@ -523,7 +523,8 @@ export default function DashboardHome() {
     if (daysLeft > 0 && store.plan === 'pro' && !store.subscription) {
       return { expired: false as const, daysLeft }
     }
-    if (trialEnd.getTime() < Date.now() && store.plan === 'free') {
+    // Plan efectivo: el cron puede tardar horas en bajar store.plan a 'free'
+    if (trialEnd.getTime() < Date.now() && getEffectivePlan(store) === 'free') {
       return { expired: true as const, daysLeft: 0 }
     }
     return null
@@ -1071,10 +1072,10 @@ export default function DashboardHome() {
         </div>
 
         {/* Uso del plan — solo en el plan gratuito */}
-        {store?.plan === 'free' &&
+        {store && getEffectivePlan(store) === 'free' &&
           !Capacitor.isNativePlatform() &&
           (() => {
-            const limits = PLAN_FEATURES[(store.plan || 'free') as PlanType].limits
+            const limits = PLAN_FEATURES.free.limits
             const rows = [
               { label: t('home.products'), used: products.length, max: limits.products },
               { label: t('home.planUsage.categories'), used: categories.length, max: limits.categories },
@@ -1090,7 +1091,7 @@ export default function DashboardHome() {
                   <div>
                     <h3 className="text-sm font-semibold">{t('home.planUsage.title')}</h3>
                     <span className="text-[0.72rem] font-normal text-[#8898AA]">
-                      {PLAN_FEATURES[(store.plan || 'free') as PlanType].name}
+                      {t('plan.planName.free', { defaultValue: PLAN_FEATURES.free.name })}
                     </span>
                   </div>
                   <Link

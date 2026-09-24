@@ -5,6 +5,7 @@ import { optimizeImage } from '../../utils/cloudinary'
 import { getFooterColors } from '../../themes/shared/themeColors'
 import { EditableText } from './LiveEdit'
 import { useLiveEdit } from './liveEditContext'
+import { getEffectivePlan } from '../../lib/stripe'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -229,7 +230,7 @@ export default function StoreFooter({ onWhatsAppClick }: StoreFooterProps) {
               {t.privacyPolicy}
             </Link>
           </div>
-          {store.plan !== 'business' && (
+          {getEffectivePlan(store) !== 'business' && (
             <a
               href="https://shopifree.app"
               target="_blank"

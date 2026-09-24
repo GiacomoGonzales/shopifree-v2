@@ -12,8 +12,13 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // El email solo cuenta si está verificado: sin esto, cualquiera podía
+    // registrarse con email/contraseña usando el email del admin (sin
+    // verificarlo) y pasar como admin.
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'giiacomo@gmail.com';
+      return isAuthenticated()
+        && request.auth.token.email == 'giiacomo@gmail.com'
+        && request.auth.token.email_verified == true;
     }
 
     function isStoreOwner(storeId) {
@@ -25,12 +30,78 @@ service cloud.firestore {
       return isStoreOwner(storeId) || isAdmin();
     }
 
+    // Secretos de pasarelas: viven en stores/{id}/private/payments (solo Admin
+    // SDK). En el doc público de la tienda el dueño no puede volver a escribir
+    // accessToken/secretKey/clientSecret/password ni tocar secretConfigured
+    // (lo maneja api/payment-credentials.ts). Se permite dejarlos igual o
+    // borrarlos, así las tiendas viejas con el campo legacy siguen guardando.
+    function gatewayFieldUnchanged(newPayments, oldPayments, gw, field) {
+      let n = newPayments.get(gw, null);
+      let o = (oldPayments is map) ? oldPayments.get(gw, null) : null;
+      return !(n is map) || !(field in n)
+        || (o is map && field in o && n[field] == o[field]);
+    }
+
+    function paymentSecretsUntouched() {
+      let np = request.resource.data.get('payments', null);
+      let op = resource.data.get('payments', null);
+      return !(np is map) || (
+        gatewayFieldUnchanged(np, op, 'mercadopago', 'accessToken')
+        && gatewayFieldUnchanged(np, op, 'stripe', 'secretKey')
+        && gatewayFieldUnchanged(np, op, 'paypal', 'clientSecret')
+        && gatewayFieldUnchanged(np, op, 'gocuotas', 'password')
+        && gatewayFieldUnchanged(np, op, 'mercadopago', 'secretConfigured')
+        && gatewayFieldUnchanged(np, op, 'stripe', 'secretConfigured')
+        && gatewayFieldUnchanged(np, op, 'paypal', 'secretConfigured')
+        && gatewayFieldUnchanged(np, op, 'gocuotas', 'secretConfigured')
+      );
+    }
+
+    // Pedido creado desde el storefront (comprador anónimo). Tiene que nacer
+    // pendiente y sin ninguno de los campos que solo escribe el servidor al
+    // confirmar el pago (api/_shared/orderTotal.ts, order-stock.ts). Sin esto
+    // cualquiera podía crear pedidos "pagados/confirmados" con stock ya
+    // descontado. Debe coincidir con lo que arma useCheckout.createOrder.
+    function isValidCustomerOrder(storeId) {
+      let d = request.resource.data;
+      return d.get('status', 'pending') == 'pending'
+        && d.get('paymentStatus', 'pending') == 'pending'
+        && !d.keys().hasAny([
+          'stockDecremented', 'couponCounted', 'paidAt', 'paymentId',
+          'paymentNote', 'paymentReview', 'stockShortage', 'stockShortageItems',
+          'isTest'
+        ])
+        && d.paymentMethod in ['whatsapp', 'mercadopago', 'stripe', 'paypal', 'gocuotas', 'transfer']
+        && (d.get('deliveryMethod', null) == null || d.deliveryMethod in ['pickup', 'delivery'])
+        && d.total is number && d.total >= 0
+        && d.subtotal is number && d.subtotal >= 0
+        && d.get('storeId', storeId) == storeId
+        && d.items is list && d.items.size() > 0 && d.items.size() <= 500;
+    }
+
     // Users collection - Admin can list all users
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      // stripeCustomerId y role solo los escribe el servidor / el admin.
+      // storeId decide a qué tienda da acceso api/api-keys.ts, así que el
+      // usuario solo puede apuntarlo a su propia tienda (Register usa
+      // storeId = uid) o dejarlo como estaba (usuarios viejos).
+      allow create: if isAdmin() || (
+        isOwner(userId)
+        && !('stripeCustomerId' in request.resource.data)
+        && request.resource.data.get('role', 'user') == 'user'
+        && request.resource.data.get('storeId', userId) == userId
+      );
+      allow update: if isAdmin() || (
+        isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['stripeCustomerId', 'role'])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['storeId'])
+          || request.resource.data.get('storeId', userId) == userId
+        )
+      );
       allow delete: if isOwner(userId);
 
       // User subscriptions subcollection
@@ -51,20 +122,47 @@ service cloud.firestore {
     match /stores/{storeId} {
       // Anyone can read store (public catalogs)
       allow read: if true;
-      // Only authenticated users can create stores — as themselves, with a
-      // client-settable plan limited to free/pro and the signup trial capped
-      // at 8 days (7 + clock-skew headroom). planExpiresAt is an admin-only
-      // comp field and can never be set from the client.
+      // Only authenticated users can create stores — as themselves. Plan
+      // 'free', or 'pro' ONLY with the signup trial (trialEndsAt timestamp,
+      // capped at 8 days = 7 + clock-skew headroom; Register.tsx writes
+      // now + 7d). Sin trialEndsAt, 'pro' era Pro gratis para siempre.
+      // planExpiresAt (comp de admin; null = indefinido), subscription,
+      // manualRestoration y stripeCustomerId solo los escribe el servidor/admin.
+      //
+      // Ademas (no admin): el id de la tienda es el uid (Register.tsx usa
+      // storeId = uid; ids arbitrarios daban trials infinitos y permitian
+      // "adelantarse" en el orden de docs), el subdominio tiene que estar
+      // reclamado en /subdomains para ESTA tienda (sin esto se podia crear
+      // una tienda con el subdominio de otra y secuestrar su catalogo), el
+      // dominio propio solo lo escribe api/domain.ts, y 'pro' (trial) exige
+      // que el marcador trials/{uid} NO exista antes de la escritura (no se
+      // puede borrar: borrar y recrear la tienda ya no regala otro trial).
+      // El cliente nuevo lo crea justo despues de la tienda; las apps nativas viejas
+      // (bundle de HEAD, ya en las stores) no lo crean, así que NO se exige
+      // existsAfter: el cron diario (api/send-email.ts) rellena el marcador de
+      // toda tienda con trialEndsAt.
       allow create: if isAuthenticated()
         && request.resource.data.ownerId == request.auth.uid
         && (isAdmin() || (
-          (!('plan' in request.resource.data) || request.resource.data.plan in ['free', 'pro'])
+          storeId == request.auth.uid
+          && request.resource.data.subdomain is string
+          && get(/databases/$(database)/documents/subdomains/$(request.resource.data.subdomain)).data.storeId == storeId
+          && !request.resource.data.keys().hasAny([
+            'customDomain', 'domainStatus', 'domainVerification', 'domainDnsRecords'
+          ])
           && (!('trialEndsAt' in request.resource.data) || (
             request.resource.data.trialEndsAt is timestamp
             && request.resource.data.trialEndsAt <= request.time + duration.value(8, 'd')
           ))
-          && !('planExpiresAt' in request.resource.data)
-          && !('subscription' in request.resource.data)
+          && (
+            request.resource.data.get('plan', 'free') == 'free'
+            || (request.resource.data.plan == 'pro'
+                && 'trialEndsAt' in request.resource.data
+                && !exists(/databases/$(database)/documents/trials/$(request.auth.uid)))
+          )
+          && !request.resource.data.keys().hasAny([
+            'planExpiresAt', 'subscription', 'manualRestoration', 'stripeCustomerId'
+          ])
         ));
       // Owner can update everything EXCEPT billing-integrity fields — those
       // are only written by the Stripe webhook / trial crons (admin SDK
@@ -74,7 +172,23 @@ service cloud.firestore {
       allow update: if isAdmin() || (
         isStoreOwner(storeId)
         && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['plan', 'trialEndsAt', 'planExpiresAt', 'subscription', 'ownerId'])
+            .hasAny(['plan', 'trialEndsAt', 'planExpiresAt', 'subscription', 'ownerId',
+                     'manualRestoration', 'stripeCustomerId',
+                     // Dominio propio: solo api/domain.ts (Admin SDK), que
+                     // valida unicidad. Si no, el dueno podia poner el dominio
+                     // de otra tienda y secuestrarle el storefront.
+                     'customDomain', 'domainStatus', 'domainVerification', 'domainDnsRecords'])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['payments'])
+          || paymentSecretsUntouched()
+        )
+        // Cambiar el subdominio exige haberlo reclamado antes en /subdomains
+        // para ESTA tienda (Settings.tsx lo hace así). Sin esto el dueño podía
+        // poner el subdominio de otra tienda y pisarle el catálogo.
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['subdomain'])
+          || get(/databases/$(database)/documents/subdomains/$(request.resource.data.subdomain)).data.storeId == storeId
+        )
       );
       allow delete: if isStoreOwnerOrAdmin(storeId);
 
@@ -97,7 +211,10 @@ service cloud.firestore {
       // Orders subcollection
       match /orders/{orderId} {
         allow read: if isStoreOwnerOrAdmin(storeId);
-        allow create: if true; // Customers can create orders
+        // Comprador anónimo: solo pedidos pendientes y limpios (ver
+        // isValidCustomerOrder). El dueño puede cargar ventas manuales ya
+        // pagadas/entregadas desde el dashboard (NewSaleModal).
+        allow create: if isValidCustomerOrder(storeId) || isStoreOwner(storeId);
         allow update: if isStoreOwner(storeId);
         allow delete: if isStoreOwner(storeId);
       }
@@ -105,15 +222,35 @@ service cloud.firestore {
       // Customers subcollection
       match /customers/{customerId} {
         allow read: if isStoreOwnerOrAdmin(storeId);
-        allow create: if true; // Auto-created on order
+        // Ningún flujo del storefront crea clientes desde el navegador; antes
+        // era "if true" y cualquiera podía llenar la colección.
+        allow create: if isStoreOwner(storeId);
         allow update: if isStoreOwner(storeId);
         allow delete: if isStoreOwner(storeId);
       }
 
       // Coupons subcollection
+      // El comprador anónimo NO puede tocar currentUses: el uso lo suma el
+      // servidor al confirmar el pago (markOrderPaid) o el dueño al confirmar
+      // un pedido manual. Solo el dueño escribe.
       match /coupons/{couponId} {
         allow read: if true; // Validate coupons publicly
         allow write: if isStoreOwner(storeId);
+      }
+
+      // Solo servidor (Admin SDK, que se saltea estas reglas). Negado explícito
+      // por si algún día se agrega un comodín bajo /stores/{storeId}.
+      //  - private/payments: secretos de pasarelas (api/_shared/paymentSecrets.ts)
+      //  - aiUsage: contador diario de IA (api/ai-text.ts)
+      //  - payment_checkouts: montos esperados de cada cobro (orderTotal.ts)
+      match /private/{document=**} {
+        allow read, write: if false;
+      }
+      match /aiUsage/{document=**} {
+        allow read, write: if false;
+      }
+      match /payment_checkouts/{document=**} {
+        allow read, write: if false;
       }
 
       // Expenses subcollection (finance module)
@@ -183,6 +320,15 @@ service cloud.firestore {
       }
     }
 
+    // Solo servidor: idempotencia del webhook de Stripe (api/stripe-webhook.ts)
+    // y rate limiting de la API. Negado explícito para el cliente.
+    match /stripeWebhookEvents/{document=**} {
+      allow read, write: if false;
+    }
+    match /rate_limits/{document=**} {
+      allow read, write: if false;
+    }
+
     // Domain indexes (for lookups)
     match /domains/{domain} {
       allow read: if true;
@@ -193,12 +339,31 @@ service cloud.firestore {
     // create-only + update:false means the first writer wins and nobody can
     // overwrite an existing claim; storeService.create claims here BEFORE
     // creating the store doc. Keep update:false — it's load-bearing.
+    // Marcador de trial usado (uno por cuenta). Se crea en el mismo batch que
+    // la tienda con plan 'pro' (storeService.create); para tiendas creadas
+    // por clientes viejos lo rellena el cron diario (api/send-email.ts). No se
+    // puede tocar ni borrar: borrar la tienda y recrearla ya no da otro trial Pro.
+    match /trials/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['storeId', 'createdAt'])
+        && request.resource.data.storeId == userId;
+      allow update, delete: if false;
+    }
+
     match /subdomains/{subdomain} {
       allow read: if true;
-      allow create: if isAuthenticated();
+      // Solo para la tienda propia: la nueva (storeId = uid, todavía no existe
+      // al registrarse) o una existente de la que es dueño (tiendas viejas).
+      allow create: if isAuthenticated() && (
+        request.resource.data.storeId == request.auth.uid
+        || isStoreOwner(request.resource.data.storeId)
+      );
       // Allow delete if user owns the store associated with this subdomain
-      allow delete: if isAuthenticated() &&
-        resource.data.storeId == request.auth.uid;
+      allow delete: if isAuthenticated() && (
+        resource.data.storeId == request.auth.uid
+        || isStoreOwner(resource.data.storeId)
+      );
       allow update: if false;
     }
 

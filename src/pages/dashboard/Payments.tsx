@@ -10,6 +10,14 @@ import { useToast } from '../../components/ui/Toast'
 import { getEffectivePlan } from '../../lib/stripe'
 import { hasGateway } from '../../data/states'
 import PayPalConnect from '../../components/dashboard/PayPalConnect'
+import {
+  getSecretStatus,
+  saveGatewaySecret,
+  clearGatewaySecret,
+  maskedLabel,
+  type PaymentGatewayId,
+  type SecretStatusMap,
+} from '../../lib/paymentCredentials'
 import type { Store } from '../../types'
 
 export default function Payments() {
@@ -42,6 +50,10 @@ export default function Payments() {
   const [gcPassword, setGcPassword] = useState('')
   const [gcSandbox, setGcSandbox] = useState(true)
 
+  // Estado enmascarado de los secretos guardados server-side
+  const [secretStatus, setSecretStatus] = useState<SecretStatusMap>({})
+  const [clearing, setClearing] = useState<PaymentGatewayId | null>(null)
+
   useEffect(() => {
     const fetchStore = async () => {
       if (!firebaseUser) return
@@ -57,25 +69,31 @@ export default function Payments() {
 
           setWhatsappEnabled(storeData.payments?.whatsapp?.enabled ?? true)
 
+          // Los secretos NO se leen del doc público: los inputs de secreto
+          // arrancan vacíos y solo se envían si el comerciante escribe uno nuevo.
           if (storeData.payments?.mercadopago) {
             setMpEnabled(storeData.payments.mercadopago.enabled || false)
             setMpPublicKey(storeData.payments.mercadopago.publicKey || '')
-            setMpAccessToken(storeData.payments.mercadopago.accessToken || '')
             setMpSandbox(storeData.payments.mercadopago.sandbox ?? true)
           }
 
           if (storeData.payments?.stripe) {
             setStripeEnabled(storeData.payments.stripe.enabled || false)
             setStripePublishableKey(storeData.payments.stripe.publishableKey || '')
-            setStripeSecretKey(storeData.payments.stripe.secretKey || '')
             setStripeTestMode(storeData.payments.stripe.testMode ?? true)
           }
 
           if (storeData.payments?.gocuotas) {
             setGcEnabled(storeData.payments.gocuotas.enabled || false)
             setGcEmail(storeData.payments.gocuotas.email || '')
-            setGcPassword(storeData.payments.gocuotas.password || '')
             setGcSandbox(storeData.payments.gocuotas.sandbox ?? true)
+          }
+
+          // Estado enmascarado de los secretos (y migración perezosa server-side)
+          try {
+            setSecretStatus(await getSecretStatus(firebaseUser, storeSnapshot.docs[0].id))
+          } catch (err) {
+            console.error('Error fetching payment secrets status:', err)
           }
         }
       } catch (error) {
@@ -89,34 +107,40 @@ export default function Payments() {
   }, [firebaseUser])
 
   const handleSave = async () => {
-    if (!store) return
+    if (!store || !firebaseUser) return
 
     setSaving(true)
     try {
+      // 1) Secretos nuevos → endpoint server-side (nunca al doc público).
+      //    Input vacío = mantener el secreto ya guardado.
+      const newSecrets: [PaymentGatewayId, string][] = [
+        ['mercadopago', mpAccessToken.trim()],
+        ['stripe', stripeSecretKey.trim()],
+        ['gocuotas', gcPassword],
+      ]
+      const nextStatus: SecretStatusMap = { ...secretStatus }
+      for (const [gateway, secret] of newSecrets) {
+        if (!secret) continue
+        nextStatus[gateway] = await saveGatewaySecret(firebaseUser, store.id, gateway, secret)
+      }
+      setSecretStatus(nextStatus)
+      setMpAccessToken('')
+      setStripeSecretKey('')
+      setGcPassword('')
+
+      // 2) Campos públicos con rutas por campo: no pisa payments.paypal ni
+      //    payments.*.secretConfigured (antes se reescribía todo `payments`).
       await updateDoc(doc(db, 'stores', store.id), {
-        payments: {
-          whatsapp: {
-            enabled: whatsappEnabled
-          },
-          mercadopago: {
-            enabled: mpEnabled,
-            publicKey: mpPublicKey || null,
-            accessToken: mpAccessToken || null,
-            sandbox: mpSandbox
-          },
-          stripe: {
-            enabled: stripeEnabled,
-            publishableKey: stripePublishableKey || null,
-            secretKey: stripeSecretKey || null,
-            testMode: stripeTestMode
-          },
-          gocuotas: {
-            enabled: gcEnabled,
-            email: gcEmail.trim() || null,
-            password: gcPassword || null,
-            sandbox: gcSandbox
-          }
-        },
+        'payments.whatsapp.enabled': whatsappEnabled,
+        'payments.mercadopago.enabled': mpEnabled,
+        'payments.mercadopago.publicKey': mpPublicKey || null,
+        'payments.mercadopago.sandbox': mpSandbox,
+        'payments.stripe.enabled': stripeEnabled,
+        'payments.stripe.publishableKey': stripePublishableKey || null,
+        'payments.stripe.testMode': stripeTestMode,
+        'payments.gocuotas.enabled': gcEnabled,
+        'payments.gocuotas.email': gcEmail.trim() || null,
+        'payments.gocuotas.sandbox': gcSandbox,
         updatedAt: new Date()
       })
       showToast(t('payments.toast.saved'), 'success')
@@ -126,6 +150,44 @@ export default function Payments() {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Borra el secreto guardado de una pasarela (server-side)
+  const handleClearSecret = async (gateway: PaymentGatewayId) => {
+    if (!store || !firebaseUser) return
+    if (!window.confirm('¿Quitar la credencial guardada? La pasarela dejará de cobrar hasta que ingreses una nueva.')) return
+    setClearing(gateway)
+    try {
+      await clearGatewaySecret(firebaseUser, store.id, gateway)
+      setSecretStatus(prev => ({ ...prev, [gateway]: { configured: false, last4: null } }))
+      showToast(t('payments.toast.saved'), 'success')
+    } catch (error) {
+      console.error('Error clearing secret:', error)
+      showToast(t('payments.toast.error'), 'error')
+    } finally {
+      setClearing(null)
+    }
+  }
+
+  // Leyenda bajo el input de secreto: "Configurada · termina en …1234" + Quitar
+  const renderSecretHint = (gateway: PaymentGatewayId) => {
+    const status = secretStatus[gateway]
+    if (!status?.configured) return null
+    return (
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-[11px] text-green-700">
+          {maskedLabel(status)}. Dejalo vacío para mantenerla.
+        </p>
+        <button
+          type="button"
+          onClick={() => handleClearSecret(gateway)}
+          disabled={clearing === gateway}
+          className="text-[11px] text-red-600 hover:underline disabled:opacity-50"
+        >
+          Quitar
+        </button>
+      </div>
+    )
   }
 
   // Get store country for gateway availability
@@ -257,9 +319,11 @@ export default function Payments() {
                         type="password"
                         value={mpAccessToken}
                         onChange={(e) => setMpAccessToken(e.target.value)}
-                        placeholder="APP_USR-xxxxxxxx-xxxx-xxxx"
+                        placeholder={secretStatus.mercadopago?.configured ? '••••••••••••' : 'APP_USR-xxxxxxxx-xxxx-xxxx'}
+                        autoComplete="new-password"
                         className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
                       />
+                      {renderSecretHint('mercadopago')}
                     </div>
                   </div>
 
@@ -384,9 +448,11 @@ export default function Payments() {
                         type="password"
                         value={stripeSecretKey}
                         onChange={(e) => setStripeSecretKey(e.target.value)}
-                        placeholder="sk_test_xxxxxxxxxxxxxxxx"
+                        placeholder={secretStatus.stripe?.configured ? '••••••••••••' : 'sk_test_xxxxxxxxxxxxxxxx'}
+                        autoComplete="new-password"
                         className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all font-mono text-sm"
                       />
+                      {renderSecretHint('stripe')}
                     </div>
                   </div>
 
@@ -494,10 +560,11 @@ export default function Payments() {
                         type="password"
                         value={gcPassword}
                         onChange={(e) => setGcPassword(e.target.value)}
-                        placeholder="Tu contrasena de Go Cuotas"
+                        placeholder={secretStatus.gocuotas?.configured ? '••••••••••••' : 'Tu contrasena de Go Cuotas'}
                         className="w-full px-4 py-2.5 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#FF1F6D]/10 focus:border-[#FF1F6D]/40 transition-all font-mono text-sm"
                         autoComplete="new-password"
                       />
+                      {renderSecretHint('gocuotas')}
                     </div>
                   </div>
 

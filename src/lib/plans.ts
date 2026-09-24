@@ -14,6 +14,14 @@
  */
 
 // `-1` means "unlimited" throughout the codebase.
+//
+// `features` son las funciones que se venden HOY (la pagina de planes las
+// muestra con check). `comingSoon` son funciones anunciadas pero todavia no
+// disponibles (la ruta muestra "Proximamente"): se muestran con una etiqueta
+// "Proximamente" y NO deben venderse como incluidas.
+// Las traducciones de la pagina de planes estan en
+// src/i18n/locales/{es,en}/dashboard.json → plan.featureList / plan.comingSoonList
+// (por indice): si cambias el orden o el texto aca, actualiza esas listas.
 export const PLAN_FEATURES = {
   free: {
     name: 'Gratis',
@@ -26,7 +34,8 @@ export const PLAN_FEATURES = {
       'Codigo QR para compartir',
       '1 foto por producto',
       'Hasta 3 categorias'
-    ],
+    ] as string[],
+    comingSoon: [] as string[],
     limits: {
       products: 10,
       imagesPerProduct: 1,
@@ -45,7 +54,8 @@ export const PLAN_FEATURES = {
       'Tu propio dominio .com',
       '5 fotos por producto',
       'Conoce a tus clientes'
-    ],
+    ] as string[],
+    comingSoon: [] as string[],
     limits: {
       products: 200,
       imagesPerProduct: 5,
@@ -60,11 +70,12 @@ export const PLAN_FEATURES = {
     features: [
       'Todo lo de Pro',
       'Productos sin limite',
-      'Dropshipping (CJ, Printful...)',
       'Tu marca, sin Shopifree',
       'App Android y iPhone de tu tienda',
       'Soporte prioritario'
-    ],
+    ] as string[],
+    // Dropshipping todavia no esta disponible (/dashboard/dropshipping es ComingSoon).
+    comingSoon: ['Dropshipping (CJ, Printful...)'] as string[],
     limits: {
       products: -1,
       imagesPerProduct: 10,
@@ -75,3 +86,25 @@ export const PLAN_FEATURES = {
 }
 
 export type PlanType = keyof typeof PLAN_FEATURES
+
+/**
+ * Convierte cualquier fecha que venga de Firestore a Date (o null).
+ * Los timestamps anidados (p. ej. `subscription.currentPeriodEnd`) llegan como
+ * Timestamp de Firestore y `new Date(timestamp)` da "Invalid Date". Acepta:
+ * Timestamp ({ toDate }), { seconds } / { _seconds }, Date, string ISO y numero (ms).
+ */
+export function toPlanDate(raw: unknown): Date | null {
+  if (raw === null || raw === undefined || raw === '') return null
+  let d: Date | null = null
+  if (raw instanceof Date) {
+    d = raw
+  } else if (typeof raw === 'object') {
+    const obj = raw as { toDate?: () => Date; seconds?: number; _seconds?: number }
+    if (typeof obj.toDate === 'function') d = obj.toDate()
+    else if (typeof obj.seconds === 'number') d = new Date(obj.seconds * 1000)
+    else if (typeof obj._seconds === 'number') d = new Date(obj._seconds * 1000)
+  } else if (typeof raw === 'string' || typeof raw === 'number') {
+    d = new Date(raw)
+  }
+  return d && !Number.isNaN(d.getTime()) ? d : null
+}

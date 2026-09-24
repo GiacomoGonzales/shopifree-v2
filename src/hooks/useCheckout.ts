@@ -428,8 +428,11 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-    // Increment coupon uses after successful order creation
-    if (appliedCoupon) {
+    // Pagos online: el uso del cupón lo suma el SERVIDOR cuando el pago se
+    // confirma (api/_shared/orderTotal.ts markOrderPaid), y el monto/descuento
+    // se recalcula allá — el descuento de acá es solo para mostrar.
+    // WhatsApp/transferencia: se mantiene el comportamiento anterior.
+    if (appliedCoupon && (paymentMethod === 'whatsapp' || paymentMethod === 'transfer')) {
       couponService.incrementUses(store.id, appliedCoupon.id).catch(() => {})
     }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import type { ChangeEvent, MouseEvent, ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { collection, query, where, getDocs, doc, updateDoc, deleteField, limit } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import { db } from '../../lib/firebase'
@@ -23,6 +23,7 @@ import { PALETTES, paletteEntries } from './palettes'
 import ProductQuickEdit from './ProductQuickEdit'
 import AiSuggest from './AiSuggest'
 import { getEffectivePlan } from '../../lib/stripe'
+import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import PhoneFrame from './PhoneFrame'
 import { DEVICES, DEFAULT_DEVICE } from './devices'
 import { saveDraft, loadDraft, clearDraft, type StoredDraft } from './draftStorage'
@@ -115,6 +116,9 @@ export default function LiveEditor() {
   const { t } = useTranslation('dashboard')
   const { firebaseUser } = useAuth()
   const { localePath } = useLanguage()
+  // En la app nativa no se muestran links de compra/upgrade (App Store 3.1.1).
+  const showUpgrade = useShowUpgradeUI()
+  const upgradePath = showUpgrade ? localePath('/dashboard/plan') : undefined
   const { showToast } = useToast()
   const navigate = useNavigate()
 
@@ -297,7 +301,7 @@ export default function LiveEditor() {
     }
     // Los temas premium se pueden mirar con el plan gratis, pero no aplicar (igual que en Apariencia).
     const theme = themes.find(th => th.id === (draft.themeId || 'minimal'))
-    if (changes.themeId && theme?.isPremium && draft.plan === 'free') {
+    if (changes.themeId && theme?.isPremium && getEffectivePlan(draft) === 'free') {
       showToast(t('liveEditor.themePremium'), 'error')
       return
     }
@@ -525,7 +529,7 @@ export default function LiveEditor() {
     const next = themes[(themeIndex + delta + themes.length) % themes.length]
     change('themeId', next.id)
   }
-  const themeLocked = !!currentTheme?.isPremium && draft.plan === 'free'
+  const themeLocked = !!currentTheme?.isPremium && getEffectivePlan(draft) === 'free'
   const headerColors = getHeaderColors(draft)
   // Colores originales del tema: los que informa el tema en pantalla (exactos) o,
   // hasta que llegan, los de la lista de temas. Solo hex: van a un <input type="color">.
@@ -559,7 +563,7 @@ export default function LiveEditor() {
   const dirtyGroups = new Set(Object.keys(changes).map(groupForPath))
   // Textos con IA: solo plan Business (el servidor tambien lo valida).
   const aiEnabled = getEffectivePlan(draft) === 'business'
-  const aiProps = { storeId: draft.id, enabled: aiEnabled, upgradeHref: localePath('/dashboard/plan') }
+  const aiProps = { storeId: draft.id, enabled: aiEnabled, upgradeHref: upgradePath }
 
   // Secciones: el orden elegido (con las que falten al final, en su orden de siempre).
   const sectionLayout = getSectionLayout(draft)
@@ -584,7 +588,7 @@ export default function LiveEditor() {
   const storeUrl = draft.customDomain && draft.domainStatus === 'verified'
     ? `https://${draft.customDomain}`
     : `https://${draft.subdomain}.shopifree.app`
-  const paidPlan = draft.plan !== 'free'
+  const paidPlan = getEffectivePlan(draft) !== 'free'
   const trustBadges = draft.trustBadges
   const flashSale = draft.flashSale
   // Primera vez que se activan las insignias: todas prendidas, como en Apariencia.
@@ -770,8 +774,10 @@ export default function LiveEditor() {
               </div>
               {themeLocked ? (
                 <p className="mt-2 text-[0.7rem] text-amber-700">
-                  {t('liveEditor.themePremiumHint')}{' '}
-                  <a href={localePath('/dashboard/plan')} className="font-semibold underline">{t('liveEditor.upgrade')}</a>
+                  {t('liveEditor.themePremiumHint')}
+                  {upgradePath && (
+                    <>{' '}<Link to={upgradePath} className="font-semibold underline">{t('liveEditor.upgrade')}</Link></>
+                  )}
                 </p>
               ) : changes.themeId !== undefined && (
                 <p className="mt-2 text-[0.7rem] text-[#8898AA]">{t('liveEditor.themeUnsaved')}</p>
@@ -1144,7 +1150,7 @@ export default function LiveEditor() {
                 </label>
               </div>
               {!paidPlan ? (
-                <PlanNote text={t('liveEditor.paidOnly')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} />
+                <PlanNote text={t('liveEditor.paidOnly')} link={upgradePath} linkLabel={t('liveEditor.upgrade')} />
               ) : trustBadges?.enabled && (
                 <>
                   <p className="text-[0.7rem] text-[#8898AA] mb-2">{t('liveEditor.trustBadgesHint')}</p>
@@ -1169,7 +1175,7 @@ export default function LiveEditor() {
                 </label>
               </div>
               {!paidPlan ? (
-                <PlanNote text={t('liveEditor.paidOnly')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} />
+                <PlanNote text={t('liveEditor.paidOnly')} link={upgradePath} linkLabel={t('liveEditor.upgrade')} />
               ) : flashSale?.enabled && (
                 <>
                   <p className="text-[0.7rem] text-[#8898AA] mb-2">{t('liveEditor.flashSaleHint')}</p>
@@ -1398,7 +1404,7 @@ export default function LiveEditor() {
                 </label>
               </div>
               {!paidPlan && (
-                <div className="mt-2"><PlanNote text={t('liveEditor.starPaid')} link={localePath('/dashboard/plan')} linkLabel={t('liveEditor.upgrade')} /></div>
+                <div className="mt-2"><PlanNote text={t('liveEditor.starPaid')} link={upgradePath} linkLabel={t('liveEditor.upgrade')} /></div>
               )}
             </section>
           </PanelGroup>
@@ -1501,10 +1507,12 @@ function SelectField({ label, value, onChange, options }: SelectFieldProps) {
   )
 }
 
-function PlanNote({ text, link, linkLabel }: { text: string; link: string; linkLabel: string }) {
+// Sin link (app nativa) solo queda el texto: nada de CTAs de compra.
+function PlanNote({ text, link, linkLabel }: { text: string; link?: string; linkLabel: string }) {
   return (
     <p className="text-[0.7rem] text-amber-700">
-      {text} <a href={link} className="font-semibold underline">{linkLabel}</a>
+      {text}
+      {link && <>{' '}<Link to={link} className="font-semibold underline">{linkLabel}</Link></>}
     </p>
   )
 }

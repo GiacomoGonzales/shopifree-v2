@@ -68,7 +68,12 @@ async function verifyOwnerAndGetStoreId(req: VercelRequest): Promise<string | nu
     const userSnap = await getDb().collection('users').doc(decoded.uid).get()
     if (!userSnap.exists) return null
     const storeId = userSnap.data()?.storeId
-    return typeof storeId === 'string' ? storeId : null
+    if (typeof storeId !== 'string' || !storeId) return null
+    // users/{uid}.storeId lo escribe el propio usuario: no alcanza para dar
+    // acceso. La tienda tiene que existir y ser de este uid.
+    const storeSnap = await getDb().collection('stores').doc(storeId).get()
+    if (!storeSnap.exists || storeSnap.data()?.ownerId !== decoded.uid) return null
+    return storeId
   } catch (err) {
     console.error('[api-keys] auth error:', err)
     return null

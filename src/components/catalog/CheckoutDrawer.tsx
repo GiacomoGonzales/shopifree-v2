@@ -16,6 +16,7 @@ import {
   type DeliverySelectorRef,
   type PaymentSelectorRef
 } from './checkout'
+import { getEffectivePlan } from '../../lib/stripe'
 
 /** Translate MercadoPago status_detail to human-readable message */
 function getPaymentErrorMessage(statusDetail: string, lang?: string): string {
@@ -369,7 +370,7 @@ export default function CheckoutDrawer({ items, totalPrice, store, onClose, onOr
                 availableCoupons={availableCoupons}
                 couponError={couponError}
                 couponLoading={couponLoading}
-                onApplyCoupon={(store.plan === 'pro' || store.plan === 'business') ? applyCoupon : undefined}
+                onApplyCoupon={getEffectivePlan(store) !== 'free' ? applyCoupon : undefined}
                 onRemoveCoupon={removeCoupon}
               />
             </div>

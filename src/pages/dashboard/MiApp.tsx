@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core'
 import { Link } from 'react-router-dom'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../hooks/useAuth'
+import { getEffectivePlan } from '../../lib/stripe'
 import { useToast } from '../../components/ui/Toast'
 import { useLanguage } from '../../hooks/useLanguage'
 import AppDownloadCard from '../../components/dashboard/AppDownloadCard'
@@ -150,17 +151,17 @@ export default function MiApp() {
       })
 
       // Notify admin via email
-      fetch(apiUrl('/api/send-email'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'app-request',
-          storeId: store.id,
-          storeName: store.name,
-          subdomain: store.subdomain,
-          appName: appName || store.name,
-        })
-      }).catch(() => {}) // fire-and-forget
+      // El endpoint exige ID token del dueno y lee los datos de la tienda en el servidor.
+      firebaseUser.getIdToken()
+        .then(idToken => fetch(apiUrl('/api/send-email'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({
+            type: 'app-request',
+            storeId: store.id,
+          })
+        }))
+        .catch(() => {}) // fire-and-forget
 
       showToast(t('miApp.toast.requested'))
     } catch {
@@ -228,7 +229,7 @@ export default function MiApp() {
   }
 
   // Plan gate - Business required
-  if (store && store.plan !== 'business') {
+  if (store && getEffectivePlan(store) !== 'business') {
     return (
       <div className="space-y-6">
         <div>

@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
+import { isAdminToken } from './_shared/admin.js'
 
 /**
  * Migración de VIDEOS Cloudinary → Cloudflare Stream, una tienda a la vez (admin).
@@ -20,7 +21,6 @@ import { getFirestore } from 'firebase-admin/firestore'
  * Auth: admin. Env: FIREBASE_*, CLOUDFLARE_STREAM_TOKEN, (CLOUDFLARE_ACCOUNT_ID|R2_ACCOUNT_ID)
  */
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 function ensureFirebase() {
   if (getApps().length) return
@@ -56,14 +56,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const token = (req.headers.authorization || '').replace('Bearer ', '')
     if (!token) return res.status(401).json({ error: 'No autenticado' })
-    let email = ''
+    let isAdmin = false
     try {
       const decoded = await getAuth().verifyIdToken(token)
-      email = decoded.email || ''
+      isAdmin = isAdminToken(decoded)
     } catch {
       return res.status(401).json({ error: 'Token inválido' })
     }
-    if (!ADMIN_EMAILS.includes(email)) return res.status(403).json({ error: 'Solo admin' })
+    if (!isAdmin) return res.status(403).json({ error: 'Solo admin' })
 
     const { storeId, dryRun = false, limit = 20 } = (req.body || {}) as {
       storeId?: string; dryRun?: boolean; limit?: number

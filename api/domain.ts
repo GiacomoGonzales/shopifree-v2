@@ -1,6 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
+import { getAuth } from 'firebase-admin/auth'
+import { isAdminToken } from './_shared/admin.js'
+import { hasPaidEffectivePlan, type StorePlanData } from './_shared/plan.js'
 
 // Initialize Firebase Admin (only once)
 if (!getApps().length) {
@@ -22,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
@@ -42,6 +45,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!action || !storeId || !domain) {
     return res.status(400).json({ error: 'Missing required parameters: action, storeId, domain' })
+  }
+
+  // add/remove/verify modifican la tienda y el proyecto de Vercel: exigen el
+  // ID token del dueno (o admin). Antes cualquiera podia quitarle el dominio
+  // a otra tienda o agregar dominios a su nombre.
+  const authHeader = req.headers.authorization || ''
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+  try {
+    const decoded = await getAuth().verifyIdToken(authHeader.slice(7))
+    const ownerSnap = await db.collection('stores').doc(String(storeId)).get()
+    if (!ownerSnap.exists) {
+      return res.status(404).json({ error: 'Store not found' })
+    }
+    if (ownerSnap.data()?.ownerId !== decoded.uid && !isAdminToken(decoded)) {
+      return res.status(403).json({ error: 'Forbidden' })
+    }
+  } catch {
+    return res.status(401).json({ error: 'Unauthorized' })
   }
 
   switch (action) {
@@ -67,16 +90,32 @@ async function handleAdd(_req: VercelRequest, res: VercelResponse, storeId: stri
 
     const storeData = storeDoc.data()
 
-    if (storeData?.plan !== 'pro' && storeData?.plan !== 'business') {
+    // Plan EFECTIVO (trial vencido = free), igual que el resto del servidor.
+    if (!hasPaidEffectivePlan(storeData as StorePlanData)) {
       return res.status(403).json({ error: 'Pro plan required for custom domains' })
     }
 
     // Validate domain format
     const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
-    const cleanDomain = domain.trim().toLowerCase()
+    const cleanDomain = String(domain).trim().toLowerCase()
 
     if (!domainRegex.test(cleanDomain)) {
       return res.status(400).json({ error: 'Invalid domain format' })
+    }
+
+    // Nunca dominios de la plataforma.
+    if (cleanDomain === 'shopifree.app' || cleanDomain.endsWith('.shopifree.app')) {
+      return res.status(400).json({ error: 'El dominio no es válido', code: 'INVALID_DOMAIN' })
+    }
+
+    // Unicidad: el storefront resuelve por where('customDomain','==',...) y
+    // toma el primero, asi que otra tienda con el mismo dominio lo secuestraria.
+    const sameDomain = await db.collection('stores').where('customDomain', '==', cleanDomain).limit(2).get()
+    if (sameDomain.docs.some(d => d.id !== storeId)) {
+      return res.status(400).json({
+        error: 'Este dominio ya está en uso en otra tienda',
+        code: 'DOMAIN_IN_USE'
+      })
     }
 
     // Add domain to Vercel

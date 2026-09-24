@@ -20,6 +20,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { isAdminToken } from './_shared/admin.js'
 
 // Vercel function config — give us a 60s budget. Default is 10s on Hobby
 // which is too short for 300+ stores. 60s is the cap on Hobby; Pro can go
@@ -47,7 +48,6 @@ function getDb(): Firestore {
   return db
 }
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   const authHeader = req.headers.authorization
@@ -57,7 +57,7 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
     getDb()
     const { getAuth } = await import('firebase-admin/auth')
     const decoded = await getAuth().verifyIdToken(token)
-    return ADMIN_EMAILS.includes(decoded.email || '')
+    return isAdminToken(decoded)
   } catch {
     return false
   }

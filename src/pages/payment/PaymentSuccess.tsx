@@ -69,9 +69,36 @@ function recoverOrderData(searchParams: URLSearchParams): PendingOrderData | nul
   return null
 }
 
+/** Texto "confirmando pago" (no está en las traducciones del tema) */
+function confirmingLabel(lang?: string): string {
+  if (lang === 'en') return 'Confirming your payment...'
+  if (lang === 'pt') return 'Confirmando seu pagamento...'
+  return 'Confirmando tu pago...'
+}
+
+// Consulta el estado REAL del pedido (lo marca pagado el servidor tras
+// verificar con la pasarela). Los pedidos no son legibles por el comprador
+// en Firestore, por eso va por la API.
+async function fetchPaymentStatus(storeId: string, orderId: string): Promise<string | null> {
+  try {
+    const res = await fetch(apiUrl('/api/process-mp-payment'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'status', storeId, orderId }),
+    })
+    if (!res.ok) return null
+    const json = await res.json() as { paymentStatus?: string }
+    return json.paymentStatus || null
+  } catch {
+    return null
+  }
+}
+
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  // 'confirming': volvimos de la pasarela pero el servidor todavía no confirmó
+  // el pago. Solo se muestra "pagado" cuando el pedido está paid de verdad.
+  const [status, setStatus] = useState<'loading' | 'confirming' | 'success' | 'pending' | 'failed' | 'error'>('loading')
   const [orderData, setOrderData] = useState<PendingOrderData | null>(null)
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
 
@@ -86,76 +113,110 @@ export default function PaymentSuccess() {
     }
 
     setOrderData(data)
+    setStatus('confirming')
 
-    // Build WhatsApp URL immediately from localStorage data (no async needed)
-    if (data.storeWhatsapp && data.orderNumber) {
-      setWhatsappUrl(buildWhatsAppUrl(data.storeWhatsapp, data))
+    let cancelled = false
+
+    // Se ejecuta solo cuando el servidor confirmó el pago
+    const onPaid = () => {
+      if (cancelled) return
+      // WhatsApp con "PAGADO" solo con el pago confirmado
+      if (data.storeWhatsapp && data.orderNumber) {
+        setWhatsappUrl(buildWhatsAppUrl(data.storeWhatsapp, data))
+      }
+      setStatus('success')
+
+      // Fire Purchase pixel event — this is where MP/Stripe conversions confirm.
+      // Gated on a session flag to avoid double-firing if the page remounts.
+      const purchaseFiredKey = `pixelPurchaseFired_${data.orderId}`
+      if (!sessionStorage.getItem(purchaseFiredKey) && data.total && data.items?.length) {
+        sessionStorage.setItem(purchaseFiredKey, '1')
+        import('../../lib/pixels').then(({ trackPurchase }) => {
+          trackPurchase({
+            transactionId: data.orderNumber || data.orderId,
+            currency: data.currency || 'USD',
+            value: data.total || 0,
+            items: (data.items || []).map((it, idx) => ({
+              id: `${data.orderId}-${idx}`,
+              name: it.productName,
+              price: it.itemTotal / Math.max(1, it.quantity),
+              quantity: it.quantity,
+            })),
+          })
+        }).catch(() => { /* silent */ })
+      }
+
+      // Clean up localStorage
+      localStorage.removeItem('pendingOrder')
     }
-
-    // Show success immediately - don't block on Firestore
-    setStatus('success')
-
-    // Fire Purchase pixel event — this is where MP/Stripe conversions confirm.
-    // Gated on a session flag to avoid double-firing if the page remounts.
-    const purchaseFiredKey = `pixelPurchaseFired_${data.orderId}`
-    if (!sessionStorage.getItem(purchaseFiredKey) && data.total && data.items?.length) {
-      sessionStorage.setItem(purchaseFiredKey, '1')
-      import('../../lib/pixels').then(({ trackPurchase }) => {
-        trackPurchase({
-          transactionId: data.orderNumber || data.orderId,
-          currency: data.currency || 'USD',
-          value: data.total || 0,
-          items: (data.items || []).map((it, idx) => ({
-            id: `${data.orderId}-${idx}`,
-            name: it.productName,
-            price: it.itemTotal / Math.max(1, it.quantity),
-            quantity: it.quantity,
-          })),
-        })
-      }).catch(() => { /* silent */ })
-    }
-
-    // Clean up localStorage
-    localStorage.removeItem('pendingOrder')
 
     // Capture path branches by gateway. We detect PayPal by either the
     // explicit ?paypal=1 flag we add on the return URL or the `token`
-    // query param PayPal appends (PayPal Order id). MP uses ?status=approved.
+    // query param PayPal appends (PayPal Order id). MP uses ?payment_id.
     const paypalFlag = searchParams.get('paypal') === '1'
     const paypalToken = searchParams.get('token') // PayPal-set on approve return
     const isPayPalReturn = paypalFlag || (!!paypalToken && data.paymentMethod === 'paypal')
 
-    if (isPayPalReturn && data.orderId && data.storeId) {
-      const paypalOrderId = paypalToken || data.paypalOrderId
-      if (paypalOrderId) {
-        fetch(apiUrl('/api/process-paypal-payment'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'capture',
-            storeId: data.storeId,
-            orderId: data.orderId,
-            paypalOrderId,
-          }),
-        }).catch(err => console.warn('PayPal capture failed (webhook will handle it):', err))
+    const confirm = async () => {
+      if (isPayPalReturn && data.orderId && data.storeId) {
+        const paypalOrderId = paypalToken || data.paypalOrderId
+        if (paypalOrderId) {
+          try {
+            await fetch(apiUrl('/api/process-paypal-payment'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'capture',
+                storeId: data.storeId,
+                orderId: data.orderId,
+                paypalOrderId,
+              }),
+            })
+          } catch (err) {
+            console.warn('PayPal capture failed (webhook will handle it):', err)
+          }
+        }
+      } else {
+        // MercadoPago / generic case: el servidor verifica el pago con la API de MP
+        const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id')
+        if (paymentId && data.orderId && data.storeId) {
+          try {
+            await fetch(apiUrl('/api/process-mp-payment'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'confirm',
+                storeId: data.storeId,
+                orderId: data.orderId,
+                paymentId
+              })
+            })
+          } catch (err) {
+            console.warn('Order confirmation failed (webhook will handle it):', err)
+          }
+        }
       }
-    } else {
-      // MercadoPago / generic case
-      const paymentId = searchParams.get('payment_id')
-      const paymentStatus = searchParams.get('status')
-      if (paymentStatus === 'approved' && paymentId && data.orderId && data.storeId) {
-        fetch(apiUrl('/api/process-mp-payment'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'confirm',
-            storeId: data.storeId,
-            orderId: data.orderId,
-            paymentId
-          })
-        }).catch(err => console.warn('Order confirmation failed (webhook will handle it):', err))
+
+      // Esperar la confirmación real (confirm inline o webhook): ~60s
+      for (let i = 0; i < 20 && !cancelled; i++) {
+        const paymentStatus = await fetchPaymentStatus(data.storeId, data.orderId)
+        if (cancelled) return
+        if (paymentStatus === 'paid') {
+          onPaid()
+          return
+        }
+        if (paymentStatus === 'failed' && i >= 2) {
+          setStatus('failed')
+          return
+        }
+        await new Promise(r => setTimeout(r, 3000))
       }
+      // Sin confirmación todavía: se muestra "pago en proceso", nunca "pagado"
+      if (!cancelled) setStatus('pending')
     }
+
+    confirm()
+    return () => { cancelled = true }
   }, [searchParams])
 
   const t = getThemeTranslations(orderData?.language)
@@ -219,7 +280,7 @@ ${orderData.shippingCost ? `<tr><td colspan="3" style="padding:8px 12px;text-ali
     URL.revokeObjectURL(url)
   }
 
-  if (status === 'loading') {
+  if (status === 'loading' || status === 'confirming') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -227,13 +288,38 @@ ${orderData.shippingCost ? `<tr><td colspan="3" style="padding:8px 12px;text-ali
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p className="mt-4 text-gray-600">{t.paymentProcessing}</p>
+          <p className="mt-4 text-gray-600">{status === 'confirming' ? confirmingLabel(orderData?.language) : t.paymentProcessing}</p>
         </div>
       </div>
     )
   }
 
-  if (status === 'error') {
+  if (status === 'pending') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.paymentPending}</h1>
+          <p className="text-gray-600 mb-2">{t.paymentPendingMessage}</p>
+          {orderData?.orderNumber && (
+            <p className="text-gray-500 mb-6">{t.orderNumber}: <strong>{orderData.orderNumber}</strong></p>
+          )}
+          <button
+            onClick={handleBackToStore}
+            className="px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            {t.backToStore}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'error' || status === 'failed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center max-w-md">

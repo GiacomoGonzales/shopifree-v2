@@ -26,6 +26,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { isAdminToken } from './_shared/admin.js'
 
 export const config = {
   maxDuration: 60,
@@ -50,7 +51,6 @@ function getDb(): Firestore {
   return db
 }
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   const authHeader = req.headers.authorization
@@ -60,7 +60,7 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
     getDb()
     const { getAuth } = await import('firebase-admin/auth')
     const decoded = await getAuth().verifyIdToken(token)
-    return ADMIN_EMAILS.includes(decoded.email || '')
+    return isAdminToken(decoded)
   } catch {
     return false
   }

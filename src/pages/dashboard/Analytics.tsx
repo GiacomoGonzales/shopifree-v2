@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
+import { getEffectivePlan } from '../../lib/stripe'
 import { useLanguage } from '../../hooks/useLanguage'
 import { analyticsService } from '../../lib/firebase'
 import { getCurrencySymbol } from '../../lib/currency'
@@ -277,8 +278,8 @@ export default function Analytics() {
     }))
   }, [referrerStats, t])
 
-  // Check plan
-  if (store?.plan === 'free' || !store?.plan) {
+  // Check plan (plan efectivo: una prueba vencida ya cuenta como Gratis)
+  if (!store?.plan || getEffectivePlan(store) === 'free') {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="max-w-md text-center p-8">

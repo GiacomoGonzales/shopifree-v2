@@ -2,6 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
+import { getPaymentSecrets } from './_shared/paymentSecrets.js'
+import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, amountsMatch } from './_shared/orderTotal.js'
+import { randomBytes } from 'crypto'
 
 let db: Firestore
 
@@ -26,7 +29,7 @@ interface RequestBody {
   storeId: string
   orderId: string
   orderNumber: string
-  amount: number              // total in store currency (e.g. ARS), as a regular number — we convert to cents
+  amount?: number             // IGNORADO: el monto se calcula en el servidor (api/_shared/orderTotal.ts)
   customerEmail?: string
   customerPhone?: string
   origin: string              // window.location.origin from the buyer's browser, used to build return URLs
@@ -70,10 +73,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { storeId, orderId, orderNumber, amount, customerEmail, customerPhone, origin } = req.body as RequestBody
+    const { storeId, orderId, orderNumber, customerEmail, customerPhone, origin } = req.body as RequestBody
 
-    if (!storeId || !orderId || !amount || amount <= 0) {
-      return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, amount' })
+    if (!storeId || !orderId) {
+      return res.status(400).json({ error: 'Missing required parameters: storeId, orderId' })
     }
 
     const firestore = getDb()
@@ -90,8 +93,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const gcConfig = storeData?.payments?.gocuotas
 
     if (!gcConfig?.enabled) return res.status(400).json({ error: 'Go Cuotas is not enabled for this store' })
-    if (!gcConfig.email || !gcConfig.password) {
+    // Secreto server-only (doc privado, con fallback al campo legacy)
+    const gcPassword = (await getPaymentSecrets(firestore, storeId, storeData)).gocuotas?.password
+    if (!gcConfig.email || !gcPassword) {
       return res.status(400).json({ error: 'Go Cuotas credentials not configured' })
+    }
+
+    // Anti-abuso: límite por IP y por pedido
+    if (!(await checkIpRateLimit(firestore, req, 'gocuotas-checkout'))) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.' })
+    }
+
+    // Monto calculado en el servidor (pedido existente, pendiente, total verificado)
+    const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'gocuotas')
+    if (!payable.ok) {
+      return res.status(payable.status).json({ error: payable.error, code: payable.code })
+    }
+    const { pricing, checkout } = payable
+    const amount = pricing.total
+
+    // Un checkout por pedido: si ya se creó con el mismo monto, se reutiliza
+    if (checkout?.gocuotasUrlInit && checkout.gocuotasToken && typeof checkout.amount === 'number'
+      && amountsMatch(checkout.amount, amount, pricing.currency)) {
+      return res.status(200).json({ url_init: checkout.gocuotasUrlInit, checkout_id: checkout.gocuotasCheckoutId || null })
+    }
+    if (!(await bumpCheckoutAttempts(firestore, storeId, orderId, 'attempts', 10))) {
+      return res.status(429).json({ error: 'Demasiados intentos para este pedido.' })
     }
 
     const apiBase = gcConfig.sandbox === true
@@ -100,7 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Step 1 — authenticate to obtain a token. Per Go Cuotas' docs the
     // credentials go as query string params (not a JSON body).
-    const authUrl = `${apiBase}/authentication?email=${encodeURIComponent(gcConfig.email)}&password=${encodeURIComponent(gcConfig.password)}`
+    const authUrl = `${apiBase}/authentication?email=${encodeURIComponent(gcConfig.email)}&password=${encodeURIComponent(gcPassword)}`
     const authResponse = await fetch(authUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
@@ -133,7 +160,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const webhookBase = process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : process.env.APP_URL || baseOrigin
-    const webhookUrl = `${webhookBase}/api/gocuotas-webhook?storeId=${encodeURIComponent(storeId)}`
+    // Go Cuotas no firma sus webhooks ni tiene (documentada) una API para
+    // re-consultar el estado, así que la URL lleva un token secreto por pedido
+    // que solo conoce el servidor (payment_checkouts) y que el webhook verifica.
+    const webhookToken = checkout?.gocuotasToken || randomBytes(24).toString('hex')
+    const webhookUrl = `${webhookBase}/api/gocuotas-webhook?storeId=${encodeURIComponent(storeId)}&orderId=${encodeURIComponent(orderId)}&token=${webhookToken}`
 
     // amount_in_cents: Go Cuotas wants the total expressed in cents (centavos).
     // 1500.50 ARS → 150050.
@@ -148,6 +179,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (customerEmail) checkoutPayload.email = customerEmail
     if (customerPhone) checkoutPayload.phone_number = customerPhone.replace(/\D/g, '')
+
+    // Guardar token y monto esperado ANTES de crear el checkout (el webhook los necesita)
+    await saveCheckout(firestore, storeId, orderId, {
+      gateway: 'gocuotas',
+      amount,
+      currency: pricing.currency,
+      payAmount: amount,
+      payCurrency: pricing.currency,
+      couponId: pricing.coupon?.id || null,
+      gocuotasToken: webhookToken,
+    })
 
     const checkoutResponse = await fetch(`${apiBase}/checkouts`, {
       method: 'POST',
@@ -173,6 +215,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error('[create-gocuotas-checkout] no url_init in response:', checkoutResult)
       return res.status(502).json({ error: 'Go Cuotas did not return a redirect URL' })
     }
+
+    await saveCheckout(firestore, storeId, orderId, {
+      gocuotasUrlInit: urlInit,
+      gocuotasCheckoutId: checkoutResult.id ? String(checkoutResult.id) : null,
+    })
 
     return res.status(200).json({
       url_init: urlInit,

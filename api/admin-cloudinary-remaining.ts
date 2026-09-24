@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
+import { isAdminToken } from './_shared/admin.js'
 
 /**
  * Verificador (solo lectura): escanea TODAS las tiendas y cuenta cuántas URLs
@@ -13,7 +14,6 @@ import { getFirestore } from 'firebase-admin/firestore'
  * Auth: admin. Env: FIREBASE_*.
  */
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 const STORE_IMAGE_FIELDS = ['logo', 'logoLandscape', 'heroImage', 'heroImageMobile', 'favicon']
 
 function ensureFirebase() {
@@ -55,9 +55,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ensureFirebase()
     const token = (req.headers.authorization || '').replace('Bearer ', '')
     if (!token) return res.status(401).json({ error: 'No autenticado' })
-    let email = ''
-    try { email = (await getAuth().verifyIdToken(token)).email || '' } catch { return res.status(401).json({ error: 'Token inválido' }) }
-    if (!ADMIN_EMAILS.includes(email)) return res.status(403).json({ error: 'Solo admin' })
+    let isAdmin = false
+    try { isAdmin = isAdminToken(await getAuth().verifyIdToken(token)) } catch { return res.status(401).json({ error: 'Token inválido' }) }
+    if (!isAdmin) return res.status(403).json({ error: 'Solo admin' })
 
     const db = getFirestore()
     const storesSnap = await db.collection('stores').get()

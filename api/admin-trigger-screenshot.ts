@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore, FieldValue } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
+import { isAdminToken } from './_shared/admin.js'
 
 /**
  * Admin-only endpoint that triggers the "Screenshot store (phone)" GitHub
@@ -15,7 +16,6 @@ import { getAuth } from 'firebase-admin/auth'
  * Env: GITHUB_TOKEN, GITHUB_REPO (format: "owner/repo")
  */
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 let _db: Firestore | null = null
 function getDb(): Firestore {
@@ -55,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     getDb()
     const decoded = await getAuth().verifyIdToken(token)
-    if (!decoded.email || !ADMIN_EMAILS.includes(decoded.email)) {
+    if (!isAdminToken(decoded)) {
       return res.status(403).json({ error: 'Admin only' })
     }
 

@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react'
-import { doc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc, deleteField } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../ui/Toast'
 import { useTranslation } from 'react-i18next'
-import { apiUrl } from '../../utils/apiBase'
+import { useAuth } from '../../hooks/useAuth'
 import { isPayPalSupportedCurrency } from '../../lib/paypal-currencies'
+import {
+  getSecretStatus,
+  saveGatewaySecret,
+  clearGatewaySecret,
+  validatePayPalCredentials,
+  maskedLabel,
+  type SecretStatus,
+} from '../../lib/paymentCredentials'
 import type { Store } from '../../types'
 
 interface Props {
@@ -16,8 +24,10 @@ interface Props {
  * PayPal credentials block for the merchant's Payments page. Standard
  * Checkout flavor: the merchant pastes Client ID + Secret + chooses
  * sandbox / live, we validate against PayPal's OAuth endpoint, then
- * persist on store.payments.paypal so the storefront's checkout can
- * use them.
+ * persist the public fields (clientId, sandbox, enabled) on
+ * store.payments.paypal. The Secret NEVER goes to the public store doc:
+ * it's sent to /api/payment-credentials, which keeps it in
+ * stores/{id}/private/payments (Admin SDK only).
  *
  * Mirrors the MercadoPago and Stripe blocks in Payments.tsx for
  * consistency. No OAuth, no Partner Referrals — those needed
@@ -27,11 +37,14 @@ interface Props {
 export default function PayPalConnect({ store, onUpdate }: Props) {
   const { t } = useTranslation('dashboard')
   const { showToast } = useToast()
+  const { firebaseUser } = useAuth()
 
   const initial = store.payments?.paypal
   const [enabled, setEnabled] = useState<boolean>(!!initial?.enabled)
   const [clientId, setClientId] = useState<string>(initial?.clientId ?? '')
-  const [clientSecret, setClientSecret] = useState<string>(initial?.clientSecret ?? '')
+  // Input de secreto NUEVO: arranca vacío (el guardado nunca llega al cliente)
+  const [clientSecret, setClientSecret] = useState<string>('')
+  const [secretStatus, setSecretStatus] = useState<SecretStatus | null>(null)
   const [sandbox, setSandbox] = useState<boolean>(initial?.sandbox ?? true)
   const [webhookId, setWebhookId] = useState<string>(initial?.webhookId ?? '')
   const [validating, setValidating] = useState(false)
@@ -44,37 +57,44 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
     if (!initial) return
     setEnabled(!!initial.enabled)
     setClientId(initial.clientId ?? '')
-    setClientSecret(initial.clientSecret ?? '')
     setSandbox(initial.sandbox ?? true)
     setWebhookId(initial.webhookId ?? '')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial?.clientId, initial?.sandbox])
 
+  // Estado enmascarado del Secret guardado server-side
+  useEffect(() => {
+    if (!firebaseUser || !store.id) return
+    let cancelled = false
+    getSecretStatus(firebaseUser, store.id)
+      .then(s => { if (!cancelled) setSecretStatus(s.paypal ?? null) })
+      .catch(err => console.error('[PayPalConnect] status error:', err))
+    return () => { cancelled = true }
+  }, [firebaseUser, store.id])
+
+  const hasStoredSecret = !!secretStatus?.configured
+
   // Try the credentials against PayPal's OAuth endpoint before saving — saves
   // the merchant a round-trip if they pasted a typo, and prevents enabled=true
   // configs from sneaking in with broken credentials.
   const validateCreds = async (): Promise<boolean> => {
-    if (!clientId.trim() || !clientSecret.trim()) {
+    if (!clientId.trim() || (!clientSecret.trim() && !hasStoredSecret) || !firebaseUser) {
       setValidationError(t('payments.paypal.missingCreds'))
       return false
     }
     setValidating(true)
     setValidationError(null)
     try {
-      const res = await fetch(apiUrl('/api/paypal-validate'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId: clientId.trim(),
-          clientSecret: clientSecret.trim(),
-          sandbox,
-        }),
-      })
-      const text = await res.text()
-      let data: { ok?: boolean; error?: string } = {}
-      try { if (text) data = JSON.parse(text) } catch { /* leave empty */ }
+      // Server-side: si no se escribió un Secret nuevo, valida con el guardado
+      const data = await validatePayPalCredentials(
+        firebaseUser,
+        store.id,
+        clientId.trim(),
+        sandbox,
+        clientSecret.trim() || undefined
+      )
       if (!data.ok) {
-        const errMsg = data.error || `HTTP ${res.status}`
+        const errMsg = data.error || 'Unknown error'
         // Strip PayPal's verbose stacks so the toast stays readable.
         const friendly = /invalid_client/i.test(errMsg)
           ? t('payments.paypal.invalidCreds')
@@ -93,7 +113,7 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
   }
 
   const handleSave = async () => {
-    if (!store.id) return
+    if (!store.id || !firebaseUser) return
     // If toggle is on, verify credentials before persisting. If off, allow
     // saving without creds so the merchant can disable while keeping their
     // existing values for later.
@@ -106,19 +126,38 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
     }
     setSaving(true)
     try {
+      // 1) Secret nuevo → endpoint (doc privado). Vacío = mantener el guardado.
+      if (clientSecret.trim()) {
+        setSecretStatus(await saveGatewaySecret(firebaseUser, store.id, 'paypal', clientSecret.trim()))
+        setClientSecret('')
+      }
+      // 2) Campos públicos por ruta: no pisa secretConfigured ni otras pasarelas
       await updateDoc(doc(db, 'stores', store.id), {
-        'payments.paypal': {
-          enabled,
-          sandbox,
-          clientId: clientId.trim(),
-          clientSecret: clientSecret.trim(),
-          ...(webhookId.trim() ? { webhookId: webhookId.trim() } : {}),
-          ...(enabled ? { validatedAt: new Date() } : {}),
-        },
+        'payments.paypal.enabled': enabled,
+        'payments.paypal.sandbox': sandbox,
+        'payments.paypal.clientId': clientId.trim(),
+        'payments.paypal.webhookId': webhookId.trim() ? webhookId.trim() : deleteField(),
+        ...(enabled ? { 'payments.paypal.validatedAt': new Date() } : {}),
         updatedAt: new Date(),
       })
       showToast(t('payments.toast.saved'), 'success')
       onUpdate?.()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      showToast(`PayPal: ${msg}`, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleClearSecret = async () => {
+    if (!store.id || !firebaseUser) return
+    if (!window.confirm('¿Quitar el Secret guardado? PayPal dejará de cobrar hasta que ingreses uno nuevo.')) return
+    setSaving(true)
+    try {
+      await clearGatewaySecret(firebaseUser, store.id, 'paypal')
+      setSecretStatus({ configured: false, last4: null })
+      showToast(t('payments.toast.saved'), 'success')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
       showToast(`PayPal: ${msg}`, 'error')
@@ -204,7 +243,8 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
                 type={showSecret ? 'text' : 'password'}
                 value={clientSecret}
                 onChange={(e) => setClientSecret(e.target.value)}
-                placeholder="EXxxx..."
+                placeholder={hasStoredSecret ? '••••••••••••' : 'EXxxx...'}
+                autoComplete="new-password"
                 className="w-full px-4 py-2.5 pr-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#003087]/10 focus:border-[#003087]/40 transition-all font-mono text-sm"
               />
               <button
@@ -225,6 +265,21 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
                 </svg>
               </button>
             </div>
+            {hasStoredSecret && (
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-[11px] text-green-700">
+                  {maskedLabel(secretStatus ?? undefined)}. Dejalo vacío para mantenerlo.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleClearSecret}
+                  disabled={saving}
+                  className="text-[11px] text-red-600 hover:underline disabled:opacity-50"
+                >
+                  Quitar
+                </button>
+              </div>
+            )}
           </div>
 
           <label className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 cursor-pointer">
@@ -275,7 +330,7 @@ export default function PayPalConnect({ store, onUpdate }: Props) {
         </div>
       )}
 
-      {!enabled && (clientId || clientSecret) && (
+      {!enabled && (clientId || clientSecret || hasStoredSecret) && (
         <div className="mt-4 pt-4 border-t border-gray-200/60">
           <button
             onClick={handleSave}

@@ -1,6 +1,7 @@
 import { useTheme } from './ThemeContext'
 import { formatPrice } from '../../lib/currency'
 import { getThemeTranslations } from '../../themes/shared/translations'
+import { getEffectivePlan } from '../../lib/stripe'
 
 interface FreeShippingProgressProps {
   subtotal: number
@@ -11,7 +12,7 @@ export default function FreeShippingProgress({ subtotal }: FreeShippingProgressP
   const t = getThemeTranslations(language)
 
   const freeAbove = store.shipping?.freeAbove
-  if (store.plan === 'free' || !freeAbove || freeAbove <= 0) return null
+  if (getEffectivePlan(store) === 'free' || !freeAbove || freeAbove <= 0) return null
 
   const progress = Math.min(100, (subtotal / freeAbove) * 100)
   const remaining = freeAbove - subtotal

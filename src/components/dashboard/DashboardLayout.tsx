@@ -10,6 +10,7 @@ import { usePresence } from '../../hooks/usePresence'
 import { useNewOrdersCount } from '../../hooks/useNewOrdersCount'
 import ChatModal from '../chat/ChatModal'
 import PlanBanner from './PlanBanner'
+import { getEffectivePlan } from '../../lib/stripe'
 import SetupAlerts from './SetupAlerts'
 import { chatService } from '../../lib/chatService'
 import { useOwnerPushNotifications } from '../../hooks/usePushNotifications'
@@ -165,29 +166,38 @@ export default function DashboardLayout() {
       // Los chats de admin llevan su propio contador global, no el del item.
       badgeFor={item => (item.href.includes('support-chats') ? totalUnread : undefined)}
       topBarLeft={
-        store && (
-          <Link
-            to={localePath('/dashboard/plan')}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.68rem] font-semibold ${
-              store.plan === 'business'
-                ? 'bg-[#FEF3C7] text-[#B45309]'
-                : store.plan === 'pro'
-                  ? 'bg-[#E0F2FE] text-[#0284C7]'
-                  : 'bg-[#F1F5F9] text-[#8898AA]'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                store.plan === 'business'
-                  ? 'bg-[#D97706]'
-                  : store.plan === 'pro'
-                    ? 'bg-[#0284C7]'
-                    : 'bg-[#A9B6C6]'
-              }`}
-            />
-            {store.plan === 'business' ? 'Business' : store.plan === 'pro' ? 'Pro' : 'Free'}
-          </Link>
-        )
+        store && (() => {
+          // Plan efectivo (una prueba vencida ya se ve como Free). En la app
+          // nativa la chapa es solo informativa: sin link a la pagina de planes
+          // (Apple no permite llevar a compras externas).
+          const plan = getEffectivePlan(store)
+          const className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.68rem] font-semibold ${
+            plan === 'business'
+              ? 'bg-[#FEF3C7] text-[#B45309]'
+              : plan === 'pro'
+                ? 'bg-[#E0F2FE] text-[#0284C7]'
+                : 'bg-[#F1F5F9] text-[#8898AA]'
+          }`
+          const content = (
+            <>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  plan === 'business'
+                    ? 'bg-[#D97706]'
+                    : plan === 'pro'
+                      ? 'bg-[#0284C7]'
+                      : 'bg-[#A9B6C6]'
+                }`}
+              />
+              {plan === 'business' ? 'Business' : plan === 'pro' ? 'Pro' : 'Free'}
+            </>
+          )
+          return isNative ? (
+            <span className={className}>{content}</span>
+          ) : (
+            <Link to={localePath('/dashboard/plan')} className={className}>{content}</Link>
+          )
+        })()
       }
       topBarRight={
         <button

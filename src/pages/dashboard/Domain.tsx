@@ -126,7 +126,7 @@ export default function Domain() {
     try {
       const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await firebaseUser!.getIdToken()}` },
         body: JSON.stringify({
           action: 'add',
           storeId: store.id,
@@ -166,7 +166,7 @@ export default function Domain() {
     try {
       const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await firebaseUser!.getIdToken()}` },
         body: JSON.stringify({
           action: 'remove',
           storeId: store.id,
@@ -204,7 +204,7 @@ export default function Domain() {
     try {
       const response = await fetch(`${API_URL}/domain`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await firebaseUser!.getIdToken()}` },
         body: JSON.stringify({
           action: 'verify',
           storeId: store.id,

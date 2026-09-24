@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, onSnapshot, deleteField } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { useLanguage } from '../../hooks/useLanguage'
-import { PLAN_FEATURES } from '../../lib/stripe'
+import { PLAN_FEATURES, syncStoreSubscription } from '../../lib/stripe'
 import type { Store } from '../../types'
 import { countries } from '../../data/states'
 
@@ -191,37 +191,25 @@ export default function AdminStores() {
   const handleSyncSubscription = async (storeId: string) => {
     setSyncingStore(storeId)
     try {
-      const apiUrl = window.location.hostname === 'localhost'
-        ? 'https://shopifree.app/api/sync-subscription'
-        : '/api/sync-subscription'
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeId })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setStores(prev => prev.map(s =>
-          s.id === storeId
-            ? {
-                ...s,
-                plan: data.plan,
-                subscription: s.subscription
-                  ? { ...s.subscription, status: data.status }
-                  : undefined
-              } as Store & { id: string }
-            : s
-        ))
-        showToast(`Sincronizado: ${SUBSCRIPTION_STATUS_LABELS[data.status] || data.status}`, 'success')
-      } else {
-        showToast(data.error || 'Error al sincronizar', 'error')
-      }
+      // syncStoreSubscription manda el ID token (el endpoint exige auth de
+      // admin/dueno; sin token devuelve 401).
+      const data = await syncStoreSubscription(storeId)
+      setStores(prev => prev.map(s =>
+        s.id === storeId
+          ? {
+              ...s,
+              plan: data.plan,
+              subscription: s.subscription
+                ? { ...s.subscription, status: data.status }
+                : undefined
+            } as Store & { id: string }
+          : s
+      ))
+      const status = data.status || ''
+      showToast(`Sincronizado: ${SUBSCRIPTION_STATUS_LABELS[status] || status}`, 'success')
     } catch (error) {
       console.error('Error syncing subscription:', error)
-      showToast('Error al sincronizar con Stripe', 'error')
+      showToast((error as Error)?.message || 'Error al sincronizar con Stripe', 'error')
     } finally {
       setSyncingStore(null)
     }
@@ -247,6 +235,12 @@ export default function AdminStores() {
       const updateData: Record<string, unknown> = {
         plan: newPlan,
         updatedAt: new Date()
+      }
+
+      if (newPlan !== 'free') {
+        // Comp de admin: borrar el trial de alta para que ningun calculo de
+        // plan efectivo caiga en un trialEndsAt vencido y la muestre como free.
+        updateData.trialEndsAt = deleteField()
       }
 
       if (newPlan === 'free') {

@@ -59,6 +59,90 @@ export function hasPaidEffectivePlan(store: StorePlanData | undefined | null): b
   return true
 }
 
+// ── Helpers de suscripcion (webhook de Stripe, sync y crons) ─────────
+// Todo lo de abajo es aditivo: hasPaidEffectivePlan no cambia de semantica.
+
+/**
+ * Estados de Stripe en los que la suscripcion sigue "viva": active/trialing
+ * obvio, y past_due porque Stripe todavia esta reintentando el cobro (dunning)
+ * — el comerciante no pierde el plan mientras tanto.
+ */
+export const LIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing', 'past_due'] as const
+
+/**
+ * Que hacer con `store.plan` segun el estado de la suscripcion:
+ *  - grant     → active/trialing: el plan sale del price de Stripe.
+ *  - keep      → past_due (Stripe reintentando) / incomplete (primer pago en
+ *                vuelo): no tocar el plan que ya tenia la tienda.
+ *  - downgrade → unpaid / canceled / incomplete_expired / paused: Stripe dejo
+ *                de cobrar, la tienda vuelve a free (salvo comp activo).
+ */
+export function subscriptionPlanAction(status: string | undefined | null): 'grant' | 'keep' | 'downgrade' {
+  if (status === 'active' || status === 'trialing') return 'grant'
+  if (status === 'past_due' || status === 'incomplete') return 'keep'
+  return 'downgrade'
+}
+
+/**
+ * Price de Stripe → plan. Devuelve null para prices desconocidos: antes caia
+ * en 'pro' por defecto, lo que regalaba un plan pago ante cualquier price que
+ * no fuera nuestro (o una env var mal configurada).
+ */
+export function getPlanFromStripePrice(priceId: string | undefined | null): 'pro' | 'business' | null {
+  if (!priceId) return null
+  const prices: Record<string, 'pro' | 'business'> = {}
+  const add = (envId: string | undefined, plan: 'pro' | 'business') => {
+    if (envId) prices[envId] = plan
+  }
+  add(process.env.STRIPE_PRICE_PRO_MONTHLY, 'pro')
+  add(process.env.STRIPE_PRICE_PRO_YEARLY, 'pro')
+  add(process.env.STRIPE_PRICE_BUSINESS_MONTHLY, 'business')
+  add(process.env.STRIPE_PRICE_BUSINESS_YEARLY, 'business')
+  return prices[priceId] || null
+}
+
+export interface StoreCompData extends StorePlanData {
+  subscription?: { status?: string; stripeSubscriptionId?: string } | null
+  manualRestoration?: { restoredUntil?: TimestampLike | Date | string | null } | null
+}
+
+/** true si un operador restauro tiempo pago a mano (manualRestoration.restoredUntil futuro). */
+export function hasActiveManualRestoration(store: StoreCompData | undefined | null): boolean {
+  const until = toDate(store?.manualRestoration?.restoredUntil)
+  return !!until && until.getTime() > Date.now()
+}
+
+/**
+ * Decide si el cron puede bajar a free una tienda cuyo trial (trialEndsAt)
+ * ya vencio. NO se baja si:
+ *  - tiene una suscripcion viva (active/trialing/past_due) — esta pagando;
+ *  - tiene un manualRestoration vigente;
+ *  - no tiene suscripcion y tiene un comp de admin (planExpiresAt futuro, o
+ *    null = comp indefinido, mismo criterio que hasPaidEffectivePlan).
+ * Con suscripcion muerta (unpaid/canceled/...) el downgrade lo hace el
+ * webhook; aca solo se respeta el mismo criterio.
+ */
+export function shouldDowngradeExpiredTrial(store: StoreCompData | undefined | null): boolean {
+  if (!store) return false
+  if (store.plan !== 'pro' && store.plan !== 'business') return false
+
+  const trialEnd = toDate(store.trialEndsAt)
+  if (!trialEnd || trialEnd.getTime() > Date.now()) return false
+
+  const status = store.subscription?.status
+  if (status && (LIVE_SUBSCRIPTION_STATUSES as readonly string[]).includes(status)) return false
+
+  if (hasActiveManualRestoration(store)) return false
+
+  if (!store.subscription) {
+    if (store.planExpiresAt === null) return false // comp indefinido
+    const compEnd = toDate(store.planExpiresAt)
+    if (compEnd && compEnd.getTime() > Date.now()) return false
+  }
+
+  return true
+}
+
 /** Standard 403 payload for payment endpoints when the plan doesn't allow cards. */
 export const PLAN_REQUIRED_RESPONSE = {
   error: 'PLAN_REQUIRED',

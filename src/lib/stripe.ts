@@ -173,6 +173,13 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
     return store.plan
   }
 
+  // planExpiresAt explicitamente null = comp de admin indefinido (Stores.tsx
+  // lo escribe asi). Igual que api/_shared/plan.ts: gana sobre un trialEndsAt
+  // vencido, si no el panel mostraba Free a una tienda que el server trata como paga.
+  if (store.planExpiresAt === null) {
+    return store.plan
+  }
+
   // No Stripe subscription - check for free trial (trialEndsAt)
   if (store.trialEndsAt) {
     // Convert to Date if needed
@@ -195,4 +202,69 @@ export function getEffectivePlan(store: StoreForPlanCheck): PlanType {
 
   // No subscription AND no trial defined = admin-granted access
   return store.plan
+}
+
+// ============================================
+// BILLING API (create-checkout / sync-subscription)
+// ============================================
+// Todos los endpoints de billing exigen el Firebase ID token del usuario
+// (Authorization: Bearer). El uid sale del token en el servidor — ya no se
+// manda userId en el body. Imports dinamicos para no arrastrar firebase a los
+// modulos livianos que solo usan PLAN_FEATURES.
+
+type BillingLang = 'es' | 'en'
+
+async function billingFetch<T = Record<string, unknown>>(path: string, body: Record<string, unknown>): Promise<T> {
+  const [{ auth }, { apiUrl }] = await Promise.all([
+    import('./firebase'),
+    import('../utils/apiBase'),
+  ])
+  const user = auth.currentUser
+  if (!user) throw new Error('Not authenticated')
+  const token = await user.getIdToken()
+  const res = await fetch(apiUrl(path), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  })
+  const data = (await res.json().catch(() => ({}))) as T & { error?: string }
+  if (!res.ok || data?.error) {
+    throw new Error(data?.error || `Request failed (${res.status})`)
+  }
+  return data
+}
+
+/**
+ * Crea una sesion de Stripe Checkout (o, si la tienda ya tiene una suscripcion
+ * viva, devuelve la URL del Billing Portal con redirectedToPortal=true).
+ * `lang` arma las URLs de vuelta con el prefijo de idioma (/es|/en/dashboard/plan).
+ */
+export function createCheckoutSession(params: {
+  storeId: string
+  plan: Exclude<PlanType, 'free'>
+  billing: 'monthly' | 'yearly'
+  lang?: BillingLang
+  applyDiscount?: boolean
+}): Promise<{ url?: string; sessionId?: string; redirectedToPortal?: boolean }> {
+  return billingFetch('/api/create-checkout', {
+    storeId: params.storeId,
+    plan: params.plan,
+    billing: params.billing,
+    lang: params.lang === 'en' ? 'en' : 'es',
+    ...(params.applyDiscount && { applyDiscount: true }),
+  })
+}
+
+/** URL del Stripe Billing Portal para la tienda del usuario autenticado. */
+export function createBillingPortalSession(params: { storeId?: string; lang?: BillingLang } = {}): Promise<{ url?: string }> {
+  return billingFetch('/api/create-checkout', {
+    action: 'portal',
+    ...(params.storeId && { storeId: params.storeId }),
+    lang: params.lang === 'en' ? 'en' : 'es',
+  })
+}
+
+/** Re-sincroniza la suscripcion de una tienda desde Stripe (dueno o admin). */
+export function syncStoreSubscription(storeId: string): Promise<{ success?: boolean; status?: string; plan?: string; message?: string }> {
+  return billingFetch('/api/sync-subscription', { action: 'sync', storeId })
 }

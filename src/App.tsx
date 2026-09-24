@@ -137,6 +137,16 @@ function LanguageRedirect() {
   return null
 }
 
+// Rutas viejas sin idioma (/dashboard/..., /finance/..., /admin/..., /blog/...):
+// antes redirigian a la raiz de la seccion y se perdian el resto del path y el
+// query (p. ej. el ?success=true de Stripe). Ahora se antepone /es y se
+// conserva todo lo demas.
+function LegacyRedirect() {
+  const location = useLocation()
+  const path = location.pathname.replace(/\/+$/, '') || '/'
+  return <Navigate to={`/es${path}${location.search}${location.hash}`} replace />
+}
+
 // Layout component that sets the language based on URL
 function LanguageLayout() {
   const { lang } = useParams<{ lang: string }>()
@@ -307,14 +317,16 @@ function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Fallback: redirect old routes to Spanish */}
-      <Route path="/login" element={<Navigate to="/es/login" replace />} />
-      <Route path="/register" element={<Navigate to="/es/register" replace />} />
-      <Route path="/dashboard/*" element={<Navigate to="/es/dashboard" replace />} />
-      <Route path="/finance/*" element={<Navigate to="/es/finance" replace />} />
-      <Route path="/admin/*" element={<Navigate to="/es/admin" replace />} />
-      <Route path="/blog" element={<Navigate to="/es/blog" replace />} />
-      <Route path="/blog/*" element={<Navigate to="/es/blog" replace />} />
+      {/* Fallback: redirect old routes to Spanish, keeping the rest of the
+          path + query + hash (e.g. /dashboard/plan?success=true from Stripe →
+          /es/dashboard/plan?success=true) */}
+      <Route path="/login" element={<LegacyRedirect />} />
+      <Route path="/register" element={<LegacyRedirect />} />
+      <Route path="/dashboard/*" element={<LegacyRedirect />} />
+      <Route path="/finance/*" element={<LegacyRedirect />} />
+      <Route path="/admin/*" element={<LegacyRedirect />} />
+      <Route path="/blog" element={<LegacyRedirect />} />
+      <Route path="/blog/*" element={<LegacyRedirect />} />
     </Routes>
     </Suspense>
   )

@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
+import { isAdminToken } from './_shared/admin.js'
 
 /**
  * Admin-only endpoint: returns real Cloudinary usage (storage, bandwidth,
@@ -14,7 +15,6 @@ import { getAuth } from 'firebase-admin/auth'
  *   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
  */
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 // Cap pagination so a runaway library can't blow the Vercel function timeout.
 // 10 pages × 500 results = up to 5000 assets per resource type, which covers
@@ -110,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     ensureFirebase()
     const decoded = await getAuth().verifyIdToken(token)
-    if (!decoded.email || !ADMIN_EMAILS.includes(decoded.email)) {
+    if (!isAdminToken(decoded)) {
       return res.status(403).json({ error: 'Admin only' })
     }
 

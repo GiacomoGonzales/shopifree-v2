@@ -2,8 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { randomUUID } from 'crypto'
-import { decrementOrderStockAdmin } from './_shared/order-stock.js'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
+import { getPaymentSecrets } from './_shared/paymentSecrets.js'
+import {
+  loadPayableOrder, saveCheckout, checkIpRateLimit, checkStoreRateLimit, bumpCheckoutAttempts, getExpectedPayment,
+  mpPaymentMismatch, markOrderPaid, markOrderFailed, type OrderDoc,
+} from './_shared/orderTotal.js'
 
 let db: Firestore
 
@@ -28,8 +32,32 @@ interface RequestBody {
   storeId: string
   orderId: string
   formData?: Record<string, unknown>
-  action?: 'confirm'
+  action?: 'confirm' | 'status'
   paymentId?: string
+}
+
+interface MpPayment {
+  id?: number | string
+  status?: string
+  status_detail?: string
+  transaction_amount?: number
+  currency_id?: string
+  external_reference?: string
+}
+
+// Campos del formData del Brick que NUNCA se aceptan del cliente: el monto y
+// la referencia los pone el servidor, y los de marketplace/fees no aplican.
+const BLOCKED_FORM_FIELDS = new Set([
+  'transaction_amount', 'external_reference', 'notification_url', 'metadata',
+  'application_fee', 'marketplace', 'marketplace_fee', 'sponsor_id', 'coupon_amount',
+  'coupon_code', 'campaign_id', 'differential_pricing_id', 'capture', 'callback_url',
+])
+
+function webhookUrlFor(storeId: string): string {
+  const webhookBase = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.APP_URL || 'https://shopifree.app'
+  return `${webhookBase}/api/mp-webhook?storeId=${encodeURIComponent(storeId)}`
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -54,7 +82,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleConfirmOrder(res, storeId, orderId, paymentId)
     }
 
-    if (!storeId || !orderId || !formData) {
+    // Route: estado del pago (la página de éxito espera la confirmación real)
+    if (action === 'status') {
+      return handleOrderStatus(res, storeId, orderId)
+    }
+
+    if (!storeId || !orderId || !formData || typeof formData !== 'object') {
       return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, formData' })
     }
 
@@ -75,22 +108,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const mpConfig = storeData?.payments?.mercadopago
 
-    if (!mpConfig?.enabled || !mpConfig.accessToken) {
+    // Secreto server-only (doc privado, con fallback al campo legacy)
+    const mpAccessToken = (await getPaymentSecrets(firestore, storeId, storeData)).mercadopago?.accessToken
+    if (!mpConfig?.enabled || !mpAccessToken) {
       return res.status(400).json({ error: 'MercadoPago is not configured for this store' })
+    }
+
+    // Anti card-testing: límite por IP + intentos de pago por pedido
+    if (!(await checkIpRateLimit(firestore, req, 'mp-payment', 20))) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.', status: 'rejected', status_detail: 'cc_rejected_max_attempts' })
+    }
+    if (!(await checkStoreRateLimit(firestore, storeId, 'mp-payment'))) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.', status: 'rejected', status_detail: 'cc_rejected_max_attempts' })
+    }
+
+    // Monto calculado en el servidor (pedido existente, pendiente, total verificado)
+    const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'mercadopago')
+    if (!payable.ok) {
+      return res.status(payable.status).json({ error: payable.error, code: payable.code, status: 'rejected', status_detail: payable.code })
+    }
+    const { pricing, order } = payable
+
+    if (!(await bumpCheckoutAttempts(firestore, storeId, orderId, 'paymentAttempts', 8))) {
+      return res.status(429).json({ error: 'Demasiados intentos para este pedido.', status: 'rejected', status_detail: 'cc_rejected_max_attempts' })
+    }
+
+    // Guardar el monto esperado ANTES de cobrar, así el webhook puede verificar
+    await saveCheckout(firestore, storeId, orderId, {
+      gateway: 'mercadopago',
+      amount: pricing.total,
+      currency: pricing.currency,
+      payAmount: pricing.total,
+      payCurrency: pricing.currency,
+      couponId: pricing.coupon?.id || null,
+    })
+
+    // formData del Brick sin los campos que controla el servidor
+    const cleanForm: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(formData)) {
+      if (!BLOCKED_FORM_FIELDS.has(k)) cleanForm[k] = v
+    }
+    const paymentPayload = {
+      ...cleanForm,
+      transaction_amount: pricing.total,
+      // Sin external_reference/notification_url el webhook no podía conciliar
+      // los pagos del Brick con el pedido
+      external_reference: orderId,
+      notification_url: webhookUrlFor(storeId),
+      description: `Pedido ${order.orderNumber || orderId}`.slice(0, 250),
+      metadata: { store_id: storeId, order_id: orderId },
     }
 
     // Process the payment via MercadoPago Payments API
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${mpConfig.accessToken}`,
+        'Authorization': `Bearer ${mpAccessToken}`,
         'Content-Type': 'application/json',
         'X-Idempotency-Key': randomUUID()
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify(paymentPayload)
     })
 
-    const paymentResult = await mpResponse.json()
+    const paymentResult = await mpResponse.json() as MpPayment & { message?: string; cause?: { code?: string }[] }
 
     if (!mpResponse.ok) {
       console.error('[process-mp-payment] MercadoPago API error:', {
@@ -104,25 +184,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // Update Firestore order based on payment result
-    const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
-
+    let status = paymentResult.status
     if (paymentResult.status === 'approved') {
-      await orderRef.update({
-        paymentStatus: 'paid',
-        paymentId: String(paymentResult.id),
-        status: 'confirmed',
-        updatedAt: new Date()
-      })
-      // Apply stock server-side on confirmation (storefront can't write
-      // products). Idempotent via stockDecremented, shared with mp-webhook.
-      try {
-        await decrementOrderStockAdmin(firestore, storeId, orderId)
-      } catch (err) {
-        console.error('[process-mp-payment] stock decrement failed:', err)
+      const mismatch = mpPaymentMismatch(paymentResult, orderId,
+        { payAmount: pricing.total, payCurrency: pricing.currency },
+        typeof storeData?.currency === 'string' ? storeData.currency : undefined)
+      if (mismatch) {
+        // No debería pasar (el monto lo puso el servidor); queda para revisión manual
+        console.error('[process-mp-payment] pago aprobado no coincide con el pedido:', { orderId, mismatch, paymentId: paymentResult.id })
+        status = 'in_process'
+        await payable.orderRef.update({ paymentId: String(paymentResult.id), updatedAt: new Date() })
+      } else {
+        // Transición pending|failed → paid; aplica stock y uso de cupón una vez
+        await markOrderPaid(firestore, storeId, orderId, { paymentId: String(paymentResult.id), paymentMethod: 'mercadopago' })
       }
     } else if (paymentResult.status === 'in_process' || paymentResult.status === 'pending') {
-      await orderRef.update({
+      await payable.orderRef.update({
         paymentId: String(paymentResult.id),
         updatedAt: new Date()
       })
@@ -130,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // rejected → keep order as pending, don't update paymentId
 
     return res.status(200).json({
-      status: paymentResult.status,
+      status,
       status_detail: paymentResult.status_detail,
       payment_id: paymentResult.id
     })
@@ -146,7 +223,7 @@ async function handleConfirmOrder(
   orderId: string,
   paymentId?: string
 ) {
-  if (!storeId || !orderId || !paymentId) {
+  if (!storeId || !orderId || !paymentId || !/^\d{1,30}$/.test(String(paymentId))) {
     return res.status(400).json({ error: 'Missing storeId, orderId, or paymentId' })
   }
 
@@ -157,15 +234,23 @@ async function handleConfirmOrder(
     return res.status(404).json({ error: 'Store not found' })
   }
 
-  const storeData = storeDoc.data()
-  const accessToken = storeData?.payments?.mercadopago?.accessToken
+  const storeData = storeDoc.data() || {}
+  const accessToken = (await getPaymentSecrets(firestore, storeId, storeData)).mercadopago?.accessToken
 
   if (!accessToken) {
     return res.status(400).json({ error: 'MercadoPago not configured' })
   }
 
-  // Verify payment with MercadoPago API
-  const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+  const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
+  const orderDoc = await orderRef.get()
+
+  if (!orderDoc.exists) {
+    return res.status(404).json({ error: 'Order not found' })
+  }
+  const order = orderDoc.data() as OrderDoc
+
+  // Verify payment with MercadoPago API (fuente de verdad, no el query string)
+  const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(String(paymentId))}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 
@@ -174,45 +259,52 @@ async function handleConfirmOrder(
     return res.status(400).json({ error: 'Could not verify payment' })
   }
 
-  const payment = await mpResponse.json()
+  const payment = await mpResponse.json() as MpPayment
 
-  const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
-  const orderDoc = await orderRef.get()
-
-  if (!orderDoc.exists) {
-    return res.status(404).json({ error: 'Order not found' })
+  // El pago tiene que ser de ESTE pedido (evita usar un pago ajeno/barato)
+  if (String(payment.external_reference || '') !== orderId) {
+    console.warn('[confirm-mp-order] external_reference no coincide', { orderId, ref: payment.external_reference })
+    return res.status(403).json({ error: 'Payment does not belong to this order' })
   }
 
-  const updateData: Record<string, unknown> = {
-    paymentId: String(paymentId),
-    updatedAt: new Date()
-  }
-
-  let confirmed = false
+  let orderStatus = order.status || 'pending'
   if (payment.status === 'approved') {
-    updateData.paymentStatus = 'paid'
-    updateData.status = 'confirmed'
-    confirmed = true
-  } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
-    updateData.paymentStatus = 'failed'
-  }
-
-  await orderRef.update(updateData)
-
-  // Apply stock server-side on confirmation (storefront can't write products).
-  // Idempotent via stockDecremented, shared with the main flow + mp-webhook.
-  if (confirmed) {
-    try {
-      await decrementOrderStockAdmin(firestore, storeId, orderId)
-    } catch (err) {
-      console.error('[confirm-mp-order] stock decrement failed:', err)
+    const expected = await getExpectedPayment(firestore, storeId, orderId, storeData, order)
+    const mismatch = mpPaymentMismatch(payment, orderId, expected,
+      typeof storeData.currency === 'string' ? storeData.currency : undefined)
+    if (mismatch) {
+      console.error('[confirm-mp-order] pago no coincide con el pedido:', { orderId, mismatch, paymentId })
+      await orderRef.update({ paymentId: String(paymentId), paymentReview: `mp:${mismatch}`, updatedAt: new Date() })
+      return res.status(409).json({ status: 'review', orderStatus })
     }
+    const r = await markOrderPaid(firestore, storeId, orderId, { paymentId: String(paymentId), paymentMethod: 'mercadopago' })
+    if (r === 'paid' || r === 'already_paid') orderStatus = 'confirmed'
+  } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
+    // Solo pending → failed; nunca pisa un pedido ya pagado
+    await markOrderFailed(firestore, storeId, orderId, { paymentId: String(paymentId) })
+  } else if (order.paymentStatus !== 'paid') {
+    await orderRef.update({ paymentId: String(paymentId), updatedAt: new Date() })
   }
 
   console.log('[confirm-mp-order] Order updated:', { orderId, paymentStatus: payment.status })
 
   return res.status(200).json({
     status: payment.status,
-    orderStatus: updateData.status || 'pending'
+    orderStatus
+  })
+}
+
+/** Estado de pago de un pedido (sin datos personales). Requiere conocer storeId + orderId. */
+async function handleOrderStatus(res: VercelResponse, storeId: string, orderId: string) {
+  if (!storeId || !orderId) {
+    return res.status(400).json({ error: 'Missing storeId or orderId' })
+  }
+  const snap = await getDb().collection('stores').doc(storeId).collection('orders').doc(orderId).get()
+  if (!snap.exists) return res.status(404).json({ error: 'Order not found' })
+  const order = snap.data() as OrderDoc
+  res.setHeader('Cache-Control', 'no-store')
+  return res.status(200).json({
+    paymentStatus: order.paymentStatus || 'pending',
+    status: order.status || 'pending',
   })
 }

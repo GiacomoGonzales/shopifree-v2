@@ -510,8 +510,8 @@ export default function StoreDetail() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           <ConfigItem
             label="MercadoPago"
-            value={store.payments?.mercadopago?.accessToken ? 'Configurado' : 'No configurado'}
-            ok={!!store.payments?.mercadopago?.accessToken}
+            value={(store.payments?.mercadopago?.secretConfigured || store.payments?.mercadopago?.accessToken) ? 'Configurado' : 'No configurado'}
+            ok={!!(store.payments?.mercadopago?.secretConfigured || store.payments?.mercadopago?.accessToken)}
           />
           <ConfigItem
             label="Envío habilitado"

@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
+import { getPaymentSecrets } from './_shared/paymentSecrets.js'
+import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, amountsMatch, round2 } from './_shared/orderTotal.js'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 
@@ -22,19 +24,13 @@ function getDb(): Firestore {
   return db
 }
 
-interface PreferenceItem {
-  id: string
-  title: string
-  quantity: number
-  unit_price: number
-  currency_id: string
-}
-
 interface RequestBody {
   storeId: string
   orderId: string
   orderNumber: string
-  items: PreferenceItem[]
+  // items/external_reference del cliente se IGNORAN: los ítems y el monto se
+  // arman en el servidor desde el pedido recalculado (api/_shared/orderTotal.ts)
+  items?: unknown[]
   payer?: {
     name?: string
     email?: string
@@ -59,10 +55,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { storeId, orderId, orderNumber, items, payer, external_reference, origin } = req.body as RequestBody
+    const { storeId, orderId, orderNumber, payer, origin } = req.body as RequestBody
 
-    if (!storeId || !orderId || !items?.length) {
-      return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, items' })
+    if (!storeId || !orderId) {
+      return res.status(400).json({ error: 'Missing required parameters: storeId, orderId' })
     }
 
     // Get store's MercadoPago credentials from Firestore (server-side only)
@@ -87,22 +83,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'MercadoPago is not enabled for this store' })
     }
 
-    if (!mpConfig.accessToken) {
+    // Secreto server-only (doc privado, con fallback al campo legacy)
+    const mpAccessToken = (await getPaymentSecrets(firestore, storeId, storeData)).mercadopago?.accessToken
+    if (!mpAccessToken) {
       return res.status(400).json({ error: 'MercadoPago access token not configured' })
     }
 
+    // Anti-abuso: límite por IP y por pedido
+    if (!(await checkIpRateLimit(firestore, req, 'mp-preference'))) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.' })
+    }
+
+    // Monto calculado en el servidor: el pedido tiene que existir, estar
+    // pendiente y su total coincidir con el recalculado desde los productos.
+    const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'mercadopago')
+    if (!payable.ok) {
+      return res.status(payable.status).json({ error: payable.error, code: payable.code })
+    }
+    const { pricing, checkout } = payable
+
     // Determine environment
     const isSandbox = mpConfig.sandbox === true
+
+    // Una preferencia por pedido: si ya se creó con el mismo monto, se reutiliza
+    if (checkout?.mpPreferenceId && checkout.mpInitPoint && typeof checkout.amount === 'number'
+      && amountsMatch(checkout.amount, pricing.total, pricing.currency)) {
+      return res.status(200).json({
+        init_point: isSandbox ? (checkout.mpSandboxInitPoint || checkout.mpInitPoint) : checkout.mpInitPoint,
+        preference_id: checkout.mpPreferenceId,
+        sandbox_init_point: checkout.mpSandboxInitPoint
+      })
+    }
+    if (!(await bumpCheckoutAttempts(firestore, storeId, orderId, 'attempts', 10))) {
+      return res.status(429).json({ error: 'Demasiados intentos para este pedido.' })
+    }
     const baseOrigin = origin || 'https://shopifree.app'
 
     // Build webhook URL - use stable production URL (not VERCEL_URL which is deployment-specific)
     const webhookBase = process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : process.env.APP_URL || baseOrigin
-    const notificationUrl = `${webhookBase}/api/mp-webhook?storeId=${storeId}`
+    const notificationUrl = `${webhookBase}/api/mp-webhook?storeId=${encodeURIComponent(storeId)}`
 
     // Encode order info in back_urls as fallback (localStorage may be lost on mobile redirects)
     const orderParams = `orderId=${encodeURIComponent(orderId)}&storeId=${encodeURIComponent(storeId)}&orderNumber=${encodeURIComponent(orderNumber || '')}`
+
+    // Ítems armados en el servidor: productos a su precio real, envío como
+    // línea aparte y descuento como línea negativa (mismo desglose que antes).
+    // currency_id solo si la tienda tiene moneda configurada (si no, MP usa la
+    // de la cuenta, como el comportamiento anterior sin moneda).
+    const currencyId = typeof storeData?.currency === 'string' && storeData.currency ? storeData.currency : undefined
+    const items: Array<{ id: string; title: string; quantity: number; unit_price: number; currency_id?: string }> =
+      pricing.lines.map((l, index) => ({
+        id: l.productId || `item-${index}`,
+        title: l.name.slice(0, 250),
+        quantity: l.quantity,
+        unit_price: l.unitPrice,
+        ...(currencyId && { currency_id: currencyId })
+      }))
+    if (pricing.shipping > 0) {
+      items.push({ id: 'shipping', title: 'Envío', quantity: 1, unit_price: pricing.shipping, ...(currencyId && { currency_id: currencyId }) })
+    }
+    if (pricing.discount > 0) {
+      const label = pricing.coupon?.code ? ` (${pricing.coupon.code})` : ''
+      items.push({ id: 'discount', title: `Descuento${label}`, quantity: 1, unit_price: -round2(pricing.discount), ...(currencyId && { currency_id: currencyId }) })
+    }
 
     // Create preference payload
     const payload = {
@@ -114,7 +159,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         pending: `${baseOrigin}/payment/pending?${orderParams}`
       },
       auto_return: 'approved',
-      external_reference: external_reference || orderId,
+      // Siempre el orderId: el webhook y la confirmación lo exigen
+      external_reference: orderId,
+      metadata: { store_id: storeId, order_id: orderId },
       notification_url: notificationUrl,
       statement_descriptor: 'Shopifree',
       expires: false,
@@ -125,7 +172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${mpConfig.accessToken}`,
+        'Authorization': `Bearer ${mpAccessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -143,6 +190,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const result = await mpResponse.json()
+
+    // Guardar en el doc server-only del cobro (monto esperado para verificar
+    // la confirmación/webhook, y la preferencia para reutilizarla)
+    await saveCheckout(firestore, storeId, orderId, {
+      gateway: 'mercadopago',
+      amount: pricing.total,
+      currency: pricing.currency,
+      payAmount: pricing.total,
+      payCurrency: pricing.currency,
+      couponId: pricing.coupon?.id || null,
+      mpPreferenceId: result.id,
+      mpInitPoint: result.init_point,
+      mpSandboxInitPoint: result.sandbox_init_point,
+    })
 
     // Return the init_point based on environment
     const init_point = isSandbox

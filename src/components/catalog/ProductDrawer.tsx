@@ -20,6 +20,7 @@ import {
   PetTypeBadge,
   type SelectedModifier,
 } from './business-type'
+import { getEffectivePlan } from '../../lib/stripe'
 
 export interface CartItemExtras {
   selectedVariants?: Record<string, string>
@@ -323,7 +324,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                 )}
 
                 {/* Limited Stock */}
-                {(features.showLimitedStock || store.plan !== 'free') && activeProduct.availableQuantity !== undefined && (
+                {(features.showLimitedStock || getEffectivePlan(store) !== 'free') && activeProduct.availableQuantity !== undefined && (
                   <AvailabilityBadge quantity={activeProduct.availableQuantity} language={language} />
                 )}
               </div>

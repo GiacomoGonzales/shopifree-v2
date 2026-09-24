@@ -942,7 +942,8 @@
       "free": "Gratuito",
       "upgrade": "Contratar",
       "processing": "Procesando...",
-      "downgrade": "Bajar a Gratis"
+      "downgrade": "Bajar a Gratis",
+      "subscribe": "Suscribirme"
     },
     "badge": {
       "popular": "Popular",
@@ -988,7 +989,60 @@
       "paymentError": "Error al procesar el pago. Intenta de nuevo.",
       "noSubscription": "No se encontró suscripción activa",
       "portalError": "Error al abrir el portal de suscripción"
-    }
+    },
+    "renewsOn": "Se renueva el {{date}}",
+    "expiresOn": "Vence el {{date}}",
+    "trialSuffix": "Prueba",
+    "currency": "USD",
+    "comingSoon": "Próximamente",
+    "trialChargeNotice": "Si te suscribes ahora, el cobro se hace hoy y tu prueba gratis termina en ese momento. Si no te suscribes, al terminar la prueba tu tienda pasa al plan Gratis sin ningún cobro.",
+    "planName": {
+      "free": "Gratis",
+      "pro": "Pro",
+      "business": "Business"
+    },
+    "featureList": {
+      "free": [
+        "Vende hasta {{products}} productos",
+        "Recibe pedidos por WhatsApp",
+        "Tu propio link de tienda",
+        "Código QR para compartir",
+        "{{images}} foto por producto",
+        "Hasta {{categories}} categorías"
+      ],
+      "pro": [
+        "Vende hasta {{products}} productos",
+        "Cobra online con tarjeta",
+        "Cupones de descuento",
+        "Tu propio dominio .com",
+        "{{images}} fotos por producto",
+        "Conoce a tus clientes"
+      ],
+      "business": [
+        "Todo lo de Pro",
+        "Productos sin límite",
+        "Tu marca, sin Shopifree",
+        "App Android y iPhone de tu tienda",
+        "Soporte prioritario"
+      ]
+    },
+    "comingSoonList": {
+      "free": [],
+      "pro": [],
+      "business": [
+        "Dropshipping (CJ, Printful...)"
+      ]
+    },
+    "freeCard": {
+      "forever": "para siempre",
+      "afterTrial": "Al terminar tu prueba, tu tienda pasa a este plan automáticamente, sin ningún cobro.",
+      "current": "Este es tu plan actual. Puedes mejorarlo cuando quieras."
+    },
+    "activation": {
+      "pending": "Pago recibido. Estamos activando tu plan…",
+      "slow": "Recibimos tu pago. La activación puede tardar unos minutos: recarga la página en un momento. Si no se activa, escríbenos a admin@shopifree.app."
+    },
+    "nativeInfo": "La suscripción se gestiona desde la web."
   },
   "payments": {
     "title": "Pagos",
@@ -1487,7 +1541,14 @@
     "subscriptionEnded": "Tu suscripción finalizó. Renueva tu plan para volver a tener las funciones Pro.",
     "upgrade": "Mejorar plan",
     "renew": "Renovar",
-    "updatePayment": "Actualizar pago"
+    "updatePayment": "Actualizar pago",
+    "native": {
+      "trialExpiring": "Tu prueba gratuita termina en {{days}} día(s).",
+      "cancelAtPeriodEnd": "Tu plan se cancela el {{date}}.",
+      "pastDue": "Hay un problema con el pago de tu suscripción. Algunas funciones podrían dejar de estar disponibles.",
+      "trialExpired": "Tu prueba gratuita terminó. Tu tienda está en el plan Gratis.",
+      "subscriptionEnded": "Tu suscripción finalizó. Tu tienda está en el plan Gratis."
+    }
   },
   "setupAlerts": {
     "noWhatsapp": "Falta configurar tu número de WhatsApp. Los clientes lo necesitan para enviarte pedidos.",

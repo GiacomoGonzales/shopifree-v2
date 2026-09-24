@@ -7,6 +7,7 @@ import { useBusinessType } from '../../hooks/useBusinessType'
 import { PrepTimeDisplay, DurationDisplay, AvailabilityBadge } from './business-type'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import { useLiveEditContext } from './liveEditContext'
+import { getEffectivePlan } from '../../lib/stripe'
 
 export type ProductCardVariant = 'default' | 'masonry' | 'horizontal' | 'featured'
 
@@ -318,7 +319,7 @@ function ProductCardView({ product, onSelect, onQuickAdd, variant = 'default' }:
         </div>
 
         {/* Bottom Left Badge - Limited Stock */}
-        {(features.showLimitedStock || store.plan !== 'free') && product.availableQuantity !== undefined && product.availableQuantity <= 10 && (
+        {(features.showLimitedStock || getEffectivePlan(store) !== 'free') && product.availableQuantity !== undefined && product.availableQuantity <= 10 && (
           <div className="absolute bottom-3 left-3">
             <AvailabilityBadge quantity={product.availableQuantity} language={language} />
           </div>

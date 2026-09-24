@@ -279,13 +279,15 @@ export interface StorePayments {
   mercadopago?: {
     enabled: boolean
     publicKey?: string
-    accessToken?: string        // encrypted
+    accessToken?: string        // legacy: ahora vive en payment_secrets (server-only)
+    secretConfigured?: boolean  // true cuando el secreto esta guardado en payment_secrets
     sandbox: boolean
   }
   stripe?: {
     enabled: boolean
     publishableKey?: string
-    secretKey?: string
+    secretKey?: string          // legacy: ahora vive en payment_secrets (server-only)
+    secretConfigured?: boolean  // true cuando el secreto esta guardado en payment_secrets
     testMode: boolean
   }
   paypal?: StorePaymentsPayPal
@@ -300,7 +302,8 @@ export interface StorePaymentsGoCuotas {
   enabled: boolean
   sandbox: boolean              // true → uses sandbox.gocuotas.com instead of www.gocuotas.com
   email?: string                // merchant's GOcuotas account email
-  password?: string             // merchant's GOcuotas password (server-side only, never sent to client)
+  password?: string             // legacy: ahora vive en payment_secrets (server-only)
+  secretConfigured?: boolean    // true cuando el password esta guardado en payment_secrets
 }
 
 // PayPal connection state — Standard Checkout flavor. The merchant pastes
@@ -311,9 +314,10 @@ export interface StorePaymentsPayPal {
   enabled: boolean
   sandbox: boolean              // true while merchant tests against sandbox.paypal.com
   clientId?: string             // from developer.paypal.com → Apps & Credentials
-  clientSecret?: string         // encrypted at rest by Firestore
+  clientSecret?: string         // legacy: ahora vive en payment_secrets (server-only)
+  secretConfigured?: boolean    // true cuando el secret esta guardado en payment_secrets
   webhookId?: string            // optional, for future webhook signature verification
-  validatedAt?: Date            // set by /api/paypal-validate when credentials passed the OAuth handshake
+  validatedAt?: Date            // set when credentials passed the OAuth handshake (payment-credentials validate-paypal)
 }
 
 export interface StoreSubscription {

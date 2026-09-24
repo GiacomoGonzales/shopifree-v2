@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
-import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './_shared/order-stock.js'
+import { getPaymentSecrets } from './_shared/paymentSecrets.js'
+import { getExpectedPayment, mpPaymentMismatch, markOrderPaid, markOrderFailed, markOrderRefunded, type OrderDoc } from './_shared/orderTotal.js'
 
 let db: Firestore
 
@@ -57,15 +58,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const storeData = storeDoc.data()
-      const accessToken = storeData?.payments?.mercadopago?.accessToken
+      const accessToken = (await getPaymentSecrets(firestore, storeId, storeData)).mercadopago?.accessToken
 
       if (!accessToken) {
         console.error('[mp-webhook] No access token for store:', storeId)
         return res.status(200).end()
       }
 
-      // Query MercadoPago for payment details
-      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      if (!/^\d{1,30}$/.test(String(paymentId))) {
+        console.warn('[mp-webhook] invalid payment id:', paymentId)
+        return res.status(200).end()
+      }
+
+      // Query MercadoPago for payment details. El body del webhook NO se usa:
+      // la fuente de verdad es la API de MP con el token del comerciante.
+      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(String(paymentId))}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -76,7 +83,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).end()
       }
 
-      const payment = await mpResponse.json()
+      const payment = await mpResponse.json() as {
+        status?: string
+        external_reference?: string
+        transaction_amount?: number
+        currency_id?: string
+      }
       const orderId = payment.external_reference
       const paymentStatus = payment.status // approved, pending, rejected, etc.
 
@@ -87,12 +99,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         storeId
       })
 
-      if (!orderId) {
+      if (!orderId || typeof orderId !== 'string' || orderId.includes('/')) {
         console.warn('[mp-webhook] No external_reference (orderId) in payment')
         return res.status(200).end()
       }
 
-      // Update order in Firestore based on payment status
       const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
       const orderDoc = await orderRef.get()
 
@@ -100,51 +111,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.error('[mp-webhook] Order not found:', orderId)
         return res.status(200).end()
       }
+      const order = orderDoc.data() as OrderDoc
 
-      const updateData: Record<string, unknown> = {
-        paymentId: String(paymentId),
-        updatedAt: new Date()
-      }
-
-      let confirmed = false
-      let refunded = false
+      // Transiciones acotadas (api/_shared/orderTotal.ts): pending|failed → paid,
+      // pending → failed, paid → refunded. Un webhook viejo de un pago
+      // rechazado nunca pasa a 'failed' un pedido ya pagado.
       if (paymentStatus === 'approved') {
-        updateData.paymentStatus = 'paid'
-        updateData.status = 'confirmed'
-        confirmed = true
+        const expected = await getExpectedPayment(firestore, storeId, orderId, storeData || {}, order)
+        const mismatch = mpPaymentMismatch(payment, orderId, expected,
+          typeof storeData?.currency === 'string' ? storeData.currency : undefined)
+        if (mismatch) {
+          console.error('[mp-webhook] pago aprobado no coincide con el pedido:', { orderId, paymentId, mismatch })
+          if (order.paymentStatus !== 'paid') {
+            await orderRef.update({ paymentId: String(paymentId), paymentReview: `mp:${mismatch}`, updatedAt: new Date() })
+          }
+          return res.status(200).end()
+        }
+        const r = await markOrderPaid(firestore, storeId, orderId, { paymentId: String(paymentId), paymentMethod: 'mercadopago' })
+        console.log('[mp-webhook] Order paid:', { orderId, result: r })
       } else if (paymentStatus === 'rejected' || paymentStatus === 'cancelled') {
-        updateData.paymentStatus = 'failed'
         // Don't change order status - let the store owner decide
+        const changed = await markOrderFailed(firestore, storeId, orderId, { paymentId: String(paymentId) })
+        console.log('[mp-webhook] Order failed:', { orderId, changed })
       } else if (paymentStatus === 'refunded' || paymentStatus === 'charged_back') {
-        updateData.paymentStatus = 'refunded'
-        refunded = true
+        // Solo si ESTE pago es el que pagó el pedido (no un pago viejo/duplicado)
+        if (!order.paymentId || order.paymentId === String(paymentId)) {
+          const changed = await markOrderRefunded(firestore, storeId, orderId)
+          console.log('[mp-webhook] Order refunded:', { orderId, changed })
+        }
       }
       // For 'pending', 'in_process', etc. - don't update, keep as is
-
-      await orderRef.update(updateData)
-
-      // Apply stock server-side now that payment is confirmed (the storefront
-      // customer can't write products). Idempotent via stockDecremented, so the
-      // inline endpoint + this webhook + MP retries decrement exactly once.
-      if (confirmed) {
-        try {
-          const did = await decrementOrderStockAdmin(firestore, storeId, orderId)
-          if (did) console.log('[mp-webhook] stock decremented for paid order:', orderId)
-        } catch (err) {
-          console.error('[mp-webhook] stock decrement failed:', err)
-        }
-      }
-      // On a refund/chargeback, return the stock to inventory (idempotent).
-      if (refunded) {
-        try {
-          const restored = await restoreOrderStockAdmin(firestore, storeId, orderId)
-          if (restored) console.log('[mp-webhook] stock restored for refund:', orderId)
-        } catch (err) {
-          console.error('[mp-webhook] stock restore failed:', err)
-        }
-      }
-
-      console.log('[mp-webhook] Order updated:', { orderId, ...updateData })
     }
 
     // Always return 200 to MercadoPago (they retry on non-200)

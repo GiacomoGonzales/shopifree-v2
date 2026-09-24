@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore, FieldValue } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
+import { isAdminToken } from './_shared/admin.js'
 
 /**
  * Admin-only endpoint: marks a store's app as published, stores the public
@@ -22,7 +23,6 @@ import { getAuth } from 'firebase-admin/auth'
  * Auth: Firebase ID token (Authorization: Bearer <token>). Caller must be admin.
  */
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 let _db: Firestore | null = null
 function getDb(): Firestore {
@@ -85,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     getDb() // init admin app
     const decoded = await getAuth().verifyIdToken(token)
-    if (!decoded.email || !ADMIN_EMAILS.includes(decoded.email)) {
+    if (!isAdminToken(decoded)) {
       return res.status(403).json({ error: 'Admin only' })
     }
 
@@ -160,7 +160,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://shopifree.app'
         fetch(`${base}/api/send-email`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // send-email exige token de admin para app-published: reenviamos el del caller.
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
             type: 'app-published',
             email: ownerEmail,

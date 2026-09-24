@@ -2,8 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import Stripe from 'stripe'
-import { decrementOrderStockAdmin } from './_shared/order-stock.js'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
+import { getPaymentSecrets } from './_shared/paymentSecrets.js'
+import {
+  loadPayableOrder, saveCheckout, checkIpRateLimit, checkStoreRateLimit, bumpCheckoutAttempts, getExpectedPayment,
+  markOrderPaid, type OrderDoc,
+} from './_shared/orderTotal.js'
 
 let db: Firestore
 
@@ -37,13 +41,30 @@ function toSmallestUnit(amount: number, currency: string): number {
   return Math.round(amount * 100)
 }
 
-async function handleCreateIntent(body: Record<string, unknown>, res: VercelResponse) {
-  const { storeId, orderId, amount, currency } = body as {
-    storeId: string; orderId: string; amount: number; currency: string
-  }
+/**
+ * Verifica un PaymentIntent contra el pedido: metadata, moneda y monto.
+ * null si coincide, o el motivo.
+ */
+function intentMismatch(
+  pi: Stripe.PaymentIntent,
+  storeId: string,
+  orderId: string,
+  expected: { payAmount: number; payCurrency: string } | null,
+): string | null {
+  if (pi.metadata?.storeId !== storeId || pi.metadata?.orderId !== orderId) return 'metadata'
+  if (!expected) return 'unverifiable_order'
+  if (pi.currency !== expected.payCurrency.toLowerCase()) return 'currency'
+  if (pi.amount !== toSmallestUnit(expected.payAmount, expected.payCurrency)) return 'amount'
+  return null
+}
 
-  if (!storeId || !orderId || !amount || !currency) {
-    return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, amount, currency' })
+async function handleCreateIntent(req: VercelRequest, res: VercelResponse) {
+  // amount/currency del cliente se IGNORAN: el monto sale del pedido
+  // recalculado en el servidor (api/_shared/orderTotal.ts)
+  const { storeId, orderId } = req.body as { storeId: string; orderId: string }
+
+  if (!storeId || !orderId) {
+    return res.status(400).json({ error: 'Missing required parameters: storeId, orderId' })
   }
 
   const firestore = getDb()
@@ -66,17 +87,71 @@ async function handleCreateIntent(body: Record<string, unknown>, res: VercelResp
     return res.status(400).json({ error: 'Stripe is not enabled for this store' })
   }
 
-  if (!stripeConfig.secretKey) {
+  // Secreto server-only (doc privado, con fallback al campo legacy)
+  const stripeSecretKey = (await getPaymentSecrets(firestore, storeId, storeData)).stripe?.secretKey
+  if (!stripeSecretKey) {
     return res.status(400).json({ error: 'Stripe secret key not configured' })
   }
 
-  const stripe = new Stripe(stripeConfig.secretKey)
+  // Anti card-testing: límite por IP
+  if (!(await checkIpRateLimit(firestore, req, 'stripe-intent'))) {
+    return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.' })
+  }
+  if (!(await checkStoreRateLimit(firestore, storeId, 'stripe-intent'))) {
+    return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.' })
+  }
+
+  // Pedido existente, pendiente, de Stripe, con total verificado en el servidor
+  const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'stripe')
+  if (!payable.ok) {
+    return res.status(payable.status).json({ error: payable.error, code: payable.code })
+  }
+  const { pricing, checkout } = payable
+  const amount = toSmallestUnit(pricing.total, pricing.currency)
+  const currency = pricing.currency.toLowerCase()
+
+  const stripe = new Stripe(stripeSecretKey)
+
+  // Un PaymentIntent por pedido: si ya existe uno reutilizable con el mismo
+  // monto, se devuelve ese (evita crear intents en masa para probar tarjetas)
+  if (checkout?.stripePaymentIntentId) {
+    try {
+      const prev = await stripe.paymentIntents.retrieve(checkout.stripePaymentIntentId)
+      if (prev.status === 'succeeded') {
+        await markOrderPaid(firestore, storeId, orderId, { paymentId: prev.id, paymentMethod: 'stripe' })
+        return res.status(409).json({ error: 'El pedido ya está pagado', code: 'already_paid' })
+      }
+      if (prev.status === 'processing') {
+        return res.status(409).json({ error: 'El pago está en proceso', code: 'processing' })
+      }
+      const reusable = ['requires_payment_method', 'requires_confirmation', 'requires_action'].includes(prev.status)
+      if (reusable && prev.amount === amount && prev.currency === currency) {
+        return res.status(200).json({ clientSecret: prev.client_secret, paymentIntentId: prev.id })
+      }
+    } catch (err) {
+      console.warn('[stripe-payment] could not reuse PaymentIntent:', err instanceof Error ? err.message : err)
+    }
+  }
+
+  if (!(await bumpCheckoutAttempts(firestore, storeId, orderId, 'attempts', 5))) {
+    return res.status(429).json({ error: 'Demasiados intentos para este pedido.' })
+  }
 
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: toSmallestUnit(amount, currency),
-    currency: currency.toLowerCase(),
+    amount,
+    currency,
     metadata: { storeId, orderId },
     automatic_payment_methods: { enabled: true }
+  })
+
+  await saveCheckout(firestore, storeId, orderId, {
+    gateway: 'stripe',
+    amount: pricing.total,
+    currency: pricing.currency,
+    payAmount: pricing.total,
+    payCurrency: pricing.currency,
+    couponId: pricing.coupon?.id || null,
+    stripePaymentIntentId: paymentIntent.id,
   })
 
   return res.status(200).json({
@@ -90,7 +165,7 @@ async function handleConfirmPayment(body: Record<string, unknown>, res: VercelRe
     storeId: string; orderId: string; paymentIntentId: string
   }
 
-  if (!storeId || !orderId || !paymentIntentId) {
+  if (!storeId || !orderId || !paymentIntentId || !/^pi_[A-Za-z0-9]+$/.test(String(paymentIntentId))) {
     return res.status(400).json({ error: 'Missing required parameters: storeId, orderId, paymentIntentId' })
   }
 
@@ -101,42 +176,49 @@ async function handleConfirmPayment(body: Record<string, unknown>, res: VercelRe
     return res.status(404).json({ error: 'Store not found' })
   }
 
-  const storeData = storeDoc.data()
-  const stripeConfig = storeData?.payments?.stripe
+  const storeData = storeDoc.data() || {}
+  // Secreto server-only (doc privado, con fallback al campo legacy)
+  const stripeSecretKey = (await getPaymentSecrets(firestore, storeId, storeData)).stripe?.secretKey
 
-  if (!stripeConfig?.secretKey) {
+  if (!stripeSecretKey) {
     return res.status(400).json({ error: 'Stripe not configured for this store' })
   }
 
-  const stripe = new Stripe(stripeConfig.secretKey)
+  const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
+  const orderSnap = await orderRef.get()
+  if (!orderSnap.exists) {
+    return res.status(404).json({ error: 'Order not found' })
+  }
+  const order = orderSnap.data() as OrderDoc
+
+  const stripe = new Stripe(stripeSecretKey)
   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
 
-  // Security check: verify metadata matches
-  if (paymentIntent.metadata.storeId !== storeId || paymentIntent.metadata.orderId !== orderId) {
+  // Security check: metadata, monto y moneda contra lo que calculó el servidor
+  const expected = await getExpectedPayment(firestore, storeId, orderId, storeData, order)
+  const mismatch = intentMismatch(paymentIntent, storeId, orderId, expected)
+  if (mismatch === 'metadata') {
     return res.status(403).json({ error: 'Payment metadata mismatch' })
   }
 
-  // Update order based on payment status
-  const orderRef = firestore.collection('stores').doc(storeId).collection('orders').doc(orderId)
-
   if (paymentIntent.status === 'succeeded') {
-    await orderRef.update({
-      paymentStatus: 'paid',
-      status: 'confirmed',
-      paymentId: paymentIntentId,
-      updatedAt: new Date()
-    })
-    // Apply stock server-side on confirmation (storefront can't write products).
-    try {
-      await decrementOrderStockAdmin(firestore, storeId, orderId)
-    } catch (err) {
-      console.error('[stripe-payment] stock decrement failed:', err)
+    if (mismatch) {
+      console.error('[stripe-payment] PaymentIntent no coincide con el pedido:', { orderId, paymentIntentId, mismatch })
+      if (order.paymentStatus !== 'paid') {
+        await orderRef.update({ paymentId: paymentIntentId, paymentReview: `stripe:${mismatch}`, updatedAt: new Date() })
+      }
+      // El pedido NO se marca pagado; el cliente ve "en proceso"
+      return res.status(200).json({ status: 'processing', paymentId: paymentIntentId })
     }
+    // pending|failed → paid; stock y cupón una sola vez
+    await markOrderPaid(firestore, storeId, orderId, { paymentId: paymentIntentId, paymentMethod: 'stripe' })
   } else if (paymentIntent.status === 'processing') {
-    await orderRef.update({
-      paymentId: paymentIntentId,
-      updatedAt: new Date()
-    })
+    if (order.paymentStatus !== 'paid') {
+      await orderRef.update({
+        paymentId: paymentIntentId,
+        updatedAt: new Date()
+      })
+    }
   }
 
   return res.status(200).json({
@@ -162,7 +244,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { action } = req.body as { action: string }
 
     if (action === 'create-intent') {
-      return await handleCreateIntent(req.body, res)
+      return await handleCreateIntent(req, res)
     } else if (action === 'confirm-payment') {
       return await handleConfirmPayment(req.body, res)
     } else {
