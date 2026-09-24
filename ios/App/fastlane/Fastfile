@@ -239,11 +239,25 @@ platform :ios do
     end
 
     UI.message("Agregando #{email} al grupo '#{group.name}'…")
-    group.post_bulk_beta_tester_assignments(beta_testers: [{
-      email: email,
-      firstName: ENV["TESTER_FIRST_NAME"].to_s.empty? ? "Probador" : ENV["TESTER_FIRST_NAME"],
-      lastName: ENV["TESTER_LAST_NAME"].to_s.empty? ? "Shopifree" : ENV["TESTER_LAST_NAME"]
-    }])
+    # API actual de Apple: crear el probador ya dentro del grupo (el metodo de
+    # fastlane usa bulkBetaTesterAssignments, que Apple dio de baja). Si ya
+    # existe como probador de la app, solo se lo suma al grupo.
+    existing = app.get_beta_testers(filter: { email: email }).first
+    if existing
+      group.add_beta_testers(beta_tester_ids: [existing.id])
+    else
+      Spaceship::ConnectAPI.test_flight_request_client.post("v1/betaTesters", {
+        data: {
+          type: "betaTesters",
+          attributes: {
+            email: email,
+            firstName: ENV["TESTER_FIRST_NAME"].to_s.empty? ? "Probador" : ENV["TESTER_FIRST_NAME"],
+            lastName: ENV["TESTER_LAST_NAME"].to_s.empty? ? "Shopifree" : ENV["TESTER_LAST_NAME"]
+          },
+          relationships: { betaGroups: { data: [{ type: "betaGroups", id: group.id }] } }
+        }
+      })
+    end
 
     tester = app.get_beta_testers(filter: { email: email }).first
     UI.user_error!("Apple no registro al probador #{email}") if tester.nil?
