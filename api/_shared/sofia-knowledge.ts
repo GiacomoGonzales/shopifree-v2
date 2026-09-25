@@ -130,6 +130,7 @@ El menú lateral (de arriba hacia abajo): Inicio, Productos, Dropshipping, Pedid
 - Agregar productos con foto, nombre, precio y categoría
 - Crear categorías (podés crear una nueva ahí mismo con "+ Nueva")
 - Variantes/variaciones (talla, color, material) con stock por combinación
+- Precios por cantidad (mayoreo), en todos los planes: al editar el producto, sección "Precios por cantidad (mayoreo)" → "+ Agregar" → "Desde X unidades" y el precio c/u (o un % de descuento). Ej.: 1 unidad $100, desde 2 unidades $95 c/u. Se cuentan todas las unidades del producto en el carrito aunque sean de distintas variantes; la ficha muestra la tabla de precios, el carrito aplica el precio solo y también se aplica en "+ Nueva venta"
 - Opción "Stock" en el menú de cada producto (cuando el producto controla stock) para editar el inventario rápido, incluso por variante
 - Importar productos en lote (CSV o Excel: .csv, .xlsx, .xls) con plantilla descargable
 - Límites según plan: Gratis (${lim(P.free.limits.products)} productos, ${P.free.limits.imagesPerProduct} foto, ${P.free.limits.categories} categorías), Pro (${lim(P.pro.limits.products)} productos, ${P.pro.limits.imagesPerProduct} fotos, categorías ilimitadas), Business (productos ilimitados, ${P.business.limits.imagesPerProduct} fotos)
@@ -140,7 +141,8 @@ El menú lateral (de arriba hacia abajo): Inicio, Productos, Dropshipping, Pedid
 - Filtrar por fecha y método de pago
 - Cambiar estado: Pendiente → Confirmado → Preparando → Listo → Entregado
 - Contactar al cliente por WhatsApp directamente
-- Registrar una venta manual ("+ Nueva venta") y marcar "venta de prueba" (no afecta el stock ni las estadísticas)
+- Registrar una venta manual ("+ Nueva venta") y marcar "venta de prueba": no descuenta stock ni cuenta en estadísticas, Inicio, Clientes ni Finanzas, y queda oculta en Pedidos
+- Eliminar ventas de prueba: cuando hay alguna, Pedidos muestra un aviso con "Ver" y "Eliminar todas" (las borra del todo). Cualquier pedido suelto también se puede borrar desde su detalle con "Eliminar pedido"
 
 ### Clientes
 - Lista de clientes con su historial de compras (se arma a partir de los pedidos)
@@ -213,7 +215,8 @@ El menú lateral (de arriba hacia abajo): Inicio, Productos, Dropshipping, Pedid
 - Temas de cobros duplicados, reembolsos o errores de pago: escalá, no los resuelvas vos
 
 ### Finanzas (módulo aparte, para gestión avanzada)
-- Inventario con historial de movimientos, almacenes, proveedores, compras, producción, gastos, flujo de caja y reportes
+- Inventario con historial de movimientos, almacenes, proveedores, compras, producción, gastos y flujo de caja
+- "Reportes" todavía muestra "Próximamente": no prometas fechas. Mientras tanto, los números están en Finanzas (resumen y flujo de caja) y en Estadísticas
 - Es distinto de la opción rápida "Stock" en Productos: Finanzas es para control de inventario con historial y motivos
 - Se entra con el selector "Tienda / Gestion" del menú lateral
 

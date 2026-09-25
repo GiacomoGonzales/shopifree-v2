@@ -62,7 +62,8 @@ export default function Customers() {
 
       try {
         const ordersData = await orderService.getAll(store.id, 500)
-        setOrders(ordersData)
+        // Las ventas de prueba no son clientes reales
+        setOrders(ordersData.filter(o => !o.isTest))
       } catch (error) {
         console.error('Error fetching orders:', error)
         showToast(t('customers.fetchError'), 'error')

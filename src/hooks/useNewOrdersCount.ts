@@ -96,7 +96,8 @@ export function useNewOrdersCount(storeId: string | undefined): number {
     const q = query(ordersRef, where('createdAt', '>', Timestamp.fromDate(seenAt)))
     const unsub = onSnapshot(q,
       snap => {
-        const next = snap.size
+        // Una venta de prueba no es un pedido nuevo: ni badge ni sonido
+        const next = snap.docs.filter(d => !d.data().isTest).length
         if (prevCountRef.current !== null && next > prevCountRef.current) {
           playNewOrderChime()
         }

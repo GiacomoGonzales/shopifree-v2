@@ -368,6 +368,14 @@ export interface StoreShipping {
 // ============================================
 // PRODUCT TYPES
 // ============================================
+
+// Precio por cantidad (mayoreo): desde `minQty` unidades del mismo producto,
+// o un precio fijo por unidad o un % de descuento. Ver src/lib/volumePricing.ts.
+export interface VolumePriceTier {
+  minQty: number                // desde cuántas unidades aplica (>= 2)
+  price?: number                // precio fijo por unidad
+  percentOff?: number           // o % de descuento sobre el precio normal
+}
 export interface Product {
   id: string
   storeId: string
@@ -380,6 +388,7 @@ export interface Product {
   price: number
   comparePrice?: number         // Precio tachado (antes)
   cost?: number                 // Costo del producto (para calcular ganancia)
+  volumePricing?: VolumePriceTier[]  // Precios por cantidad (mayoreo)
 
   // === INVENTARIO ===
   sku?: string                  // Código único del producto
@@ -709,6 +718,8 @@ export interface OrderItem {
   // fulfillment, restocks, and analytics.
   combinationId?: string
   combinationSku?: string
+  // Precio unitario normal cuando se aplicó un precio por cantidad (price < listPrice)
+  listPrice?: number
   // Dropshipping
   cjProductId?: string            // Set if this item is from CJ Dropshipping
   printfulProductId?: number      // Set if this item is from Printful

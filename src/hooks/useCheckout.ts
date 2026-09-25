@@ -8,6 +8,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { createPreference, cartToPreference, processPayment } from '../lib/mercadopago'
 import { resolveShippingCost } from '../lib/shipping'
 import { findCombination, getDisplayImage, getDisplayPrice } from '../lib/variants'
+import { volumeUnitPrice } from '../lib/volumePricing'
 import { getEffectivePlan } from '../lib/stripe'
 import { apiUrl } from '../utils/apiBase'
 
@@ -250,13 +251,17 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
   // Convert cart items to order items (removing undefined values for Firestore)
   const createOrderItems = useCallback((): OrderItem[] => {
+    // Unidades por producto (sumando variantes) para el precio por cantidad
+    const qtyByProduct = new Map<string, number>()
+    for (const it of items) qtyByProduct.set(it.product.id, (qtyByProduct.get(it.product.id) || 0) + it.quantity)
     return items.map(item => {
       // Resolve the actual price the customer is paying for THIS line. When a
       // variant combination is selected, its price wins (variant pricing); the
       // legacy product price is the fallback. This is the source of truth for
       // the order — `item.itemPrice` already reflects this from the drawer,
       // but we recompute here defensively in case anything bypassed the drawer.
-      const variantPrice = getDisplayPrice(item.product, item.selectedVariants)
+      const listVariantPrice = getDisplayPrice(item.product, item.selectedVariants)
+      const variantPrice = volumeUnitPrice(item.product, listVariantPrice, qtyByProduct.get(item.product.id) || item.quantity)
       // Image: prefer variant-specific image when present
       const lineImage = getDisplayImage(item.product, item.selectedVariants)
       // Combination metadata: track which exact variant was sold for fulfillment
@@ -268,6 +273,10 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
         price: variantPrice,
         quantity: item.quantity,
         itemTotal: item.itemPrice * item.quantity,
+      }
+
+      if (variantPrice < listVariantPrice) {
+        orderItem.listPrice = listVariantPrice
       }
 
       if (lineImage) {

@@ -149,8 +149,9 @@ export default function CashFlow() {
           } as Expense
         }
 
-        setCurrentOrders(currOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() } as Order)))
-        setPreviousOrders(prevOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() } as Order)))
+        // Las ventas de prueba no son plata real: fuera de la caja
+        setCurrentOrders(currOrdersSnap.docs.filter(d => !d.data().isTest).map(d => ({ id: d.id, ...d.data() } as Order)))
+        setPreviousOrders(prevOrdersSnap.docs.filter(d => !d.data().isTest).map(d => ({ id: d.id, ...d.data() } as Order)))
         setCurrentExpenses(currExpSnap.docs.map(parseExpense))
         setPreviousExpenses(prevExpSnap.docs.map(parseExpense))
         setProducts(prodSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product)))

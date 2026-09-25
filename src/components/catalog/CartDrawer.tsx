@@ -4,7 +4,8 @@ import { formatPrice } from '../../lib/currency'
 import { optimizeImage } from '../../utils/media'
 import { useTheme } from './ThemeContext'
 import { getThemeTranslations } from '../../themes/shared/translations'
-import { getDisplayImage } from '../../lib/variants'
+import { getDisplayImage, getDisplayPrice } from '../../lib/variants'
+import { getNextVolumeTier } from '../../lib/volumePricing'
 import FreeShippingProgress from './FreeShippingProgress'
 
 interface CartDrawerProps {
@@ -26,6 +27,15 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const { theme, currency, language } = useTheme()
   const t = getThemeTranslations(language)
+
+  // Precio por cantidad: unidades por producto (sumando variantes) y la primera
+  // línea de cada producto, que es la que muestra "Llevando N o más".
+  const qtyByProduct = new Map<string, number>()
+  const firstLineOf = new Map<string, number>()
+  items.forEach((it, i) => {
+    qtyByProduct.set(it.product.id, (qtyByProduct.get(it.product.id) || 0) + it.quantity)
+    if (!firstLineOf.has(it.product.id)) firstLineOf.set(it.product.id, i)
+  })
 
   return (
     // data-sf-ui: parte de la compra; las tipografias decorativas no la tocan (ver ThemeContext).
@@ -99,6 +109,18 @@ export default function CartDrawer({
                 // Per-line image: prefer the variant's own image when the customer
                 // picked a specific combination; fall back to the product image.
                 const lineImage = getDisplayImage(item.product, item.selectedVariants)
+                const volumeApplied = item.itemPrice < item.listPrice - 0.001
+                let volumeNudge: string | null = null
+                if (item.product.volumePricing?.length && firstLineOf.get(item.product.id) === index) {
+                  const base = getDisplayPrice(item.product, item.selectedVariants)
+                  const next = getNextVolumeTier(item.product, base, qtyByProduct.get(item.product.id) || item.quantity)
+                  if (next) {
+                    const nextUnit = item.listPrice - (base - next.unitPrice)
+                    volumeNudge = t.volumeNudge
+                      .replace('{n}', String(next.minQty))
+                      .replace('{price}', formatPrice(nextUnit, currency))
+                  }
+                }
                 return (
                 <div key={`${item.product.id}-${index}`} className="flex gap-4">
                   <div
@@ -141,7 +163,20 @@ export default function CartDrawer({
                       style={{ color: theme.colors.textMuted }}
                     >
                       {formatPrice(item.itemPrice, currency)}
+                      {volumeApplied && (
+                        <>
+                          {' '}
+                          <span className="line-through text-xs">{formatPrice(item.listPrice, currency)}</span>
+                          {' · '}
+                          <span className="text-xs">{t.volumePricing}</span>
+                        </>
+                      )}
                     </p>
+                    {volumeNudge && (
+                      <p className="text-xs mt-1 font-medium" style={{ color: theme.colors.text }}>
+                        {volumeNudge}
+                      </p>
+                    )}
 
                     {/* Show selected variants */}
                     {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (

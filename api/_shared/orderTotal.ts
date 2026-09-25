@@ -33,6 +33,7 @@ import { createHash } from 'crypto'
 import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './order-stock.js'
 import { resolveShippingCost } from '../../src/lib/shipping.js'
 import { getDisplayPrice } from '../../src/lib/variants.js'
+import { volumeUnitPrice } from '../../src/lib/volumePricing.js'
 
 export type Gateway = 'mercadopago' | 'stripe' | 'paypal' | 'gocuotas'
 
@@ -108,13 +109,14 @@ interface ProductDoc {
   variations?: { name: string; options: { value: string; available?: boolean; stock?: number }[] }[]
   combinations?: { id: string; options: Record<string, string>; price?: number; stock?: number; available?: boolean }[]
   modifierGroups?: { name: string; options: { name: string; price: number; available?: boolean }[] }[]
+  volumePricing?: { minQty: number; price?: number; percentOff?: number }[]
 }
 
 export interface PricedLine {
   productId: string
   name: string
   quantity: number
-  unitPrice: number   // precio unitario (variante + modificadores), redondeado a 2 decimales
+  unitPrice: number   // precio unitario (variante con precio por cantidad + modificadores), redondeado a 2 decimales
 }
 
 export interface OrderPricing {
@@ -177,6 +179,17 @@ export async function priceOrder(
   // Cantidad pedida por producto/variante, para validar stock sumando líneas
   const lines: PricedLine[] = []
   const stockNeed = new Map<string, { product: ProductDoc; item: OrderItemDoc; qty: number }>()
+
+  // Precio por cantidad: cuenta las unidades del producto sumando sus variantes,
+  // igual que el carrito (src/hooks/useCart.ts). Una cantidad inválida la
+  // rechaza el loop de abajo.
+  const qtyByProduct = new Map<string, number>()
+  for (const item of items) {
+    const q = Number(item.quantity)
+    if (item.productId && Number.isInteger(q) && q > 0) {
+      qtyByProduct.set(item.productId, (qtyByProduct.get(item.productId) || 0) + q)
+    }
+  }
 
   for (const item of items) {
     const product = item.productId ? products.get(item.productId) : undefined
@@ -263,6 +276,7 @@ export async function priceOrder(
       }
     }
 
+    base = volumeUnitPrice(product, base, qtyByProduct.get(item.productId!) || qty)
     const unitPrice = round2(base + extras)
     lines.push({ productId: item.productId!, name: product.name || item.productName || 'Item', quantity: qty, unitPrice })
 

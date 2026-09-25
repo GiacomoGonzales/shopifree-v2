@@ -4,6 +4,7 @@ import { decrementOrderStock } from '../../lib/stock'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
+import { volumeUnitPrice } from '../../lib/volumePricing'
 import type { Order, OrderItem, Product } from '../../types'
 
 type Channel = 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'
@@ -16,6 +17,8 @@ interface ManualItem {
   image?: string
   quantity: number
   unitPrice: number
+  listPrice: number        // precio normal, antes del precio por cantidad
+  priceEdited?: boolean    // el comerciante escribió el precio a mano: no se recalcula
   // For combos/variants
   variationName?: string
   optionValue?: string
@@ -114,6 +117,21 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
     setVariantSearch('')
   }, [open])
 
+  // Precio por cantidad (src/lib/volumePricing.ts): mismas reglas que la tienda,
+  // contando las unidades del producto en todas sus líneas. Un precio escrito a
+  // mano manda sobre el automático.
+  const productById = useMemo(() => new Map(products.map(p => [p.id, p])), [products])
+  const withVolumePricing = (list: ManualItem[]): ManualItem[] => {
+    const qtyByProduct = new Map<string, number>()
+    for (const it of list) qtyByProduct.set(it.productId, (qtyByProduct.get(it.productId) || 0) + it.quantity)
+    return list.map(it => {
+      const product = productById.get(it.productId)
+      if (it.priceEdited || !product?.volumePricing?.length) return it
+      const unitPrice = volumeUnitPrice(product, it.listPrice, qtyByProduct.get(it.productId) || it.quantity)
+      return unitPrice === it.unitPrice ? it : { ...it, unitPrice }
+    })
+  }
+
   const filteredProducts = useMemo(() => {
     if (!productSearch.trim()) return products.filter(p => p.active !== false).slice(0, 20)
     const q = productSearch.trim().toLowerCase()
@@ -138,17 +156,18 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
     setItems(prev => {
       const existingIdx = prev.findIndex(it => it.productId === product.id && !it._comboId)
       if (existingIdx !== -1) {
-        return prev.map((it, i) => i === existingIdx ? { ...it, quantity: it.quantity + 1 } : it)
+        return withVolumePricing(prev.map((it, i) => i === existingIdx ? { ...it, quantity: it.quantity + 1 } : it))
       }
-      return [...prev, {
+      return withVolumePricing([...prev, {
         productId: product.id,
         productName: product.name,
         image: productImage,
         quantity: 1,
         unitPrice: product.price || 0,
+        listPrice: product.price || 0,
         trackStock: product.trackStock === true,
         availableStock: product.stock ?? undefined,
-      }]
+      }])
     })
     setShowProductPicker(false)
     setProductSearch('')
@@ -160,31 +179,33 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
     setItems(prev => {
       const existingIdx = prev.findIndex(it => it._comboId === combo.id)
       if (existingIdx !== -1) {
-        return prev.map((it, i) => i === existingIdx ? { ...it, quantity: it.quantity + 1 } : it)
+        return withVolumePricing(prev.map((it, i) => i === existingIdx ? { ...it, quantity: it.quantity + 1 } : it))
       }
-      return [...prev, {
+      return withVolumePricing([...prev, {
         productId: product.id,
         productName: product.name,
         image: productImage,
         quantity: 1,
         unitPrice: combo.price || product.price || 0,
+        listPrice: combo.price || product.price || 0,
         variationName: Object.keys(combo.options).join(' / '),
         optionValue: Object.values(combo.options).join(' / '),
         _comboId: combo.id,
         trackStock: product.trackStock === true,
         availableStock: combo.stock,
-      }]
+      }])
     })
     // Keep the variant picker open so user can pick another variant of the same product easily.
     // User closes manually when done.
   }
 
   const updateItem = (index: number, patch: Partial<ManualItem>) => {
-    setItems(prev => prev.map((it, i) => i === index ? { ...it, ...patch } : it))
+    if ('unitPrice' in patch) patch = { ...patch, priceEdited: true }
+    setItems(prev => withVolumePricing(prev.map((it, i) => i === index ? { ...it, ...patch } : it)))
   }
 
   const removeItem = (index: number) => {
-    setItems(prev => prev.filter((_, i) => i !== index))
+    setItems(prev => withVolumePricing(prev.filter((_, i) => i !== index)))
   }
 
   const activeItems = items.filter(it => it.quantity > 0)
@@ -213,6 +234,7 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
           itemTotal: it.unitPrice * it.quantity,
         }
         if (it.image) base.productImage = it.image
+        if (!it.priceEdited && it.unitPrice < it.listPrice) base.listPrice = it.listPrice
         if (it.variationName && it.optionValue) {
           base.selectedVariations = [{ name: it.variationName, value: it.optionValue }]
         }
@@ -489,6 +511,9 @@ export default function NewSaleModal({ open, onClose, onCreated }: NewSaleModalP
                             onChange={e => updateItem(idx, { unitPrice: Number(e.target.value) || 0 })}
                             className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-sm text-right"
                           />
+                          {!it.priceEdited && it.unitPrice < it.listPrice && (
+                            <p className="text-[10px] text-emerald-600 mt-0.5 text-right">Precio por cantidad</p>
+                          )}
                         </div>
                         <div>
                           <label className="text-[10px] text-gray-400 block mb-0.5">Subtotal</label>

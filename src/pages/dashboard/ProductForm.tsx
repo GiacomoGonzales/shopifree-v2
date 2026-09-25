@@ -30,6 +30,8 @@ import {
   CollapsibleCard,
 } from '../../components/dashboard/product-form'
 import { CARD, SECTION_TITLE, LABEL, FIELD, INPUT, INPUT_SM, TOGGLE, NOTE, NOTE_BORDER } from '../../components/dashboard/product-form/tokens'
+import VolumePricingSection from '../../components/dashboard/product-form/VolumePricingSection'
+import { rowsToTiers, tiersToRows, type VolumeRow, type VolumeMode } from '../../components/dashboard/product-form/volumePricingForm'
 
 export default function ProductForm() {
   const { t } = useTranslation('dashboard')
@@ -71,6 +73,9 @@ export default function ProductForm() {
   // === CAMPOS AVANZADOS ===
   const [comparePrice, setComparePrice] = useState('')
   const [cost, setCost] = useState('')
+  // Precios por cantidad (mayoreo)
+  const [volumeRows, setVolumeRows] = useState<VolumeRow[]>([])
+  const [volumeMode, setVolumeMode] = useState<VolumeMode>('price')
   const [sku, setSku] = useState('')
   const [barcode, setBarcode] = useState('')
   const [stock, setStock] = useState('')
@@ -209,6 +214,9 @@ export default function ProductForm() {
             // Avanzados
             setComparePrice(productData.comparePrice?.toString() || '')
             setCost(productData.cost?.toString() || '')
+            const volume = tiersToRows(productData.volumePricing)
+            setVolumeRows(volume.rows)
+            setVolumeMode(volume.mode)
             setSku(productData.sku || '')
             setBarcode(productData.barcode || '')
             setStock(productData.stock?.toString() || '')
@@ -525,6 +533,12 @@ export default function ProductForm() {
       // perdía el descuento sin ningún aviso.
       if (comparePrice) productData.comparePrice = parseFloat(comparePrice)
       if (cost) productData.cost = parseFloat(cost)
+      const volumeTiers = rowsToTiers(volumeRows, volumeMode)
+      if (volumeTiers.length > 0) {
+        productData.volumePricing = volumeTiers
+      } else if (isEditing) {
+        productData.volumePricing = null
+      }
       if (sku) productData.sku = sku
       if (barcode) productData.barcode = barcode
       if (stock) productData.stock = parseInt(stock)
@@ -1139,6 +1153,16 @@ export default function ProductForm() {
                 </div>
               )}
             </div>
+
+            <VolumePricingSection
+              rows={volumeRows}
+              onChange={setVolumeRows}
+              mode={volumeMode}
+              onModeChange={setVolumeMode}
+              basePrice={hasVariantsWithPricing ? minVariantPrice : (price ? parseFloat(price) : undefined)}
+              pricedByVariants={hasVariantsWithPricing}
+              currency={storeCurrency}
+            />
 
             {/* Variants — first-class section, in left column right after pricing
                 because variant prices override the global price. */}

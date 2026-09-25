@@ -110,6 +110,7 @@ export default function Orders() {
   const [hideTestOrders, setHideTestOrders] = useState(true)
   // Delete confirmation
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null)
+  const [deletingTestOrders, setDeletingTestOrders] = useState(false)
 
   // Payment action states
   const [markingPaid, setMarkingPaid] = useState(false)
@@ -291,6 +292,46 @@ export default function Orders() {
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, filterStatus, dateFilter, paymentFilter, sortField, sortOrder])
+
+  const testOrders = useMemo(() => orders.filter(o => o.isTest), [orders])
+
+  // Borra de una todas las ventas de prueba. Pedido de comerciantes: aunque
+  // estén ocultas, no quieren que queden en ningún lado.
+  const handleDeleteTestOrders = async () => {
+    if (!store || testOrders.length === 0) return
+    const n = testOrders.length
+    if (!confirm(t('orders.confirmDeleteTests', {
+      count: n,
+      defaultValue: n === 1
+        ? '¿Eliminar la venta de prueba? Esta acción no se puede deshacer.'
+        : '¿Eliminar las {{count}} ventas de prueba? Esta acción no se puede deshacer.',
+    }))) return
+    setDeletingTestOrders(true)
+    const deleted = new Set<string>()
+    try {
+      for (const order of testOrders) {
+        // Las de prueba no descuentan stock, pero si alguna lo tuviera aplicado
+        // se devuelve igual que al borrar un pedido suelto.
+        if (order.stockDecremented && order.paymentStatus !== 'paid' && order.status !== 'delivered') {
+          try {
+            await restoreOrderStock(store.id, order, { createdBy: store.ownerId, reason: 'Venta de prueba eliminada' })
+          } catch (err) {
+            console.error('Error restoring stock before delete:', err)
+          }
+        }
+        await orderService.delete(store.id, order.id)
+        deleted.add(order.id)
+      }
+      showToast(t('orders.testsDeleted', { defaultValue: 'Ventas de prueba eliminadas' }), 'success')
+    } catch (err) {
+      console.error('Error deleting test orders:', err)
+      showToast(t('orders.deleteError', { defaultValue: 'Error al eliminar el pedido' }), 'error')
+    } finally {
+      setOrders(prev => prev.filter(o => !deleted.has(o.id)))
+      if (selectedOrder && deleted.has(selectedOrder.id)) setSelectedOrder(null)
+      setDeletingTestOrders(false)
+    }
+  }
 
   // Permanently delete an order. Used mainly to clean up test orders the
   // merchant created while probing the checkout flow. The Firestore rule
@@ -821,6 +862,43 @@ export default function Orders() {
         })}
       </div>
 
+      {/* Ventas de prueba: aviso a la vista (el filtro vive en un panel plegado)
+          con la opción de verlas o borrarlas todas. */}
+      {testOrders.length > 0 && !receptionMode && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5 rounded-[10px] border border-amber-200 bg-amber-50 text-sm">
+          <span className="text-amber-900">
+            {hideTestOrders
+              ? t('orders.testOrdersHidden', {
+                  count: testOrders.length,
+                  defaultValue: testOrders.length === 1 ? 'Tienes 1 venta de prueba oculta.' : 'Tienes {{count}} ventas de prueba ocultas.',
+                })
+              : t('orders.testOrdersShown', {
+                  count: testOrders.length,
+                  defaultValue: testOrders.length === 1 ? 'Estás viendo 1 venta de prueba.' : 'Estás viendo {{count}} ventas de prueba.',
+                })}
+          </span>
+          <div className="flex items-center gap-3 ml-auto">
+            <button
+              type="button"
+              onClick={() => setHideTestOrders(h => !h)}
+              className="text-[#0284C7] hover:underline font-medium"
+            >
+              {hideTestOrders ? t('orders.showTests', { defaultValue: 'Ver' }) : t('orders.hideTests', { defaultValue: 'Ocultar' })}
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteTestOrders}
+              disabled={deletingTestOrders}
+              className="text-red-600 hover:underline font-medium disabled:opacity-50"
+            >
+              {deletingTestOrders
+                ? t('orders.deleting', { defaultValue: 'Eliminando...' })
+                : t('orders.deleteTests', { defaultValue: 'Eliminar todas' })}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Results info */}
       {(searchQuery || filterStatus !== 'all' || activeFiltersCount > 0) && (
         <p className="text-sm text-[#8898AA]">
@@ -1231,7 +1309,15 @@ export default function Orders() {
                             + {formatModifierNames(item.selectedModifiers)}
                           </p>
                         )}
-                        <p className="text-sm text-[#8898AA] mt-0.5">x{item.quantity}</p>
+                        <p className="text-sm text-[#8898AA] mt-0.5">
+                          x{item.quantity}
+                          {item.listPrice != null && item.listPrice > item.price && (
+                            <span className="ml-1.5 text-xs">
+                              · {t('orders.volumePrice', { defaultValue: 'Precio por cantidad' })}: {currencySymbol}{item.price.toFixed(2)} c/u{' '}
+                              <span className="line-through">{currencySymbol}{item.listPrice.toFixed(2)}</span>
+                            </span>
+                          )}
+                        </p>
                       </div>
                       <p className="text-sm font-medium text-[#1e3a5f] whitespace-nowrap">
                         {currencySymbol}{(item.itemTotal || item.price * item.quantity).toFixed(2)}

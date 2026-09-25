@@ -55,9 +55,9 @@ const FAQS_ES: Faq[] = [
         Las pruebas:
         <ul className="list-disc ml-5 mt-1 space-y-1">
           <li>NO descuentan stock</li>
-          <li>NO cuentan en estadísticas ni ingresos</li>
+          <li>NO cuentan en estadísticas, ingresos, Clientes ni Finanzas</li>
           <li>Quedan ocultas por defecto en el listado</li>
-          <li>Se pueden ver activando "Mostrar pedidos de prueba" en Filtros</li>
+          <li>Arriba del listado aparece un aviso con <strong>Ver</strong> (para mostrarlas) y <strong>Eliminar todas</strong> (las borra para siempre)</li>
         </ul>
       </>
     ),
@@ -69,7 +69,23 @@ const FAQS_ES: Faq[] = [
       <>
         Click sobre el pedido para abrir el detalle → al final del panel hay un botón rojo <strong>"Eliminar pedido"</strong>. Pide confirmación y se borra para siempre.
         <br /><br />
-        Importante: si el pedido descontó stock real, eliminarlo NO lo devuelve automáticamente. Para eso, también ajusta el stock manualmente desde el botón <strong>Stock</strong> en Productos.
+        Si el pedido había reservado stock y todavía no estaba pagado ni entregado, al eliminarlo el stock vuelve solo. Si ya estaba pagado o entregado, el stock no se devuelve (la mercadería salió): ajústalo desde el botón <strong>Stock</strong> en Productos si hace falta.
+        <br /><br />
+        Para borrar todas las ventas de prueba de una vez, usa <strong>Eliminar todas</strong> en el aviso ámbar de arriba del listado.
+      </>
+    ),
+  },
+  {
+    id: 'precio-por-cantidad',
+    q: '¿Puedo cobrar más barato si el cliente lleva más unidades (precio por mayoreo)?',
+    a: (
+      <>
+        Sí. En el formulario del producto, sección <strong>Precios por cantidad (mayoreo)</strong>, pulsa <strong>+ Agregar</strong> y pon desde cuántas unidades aplica y el precio por unidad. Por ejemplo: precio normal $100 y <em>desde 2 unidades</em> $95 c/u. Puedes agregar varios escalones (desde 7 unidades $90 c/u, etc.) o usar un % de descuento.
+        <ul className="list-disc ml-5 mt-1 space-y-1">
+          <li>La ficha del producto muestra la tabla de precios a tus clientes</li>
+          <li>El carrito aplica el precio solo, contando todas las unidades del producto aunque sean de distintas variantes</li>
+          <li>También se aplica al registrar una venta con <strong>+ Nueva venta</strong></li>
+        </ul>
       </>
     ),
   },

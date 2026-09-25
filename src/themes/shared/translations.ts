@@ -55,6 +55,15 @@ export interface ThemeTranslations {
   lowStock: string              // "Pocas unidades" / "Low stock"
   unitsLeft: string             // "quedan {n}" / "{n} left" — {n} is replaced with the count
 
+  // Precios por cantidad (mayoreo)
+  volumePricing: string         // título de la tabla en la ficha
+  volumeOne: string             // "1 unidad"
+  volumeExact: string           // "{n} unidades"
+  volumeRange: string           // "{from} a {to} unidades"
+  volumeFrom: string            // "{n} o más"
+  perUnit: string               // "c/u"
+  volumeNudge: string           // "Llevando {n} o más: {price} c/u"
+
   // Powered by
   poweredBy: string
 
@@ -313,6 +322,14 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     lowStock: 'Pocas unidades',
     unitsLeft: 'quedan {n}',
 
+    volumePricing: 'Precio por cantidad',
+    volumeOne: '1 unidad',
+    volumeExact: '{n} unidades',
+    volumeRange: '{from} a {to} unidades',
+    volumeFrom: '{n} o más',
+    perUnit: 'c/u',
+    volumeNudge: 'Llevando {n} o más: {price} c/u',
+
     // Powered by
     poweredBy: 'Creado con Shopifree',
 
@@ -570,6 +587,14 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     lowStock: 'Low stock',
     unitsLeft: '{n} left',
 
+    volumePricing: 'Quantity pricing',
+    volumeOne: '1 unit',
+    volumeExact: '{n} units',
+    volumeRange: '{from} to {to} units',
+    volumeFrom: '{n} or more',
+    perUnit: 'each',
+    volumeNudge: 'Buy {n} or more: {price} each',
+
     // Powered by
     poweredBy: 'Powered by Shopifree',
 
@@ -826,6 +851,14 @@ export const themeTranslations: Record<ThemeLanguage, ThemeTranslations> = {
     stockLimit: 'Máx. disponível: ',
     lowStock: 'Poucas unidades',
     unitsLeft: 'restam {n}',
+
+    volumePricing: 'Preço por quantidade',
+    volumeOne: '1 unidade',
+    volumeExact: '{n} unidades',
+    volumeRange: '{from} a {to} unidades',
+    volumeFrom: '{n} ou mais',
+    perUnit: 'cada',
+    volumeNudge: 'Levando {n} ou mais: {price} cada',
 
     // Powered by
     poweredBy: 'Criado com Shopifree',

@@ -171,8 +171,9 @@ export default function FinanceDashboard() {
           getDocs(collection(db, `stores/${store.id}/products`)),
         ])
 
-        setOrders(ordSnap.docs.map(d => ({ id: d.id, ...d.data() } as Order)))
-        setPreviousOrders(prevOrdSnap.docs.map(d => ({ id: d.id, ...d.data() } as Order)))
+        // Las ventas de prueba no son plata real: fuera de Finanzas
+        setOrders(ordSnap.docs.filter(d => !d.data().isTest).map(d => ({ id: d.id, ...d.data() } as Order)))
+        setPreviousOrders(prevOrdSnap.docs.filter(d => !d.data().isTest).map(d => ({ id: d.id, ...d.data() } as Order)))
         setExpenses(expSnap.docs.map(parseExpense))
         setPreviousExpenses(prevExpSnap.docs.map(parseExpense))
         setAllRecurringExpenses(allRecurringSnap.docs.map(parseExpense))

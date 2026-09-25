@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo } from 'react'
 import type { Product } from '../types'
 import type { SelectedModifier } from '../components/catalog/business-type'
 import { trackAddToCart, getPixelDefaultCurrency } from '../lib/pixels'
-import { getStockForSelection } from '../lib/variants'
+import { getDisplayPrice, getStockForSelection } from '../lib/variants'
+import { volumeUnitPrice } from '../lib/volumePricing'
 
 export interface CartItemExtras {
   selectedVariants?: Record<string, string>
@@ -18,7 +19,28 @@ export interface CartItem {
   selectedVariants?: Record<string, string>
   selectedModifiers?: SelectedModifier[]
   customNote?: string
-  itemPrice: number  // Price per unit including modifiers
+  itemPrice: number  // Price per unit including modifiers (and volume pricing)
+  listPrice: number  // Same, before volume pricing (what the drawer added)
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100
+
+// Precios por cantidad (src/lib/volumePricing.ts): el precio por unidad depende
+// de cuántas unidades del producto hay en el carrito sumando sus variantes, así
+// que cada cambio de cantidad recalcula todas las líneas. Solo se descuenta de
+// la variante: los modificadores quedan igual (misma regla que orderTotal.ts).
+function applyVolumePricing(items: CartItem[]): CartItem[] {
+  const qtyByProduct = new Map<string, number>()
+  for (const it of items) qtyByProduct.set(it.product.id, (qtyByProduct.get(it.product.id) || 0) + it.quantity)
+  return items.map(it => {
+    let itemPrice = it.listPrice
+    if (it.product.volumePricing?.length) {
+      const base = getDisplayPrice(it.product, it.selectedVariants)
+      const tiered = volumeUnitPrice(it.product, base, qtyByProduct.get(it.product.id) || it.quantity)
+      itemPrice = round2(it.listPrice - (base - tiered))
+    }
+    return itemPrice === it.itemPrice ? it : { ...it, itemPrice }
+  })
 }
 
 // Generate a unique key for cart items based on product and selections
@@ -74,24 +96,26 @@ export function useCart() {
 
       if (existingIndex !== -1) {
         // Increment quantity of existing item
-        return currentItems.map((item, index) =>
+        return applyVolumePricing(currentItems.map((item, index) =>
           index === existingIndex
             ? { ...item, quantity: item.quantity + 1 }
             : item
-        )
+        ))
       }
 
       // Add new item
+      const unitPrice = extras?.itemPrice || product.price
       const newItem: CartItem = {
         product,
         quantity: 1,
         selectedVariants: extras?.selectedVariants,
         selectedModifiers: extras?.selectedModifiers,
         customNote: extras?.customNote,
-        itemPrice: extras?.itemPrice || product.price,
+        itemPrice: unitPrice,
+        listPrice: unitPrice,
       }
 
-      return [...currentItems, newItem]
+      return applyVolumePricing([...currentItems, newItem])
     })
     // Fire AddToCart pixel event on successful add (not when blocked by stock)
     if (!blocked) {
@@ -111,17 +135,17 @@ export function useCart() {
   }, [])
 
   const removeItem = useCallback((index: number) => {
-    setItems(currentItems => currentItems.filter((_, i) => i !== index))
+    setItems(currentItems => applyVolumePricing(currentItems.filter((_, i) => i !== index)))
   }, [])
 
   const updateQuantity = useCallback((index: number, quantity: number): boolean => {
     if (quantity <= 0) {
-      setItems(currentItems => currentItems.filter((_, i) => i !== index))
+      setItems(currentItems => applyVolumePricing(currentItems.filter((_, i) => i !== index)))
       return true
     }
     let blocked = false
     setItems(currentItems =>
-      currentItems.map((item, i) => {
+      applyVolumePricing(currentItems.map((item, i) => {
         if (i !== index) return item
         if (item.product.trackStock) {
           const stockLimit = getStockForSelection(item.product, item.selectedVariants)
@@ -131,7 +155,7 @@ export function useCart() {
           }
         }
         return { ...item, quantity }
-      })
+      }))
     )
     return !blocked
   }, [])
@@ -149,7 +173,7 @@ export function useCart() {
     setItems(currentItems => {
       const index = currentItems.findIndex(item => item.product.id === productId)
       if (index === -1) return currentItems
-      return currentItems.filter((_, i) => i !== index)
+      return applyVolumePricing(currentItems.filter((_, i) => i !== index))
     })
   }, [])
 
@@ -159,9 +183,9 @@ export function useCart() {
       return
     }
     setItems(currentItems =>
-      currentItems.map(item =>
+      applyVolumePricing(currentItems.map(item =>
         item.product.id === productId ? { ...item, quantity } : item
-      )
+      ))
     )
   }, [removeItemById])
 

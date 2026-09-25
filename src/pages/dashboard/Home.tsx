@@ -394,7 +394,7 @@ export default function DashboardHome() {
         // (getOrdersByDateRange filtra los cancelados), y ver "Pedidos: 0"
         // encima de una lista con cinco pedidos hace desconfiar del tablero.
         // Los cancelados siguen visibles en /dashboard/orders, que tiene filtro.
-        setRecentOrders(ordersData.filter(o => !isAbandoned(o) && o.status !== 'cancelled').slice(0, 5))
+        setRecentOrders(ordersData.filter(o => !isAbandoned(o) && o.status !== 'cancelled' && !o.isTest).slice(0, 5))
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {

@@ -1072,7 +1072,8 @@ export const analyticsService = {
       const snapshot = await getDocs(q)
       return snapshot.docs
         .map(doc => ({ id: doc.id, storeId, ...convertTimestamps(doc.data()) }) as Order)
-        .filter(order => order.status !== 'cancelled')
+        // Las ventas de prueba no cuentan en ninguna métrica (Inicio, Estadísticas)
+        .filter(order => order.status !== 'cancelled' && !order.isTest)
     } catch (error) {
       console.error('Error getting orders by date range:', error)
       return []

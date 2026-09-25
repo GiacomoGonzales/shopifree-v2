@@ -7,6 +7,7 @@ import { useBusinessType } from '../../hooks/useBusinessType'
 import ProductGallery from '../../themes/shared/ProductGallery'
 import { getThemeTranslations } from '../../themes/shared/translations'
 import ProductReels from './ProductReels'
+import VolumePriceTable from './VolumePriceTable'
 import { getCatalogProducts } from './catalogProducts'
 import {
   ModifierSelector,
@@ -376,6 +377,9 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
                 </span>
               )}
             </div>
+
+            {/* Precio por cantidad (mayoreo) — el carrito lo aplica solo */}
+            <VolumePriceTable product={activeProduct} basePrice={unitPrice} />
 
             {/* Fashion/Pets: Variants */}
             {features.showVariants && activeProduct.variations && activeProduct.variations.length > 0 && (
