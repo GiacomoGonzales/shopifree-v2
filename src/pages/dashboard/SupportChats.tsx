@@ -794,6 +794,11 @@ export default function SupportChats() {
                         </div>
                       </div>
                       <p className="text-[10px] text-[#A9B6C6] mt-0.5 truncate">{chat.userEmail}</p>
+                      {chat.escalated && chat.escalationReason && (
+                        <p className="text-[10px] text-orange-600 mt-0.5 truncate" title={chat.escalationReason}>
+                          Motivo: {chat.escalationReason}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -928,6 +933,13 @@ export default function SupportChats() {
                     </button>
                   </div>
                 </div>
+
+                {/* Motivo de la escalación que puso Sofía */}
+                {selectedChat.escalated && selectedChat.escalationReason && (
+                  <div className="px-4 py-2 bg-orange-50 border-b border-orange-100 text-xs text-orange-700">
+                    <span className="font-semibold">Escalado por Sofía:</span> {selectedChat.escalationReason}
+                  </div>
+                )}
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto px-4 py-3" onScroll={handleMessagesScroll}>

@@ -304,7 +304,9 @@ export default function ChatModal({ open, onClose }: ChatModalProps) {
         setAiTyping(true)
         try {
           const aiResult = await chatService.requestAIResponse(chatId, store.id, msgText, firebaseUser.uid)
-          // If AI was skipped (paused or escalated), hide typing immediately
+          // Sofía no responde si el admin pausó la IA o si hay una persona del
+          // equipo atendiendo (mensaje del admin hace < 30 min). En chats
+          // escalados SÍ responde y su mensaje llega por el listener.
           if (aiResult.skipped) {
             setAiTyping(false)
           }

@@ -37,6 +37,8 @@ export interface Chat {
   unreadByAdmin: number
   unreadByUser: number
   escalated: boolean
+  // Motivo que puso Sofía al escalar ([ESCALATE: motivo]), lo escribe api/ai-chat
+  escalationReason?: string
   aiPaused: boolean
   createdAt: Date
 }
@@ -56,6 +58,7 @@ function docToChat(docSnap: { id: string; data: () => Record<string, any> }): Ch
     unreadByAdmin: data.unreadByAdmin || 0,
     unreadByUser: data.unreadByUser || 0,
     escalated: data.escalated || false,
+    escalationReason: typeof data.escalationReason === 'string' ? data.escalationReason : undefined,
     aiPaused: data.aiPaused || false,
     createdAt: data.createdAt?.toDate?.() || new Date(),
   }
