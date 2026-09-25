@@ -6,11 +6,14 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useSidebar } from '../../contexts/SidebarContext'
 import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import { useNewOrdersCount } from '../../hooks/useNewOrdersCount'
+import { useShopiChatUnread } from '../../hooks/useShopiChatAlerts'
+import { canSeeShopiChat } from '../../lib/shopichatAccess'
+import { getEffectivePlan } from '../../lib/stripe'
 import ModeSwitcher from '../finance/ModeSwitcher'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
   PaletteIcon, SettingsIcon, GlobeIcon, TagIcon, CreditCardIcon, PhoneIcon,
-  IntegrationsIcon, UserIcon, ChatIcon,
+  IntegrationsIcon, UserIcon, ChatIcon, ShopiChatIcon,
   FinanceDashIcon, InventoryIcon, MovementsIcon, WarehouseIcon, SupplierIcon,
   PurchaseIcon, ProductionIcon, ExpenseIcon, CashFlowIcon, ReportsIcon, AccountIcon,
   SubscriptionIcon, ChatNavIcon, CloseIcon,
@@ -41,6 +44,8 @@ export default function SharedMobileSidebar() {
   const { localePath } = useLanguage()
   const { user, firebaseUser, store, logout } = useAuth()
   const newOrders = useNewOrdersCount(store?.id)
+  const shopichatVisible = canSeeShopiChat(firebaseUser?.email)
+  const shopichatUnread = useShopiChatUnread(store?.id, shopichatVisible && !!store && getEffectivePlan(store) === 'business')
   const { open, setOpen } = useSidebar()
   const location = useLocation()
   const navigate = useNavigate()
@@ -101,6 +106,7 @@ export default function SharedMobileSidebar() {
       { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
       { name: 'Dropshipping', href: localePath('/dashboard/dropshipping'), icon: DropshippingIcon },
       { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon, badge: newOrders },
+      ...(shopichatVisible ? [{ name: t('nav.shopichat'), href: localePath('/dashboard/shopichat'), icon: ShopiChatIcon, badge: shopichatUnread }] : []),
       { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
       { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
       'separator',
@@ -116,7 +122,7 @@ export default function SharedMobileSidebar() {
     ]
     if (isAdmin) items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
     return items
-  }, [mode, t, localePath, isAdmin, showUpgrade, newOrders])
+  }, [mode, t, localePath, isAdmin, showUpgrade, newOrders, shopichatUnread, shopichatVisible])
 
   const isItemActive = (href: string) => {
     const rootDash = localePath('/dashboard')

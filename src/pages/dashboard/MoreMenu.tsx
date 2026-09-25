@@ -4,6 +4,8 @@ import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { getEffectivePlan } from '../../lib/stripe'
 import { useLanguage } from '../../hooks/useLanguage'
+import { useShopiChatUnread } from '../../hooks/useShopiChatAlerts'
+import { canSeeShopiChat } from '../../lib/shopichatAccess'
 
 const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
@@ -13,8 +15,23 @@ export default function MoreMenu() {
   const { user, firebaseUser, store, logout } = useAuth()
 
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const shopichatVisible = canSeeShopiChat(firebaseUser?.email)
+  const shopichatUnread = useShopiChatUnread(store?.id, shopichatVisible && !!store && getEffectivePlan(store) === 'business')
 
-  const menuItems = [
+  const menuItems: { name: string; href: string; icon: React.ReactNode; color: string; badge?: number }[] = [
+    ...(shopichatVisible ? [
+    {
+      name: t('nav.shopichat'),
+      href: localePath('/dashboard/shopichat'),
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        </svg>
+      ),
+      color: 'from-[#25D366] to-[#128C7E]',
+      badge: shopichatUnread,
+    },
+    ] : []),
     {
       name: 'Dropshipping',
       href: localePath('/dashboard/dropshipping'),
@@ -118,8 +135,13 @@ export default function MoreMenu() {
             to={item.href}
             className="flex flex-col items-center gap-2 p-4 bg-white rounded-[14px] border border-[#E6EBF1] shadow-sm active:scale-95 transition-all"
           >
-            <div className={`w-11 h-11 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center text-white shadow-sm`}>
+            <div className={`relative w-11 h-11 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center text-white shadow-sm`}>
               {item.icon}
+              {(item.badge ?? 0) > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[#DC2626] text-white text-[0.62rem] font-semibold rounded-full flex items-center justify-center border-2 border-white">
+                  {(item.badge ?? 0) > 9 ? '9+' : item.badge}
+                </span>
+              )}
             </div>
             <span className="text-xs font-medium text-[#425466] text-center leading-tight">{item.name}</span>
           </Link>

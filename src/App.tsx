@@ -40,6 +40,7 @@ const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
 const Orders = lazy(() => import('./pages/dashboard/Orders'))
 const Customers = lazy(() => import('./pages/dashboard/Customers'))
 const SupportChats = lazy(() => import('./pages/dashboard/SupportChats'))
+const ShopiChat = lazy(() => import('./pages/dashboard/ShopiChat'))
 const MoreMenu = lazy(() => import('./pages/dashboard/MoreMenu'))
 const Help = lazy(() => import('./pages/dashboard/Help'))
 const MiApp = lazy(() => import('./pages/dashboard/MiApp'))
@@ -253,6 +254,8 @@ function AppRoutes() {
             <Route path="categories" element={<Navigate to="products" replace />} />
             <Route path="orders" element={<Orders />} />
             <Route path="customers" element={<Customers />} />
+            {/* ShopiChat: bandeja de WhatsApp (plan Business) */}
+            <Route path="shopichat" element={<ShopiChat />} />
             <Route path="analytics" element={<Analytics />} />
             {/* Mi Tienda */}
             <Route path="branding" element={<Branding />} />

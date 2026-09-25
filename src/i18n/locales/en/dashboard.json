@@ -15,7 +15,8 @@
     "help": "Help",
     "miApp": "My App",
     "plan": "Plan",
-    "logout": "Logout"
+    "logout": "Logout",
+    "shopichat": "ShopiChat"
   },
   "home": {
     "title": "My Catalog",
@@ -1791,6 +1792,289 @@
       "limit": "You've reached today's suggestion limit. Come back tomorrow.",
       "businessOnly": "AI texts: Business plan only.",
       "announcementText": "Announcement text"
+    }
+  },
+  "shopichat": {
+    "common": {
+      "back": "Back",
+      "cancel": "Cancel",
+      "close": "Close",
+      "copiedPhone": "Number copied: {{phone}}",
+      "delete": "Delete",
+      "discard": "Discard",
+      "edit": "Edit",
+      "loading": "Loading…",
+      "more": "More options",
+      "retry": "Retry",
+      "save": "Save",
+      "sending": "Sending…"
+    },
+    "actions": {
+      "forward": "Forward",
+      "react": "React",
+      "reply": "Reply"
+    },
+    "composer": {
+      "attach": "Attach photo or document",
+      "camera": "Take a photo",
+      "captionPlaceholder": "Add a caption (optional)",
+      "dropHere": "Drop the file here",
+      "oneFile": "One file at a time: sending the first one.",
+      "placeholder": "Type a message",
+      "placeholderQuick": "Type a message, or / for a quick reply",
+      "quickHint": "Arrows to pick · Enter to use",
+      "replyingTo": "Replying to {{name}}",
+      "send": "Send",
+      "sendFile": "Send file"
+    },
+    "connect": {
+      "title": "Connect your WhatsApp to Shopifree",
+      "subtitle": "Reply to your customers from the dashboard, with their orders in view.",
+      "benefit1": "All your WhatsApp conversations in one place, on your computer or phone.",
+      "benefit2": "See each customer's orders and total spent while you reply.",
+      "benefit3": "Quick replies, voice notes, photos and documents, just like WhatsApp.",
+      "benefit4": "Organize chats into open, pending and done, with labels and notes.",
+      "coexistTitle": "Keep using WhatsApp Business on your phone",
+      "coexistBody": "If you already use the WhatsApp Business app, connect that same number: messages show up on your phone and in Shopifree at the same time.",
+      "cta": "Connect my WhatsApp",
+      "ctaNewNumber": "I'd rather use a new number",
+      "connecting": "Connecting…",
+      "loadingSdk": "Preparing the connection with Meta…",
+      "sdkError": "Couldn't load the Meta connection. Disable your ad blocker and reload the page.",
+      "followPopup": "Follow the steps in the Meta window.",
+      "almost": "Done! We're finishing connecting your number…",
+      "failed": "Couldn't connect your WhatsApp. Please try again.",
+      "lastError": "The last attempt failed: {{error}}",
+      "comingSoonTitle": "Coming soon",
+      "comingSoonBody": "We're finishing the WhatsApp connection. You'll be able to turn it on from here very soon.",
+      "desktopTitle": "Connect your WhatsApp from a computer",
+      "desktopBody": "Open shopifree.app on your computer to connect the number. Then you can reply from the app."
+    },
+    "customer": {
+      "title": "Customer",
+      "optOut": "This contact asked not to receive more messages.",
+      "orders": "Orders",
+      "noOrders": "No orders with this number.",
+      "totalSpent": "Total spent",
+      "orderCount": "Orders",
+      "lastOrder": "Last order",
+      "share": "Send to chat",
+      "sendStoreLink": "Store link",
+      "sendProductLink": "Product link",
+      "searchProduct": "Search product",
+      "storeLinkText": "Check out our catalog here: {{url}}"
+    },
+    "editor": {
+      "clear": "Clear all",
+      "eraser": "Eraser",
+      "exportError": "Couldn't prepare the photo.",
+      "loadError": "Couldn't open the photo for editing.",
+      "marker": "Marker",
+      "pen": "Pen",
+      "undo": "Undo"
+    },
+    "errors": {
+      "accountLoad": "Couldn't read the WhatsApp settings.",
+      "fileRead": "Couldn't read the file.",
+      "fileTooBig": "For now you can send files up to {{mb}} MB.",
+      "uploadFailed": "The file could not be uploaded. Check your connection and try again.",
+      "fileTooBigWa": "WhatsApp accepts files of this type up to {{mb}} MB.",
+      "fileType": "WhatsApp doesn't support that file type.",
+      "labelFailed": "Couldn't change the label.",
+      "listLoad": "Couldn't load conversations.",
+      "network": "No connection. Check your internet.",
+      "planRequired": "ShopiChat is available on the Business plan.",
+      "sendFailed": "Couldn't send.",
+      "statusFailed": "Couldn't change the status.",
+      "threadLoad": "Couldn't load messages.",
+      "waitSending": "Wait for the message to finish sending.",
+      "windowClosed": "More than 24 hours have passed since their last message: you can only write with a template."
+    },
+    "forward": {
+      "title": "Forward to…",
+      "done_one": "Forwarded",
+      "done_other": "Forwarded to {{count}} conversations",
+      "max": "You can forward up to {{count}} messages at once.",
+      "nMessages_one": "{{count}} message",
+      "nMessages_other": "{{count}} messages",
+      "sendTo_one": "Send to {{count}}",
+      "sendTo_other": "Send to {{count}}",
+      "tapToSelect": "Tap the messages you want to forward"
+    },
+    "labels": {
+      "title": "Labels",
+      "add": "Add a label and press Enter",
+      "all": "All",
+      "none": "No labels",
+      "remove": "Remove {{label}}",
+      "max": "Up to {{count}} labels per conversation."
+    },
+    "list": {
+      "search": "Search by name or number",
+      "noMatches": "No matching conversations.",
+      "empty": {
+        "open": "No conversations yet. They'll show up here as soon as a customer writes to you.",
+        "pending": "Nothing pending.",
+        "done": "You haven't completed any conversation yet."
+      },
+      "limited": "Showing the {{count}} most recent conversations.",
+      "notFound": "We couldn't find that conversation.",
+      "pick": "Pick a conversation to read it",
+      "you": "You"
+    },
+    "locked": {
+      "title": "ShopiChat is part of the Business plan",
+      "body": "Answer your store's WhatsApp from Shopifree, with each customer's orders in view.",
+      "cta": "See Business plan",
+      "native": "Available on the Business plan."
+    },
+    "media": {
+      "download": "Download",
+      "edit": "Edit",
+      "empty": "No files of this type in the conversation.",
+      "tabAudio": "Audio",
+      "tabDocs": "Documents",
+      "tabMedia": "Photos & videos",
+      "title": "Files",
+      "watchVideo": "Watch video"
+    },
+    "note": {
+      "title": "Internal note",
+      "placeholder": "Only you see it: will pick up on Friday, asked for size M…",
+      "save": "Save note",
+      "saved": "Note saved",
+      "deleted": "Note deleted",
+      "error": "Couldn't save the note."
+    },
+    "orderStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "settings": {
+      "title": "ShopiChat settings",
+      "number": "Connected number",
+      "connected": "Connected",
+      "coexistence": "Also on the phone app",
+      "connectedAt": "Connected on {{date}}",
+      "disconnect": "Disconnect this number",
+      "disconnectConfirm": "You'll stop receiving and sending messages from Shopifree. Saved conversations aren't deleted.",
+      "disconnectYes": "Yes, disconnect",
+      "disconnected": "Number disconnected",
+      "disconnectError": "Couldn't disconnect.",
+      "soundTitle": "New message sound",
+      "soundBody": "Plays on this device while the dashboard is open.",
+      "quickReplies": "Quick replies",
+      "quickRepliesHelp": "Type / in the chat followed by the shortcut: the text is pasted and you can edit it before sending. {nombre} is replaced with the customer's name.",
+      "newReply": "New",
+      "noReplies": "You don't have quick replies yet.",
+      "shortcutPlaceholder": "shortcut (e.g. prices)",
+      "textPlaceholder": "Hi {nombre}, thanks for reaching out…",
+      "taken": "You already have another reply with {{shortcut}}.",
+      "saved": "{{shortcut}} saved",
+      "deleted": "{{shortcut}} deleted",
+      "confirmDelete": "Delete {{shortcut}}?",
+      "saveError": "Couldn't save."
+    },
+    "sound": {
+      "blockedHint": "The browser won't play sounds until you tap the page once",
+      "enable": "Enable sound",
+      "mute": "Mute new messages",
+      "unmute": "Play sound on new messages"
+    },
+    "status": {
+      "open": "Open",
+      "pending": "Pending",
+      "done": "Done",
+      "markDone": "Complete",
+      "reopen": "Reopen",
+      "markPending": "Mark as pending",
+      "markOpen": "Move to open"
+    },
+    "templates": {
+      "subtitle": "After 24 hours you can only write with a template approved by Meta.",
+      "titleFor": "Template for {{name}}",
+      "send": "Send template",
+      "sent": "Template sent",
+      "sync": "Fetch templates from Meta",
+      "syncedAt": "Updated {{date}}",
+      "synced_one": "{{count}} template in the account",
+      "synced_other": "{{count}} templates in the account",
+      "syncError": "Couldn't fetch templates.",
+      "syncing": "Fetching templates from Meta…",
+      "none": "No approved templates yet. Create them in WhatsApp Manager (Meta); once approved they show up here.",
+      "unavailable": "Not available",
+      "pick": "Pick a template from the list.",
+      "headerImage": "Header image (public URL)",
+      "headerVar": "Header: {{v}}",
+      "variable": "Variable {{n}}",
+      "preview": "What the customer will see",
+      "hasButtons": "This template includes buttons; they show on the customer's WhatsApp.",
+      "category": {
+        "MARKETING": "Marketing",
+        "UTILITY": "Utility",
+        "AUTHENTICATION": "Authentication"
+      },
+      "status": {
+        "PENDING": "In review",
+        "REJECTED": "Rejected",
+        "PAUSED": "Paused",
+        "DISABLED": "Disabled"
+      }
+    },
+    "thread": {
+      "auto": "Automatic reply",
+      "empty": "No messages yet.",
+      "labelsAndNote": "Labels and note",
+      "mediaUnavailable": "{{type}} unavailable",
+      "mediaLoading": "Loading {{type}}…",
+      "notSent": "Not sent",
+      "quoted": "Quoted message",
+      "quotedMissing": "Not in this part of the conversation",
+      "searchIn": "Search in conversation",
+      "selectMessages": "Select messages",
+      "template": "Template",
+      "toBottom": "Go to latest message",
+      "unsupported": "Unsupported message",
+      "you": "You"
+    },
+    "time": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "types": {
+      "audio": "Audio",
+      "document": "Document",
+      "file": "File",
+      "image": "Photo",
+      "location": "Location",
+      "message": "Message",
+      "sticker": "Sticker",
+      "video": "Video",
+      "template": "Template",
+      "text": "Message"
+    },
+    "voice": {
+      "barTitle": "Voice note · {{name}}",
+      "discard": "Discard the note",
+      "pause": "Pause",
+      "play": "Play",
+      "progress": "Voice note progress",
+      "record": "Record a voice note",
+      "recording": "Recording a voice note",
+      "speed": "Change speed",
+      "unsupported": "This browser can't record audio for WhatsApp.",
+      "denied": "The browser didn't allow microphone access.",
+      "failed": "Couldn't open the microphone."
+    },
+    "window": {
+      "closedShort": "Window closed",
+      "closedTitle": "More than 24 hours since their last message",
+      "closedBody": "WhatsApp only allows free replies within 24 hours. To write now you need a template approved by Meta. If they write again, the window reopens.",
+      "remaining": "Window: {{time}}"
     }
   }
 }

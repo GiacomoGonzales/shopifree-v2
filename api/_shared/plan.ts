@@ -59,6 +59,15 @@ export function hasPaidEffectivePlan(store: StorePlanData | undefined | null): b
   return true
 }
 
+/**
+ * true cuando el plan EFECTIVO es business (ShopiChat / WhatsApp). Misma
+ * semantica que hasPaidEffectivePlan (dunning, comps, trial), pero exige
+ * que el plan guardado sea 'business': un Pro no alcanza.
+ */
+export function hasBusinessEffectivePlan(store: StorePlanData | undefined | null): boolean {
+  return !!store && store.plan === 'business' && hasPaidEffectivePlan(store)
+}
+
 // ── Helpers de suscripcion (webhook de Stripe, sync y crons) ─────────
 // Todo lo de abajo es aditivo: hasPaidEffectivePlan no cambia de semantica.
 

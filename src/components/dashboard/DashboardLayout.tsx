@@ -14,11 +14,13 @@ import { getEffectivePlan } from '../../lib/stripe'
 import SetupAlerts from './SetupAlerts'
 import { chatService } from '../../lib/chatService'
 import { useOwnerPushNotifications } from '../../hooks/usePushNotifications'
+import { useShopiChatAlerts } from '../../hooks/useShopiChatAlerts'
+import { canSeeShopiChat } from '../../lib/shopichatAccess'
 import AppChrome, { type NavElement } from '../layout/AppChrome'
 import {
   HomeIcon, BoxIcon, DropshippingIcon, ChartIcon, OrdersIcon, CustomersIcon,
   PaletteIcon, SettingsIcon, GlobeIcon, TagIcon, CreditCardIcon, PhoneIcon,
-  IntegrationsIcon, UserIcon, ChatIcon, HelpIcon,
+  IntegrationsIcon, UserIcon, ChatIcon, HelpIcon, ShopiChatIcon,
 } from '../layout/sharedIcons'
 
 const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
@@ -32,12 +34,27 @@ export default function DashboardLayout() {
 
   const isNative = Capacitor.isNativePlatform()
 
-  // Registra el teléfono del dueño para recibir avisos de pedidos nuevos, y al
-  // tocar el aviso abre la lista de pedidos. La Cloud Function notifyNewOrder
-  // manda `orderId` y `storeId` en el payload.
-  useOwnerPushNotifications(firebaseUser?.uid, () => {
+  // Registra el teléfono del dueño para recibir avisos, y al tocar el aviso
+  // abre lo que corresponda: un mensaje de WhatsApp (ShopiChat) abre esa
+  // conversación; cualquier otro (pedido nuevo: la Cloud Function notifyNewOrder
+  // manda `orderId` y `storeId`) abre la lista de pedidos.
+  const openShopiChat = (waId?: string) => {
+    navigate(localePath(waId ? `/dashboard/shopichat?c=${encodeURIComponent(waId)}` : '/dashboard/shopichat'))
+  }
+  useOwnerPushNotifications(firebaseUser?.uid, data => {
+    if (data?.type === 'whatsapp-message') {
+      const waId = typeof data.waId === 'string' ? data.waId : typeof data.conversationId === 'string' ? data.conversationId : undefined
+      openShopiChat(waId)
+      return
+    }
     navigate(localePath('/dashboard/orders'))
   })
+
+  // ShopiChat (plan Business): contador de conversaciones sin leer, sonido y
+  // título de la pestaña mientras el panel está abierto, esté donde esté.
+  const shopichatVisible = canSeeShopiChat(firebaseUser?.email)
+  const shopichatEnabled = shopichatVisible && !!store && getEffectivePlan(store) === 'business'
+  const shopichatUnread = useShopiChatAlerts(store?.id, shopichatEnabled, openShopiChat)
 
   // Track presence for any user with a store
   const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
@@ -79,6 +96,7 @@ export default function DashboardLayout() {
       { name: t('nav.products'), href: localePath('/dashboard/products'), icon: BoxIcon },
       { name: 'Dropshipping', href: localePath('/dashboard/dropshipping'), icon: DropshippingIcon },
       { name: t('nav.orders'), href: localePath('/dashboard/orders'), icon: OrdersIcon, badge: newOrders },
+      ...(shopichatVisible ? [{ name: t('nav.shopichat'), href: localePath('/dashboard/shopichat'), icon: ShopiChatIcon, badge: shopichatUnread }] : []),
       { name: t('nav.customers'), href: localePath('/dashboard/customers'), icon: CustomersIcon },
       { name: t('nav.analytics'), href: localePath('/dashboard/analytics'), icon: ChartIcon },
       'separator',
@@ -100,7 +118,7 @@ export default function DashboardLayout() {
       items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
     }
     return items
-  }, [t, localePath, isAdmin, newOrders])
+  }, [t, localePath, isAdmin, newOrders, shopichatUnread, shopichatVisible])
 
   // Set dark status bar text for dashboard (white/light background)
   useEffect(() => {

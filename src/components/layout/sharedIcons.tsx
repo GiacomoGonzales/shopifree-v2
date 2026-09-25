@@ -64,6 +64,10 @@ export const UserIcon = ({ active }: { active?: boolean }) =>
 export const ChatIcon = ({ active }: { active?: boolean }) =>
   <NavIcon active={active} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" />
 
+// ShopiChat (bandeja de WhatsApp): globo de chat redondo, distinto del de soporte.
+export const ShopiChatIcon = ({ active }: { active?: boolean }) =>
+  <NavIcon active={active} d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+
 export const MoreIcon = ({ active }: { active?: boolean }) =>
   <NavIcon active={active} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
 

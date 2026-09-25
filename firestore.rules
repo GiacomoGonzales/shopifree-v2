@@ -253,6 +253,45 @@ service cloud.firestore {
         allow read, write: if false;
       }
 
+      // ShopiChat (WhatsApp). Todo lo escribe el servidor (api/whatsapp.ts y
+      // api/whatsapp-webhook.ts con el Admin SDK). El token de Meta vive en
+      // private/whatsapp (negado arriba).
+      //  - account / templates: el dueño solo lee.
+      //  - automations: respuestas rapidas, las edita el dueño.
+      match /waSettings/{docId} {
+        allow read: if isStoreOwnerOrAdmin(storeId);
+        allow write: if docId == 'automations' && isStoreOwner(storeId)
+          && (request.method == 'delete' || (
+            request.resource.data.get('quickReplies', []) is list
+            && request.resource.data.get('quickReplies', []).size() <= 300
+          ));
+      }
+
+      // Conversaciones: el dueño lee y solo puede cambiar status, labels, note
+      // y bajar unread a 0 (marcar leido). Lo demas (ventana de 24 h, optOut,
+      // ultimo mensaje) lo decide el servidor.
+      match /waConversations/{waId} {
+        allow read: if isStoreOwnerOrAdmin(storeId);
+        allow create, delete: if false;
+        allow update: if isStoreOwner(storeId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'labels', 'note', 'unread'])
+          && request.resource.data.get('status', 'open') in ['open', 'pending', 'done']
+          && request.resource.data.get('labels', []) is list
+          && request.resource.data.get('labels', []).size() <= 20
+          && request.resource.data.get('note', '') is string
+          && request.resource.data.get('note', '').size() <= 2000
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['unread'])
+            || request.resource.data.unread == 0
+          );
+
+        match /messages/{messageId} {
+          allow read: if isStoreOwnerOrAdmin(storeId);
+          allow write: if false;
+        }
+      }
+
       // Expenses subcollection (finance module)
       match /expenses/{expenseId} {
         allow read: if isStoreOwnerOrAdmin(storeId);
@@ -326,6 +365,15 @@ service cloud.firestore {
       allow read, write: if false;
     }
     match /rate_limits/{document=**} {
+      allow read, write: if false;
+    }
+
+    // ShopiChat, solo servidor: phoneNumberId → tienda (ruteo del webhook) y
+    // eventos de WhatsApp que no se pudieron guardar.
+    match /waNumbers/{document=**} {
+      allow read, write: if false;
+    }
+    match /waUnprocessed/{document=**} {
       allow read, write: if false;
     }
 
