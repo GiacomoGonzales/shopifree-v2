@@ -170,6 +170,7 @@ export default function DashboardLayout() {
 
   return (
     <AppChrome
+      autoCollapse={location.pathname.includes('/dashboard/shopichat')}
       mode="ecommerce"
       navigation={navigation}
       isItemActive={isItemActive}

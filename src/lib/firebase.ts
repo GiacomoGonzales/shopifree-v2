@@ -592,6 +592,12 @@ export const orderService = {
     return { id: newDocRef.id, orderNumber }
   },
 
+  async getById(storeId: string, orderId: string): Promise<Order | null> {
+    const snap = await getDoc(doc(db, 'stores', storeId, 'orders', orderId))
+    if (!snap.exists()) return null
+    return { id: snap.id, storeId, ...convertTimestamps(snap.data()) } as Order
+  },
+
   async updateStatus(storeId: string, orderId: string, status: Order['status']): Promise<void> {
     await updateDoc(doc(db, 'stores', storeId, 'orders', orderId), {
       status,

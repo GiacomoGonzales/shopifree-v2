@@ -5,6 +5,8 @@ import { orderService } from '../../lib/firebase'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
 import type { Order } from '../../types'
+import CustomerProfileEditor from '../../components/dashboard/CustomerProfileEditor'
+import OpenInShopiChat from '../../components/shopichat/OpenInShopiChat'
 
 interface Customer {
   phone: string
@@ -760,6 +762,15 @@ export default function Customers() {
                 </div>
               </div>
 
+              {/* Etiquetas y nota del cliente (perfil compartido con ShopiChat) */}
+              {store && (
+                <CustomerProfileEditor
+                  storeId={store.id}
+                  phone={selectedCustomer.phone}
+                  name={selectedCustomer.name === '-' ? null : selectedCustomer.name}
+                />
+              )}
+
               {/* Order history */}
               <div>
                 <h4 className="text-xs font-medium text-[#8898AA] uppercase tracking-wider mb-2">{t('customers.orderHistory')}</h4>
@@ -783,7 +794,8 @@ export default function Customers() {
                 </div>
               </div>
 
-              {/* WhatsApp button */}
+              {/* ShopiChat (si está conectado) y WhatsApp de siempre como alternativa */}
+              <OpenInShopiChat phone={selectedCustomer.phone} name={selectedCustomer.name} />
               <a
                 href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, '')}`}
                 target="_blank"

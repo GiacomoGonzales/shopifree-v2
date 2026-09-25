@@ -1,7 +1,9 @@
 /**
- * Configuración de ShopiChat: el número conectado, desconectar y las
- * respuestas rápidas (portado de la sección de rápidas de Cobrify,
- * components/chat/ConfiguracionChat.jsx; sin perfil, automáticos ni fondos).
+ * Configuración de ShopiChat: el número conectado, desconectar, los avisos
+ * automáticos de pedidos (OrderNotificationsSection), el asistente IA
+ * (AiSettingsSection) y las respuestas rápidas
+ * (portado de la sección de rápidas de Cobrify,
+ * components/chat/ConfiguracionChat.jsx; sin perfil ni fondos).
  *
  * Cada respuesta tiene un atajo ("precios") y un texto. En el cuadro de
  * escribir se tipea "/" y el atajo; el texto se pega y se puede editar antes
@@ -10,8 +12,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { disconnectAccount, formatPhone, saveQuickReplies, toDate } from '../../lib/shopichatService'
-import type { WaAccount, WaQuickReply } from '../../types/shopichat'
+import type { WaAccount, WaAiSettings, WaOrderNotifications, WaQuickReply, WaTemplatesDoc } from '../../types/shopichat'
 import { useToast } from '../ui/Toast'
+import OrderNotificationsSection from './OrderNotificationsSection'
+import AiSettingsSection from './AiSettingsSection'
 import SoundButton from './SoundButton'
 import { IconArrowLeft, IconPencil, IconPlus, IconTrash, IconWhatsApp } from './icons'
 
@@ -26,12 +30,16 @@ interface Props {
   storeId: string
   account: WaAccount
   quickReplies: WaQuickReply[]
+  orderNotifications: WaOrderNotifications
+  aiSettings: WaAiSettings
+  templates: WaTemplatesDoc
+  storeLanguage?: string | null
   onBack: () => void
 }
 
 interface Draft { original: string | null; shortcut: string; text: string }
 
-export default function SettingsPanel({ storeId, account, quickReplies, onBack }: Props) {
+export default function SettingsPanel({ storeId, account, quickReplies, orderNotifications, aiSettings, templates, storeLanguage, onBack }: Props) {
   const { t, i18n } = useTranslation('dashboard')
   const { showToast } = useToast()
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -178,6 +186,12 @@ export default function SettingsPanel({ storeId, account, quickReplies, onBack }
           </div>
           <SoundButton />
         </section>
+
+        {/* Avisos automáticos de pedidos */}
+        <OrderNotificationsSection storeId={storeId} storeLanguage={storeLanguage} templates={templates} value={orderNotifications} />
+
+        {/* Asistente IA (copiloto de respuestas) */}
+        <AiSettingsSection storeId={storeId} value={aiSettings} />
 
         {/* Respuestas rápidas */}
         <section className={card}>

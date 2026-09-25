@@ -8,7 +8,8 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Store } from '../../types'
+import { Link } from 'react-router-dom'
+import type { Order, Product, Store } from '../../types'
 import type {
   WaConversation,
   WaConversationStatus,
@@ -34,6 +35,7 @@ import {
   retryMedia,
   sendMedia,
   sendPreparedMedia,
+  sendProductCard,
   sendTemplate,
   sendText,
   sentMessageId,
@@ -45,6 +47,10 @@ import {
   type TemplateValues,
 } from '../../lib/shopichatService'
 import { useToast } from '../ui/Toast'
+import { orderService } from '../../lib/firebase'
+import { formatPrice } from '../../lib/currency'
+import { ORDER_STATUS_COLORS } from '../../lib/orderStatus'
+import { useLanguage } from '../../hooks/useLanguage'
 import WhatsAppText from './WhatsAppText'
 import MediaAlbum, { VideoPreview, VideoViewer } from './MediaAlbum'
 import MediaViewer from './MediaViewer'
@@ -53,13 +59,19 @@ import MediaPanel from './MediaPanel'
 import ForwardSheet from './ForwardSheet'
 import TemplatePicker from './TemplatePicker'
 import CustomerPanel from './CustomerPanel'
+import ProductPicker from './ProductPicker'
+import CouponPicker from './CouponPicker'
+import ChatOrderModal from './ChatOrderModal'
+import AiAssist from './AiAssist'
+import { invalidateStoreOrders, useCustomerOrders, useLiveOrders } from './storeData'
+import { canPayOnline, isOnlineMethod, methodLabel, orderSummaryText, payLinkFor, productCaption, productImage } from './sell'
 import { VoiceNote, VoiceNoteBar } from './VoiceNotes'
 import { recordingClock, useVoiceRecorder } from './useVoiceRecorder'
 import { labelColor } from './utils'
 import {
   IconAlert, IconArrowDown, IconArrowLeft, IconCamera, IconCheck, IconCheckCheck, IconClock, IconFile,
-  IconForward, IconMapPin, IconMic, IconMore, IconNote, IconPaperclip, IconPencil, IconRefresh, IconReply,
-  IconSearch, IconSend, IconSmilePlus, IconTrash, IconUpload, IconUser, IconX,
+  IconBag, IconForward, IconLink, IconMapPin, IconMic, IconMore, IconNote, IconPaperclip, IconPencil, IconPlus, IconRefresh,
+  IconReply, IconSearch, IconSend, IconSmilePlus, IconTag, IconTrash, IconUpload, IconUser, IconX,
 } from './icons'
 
 /**
@@ -137,9 +149,30 @@ function together(a: WaMessage, b: WaMessage) {
   return Math.abs(toMillis(b.timestamp) - toMillis(a.timestamp)) <= 5 * 60 * 1000
 }
 
+/**
+ * Un momento de un pedido del cliente, intercalado en el hilo por fecha. NO es
+ * un mensaje de WhatsApp: no se manda, solo lo ve el comerciante.
+ */
+interface OrderEvent { id: string; at: number; kind: 'created' | 'paid' | 'status'; order: Order }
+
 type Element =
   | { kind: 'day'; id: string; label: string }
   | { kind: 'msg'; id: string; message: WaMessage; album?: WaMessage[] }
+  | { kind: 'event'; id: string; event: OrderEvent }
+
+/** Pedidos del cliente que se muestran en el hilo (los más recientes). */
+const THREAD_ORDERS = 5
+const ORDER_EVENTS_PREF = 'shopichat.orderEvents'
+
+function readOrderEventsPref(): boolean {
+  try { return localStorage.getItem(ORDER_EVENTS_PREF) !== '0' } catch { return true }
+}
+
+const msOf = (v: unknown): number => {
+  if (!v) return 0
+  const d = v instanceof Date ? v : new Date(v as string)
+  return Number.isNaN(d.getTime()) ? 0 : d.getTime()
+}
 
 const localStamp = (d: Date) => ({ toDate: () => d, toMillis: () => d.getTime() })
 
@@ -151,6 +184,8 @@ interface Props {
   conversations: WaConversation[]
   templates: WaTemplatesDoc
   quickReplies: WaQuickReply[]
+  /** Asistente IA prendido (waSettings/automations.ai.enabled): muestra el botón ✨. */
+  aiEnabled?: boolean
   allLabels: string[]
   now: number
   onBack: () => void
@@ -159,10 +194,11 @@ interface Props {
 }
 
 export default function Thread({
-  store, conversation, conversations, templates, quickReplies, allLabels, now, onBack, onStatus, onOpenConversation,
+  store, conversation, conversations, templates, quickReplies, aiEnabled, allLabels, now, onBack, onStatus, onOpenConversation,
 }: Props) {
   const { t, i18n } = useTranslation('dashboard')
   const { showToast } = useToast()
+  const { localePath } = useLanguage()
   const storeId = store.id
   const waId = conversation.id
   const locale = i18n.language
@@ -223,6 +259,19 @@ export default function Thread({
   const [headerMenu, setHeaderMenu] = useState(false)
   const [awayFromBottom, setAwayFromBottom] = useState(false)
 
+  // ------------------------------------------------------ vender desde el chat
+  const [sellMenu, setSellMenu] = useState(false)
+  const [productPicker, setProductPicker] = useState(false)
+  const [couponPicker, setCouponPicker] = useState(false)
+  const [orderModal, setOrderModal] = useState(false)
+  // Tarjetas de producto que salen DESPUÉS del texto (las ofrece la IA).
+  const [aiCards, setAiCards] = useState<Product[]>([])
+  const [showOrderEvents, setShowOrderEvents] = useState(readOrderEventsPref)
+  const { orders: customerOrders } = useCustomerOrders(storeId, conversation.phone || conversation.waId)
+  const recentOrders = useMemo(() => customerOrders.slice(0, THREAD_ORDERS), [customerOrders])
+  // En vivo: un pago confirmado por la pasarela aparece al instante (✅ Pagado).
+  const liveOrders = useLiveOrders(storeId, showOrderEvents ? recentOrders : [])
+
   // ------------------------------------------------------------- ventana 24h
   const remaining = windowRemainingMs(conversation, now)
   const windowOpen = remaining > 0
@@ -251,18 +300,51 @@ export default function Thread({
     return map
   }, [thread])
 
-  // El hilo cortado por días, y las fotos de una misma tanda juntas.
+  // Los pedidos del cliente como momentos del hilo: creado, pagado y su
+  // estado actual (el pedido no guarda historial, así que el cambio de estado
+  // se fecha con su última actualización).
+  const orderEvents = useMemo<OrderEvent[]>(() => {
+    if (!showOrderEvents) return []
+    const out: OrderEvent[] = []
+    for (const o of liveOrders) {
+      const created = msOf(o.createdAt)
+      if (created) out.push({ id: `ord-${o.id}-created`, at: created, kind: 'created', order: o })
+      const paid = o.paymentStatus === 'paid' ? msOf(o.paidAt) : 0
+      if (paid) out.push({ id: `ord-${o.id}-paid`, at: paid, kind: 'paid', order: o })
+      const updated = msOf(o.updatedAt)
+      if (o.status !== 'pending' && updated && updated - created > 60000 && Math.abs(updated - paid) > 60000) {
+        out.push({ id: `ord-${o.id}-status`, at: updated, kind: 'status', order: o })
+      }
+    }
+    return out.sort((a, b) => a.at - b.at)
+  }, [liveOrders, showOrderEvents])
+
+  // El hilo cortado por días, y las fotos de una misma tanda juntas. Los
+  // momentos de pedidos se intercalan por fecha.
   const elements = useMemo<Element[]>(() => {
     const out: Element[] = []
     let prevDay: string | null = null
+    const pushDay = (ts: number | WaMessage['timestamp']) => {
+      const d = dayKey(ts)
+      if (d && d !== prevDay) {
+        out.push({ kind: 'day', id: `day-${d}`, label: dayLabel(toDate(ts)) })
+        prevDay = d
+      }
+    }
+    let e = 0
+    const flushEvents = (until: number) => {
+      while (e < orderEvents.length && orderEvents[e].at <= until) {
+        const ev = orderEvents[e++]
+        pushDay(ev.at)
+        out.push({ kind: 'event', id: ev.id, event: ev })
+      }
+    }
     let i = 0
     while (i < thread.length) {
       const m = thread[i]
-      const d = dayKey(m.timestamp)
-      if (d && d !== prevDay) {
-        out.push({ kind: 'day', id: `day-${d}`, label: dayLabel(toDate(m.timestamp)) })
-        prevDay = d
-      }
+      const at = toMillis(m.timestamp)
+      if (at) flushEvents(at)
+      pushDay(m.timestamp)
       let end = i
       while (end + 1 < thread.length && together(thread[end], thread[end + 1])) end += 1
       if (end > i) {
@@ -273,9 +355,10 @@ export default function Thread({
       }
       i = end + 1
     }
+    flushEvents(Number.POSITIVE_INFINITY)
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [thread, locale])
+  }, [thread, orderEvents, locale])
 
   function dayLabel(d: Date | null): string {
     if (!d) return ''
@@ -490,7 +573,31 @@ export default function Thread({
     setText('')
     setReplyTo(null)
     enqueue({ type: 'text', text: clean, replyTo: quoted }, () => sendText(storeId, waId, clean, quoted))
+    // Las tarjetas que sugirió la IA van detrás del texto (la cola respeta el orden).
+    const cards = aiCards
+    setAiCards([])
+    for (const product of cards) {
+      const imageUrl = productImage(product)
+      const cardCaption = productCaption(store, product)
+      enqueue(
+        { type: imageUrl ? 'image' : 'text', text: cardCaption, replyTo: null, ...(imageUrl ? { media: { url: imageUrl, mimeType: 'image/jpeg' } } : {}) },
+        () => sendProductCard(storeId, waId, { productId: product.id, imageUrl, caption: cardCaption })
+      )
+    }
     refocus()
+  }
+
+  /** Una sugerencia de la IA: al cuadro (editable, no sale sola) y sus tarjetas en espera. */
+  const applyAiText = (value: string, products: Product[]) => {
+    setText(value)
+    setAiCards(products)
+    setSuggestionIdx(0)
+    setTimeout(() => {
+      const box = textBox.current
+      if (!box) return
+      box.focus()
+      box.setSelectionRange(box.value.length, box.value.length)
+    }, 0)
   }
 
   const sendFile = async (file: File, fileCaption = '') => {
@@ -705,6 +812,53 @@ export default function Thread({
     setTemplateOpen(false)
   }
 
+  // ------------------------------------------------ vender desde el chat
+  /** Deja un texto en el cuadro de escribir (no sale solo). */
+  const insertText = (s: string) => {
+    setText(prev => (prev.trim() ? `${prev.trimEnd()}\n${s}` : s))
+    if (!windowOpen) showToast(t('shopichat.errors.windowClosed'), 'info')
+    setTimeout(() => textBox.current?.focus(), 0)
+  }
+
+  const sendProduct = ({ product, imageUrl, caption }: { product: Product; imageUrl: string | null; caption: string }) => {
+    setProductPicker(false)
+    const quoted = replyTo && !(replyTo as WaPendingMessage).local ? replyTo.id : null
+    setReplyTo(null)
+    enqueue(
+      {
+        type: imageUrl ? 'image' : 'text',
+        text: caption,
+        replyTo: quoted,
+        ...(imageUrl ? { media: { url: imageUrl, mimeType: 'image/jpeg' } } : {}),
+      },
+      () => sendProductCard(storeId, waId, { productId: product.id, imageUrl, caption, replyTo: quoted })
+    )
+  }
+
+  const toggleOrderEvents = () => {
+    const next = !showOrderEvents
+    setShowOrderEvents(next)
+    try { localStorage.setItem(ORDER_EVENTS_PREF, next ? '1' : '0') } catch { /* sin almacenamiento, solo esta vez */ }
+  }
+
+  const onOrderCreated = (o: Order) => {
+    setOrderModal(false)
+    invalidateStoreOrders(storeId)
+    if (!showOrderEvents) toggleOrderEvents()
+    insertText(orderSummaryText(t, store, o, isOnlineMethod(o.paymentMethod) ? payLinkFor(store, o.id) : null))
+    showToast(t('shopichat.sell.orderCreated', { number: o.orderNumber }), 'success')
+  }
+
+  /** "Paga aquí: <link>" — habilita el link público del pedido si hacía falta. */
+  const insertPayLink = async (o: Order) => {
+    try {
+      if (!o.payLinkAt) await orderService.update(storeId, o.id, { payLinkAt: new Date() })
+      insertText(t('shopichat.sell.payHere', { url: payLinkFor(store, o.id) }))
+    } catch {
+      showToast(t('shopichat.sell.errors.payLink'), 'error')
+    }
+  }
+
   const copyPhone = async (phone: string) => {
     try {
       await navigator.clipboard.writeText(phone)
@@ -731,6 +885,75 @@ export default function Thread({
     if (m.status === 'read') return <IconCheckCheck className={`${cls} text-[#38bdf8]`} />
     if (m.status === 'delivered') return <IconCheckCheck className={cls} />
     return <IconCheck className={cls} />
+  }
+
+  const renderEvent = (ev: OrderEvent) => {
+    const o = ev.order
+    const currency = store.currency || 'USD'
+    const time = new Date(ev.at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+    const orderLink = `${localePath('/dashboard/orders')}?order=${encodeURIComponent(o.id)}`
+    const statusText = t(`shopichat.orderStatus.${o.status}`, { defaultValue: o.status })
+    if (ev.kind !== 'created') {
+      const paid = ev.kind === 'paid'
+      return (
+        <div key={ev.id} className="flex justify-center py-0.5" title={t('shopichat.sell.onlyYou')}>
+          <Link
+            to={orderLink}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-dashed text-[11.5px] font-medium ${paid ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white/90 border-[#CBD5E1] text-[#425466]'}`}
+          >
+            {paid
+              ? <>✅ {t('shopichat.sell.eventPaid', { number: o.orderNumber, total: formatPrice(Number(o.total) || 0, currency) })}</>
+              : <><IconBag className="w-3 h-3" />{t('shopichat.sell.eventStatus', { number: o.orderNumber, status: statusText })}</>}
+            <span className="opacity-60">· {time}</span>
+          </Link>
+        </div>
+      )
+    }
+    const color = ORDER_STATUS_COLORS[o.status]
+    const items = o.items || []
+    return (
+      <div key={ev.id} className="flex justify-center py-1">
+        <div className="w-full max-w-sm rounded-xl border border-dashed border-[#94A3B8] bg-white/95 px-3 py-2.5 shadow-sm">
+          <div className="flex items-center gap-1.5">
+            <IconBag className="w-3.5 h-3.5 text-[#0284C7] flex-none" />
+            <span className="text-[12px] font-semibold text-[#1e3a5f] truncate">{t('shopichat.sell.eventCreated', { number: o.orderNumber })}</span>
+            <span className={`ml-auto inline-flex items-center gap-1 px-1.5 py-px rounded-full text-[10px] font-semibold flex-none ${color?.bg || 'bg-[#F1F5F9]'} ${color?.text || 'text-[#1e3a5f]'}`}>
+              <span className={`w-1 h-1 rounded-full ${color?.dot || 'bg-[#8898AA]'}`} />{statusText}
+            </span>
+            {o.paymentStatus === 'paid' && (
+              <span className="px-1.5 py-px rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 flex-none">✅ {t('shopichat.customer.paid')}</span>
+            )}
+          </div>
+          <ul className="mt-1.5 space-y-0.5">
+            {items.slice(0, 3).map((it, idx) => (
+              <li key={idx} className="text-[11.5px] text-[#425466] truncate">
+                {it.quantity} × {it.productName}{it.selectedVariations?.length ? ` (${it.selectedVariations.map(v => v.value).join(' / ')})` : ''}
+              </li>
+            ))}
+            {items.length > 3 && <li className="text-[11px] text-[#A9B6C6]">{t('shopichat.sell.moreItems', { count: items.length - 3 })}</li>}
+          </ul>
+          <div className="mt-1.5 flex items-center gap-2 text-[11.5px]">
+            <span className="font-semibold text-[#1e3a5f]">{formatPrice(Number(o.total) || 0, currency)}</span>
+            {o.paymentMethod && <span className="text-[#8898AA] truncate">· {methodLabel(t, o.paymentMethod)}</span>}
+            <span className="ml-auto text-[#A9B6C6] flex-none">{time}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <Link to={orderLink} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#E6EBF1] text-[11px] font-medium text-[#425466] hover:bg-[#F6F9FC]">
+              {t('shopichat.sell.viewOrder')}
+            </Link>
+            <button type="button" onClick={() => insertText(orderSummaryText(t, store, o, canPayOnline(o) && o.payLinkAt ? payLinkFor(store, o.id) : null))} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#E6EBF1] text-[11px] font-medium text-[#425466] hover:bg-[#F6F9FC]">
+              <IconSend className="w-3 h-3" />{t('shopichat.sell.insertSummary')}
+            </button>
+            {canPayOnline(o) && (
+              <button type="button" onClick={() => void insertPayLink(o)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#BAE6FD] bg-[#F0F9FF] text-[11px] font-semibold text-[#0284C7] hover:bg-[#E0F2FE]">
+                <IconLink className="w-3 h-3" />{t('shopichat.sell.payLink')}
+              </button>
+            )}
+          </div>
+          <p className="mt-1.5 text-[10px] text-[#A9B6C6]">{t('shopichat.sell.onlyYou')}</p>
+        </div>
+      </div>
+    )
   }
 
   const renderMessage = (el: Extract<Element, { kind: 'msg' }>) => {
@@ -851,11 +1074,16 @@ export default function Thread({
                 </span>
               </button>
             )}
-            {m.type === 'template' && (
-              <span className="inline-block text-[10.5px] font-semibold uppercase tracking-wide mb-1 text-[#8898AA]">{t('shopichat.thread.template')}</span>
-            )}
-            {m.sentBy === 'auto' && (
-              <span className="inline-block text-[10.5px] font-semibold uppercase tracking-wide mb-1 text-[#8898AA]">{t('shopichat.thread.auto')}</span>
+            {(m.type === 'template' || m.sentBy === 'auto') && (
+              <span className="flex items-center gap-1.5 mb-1">
+                {m.type === 'template' && (
+                  <span className="text-[10.5px] font-semibold uppercase tracking-wide text-[#8898AA]">{t('shopichat.thread.template')}</span>
+                )}
+                {/* Aviso automático de pedido (api/whatsapp-notify) */}
+                {m.sentBy === 'auto' && (
+                  <span className="px-1.5 py-px rounded-full bg-[#E0F2FE] text-[#0284C7] text-[10px] font-semibold uppercase tracking-wide">{t('shopichat.thread.auto')}</span>
+                )}
+              </span>
             )}
             {(m.type === 'image' || m.type === 'sticker' || m.type === 'template') && m.media?.url && (
               <button type="button" onClick={() => m.media && openViewer(m.media)} className="block max-w-full">
@@ -1022,6 +1250,10 @@ export default function Thread({
                   {status !== 'pending' && <MenuItem onClick={() => { setHeaderMenu(false); onStatus('pending') }}>{t('shopichat.status.markPending')}</MenuItem>}
                   {status === 'pending' && <MenuItem onClick={() => { setHeaderMenu(false); onStatus('open') }}>{t('shopichat.status.markOpen')}</MenuItem>}
                   <MenuItem onClick={() => { setHeaderMenu(false); setTemplateOpen(true) }}>{t('shopichat.templates.send')}</MenuItem>
+                  <MenuItem onClick={() => { setHeaderMenu(false); setOrderModal(true) }}>{t('shopichat.sell.createOrder')}</MenuItem>
+                  <MenuItem onClick={() => { setHeaderMenu(false); toggleOrderEvents() }}>
+                    {showOrderEvents ? t('shopichat.sell.hideOrders') : t('shopichat.sell.showOrders')}
+                  </MenuItem>
                 </div>
               </>
             )}
@@ -1116,7 +1348,7 @@ export default function Thread({
                 <div key={el.id} className="flex justify-center py-1.5">
                   <span className="px-2.5 py-0.5 rounded-full bg-white/90 border border-[#E6EBF1] text-[11px] font-medium text-[#8898AA]">{el.label}</span>
                 </div>
-              ) : renderMessage(el))}
+              ) : el.kind === 'event' ? renderEvent(el.event) : renderMessage(el))}
             </div>
           </div>
           {awayFromBottom && (
@@ -1151,6 +1383,21 @@ export default function Thread({
             </button>
           </div>
         ) : windowOpen ? (
+          <>
+          {aiCards.length > 0 && (
+            <div className="px-3 sm:px-4 pt-2 bg-white border-t border-[#E6EBF1] flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-[#8898AA]">{t('shopichat.ai.cardsAfter')}</span>
+              {aiCards.map(p => (
+                <span key={p.id} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full bg-[#F0F9FF] text-[#0284C7] text-[11.5px] font-medium max-w-[220px]">
+                  <IconBag className="w-3 h-3 flex-none" />
+                  <span className="truncate">{p.name}</span>
+                  <button type="button" onClick={() => setAiCards(prev => prev.filter(x => x.id !== p.id))} className="p-0.5 rounded-full hover:bg-white" aria-label={t('shopichat.ai.removeCard')}>
+                    <IconX className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <form
             onSubmit={e => { e.preventDefault(); sendCurrentText() }}
             className="relative px-2 sm:px-4 py-2.5 bg-white border-t border-[#E6EBF1] flex items-end gap-1 sm:gap-2"
@@ -1193,8 +1440,32 @@ export default function Thread({
               </div>
             )}
 
+            {sellMenu && (
+              <>
+                <div className="fixed inset-0 z-20" onClick={() => setSellMenu(false)} />
+                <div className="absolute bottom-full left-2 sm:left-4 mb-1 z-30 w-52 rounded-xl bg-white border border-[#E6EBF1] shadow-lg py-1 text-[13px] text-[#425466]">
+                  <SellItem icon={<IconBag className="w-4 h-4" />} onClick={() => { setSellMenu(false); setProductPicker(true) }}>{t('shopichat.sell.product')}</SellItem>
+                  <SellItem icon={<IconTag className="w-4 h-4" />} onClick={() => { setSellMenu(false); setCouponPicker(true) }}>{t('shopichat.sell.coupon')}</SellItem>
+                  <SellItem icon={<IconPlus className="w-4 h-4" />} onClick={() => { setSellMenu(false); setOrderModal(true) }}>{t('shopichat.sell.createOrder')}</SellItem>
+                </div>
+              </>
+            )}
+
             {!recorder.recording && (
               <>
+                <button
+                  type="button"
+                  onClick={() => setSellMenu(v => !v)}
+                  className={`p-2 sm:p-2.5 rounded-full hover:bg-[#F6F9FC] flex-none ${sellMenu ? 'text-[#0284C7]' : 'text-[#8898AA] hover:text-[#1e3a5f]'}`}
+                  title={t('shopichat.sell.menu')}
+                  aria-label={t('shopichat.sell.menu')}
+                  aria-expanded={sellMenu}
+                >
+                  <IconPlus className="w-5 h-5" />
+                </button>
+                {aiEnabled && (
+                  <AiAssist store={store} waId={waId} text={text} raised={Boolean(replyTo)} onUse={applyAiText} />
+                )}
                 <button type="button" onClick={() => fileInput.current?.click()} className="p-2 sm:p-2.5 text-[#8898AA] hover:text-[#1e3a5f] rounded-full hover:bg-[#F6F9FC] flex-none" title={t('shopichat.composer.attach')}>
                   <IconPaperclip className="w-5 h-5" />
                 </button>
@@ -1260,6 +1531,7 @@ export default function Thread({
               </button>
             )}
           </form>
+          </>
         ) : (
           <div className="border-t border-[#E6EBF1] bg-white px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -1287,10 +1559,12 @@ export default function Thread({
                 allLabels={allLabels}
                 onClose={() => setSidePanel(null)}
                 onInsert={s => {
-                  setText(prev => (prev.trim() ? `${prev.trimEnd()}\n${s}` : s))
                   if (!window.matchMedia?.('(min-width: 1280px)').matches) setSidePanel(null)
-                  if (!windowOpen) showToast(t('shopichat.errors.windowClosed'), 'info')
-                  setTimeout(() => textBox.current?.focus(), 0)
+                  insertText(s)
+                }}
+                onCreateOrder={() => {
+                  if (!window.matchMedia?.('(min-width: 1280px)').matches) setSidePanel(null)
+                  setOrderModal(true)
                 }}
               />
             ) : (
@@ -1391,6 +1665,28 @@ export default function Thread({
         />
       )}
 
+      {productPicker && (
+        <ProductPicker store={store} onClose={() => setProductPicker(false)} onSend={sendProduct} />
+      )}
+
+      {couponPicker && (
+        <CouponPicker
+          store={store}
+          onClose={() => setCouponPicker(false)}
+          onInsert={s => { setCouponPicker(false); insertText(s) }}
+        />
+      )}
+
+      {orderModal && (
+        <ChatOrderModal
+          store={store}
+          conversation={conversation}
+          customerOrders={customerOrders}
+          onClose={() => setOrderModal(false)}
+          onCreated={onOrderCreated}
+        />
+      )}
+
       {templateOpen && (
         <TemplatePicker
           storeId={storeId}
@@ -1401,6 +1697,14 @@ export default function Thread({
         />
       )}
     </div>
+  )
+}
+
+function SellItem({ icon, onClick, children }: { icon: React.ReactNode; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} className="w-full text-left px-3.5 py-2 hover:bg-[#F6F9FC] flex items-center gap-2.5">
+      <span className="text-[#0284C7]">{icon}</span>{children}
+    </button>
   )
 }
 

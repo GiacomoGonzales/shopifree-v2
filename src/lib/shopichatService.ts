@@ -9,9 +9,11 @@
  * acá solo se ESCUCHA. Firestore empuja los cambios solo: cuando entra un
  * mensaje aparece en pantalla sin refrescar.
  */
+import { useEffect, useState } from 'react'
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   limit,
   limitToLast,
@@ -28,8 +30,13 @@ import { auth, db } from './firebase'
 import { apiUrl } from '../utils/apiBase'
 import type {
   WaAccount,
+  WaAiRewriteMode,
+  WaAiSettings,
+  WaAiSuggestion,
+  WaAiTone,
   WaApiAction,
   WaAutomations,
+  WaOrderNotifications,
   WaConversation,
   WaConversationStatus,
   WaMessage,
@@ -171,10 +178,48 @@ export function subscribeAutomations(
     settingsRef(storeId, 'automations'),
     snap => {
       const data = snap.exists() ? (snap.data() as Partial<WaAutomations>) : {}
-      onChange({ quickReplies: Array.isArray(data.quickReplies) ? data.quickReplies : [] })
+      onChange({
+        quickReplies: Array.isArray(data.quickReplies) ? data.quickReplies : [],
+        orderNotifications: normalizeOrderNotifications(data.orderNotifications),
+        ai: normalizeAiSettings(data.ai),
+      })
     },
     error => console.warn('[shopichat] automatizaciones:', error.message)
   )
+}
+
+// ¿La tienda tiene ShopiChat conectado? Para los atajos "Abrir en ShopiChat"
+// de Pedidos y Clientes: se lee la cuenta UNA vez por sesión y tienda (no hace
+// falta escucharla en vivo para decidir si mostrar un botón).
+const connectedCache = new Map<string, Promise<boolean>>()
+
+function readConnected(storeId: string): Promise<boolean> {
+  let p = connectedCache.get(storeId)
+  if (!p) {
+    p = getDoc(settingsRef(storeId, 'account'))
+      .then(snap => snap.exists() && (snap.data() as WaAccount).status === 'connected')
+      .catch(() => {
+        connectedCache.delete(storeId)
+        return false
+      })
+    connectedCache.set(storeId, p)
+  }
+  return p
+}
+
+/**
+ * true si la tienda tiene un número de WhatsApp conectado a ShopiChat.
+ * Con `enabled` en false (p. ej. el usuario no ve ShopiChat) no lee nada.
+ */
+export function useShopiChatConnected(storeId?: string | null, enabled = true): boolean {
+  const [state, setState] = useState<{ id: string; connected: boolean } | null>(null)
+  useEffect(() => {
+    if (!storeId || !enabled) return undefined
+    let alive = true
+    readConnected(storeId).then(connected => { if (alive) setState({ id: storeId, connected }) })
+    return () => { alive = false }
+  }, [storeId, enabled])
+  return Boolean(enabled && storeId && state?.id === storeId && state.connected)
 }
 
 /**
@@ -220,6 +265,113 @@ export async function clearUnread(storeId: string, waId: string) {
     console.warn('[shopichat] no se pudo marcar como leída:', error)
   }
 }
+
+/** Horas de espera que ofrece la UI para el recordatorio de pago. */
+export const REMINDER_DELAYS = [2, 6, 24, 48] as const
+
+/** Todo apagado: los avisos se prenden a mano (cada uno le cuesta al comerciante). */
+export const DEFAULT_ORDER_NOTIFICATIONS: WaOrderNotifications = {
+  received: false,
+  confirmed: false,
+  shipped: false,
+  readyForPickup: false,
+  delivered: false,
+  paymentReminder: { enabled: false, delayHours: 24 },
+}
+
+export function normalizeOrderNotifications(raw: unknown): WaOrderNotifications {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<WaOrderNotifications>
+  const pr = (r.paymentReminder && typeof r.paymentReminder === 'object' ? r.paymentReminder : {}) as Partial<WaOrderNotifications['paymentReminder']>
+  const delay = Number(pr.delayHours)
+  return {
+    received: r.received === true,
+    confirmed: r.confirmed === true,
+    shipped: r.shipped === true,
+    readyForPickup: r.readyForPickup === true,
+    delivered: r.delivered === true,
+    paymentReminder: {
+      enabled: pr.enabled === true,
+      delayHours: Number.isFinite(delay) && delay >= 1 && delay <= 72 ? Math.round(delay) : DEFAULT_ORDER_NOTIFICATIONS.paymentReminder.delayHours,
+    },
+  }
+}
+
+export function saveOrderNotifications(storeId: string, orderNotifications: WaOrderNotifications) {
+  return setDoc(settingsRef(storeId, 'automations'), { orderNotifications, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+export interface SetupOrderTemplatesResult {
+  language: 'es' | 'en'
+  created: string[]
+  existing: { name: string; status: string }[]
+  errors: { name: string; message: string }[]
+}
+
+/** Crea en Meta las plantillas de avisos que falten y sincroniza el catálogo. */
+export const setupOrderTemplates = (storeId: string) =>
+  callWhatsappApi<SetupOrderTemplatesResult>('setup-order-templates', storeId)
+
+// ---------------------------------------------------------------- IA (3A)
+
+export const AI_TONES: WaAiTone[] = ['amigable', 'profesional', 'divertido']
+export const AI_KNOWLEDGE_MAX = 4000
+export const AI_SIGNATURE_MAX = 60
+export const AI_HANDOFF_MAX = 300
+
+export const DEFAULT_AI_SETTINGS: WaAiSettings = { enabled: false, tone: 'amigable', signature: '', knowledge: '', handoffNote: '' }
+
+export function normalizeAiSettings(raw: unknown): WaAiSettings {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<WaAiSettings>
+  const s = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '')
+  return {
+    enabled: r.enabled === true,
+    tone: AI_TONES.includes(r.tone as WaAiTone) ? (r.tone as WaAiTone) : 'amigable',
+    signature: s(r.signature, AI_SIGNATURE_MAX),
+    knowledge: s(r.knowledge, AI_KNOWLEDGE_MAX),
+    handoffNote: s(r.handoffNote, AI_HANDOFF_MAX),
+  }
+}
+
+export function saveAiSettings(storeId: string, ai: WaAiSettings) {
+  return setDoc(settingsRef(storeId, 'automations'), { ai: normalizeAiSettings(ai), updatedAt: serverTimestamp() }, { merge: true })
+}
+
+export interface AiQuota { remaining: number; limit: number }
+
+/**
+ * POST /api/shopichat-ai (IA copiloto). Mismo manejo de errores que
+ * callWhatsappApi: lanza ShopiChatApiError con el código del servidor
+ * (AI_DISABLED, LIMIT_REACHED, WINDOW_CLOSED, REFUSED, BUSY, AI_ERROR...).
+ */
+async function callAiApi<T>(action: 'suggest' | 'rewrite' | 'quota', storeId: string, payload: Record<string, unknown> = {}): Promise<T> {
+  const token = await auth?.currentUser?.getIdToken()
+  if (!token) throw new ShopiChatApiError('No hay sesión', 401, 'UNAUTHENTICATED')
+  let res: Response
+  try {
+    res = await fetch(apiUrl('/api/shopichat-ai'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action, storeId, ...payload }),
+    })
+  } catch {
+    throw new ShopiChatApiError('Sin conexión', 0, 'NETWORK')
+  }
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>
+  if (!res.ok) {
+    // Un 404 sin código es la ruta que todavía no existe (API sin desplegar).
+    const code = typeof data.error === 'string' ? data.error : res.status === 404 ? 'NOT_DEPLOYED' : undefined
+    throw new ShopiChatApiError(code || `HTTP ${res.status}`, res.status, code)
+  }
+  return data as T
+}
+
+export const aiSuggest = (storeId: string, waId: string, draft?: string) =>
+  callAiApi<{ suggestions: WaAiSuggestion[] } & AiQuota>('suggest', storeId, { waId, ...(draft?.trim() ? { draft: draft.trim() } : {}) })
+
+export const aiRewrite = (storeId: string, waId: string, draft: string, mode: WaAiRewriteMode) =>
+  callAiApi<{ text: string } & AiQuota>('rewrite', storeId, { waId, draft, mode })
+
+export const aiQuota = (storeId: string) => callAiApi<AiQuota>('quota', storeId)
 
 export function saveQuickReplies(storeId: string, quickReplies: WaAutomations['quickReplies']) {
   return setDoc(settingsRef(storeId, 'automations'), { quickReplies, updatedAt: serverTimestamp() }, { merge: true })
@@ -289,10 +441,51 @@ export interface SendMediaInput {
   replyTo?: string | null
   /** Un webp reenviado como sticker (como imagen Meta lo rechaza). */
   asSticker?: boolean
+  /** Foto de un producto de la tienda (mediaUrl = una de sus imágenes). */
+  productId?: string
 }
 
 export const sendMedia = (storeId: string, waId: string, input: SendMediaInput) =>
   callWhatsappApi('send-media', storeId, { waId, ...input, replyTo: input.replyTo || undefined })
+
+/**
+ * Manda un producto como tarjeta: su foto con el pie "*Nombre*\nPrecio\nlink".
+ *
+ * Primero por URL con `productId`: el servidor verifica que la foto sea de ese
+ * producto de la tienda y la re-sube bajo whatsapp/{storeId}/ (webp → JPEG).
+ * Si el servidor no la acepta (foto fuera de nuestro R2, o una API anterior a
+ * este cambio), se baja en el navegador (R2 responde con CORS *), se pasa a
+ * JPEG y se manda en base64 como cualquier foto. Sin foto, va solo el texto.
+ */
+export async function sendProductCard(
+  storeId: string,
+  waId: string,
+  input: { productId: string; imageUrl?: string | null; caption: string; replyTo?: string | null }
+) {
+  const { productId, imageUrl, caption, replyTo } = input
+  if (!imageUrl) return sendText(storeId, waId, caption, replyTo)
+  try {
+    return await sendMedia(storeId, waId, { mediaUrl: imageUrl, productId, mimeType: 'image/jpeg', caption, replyTo })
+  } catch (e) {
+    if ((e as ShopiChatApiError)?.code !== 'MEDIA_URL_NOT_ALLOWED') throw e
+  }
+  let blob: Blob
+  try {
+    const res = await fetch(imageUrl, { mode: 'cors' })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    blob = await res.blob()
+  } catch {
+    throw new ShopiChatApiError('No se pudo leer la foto del producto', 0, 'PRODUCT_IMAGE')
+  }
+  const jpeg = await imageToJpeg(blob)
+  return sendMedia(storeId, waId, {
+    mediaBase64: await blobToBase64(jpeg),
+    mimeType: 'image/jpeg',
+    filename: jpeg.name,
+    caption,
+    replyTo,
+  })
+}
 
 /** Avisa a WhatsApp que leímos (dos palomitas azules al cliente). Silencioso. */
 export async function markRead(storeId: string, waId: string) {
@@ -351,6 +544,27 @@ export interface TemplateValues {
 export const sendTemplate = (storeId: string, waId: string, template: WaTemplate, values: TemplateValues) =>
   callWhatsappApi('send-template', storeId, {
     waId,
+    name: template.name,
+    language: template.language,
+    params: {
+      body: values.body,
+      ...(values.headerText ? { header: values.headerText } : {}),
+      ...(values.headerImageUrl ? { headerImageUrl: values.headerImageUrl } : {}),
+    },
+  })
+
+/**
+ * Abre una conversación NUEVA con una plantilla (sin ventana de 24 h no se
+ * puede mandar otra cosa). El backend crea la conversación y devuelve su waId.
+ */
+export const sendTemplateToPhone = (
+  storeId: string,
+  phone: string,
+  template: WaTemplate,
+  values: TemplateValues
+) =>
+  callWhatsappApi<{ waId?: string; messageId?: string }>('send-template', storeId, {
+    phone,
     name: template.name,
     language: template.language,
     params: {

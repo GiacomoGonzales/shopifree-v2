@@ -43,6 +43,24 @@ export function getDb(): Firestore {
   return _db
 }
 
+// =================== waitUntil ===================
+
+/**
+ * waitUntil de Vercel sin agregar @vercel/functions: es exactamente lo que ese
+ * paquete lee (el request context que inyecta el runtime). Si no esta (local,
+ * otro runtime), devuelve null y se espera con presupuesto.
+ */
+export function getWaitUntil(): ((p: Promise<unknown>) => void) | null {
+  try {
+    const ctx = (globalThis as unknown as Record<symbol, { get?: () => { waitUntil?: (p: Promise<unknown>) => void } } | undefined>)[
+      Symbol.for('@vercel/request-context')
+    ]?.get?.()
+    return typeof ctx?.waitUntil === 'function' ? ctx.waitUntil.bind(ctx) : null
+  } catch {
+    return null
+  }
+}
+
 // =================== REFERENCIAS ===================
 
 export const storeRef = (storeId: string) => getDb().collection('stores').doc(storeId)

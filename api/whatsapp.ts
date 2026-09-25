@@ -13,8 +13,9 @@ import {
 import {
   getDb, storeRef, privateWaRef, waSettingsRef, convRef, waNumberRef, getPrivateWa,
   putObjectToR2, makeThumbnail, webpToJpeg, mediaKeyBase, r2PublicBase, saveOutgoingMessage, archiveMedia,
-  previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, type PrivateWa,
+  previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, getWaitUntil, type PrivateWa,
 } from './_shared/whatsappInbox.js'
+import { setupOrderTemplates } from './_shared/whatsappOrderNotify.js'
 
 /**
  * ShopiChat — acciones del comerciante sobre su WhatsApp.
@@ -27,7 +28,11 @@ import {
  *
  * Acciones: status, connect, connect-manual (solo admin), disconnect,
  * send-text, send-media, upload-url, mark-read, react, sync-templates,
- * send-template, retry-media.
+ * send-template, retry-media, setup-order-templates.
+ *
+ * send-media acepta ademas { productId, mediaUrl } para mandar un producto
+ * como tarjeta: la foto tiene que ser una de las de ese producto de la tienda
+ * (ver productImageUrl) y se re-sube bajo whatsapp/{storeId}/.
  *
  * Errores con codigo estable para la UI: PLAN_REQUIRED, NOT_CONNECTED,
  * WINDOW_CLOSED, OPTED_OUT, NUMBER_IN_USE, CONVERSATION_NOT_FOUND,
@@ -81,6 +86,66 @@ function ownMediaUrl(raw: string, storeId: string): string | null {
     return u.pathname.startsWith(prefix) ? u.toString() : null
   } catch {
     return null
+  }
+}
+
+/**
+ * Imagen de un PRODUCTO de la tienda para mandarlo como tarjeta ('send-media'
+ * con productId). Las fotos de producto viven en nuestro R2 pero bajo
+ * {carpeta}/{uid}/..., no bajo whatsapp/{storeId}/, asi que ownMediaUrl no las
+ * acepta. Se aceptan solo si:
+ *  - son https de NUESTRO R2 (mismo origen que R2_PUBLIC_URL), sin query ni hash;
+ *  - el producto existe en stores/{storeId}/products/{productId} (o sea, es de
+ *    ESTA tienda: el uid ya se verifico como dueño) y la URL es exactamente una
+ *    de sus imagenes (principal, galeria o de una combinacion).
+ * Devuelve la URL normalizada o null.
+ */
+async function productImageUrl(raw: string, storeId: string, productId: string): Promise<string | null> {
+  if (!raw || !productId || !isSafeDocId(productId) || productId.length > 128) return null
+  let target: string
+  try {
+    const u = new URL(raw)
+    const base = new URL(`${r2PublicBase()}/`)
+    if (u.protocol !== 'https:' || u.origin !== base.origin || u.search || u.hash) return null
+    target = u.toString()
+  } catch {
+    return null
+  }
+  const snap = await storeRef(storeId).collection('products').doc(productId).get()
+  if (!snap.exists) return null
+  const p = snap.data() || {}
+  const combos = Array.isArray(p.combinations) ? (p.combinations as Array<{ image?: unknown }>) : []
+  const candidates = [p.image, ...(Array.isArray(p.images) ? p.images : []), ...combos.map(c => c?.image)]
+  const same = (s: unknown) => {
+    if (typeof s !== 'string' || !s) return false
+    try { return new URL(s).toString() === target } catch { return false }
+  }
+  return candidates.some(same) ? target : null
+}
+
+/**
+ * Baja una imagen de producto (ya validada por productImageUrl) para
+ * re-subirla bajo whatsapp/{storeId}/: WhatsApp no acepta webp como imagen y
+ * asi el mensaje queda archivado junto al resto del chat. null si no es una
+ * imagen utilizable o pasa el tope de WhatsApp.
+ */
+async function fetchProductImage(url: string, max: number): Promise<{ buffer: Buffer; mimeType: string } | null> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 15000)
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, redirect: 'error' })
+    if (!r.ok) return null
+    const mimeType = mimeBase(r.headers.get('content-type') || '')
+    if (!mimeType.startsWith('image/')) return null
+    const len = Number(r.headers.get('content-length') || 0)
+    if (len && len > max * 2) return null
+    const buffer = Buffer.from(await r.arrayBuffer())
+    if (!buffer.length || buffer.length > max * 2) return null
+    return { buffer, mimeType }
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -248,6 +313,14 @@ async function finishConnect(p: {
   }
   await syncTemplatesFor(storeId, token, wabaId).catch(e => console.warn('[whatsapp] sync de plantillas fallo:', (e as Error).message))
 
+  // Avisos automaticos de pedidos: se crean las plantillas que falten (best
+  // effort). Con waitUntil va despues de responder; si no, con presupuesto
+  // para no demorar la conexion.
+  const setup = autoSetupOrderTemplates(storeId, token, wabaId)
+  const waitUntil = getWaitUntil()
+  if (waitUntil) waitUntil(setup)
+  else await Promise.race([setup, new Promise(r => setTimeout(r, 8_000))])
+
   const { lastError: _le, updatedAt: _ua, ...publicAccount } = account
   void _le; void _ua
   return ok({ account: serialize(publicAccount) })
@@ -257,6 +330,17 @@ async function syncTemplatesFor(storeId: string, token: string, wabaId: string):
   const items = await listWhatsappTemplates({ token, wabaId })
   await waSettingsRef(storeId, 'templates').set({ items, syncedAt: FieldValue.serverTimestamp() })
   return items
+}
+
+/** Plantillas de avisos despues de conectar. Nunca lanza: la conexion ya quedo hecha. */
+async function autoSetupOrderTemplates(storeId: string, token: string, wabaId: string): Promise<void> {
+  try {
+    const store = (await storeRef(storeId).get()).data() || {}
+    const r = await setupOrderTemplates({ storeId, token, wabaId, storeLanguage: store.language })
+    if (r.errors.length) console.warn(`[whatsapp] plantillas de avisos con errores (${storeId}):`, r.errors.map(e => `${e.name}: ${e.message}`).join(' | '))
+  } catch (e) {
+    console.warn('[whatsapp] plantillas de avisos fallo:', (e as Error).message)
+  }
 }
 
 async function actionConnect(ctx: Ctx): Promise<Result> {
@@ -362,6 +446,8 @@ async function actionSendMedia(ctx: Ctx): Promise<Result> {
   const caption = str(ctx.body.caption, 1024) || undefined
   const replyTo = str(ctx.body.replyTo, 200) || null
   const asSticker = ctx.body.asSticker === true
+  // Producto mandado como tarjeta: su foto (de su galeria, en nuestro R2).
+  const productId = str(ctx.body.productId, 128)
   if ((!mediaBase64 && !mediaUrl) || !mimeType) return fail(400, 'MISSING_PARAMS', { message: 'Faltan el archivo (mediaBase64 o mediaUrl) y mimeType' })
 
   const permitido = MEDIA_PERMITIDOS[mimeType]
@@ -369,9 +455,13 @@ async function actionSendMedia(ctx: Ctx): Promise<Result> {
   // Un webp es imagen O sticker; como imagen Meta lo rechaza.
   const type = asSticker && mimeType === 'image/webp' ? 'sticker' : permitido.type
 
-  // mediaUrl: solo archivos de ESTA tienda en NUESTRO R2 (ya subidos), no cualquier enlace.
+  // mediaUrl: solo archivos de ESTA tienda en NUESTRO R2 (ya subidos), no
+  // cualquier enlace. O, con productId, una foto de un producto de la tienda.
   const ownUrl = mediaBase64 ? null : ownMediaUrl(mediaUrl, ctx.storeId)
-  if (!mediaBase64 && !ownUrl) {
+  const productUrl = !mediaBase64 && !ownUrl && productId && type === 'image'
+    ? await productImageUrl(mediaUrl, ctx.storeId, productId)
+    : null
+  if (!mediaBase64 && !ownUrl && !productUrl) {
     return fail(400, 'MEDIA_URL_NOT_ALLOWED', { message: 'mediaUrl tiene que ser un archivo de la tienda ya subido a R2' })
   }
 
@@ -382,8 +472,24 @@ async function actionSendMedia(ctx: Ctx): Promise<Result> {
 
   let url = ownUrl || ''
   let thumb: { thumbUrl: string; width?: number; height?: number } | null = null
-  if (mediaBase64) {
-    let buffer: Buffer = Buffer.from(mediaBase64, 'base64')
+  let source: Buffer | null = null
+  if (productUrl) {
+    // Se baja y se re-sube bajo whatsapp/{storeId}/ (webp → JPEG en el camino).
+    const img = await fetchProductImage(productUrl, permitido.max)
+    if (!img) return fail(400, 'MEDIA_URL_NOT_ALLOWED', { message: 'No se pudo usar la imagen del producto' })
+    source = img.buffer
+    mimeType = img.mimeType
+    if (mimeType !== 'image/jpeg' && mimeType !== 'image/png') {
+      const jpg = await webpToJpeg(source)
+      if (!jpg) return fail(400, 'MEDIA_TYPE_NOT_ALLOWED', { message: 'No se pudo convertir la imagen del producto' })
+      source = jpg
+      mimeType = 'image/jpeg'
+    }
+  } else if (mediaBase64) {
+    source = Buffer.from(mediaBase64, 'base64')
+  }
+  if (source) {
+    let buffer: Buffer = source
     if (!buffer.length) return fail(400, 'EMPTY_MEDIA')
     if (buffer.length > permitido.max) {
       return fail(413, 'MEDIA_TOO_LARGE', { message: `El limite de WhatsApp para este tipo es ${Math.round(permitido.max / 1024 / 1024)} MB` })
@@ -596,6 +702,22 @@ async function actionSendTemplate(ctx: Ctx): Promise<Result> {
   return ok({ messageId: waMessageId, waId })
 }
 
+/**
+ * Avisos automaticos de pedidos: crea en la WABA las plantillas UTILITY que
+ * falten (idioma de la tienda) y sincroniza el catalogo. Solo el dueño (o
+ * admin) y con plan Business (lo exige el handler).
+ */
+async function actionSetupOrderTemplates(ctx: Ctx): Promise<Result> {
+  const wa = await requireConnected(ctx.storeId)
+  if (isResult(wa)) return wa
+  try {
+    const r = await setupOrderTemplates({ storeId: ctx.storeId, token: wa.accessToken, wabaId: wa.wabaId, storeLanguage: ctx.store.language })
+    return ok({ language: r.language, created: r.created, existing: r.existing, errors: r.errors })
+  } catch (e) {
+    return metaFail(e)
+  }
+}
+
 /** Reintenta bajar a R2 un adjunto entrante que no se archivo (el mediaId de Meta vale ~30 dias). */
 async function actionRetryMedia(ctx: Ctx): Promise<Result> {
   const waId = waIdOf(ctx.body.waId)
@@ -633,6 +755,7 @@ const ACTIONS: Record<string, (ctx: Ctx) => Promise<Result>> = {
   'sync-templates': actionSyncTemplates,
   'send-template': actionSendTemplate,
   'retry-media': actionRetryMedia,
+  'setup-order-templates': actionSetupOrderTemplates,
 }
 
 // Acciones que no exigen plan Business.

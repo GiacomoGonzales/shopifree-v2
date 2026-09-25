@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
+import { defineSecret } from 'firebase-functions/params'
 
 // Initialize Firebase Admin
 admin.initializeApp()
@@ -32,16 +33,17 @@ function isAdminRequest(auth: { token: { email?: string; email_verified?: boolea
 
 // ============================================
 // ADMIN FUNCTIONS
+// Callables de 1a generacion (firebase-functions v1): la firma es (data, context).
 // ============================================
 
 // Get all stores (admin only)
-export const adminGetAllStores = functions.https.onCall(async (request) => {
+export const adminGetAllStores = functions.https.onCall(async (data, context) => {
   // Verify admin
-  if (!isAdminRequest(request.auth)) {
+  if (!isAdminRequest(context.auth)) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
-  const { limit: limitNum = 50, startAfter } = request.data || {}
+  const { limit: limitNum = 50, startAfter } = data || {}
 
   let query = db.collection('stores')
     .orderBy('createdAt', 'desc')
@@ -64,13 +66,13 @@ export const adminGetAllStores = functions.https.onCall(async (request) => {
 })
 
 // Update store plan manually (admin only)
-export const adminUpdateStorePlan = functions.https.onCall(async (request) => {
+export const adminUpdateStorePlan = functions.https.onCall(async (data, context) => {
   // Verify admin
-  if (!isAdminRequest(request.auth)) {
+  if (!isAdminRequest(context.auth)) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
-  const { storeId, plan, expiresAt } = request.data
+  const { storeId, plan, expiresAt } = data
 
   if (!storeId || !plan) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing storeId or plan')
@@ -92,13 +94,13 @@ export const adminUpdateStorePlan = functions.https.onCall(async (request) => {
 })
 
 // Get all users (admin only)
-export const adminGetAllUsers = functions.https.onCall(async (request) => {
+export const adminGetAllUsers = functions.https.onCall(async (data, context) => {
   // Verify admin
-  if (!isAdminRequest(request.auth)) {
+  if (!isAdminRequest(context.auth)) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
-  const { limit: limitNum = 50, startAfter } = request.data || {}
+  const { limit: limitNum = 50, startAfter } = data || {}
 
   let query = db.collection('users')
     .orderBy('createdAt', 'desc')
@@ -121,9 +123,9 @@ export const adminGetAllUsers = functions.https.onCall(async (request) => {
 })
 
 // Dashboard stats (admin only)
-export const adminGetDashboardStats = functions.https.onCall(async (request) => {
+export const adminGetDashboardStats = functions.https.onCall(async (data, context) => {
   // Verify admin
-  if (!isAdminRequest(request.auth)) {
+  if (!isAdminRequest(context.auth)) {
     throw new functions.https.HttpsError('permission-denied', 'Admin access required')
   }
 
@@ -263,4 +265,193 @@ export const notifyNewOrder = functions.firestore
       console.error('[notifyNewOrder] Error:', err)
       return null
     }
+  })
+
+// ============================================
+// SHOPICHAT: AVISOS AUTOMÁTICOS DE PEDIDOS POR WHATSAPP
+// ============================================
+
+/**
+ * Secreto compartido con Vercel (api/whatsapp-notify.ts). Se carga con
+ *   firebase functions:secrets:set WHATSAPP_NOTIFY_SECRET
+ * y en Vercel como variable de entorno con el MISMO valor.
+ */
+const WHATSAPP_NOTIFY_SECRET = defineSecret('WHATSAPP_NOTIFY_SECRET')
+
+/** Endpoint de Vercel que manda los avisos (se puede apuntar a un preview con la env WHATSAPP_NOTIFY_URL). */
+const getNotifyUrl = () => process.env.WHATSAPP_NOTIFY_URL || 'https://shopifree.app/api/whatsapp-notify'
+
+type WaOrderEvent = 'received' | 'confirmed' | 'shipped' | 'readyForPickup' | 'delivered' | 'paymentReminder'
+
+const ONLINE_METHODS = new Set(['mercadopago', 'stripe', 'paypal', 'gocuotas'])
+
+/** Recordatorio de pago: horas permitidas (lo mismo que ofrece la UI). */
+const clampDelayHours = (v: unknown) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.min(Math.max(Math.round(n), 1), 72) : 24
+}
+
+/**
+ * Qué avisos corresponden a este cambio del pedido. Mapeo:
+ *  - pedido creado                                  → received
+ *  - status → confirmed                             → confirmed
+ *  - status → ready con deliveryMethod 'delivery'   → shipped (listo = despachado)
+ *  - status → ready con retiro (o sin método)       → readyForPickup
+ *  - fulfillmentStatus → shipped (CJ / Printful)    → shipped (con tracking)
+ *  - status → delivered                             → delivered
+ * 'preparing' no avisa (el cliente ya recibió "confirmado, lo estamos
+ * preparando"). paymentStatus → paid no manda nada: solo cancela el
+ * recordatorio de pago pendiente (un pago online ya pasa el pedido a
+ * confirmed, que sí avisa). Nada para pedidos de prueba.
+ */
+function waEventsFor(before: FirebaseFirestore.DocumentData | undefined, after: FirebaseFirestore.DocumentData): WaOrderEvent[] {
+  if (after.isTest === true) return []
+  if (!before) return ['received']
+  const events: WaOrderEvent[] = []
+  if (before.status !== after.status) {
+    if (after.status === 'confirmed') events.push('confirmed')
+    else if (after.status === 'ready') events.push(after.deliveryMethod === 'delivery' ? 'shipped' : 'readyForPickup')
+    else if (after.status === 'delivered') events.push('delivered')
+  }
+  if (before.fulfillmentStatus !== after.fulfillmentStatus && after.fulfillmentStatus === 'shipped' && !events.includes('shipped')) {
+    events.push('shipped')
+  }
+  return events
+}
+
+/** POST al endpoint de Vercel. Nunca lanza: un aviso perdido no rompe nada. */
+async function callWhatsappNotify(storeId: string, orderId: string, event: WaOrderEvent): Promise<boolean> {
+  const secret = WHATSAPP_NOTIFY_SECRET.value()
+  if (!secret) {
+    console.warn('[waNotify] WHATSAPP_NOTIFY_SECRET no configurado')
+    return false
+  }
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 25_000)
+  try {
+    const res = await fetch(getNotifyUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${secret}` },
+      body: JSON.stringify({ storeId, orderId, event }),
+      signal: ctrl.signal,
+    })
+    const data = await res.json().catch(() => ({})) as Record<string, unknown>
+    if (!res.ok) console.warn(`[waNotify] ${storeId}/${orderId} ${event} → HTTP ${res.status}`, data.error || '', data.message || '')
+    else console.log(`[waNotify] ${storeId}/${orderId} ${event} →`, data.skipped ? `omitido (${data.skipped})` : 'enviado')
+    return res.ok
+  } catch (e) {
+    console.warn(`[waNotify] ${storeId}/${orderId} ${event} fallo:`, (e as Error).message)
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
+ * Detecta los cambios del pedido que merecen aviso al cliente por WhatsApp y
+ * se los pasa a api/whatsapp-notify (que tiene el token, la plantilla, el
+ * teléfono y la idempotencia). Convive con notifyNewOrder (push al dueño).
+ *
+ * Para no llamar a Vercel en cada escritura de cada pedido, primero lee
+ * waSettings/automations (1 lectura) y solo sigue si ese aviso está prendido.
+ * Al crear un pedido con pago online pendiente y el recordatorio prendido,
+ * deja waReminderDueAt para waPaymentReminders; si el pedido se paga o se
+ * cancela antes, lo borra.
+ */
+export const onOrderWriteWhatsapp = functions
+  .runWith({ secrets: [WHATSAPP_NOTIFY_SECRET], timeoutSeconds: 60 })
+  .firestore.document('stores/{storeId}/orders/{orderId}')
+  .onWrite(async (change, context) => {
+    const { storeId, orderId } = context.params
+    const before = change.before.exists ? change.before.data() : undefined
+    const after = change.after.exists ? change.after.data() : undefined
+    if (!after) return null
+
+    try {
+      // Pagado o cancelado: el recordatorio pendiente ya no corresponde.
+      const reminderObsolete = after.waReminderDueAt
+        && (after.paymentStatus === 'paid' || after.paymentStatus === 'refunded' || after.status === 'cancelled')
+      if (reminderObsolete) {
+        await change.after.ref.update({ waReminderDueAt: admin.firestore.FieldValue.delete() })
+      }
+
+      const events = waEventsFor(before, after)
+      const wantsReminder = !before
+        && after.isTest !== true
+        && (after.paymentStatus || 'pending') === 'pending'
+        && ONLINE_METHODS.has(String(after.paymentMethod || ''))
+        && after.status !== 'cancelled'
+      if (!events.length && !wantsReminder) return null
+
+      const autoSnap = await db.collection('stores').doc(storeId).collection('waSettings').doc('automations').get()
+      const cfg = (autoSnap.data()?.orderNotifications || {}) as Record<string, unknown>
+      const reminder = (cfg.paymentReminder || {}) as { enabled?: boolean; delayHours?: number }
+
+      if (wantsReminder && reminder.enabled === true) {
+        const dueAt = admin.firestore.Timestamp.fromMillis(Date.now() + clampDelayHours(reminder.delayHours) * 3600_000)
+        await change.after.ref.update({ waReminderDueAt: dueAt })
+      }
+
+      const already = (after.waNotified || {}) as Record<string, unknown>
+      for (const event of events) {
+        if (cfg[event] !== true || already[event]) continue
+        await callWhatsappNotify(storeId, orderId, event)
+      }
+      return null
+    } catch (err) {
+      // Nunca reventar: Firestore reintentaría y el pedido ya está guardado.
+      console.error('[onOrderWriteWhatsapp] Error:', err)
+      return null
+    }
+  })
+
+/**
+ * Recordatorio de pago: cada 30 minutos busca pedidos con waReminderDueAt
+ * vencido (collection group, índice de campo único en firestore.indexes.json),
+ * como mucho 100 por pasada, y le pide a api/whatsapp-notify el aviso
+ * 'paymentReminder'. El endpoint vuelve a validar todo (sigue impago, método
+ * online activo, toggle prendido, plantilla aprobada, no enviado antes).
+ *
+ * Después se borra waReminderDueAt. Si el endpoint no respondió (red, 5xx) se
+ * reintenta en la próxima pasada, hasta 3 veces.
+ */
+export const waPaymentReminders = functions
+  .runWith({ secrets: [WHATSAPP_NOTIFY_SECRET], timeoutSeconds: 300 })
+  .pubsub.schedule('every 30 minutes')
+  .onRun(async () => {
+    const now = admin.firestore.Timestamp.now()
+    const snap = await db.collectionGroup('orders')
+      .where('waReminderDueAt', '<=', now)
+      .orderBy('waReminderDueAt', 'asc')
+      .limit(100)
+      .get()
+
+    let sent = 0
+    for (const doc of snap.docs) {
+      const storeId = doc.ref.parent.parent?.id
+      const o = doc.data()
+      const stillDue = storeId
+        && o.isTest !== true
+        && (o.paymentStatus || 'pending') === 'pending'
+        && o.status !== 'cancelled'
+        && !o.waNotified?.paymentReminder
+      let done = true
+      if (stillDue) {
+        const okCall = await callWhatsappNotify(storeId, doc.id, 'paymentReminder')
+        const attempts = (Number(o.waReminderAttempts) || 0) + 1
+        if (okCall) sent++
+        else if (attempts < 3) {
+          done = false
+          await doc.ref.update({ waReminderAttempts: attempts }).catch(() => {})
+        }
+      }
+      if (done) {
+        await doc.ref.update({
+          waReminderDueAt: admin.firestore.FieldValue.delete(),
+          waReminderAttempts: admin.firestore.FieldValue.delete(),
+        }).catch(e => console.warn(`[waPaymentReminders] ${doc.ref.path}:`, (e as Error).message))
+      }
+    }
+    console.log(`[waPaymentReminders] ${snap.size} vencidos, ${sent} llamadas OK`)
+    return null
   })

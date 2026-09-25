@@ -90,6 +90,8 @@ const AdminStoreAppPreview = lazy(() => import('./pages/admin/StoreAppPreview'))
 const PaymentSuccess = lazy(() => import('./pages/payment/PaymentSuccess'))
 const PaymentFailure = lazy(() => import('./pages/payment/PaymentFailure'))
 const PaymentPending = lazy(() => import('./pages/payment/PaymentPending'))
+// Link de pago de un pedido existente (ShopiChat → "Paga aquí")
+const PayOrder = lazy(() => import('./pages/payment/PayOrder'))
 
 // Legal
 const Privacy = lazy(() => import('./pages/Privacy'))
@@ -181,6 +183,7 @@ function AppRoutes() {
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failure" element={<PaymentFailure />} />
           <Route path="/payment/pending" element={<PaymentPending />} />
+          <Route path="/pay/:storeId/:orderId" element={<PayOrder />} />
           <Route path="/privacy" element={<StorePrivacyPage subdomainStore={subdomain} />} />
           <Route path="/p/:productSlug" element={<SubdomainCatalog subdomain={subdomain} />} />
           <Route path="*" element={<SubdomainCatalog subdomain={subdomain} />} />
@@ -197,6 +200,7 @@ function AppRoutes() {
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failure" element={<PaymentFailure />} />
           <Route path="/payment/pending" element={<PaymentPending />} />
+          <Route path="/pay/:storeId/:orderId" element={<PayOrder />} />
           <Route path="/privacy" element={<StorePrivacyPage customDomain={customDomain} />} />
           <Route path="/p/:productSlug" element={<CustomDomainCatalog domain={customDomain} />} />
           <Route path="*" element={<CustomDomainCatalog domain={customDomain} />} />
@@ -216,6 +220,7 @@ function AppRoutes() {
       <Route path="/payment/success" element={<PaymentSuccess />} />
       <Route path="/payment/failure" element={<PaymentFailure />} />
       <Route path="/payment/pending" element={<PaymentPending />} />
+      <Route path="/pay/:storeId/:orderId" element={<PayOrder />} />
 
       {/* Public catalog (no language prefix) */}
       <Route path="/c/:storeSlug/p/:productSlug" element={<Catalog />} />

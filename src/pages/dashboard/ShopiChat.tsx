@@ -26,10 +26,14 @@ import { getEffectivePlan } from '../../lib/stripe'
 import { canSeeShopiChat } from '../../lib/shopichatAccess'
 import { useToast } from '../../components/ui/Toast'
 import {
+  DEFAULT_AI_SETTINGS,
+  DEFAULT_ORDER_NOTIFICATIONS,
   MAX_CONVERSATIONS,
   formatPhone,
   onlyDigits,
   prefetchMessages,
+  samePhone,
+  sendTemplateToPhone,
   setConversationStatus,
   subscribeAccount,
   subscribeAutomations,
@@ -40,20 +44,25 @@ import {
 } from '../../lib/shopichatService'
 import type {
   WaAccount,
+  WaAiSettings,
   WaConversation,
   WaConversationStatus,
+  WaOrderNotifications,
   WaQuickReply,
+  WaTemplate,
   WaTemplatesDoc,
 } from '../../types/shopichat'
+import type { TemplateValues } from '../../lib/shopichatService'
 import type { Store } from '../../types'
 import ConnectWhatsApp from '../../components/shopichat/ConnectWhatsApp'
 import Thread from '../../components/shopichat/Thread'
 import SettingsPanel from '../../components/shopichat/SettingsPanel'
 import SoundButton from '../../components/shopichat/SoundButton'
+import TemplatePicker from '../../components/shopichat/TemplatePicker'
 import { VoiceNoteBar } from '../../components/shopichat/VoiceNotes'
 import { avatarColor, labelColor } from '../../components/shopichat/utils'
 import {
-  IconChat, IconClock, IconLock, IconNote, IconSearch, IconSettings, IconSparkles, IconWhatsApp,
+  IconArrowLeft, IconChat, IconClock, IconLock, IconNote, IconSearch, IconSettings, IconSparkles, IconWhatsApp,
 } from '../../components/shopichat/icons'
 
 const STATUSES: WaConversationStatus[] = ['open', 'pending', 'done']
@@ -183,6 +192,8 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
   const [listError, setListError] = useState(false)
   const [templates, setTemplates] = useState<WaTemplatesDoc>({ items: [], syncedAt: null })
   const [quickReplies, setQuickReplies] = useState<WaQuickReply[]>([])
+  const [orderNotifications, setOrderNotifications] = useState<WaOrderNotifications>(DEFAULT_ORDER_NOTIFICATIONS)
+  const [aiSettings, setAiSettings] = useState<WaAiSettings>(DEFAULT_AI_SETTINGS)
   const [tab, setTab] = useState<WaConversationStatus>('open')
   const [search, setSearch] = useState('')
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
@@ -201,7 +212,11 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
     () => { setListError(true); setLoading(false) }
   ), [storeId])
   useEffect(() => subscribeTemplates(storeId, setTemplates), [storeId])
-  useEffect(() => subscribeAutomations(storeId, a => setQuickReplies(a.quickReplies)), [storeId])
+  useEffect(() => subscribeAutomations(storeId, a => {
+    setQuickReplies(a.quickReplies)
+    setOrderNotifications(a.orderNotifications)
+    setAiSettings(a.ai)
+  }), [storeId])
 
   // El panel suena distinto si el mensaje entra en la conversación que se está mirando.
   useEffect(() => {
@@ -227,6 +242,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
       const next = new URLSearchParams(prev)
       if (waId) next.set('c', waId)
       else next.delete('c')
+      next.delete('n')
       return next
     }, { replace })
   }, [setSearchParams, activeId])
@@ -249,6 +265,30 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
   }
 
   const active = useMemo(() => conversations.find(c => c.id === activeId) || null, [conversations, activeId])
+
+  // ?c=<dígitos> desde Pedidos/Clientes: el número puede venir con otro
+  // formato que el waId (sin código de país, con un 9 de más...). Si hay una
+  // conversación con ese teléfono se abre esa; si no, se ofrece empezarla.
+  const phoneMatch = useMemo(() => {
+    if (active || !activeId || loading) return null
+    return conversations.find(c => samePhone(c.waId, activeId) || samePhone(c.phone, activeId)) || null
+  }, [active, activeId, loading, conversations])
+
+  useEffect(() => {
+    if (!phoneMatch) return
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.set('c', phoneMatch.id)
+      next.delete('n')
+      return next
+    }, { replace: true })
+  }, [phoneMatch, setSearchParams])
+
+  // La conversación que acabamos de abrir con una plantilla: hasta que el
+  // servidor la crea y llega por la suscripción se muestra "abriendo…".
+  const [startedWaId, setStartedWaId] = useState<string | null>(null)
+  const newPhone = !active && !phoneMatch && !loading && activeId && /^\d{8,15}$/.test(activeId) ? activeId : null
+  const newName = searchParams.get('n')
 
   const counts = useMemo(() => {
     const c: Record<WaConversationStatus, number> = { open: 0, pending: 0, done: 0 }
@@ -314,7 +354,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
   }
 
   const { ref, height } = useFillHeight()
-  const showingPane = Boolean(active) || settingsOpen
+  const showingPane = Boolean(active) || settingsOpen || Boolean(newPhone)
 
   return (
     // Márgenes negativos: la bandeja va de borde a borde bajo la barra de
@@ -488,7 +528,16 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
         {/* ---------- Conversación / configuración ---------- */}
         <section className={`flex-1 min-w-0 min-h-0 flex ${showingPane ? 'flex' : 'hidden md:flex'}`}>
           {settingsOpen ? (
-            <SettingsPanel storeId={storeId} account={account} quickReplies={quickReplies} onBack={() => setSettingsOpen(false)} />
+            <SettingsPanel
+              storeId={storeId}
+              account={account}
+              quickReplies={quickReplies}
+              orderNotifications={orderNotifications}
+              aiSettings={aiSettings}
+              templates={templates}
+              storeLanguage={store.language}
+              onBack={() => setSettingsOpen(false)}
+            />
           ) : active ? (
             <Thread
               key={active.id}
@@ -497,11 +546,30 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
               conversations={conversations}
               templates={templates}
               quickReplies={quickReplies}
+              aiEnabled={aiSettings.enabled}
               allLabels={allLabels}
               now={now}
               onBack={() => openConversation(null)}
               onStatus={changeStatus}
               onOpenConversation={id => openConversation(id)}
+            />
+          ) : newPhone ? (
+            <NewConversation
+              key={newPhone}
+              storeId={storeId}
+              phone={newPhone}
+              name={newName}
+              templates={templates}
+              opening={startedWaId === newPhone}
+              onBack={() => openConversation(null)}
+              onStarted={waId => {
+                setStartedWaId(waId)
+                setSearchParams(prev => {
+                  const next = new URLSearchParams(prev)
+                  next.set('c', waId)
+                  return next
+                }, { replace: true })
+              }}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center bg-[#fafbfc]">
@@ -515,6 +583,86 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
           )}
         </section>
       </div>
+    </div>
+  )
+}
+
+/**
+ * "Nueva conversación con +51 …": se llega desde Pedidos o Clientes con un
+ * número que todavía no escribió. Sin ventana de 24 h abierta WhatsApp solo
+ * deja empezar con una plantilla aprobada; al mandarla el servidor crea la
+ * conversación y la bandeja la abre en cuanto aparece en la lista.
+ */
+function NewConversation({
+  storeId, phone, name, templates, opening, onBack, onStarted,
+}: {
+  storeId: string
+  phone: string
+  name: string | null
+  templates: WaTemplatesDoc
+  opening: boolean
+  onBack: () => void
+  onStarted: (waId: string) => void
+}) {
+  const { t } = useTranslation('dashboard')
+  const { showToast } = useToast()
+  const [picking, setPicking] = useState(false)
+  const pretty = `+${formatPhone(phone).replace(/^\+/, '')}`
+  const display = name ? `${name} (${pretty})` : pretty
+
+  const onSend = async (tpl: WaTemplate, values: TemplateValues) => {
+    const r = await sendTemplateToPhone(storeId, phone, tpl, values)
+    showToast(t('shopichat.templates.sent'), 'success')
+    setPicking(false)
+    onStarted(r.waId || phone)
+  }
+
+  return (
+    <div className="flex-1 min-w-0 flex flex-col bg-[#fafbfc]">
+      <div className="px-3 py-2.5 border-b border-[#E6EBF1] bg-white flex items-center gap-2">
+        <button type="button" onClick={onBack} className="md:hidden p-1.5 -ml-1 rounded-lg text-[#8898AA] hover:bg-[#F6F9FC]" aria-label={t('shopichat.common.back')}>
+          <IconArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="w-9 h-9 rounded-full flex-none grid place-items-center text-white text-[12px] font-semibold" style={{ backgroundColor: avatarColor(phone) }}>
+          {(name || '').trim() ? (name || '').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase() : phone.slice(-2)}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[13.5px] font-semibold text-[#1e3a5f] truncate">{name || pretty}</p>
+          {name && <p className="text-[11.5px] text-[#8898AA]">{pretty}</p>}
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-6">
+        {opening ? (
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#1e3a5f] mx-auto" />
+            <p className="mt-3 text-[13px] text-[#8898AA]">{t('shopichat.newConversation.opening')}</p>
+          </div>
+        ) : (
+          <div className="max-w-sm text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#25D366] text-white grid place-items-center mx-auto">
+              <IconWhatsApp className="w-7 h-7" />
+            </div>
+            <h2 className="mt-3 text-[15px] font-semibold text-[#1e3a5f]">{t('shopichat.newConversation.title', { name: display })}</h2>
+            <p className="mt-1.5 text-[12.5px] text-[#8898AA]">{t('shopichat.newConversation.body')}</p>
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              className="mt-5 px-4 py-2 rounded-lg bg-[#1e3a5f] text-white text-[13px] font-semibold hover:bg-[#2a4d7a]"
+            >
+              {t('shopichat.newConversation.cta')}
+            </button>
+          </div>
+        )}
+      </div>
+      {picking && (
+        <TemplatePicker
+          storeId={storeId}
+          templates={templates}
+          title={t('shopichat.templates.titleFor', { name: display })}
+          onClose={() => setPicking(false)}
+          onSend={onSend}
+        />
+      )}
     </div>
   )
 }

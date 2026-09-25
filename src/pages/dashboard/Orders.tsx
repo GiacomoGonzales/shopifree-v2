@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import OrderReceptionBoard from '../../components/dashboard/OrderReceptionBoard'
 import { useReceptionMode } from '../../hooks/useReceptionMode'
 import { formatModifierNames } from '../../lib/modifiers'
@@ -13,6 +14,8 @@ import { apiUrl } from '../../utils/apiBase'
 import NewSaleModal from '../../components/dashboard/NewSaleModal'
 import HelpTip from '../../components/ui/HelpTip'
 import type { Order } from '../../types'
+import OpenInShopiChat from '../../components/shopichat/OpenInShopiChat'
+import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../lib/orderStatus'
 import { CARD, LABEL, INPUT, INPUT_SM } from '../../components/dashboard/tokens'
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
@@ -34,23 +37,8 @@ const CHANNEL_LABELS: Record<Channel, string> = {
 
 const ITEMS_PER_PAGE = 10
 
-const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; dot: string }> = {
-  pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' },
-  confirmed: { bg: 'bg-[#E0F2FE]', text: 'text-[#075985]', dot: 'bg-[#0284C7]' },
-  preparing: { bg: 'bg-orange-100', text: 'text-orange-800', dot: 'bg-orange-500' },
-  ready: { bg: 'bg-purple-100', text: 'text-purple-800', dot: 'bg-purple-500' },
-  delivered: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
-  cancelled: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' }
-}
-
-const STATUS_LABELS: Record<OrderStatus, Record<string, string>> = {
-  pending: { es: 'Pendiente', en: 'Pending' },
-  confirmed: { es: 'Confirmado', en: 'Confirmed' },
-  preparing: { es: 'Preparando', en: 'Preparing' },
-  ready: { es: 'Listo', en: 'Ready' },
-  delivered: { es: 'Entregado', en: 'Delivered' },
-  cancelled: { es: 'Cancelado', en: 'Cancelled' }
-}
+const STATUS_COLORS = ORDER_STATUS_COLORS
+const STATUS_LABELS = ORDER_STATUS_LABELS
 
 // Stacked product thumbnails for an order row, so merchants can tell orders
 // apart at a glance without opening each one. Shows up to 4 item images
@@ -130,6 +118,32 @@ export default function Orders() {
   const lang = i18n.language?.startsWith('es') ? 'es' : 'en'
   const currencySymbol = getCurrencySymbol(store?.currency || 'USD')
   const { activo: receptionMode } = useReceptionMode(store?.id)
+
+  // Abrir un pedido puntual desde otra pantalla (p. ej. el panel del cliente
+  // de ShopiChat): /dashboard/orders?order=<id>. Se busca en lo ya cargado y,
+  // si es más viejo que los 500 de la lista, se trae por id. El parámetro se
+  // borra al abrirlo, así cerrar el detalle deja la página normal.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const orderParam = searchParams.get('order')
+  useEffect(() => {
+    if (!orderParam || !store || loading) return
+    let alive = true
+    const clearParam = () => setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.delete('order')
+      return next
+    }, { replace: true })
+    const found = orders.find(o => o.id === orderParam)
+    ;(found ? Promise.resolve(found) : orderService.getById(store.id, orderParam))
+      .then(o => {
+        if (!alive) return
+        if (o) setSelectedOrder(o)
+        else showToast(t('orders.notFound', { defaultValue: 'No encontramos ese pedido' }), 'error')
+        clearParam()
+      })
+      .catch(() => { if (alive) clearParam() })
+    return () => { alive = false }
+  }, [orderParam, store, loading, orders, setSearchParams, showToast, t])
 
   // Clear the "new orders" badge as soon as the user opens this page.
   useEffect(() => {
@@ -1546,7 +1560,10 @@ export default function Orders() {
                 </div>
               )}
 
-              {/* WhatsApp button */}
+              {/* ShopiChat (si está conectado) y WhatsApp de siempre como alternativa */}
+              {selectedOrder.customer?.phone && (
+                <OpenInShopiChat phone={selectedOrder.customer.phone} name={selectedOrder.customer.name} />
+              )}
               {selectedOrder.customer?.phone && (
                 <a
                   href={`https://wa.me/${selectedOrder.customer.phone.replace(/\D/g, '')}`}

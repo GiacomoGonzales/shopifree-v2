@@ -669,6 +669,29 @@ export async function sendWhatsappTemplate(p: {
   return { waMessageId: firstMessageId(data) }
 }
 
+/**
+ * Crea una plantilla en la WABA de la tienda (POST /{waba_id}/message_templates).
+ * Solo cuerpo con variables posicionales {{1}}..{{n}}: Meta exige un ejemplo
+ * de cada variable (example.body_text) para revisarla. Nace PENDING; la
+ * aprobacion llega por webhook o al sincronizar.
+ */
+export async function createWhatsappTemplate(p: {
+  token: string; wabaId: string; name: string; language: string
+  category: 'UTILITY' | 'MARKETING'; body: string; bodyExamples: string[]; footer?: string | null
+}): Promise<{ id: string | null; status: string | null }> {
+  const components: unknown[] = [{
+    type: 'BODY',
+    text: p.body,
+    ...(p.bodyExamples.length ? { example: { body_text: [p.bodyExamples] } } : {}),
+  }]
+  if (p.footer) components.push({ type: 'FOOTER', text: p.footer })
+  const data = await graphFetch<{ id?: string; status?: string }>(`${p.wabaId}/message_templates`, {
+    token: p.token,
+    body: { name: p.name, language: p.language, category: p.category, components },
+  })
+  return { id: data.id || null, status: data.status || null }
+}
+
 // =================== ONBOARDING (Embedded Signup) ===================
 
 /**

@@ -47,9 +47,51 @@ export interface WaQuickReply {
   text: string
 }
 
+/** Avisos automáticos de pedidos (fase 2C). Los manda api/whatsapp-notify. */
+export type WaOrderEvent = 'received' | 'confirmed' | 'shipped' | 'readyForPickup' | 'delivered' | 'paymentReminder'
+
+/** stores/{storeId}/waSettings/automations.orderNotifications */
+export interface WaOrderNotifications {
+  received: boolean
+  confirmed: boolean
+  shipped: boolean
+  readyForPickup: boolean
+  delivered: boolean
+  paymentReminder: { enabled: boolean; delayHours: number }
+}
+
+/** Tono del asistente IA (fase 3A). */
+export type WaAiTone = 'amigable' | 'profesional' | 'divertido'
+
+/**
+ * stores/{storeId}/waSettings/automations.ai — IA copiloto (fase 3A). La lee
+ * api/shopichat-ai.ts: sin `enabled` no sugiere nada.
+ */
+export interface WaAiSettings {
+  enabled: boolean
+  tone: WaAiTone
+  /** Firma al final de las respuestas completas ("— Equipo Lumi"). */
+  signature?: string
+  /** Preguntas frecuentes, políticas, horarios... (máx. ~4000 caracteres). */
+  knowledge: string
+  /** Qué decir cuando hay que pasarle el caso a una persona. */
+  handoffNote?: string
+}
+
+/** Una respuesta propuesta por la IA. */
+export interface WaAiSuggestion {
+  text: string
+  /** Productos que la respuesta recomienda (para mandar su tarjeta). */
+  productIds: string[]
+}
+
+export type WaAiRewriteMode = 'friendlier' | 'shorter' | 'formal' | 'fix'
+
 /** stores/{storeId}/waSettings/automations */
 export interface WaAutomations {
   quickReplies: WaQuickReply[]
+  orderNotifications: WaOrderNotifications
+  ai: WaAiSettings
 }
 
 export type WaConversationStatus = 'open' | 'pending' | 'done'
@@ -116,8 +158,15 @@ export interface WaMessage {
   errorCode?: number | null
   /** Fallo definitivo (sin WhatsApp, marketing apagado...): no vale reintentar. */
   permanent?: boolean
-  /** uid de quien lo mandó desde la bandeja, o 'phone' si salió de la app WhatsApp Business (coexistencia). */
+  /**
+   * uid de quien lo mandó desde la bandeja, 'phone' si salió de la app
+   * WhatsApp Business (coexistencia) o 'auto' si es un aviso automático de
+   * pedido (api/whatsapp-notify).
+   */
   sentBy?: string
+  /** Aviso automático: el pedido y el evento que lo originaron. */
+  orderId?: string
+  orderEvent?: WaOrderEvent
   template?: { name: string; language: string } | null
   /** Ubicación: el backend puede guardarla así (tolerado si no viene). */
   location?: { latitude: number; longitude: number; name?: string; address?: string } | null
@@ -137,3 +186,4 @@ export interface WaPendingMessage extends WaMessage {
 export type WaApiAction =
   | 'status' | 'connect' | 'disconnect' | 'send-text' | 'send-media' | 'mark-read'
   | 'react' | 'sync-templates' | 'send-template' | 'retry-media' | 'upload-url' | 'connect-manual'
+  | 'setup-order-templates'

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
 import { verifyWhatsappSignature, parseWhatsappWebhook, type WaAccountRef } from './_shared/whatsappGraph.js'
 import {
-  getDb, saveIncomingMessage, saveIncomingReaction, applyStatus, applyContactSyncs, saveUnprocessed,
+  getDb, saveIncomingMessage, saveIncomingReaction, applyStatus, applyContactSyncs, saveUnprocessed, getWaitUntil,
 } from './_shared/whatsappInbox.js'
 
 /**
@@ -39,22 +39,6 @@ async function getRawBody(req: VercelRequest): Promise<Buffer> {
     req.on('end', () => resolve(Buffer.concat(chunks)))
     req.on('error', reject)
   })
-}
-
-/**
- * waitUntil de Vercel sin agregar @vercel/functions: es exactamente lo que ese
- * paquete lee (el request context que inyecta el runtime). Si no esta (local,
- * otro runtime), devuelve null y se espera con presupuesto.
- */
-function getWaitUntil(): ((p: Promise<unknown>) => void) | null {
-  try {
-    const ctx = (globalThis as unknown as Record<symbol, { get?: () => { waitUntil?: (p: Promise<unknown>) => void } } | undefined>)[
-      Symbol.for('@vercel/request-context')
-    ]?.get?.()
-    return typeof ctx?.waitUntil === 'function' ? ctx.waitUntil.bind(ctx) : null
-  } catch {
-    return null
-  }
 }
 
 /** phoneNumberId (o, si no viene, wabaId) → storeId. Cacheado por request. */

@@ -12,7 +12,7 @@
  * Cada layout aporta lo suyo por props: su navegacion, a donde apunta el logo,
  * y los trozos variables de las barras (chapa de plan, boton de soporte).
  */
-import { type JSX, type ReactNode } from 'react'
+import { type JSX, type ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useSidebar } from '../../contexts/SidebarContext'
@@ -118,6 +118,11 @@ export interface AppChromeProps {
   children: ReactNode
   /** Modales y botones flotantes que viven fuera del flujo. */
   overlays?: ReactNode
+  /**
+   * Arranca con el menu de escritorio contraido a solo iconos (p. ej. en
+   * ShopiChat, que necesita el ancho). El usuario lo puede expandir igual.
+   */
+  autoCollapse?: boolean
 }
 
 export default function AppChrome({
@@ -139,13 +144,19 @@ export default function AppChrome({
   beforeContent,
   children,
   overlays,
+  autoCollapse = false,
 }: AppChromeProps) {
   const { setOpen: setSidebarOpen } = useSidebar()
   const isNative = Capacitor.isNativePlatform()
+  // Contraido: lo que eligio el usuario en esta pantalla, o lo que pide la pantalla.
+  // La eleccion se olvida al cambiar de pantalla (patron "ajustar estado al cambiar un prop").
+  const [manual, setManual] = useState<{ for: boolean; value: boolean } | null>(null)
+  const collapsed = manual && manual.for === autoCollapse ? manual.value : autoCollapse
+  const toggleCollapsed = () => setManual({ for: autoCollapse, value: !collapsed })
 
   const menu = (
     <>
-      <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
+      <nav className={`flex-1 py-3 space-y-px overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2'}`}>
         {navigation.map((item, index) => {
           if (item === 'separator') return <div key={`sep-${index}`} className="my-1.5" />
           const activo = isItemActive(item.href)
@@ -154,8 +165,11 @@ export default function AppChrome({
             <Link
               key={item.name}
               to={item.href}
+              title={collapsed ? item.name : undefined}
               // Activo en azul, igual que el mockup de dashboard de la landing.
-              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[0.82rem] transition-colors relative ${
+              className={`flex items-center rounded-lg text-[0.82rem] transition-colors relative ${
+                collapsed ? 'justify-center px-0 py-2' : 'gap-2.5 px-3 py-1.5'
+              } ${
                 activo
                   ? 'bg-[#E0F2FE] text-[#0284C7] font-semibold'
                   : 'text-[#425466] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] font-medium'
@@ -168,8 +182,11 @@ export default function AppChrome({
                 />
               )}
               <item.icon active={activo} />
-              <span className="flex-1">{item.name}</span>
-              {contador > 0 && (
+              {!collapsed && <span className="flex-1">{item.name}</span>}
+              {contador > 0 && collapsed && (
+                <span className="absolute top-1 right-1.5 w-2 h-2 rounded-full bg-[#DC2626]" />
+              )}
+              {contador > 0 && !collapsed && (
                 <span
                   className={`min-w-[18px] h-[18px] px-1 text-[0.62rem] font-semibold rounded-full flex items-center justify-center ${
                     activo ? 'bg-[#0284C7] text-white' : 'bg-[#DC2626] text-white'
@@ -183,7 +200,24 @@ export default function AppChrome({
         })}
       </nav>
 
-      <div className="px-3 pt-3 pb-5 border-t border-[#EEF2F6]">
+      <div className={`pt-3 pb-5 border-t border-[#EEF2F6] ${collapsed ? 'px-2' : 'px-3'}`}>
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expandir menú' : 'Contraer menú'}
+          aria-label={collapsed ? 'Expandir menú' : 'Contraer menú'}
+          className={`mb-3 flex items-center gap-2 rounded-lg text-[0.75rem] font-medium text-[#8898AA] hover:text-[#1e3a5f] hover:bg-[#F6F9FC] transition-colors py-1.5 ${collapsed ? 'w-full justify-center' : 'px-2'}`}
+        >
+          <svg className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+          </svg>
+          {!collapsed && 'Contraer menú'}
+        </button>
+        {collapsed ? (
+          <div className="flex justify-center" title={user.firstName || user.email}>
+            <Avatar avatar={user.avatar} nombre={user.firstName} email={user.email} />
+          </div>
+        ) : (
         <div className="flex items-center gap-2.5">
           <Avatar avatar={user.avatar} nombre={user.firstName} email={user.email} />
           <div className="flex-1 min-w-0">
@@ -200,6 +234,7 @@ export default function AppChrome({
             {logoutLabel}
           </button>
         </div>
+        )}
       </div>
     </>
   )
@@ -253,14 +288,16 @@ export default function AppChrome({
       {/* El menu lateral movil lo monta AppShell, para que sobreviva al cambio de modo */}
 
       {/* Menu lateral de escritorio */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-[#EEF2F6]">
+      <aside className={`hidden lg:block fixed inset-y-0 left-0 bg-white border-r border-[#EEF2F6] transition-[width] duration-200 z-20 ${collapsed ? 'w-16' : 'w-60'}`}>
         <div className="flex flex-col h-full">
-          <div className="px-4 pt-5 pb-3 border-b border-[#EEF2F6] space-y-4">
+          <div className={`pt-5 pb-3 border-b border-[#EEF2F6] space-y-4 ${collapsed ? 'px-2' : 'px-4'}`}>
             <div className="flex items-center justify-center gap-2">
               <Link to={homeHref}>
-                <img src="/newlogo.png" alt="Shopifree" className="h-10" />
+                {collapsed
+                  ? <img src="/icon-192.png" alt="Shopifree" className="h-8 w-8" />
+                  : <img src="/newlogo.png" alt="Shopifree" className="h-10" />}
               </Link>
-              {isAdmin && (
+              {isAdmin && !collapsed && (
                 <Link
                   to={adminHref}
                   className="px-1.5 py-0.5 rounded-md text-[0.6rem] font-bold tracking-wide transition-colors"
@@ -271,7 +308,7 @@ export default function AppChrome({
                 </Link>
               )}
             </div>
-            <ModeSwitcher mode={mode} isAdmin={isAdmin} />
+            {!collapsed && <ModeSwitcher mode={mode} isAdmin={isAdmin} />}
           </div>
           {menu}
         </div>
@@ -279,7 +316,7 @@ export default function AppChrome({
 
       {/* Contenido */}
       <main
-        className="lg:pl-60 lg:!pt-0"
+        className={`lg:!pt-0 transition-[padding] duration-200 ${collapsed ? 'lg:pl-16' : 'lg:pl-60'}`}
         style={{ paddingTop: isNative ? 'calc(3rem + env(safe-area-inset-top))' : '3rem' }}
       >
         {store && (

@@ -667,6 +667,11 @@ export interface Order {
   channel?: 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'
   manual?: boolean              // true if created from Dashboard (Nueva venta), false/undefined if from storefront
   isTest?: boolean              // true if the merchant marked this as a test order; hidden from the default Orders view and excluded from stats. Test orders also skip stock decrements.
+  waId?: string                 // ShopiChat: conversación de WhatsApp desde la que se creó el pedido
+  payLinkAt?: Date              // ShopiChat: cuándo se generó el link de pago público (/pay/{storeId}/{orderId}); sin esto el link no abre
+  // ShopiChat — avisos automáticos por WhatsApp (solo los escribe el servidor):
+  waNotified?: Partial<Record<'received' | 'confirmed' | 'shipped' | 'readyForPickup' | 'delivered' | 'paymentReminder', Date>>  // evento → cuándo se avisó (nunca dos veces)
+  waReminderDueAt?: Date        // cuándo toca el recordatorio de pago (lo pone onOrderWriteWhatsapp; lo borra waPaymentReminders)
 
   // Notas
   notes?: string

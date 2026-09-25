@@ -69,7 +69,9 @@ service cloud.firestore {
         && !d.keys().hasAny([
           'stockDecremented', 'couponCounted', 'paidAt', 'paymentId',
           'paymentNote', 'paymentReview', 'stockShortage', 'stockShortageItems',
-          'isTest'
+          'isTest',
+          // Avisos de WhatsApp: solo los escribe el servidor (functions / api).
+          'waNotified', 'waNotifyErrors', 'waReminderDueAt', 'waReminderAttempts'
         ])
         && d.paymentMethod in ['whatsapp', 'mercadopago', 'stripe', 'paypal', 'gocuotas', 'transfer']
         && (d.get('deliveryMethod', null) == null || d.deliveryMethod in ['pickup', 'delivery'])
@@ -264,6 +266,7 @@ service cloud.firestore {
           && (request.method == 'delete' || (
             request.resource.data.get('quickReplies', []) is list
             && request.resource.data.get('quickReplies', []).size() <= 300
+            && request.resource.data.get('orderNotifications', {}) is map
           ));
       }
 
