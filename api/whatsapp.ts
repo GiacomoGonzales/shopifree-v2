@@ -13,7 +13,7 @@ import {
 import {
   getDb, storeRef, privateWaRef, waSettingsRef, convRef, waNumberRef, getPrivateWa,
   putObjectToR2, makeThumbnail, webpToJpeg, mediaKeyBase, r2PublicBase, saveOutgoingMessage, archiveMedia,
-  previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, getWaitUntil, type PrivateWa,
+  previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, getWaitUntil, fetchProductImage, type PrivateWa,
 } from './_shared/whatsappInbox.js'
 import { setupOrderTemplates } from './_shared/whatsappOrderNotify.js'
 
@@ -121,32 +121,6 @@ async function productImageUrl(raw: string, storeId: string, productId: string):
     try { return new URL(s).toString() === target } catch { return false }
   }
   return candidates.some(same) ? target : null
-}
-
-/**
- * Baja una imagen de producto (ya validada por productImageUrl) para
- * re-subirla bajo whatsapp/{storeId}/: WhatsApp no acepta webp como imagen y
- * asi el mensaje queda archivado junto al resto del chat. null si no es una
- * imagen utilizable o pasa el tope de WhatsApp.
- */
-async function fetchProductImage(url: string, max: number): Promise<{ buffer: Buffer; mimeType: string } | null> {
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), 15000)
-  try {
-    const r = await fetch(url, { signal: ctrl.signal, redirect: 'error' })
-    if (!r.ok) return null
-    const mimeType = mimeBase(r.headers.get('content-type') || '')
-    if (!mimeType.startsWith('image/')) return null
-    const len = Number(r.headers.get('content-length') || 0)
-    if (len && len > max * 2) return null
-    const buffer = Buffer.from(await r.arrayBuffer())
-    if (!buffer.length || buffer.length > max * 2) return null
-    return { buffer, mimeType }
-  } catch {
-    return null
-  } finally {
-    clearTimeout(timer)
-  }
 }
 
 /** Error de Meta → respuesta. 131047 = paso la ventana de 24 h (re-engagement). */

@@ -12,7 +12,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { disconnectAccount, formatPhone, saveQuickReplies, toDate } from '../../lib/shopichatService'
-import type { WaAccount, WaAiSettings, WaOrderNotifications, WaQuickReply, WaTemplatesDoc } from '../../types/shopichat'
+import type { WaAccount, WaAiSettings, WaAiStatus, WaOrderNotifications, WaQuickReply, WaTemplatesDoc } from '../../types/shopichat'
 import { useToast } from '../ui/Toast'
 import OrderNotificationsSection from './OrderNotificationsSection'
 import AiSettingsSection from './AiSettingsSection'
@@ -32,6 +32,7 @@ interface Props {
   quickReplies: WaQuickReply[]
   orderNotifications: WaOrderNotifications
   aiSettings: WaAiSettings
+  aiStatus?: WaAiStatus | null
   templates: WaTemplatesDoc
   storeLanguage?: string | null
   onBack: () => void
@@ -39,7 +40,7 @@ interface Props {
 
 interface Draft { original: string | null; shortcut: string; text: string }
 
-export default function SettingsPanel({ storeId, account, quickReplies, orderNotifications, aiSettings, templates, storeLanguage, onBack }: Props) {
+export default function SettingsPanel({ storeId, account, quickReplies, orderNotifications, aiSettings, aiStatus, templates, storeLanguage, onBack }: Props) {
   const { t, i18n } = useTranslation('dashboard')
   const { showToast } = useToast()
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -190,8 +191,8 @@ export default function SettingsPanel({ storeId, account, quickReplies, orderNot
         {/* Avisos automáticos de pedidos */}
         <OrderNotificationsSection storeId={storeId} storeLanguage={storeLanguage} templates={templates} value={orderNotifications} />
 
-        {/* Asistente IA (copiloto de respuestas) */}
-        <AiSettingsSection storeId={storeId} value={aiSettings} />
+        {/* Asistente IA (copiloto / piloto automático) */}
+        <AiSettingsSection storeId={storeId} value={aiSettings} status={aiStatus} />
 
         {/* Respuestas rápidas */}
         <section className={card}>

@@ -2294,7 +2294,12 @@
         "NETWORK": "No connection. Check your internet and try again.",
         "NOT_DEPLOYED": "The AI assistant isn't available yet. Try again later.",
         "EMPTY": "No suggestions came back. Try again.",
-        "generic": "The assistant can't be used right now. Try again in a moment."
+        "generic": "The assistant can't be used right now. Try again in a moment.",
+        "AI_KEY_MISSING": "The API key for the selected AI provider is missing. Check it in Settings.",
+        "INVALID_KEY": "Your AI provider key isn't valid. Check it in Settings.",
+        "QUOTA": "Your AI provider account is out of credit or reached its quota.",
+        "MODEL_NOT_FOUND": "The configured model doesn't exist or your key has no access to it.",
+        "PROVIDER_ERROR": "Your AI provider didn't respond. Try again in a moment."
       },
       "settings": {
         "title": "AI assistant",
@@ -2308,9 +2313,114 @@
         "handoffPlaceholder": "E.g.: I'm passing you to Ana from customer care, she'll reply in a few minutes.",
         "signature": "Signature (optional)",
         "signaturePlaceholder": "E.g.: — The Lumi team",
-        "privacy": "To suggest, the latest messages of the conversation, that customer's orders and these details are sent to the AI. Up to 200 suggestions per day.",
+        "privacy": "The latest messages of the conversation, that customer's orders and these details are sent to the AI. Included AI: up to 200 replies per day.",
         "saved": "AI assistant saved",
-        "saveError": "Couldn't save the AI assistant."
+        "saveError": "Couldn't save the AI assistant.",
+        "helpAutopilot": "Replies to your customers on WhatsApp ON ITS OWN using your store data, your products and their orders. When a person is needed, it hands the chat over and notifies you.",
+        "handoffAutopilotHelp": "Autopilot sends this message when handing over and pauses the AI in that conversation.",
+        "privacyByo": "The latest messages of the conversation, that customer's orders and these details are sent to your AI provider (with your key, at your cost). Safety cap: 2000 replies per day.",
+        "metaPolicy": "WhatsApp Business policy: the assistant only serves this store's customers about its products and orders (it's not a general-purpose chatbot)."
+      },
+      "mode": {
+        "title": "Mode",
+        "copilot": "Copilot",
+        "copilotHelp": "Suggests replies in the chat; you pick, edit and send.",
+        "autopilot": "Autopilot",
+        "autopilotHelp": "Replies to your customers on its own and passes you the cases that need a person.",
+        "autopilotWarning": "The AI will send messages to your customers without you reviewing them. Fill in what it should know and check conversations often. If you reply yourself, the AI stays quiet for 30 minutes in that chat, and you can pause it per conversation."
+      },
+      "provider": {
+        "title": "AI provider",
+        "names": {
+          "shopifree": "Shopifree AI (included)",
+          "openai": "ChatGPT (OpenAI)",
+          "gemini": "Gemini (Google)",
+          "anthropic": "Claude (Anthropic)"
+        },
+        "shopifreeHelp": "Included in your Business plan, nothing to set up.",
+        "byoHelp": "Use your own key: usage is billed to your provider account and doesn't use Shopifree's quota.",
+        "apiKey": "API key",
+        "keyPlaceholder": {
+          "openai": "sk-…",
+          "gemini": "AIza…",
+          "anthropic": "sk-ant-…"
+        },
+        "keepKey": "Leave empty to keep the saved key",
+        "model": "Model",
+        "modelHelp": "If you're not sure, use {{model}}.",
+        "saveAndTest": "Save and test",
+        "testing": "Testing…",
+        "keySaved": "Key verified and saved",
+        "keyDeleted": "Key deleted. Shopifree AI is used now.",
+        "deleteConfirm": "Delete the key? The assistant will go back to Shopifree AI.",
+        "change": "Change",
+        "delete": "Delete",
+        "notActive": "saved, not in use",
+        "keyPrivacy": "The key is stored only on our server and is never shown in full again.",
+        "errors": {
+          "INVALID_KEY": "The key isn't valid or lacks permissions.",
+          "QUOTA": "The account is out of credit or reached its quota. Check billing with your provider.",
+          "MODEL_NOT_FOUND": "That model doesn't exist or your key has no access to it.",
+          "PROVIDER_ERROR": "The provider didn't respond. Try again in a moment.",
+          "INVALID_MODEL": "Invalid model name.",
+          "MISSING_KEY": "Paste the API key.",
+          "NETWORK": "No connection. Check your internet.",
+          "NOT_DEPLOYED": "This feature isn't available yet.",
+          "PLAN_REQUIRED": "The AI assistant is part of the Business plan.",
+          "generic": "Couldn't save the key. Try again."
+        }
+      },
+      "hours": {
+        "enable": "Only during business hours",
+        "days": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
+        "from": "From",
+        "to": "to",
+        "tz": "Time zone",
+        "outside": "Outside business hours",
+        "outsideOptions": {
+          "reply": "Reply anyway",
+          "away": "Away message",
+          "silent": "Don't reply"
+        },
+        "awayMessage": "Away message",
+        "awayPlaceholder": "E.g.: Hi! We're closed right now; we'll reply tomorrow from 9:00."
+      },
+      "autopilot": {
+        "handling": "The AI is handling this conversation",
+        "badge": "AI",
+        "sentByAi": "Sent by autopilot",
+        "stateActive": "AI on",
+        "statePaused": "AI paused",
+        "pauseHint": "Pause the AI in this conversation",
+        "resumeHint": "Resume the AI in this conversation",
+        "paused": "AI paused in this conversation",
+        "resumed": "AI resumed in this conversation",
+        "toggleError": "Couldn't change the AI state.",
+        "handoffBanner": "The AI handed this chat to a person:",
+        "resume": "Resume AI",
+        "lastError": "Last autopilot issue: {{error}}",
+        "errors": {
+          "AI_KEY_MISSING": "provider key missing",
+          "INVALID_KEY": "invalid key",
+          "QUOTA": "out of credit or quota at your provider",
+          "RATE_LIMITED": "the provider is overloaded",
+          "MODEL_NOT_FOUND": "model not found",
+          "PROVIDER_ERROR": "the provider didn't respond",
+          "LIMIT_REACHED": "daily limit reached",
+          "REFUSED": "the AI declined to answer",
+          "EMPTY": "the AI produced no reply",
+          "META_ERROR": "WhatsApp rejected the message",
+          "SEND_ERROR": "couldn't send",
+          "AI_ERROR": "the AI is unavailable"
+        }
       }
     }
   },

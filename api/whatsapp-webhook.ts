@@ -4,6 +4,7 @@ import { verifyWhatsappSignature, parseWhatsappWebhook, type WaAccountRef } from
 import {
   getDb, saveIncomingMessage, saveIncomingReaction, applyStatus, applyContactSyncs, saveUnprocessed, getWaitUntil,
 } from './_shared/whatsappInbox.js'
+import { runAutopilot } from './_shared/shopichatAutopilot.js'
 
 /**
  * ShopiChat — webhook de la WhatsApp Cloud API (multi-tienda).
@@ -22,7 +23,8 @@ import {
  * falle: un webhook que devuelve error entra en reintentos y, si insiste, Meta
  * lo da de baja. Lo que falla queda en waUnprocessed.
  *
- * Lo lento (bajar adjuntos a R2, miniaturas, push) va despues del 200 con
+ * Lo lento (bajar adjuntos a R2, miniaturas, push, piloto automatico de IA)
+ * va despues del 200 con
  * waitUntil de Vercel cuando el runtime lo expone; si no, se espera con un
  * presupuesto de tiempo antes de responder.
  *
@@ -128,6 +130,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? await saveIncomingReaction(storeId, m)
           : await saveIncomingMessage(storeId, m)
         followUps.push(...r.followUps)
+        // Piloto automatico (fase 3B): solo mensajes NUEVOS del cliente (no
+        // ecos, reacciones ni reintentos de Meta). runAutopilot decide si
+        // corresponde (modo, ventana, pausa, horario...) y nunca lanza.
+        if (m.type !== 'reaction' && m.origin === 'in' && !r.duplicate && r.convId) {
+          const sid = storeId
+          followUps.push(() => runAutopilot(sid, r.convId, m.waMessageId))
+        }
       } catch (error) {
         await saveUnprocessed({
           storeId, phoneNumberId: m.account.phoneNumberId, waMessageId: m.waMessageId,
@@ -190,10 +199,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 // Cuerpo crudo para verificar la firma (mismo patron que stripe-webhook) y
-// margen para que waitUntil termine de bajar adjuntos grandes.
+// margen para que waitUntil termine de bajar adjuntos grandes y el piloto
+// automatico (12 s de espera + hasta 4 llamadas al modelo + envios).
 export const config = {
   api: {
     bodyParser: false,
   },
-  maxDuration: 60,
+  maxDuration: 120,
 }

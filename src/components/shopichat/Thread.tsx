@@ -39,6 +39,7 @@ import {
   sendTemplate,
   sendText,
   sentMessageId,
+  setConversationAiPaused,
   subscribeMessages,
   toDate,
   toMillis,
@@ -70,7 +71,7 @@ import { recordingClock, useVoiceRecorder } from './useVoiceRecorder'
 import { labelColor } from './utils'
 import {
   IconAlert, IconArrowDown, IconArrowLeft, IconCamera, IconCheck, IconCheckCheck, IconClock, IconFile,
-  IconBag, IconForward, IconLink, IconMapPin, IconMic, IconMore, IconNote, IconPaperclip, IconPencil, IconPlus, IconRefresh,
+  IconBag, IconBot, IconForward, IconLink, IconMapPin, IconMic, IconMore, IconNote, IconPaperclip, IconPencil, IconPlus, IconRefresh,
   IconReply, IconSearch, IconSend, IconSmilePlus, IconTag, IconTrash, IconUpload, IconUser, IconX,
 } from './icons'
 
@@ -186,6 +187,8 @@ interface Props {
   quickReplies: WaQuickReply[]
   /** Asistente IA prendido (waSettings/automations.ai.enabled): muestra el botón ✨. */
   aiEnabled?: boolean
+  /** Piloto automático prendido: muestra el interruptor "IA activa/pausada" de la conversación. */
+  autopilot?: boolean
   allLabels: string[]
   now: number
   onBack: () => void
@@ -194,7 +197,7 @@ interface Props {
 }
 
 export default function Thread({
-  store, conversation, conversations, templates, quickReplies, aiEnabled, allLabels, now, onBack, onStatus, onOpenConversation,
+  store, conversation, conversations, templates, quickReplies, aiEnabled, autopilot, allLabels, now, onBack, onStatus, onOpenConversation,
 }: Props) {
   const { t, i18n } = useTranslation('dashboard')
   const { showToast } = useToast()
@@ -257,6 +260,20 @@ export default function Thread({
   const [searchText, setSearchText] = useState('')
   const [highlight, setHighlight] = useState<string | null>(null)
   const [headerMenu, setHeaderMenu] = useState(false)
+  const [aiToggling, setAiToggling] = useState(false)
+  const aiPaused = conversation.aiPaused === true
+  const toggleAi = async () => {
+    if (aiToggling) return
+    setAiToggling(true)
+    try {
+      await setConversationAiPaused(storeId, waId, !aiPaused)
+      showToast(t(aiPaused ? 'shopichat.ai.autopilot.resumed' : 'shopichat.ai.autopilot.paused'), 'success')
+    } catch {
+      showToast(t('shopichat.ai.autopilot.toggleError'), 'error')
+    } finally {
+      setAiToggling(false)
+    }
+  }
   const [awayFromBottom, setAwayFromBottom] = useState(false)
 
   // ------------------------------------------------------ vender desde el chat
@@ -1074,8 +1091,14 @@ export default function Thread({
                 </span>
               </button>
             )}
-            {(m.type === 'template' || m.sentBy === 'auto') && (
+            {(m.type === 'template' || m.sentBy === 'auto' || m.sentBy === 'ai') && (
               <span className="flex items-center gap-1.5 mb-1">
+                {/* Enviado por el piloto automático */}
+                {m.sentBy === 'ai' && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full bg-[#F3E8FF] text-[#7C3AED] text-[10px] font-semibold uppercase tracking-wide" title={t('shopichat.ai.autopilot.sentByAi')}>
+                    <IconBot className="w-2.5 h-2.5" />{t('shopichat.ai.autopilot.badge')}
+                  </span>
+                )}
                 {m.type === 'template' && (
                   <span className="text-[10.5px] font-semibold uppercase tracking-wide text-[#8898AA]">{t('shopichat.thread.template')}</span>
                 )}
@@ -1219,6 +1242,21 @@ export default function Thread({
             </p>
           </button>
           <div className="flex items-center gap-1 relative flex-none">
+            {autopilot && (
+              <button
+                type="button"
+                onClick={toggleAi}
+                disabled={aiToggling}
+                aria-pressed={!aiPaused}
+                title={t(aiPaused ? 'shopichat.ai.autopilot.resumeHint' : 'shopichat.ai.autopilot.pauseHint')}
+                className={`h-8 px-2 inline-flex items-center gap-1 rounded-lg text-[11.5px] font-semibold border disabled:opacity-50 ${
+                  aiPaused ? 'border-[#E6EBF1] text-[#8898AA] hover:bg-[#F6F9FC]' : 'border-[#E9D5FF] bg-[#FAF5FF] text-[#7C3AED] hover:bg-[#F3E8FF]'
+                }`}
+              >
+                <IconBot className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t(aiPaused ? 'shopichat.ai.autopilot.statePaused' : 'shopichat.ai.autopilot.stateActive')}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setSidePanel(p => (p === 'customer' ? null : 'customer'))}
@@ -1295,6 +1333,21 @@ export default function Thread({
 
         {conversation.optOut && (
           <div className="px-4 py-2 bg-red-50 border-b border-red-100 text-[11.5px] text-red-700">{t('shopichat.customer.optOut')}</div>
+        )}
+
+        {/* La IA derivó la conversación a una persona */}
+        {conversation.aiHandoff?.reason && (
+          <div className="px-4 py-2 bg-[#FAF5FF] border-b border-[#E9D5FF] flex items-center gap-2 text-[11.5px] text-[#6B21A8]">
+            <IconBot className="w-3.5 h-3.5 flex-none" />
+            <span className="flex-1 min-w-0">
+              <span className="font-semibold">{t('shopichat.ai.autopilot.handoffBanner')}</span> {conversation.aiHandoff.reason}
+            </span>
+            {autopilot && aiPaused && (
+              <button type="button" onClick={toggleAi} disabled={aiToggling} className="flex-none font-semibold text-[#7C3AED] hover:underline disabled:opacity-50">
+                {t('shopichat.ai.autopilot.resume')}
+              </button>
+            )}
+          </div>
         )}
 
         {(labels.length > 0 || conversation.note) && (

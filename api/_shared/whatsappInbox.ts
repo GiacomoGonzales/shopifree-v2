@@ -237,6 +237,35 @@ export async function webpToJpeg(buffer: Buffer): Promise<Buffer | null> {
   }
 }
 
+// =================== IMAGEN DE PRODUCTO ===================
+
+/**
+ * Baja una imagen de producto (ya validada: ver productImageUrl en api/whatsapp.ts
+ * o productCardImage en shopichatAutopilot.ts) para
+ * re-subirla bajo whatsapp/{storeId}/: WhatsApp no acepta webp como imagen y
+ * asi el mensaje queda archivado junto al resto del chat. null si no es una
+ * imagen utilizable o pasa el tope de WhatsApp.
+ */
+export async function fetchProductImage(url: string, max: number): Promise<{ buffer: Buffer; mimeType: string } | null> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 15000)
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, redirect: 'error' })
+    if (!r.ok) return null
+    const mimeType = mimeBase(r.headers.get('content-type') || '')
+    if (!mimeType.startsWith('image/')) return null
+    const len = Number(r.headers.get('content-length') || 0)
+    if (len && len > max * 2) return null
+    const buffer = Buffer.from(await r.arrayBuffer())
+    if (!buffer.length || buffer.length > max * 2) return null
+    return { buffer, mimeType }
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 // =================== TEXTOS DE VISTA PREVIA ===================
 
 const MEDIA_LABEL: Record<string, string> = {

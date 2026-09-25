@@ -63,9 +63,30 @@ export interface WaOrderNotifications {
 /** Tono del asistente IA (fase 3A). */
 export type WaAiTone = 'amigable' | 'profesional' | 'divertido'
 
+/** Copiloto (propone, el comerciante envía) o piloto automático (responde solo). */
+export type WaAiMode = 'copilot' | 'autopilot'
+
+/** Quién pone el modelo: la IA incluida de Shopifree o la clave propia del comerciante. */
+export type WaAiProvider = 'shopifree' | 'openai' | 'gemini' | 'anthropic'
+
+/** Fuera de horario, el piloto: responde igual, manda el mensaje de ausencia o no hace nada. */
+export type WaAiOutsideHours = 'reply' | 'away' | 'silent'
+
+export interface WaAiHours {
+  enabled: boolean
+  /** Zona horaria IANA (ej. America/Lima). */
+  tz: string
+  /** 0 = domingo … 6 = sábado. */
+  days: number[]
+  /** 'HH:MM' */
+  from: string
+  to: string
+}
+
 /**
- * stores/{storeId}/waSettings/automations.ai — IA copiloto (fase 3A). La lee
- * api/shopichat-ai.ts: sin `enabled` no sugiere nada.
+ * stores/{storeId}/waSettings/automations.ai — IA de ShopiChat (fases 3A/3B).
+ * La leen api/shopichat-ai.ts (copiloto) y el piloto automático del webhook.
+ * La clave propia NO vive acá: está en stores/{id}/private/ai (solo servidor).
  */
 export interface WaAiSettings {
   enabled: boolean
@@ -76,6 +97,28 @@ export interface WaAiSettings {
   knowledge: string
   /** Qué decir cuando hay que pasarle el caso a una persona. */
   handoffNote?: string
+  mode: WaAiMode
+  provider: WaAiProvider
+  hours: WaAiHours
+  outsideHours: WaAiOutsideHours
+  /** Mensaje de ausencia (fuera de horario, con outsideHours 'away'). */
+  awayMessage: string
+}
+
+/** Estado de la clave propia (api/shopichat-ai 'key-status'). Nunca trae la clave. */
+export interface WaAiKeyStatus {
+  configured: boolean
+  provider: Exclude<WaAiProvider, 'shopifree'> | null
+  model: string | null
+  /** '…abcd' */
+  masked: string | null
+  savedAt: string | null
+}
+
+/** automations.aiStatus — lo escribe el piloto automático (último error). */
+export interface WaAiStatus {
+  lastError?: string | null
+  at?: Timestamp | null
 }
 
 /** Una respuesta propuesta por la IA. */
@@ -92,6 +135,7 @@ export interface WaAutomations {
   quickReplies: WaQuickReply[]
   orderNotifications: WaOrderNotifications
   ai: WaAiSettings
+  aiStatus?: WaAiStatus | null
 }
 
 export type WaConversationStatus = 'open' | 'pending' | 'done'
@@ -112,6 +156,12 @@ export interface WaConversation {
   labels?: string[]
   note?: string | null
   optOut?: boolean
+  /** Piloto automático pausado en esta conversación (lo pausa la derivación o el comerciante). */
+  aiPaused?: boolean
+  /** Por qué la IA derivó la conversación a una persona. */
+  aiHandoff?: { reason: string; at?: Timestamp | null } | null
+  /** Última respuesta enviada por el piloto automático. */
+  aiLastReplyAt?: Timestamp | null
   createdAt?: Timestamp | null
   updatedAt?: Timestamp | null
 }
@@ -160,10 +210,12 @@ export interface WaMessage {
   permanent?: boolean
   /**
    * uid de quien lo mandó desde la bandeja, 'phone' si salió de la app
-   * WhatsApp Business (coexistencia) o 'auto' si es un aviso automático de
-   * pedido (api/whatsapp-notify).
+   * WhatsApp Business (coexistencia), 'auto' si es un aviso automático de
+   * pedido (api/whatsapp-notify) o 'ai' si lo mandó el piloto automático.
    */
   sentBy?: string
+  /** Nota de derivación mandada por la IA. */
+  aiHandoff?: boolean
   /** Aviso automático: el pedido y el evento que lo originaron. */
   orderId?: string
   orderEvent?: WaOrderEvent

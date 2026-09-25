@@ -63,7 +63,8 @@ export default function AiAssist({ store, waId, text, raised, onUse }: Props) {
 
   const errorText = (e: unknown) => {
     const code = (e as ShopiChatApiError)?.code || ''
-    const known = ['LIMIT_REACHED', 'WINDOW_CLOSED', 'AI_DISABLED', 'PLAN_REQUIRED', 'REFUSED', 'BUSY', 'NETWORK', 'NOT_DEPLOYED', 'EMPTY']
+    const known = ['LIMIT_REACHED', 'WINDOW_CLOSED', 'AI_DISABLED', 'PLAN_REQUIRED', 'REFUSED', 'BUSY', 'NETWORK', 'NOT_DEPLOYED', 'EMPTY',
+      'AI_KEY_MISSING', 'INVALID_KEY', 'QUOTA', 'MODEL_NOT_FOUND', 'PROVIDER_ERROR']
     if (code === 'LIMIT_REACHED') keepQuota({ remaining: 0, limit: quota?.limit || (e as { limit?: number }).limit || 0 })
     return t(`shopichat.ai.errors.${known.includes(code) ? code : 'generic'}`)
   }

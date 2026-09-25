@@ -2295,7 +2295,12 @@
         "NETWORK": "Sin conexión. Revisa tu internet e intenta de nuevo.",
         "NOT_DEPLOYED": "El asistente IA todavía no está disponible. Intenta más tarde.",
         "EMPTY": "No salió ninguna sugerencia. Prueba de nuevo.",
-        "generic": "No se pudo usar el asistente ahora. Intenta de nuevo en un momento."
+        "generic": "No se pudo usar el asistente ahora. Intenta de nuevo en un momento.",
+        "AI_KEY_MISSING": "Falta la clave del proveedor de IA elegido. Revísala en Configuración.",
+        "INVALID_KEY": "La clave de tu proveedor de IA no es válida. Revísala en Configuración.",
+        "QUOTA": "Tu cuenta del proveedor de IA no tiene saldo o llegó a su cuota.",
+        "MODEL_NOT_FOUND": "El modelo configurado no existe o tu clave no tiene acceso.",
+        "PROVIDER_ERROR": "Tu proveedor de IA no respondió. Prueba de nuevo en un momento."
       },
       "settings": {
         "title": "Asistente IA",
@@ -2309,9 +2314,114 @@
         "handoffPlaceholder": "Ej.: Te paso con Ana, de atención al cliente, que te responde en unos minutos.",
         "signature": "Firma (opcional)",
         "signaturePlaceholder": "Ej.: — Equipo Lumi",
-        "privacy": "Para sugerir, se envían a la IA los últimos mensajes de la conversación, los pedidos de ese cliente y estos datos. Hasta 200 sugerencias por día.",
+        "privacy": "Se envían a la IA los últimos mensajes de la conversación, los pedidos de ese cliente y estos datos. IA incluida: hasta 200 respuestas por día.",
         "saved": "Asistente IA guardado",
-        "saveError": "No se pudo guardar el asistente IA."
+        "saveError": "No se pudo guardar el asistente IA.",
+        "helpAutopilot": "Responde SOLO a tus clientes por WhatsApp con los datos de tu tienda, tus productos y sus pedidos. Si hace falta una persona, deriva la conversación y te avisa.",
+        "handoffAutopilotHelp": "El piloto automático manda este mensaje al derivar y pausa la IA en esa conversación.",
+        "privacyByo": "Se envían a tu proveedor de IA (con tu clave y a tu costo) los últimos mensajes de la conversación, los pedidos de ese cliente y estos datos. Tope de seguridad: 2000 respuestas por día.",
+        "metaPolicy": "Política de WhatsApp Business: el asistente solo atiende a clientes de esta tienda sobre sus productos y pedidos (no es un chatbot de uso general)."
+      },
+      "mode": {
+        "title": "Modo",
+        "copilot": "Copiloto",
+        "copilotHelp": "Te propone respuestas en el chat; tú eliges, editas y envías.",
+        "autopilot": "Piloto automático",
+        "autopilotHelp": "Responde solo a tus clientes y te pasa los casos que necesitan a una persona.",
+        "autopilotWarning": "La IA enviará mensajes a tus clientes sin que los revises. Carga bien lo que debe saber y revisa las conversaciones seguido. Si respondes tú, la IA se calla 30 minutos en ese chat, y puedes pausarla por conversación."
+      },
+      "provider": {
+        "title": "Proveedor de IA",
+        "names": {
+          "shopifree": "Shopifree IA (incluida)",
+          "openai": "ChatGPT (OpenAI)",
+          "gemini": "Gemini (Google)",
+          "anthropic": "Claude (Anthropic)"
+        },
+        "shopifreeHelp": "Incluida en tu plan Business, sin configurar nada.",
+        "byoHelp": "Usa tu propia clave: el consumo se cobra en tu cuenta del proveedor y no gasta el cupo de Shopifree.",
+        "apiKey": "Clave API",
+        "keyPlaceholder": {
+          "openai": "sk-…",
+          "gemini": "AIza…",
+          "anthropic": "sk-ant-…"
+        },
+        "keepKey": "Déjala vacía para mantener la clave guardada",
+        "model": "Modelo",
+        "modelHelp": "Si no sabes cuál, usa {{model}}.",
+        "saveAndTest": "Guardar y probar",
+        "testing": "Probando…",
+        "keySaved": "Clave verificada y guardada",
+        "keyDeleted": "Clave eliminada. Se usa Shopifree IA.",
+        "deleteConfirm": "¿Eliminar la clave? El asistente volverá a usar Shopifree IA.",
+        "change": "Cambiar",
+        "delete": "Eliminar",
+        "notActive": "guardada, sin usar",
+        "keyPrivacy": "La clave se guarda solo en nuestro servidor y nunca se vuelve a mostrar completa.",
+        "errors": {
+          "INVALID_KEY": "La clave no es válida o no tiene permisos.",
+          "QUOTA": "La cuenta no tiene saldo o llegó a su cuota. Revisa la facturación en tu proveedor.",
+          "MODEL_NOT_FOUND": "Ese modelo no existe o tu clave no tiene acceso.",
+          "PROVIDER_ERROR": "El proveedor no respondió. Prueba de nuevo en un momento.",
+          "INVALID_MODEL": "Nombre de modelo inválido.",
+          "MISSING_KEY": "Pega la clave API.",
+          "NETWORK": "Sin conexión. Revisa tu internet.",
+          "NOT_DEPLOYED": "Esta función todavía no está disponible.",
+          "PLAN_REQUIRED": "El asistente IA es parte del plan Business.",
+          "generic": "No se pudo guardar la clave. Intenta de nuevo."
+        }
+      },
+      "hours": {
+        "enable": "Solo en horario de atención",
+        "days": {
+          "0": "Dom",
+          "1": "Lun",
+          "2": "Mar",
+          "3": "Mié",
+          "4": "Jue",
+          "5": "Vie",
+          "6": "Sáb"
+        },
+        "from": "De",
+        "to": "a",
+        "tz": "Zona horaria",
+        "outside": "Fuera de horario",
+        "outsideOptions": {
+          "reply": "Responder igual",
+          "away": "Mensaje de ausencia",
+          "silent": "No responder"
+        },
+        "awayMessage": "Mensaje de ausencia",
+        "awayPlaceholder": "Ej.: ¡Hola! Ahora estamos cerrados; te respondemos mañana desde las 9:00."
+      },
+      "autopilot": {
+        "handling": "La IA está atendiendo esta conversación",
+        "badge": "IA",
+        "sentByAi": "Enviado por el piloto automático",
+        "stateActive": "IA activa",
+        "statePaused": "IA pausada",
+        "pauseHint": "Pausar la IA en esta conversación",
+        "resumeHint": "Reanudar la IA en esta conversación",
+        "paused": "IA pausada en esta conversación",
+        "resumed": "IA reanudada en esta conversación",
+        "toggleError": "No se pudo cambiar el estado de la IA.",
+        "handoffBanner": "La IA pasó este chat a una persona:",
+        "resume": "Reanudar IA",
+        "lastError": "Último problema del piloto automático: {{error}}",
+        "errors": {
+          "AI_KEY_MISSING": "falta la clave del proveedor",
+          "INVALID_KEY": "clave inválida",
+          "QUOTA": "sin saldo o cuota en tu proveedor",
+          "RATE_LIMITED": "el proveedor está saturado",
+          "MODEL_NOT_FOUND": "modelo no encontrado",
+          "PROVIDER_ERROR": "el proveedor no respondió",
+          "LIMIT_REACHED": "se alcanzó el límite diario",
+          "REFUSED": "la IA no quiso responder",
+          "EMPTY": "la IA no generó respuesta",
+          "META_ERROR": "WhatsApp rechazó el envío",
+          "SEND_ERROR": "no se pudo enviar",
+          "AI_ERROR": "la IA no está disponible"
+        }
       }
     }
   },

@@ -45,6 +45,7 @@ import {
 import type {
   WaAccount,
   WaAiSettings,
+  WaAiStatus,
   WaConversation,
   WaConversationStatus,
   WaOrderNotifications,
@@ -62,7 +63,7 @@ import TemplatePicker from '../../components/shopichat/TemplatePicker'
 import { VoiceNoteBar } from '../../components/shopichat/VoiceNotes'
 import { avatarColor, labelColor } from '../../components/shopichat/utils'
 import {
-  IconArrowLeft, IconChat, IconClock, IconLock, IconNote, IconSearch, IconSettings, IconSparkles, IconWhatsApp,
+  IconArrowLeft, IconBot, IconChat, IconClock, IconLock, IconNote, IconSearch, IconSettings, IconSparkles, IconWhatsApp,
 } from '../../components/shopichat/icons'
 
 const STATUSES: WaConversationStatus[] = ['open', 'pending', 'done']
@@ -194,6 +195,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
   const [quickReplies, setQuickReplies] = useState<WaQuickReply[]>([])
   const [orderNotifications, setOrderNotifications] = useState<WaOrderNotifications>(DEFAULT_ORDER_NOTIFICATIONS)
   const [aiSettings, setAiSettings] = useState<WaAiSettings>(DEFAULT_AI_SETTINGS)
+  const [aiStatus, setAiStatus] = useState<WaAiStatus | null>(null)
   const [tab, setTab] = useState<WaConversationStatus>('open')
   const [search, setSearch] = useState('')
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
@@ -216,6 +218,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
     setQuickReplies(a.quickReplies)
     setOrderNotifications(a.orderNotifications)
     setAiSettings(a.ai)
+    setAiStatus(a.aiStatus || null)
   }), [storeId])
 
   // El panel suena distinto si el mensaje entra en la conversación que se está mirando.
@@ -470,6 +473,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
               <p className="px-3 pt-2 text-center text-[11px] text-[#A9B6C6]">{t('shopichat.list.limited', { count: MAX_CONVERSATIONS })}</p>
             )}
             {filtered.map(c => {
+              const autopilotOn = aiSettings.enabled && aiSettings.mode === 'autopilot'
               const closed = windowRemainingMs(c, now) <= 0
               const otherTab = searching && statusOf(c) !== tab ? t(`shopichat.status.${statusOf(c)}`) : null
               const unread = c.unread || 0
@@ -493,6 +497,9 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[13.5px] truncate ${unread > 0 ? 'font-semibold text-[#1e3a5f]' : 'font-medium text-[#1e3a5f]'}`}>{name}</span>
                         {closed && <span title={t('shopichat.window.closedShort')}><IconClock className="w-3.5 h-3.5 text-[#A9B6C6] flex-none" /></span>}
+                        {autopilotOn && !closed && !c.optOut && !c.aiPaused && (
+                          <span title={t('shopichat.ai.autopilot.handling')}><IconBot className="w-3.5 h-3.5 text-[#7C3AED] flex-none" /></span>
+                        )}
                         {otherTab && <span className="ml-auto text-[10.5px] px-1.5 py-px rounded bg-[#F1F5F9] text-[#8898AA] flex-none">{otherTab}</span>}
                       </div>
                       <p className={`text-[12.5px] truncate mt-0.5 ${unread > 0 ? 'text-[#425466]' : 'text-[#8898AA]'}`}>
@@ -534,6 +541,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
               quickReplies={quickReplies}
               orderNotifications={orderNotifications}
               aiSettings={aiSettings}
+              aiStatus={aiStatus}
               templates={templates}
               storeLanguage={store.language}
               onBack={() => setSettingsOpen(false)}
@@ -547,6 +555,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
               templates={templates}
               quickReplies={quickReplies}
               aiEnabled={aiSettings.enabled}
+              autopilot={aiSettings.enabled && aiSettings.mode === 'autopilot'}
               allLabels={allLabels}
               now={now}
               onBack={() => openConversation(null)}

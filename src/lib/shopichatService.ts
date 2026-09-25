@@ -20,6 +20,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  deleteField,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -30,8 +31,14 @@ import { auth, db } from './firebase'
 import { apiUrl } from '../utils/apiBase'
 import type {
   WaAccount,
+  WaAiHours,
+  WaAiKeyStatus,
+  WaAiMode,
+  WaAiOutsideHours,
+  WaAiProvider,
   WaAiRewriteMode,
   WaAiSettings,
+  WaAiStatus,
   WaAiSuggestion,
   WaAiTone,
   WaApiAction,
@@ -182,6 +189,7 @@ export function subscribeAutomations(
         quickReplies: Array.isArray(data.quickReplies) ? data.quickReplies : [],
         orderNotifications: normalizeOrderNotifications(data.orderNotifications),
         ai: normalizeAiSettings(data.ai),
+        aiStatus: (data.aiStatus && typeof data.aiStatus === 'object' ? data.aiStatus : null) as WaAiStatus | null,
       })
     },
     error => console.warn('[shopichat] automatizaciones:', error.message)
@@ -257,6 +265,14 @@ export function setConversationNote(storeId: string, waId: string, note: string)
   return updateDoc(conversationRef(storeId, waId), { note: (note || '').slice(0, 2000) })
 }
 
+/**
+ * Pausa / reanuda el piloto automático en una conversación. Al reanudar se
+ * borra el motivo de la derivación (las reglas lo permiten solo así).
+ */
+export function setConversationAiPaused(storeId: string, waId: string, paused: boolean) {
+  return updateDoc(conversationRef(storeId, waId), paused ? { aiPaused: true } : { aiPaused: false, aiHandoff: deleteField() })
+}
+
 /** Limpia el contador local. Falla en silencio: el contador también se limpia al responder. */
 export async function clearUnread(storeId: string, waId: string) {
   try {
@@ -318,7 +334,44 @@ export const AI_KNOWLEDGE_MAX = 4000
 export const AI_SIGNATURE_MAX = 60
 export const AI_HANDOFF_MAX = 300
 
-export const DEFAULT_AI_SETTINGS: WaAiSettings = { enabled: false, tone: 'amigable', signature: '', knowledge: '', handoffNote: '' }
+export const AI_AWAY_MAX = 500
+export const AI_MODES: WaAiMode[] = ['copilot', 'autopilot']
+export const AI_PROVIDERS: WaAiProvider[] = ['shopifree', 'openai', 'gemini', 'anthropic']
+export const AI_OUTSIDE_HOURS: WaAiOutsideHours[] = ['reply', 'away', 'silent']
+/** Modelos por defecto con clave propia (el servidor usa los mismos). */
+export const AI_DEFAULT_MODELS: Record<Exclude<WaAiProvider, 'shopifree'>, string> = {
+  openai: 'gpt-5-mini',
+  gemini: 'gemini-2.5-flash',
+  anthropic: 'claude-sonnet-5',
+}
+/** Con Anthropic se elige de una lista (el servidor la valida). */
+export const AI_ANTHROPIC_MODELS = ['claude-sonnet-5', 'claude-opus-5', 'claude-haiku-4-5']
+
+const localTz = () => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' } catch { return 'UTC' }
+}
+
+export const DEFAULT_AI_HOURS: WaAiHours = { enabled: false, tz: 'UTC', days: [1, 2, 3, 4, 5], from: '09:00', to: '18:00' }
+
+export const DEFAULT_AI_SETTINGS: WaAiSettings = {
+  enabled: false, tone: 'amigable', signature: '', knowledge: '', handoffNote: '',
+  mode: 'copilot', provider: 'shopifree', hours: DEFAULT_AI_HOURS, outsideHours: 'reply', awayMessage: '',
+}
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/
+
+function normalizeAiHours(raw: unknown): WaAiHours {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<WaAiHours>
+  const days = (Array.isArray(r.days) ? r.days : DEFAULT_AI_HOURS.days)
+    .map(Number).filter(d => Number.isInteger(d) && d >= 0 && d <= 6)
+  return {
+    enabled: r.enabled === true,
+    tz: typeof r.tz === 'string' && r.tz ? r.tz.slice(0, 64) : localTz(),
+    days: [...new Set(days)].sort(),
+    from: typeof r.from === 'string' && HHMM.test(r.from) ? r.from : DEFAULT_AI_HOURS.from,
+    to: typeof r.to === 'string' && HHMM.test(r.to) ? r.to : DEFAULT_AI_HOURS.to,
+  }
+}
 
 export function normalizeAiSettings(raw: unknown): WaAiSettings {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<WaAiSettings>
@@ -329,6 +382,11 @@ export function normalizeAiSettings(raw: unknown): WaAiSettings {
     signature: s(r.signature, AI_SIGNATURE_MAX),
     knowledge: s(r.knowledge, AI_KNOWLEDGE_MAX),
     handoffNote: s(r.handoffNote, AI_HANDOFF_MAX),
+    mode: r.mode === 'autopilot' ? 'autopilot' : 'copilot',
+    provider: AI_PROVIDERS.includes(r.provider as WaAiProvider) ? (r.provider as WaAiProvider) : 'shopifree',
+    hours: normalizeAiHours(r.hours),
+    outsideHours: AI_OUTSIDE_HOURS.includes(r.outsideHours as WaAiOutsideHours) ? (r.outsideHours as WaAiOutsideHours) : 'reply',
+    awayMessage: s(r.awayMessage, AI_AWAY_MAX),
   }
 }
 
@@ -338,12 +396,14 @@ export function saveAiSettings(storeId: string, ai: WaAiSettings) {
 
 export interface AiQuota { remaining: number; limit: number }
 
+type AiApiAction = 'suggest' | 'rewrite' | 'quota' | 'save-key' | 'key-status' | 'delete-key'
+
 /**
  * POST /api/shopichat-ai (IA copiloto). Mismo manejo de errores que
  * callWhatsappApi: lanza ShopiChatApiError con el código del servidor
  * (AI_DISABLED, LIMIT_REACHED, WINDOW_CLOSED, REFUSED, BUSY, AI_ERROR...).
  */
-async function callAiApi<T>(action: 'suggest' | 'rewrite' | 'quota', storeId: string, payload: Record<string, unknown> = {}): Promise<T> {
+async function callAiApi<T>(action: AiApiAction, storeId: string, payload: Record<string, unknown> = {}): Promise<T> {
   const token = await auth?.currentUser?.getIdToken()
   if (!token) throw new ShopiChatApiError('No hay sesión', 401, 'UNAUTHENTICATED')
   let res: Response
@@ -372,6 +432,14 @@ export const aiRewrite = (storeId: string, waId: string, draft: string, mode: Wa
   callAiApi<{ text: string } & AiQuota>('rewrite', storeId, { waId, draft, mode })
 
 export const aiQuota = (storeId: string) => callAiApi<AiQuota>('quota', storeId)
+
+/** Clave propia: estado (nunca la clave), guardar y probar, borrar. */
+export const aiKeyStatus = (storeId: string) => callAiApi<{ status: WaAiKeyStatus }>('key-status', storeId)
+
+export const aiSaveKey = (storeId: string, provider: Exclude<WaAiProvider, 'shopifree'>, apiKey: string, model: string) =>
+  callAiApi<{ status: WaAiKeyStatus }>('save-key', storeId, { provider, model, ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}) })
+
+export const aiDeleteKey = (storeId: string) => callAiApi<{ status: WaAiKeyStatus }>('delete-key', storeId)
 
 export function saveQuickReplies(storeId: string, quickReplies: WaAutomations['quickReplies']) {
   return setDoc(settingsRef(storeId, 'automations'), { quickReplies, updatedAt: serverTimestamp() }, { merge: true })
