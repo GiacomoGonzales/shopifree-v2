@@ -90,7 +90,8 @@ export default function Settings() {
   // Catalog settings (low stock badge + show out-of-stock products)
   const [showOutOfStock, setShowOutOfStock] = useState(true)
   const [showLowStockBadge, setShowLowStockBadge] = useState(false)
-  const [lowStockThreshold, setLowStockThreshold] = useState(5)
+  // Texto del input: se puede dejar vacío mientras se escribe; se normaliza al salir y al guardar.
+  const [lowStockThreshold, setLowStockThreshold] = useState('5')
 
   // Expanded zones for hierarchical selector
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
@@ -155,7 +156,7 @@ export default function Settings() {
           if (storeData.catalogSettings) {
             setShowOutOfStock(storeData.catalogSettings.showOutOfStock !== false)
             setShowLowStockBadge(storeData.catalogSettings.showLowStockBadge === true)
-            setLowStockThreshold(storeData.catalogSettings.lowStockThreshold ?? 5)
+            setLowStockThreshold(String(storeData.catalogSettings.lowStockThreshold ?? 5))
           }
         }
       } catch (error) {
@@ -217,7 +218,7 @@ export default function Settings() {
         catalogSettings: {
           showOutOfStock,
           showLowStockBadge,
-          lowStockThreshold: Math.max(1, Math.floor(lowStockThreshold)) || 5,
+          lowStockThreshold: Math.max(1, Math.floor(Number(lowStockThreshold))) || 5,
         },
         updatedAt: new Date()
       })
@@ -1400,7 +1401,8 @@ export default function Settings() {
                     type="number"
                     min="1"
                     value={lowStockThreshold}
-                    onChange={(e) => setLowStockThreshold(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => setLowStockThreshold(e.target.value.replace(/[^0-9]/g, ''))}
+                    onBlur={() => setLowStockThreshold(String(Math.max(1, parseInt(lowStockThreshold) || 1)))}
                     className="w-32 px-3 py-2 border border-[#E6EBF1] rounded-lg focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
                   />
                 </div>
