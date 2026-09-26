@@ -6,6 +6,8 @@ import { useLanguage } from '../hooks/useLanguage'
 import { useAuth } from '../hooks/useAuth'
 import LanguageSelector from '../components/common/LanguageSelector'
 import Seo from '../components/seo/Seo'
+import ShopiChatShowcase from '../components/landing/ShopiChatShowcase'
+import { SHOPICHAT_PUBLIC } from '../lib/shopichatAccess'
 
 // Landing rediseñada — dirección B2B premium estilo Stripe (misma línea que la
 // landing V2 de Cobrify): fondo blanco, navy de marca, degradado animado sutil
@@ -144,6 +146,8 @@ export default function Landing() {
     t('pricing.business.features.everythingPro'), t('pricing.business.features.unlimitedProducts'),
     t('pricing.business.features.noBranding'), t('pricing.business.features.ownApp'),
     t('pricing.business.features.prioritySupport'),
+    // ShopiChat se vende en Business solo cuando esta lanzado (VITE_SHOPICHAT_PUBLIC)
+    ...(SHOPICHAT_PUBLIC ? [t('pricing.business.features.shopichat')] : []),
   ]
 
   // index.html trae los metadatos por defecto, pero apuntan siempre a la raiz.
@@ -192,6 +196,7 @@ export default function Landing() {
               'Control de stock por variante y almacén',
               'App Android y iPhone de la tienda',
               'Estadísticas y fuentes de tráfico',
+              ...(SHOPICHAT_PUBLIC ? ['Bandeja de WhatsApp con IA y avisos automáticos de pedidos'] : []),
             ],
           },
         ]}
@@ -907,6 +912,9 @@ export default function Landing() {
           </p>
         </div>
       </section>
+
+      {/* ===== ShopiChat (solo cuando esta lanzado: VITE_SHOPICHAT_PUBLIC) ===== */}
+      {SHOPICHAT_PUBLIC && <ShopiChatShowcase registerPath={localePath('/register')} />}
 
       {/* ===== Precios ===== */}
       <section id="precios" className="slp-section py-20 lg:py-24">

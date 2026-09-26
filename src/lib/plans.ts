@@ -88,6 +88,30 @@ export const PLAN_FEATURES = {
 export type PlanType = keyof typeof PLAN_FEATURES
 
 /**
+ * Funciones que ya existen pero se venden solo cuando se lanzan al publico.
+ * No van en `features` porque este modulo no puede leer el flag de lanzamiento
+ * (no hay `import.meta.env` en las funciones de Vercel): cada lado pasa si
+ * esta lanzada —
+ *   - frontend: `SHOPICHAT_PUBLIC` de src/lib/shopichatAccess.ts (VITE_SHOPICHAT_PUBLIC)
+ *   - api (Sofia): `process.env.SHOPICHAT_PUBLIC === 'true'`
+ * Se agregan al FINAL de `features`, asi los indices de plan.featureList del
+ * i18n siguen valiendo (la traduccion va en el indice siguiente al ultimo).
+ */
+export const PLAN_LAUNCH_FEATURES = {
+  shopichat: { plan: 'business' as PlanType, text: 'ShopiChat: tu WhatsApp con IA y avisos de pedidos' },
+}
+
+export type LaunchFeature = keyof typeof PLAN_LAUNCH_FEATURES
+
+/** Funciones que se venden hoy en un plan, sumando las lanzadas que se indiquen. */
+export function getPlanFeatures(plan: PlanType, launched: Partial<Record<LaunchFeature, boolean>> = {}): string[] {
+  const extra = (Object.keys(PLAN_LAUNCH_FEATURES) as LaunchFeature[])
+    .filter(key => launched[key] && PLAN_LAUNCH_FEATURES[key].plan === plan)
+    .map(key => PLAN_LAUNCH_FEATURES[key].text)
+  return [...PLAN_FEATURES[plan].features, ...extra]
+}
+
+/**
  * Convierte cualquier fecha que venga de Firestore a Date (o null).
  * Los timestamps anidados (p. ej. `subscription.currentPeriodEnd`) llegan como
  * Timestamp de Firestore y `new Date(timestamp)` da "Invalid Date". Acepta:

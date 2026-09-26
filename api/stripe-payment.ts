@@ -5,7 +5,7 @@ import Stripe from 'stripe'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
 import { getPaymentSecrets } from './_shared/paymentSecrets.js'
 import {
-  loadPayableOrder, saveCheckout, checkIpRateLimit, checkStoreRateLimit, bumpCheckoutAttempts, getExpectedPayment,
+  loadPayableOrder, saveCheckout, checkIpRateLimit, checkStoreRateLimit, bumpCheckoutAttempts, getExpectedPayment, failBody,
   markOrderPaid, type OrderDoc,
 } from './_shared/orderTotal.js'
 
@@ -104,7 +104,7 @@ async function handleCreateIntent(req: VercelRequest, res: VercelResponse) {
   // Pedido existente, pendiente, de Stripe, con total verificado en el servidor
   const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'stripe')
   if (!payable.ok) {
-    return res.status(payable.status).json({ error: payable.error, code: payable.code })
+    return res.status(payable.status).json(failBody(payable))
   }
   const { pricing, checkout } = payable
   const amount = toSmallestUnit(pricing.total, pricing.currency)

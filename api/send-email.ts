@@ -7,6 +7,7 @@ import { isAdminToken } from './_shared/admin.js'
 import { checkRateLimit } from './_shared/orderTotal.js'
 import { shouldDowngradeExpiredTrial, LIVE_SUBSCRIPTION_STATUSES, type StoreCompData } from './_shared/plan.js'
 import { checkAllWhatsappTokens } from './_shared/whatsappTokenHealth.js'
+import { sweepExpiredHolds } from './_shared/reservations.js'
 
 let db: Firestore
 
@@ -273,6 +274,19 @@ async function runWhatsappTokenCheck() {
   }
 }
 
+// ── Cron: reservas de stock/cupón vencidas ───────────────────────────
+
+// Las reservas vencidas ya cuentan como libres en cada transacción; esto solo
+// borra las entradas/docs que nadie volvió a tocar (ver _shared/reservations.ts).
+async function runReservationSweep() {
+  try {
+    return await sweepExpiredHolds(getDb())
+  } catch (err) {
+    console.error('[cron] reservation sweep error:', err)
+    return null
+  }
+}
+
 // ── Cron: scan stores and send trial reminder/expired emails ─────────
 
 async function handleCron(req: VercelRequest, res: VercelResponse) {
@@ -297,7 +311,8 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
       console.error('[cron] trial markers backfill error:', err)
     }
     const whatsappTokens = await runWhatsappTokenCheck()
-    return res.status(200).json({ ok: true, skipped: true, trialMarkers, whatsappTokens })
+    const reservationHolds = await runReservationSweep()
+    return res.status(200).json({ ok: true, skipped: true, trialMarkers, whatsappTokens, reservationHolds })
   }
 
   const resend = new Resend(apiKey)
@@ -411,7 +426,10 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
   // 5. Tokens de WhatsApp de ShopiChat
   const whatsappTokens = await runWhatsappTokenCheck()
 
-  return res.status(200).json({ ok: true, remindersSent, expiredSent, downgraded, trialMarkers, whatsappTokens })
+  // 6. Reservas de stock/cupón vencidas
+  const reservationHolds = await runReservationSweep()
+
+  return res.status(200).json({ ok: true, remindersSent, expiredSent, downgraded, trialMarkers, whatsappTokens, reservationHolds })
 }
 
 // ── Main handler ─────────────────────────────────────────────────────

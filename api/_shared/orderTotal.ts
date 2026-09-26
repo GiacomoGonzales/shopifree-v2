@@ -25,12 +25,17 @@
  *  - markOrderPaid/Failed/Refunded aplican solo transiciones válidas:
  *    pending|failed → paid, pending → failed, paid → refunded. Un webhook
  *    viejo nunca pasa un pedido pagado a fallido.
+ *  - Reservas: loadPayableOrder() reserva stock y uso del cupón por 30 min
+ *    (reservations.ts reserveOrder) y rechaza con OUT_OF_STOCK /
+ *    coupon_max_uses si no alcanza. markOrderPaid convierte la reserva en el
+ *    descuento/uso definitivo y la libera; markOrderFailed/Refunded la liberan.
  */
 
 import type { Firestore, DocumentReference } from 'firebase-admin/firestore'
 import { FieldValue } from 'firebase-admin/firestore'
 import { createHash } from 'crypto'
 import { decrementOrderStockAdmin, restoreOrderStockAdmin } from './order-stock.js'
+import { reserveOrder, releaseOrderReservation, type OutOfStockItem } from './reservations.js'
 import { resolveShippingCost } from '../../src/lib/shipping.js'
 import { getDisplayPrice } from '../../src/lib/variants.js'
 import { volumeUnitPrice } from '../../src/lib/volumePricing.js'
@@ -129,7 +134,12 @@ export interface OrderPricing {
   coupon?: { id: string; code: string }
 }
 
-export type Fail = { ok: false; status: number; error: string; code: string }
+export type Fail = { ok: false; status: number; error: string; code: string; item?: OutOfStockItem }
+
+/** Cuerpo JSON de error para los endpoints que crean el cobro (incluye el ítem sin stock). */
+export function failBody(f: Fail): { error: string; code: string; item?: OutOfStockItem } {
+  return f.item ? { error: f.error, code: f.code, item: f.item } : { error: f.error, code: f.code }
+}
 const fail = (status: number, code: string, error: string): Fail => ({ ok: false, status, code, error })
 
 function toDateSafe(v: unknown): Date | null {
@@ -295,7 +305,10 @@ export async function priceOrder(
       const available = availableStock(product, item)
       if (available !== null && available < qty) {
         // Mismo formato de error que el checkout (CheckoutDrawer lo traduce)
-        return fail(409, 'stock_insufficient', `stockInsufficient:${product.name || item.productName}:${Math.max(0, available)}`)
+        return {
+          ...fail(409, 'OUT_OF_STOCK', `stockInsufficient:${product.name || item.productName}:${Math.max(0, available)}`),
+          item: { productId: item.productId!, productName: product.name || item.productName || '', available: Math.max(0, available), requested: qty },
+        }
       }
     }
   }
@@ -446,6 +459,19 @@ export async function loadPayableOrder(
     return fail(409, 'amount_mismatch', 'Los precios cambiaron. Actualiza la página y vuelve a intentar.')
   }
 
+  // Reserva atómica de stock + uso del cupón (30 min). Descuenta las reservas
+  // vigentes de otros pedidos: si no alcanza, no se crea el cobro.
+  // Si la transacción de reserva FALLA (contención en un producto muy pedido,
+  // un dato legacy inesperado, Firestore caído) no se bloquea la venta: se
+  // sigue sin reserva, como antes (el stock ya se validó arriba y al pagar se
+  // descuenta clampado + stockShortage). Solo un rechazo explícito corta.
+  try {
+    const reserved = await reserveOrder(db, storeId, orderId, priced.pricing.coupon?.id || null)
+    if (!reserved.ok) return reserved
+  } catch (err) {
+    console.error('[orderTotal] reserveOrder failed, continuing without reservation', { storeId, orderId, err })
+  }
+
   const checkout = await getCheckout(db, storeId, orderId)
   return { ok: true, order, orderRef, pricing: priced.pricing, checkout }
 }
@@ -552,7 +578,8 @@ type PaidResult = 'paid' | 'already_paid' | 'not_found' | 'refunded'
 /**
  * pending|failed → paid (idempotente). Incrementa el uso del cupón una sola
  * vez (flag couponCounted) en la misma transacción, marca faltantes de stock
- * y aplica el stock (idempotente vía stockDecremented).
+ * y aplica el stock (idempotente vía stockDecremented). Recién después libera
+ * la reserva (mientras tanto el pedido cuenta doble: conservador).
  */
 export async function markOrderPaid(
   db: Firestore,
@@ -618,6 +645,8 @@ export async function markOrderPaid(
     } catch (err) {
       console.error('[orderTotal] stock decrement failed:', err)
     }
+    // La reserva ya se convirtió en descuento/uso definitivo: liberarla
+    await releaseSafe(db, storeId, orderId)
   }
   return result
 }
@@ -645,7 +674,16 @@ async function flagStockShortage(db: Firestore, storeId: string, orderId: string
   }
 }
 
-/** pending → failed. Nunca toca un pedido pagado/reembolsado. */
+/** Libera la reserva del pedido sin romper el flujo si falla (vence sola a los 30 min). */
+async function releaseSafe(db: Firestore, storeId: string, orderId: string): Promise<void> {
+  try {
+    await releaseOrderReservation(db, storeId, orderId)
+  } catch (err) {
+    console.error('[orderTotal] release reservation failed:', err)
+  }
+}
+
+/** pending → failed (y libera la reserva). Nunca toca un pedido pagado/reembolsado. */
 export async function markOrderFailed(
   db: Firestore,
   storeId: string,
@@ -653,7 +691,7 @@ export async function markOrderFailed(
   fields: { paymentId?: string; paymentMethod?: Gateway } = {},
 ): Promise<boolean> {
   const orderRef = db.collection('stores').doc(storeId).collection('orders').doc(orderId)
-  return db.runTransaction(async (tx) => {
+  const changed = await db.runTransaction(async (tx) => {
     const snap = await tx.get(orderRef)
     if (!snap.exists) return false
     const order = snap.data() as OrderDoc
@@ -664,6 +702,10 @@ export async function markOrderFailed(
     tx.update(orderRef, update)
     return true
   })
+  // Un reintento vuelve a reservar (loadPayableOrder); si el webhook después lo
+  // paga igual (failed → paid), el descuento clampa y se marca stockShortage.
+  if (changed) await releaseSafe(db, storeId, orderId)
+  return changed
 }
 
 /** paid → refunded (y devuelve el stock, idempotente). */
@@ -683,6 +725,7 @@ export async function markOrderRefunded(db: Firestore, storeId: string, orderId:
     } catch (err) {
       console.error('[orderTotal] stock restore failed:', err)
     }
+    await releaseSafe(db, storeId, orderId)
   }
   return changed
 }

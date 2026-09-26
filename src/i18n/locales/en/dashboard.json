@@ -207,6 +207,8 @@
     }
   },
   "orders": {
+    "stockShortageToast": "Not enough stock for: {{items}}. The order was confirmed anyway.",
+    "stockShortageTitle": "This order didn't have enough stock",
     "title": "Orders",
     "order": "order",
     "orders": "orders",
@@ -1061,7 +1063,8 @@
         "Unlimited products",
         "Your brand, without Shopifree",
         "Android and iPhone app for your store",
-        "Priority support"
+        "Priority support",
+        "ShopiChat: your WhatsApp inbox with AI and order updates"
       ]
     },
     "comingSoonList": {
@@ -1849,7 +1852,35 @@
       "comingSoonTitle": "Coming soon",
       "comingSoonBody": "We're finishing the WhatsApp connection. You'll be able to turn it on from here very soon.",
       "desktopTitle": "Connect your WhatsApp from a computer",
-      "desktopBody": "Open shopifree.app on your computer to connect the number. Then you can reply from the app."
+      "desktopBody": "Open shopifree.app on your computer to connect the number. Then you can reply from the app.",
+      "guide": {
+        "needTitle": "What you need",
+        "needFacebook": "A Facebook account (you use it to log in to Meta).",
+        "needApp": "The WhatsApp Business app on your phone, with your store number.",
+        "needAppLink": "Using regular WhatsApp? Switch to WhatsApp Business without losing your chats",
+        "needPlan": "The Shopifree Business plan.",
+        "stepsTitle": "How to connect",
+        "step1": "Log in with Facebook in the Meta window.",
+        "step2": "Choose to connect the WhatsApp Business app you already use.",
+        "step3": "Scan the QR code with your phone from WhatsApp Business.",
+        "costTitle": "What it costs",
+        "costBody": "Replying within 24 hours of the customer's last message is free. Templates (to write after 24 hours, and automatic order updates) are charged by Meta to the card on your WhatsApp Business account.",
+        "faqTitle": "Frequently asked questions",
+        "faq": [
+          {
+            "q": "Can I keep using WhatsApp on my phone?",
+            "a": "Yes. You keep using the WhatsApp Business app as usual: messages show up on your phone and in Shopifree at the same time."
+          },
+          {
+            "q": "Will I lose my chats?",
+            "a": "No. Your chats stay in the app on your phone. ShopiChat imports your contacts and shows conversations from the moment you connect."
+          },
+          {
+            "q": "Can I disconnect it?",
+            "a": "Yes, anytime, from the ShopiChat settings. WhatsApp keeps working on your phone and saved conversations are not deleted."
+          }
+        ]
+      }
     },
     "reconnect": {
       "expiringTitle": "Your WhatsApp connection expires on {{date}}",

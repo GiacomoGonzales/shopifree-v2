@@ -437,12 +437,43 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
 
     const { id: orderId, orderNumber } = await orderService.create(store.id, orderData)
 
-    // Pagos online: el uso del cupón lo suma el SERVIDOR cuando el pago se
-    // confirma (api/_shared/orderTotal.ts markOrderPaid), y el monto/descuento
-    // se recalcula allá — el descuento de acá es solo para mostrar.
-    // WhatsApp/transferencia: se mantiene el comportamiento anterior.
-    if (appliedCoupon && (paymentMethod === 'whatsapp' || paymentMethod === 'transfer')) {
-      couponService.incrementUses(store.id, appliedCoupon.id).catch(() => {})
+    // Pagos online: el servidor reserva stock + uso del cupón al crear el cobro
+    // y los confirma cuando se paga (api/_shared/reservations.ts); el
+    // monto/descuento se recalcula allá — el descuento de acá es solo para mostrar.
+    // WhatsApp/transferencia: el servidor cuenta el uso del cupón ahora (el
+    // comprador no puede escribir cupones) y marca faltante de stock para el
+    // comerciante. Si el cupón ya no tenía usos, el servidor cancela este
+    // pedido y acá se avisa para reintentar sin cupón.
+    if (paymentMethod === 'whatsapp' || paymentMethod === 'transfer') {
+      let rejected: string | null = null
+      // Tope de espera: si el servidor tarda (cold start, Firestore lento) el
+      // pedido sigue igual; no se deja al comprador esperando.
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 8000)
+      try {
+        const res = await fetch(apiUrl('/api/order-reservation'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'manual-order', storeId: store.id, orderId }),
+          signal: ctrl.signal,
+        })
+        if (res.status === 409) {
+          const json = await res.json().catch(() => ({})) as { code?: string }
+          if (json.code === 'coupon_max_uses' || json.code === 'coupon_invalid') rejected = json.code
+        }
+      } catch {
+        // Red caída / timeout: el pedido sigue (el comerciante lo confirma igual)
+      } finally {
+        clearTimeout(timer)
+      }
+      if (rejected) {
+        setAppliedCoupon(null)
+        setCouponError('couponInvalid')
+        const en = store.language === 'en'
+        throw new Error(rejected === 'coupon_max_uses'
+          ? (en ? 'This coupon has reached its usage limit. It was removed, please try again.' : 'El cupón ya alcanzó su límite de usos. Lo quitamos del pedido, vuelve a intentarlo.')
+          : (en ? 'This coupon is no longer valid. It was removed, please try again.' : 'El cupón ya no es válido. Lo quitamos del pedido, vuelve a intentarlo.'))
+      }
     }
 
     // Build the order object from the data we have (no need to fetch)
@@ -485,7 +516,7 @@ export function useCheckout({ store, items, totalPrice, onOrderComplete }: UseCh
     }
 
     return createdOrder
-  }, [store.id, store.currency, data, totalPrice, discountAmount, appliedCoupon, createOrderItems])
+  }, [store.id, store.currency, store.language, data, totalPrice, discountAmount, appliedCoupon, createOrderItems])
 
   // WhatsApp message translations
   const getMessageLabels = useCallback(() => {

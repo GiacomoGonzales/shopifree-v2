@@ -137,7 +137,8 @@
         "unlimitedProducts": "Productos sin límite",
         "noBranding": "Tu marca, sin Shopifree",
         "ownApp": "App Android y iPhone de tu tienda",
-        "prioritySupport": "Soporte prioritario"
+        "prioritySupport": "Soporte prioritario",
+        "shopichat": "ShopiChat: tu WhatsApp con IA y avisos de pedidos"
       }
     }
   },
@@ -153,6 +154,80 @@
     "step3": "Tus clientes la descargan y compran al instante",
     "cta": "Quiero mi app",
     "badge": "Plan Business"
+  },
+  "shopichat": {
+    "badge": "Nuevo · Plan Business",
+    "title": "Tu WhatsApp de ventas, ahora dentro de Shopifree",
+    "subtitle": "ShopiChat reúne los chats de tu tienda con tus pedidos y tus productos. Respondes más rápido, vendes desde la conversación y dejas que la IA te ayude.",
+    "benefits": [
+      {
+        "title": "Todos tus chats en un solo lugar",
+        "description": "Responde desde la computadora o el celular y sigue usando la app WhatsApp Business como siempre."
+      },
+      {
+        "title": "El perfil de cada cliente a la vista",
+        "description": "Sus pedidos, lo que gastó, lo que más compra y sus direcciones, al lado de la conversación."
+      },
+      {
+        "title": "Vende desde el chat",
+        "description": "Envía tarjetas de productos, cupones y links de pago, y crea el pedido sin salir de la conversación."
+      },
+      {
+        "title": "Avisos automáticos de pedidos",
+        "description": "Tus clientes reciben un WhatsApp cuando su pedido se confirma, sale en camino o está listo."
+      },
+      {
+        "title": "Asistente con IA",
+        "description": "Copiloto que te sugiere respuestas o piloto automático que atiende solo. Usa la IA incluida o conecta la tuya."
+      }
+    ],
+    "cta": "Probar ShopiChat",
+    "note": "Incluido en el plan Business. Solo necesitas tu cuenta de Facebook y la app WhatsApp Business.",
+    "mockup": {
+      "open": "Abiertas",
+      "pending": "Pendientes",
+      "done": "Completadas",
+      "search": "Buscar chat",
+      "chats": [
+        {
+          "name": "María T.",
+          "preview": "¿Tienen la talla M?",
+          "time": "10:42"
+        },
+        {
+          "name": "Lucía R.",
+          "preview": "¡Gracias! Ya pagué 🙌",
+          "time": "10:15"
+        },
+        {
+          "name": "Carlos P.",
+          "preview": "¿Hacen envíos a Lima?",
+          "time": "09:58"
+        },
+        {
+          "name": "Ana G.",
+          "preview": "Pedido #1038 entregado",
+          "time": "Ayer"
+        }
+      ],
+      "online": "en línea",
+      "msgIn": "Hola! ¿Tienen el vestido lino en talla M? 😊",
+      "msgOut": "¡Hola María! Sí, nos queda en M. Te paso la foto y el precio:",
+      "productName": "Vestido lino",
+      "productPrice": "$ 39.00",
+      "productLink": "Ver en la tienda",
+      "payLink": "Paga aquí: shopifree.app/pay/1043",
+      "aiLabel": "Sugerencia IA",
+      "aiText": "¿Te lo envío a la misma dirección de tu último pedido?",
+      "composer": "Escribe un mensaje",
+      "customer": "Cliente",
+      "orders": "Pedidos",
+      "spent": "Total gastado",
+      "lastOrder": "Último pedido",
+      "delivered": "Entregado",
+      "notifTitle": "Aviso automático",
+      "notifBody": "Tu pedido #1043 está en camino 🚚"
+    }
   },
   "demoStores": {
     "title": "Tiendas creadas con Shopifree",

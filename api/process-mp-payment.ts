@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
 import { getPaymentSecrets } from './_shared/paymentSecrets.js'
 import {
-  loadPayableOrder, saveCheckout, checkIpRateLimit, checkStoreRateLimit, bumpCheckoutAttempts, getExpectedPayment,
+  loadPayableOrder, saveCheckout, checkIpRateLimit, checkStoreRateLimit, bumpCheckoutAttempts, getExpectedPayment, failBody,
   mpPaymentMismatch, markOrderPaid, markOrderFailed, type OrderDoc,
 } from './_shared/orderTotal.js'
 
@@ -125,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Monto calculado en el servidor (pedido existente, pendiente, total verificado)
     const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'mercadopago')
     if (!payable.ok) {
-      return res.status(payable.status).json({ error: payable.error, code: payable.code, status: 'rejected', status_detail: payable.code })
+      return res.status(payable.status).json({ ...failBody(payable), status: 'rejected', status_detail: payable.code })
     }
     const { pricing, order } = payable
 

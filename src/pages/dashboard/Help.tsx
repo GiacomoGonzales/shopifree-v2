@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../../hooks/useLanguage'
+import { useAuth } from '../../hooks/useAuth'
+import { canSeeShopiChat } from '../../lib/shopichatAccess'
 
 /**
  * Help — searchable FAQ page for merchants.
@@ -120,7 +122,7 @@ const FAQS_ES: Faq[] = [
     q: '¿Hay forma de subir muchos productos rápido?',
     a: (
       <>
-        Sí: en <Link to="/es/dashboard/products" className="text-[#2d6cb5] underline">Productos</Link> arriba a la derecha hay un botón <strong>Importar</strong> que acepta CSV. También puedes duplicar productos desde el listado para crear variaciones rápidas.
+        Sí: en <Link to="/es/dashboard/products" className="text-[#2d6cb5] underline">Productos</Link> arriba a la derecha hay un botón <strong>Importar</strong> que acepta CSV o Excel (.csv, .xlsx, .xls), con una plantilla descargable para completar. Si lo que quieres son tallas o colores del mismo producto, no hace falta crear uno por cada uno: usa las <strong>Variantes</strong> dentro del producto.
       </>
     ),
   },
@@ -135,14 +137,43 @@ const FAQS_ES: Faq[] = [
   },
 ]
 
+// ShopiChat: solo se muestra a quien ve la seccion (admins, o todos con
+// VITE_SHOPICHAT_PUBLIC=true), igual que el menu.
+const SHOPICHAT_FAQ_ES: Faq = {
+  id: 'shopichat',
+  q: '¿Cómo conecto mi WhatsApp a ShopiChat y cuánto cuesta?',
+  a: (
+    <>
+      ShopiChat es el WhatsApp de tu tienda dentro de Shopifree (plan <strong>Business</strong>): respondes desde la computadora o el celular, con los pedidos de cada cliente a la vista, y sigues usando la app WhatsApp Business en tu teléfono.
+      <br /><br />
+      Necesitas una cuenta de Facebook y la app <strong>WhatsApp Business</strong> en tu celular con el número de la tienda (si usas el WhatsApp normal, puedes <a href="https://faq.whatsapp.com/663543925287107" target="_blank" rel="noopener noreferrer" className="text-[#2d6cb5] underline">pasarte a WhatsApp Business sin perder tus chats</a>). Desde la computadora:
+      <ol className="list-decimal ml-5 mt-1 space-y-1">
+        <li>Entra a <Link to="/es/dashboard/shopichat" className="text-[#2d6cb5] underline">ShopiChat</Link> y toca <strong>Conectar mi WhatsApp</strong></li>
+        <li>Inicia sesión con Facebook en la ventana de Meta</li>
+        <li>Elige conectar la app WhatsApp Business que ya usas</li>
+        <li>Escanea el código QR con tu celular desde WhatsApp Business</li>
+      </ol>
+      <br />
+      Costos: responder dentro de las 24 horas desde el último mensaje del cliente es gratis. Las plantillas (para escribir pasadas las 24 horas y los avisos automáticos de pedidos) las cobra Meta a la tarjeta de tu cuenta de WhatsApp Business.
+      <br /><br />
+      En la configuración de ShopiChat (ícono de engranaje) están los <strong>avisos automáticos de pedidos</strong>, el <strong>asistente IA</strong> (copiloto o piloto automático, con la IA incluida o la tuya) y la opción para desconectar el número cuando quieras.
+    </>
+  ),
+}
+
 const FAQS_EN: Faq[] = FAQS_ES.map(f => ({ ...f })) // Placeholder — uses Spanish text in English locale. Can be translated later.
 
 export default function Help() {
   const { i18n } = useTranslation('dashboard')
   const { localePath } = useLanguage()
+  const { firebaseUser } = useAuth()
   const lang = i18n.language?.startsWith('en') ? 'en' : 'es'
+  const showShopiChat = canSeeShopiChat(firebaseUser?.email)
 
-  const allFaqs = lang === 'en' ? FAQS_EN : FAQS_ES
+  const allFaqs = useMemo(() => {
+    const base = lang === 'en' ? FAQS_EN : FAQS_ES
+    return showShopiChat ? [...base, SHOPICHAT_FAQ_ES] : base
+  }, [lang, showShopiChat])
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {

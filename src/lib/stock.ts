@@ -1,6 +1,7 @@
 import { collection, addDoc } from 'firebase/firestore'
-import { db, productService } from './firebase'
+import { db, auth, productService } from './firebase'
 import type { Order } from '../types'
+import { apiUrl } from '../utils/apiBase'
 
 /** The subset of an order the stock helpers need — a full Order satisfies it,
  *  and callers that only just created an order can pass `{ id, items }`. */
@@ -159,4 +160,60 @@ export async function decrementOrderStock(storeId: string, order: OrderStockSour
       .catch(err => console.error('[stock] movement log (sale) failed', err))
   }
   return combo.length > 0 || variant.length > 0 || simple.length > 0
+}
+
+/**
+ * Líneas del pedido cuyo stock físico actual no alcanza (mismo orden de
+ * prioridad que el descuento: combinación → opción legacy → producto). Solo
+ * lectura: el dashboard la usa para AVISAR (no bloquear) al confirmar un
+ * pedido manual que dejaría el stock en 0 antes de tiempo.
+ */
+export async function findStockShortages(storeId: string, order: OrderStockSource): Promise<string[]> {
+  const need = new Map<string, { label: string; available: number; qty: number }>()
+  for (const item of order.items || []) {
+    if (!item.productId || !item.quantity) continue
+    const product = await productService.get(storeId, item.productId)
+    if (!product || !product.trackStock) continue
+    const buckets: { key: string; label: string; available: number }[] = []
+    const combo = item.combinationId ? product.combinations?.find(c => c.id === item.combinationId) : undefined
+    if (combo) {
+      buckets.push({ key: `c:${combo.id}`, label: `${item.productName} (${Object.values(combo.options || {}).join(' / ')})`, available: combo.available === false ? 0 : combo.stock || 0 })
+    } else if (item.selectedVariations?.length && product.variations?.length) {
+      for (const sv of item.selectedVariations) {
+        const option = product.variations.find(v => v.name === sv.name)?.options.find(o => o.value === sv.value)
+        if (option && typeof option.stock === 'number') {
+          buckets.push({ key: `o:${sv.name}=${sv.value}`, label: `${item.productName} (${sv.value})`, available: option.available === false ? 0 : option.stock })
+        }
+      }
+    }
+    if (!buckets.length && typeof product.stock === 'number') {
+      buckets.push({ key: 'p', label: item.productName, available: product.stock })
+    }
+    for (const b of buckets) {
+      const k = `${item.productId}|${b.key}`
+      const prev = need.get(k)
+      need.set(k, { label: b.label, available: Math.max(0, b.available), qty: (prev?.qty || 0) + item.quantity })
+    }
+  }
+  return [...need.values()].filter(n => n.available < n.qty).map(n => `${n.label} (${n.available}/${n.qty})`)
+}
+
+/**
+ * Al cancelar un pedido desde el dashboard: pide al servidor que libere la
+ * reserva de stock/cupón de un pago online pendiente y devuelva el uso del
+ * cupón si ya se había contado (api/order-reservation.ts). Best-effort: si
+ * falla, la reserva vence sola a los 30 min.
+ */
+export async function releaseOrderReservation(storeId: string, orderId: string): Promise<void> {
+  try {
+    const token = await auth.currentUser?.getIdToken()
+    if (!token) return
+    await fetch(apiUrl('/api/order-reservation'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'release', storeId, orderId }),
+    })
+  } catch (err) {
+    console.error('[stock] release reservation failed', err)
+  }
 }
