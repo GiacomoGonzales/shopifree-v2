@@ -18,10 +18,10 @@ const COMPANY_NAME = 'Shopifree'
 /** Titular legal de la plataforma (confirmado por el dueño, 26/09/2026). */
 const LEGAL_ENTITY = 'Shopifree Group LLC'
 const CONTACT_EMAIL = 'admin@shopifree.app'
-const JURISDICTION = 'Lima, Perú'
-const JURISDICTION_EN = 'Lima, Peru'
-const GOVERNING_LAW = 'las leyes de la República del Perú'
-const GOVERNING_LAW_EN = 'the laws of the Republic of Peru'
+const JURISDICTION = 'el estado de Wyoming, Estados Unidos'
+const JURISDICTION_EN = 'the State of Wyoming, United States'
+const GOVERNING_LAW = 'las leyes del estado de Wyoming, Estados Unidos (Shopifree Group LLC está constituida en Wyoming)'
+const GOVERNING_LAW_EN = 'the laws of the State of Wyoming, United States (Shopifree Group LLC is organized in Wyoming)'
 const LAST_UPDATED = { es: '26 de septiembre de 2026', en: 'September 26, 2026' }
 const TRIAL_DAYS = 7
 
@@ -155,7 +155,7 @@ const CONTENT: Record<'es' | 'en', { title: string; updated: string; back: strin
       {
         title: '11. Ley aplicable y jurisdicción',
         blocks: [
-          `Estos términos se rigen por ${GOVERNING_LAW}. Cualquier controversia se someterá a los jueces y tribunales de ${JURISDICTION}, sin perjuicio de los derechos que la ley de protección al consumidor de tu país te reconozca y que no puedan renunciarse.`,
+          `Estos términos se rigen por ${GOVERNING_LAW}. Cualquier controversia se someterá a los tribunales estatales o federales con sede en ${JURISDICTION}, sin perjuicio de los derechos que la ley de protección al consumidor de tu país te reconozca y que no puedan renunciarse.`,
         ],
       },
       {
@@ -292,7 +292,7 @@ const CONTENT: Record<'es' | 'en', { title: string; updated: string; back: strin
       {
         title: '11. Governing law and jurisdiction',
         blocks: [
-          `These terms are governed by ${GOVERNING_LAW_EN}. Any dispute will be submitted to the courts of ${JURISDICTION_EN}, without prejudice to any non-waivable rights granted to you by the consumer protection law of your country.`,
+          `These terms are governed by ${GOVERNING_LAW_EN}. Any dispute will be submitted to the state or federal courts located in ${JURISDICTION_EN}, without prejudice to any non-waivable rights granted to you by the consumer protection law of your country.`,
         ],
       },
       {
