@@ -15,12 +15,14 @@ import Seo from '../components/seo/Seo'
  * Al cambiar el texto, actualizar LAST_UPDATED.
  */
 const COMPANY_NAME = 'Shopifree'
+/** Titular legal de la plataforma (confirmado por el dueño, 26/09/2026). */
+const LEGAL_ENTITY = 'Shopifree Group LLC'
 const CONTACT_EMAIL = 'admin@shopifree.app'
 const JURISDICTION = 'Lima, Perú'
 const JURISDICTION_EN = 'Lima, Peru'
 const GOVERNING_LAW = 'las leyes de la República del Perú'
 const GOVERNING_LAW_EN = 'the laws of the Republic of Peru'
-const LAST_UPDATED = { es: '25 de septiembre de 2026', en: 'September 25, 2026' }
+const LAST_UPDATED = { es: '26 de septiembre de 2026', en: 'September 26, 2026' }
 const TRIAL_DAYS = 7
 
 /** Un bloque es un párrafo (string) o una lista (string[]). */
@@ -32,7 +34,7 @@ const CONTENT: Record<'es' | 'en', { title: string; updated: string; back: strin
     title: 'Términos y Condiciones',
     updated: `Última actualización: ${LAST_UPDATED.es}`,
     back: 'Volver al inicio',
-    intro: `Estos Términos y Condiciones regulan el uso de ${COMPANY_NAME} (la "plataforma" o el "servicio"), disponible en shopifree.app, en sus subdominios y en sus aplicaciones móviles. Al crear una cuenta o usar el servicio aceptas estos términos. Si no estás de acuerdo, no uses la plataforma.`,
+    intro: `Estos Términos y Condiciones regulan el uso de ${COMPANY_NAME} (la "plataforma" o el "servicio"), disponible en shopifree.app, en sus subdominios y en sus aplicaciones móviles, operada por ${LEGAL_ENTITY} ("nosotros"). Al crear una cuenta o usar el servicio aceptas estos términos. Si no estás de acuerdo, no uses la plataforma.`,
     sections: [
       {
         title: '1. El servicio',
@@ -169,7 +171,7 @@ const CONTENT: Record<'es' | 'en', { title: string; updated: string; back: strin
     title: 'Terms and Conditions',
     updated: `Last updated: ${LAST_UPDATED.en}`,
     back: 'Back to home',
-    intro: `These Terms and Conditions govern the use of ${COMPANY_NAME} (the "platform" or the "service"), available at shopifree.app, its subdomains and its mobile apps. By creating an account or using the service you accept these terms. If you do not agree, do not use the platform.`,
+    intro: `These Terms and Conditions govern the use of ${COMPANY_NAME} (the "platform" or the "service"), available at shopifree.app, its subdomains and its mobile apps, operated by ${LEGAL_ENTITY} ("we", "us"). By creating an account or using the service you accept these terms. If you do not agree, do not use the platform.`,
     sections: [
       {
         title: '1. The service',
@@ -365,7 +367,7 @@ export default function Terms() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-100 text-center">
-          <p className="text-sm text-gray-400">&copy; 2026 {COMPANY_NAME}. {c.rights}</p>
+          <p className="text-sm text-gray-400">&copy; 2026 {LEGAL_ENTITY}. {c.rights}</p>
         </div>
       </div>
     </div>

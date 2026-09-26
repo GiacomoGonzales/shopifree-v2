@@ -43,7 +43,10 @@ export default function Privacy() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-[#1e3a5f] mb-2">Politica de Privacidad</h1>
-        <p className="text-sm text-gray-400 mb-8">Ultima actualizacion: 25 de septiembre de 2026</p>
+        <p className="text-sm text-gray-400 mb-4">Ultima actualizacion: 26 de septiembre de 2026</p>
+        <p className="text-[15px] text-gray-700 mb-8">
+          Shopifree es operada por Shopifree Group LLC ("nosotros"), responsable del tratamiento de los datos descritos en esta politica.
+        </p>
 
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700 text-[15px] leading-relaxed">
           <section>
@@ -211,7 +214,7 @@ export default function Privacy() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-100 text-center">
-          <p className="text-sm text-gray-400">&copy; 2026 Shopifree. Todos los derechos reservados.</p>
+          <p className="text-sm text-gray-400">&copy; 2026 Shopifree Group LLC. Todos los derechos reservados.</p>
         </div>
       </div>
     </div>
