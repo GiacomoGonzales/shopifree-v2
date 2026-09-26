@@ -137,7 +137,8 @@
         "unlimitedProducts": "Unlimited products",
         "noBranding": "Your brand, no Shopifree",
         "ownApp": "Your store's Android & iPhone app",
-        "prioritySupport": "Priority support"
+        "prioritySupport": "Priority support",
+        "shopichat": "ShopiChat: your WhatsApp inbox with AI and order updates"
       }
     }
   },
@@ -153,6 +154,80 @@
     "step3": "Your customers download it and buy instantly",
     "cta": "I want my app",
     "badge": "Business Plan"
+  },
+  "shopichat": {
+    "badge": "New · Business plan",
+    "title": "Your sales WhatsApp, now inside Shopifree",
+    "subtitle": "ShopiChat brings your store chats together with your orders and products. Reply faster, sell right from the conversation and let AI help you.",
+    "benefits": [
+      {
+        "title": "All your chats in one place",
+        "description": "Reply from your computer or phone and keep using the WhatsApp Business app as usual."
+      },
+      {
+        "title": "Every customer profile at a glance",
+        "description": "Their orders, total spent, favorite products and addresses, right next to the conversation."
+      },
+      {
+        "title": "Sell from the chat",
+        "description": "Send product cards, coupons and payment links, and create the order without leaving the conversation."
+      },
+      {
+        "title": "Automatic order updates",
+        "description": "Customers get a WhatsApp when their order is confirmed, on its way or ready."
+      },
+      {
+        "title": "AI assistant",
+        "description": "A copilot that suggests replies, or an autopilot that answers on its own. Use the included AI or bring your own."
+      }
+    ],
+    "cta": "Try ShopiChat",
+    "note": "Included in the Business plan. All you need is your Facebook account and the WhatsApp Business app.",
+    "mockup": {
+      "open": "Open",
+      "pending": "Pending",
+      "done": "Done",
+      "search": "Search chats",
+      "chats": [
+        {
+          "name": "María T.",
+          "preview": "Do you have size M?",
+          "time": "10:42"
+        },
+        {
+          "name": "Lucía R.",
+          "preview": "Thanks! Just paid 🙌",
+          "time": "10:15"
+        },
+        {
+          "name": "Carlos P.",
+          "preview": "Do you ship to Lima?",
+          "time": "09:58"
+        },
+        {
+          "name": "Ana G.",
+          "preview": "Order #1038 delivered",
+          "time": "Yesterday"
+        }
+      ],
+      "online": "online",
+      "msgIn": "Hi! Do you have the linen dress in size M? 😊",
+      "msgOut": "Hi María! Yes, we have it in M. Here is the photo and price:",
+      "productName": "Linen dress",
+      "productPrice": "$ 39.00",
+      "productLink": "View in store",
+      "payLink": "Pay here: shopifree.app/pay/1043",
+      "aiLabel": "AI suggestion",
+      "aiText": "Shall I ship it to the same address as your last order?",
+      "composer": "Type a message",
+      "customer": "Customer",
+      "orders": "Orders",
+      "spent": "Total spent",
+      "lastOrder": "Last order",
+      "delivered": "Delivered",
+      "notifTitle": "Automatic update",
+      "notifBody": "Your order #1043 is on its way 🚚"
+    }
   },
   "demoStores": {
     "title": "Stores created with Shopifree",

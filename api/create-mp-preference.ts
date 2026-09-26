@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
 import { getPaymentSecrets } from './_shared/paymentSecrets.js'
-import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, amountsMatch, round2 } from './_shared/orderTotal.js'
+import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, amountsMatch, round2, failBody } from './_shared/orderTotal.js'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 
@@ -98,7 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // pendiente y su total coincidir con el recalculado desde los productos.
     const payable = await loadPayableOrder(firestore, storeId, orderId, storeData || {}, 'mercadopago')
     if (!payable.ok) {
-      return res.status(payable.status).json({ error: payable.error, code: payable.code })
+      return res.status(payable.status).json(failBody(payable))
     }
     const { pricing, checkout } = payable
 

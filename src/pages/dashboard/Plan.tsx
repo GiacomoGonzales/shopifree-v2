@@ -14,7 +14,8 @@ import {
   syncStoreSubscription,
   type PlanType
 } from '../../lib/stripe'
-import { toPlanDate } from '../../lib/plans'
+import { toPlanDate, getPlanFeatures } from '../../lib/plans'
+import { SHOPICHAT_PUBLIC } from '../../lib/shopichatAccess'
 
 type BillingCycle = 'monthly' | 'yearly'
 
@@ -501,7 +502,8 @@ admin@shopifree.app
                   </div>
 
                   <ul className="space-y-2 mb-4">
-                    {plan.features.map((feature, index) => (
+                    {/* ShopiChat se suma a Business solo cuando esta lanzado (VITE_SHOPICHAT_PUBLIC) */}
+                    {getPlanFeatures(planId, { shopichat: SHOPICHAT_PUBLIC }).map((feature, index) => (
                       <li key={index} className="flex items-start gap-2 text-xs">
                         <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

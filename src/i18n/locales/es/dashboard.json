@@ -207,6 +207,8 @@
     }
   },
   "orders": {
+    "stockShortageToast": "Stock insuficiente para: {{items}}. El pedido se confirmó igual.",
+    "stockShortageTitle": "Este pedido no tenía stock suficiente",
     "title": "Pedidos",
     "order": "pedido",
     "orders": "pedidos",
@@ -1062,7 +1064,8 @@
         "Productos sin límite",
         "Tu marca, sin Shopifree",
         "App Android y iPhone de tu tienda",
-        "Soporte prioritario"
+        "Soporte prioritario",
+        "ShopiChat: tu WhatsApp con IA y avisos de pedidos"
       ]
     },
     "comingSoonList": {
@@ -1850,7 +1853,35 @@
       "comingSoonTitle": "Próximamente",
       "comingSoonBody": "Estamos terminando la conexión con WhatsApp. Muy pronto podrás activarla desde aquí.",
       "desktopTitle": "Conecta tu WhatsApp desde la computadora",
-      "desktopBody": "Entra a shopifree.app desde tu computadora para conectar el número. Después podrás responder desde la app."
+      "desktopBody": "Entra a shopifree.app desde tu computadora para conectar el número. Después podrás responder desde la app.",
+      "guide": {
+        "needTitle": "Lo que necesitas",
+        "needFacebook": "Una cuenta de Facebook (con ella inicias sesión en Meta).",
+        "needApp": "La app WhatsApp Business en tu celular, con el número de tu tienda.",
+        "needAppLink": "¿Usas el WhatsApp normal? Pásate a WhatsApp Business sin perder tus chats",
+        "needPlan": "El plan Business de Shopifree.",
+        "stepsTitle": "Cómo se conecta",
+        "step1": "Inicia sesión con Facebook en la ventana de Meta.",
+        "step2": "Elige conectar la app WhatsApp Business que ya usas.",
+        "step3": "Escanea el código QR con tu celular desde WhatsApp Business.",
+        "costTitle": "Lo que cuesta",
+        "costBody": "Responder dentro de las 24 horas desde el último mensaje del cliente es gratis. Las plantillas (para escribir pasadas las 24 horas y los avisos automáticos de pedidos) las cobra Meta a la tarjeta de tu cuenta de WhatsApp Business.",
+        "faqTitle": "Preguntas frecuentes",
+        "faq": [
+          {
+            "q": "¿Puedo seguir usando WhatsApp en mi celular?",
+            "a": "Sí. Sigues usando la app WhatsApp Business como siempre: los mensajes se ven en el celular y en Shopifree a la vez."
+          },
+          {
+            "q": "¿Voy a perder mis chats?",
+            "a": "No. Tus chats siguen en la app de tu celular. En ShopiChat se importan tus contactos y verás las conversaciones desde el momento en que conectas."
+          },
+          {
+            "q": "¿Puedo desconectarlo?",
+            "a": "Sí, cuando quieras, desde la configuración de ShopiChat. Tu WhatsApp sigue funcionando en el celular y las conversaciones guardadas no se borran."
+          }
+        ]
+      }
     },
     "reconnect": {
       "expiringTitle": "Tu conexión con WhatsApp vence el {{date}}",

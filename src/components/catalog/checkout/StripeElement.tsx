@@ -13,6 +13,8 @@ interface Props {
   currency: string
   onPaymentComplete: (result: { status: string; paymentId: string }) => void
   onError: (msg: string) => void
+  /** Traduce errores con formato propio (p. ej. 'stockInsufficient:…' de OUT_OF_STOCK) */
+  formatError?: (msg: string) => string
   t: ThemeTranslations
 }
 
@@ -102,7 +104,7 @@ function CheckoutForm({ store, orderId, onPaymentComplete, onError, t }: {
 }
 
 // Outer component — loads Stripe + creates PaymentIntent
-export default function StripeElement({ store, orderId, amount, currency, onPaymentComplete, onError, t }: Props) {
+export default function StripeElement({ store, orderId, amount, currency, onPaymentComplete, onError, formatError, t }: Props) {
   const { theme } = useTheme()
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
@@ -129,7 +131,7 @@ export default function StripeElement({ store, orderId, amount, currency, onPaym
   if (error) {
     return (
       <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: '#fef2f2', color: '#dc2626' }}>
-        {error}
+        {formatError ? formatError(error) : error}
       </div>
     )
   }

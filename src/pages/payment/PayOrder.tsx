@@ -55,7 +55,7 @@ const TEXTS: Record<Lang, Record<string, string>> = {
     unavailable: 'Este pedido no se puede pagar online en este momento. Escríbenos por WhatsApp para coordinar.',
     error: 'No pudimos iniciar el pago. Intenta de nuevo en unos minutos.', secure: 'Pago seguro procesado por {method}',
     redirecting: 'Te estamos llevando a {method}…', pickup: 'Recojo en tienda', delivery: 'Envío a domicilio', coupon: 'Cupón',
-    contact: 'Escribir por WhatsApp',
+    contact: 'Escribir por WhatsApp', outOfStock: '"{item}" ya no tiene stock suficiente. Escríbenos por WhatsApp para coordinar.',
   },
   en: {
     title: 'Pay order', hi: 'Hi {name}, here is your order', pay: 'Pay {amount}', payWith: 'Pay with {method}',
@@ -64,7 +64,7 @@ const TEXTS: Record<Lang, Record<string, string>> = {
     unavailable: "This order can't be paid online right now. Message us on WhatsApp to sort it out.",
     error: "We couldn't start the payment. Please try again in a few minutes.", secure: 'Secure payment processed by {method}',
     redirecting: 'Taking you to {method}…', pickup: 'Store pickup', delivery: 'Home delivery', coupon: 'Coupon',
-    contact: 'Message on WhatsApp',
+    contact: 'Message on WhatsApp', outOfStock: '"{item}" is no longer in stock. Message us on WhatsApp to sort it out.',
   },
   pt: {
     title: 'Pagar pedido', hi: 'Olá {name}, este é o seu pedido', pay: 'Pagar {amount}', payWith: 'Pagar com {method}',
@@ -73,7 +73,7 @@ const TEXTS: Record<Lang, Record<string, string>> = {
     unavailable: 'Este pedido não pode ser pago online agora. Fale conosco pelo WhatsApp.',
     error: 'Não foi possível iniciar o pagamento. Tente novamente em alguns minutos.', secure: 'Pagamento seguro processado por {method}',
     redirecting: 'Levando você para {method}…', pickup: 'Retirada na loja', delivery: 'Entrega em domicílio', coupon: 'Cupom',
-    contact: 'Falar no WhatsApp',
+    contact: 'Falar no WhatsApp', outOfStock: '"{item}" não tem mais estoque suficiente. Fale conosco pelo WhatsApp.',
   },
 }
 
@@ -227,7 +227,12 @@ export default function PayOrder() {
         throw new Error(tx.unavailable)
       }
     } catch (e) {
-      setError(e instanceof Error && e.message ? e.message : tx.error)
+      const msg = e instanceof Error && e.message ? e.message : tx.error
+      // OUT_OF_STOCK del servidor: 'stockInsufficient:{producto}:{disponible}'
+      // (el nombre puede traer ':' → se toma todo entre el primer y el último ':')
+      setError(msg.startsWith('stockInsufficient:')
+        ? tx.outOfStock.replace('{item}', msg.slice('stockInsufficient:'.length, msg.lastIndexOf(':')))
+        : msg)
       setBusy(false)
     }
   }

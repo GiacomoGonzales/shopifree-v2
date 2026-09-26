@@ -70,6 +70,8 @@ service cloud.firestore {
           'stockDecremented', 'couponCounted', 'paidAt', 'paymentId',
           'paymentNote', 'paymentReview', 'stockShortage', 'stockShortageItems',
           'isTest',
+          // Reservas de stock/cupón (api/_shared/reservations.ts): solo servidor.
+          'stockReservedUntil', 'cancelReason',
           // Avisos de WhatsApp: solo los escribe el servidor (functions / api).
           'waNotified', 'waNotifyErrors', 'waReminderDueAt', 'waReminderAttempts'
         ])
@@ -233,8 +235,8 @@ service cloud.firestore {
 
       // Coupons subcollection
       // El comprador anónimo NO puede tocar currentUses: el uso lo suma el
-      // servidor al confirmar el pago (markOrderPaid) o el dueño al confirmar
-      // un pedido manual. Solo el dueño escribe.
+      // servidor al confirmar el pago (markOrderPaid) o, en pedidos WhatsApp/
+      // transferencia, api/order-reservation.ts al crearlos. Solo el dueño escribe.
       match /coupons/{couponId} {
         allow read: if true; // Validate coupons publicly
         allow write: if isStoreOwner(storeId);
@@ -246,6 +248,7 @@ service cloud.firestore {
       //  - private/ai: clave de IA propia del comerciante (api/_shared/aiProviders)
       //  - aiUsage: contador diario de IA (api/ai-text.ts)
       //  - payment_checkouts: montos esperados de cada cobro (orderTotal.ts)
+      //  - reservation_holds: reservas de stock/cupón (reservations.ts)
       match /private/{document=**} {
         allow read, write: if false;
       }
@@ -253,6 +256,9 @@ service cloud.firestore {
         allow read, write: if false;
       }
       match /payment_checkouts/{document=**} {
+        allow read, write: if false;
+      }
+      match /reservation_holds/{document=**} {
         allow read, write: if false;
       }
 

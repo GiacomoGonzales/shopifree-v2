@@ -6,7 +6,7 @@ import { formatModifierNames } from '../../lib/modifiers'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { orderService } from '../../lib/firebase'
-import { restoreOrderStock, decrementOrderStock } from '../../lib/stock'
+import { restoreOrderStock, decrementOrderStock, findStockShortages, releaseOrderReservation } from '../../lib/stock'
 import { markOrdersAsSeen } from '../../hooks/useNewOrdersCount'
 import { useToast } from '../../components/ui/Toast'
 import { getCurrencySymbol } from '../../lib/currency'
@@ -368,6 +368,8 @@ export default function Orders() {
           console.error('Error restoring stock before delete:', err)
         }
       }
+      // Reserva de stock/cupón de un pago online pendiente: liberarla ya
+      if (order && order.paymentStatus !== 'paid') await releaseOrderReservation(store.id, orderId)
       await orderService.delete(store.id, orderId)
       setOrders(prev => prev.filter(o => o.id !== orderId))
       if (selectedOrder?.id === orderId) setSelectedOrder(null)
@@ -390,6 +392,15 @@ export default function Orders() {
   const ensureStockDecremented = async (order: Order): Promise<boolean> => {
     if (!store || order.stockDecremented) return false
     try {
+      // Aviso NO bloqueante: si el stock actual no alcanza, se confirma igual
+      // (el descuento clampa en 0) pero el comerciante se entera.
+      const shortages = await findStockShortages(store.id, order).catch(() => [] as string[])
+      if (shortages.length) {
+        showToast(t('orders.stockShortageToast', {
+          items: shortages.join(', '),
+          defaultValue: 'Stock insuficiente para: {{items}}. El pedido se confirmó igual.',
+        }), 'warning')
+      }
       const did = await decrementOrderStock(store.id, order, { createdBy: store.ownerId })
       if (did) {
         await orderService.update(store.id, order.id, { stockDecremented: true })
@@ -411,6 +422,11 @@ export default function Orders() {
 
       const order = orders.find(o => o.id === orderId)
       let stockFlagPatch: boolean | undefined
+      if (newStatus === 'cancelled' && order && order.paymentStatus !== 'paid') {
+        // Libera en el acto la reserva de stock/cupón de un pago online
+        // pendiente y devuelve el uso del cupón ya contado (servidor).
+        void releaseOrderReservation(store.id, orderId)
+      }
       if (newStatus === 'cancelled' && order?.stockDecremented) {
         // Cancelling returns reserved stock to inventory (idempotent via the
         // flag, which we flip off once restored). Without this, cancelled or
@@ -1376,6 +1392,17 @@ export default function Orders() {
                     Pagado el {formatDate(selectedOrder.paidAt as Date)}
                     {selectedOrder.paymentNote && <span className="ml-1 text-[#A9B6C6]">· {selectedOrder.paymentNote}</span>}
                   </p>
+                )}
+
+                {selectedOrder.stockShortage && selectedOrder.status !== 'cancelled' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p className="text-xs font-medium text-amber-800">
+                      {t('orders.stockShortageTitle', { defaultValue: 'Este pedido no tenía stock suficiente' })}
+                    </p>
+                    {selectedOrder.stockShortageItems?.length ? (
+                      <p className="text-[11px] text-amber-700 mt-0.5">{selectedOrder.stockShortageItems.join(', ')}</p>
+                    ) : null}
+                  </div>
                 )}
 
                 {/* Action buttons — hidden for cancelled */}

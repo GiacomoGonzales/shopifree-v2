@@ -662,6 +662,12 @@ export interface Order {
   // never touched stock (test orders, products without trackStock) leave it
   // unset/false so restore is a no-op for them.
   stockDecremented?: boolean
+  // Reservas (api/_shared/reservations.ts) — solo las escribe el servidor:
+  stockReservedUntil?: Date     // pago online: stock/cupón reservados hasta esta fecha (30 min)
+  stockShortage?: boolean       // el stock disponible no alcanzaba (aviso para el comerciante)
+  stockShortageItems?: string[] // "Producto (disponible/pedido)"
+  couponCounted?: boolean       // el uso del cupón ya se sumó a currentUses
+  cancelReason?: string         // p. ej. 'coupon_max_uses' si el servidor canceló el pedido
 
   // Origen del pedido (para distinguir ventas online vs manuales)
   channel?: 'online' | 'in_store' | 'whatsapp' | 'instagram' | 'other'

@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { paypalFetch, isPayPalSupportedCurrency, getConversionRate, type MerchantCredentials } from '../src/lib/paypal-server.js'
 import { hasPaidEffectivePlan, PLAN_REQUIRED_RESPONSE } from './_shared/plan.js'
 import { getPaymentSecrets } from './_shared/paymentSecrets.js'
-import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, round2, amountsMatch } from './_shared/orderTotal.js'
+import { loadPayableOrder, saveCheckout, checkIpRateLimit, bumpCheckoutAttempts, round2, amountsMatch, failBody } from './_shared/orderTotal.js'
 
 /**
  * Creates a PayPal order using the merchant's own credentials. Called by the
@@ -100,7 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Monto calculado en el servidor (pedido existente, pendiente, total verificado)
     const payable = await loadPayableOrder(db, storeId, orderId, store as Record<string, unknown>, 'paypal')
     if (!payable.ok) {
-      return res.status(payable.status).json({ error: payable.error, code: payable.code })
+      return res.status(payable.status).json(failBody(payable))
     }
     const { pricing } = payable
     const currency = pricing.currency
