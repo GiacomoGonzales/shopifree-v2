@@ -260,6 +260,24 @@ export default function Account() {
           }
         }
 
+        // Datos solo-servidor (ShopiChat: conversaciones, token de WhatsApp,
+        // mapeo del numero, media en R2; clientes, cupos de IA, secretos de
+        // pagos...). Las reglas no dejan que el navegador los borre, asi que
+        // lo hace api/account-delete. Tiene que correr ANTES de borrar el doc
+        // de la tienda (valida la propiedad con stores/{id}.ownerId); si falla
+        // se aborta todo para no dejar datos huerfanos sin forma de borrarlos.
+        {
+          const token = await firebaseUser.getIdToken()
+          const res = await fetch(apiUrl('/api/account-delete'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ action: 'delete-account-data', storeId: store.id }),
+          })
+          if (!res.ok) {
+            throw new Error(`Failed to delete store data (${res.status})`)
+          }
+        }
+
         // Delete all products
         const productsRef = collection(db, 'stores', store.id, 'products')
         const productsSnap = await getDocs(productsRef)

@@ -49,6 +49,7 @@ import {
   fetchProductImage, putObjectToR2, makeThumbnail, webpToJpeg, mediaKeyBase, r2PublicBase, getWaitUntil, type PrivateWa,
 } from './whatsappInbox.js'
 import { MEDIA_PERMITIDOS, MetaError, sendWhatsappText, sendWhatsappMedia, isSafeDocId } from './whatsappGraph.js'
+import { flagTokenError } from './whatsappTokenHealth.js'
 import {
   HttpError, autopilotReply, claimQuota, oneLine, readAiSettings, recordUsage, storeUrl, toDate, withinHours, type AiSettings,
 } from './shopichatAiEngine.js'
@@ -357,6 +358,7 @@ async function autopilot(storeId: string, convId: string, messageId: string) {
         await sendAiText(storeId, convId, wa, s.ai.awayMessage, { aiAway: true }, { aiAwaySentAt: Timestamp.now() })
       } catch (e) {
         await setStatus(storeId, { lastError: e instanceof MetaError ? 'META_ERROR' : 'SEND_ERROR' })
+        await flagTokenError(storeId, e)
         throw e
       }
       return
@@ -426,6 +428,7 @@ async function autopilot(storeId: string, convId: string, messageId: string) {
     await setStatus(storeId, { lastError: null, lastReplyProvider: provider.id })
   } catch (e) {
     await setStatus(storeId, { lastError: e instanceof MetaError ? 'META_ERROR' : 'SEND_ERROR' })
+    await flagTokenError(storeId, e)
     throw e
   }
 }

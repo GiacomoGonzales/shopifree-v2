@@ -1115,9 +1115,9 @@ export default function Landing() {
             <div>
               <h4 className="text-[0.78rem] font-bold uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--muted)' }}>{t('footer.legal')}</h4>
               <ul className="space-y-2.5 text-sm font-medium" style={{ color: 'var(--body)' }}>
-                <li><a href="#" className="hover:text-[var(--sky-deep)] transition-colors">{t('common:footer.terms')}</a></li>
+                <li><Link to={localePath('/terms')} className="hover:text-[var(--sky-deep)] transition-colors">{t('common:footer.terms')}</Link></li>
                 <li><Link to={localePath('/privacy')} className="hover:text-[var(--sky-deep)] transition-colors">{t('common:footer.privacy')}</Link></li>
-                <li><a href="#" className="hover:text-[var(--sky-deep)] transition-colors">{t('common:footer.contact')}</a></li>
+                <li><a href="mailto:admin@shopifree.app" className="hover:text-[var(--sky-deep)] transition-colors">{t('common:footer.contact')}</a></li>
               </ul>
             </div>
           </div>

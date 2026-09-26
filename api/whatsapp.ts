@@ -13,13 +13,14 @@ import {
 import {
   getDb, storeRef, privateWaRef, waSettingsRef, convRef, waNumberRef, getPrivateWa,
   putObjectToR2, makeThumbnail, webpToJpeg, mediaKeyBase, r2PublicBase, saveOutgoingMessage, archiveMedia,
-  previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, getWaitUntil, fetchProductImage, type PrivateWa,
+  previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, getWaitUntil, fetchProductImage, unsubscribeWabaIfUnused, type PrivateWa,
 } from './_shared/whatsappInbox.js'
 import { setupOrderTemplates } from './_shared/whatsappOrderNotify.js'
 import { parseTemplateBody, sendTemplateMessage, syncTemplatesFor } from './_shared/whatsappTemplateSend.js'
 import {
   assertPublicHost, checkBotUrl, deliver, getBotSecret, newEventId, readBotWebhook, recordDelivery, rotateBotSecret, type BotPayload,
 } from './_shared/shopichatBotWebhook.js'
+import { inspectToken, tokenFields, checkStoreToken, flagTokenError } from './_shared/whatsappTokenHealth.js'
 
 /**
  * ShopiChat — acciones del comerciante sobre su WhatsApp.
@@ -33,7 +34,13 @@ import {
  * Acciones: status, connect, connect-manual (solo admin), disconnect,
  * send-text, send-media, upload-url, mark-read, react, sync-templates,
  * send-template, retry-media, setup-order-templates, bot-webhook-secret,
- * bot-webhook-test (fase 3C: "conecta tu propio bot").
+ * bot-webhook-test (fase 3C: "conecta tu propio bot"), check-token (revisa
+ * y renueva el token de Meta; ver _shared/whatsappTokenHealth.ts).
+ *
+ * Reconectar: 'connect' con el MISMO numero que la tienda ya tenia conectado
+ * solo reemplaza el token (no re-registra el numero ni toca las
+ * conversaciones). Es lo que hace el banner "Reconectar WhatsApp" cuando el
+ * token vence.
  *
  * send-media acepta ademas { productId, mediaUrl } para mandar un producto
  * como tarjeta: la foto tiene que ser una de las de ese producto de la tienda
@@ -188,7 +195,8 @@ async function finishConnect(p: {
   storeId: string; token: string; wabaId: string; phoneNumberId?: string
   coexistence: boolean; register: boolean; subscribeStrict: boolean
 }): Promise<Result> {
-  const { storeId, token, wabaId, coexistence } = p
+  const { storeId, token, wabaId } = p
+  let { coexistence } = p
 
   // El numero tiene que ser de esta WABA (y el token tiene que poder verla).
   let phones
@@ -218,6 +226,19 @@ async function finishConnect(p: {
     return fail(409, 'NUMBER_IN_USE', { message: 'Ese numero ya esta conectado a otra tienda' })
   }
 
+  // Reconexion (token vencido o por vencer): mismo numero en la misma tienda.
+  // El numero ya esta registrado en la Cloud API: registrarlo de nuevo con otro
+  // PIN chocaria con la verificacion en dos pasos (y en coexistencia romperia la
+  // app del celular). Se conservan el PIN y el modo; solo cambia el token.
+  const prev = (await privateWaRef(storeId).get()).data() as Partial<PrivateWa> | undefined
+  const reconnecting = Boolean(prev?.accessToken && prev.phoneNumberId === phoneNumberId)
+  if (reconnecting) coexistence = prev?.coexistence === true
+
+  // Vencimiento del token (null = no vence). Si Meta no responde se sigue igual:
+  // el cron diario lo completa.
+  const tokenInfo = await inspectToken(token)
+  const tok = tokenFields(tokenInfo)
+
   try {
     await subscribeAppToWaba({ token, wabaId })
   } catch (e) {
@@ -225,10 +246,14 @@ async function finishConnect(p: {
     console.warn('[whatsapp] subscribed_apps fallo (connect-manual):', (e as Error).message)
   }
 
-  let pin: string | null = null
-  if (p.register) {
-    // PIN de verificacion en dos pasos: se guarda (privado) por si hay que re-registrar.
-    pin = String(crypto.randomInt(100000, 1000000))
+  // PIN guardado de ESTE numero (queda tras desconectar; ver actionDisconnect).
+  const savedPin = prev?.phoneNumberId === phoneNumberId && prev?.pin ? prev.pin : null
+  let pin: string | null = savedPin
+  if (p.register && !reconnecting) {
+    // PIN de verificacion en dos pasos: se guarda (privado) por si hay que
+    // re-registrar. Si el numero ya se habia registrado desde esta tienda se
+    // reusa el mismo PIN: uno nuevo chocaria con la verificacion en dos pasos.
+    pin = savedPin || String(crypto.randomInt(100000, 1000000))
     try {
       await registerPhoneNumber({ token, phoneNumberId, pin })
     } catch (e) {
@@ -242,7 +267,7 @@ async function finishConnect(p: {
   }
 
   const connectedAt = Timestamp.now()
-  const account = {
+  const account: Record<string, unknown> = {
     status: 'connected',
     displayNumber: phone.display_phone_number || null,
     verifiedName: phone.verified_name || null,
@@ -253,6 +278,11 @@ async function finishConnect(p: {
     lastError: FieldValue.delete(),
     updatedAt: FieldValue.serverTimestamp(),
   }
+  // Token nuevo: se limpia el aviso anterior. Sin datos de Meta se borra el
+  // estado viejo para que el banner no quede colgado.
+  const accountToken: Record<string, unknown> = tokenInfo
+    ? { ...tok.account, tokenAlertSentAt: FieldValue.delete() }
+    : { tokenStatus: FieldValue.delete(), tokenExpiresAt: FieldValue.delete(), tokenAlertSentAt: FieldValue.delete() }
 
   const db = getDb()
   try {
@@ -272,11 +302,14 @@ async function finishConnect(p: {
         displayNumber: account.displayNumber,
         verifiedName: account.verifiedName,
         coexistence,
-        connectedAt,
+        // Al reconectar se conserva la fecha de la conexion original.
+        connectedAt: reconnecting && prev?.connectedAt ? prev.connectedAt : connectedAt,
         ...(pin ? { pin } : {}),
+        ...tok.priv,
+        ...(reconnecting ? { reconnectedAt: Timestamp.now() } : {}),
       })
       tx.set(waNumberRef(phoneNumberId), { storeId, wabaId, updatedAt: FieldValue.serverTimestamp() })
-      tx.set(waSettingsRef(storeId, 'account'), account, { merge: true })
+      tx.set(waSettingsRef(storeId, 'account'), { ...account, ...accountToken }, { merge: true })
     })
   } catch (e) {
     if ((e as Error).message === 'NUMBER_IN_USE') return fail(409, 'NUMBER_IN_USE', { message: 'Ese numero ya esta conectado a otra tienda' })
@@ -286,7 +319,7 @@ async function finishConnect(p: {
   // Coexistencia: contactos de la app (llegan por webhook smb_app_state_sync).
   // Solo se puede dentro de las 24 h del onboarding. El historial (history) no
   // se pide en fase 1.
-  if (coexistence) {
+  if (coexistence && !reconnecting) {
     await requestSmbAppDataSync({ token, phoneNumberId, syncType: 'smb_app_state_sync' })
       .catch(e => console.warn('[whatsapp] smb_app_data contactos fallo:', (e as Error).message))
   }
@@ -302,7 +335,15 @@ async function finishConnect(p: {
 
   const { lastError: _le, updatedAt: _ua, ...publicAccount } = account
   void _le; void _ua
-  return ok({ account: serialize(publicAccount) })
+  return ok({
+    account: serialize({
+      ...publicAccount,
+      ...(reconnecting ? { connectedAt: prev?.connectedAt ?? connectedAt } : {}),
+      tokenExpiresAt: tokenInfo?.expiresAt ? tokenInfo.expiresAt.toISOString() : null,
+      tokenStatus: tokenInfo ? tok.account.tokenStatus : null,
+    }),
+    reconnected: reconnecting,
+  })
 }
 
 /** Plantillas de avisos despues de conectar. Nunca lanza: la conexion ya quedo hecha. */
@@ -356,8 +397,16 @@ async function actionConnectManual(ctx: Ctx): Promise<Result> {
 /**
  * Desconectar: se suelta el mapeo y el token; las conversaciones quedan. NO se
  * des-registra el numero en Meta (en coexistencia romperia la app del celular).
+ * En private/whatsapp se conservan el PIN y el phoneNumberId (solo se borra el
+ * accessToken): si se reconecta el mismo numero, finishConnect reusa el MISMO
+ * PIN de verificacion en dos pasos en vez de inventar otro. Antes se
+ * des-suscribe la app de la WABA (best effort) para que Meta deje de mandar
+ * webhooks.
  */
 async function actionDisconnect(ctx: Ctx): Promise<Result> {
+  const prev = (await privateWaRef(ctx.storeId).get()).data() as Partial<PrivateWa> | undefined
+  if (prev?.accessToken) await unsubscribeWabaIfUnused(ctx.storeId, prev.accessToken, prev.wabaId)
+
   const db = getDb()
   await db.runTransaction(async tx => {
     const priv = await tx.get(privateWaRef(ctx.storeId))
@@ -366,7 +415,12 @@ async function actionDisconnect(ctx: Ctx): Promise<Result> {
       const m = await tx.get(waNumberRef(pid))
       if (m.data()?.storeId === ctx.storeId) tx.delete(waNumberRef(pid))
     }
-    tx.delete(privateWaRef(ctx.storeId))
+    if (priv.exists) {
+      tx.update(privateWaRef(ctx.storeId), {
+        accessToken: FieldValue.delete(),
+        disconnectedAt: FieldValue.serverTimestamp(),
+      })
+    }
     tx.set(waSettingsRef(ctx.storeId, 'account'), {
       status: 'disconnected',
       disconnectedAt: FieldValue.serverTimestamp(),
@@ -383,6 +437,18 @@ async function actionStatus(ctx: Ctx): Promise<Result> {
     account: serialize(snap.exists ? snap.data() : null),
     businessPlan: hasBusinessEffectivePlan(ctx.store as StorePlanData),
   })
+}
+
+/**
+ * Revisa el token contra Meta (debug_token), lo renueva si esta por vencer y
+ * actualiza tokenStatus. Sin avisos por mail: eso es del cron.
+ */
+async function actionCheckToken(ctx: Ctx): Promise<Result> {
+  const wa = await requireConnected(ctx.storeId)
+  if (isResult(wa)) return wa
+  const r = await checkStoreToken(ctx.storeId, { refresh: true, notify: false })
+  if (!r) return fail(502, 'TOKEN_CHECK_FAILED', { message: 'No se pudo consultar el token con Meta' })
+  return ok({ token: r })
 }
 
 // =================== MENSAJES ===================
@@ -732,10 +798,11 @@ const ACTIONS: Record<string, (ctx: Ctx) => Promise<Result>> = {
   'setup-order-templates': actionSetupOrderTemplates,
   'bot-webhook-secret': actionBotWebhookSecret,
   'bot-webhook-test': actionBotWebhookTest,
+  'check-token': actionCheckToken,
 }
 
 // Acciones que no exigen plan Business.
-const NO_PLAN_ACTIONS = new Set(['status', 'disconnect', 'connect-manual'])
+const NO_PLAN_ACTIONS = new Set(['status', 'disconnect', 'connect-manual', 'check-token'])
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res)
@@ -773,6 +840,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const result = await fn({ uid: decoded.uid, isAdmin, storeId, store, body })
+    // 190 = token de Meta invalido (vencido/revocado): se marca y se avisa al
+    // dueño. No en connect/connect-manual: ahi el token es uno recien pegado.
+    if (result.data.metaCode === 190 && action !== 'connect' && action !== 'connect-manual') {
+      await flagTokenError(storeId, new MetaError('token', { code: 190 }))
+    }
     return res.status(result.status).json(result.data)
   } catch (err) {
     console.error(`[whatsapp] ${action} fallo:`, (err as Error).message)

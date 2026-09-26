@@ -1852,6 +1852,15 @@
       "desktopTitle": "Conecta tu WhatsApp desde la computadora",
       "desktopBody": "Entra a shopifree.app desde tu computadora para conectar el número. Después podrás responder desde la app."
     },
+    "reconnect": {
+      "expiringTitle": "Tu conexión con WhatsApp vence el {{date}}",
+      "expiringSoonTitle": "Tu conexión con WhatsApp vence pronto",
+      "expiredTitle": "Tu WhatsApp se desconectó de ShopiChat",
+      "body": "Reconéctalo para seguir enviando mensajes y avisos de pedidos. Tus conversaciones se mantienen.",
+      "desktopBody": "Entra a shopifree.app desde tu computadora y toca «Reconectar WhatsApp». Tus conversaciones se mantienen.",
+      "cta": "Reconectar WhatsApp",
+      "done": "¡Listo! Estamos actualizando la conexión…"
+    },
     "customer": {
       "title": "Cliente",
       "optOut": "Este contacto pidió no recibir más mensajes.",

@@ -18,7 +18,13 @@ export interface WaAccount {
   coexistence?: boolean
   connectedAt?: Timestamp | null
   lastError?: string | null
+  /** Vencimiento del token de Meta. null = no vence (system user permanente). */
+  tokenExpiresAt?: Timestamp | null
+  /** Lo escribe el servidor (api/_shared/whatsappTokenHealth.ts). Sin campo = sin revisar todavía. */
+  tokenStatus?: WaTokenStatus | null
 }
+
+export type WaTokenStatus = 'ok' | 'expiring' | 'expired'
 
 export interface WaTemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | string

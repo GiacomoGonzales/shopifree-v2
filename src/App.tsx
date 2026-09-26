@@ -95,6 +95,7 @@ const PayOrder = lazy(() => import('./pages/payment/PayOrder'))
 
 // Legal
 const Privacy = lazy(() => import('./pages/Privacy'))
+const Terms = lazy(() => import('./pages/Terms'))
 const StorePrivacyPage = lazy(() => import('./pages/catalog/StorePrivacyPage'))
 
 // Suspense fallback while a route chunk downloads — mirrors the app's spinner
@@ -244,6 +245,7 @@ function AppRoutes() {
 
         {/* Legal routes */}
         <Route path="privacy" element={<Privacy />} />
+        <Route path="terms" element={<Terms />} />
 
         {/* Blog routes */}
         <Route path="blog" element={<BlogList />} />

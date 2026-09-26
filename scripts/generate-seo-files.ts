@@ -52,6 +52,9 @@ ${url(`${SITE}/es/register`, today, 'monthly', '0.8')}
 ${url(`${SITE}/en/register`, today, 'monthly', '0.7')}
 ${url(`${SITE}/es/login`, today, 'monthly', '0.5')}
 ${url(`${SITE}/en/login`, today, 'monthly', '0.5')}
+${url(`${SITE}/es/terms`, today, 'yearly', '0.3')}
+${url(`${SITE}/en/terms`, today, 'yearly', '0.3')}
+${url(`${SITE}/es/privacy`, today, 'yearly', '0.3')}
 ${sorted.map(p => url(`${SITE}/es/blog/${p.slug}`, p.updated ?? p.date, 'monthly', '0.7')).join('\n')}
 
 </urlset>

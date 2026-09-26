@@ -1,11 +1,32 @@
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
+import Seo from '../components/seo/Seo'
+
+// Correo para ejercer derechos y pedir la eliminacion de datos. La seccion de
+// eliminacion (id="data-deletion") es la URL que se da a Meta en la revision de
+// la app: https://shopifree.app/es/privacy#data-deletion — no cambiar el id.
+const CONTACT_EMAIL = 'admin@shopifree.app'
 
 export default function Privacy() {
   const { localePath } = useLanguage()
+  const { hash } = useLocation()
+
+  // La pagina carga en diferido: el navegador ya intento saltar al #ancla
+  // (p. ej. #data-deletion, el enlace que se da a Meta) antes de que exista.
+  useEffect(() => {
+    if (!hash) return
+    document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView()
+  }, [hash])
 
   return (
     <div className="min-h-screen bg-white">
+      <Seo
+        title="Política de Privacidad | Shopifree"
+        description="Cómo Shopifree recopila, usa, protege y elimina los datos de comerciantes y de los clientes de sus tiendas, incluido ShopiChat (WhatsApp) y el asistente de IA."
+        // El texto esta solo en espanol: /en/privacy apunta a la version /es.
+        canonical="https://shopifree.app/es/privacy"
+      />
       {/* Header */}
       <div className="border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-6 py-6 flex items-center justify-between">
@@ -22,7 +43,7 @@ export default function Privacy() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-[#1e3a5f] mb-2">Politica de Privacidad</h1>
-        <p className="text-sm text-gray-400 mb-8">Ultima actualizacion: 3 de febrero de 2026</p>
+        <p className="text-sm text-gray-400 mb-8">Ultima actualizacion: 25 de septiembre de 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700 text-[15px] leading-relaxed">
           <section>
@@ -34,6 +55,11 @@ export default function Privacy() {
               <li>Informacion del negocio (nombre de la tienda, logo, productos)</li>
               <li>Datos de inicio de sesion a traves de Google (si usas Google Sign-In)</li>
             </ul>
+            <p className="mt-2">
+              Si conectas WhatsApp a ShopiChat, tambien guardamos los datos de tu cuenta de WhatsApp Business (numero, nombre verificado
+              e identificadores de Meta) y las conversaciones con tus clientes: mensajes, archivos multimedia, nombre y telefono
+              o identificador de WhatsApp del contacto.
+            </p>
           </section>
 
           <section>
@@ -62,7 +88,14 @@ export default function Privacy() {
             <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">4. Compartir informacion</h2>
             <p>No vendemos, alquilamos ni compartimos tu informacion personal con terceros, excepto:</p>
             <ul className="list-disc pl-6 space-y-1 mt-2">
-              <li>Proveedores de servicio necesarios para operar la plataforma (Firebase, Cloudflare, Vercel)</li>
+              <li>Proveedores de servicio necesarios para operar la plataforma (Firebase, Cloudflare, Vercel, Resend para correos)</li>
+              <li>Stripe, para cobrar la suscripcion a Shopifree, y las pasarelas que tu conectes en tu tienda (Stripe, Mercado Pago, PayPal)</li>
+              <li>Meta (WhatsApp Business Platform), para enviar y recibir los mensajes de ShopiChat</li>
+              <li>
+                Proveedores de inteligencia artificial (Anthropic, OpenAI o Google), solo si activas el asistente de IA: reciben el texto
+                necesario para generar la respuesta (por ejemplo, los ultimos mensajes de la conversacion y datos de tu catalogo).
+                Si usas tu propia clave de API, el procesamiento se rige ademas por tu contrato con ese proveedor.
+              </li>
               <li>Cuando sea requerido por ley o proceso legal</li>
               <li>Para proteger los derechos y seguridad de Shopifree y sus usuarios</li>
             </ul>
@@ -72,7 +105,8 @@ export default function Privacy() {
             <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">5. Datos de los clientes de tu tienda</h2>
             <p>
               Como propietario de una tienda en Shopifree, eres responsable de los datos de tus clientes.
-              Los datos de pedidos (nombre, direccion, telefono) se almacenan en tu cuenta y solo tu tienes acceso a ellos.
+              Los datos de pedidos (nombre, direccion, telefono) y las conversaciones de ShopiChat se almacenan en tu cuenta y solo
+              tu (y quienes tengan acceso a tu panel) pueden verlos. Shopifree los trata por cuenta tuya, solo para prestarte el servicio.
               Te recomendamos cumplir con las leyes de proteccion de datos aplicables en tu pais.
             </p>
           </section>
@@ -97,16 +131,64 @@ export default function Privacy() {
             </ul>
             <p className="mt-2">
               Para ejercer cualquiera de estos derechos, contactanos a traves del chat de soporte
-              dentro de la aplicacion o enviando un correo a <span className="text-[#2d6cb5]">soporte@shopifree.app</span>.
+              dentro de la aplicacion o enviando un correo a <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#2d6cb5] hover:underline">{CONTACT_EMAIL}</a>.
             </p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">8. Eliminacion de cuenta</h2>
+          <section id="data-deletion" className="scroll-mt-6">
+            <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">8. Eliminacion de datos (Data deletion)</h2>
+            <p>Puedes pedir que eliminemos tus datos en cualquier momento, de dos formas:</p>
+            <ul className="list-disc pl-6 space-y-1 mt-2">
+              <li>
+                <strong>Desde la aplicacion:</strong> en el panel, entra a "Mi Cuenta" y usa "Eliminar mi cuenta". Se cancela tu
+                suscripcion y se eliminan de inmediato tu cuenta, tu tienda, tus productos, categorias y pedidos. Es irreversible.
+              </li>
+              <li>
+                <strong>Por correo:</strong> escribe a{' '}
+                <a href={`mailto:${CONTACT_EMAIL}?subject=Eliminacion%20de%20datos`} className="text-[#2d6cb5] hover:underline">{CONTACT_EMAIL}</a>{' '}
+                desde el correo de tu cuenta, con el asunto "Eliminacion de datos" e indicando el nombre o subdominio de tu tienda.
+                Podemos pedirte confirmar tu identidad antes de borrar nada.
+              </li>
+            </ul>
+
+            <h3 className="font-semibold text-[#1e3a5f] mt-5 mb-2">Que se elimina y en que plazo</h3>
             <p>
-              Puedes eliminar tu cuenta en cualquier momento desde la seccion "Mi Cuenta" en el panel de administracion.
-              Al eliminar tu cuenta, se eliminaran todos tus datos, incluyendo tu tienda, productos y pedidos.
-              Este proceso es irreversible.
+              Eliminamos tu cuenta, tu tienda y los datos asociados (productos, imagenes, pedidos, clientes, configuracion y,
+              si usaste ShopiChat, las conversaciones, archivos multimedia y los datos de conexion de WhatsApp) dentro de los
+              30 dias siguientes a tu solicitud. Las copias de seguridad se sobrescriben en ciclos posteriores. Te confirmaremos
+              por correo cuando la eliminacion este completa.
+            </p>
+
+            <h3 className="font-semibold text-[#1e3a5f] mt-5 mb-2">Que podemos conservar</h3>
+            <p>
+              Solo lo que la ley nos obliga a guardar o lo necesario para defendernos de reclamos: por ejemplo, registros de
+              facturacion y pagos de tu suscripcion (que ademas conserva Stripe) y registros de seguridad. Esos datos se guardan
+              por el plazo legal y luego se eliminan.
+            </p>
+
+            <h3 className="font-semibold text-[#1e3a5f] mt-5 mb-2">WhatsApp y ShopiChat</h3>
+            <ul className="list-disc pl-6 space-y-1 mt-2">
+              <li>Las conversaciones de ShopiChat se guardan para el comerciante, para que pueda atender a sus clientes desde el panel.</li>
+              <li>
+                Si desconectas WhatsApp en ShopiChat, dejamos de recibir y guardar mensajes nuevos y borramos el token de acceso
+                de Meta. Las conversaciones anteriores se conservan hasta que pidas eliminarlas o elimines tu cuenta.
+              </li>
+              <li>
+                Puedes pedir que eliminemos todas o algunas conversaciones escribiendo a {CONTACT_EMAIL}; lo hacemos dentro de los
+                30 dias. Meta conserva su propia copia de los mensajes segun sus politicas.
+              </li>
+              <li>
+                Si activaste el asistente de IA, los mensajes que procesa se envian al proveedor de IA correspondiente (Anthropic,
+                OpenAI o Google) solo para generar la respuesta. Shopifree no los usa para entrenar modelos propios.
+              </li>
+            </ul>
+
+            <h3 className="font-semibold text-[#1e3a5f] mt-5 mb-2">Si eres cliente de una tienda</h3>
+            <p>
+              Si compraste en una tienda creada con Shopifree o le escribiste por WhatsApp, esa tienda es la responsable de tus
+              datos. Para acceder a ellos, corregirlos o eliminarlos, contacta directamente a la tienda (sus datos de contacto
+              aparecen en su pagina). Si no obtienes respuesta, escribenos a {CONTACT_EMAIL} indicando la tienda y te ayudaremos
+              a canalizar tu solicitud.
             </p>
           </section>
 
@@ -123,7 +205,7 @@ export default function Privacy() {
             <h2 className="text-lg font-semibold text-[#1e3a5f] mt-8 mb-3">10. Contacto</h2>
             <p>
               Si tienes preguntas sobre esta politica de privacidad, puedes contactarnos a traves del
-              chat de soporte dentro de la aplicacion o enviando un correo a <span className="text-[#2d6cb5]">soporte@shopifree.app</span>.
+              chat de soporte dentro de la aplicacion o enviando un correo a <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#2d6cb5] hover:underline">{CONTACT_EMAIL}</a>.
             </p>
           </section>
         </div>

@@ -18,9 +18,9 @@ import crypto from 'crypto'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore, Firestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import {
-  WINDOW_24H_MS, downloadWhatsappMedia, isBsuid, isValidWaId, isSafeDocId, extensionFromMime, looksLikeOptOut, mimeBase,
+  WINDOW_24H_MS, downloadWhatsappMedia, unsubscribeAppFromWaba, isBsuid, isValidWaId, isSafeDocId, extensionFromMime, looksLikeOptOut, mimeBase,
   type ParsedMessage, type ParsedStatus, type ParsedContactSync, type WaMediaRef,
 } from './whatsappGraph.js'
 
@@ -89,6 +89,28 @@ export async function getPrivateWa(storeId: string): Promise<PrivateWa | null> {
   return d?.accessToken && d?.phoneNumberId ? d : null
 }
 
+/**
+ * Best effort: des-suscribe la app de la WABA de la tienda para que Meta deje
+ * de mandar webhooks. Si OTRA tienda tiene un numero conectado en la misma
+ * WABA (waNumbers con ese wabaId), no se toca: le cortaria los webhooks a ella.
+ * Nunca lanza; devuelve si se des-suscribio.
+ */
+export async function unsubscribeWabaIfUnused(storeId: string, token: string | undefined, wabaId: string | undefined): Promise<boolean> {
+  if (!token || !wabaId) return false
+  try {
+    const otros = await getDb().collection('waNumbers').where('wabaId', '==', wabaId).get()
+    if (otros.docs.some(d => d.data()?.storeId !== storeId)) {
+      console.log(`[whatsapp] WABA ${wabaId} la usa otra tienda: no se des-suscribe`)
+      return false
+    }
+    await unsubscribeAppFromWaba({ token, wabaId })
+    return true
+  } catch (e) {
+    console.warn(`[whatsapp] no se pudo des-suscribir la app de la WABA (${storeId}):`, (e as Error).message)
+    return false
+  }
+}
+
 // =================== R2 ===================
 
 let _r2: S3Client | null = null
@@ -150,6 +172,36 @@ export const mediaKeyBase = (storeId: string, waId: string, name: string) =>
 
 /** Prefijo de R2 de TODO lo de WhatsApp de una tienda (entrantes, salientes y subidas directas). */
 export const storeMediaPrefix = (storeId: string) => `whatsapp/${keySeg(storeId)}/`
+
+/**
+ * Borra de R2 todo lo que cuelga de un prefijo (lista de a 1000 y borra en
+ * lote). Se usa al eliminar la cuenta (whatsapp/{storeId}/). Devuelve cuantos
+ * objetos borro. Lanza si R2 no esta configurado o falla un pedido.
+ */
+export async function deleteR2Prefix(prefix: string): Promise<number> {
+  // Nunca un prefijo vacio o sin carpeta: borraria el bucket entero.
+  if (!prefix || !prefix.endsWith('/') || prefix.split('/').filter(Boolean).length < 2) {
+    throw new Error(`Prefijo de R2 no permitido: ${prefix}`)
+  }
+  const bucket = process.env.R2_BUCKET || 'shopifree-media'
+  const r2 = getR2()
+  let borrados = 0
+  let token: string | undefined
+  do {
+    const list = await r2.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token, MaxKeys: 1000 }))
+    const keys = (list.Contents || []).map(o => o.Key).filter((k): k is string => !!k && k.startsWith(prefix))
+    if (keys.length) {
+      const r = await r2.send(new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: { Objects: keys.map(Key => ({ Key })), Quiet: true },
+      }))
+      if (r.Errors?.length) console.warn(`[r2] ${r.Errors.length} objetos no se pudieron borrar bajo ${prefix}`)
+      borrados += keys.length - (r.Errors?.length || 0)
+    }
+    token = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (token)
+  return borrados
+}
 
 /** Key para una subida directa del navegador (URL prefirmada de api/whatsapp 'upload-url'). */
 export const outgoingUploadKey = (storeId: string, ext: string) =>

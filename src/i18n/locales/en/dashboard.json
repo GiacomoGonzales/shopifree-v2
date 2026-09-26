@@ -1851,6 +1851,15 @@
       "desktopTitle": "Connect your WhatsApp from a computer",
       "desktopBody": "Open shopifree.app on your computer to connect the number. Then you can reply from the app."
     },
+    "reconnect": {
+      "expiringTitle": "Your WhatsApp connection expires on {{date}}",
+      "expiringSoonTitle": "Your WhatsApp connection expires soon",
+      "expiredTitle": "Your WhatsApp is disconnected from ShopiChat",
+      "body": "Reconnect it to keep sending messages and order notifications. Your conversations stay as they are.",
+      "desktopBody": "Open shopifree.app on your computer and click \"Reconnect WhatsApp\". Your conversations stay as they are.",
+      "cta": "Reconnect WhatsApp",
+      "done": "Done! We're updating the connection…"
+    },
     "customer": {
       "title": "Customer",
       "optOut": "This contact asked not to receive more messages.",

@@ -59,6 +59,7 @@ import type {
 import type { TemplateValues } from '../../lib/shopichatService'
 import type { Store } from '../../types'
 import ConnectWhatsApp from '../../components/shopichat/ConnectWhatsApp'
+import ReconnectWhatsAppBanner from '../../components/shopichat/ReconnectWhatsAppBanner'
 import Thread from '../../components/shopichat/Thread'
 import SettingsPanel from '../../components/shopichat/SettingsPanel'
 import SoundButton from '../../components/shopichat/SoundButton'
@@ -370,6 +371,8 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
     // Márgenes negativos: la bandeja va de borde a borde bajo la barra de
     // arriba, como SupportChats, en vez de "una tarjeta dentro de la página".
     <div className="-m-4 sm:-m-6 lg:-mt-5 lg:-mb-8 lg:-mx-8">
+      {/* Token de Meta por vencer o vencido: pide reconectar (sin perder chats). */}
+      <ReconnectWhatsAppBanner storeId={store.id} account={account} />
       <div ref={ref} className="bg-white overflow-hidden flex" style={{ height: height ?? 'calc(100vh - 3rem)' }}>
         {/* ---------- Lista ---------- */}
         <aside className={`w-full md:w-80 lg:w-[22rem] md:border-r border-[#E6EBF1] flex-col min-h-0 ${showingPane ? 'hidden md:flex' : 'flex'}`}>

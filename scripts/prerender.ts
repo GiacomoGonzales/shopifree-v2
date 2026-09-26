@@ -54,6 +54,10 @@ const routes = [
   '/en',
   '/es/blog',
   ...blogPosts.map(p => `/es/blog/${p.slug}`),
+  // Paginas legales: Meta (revision de la app) y otros rastreadores las leen sin JavaScript.
+  '/es/privacy',
+  '/es/terms',
+  '/en/terms',
 ]
 
 const MIME: Record<string, string> = {

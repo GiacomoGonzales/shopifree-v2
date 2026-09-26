@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { hasBusinessEffectivePlan, type StorePlanData } from './_shared/plan.js'
 import { MetaError, isValidWaId, renderTemplateText, sendWhatsappTemplate, type WaTemplate } from './_shared/whatsappGraph.js'
+import { flagTokenError } from './_shared/whatsappTokenHealth.js'
 import { getDb, storeRef, convRef, waSettingsRef, getPrivateWa, saveOutgoingMessage, previewText } from './_shared/whatsappInbox.js'
 import {
   EVENT_TEMPLATE, isOrderEvent, isEventEnabled, pickEventTemplate, bodyVarCount, templateLangOf, templateValues,
@@ -148,6 +149,8 @@ async function notify(storeId: string, orderId: string, event: OrderEvent): Prom
   } catch (e) {
     const message = e instanceof MetaError ? (e.metaDetails || e.message) : String((e as Error)?.message || e)
     await oRef.update({ [`waNotifyErrors.${event}`]: { message: message.slice(0, 300), at: Timestamp.now() } }).catch(() => {})
+    // Token vencido/revocado (190): se marca y se avisa al dueño que reconecte.
+    await flagTokenError(storeId, e)
     throw e
   }
 

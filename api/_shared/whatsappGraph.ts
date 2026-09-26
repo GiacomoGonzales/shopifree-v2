@@ -706,6 +706,75 @@ export async function exchangeCodeForToken(p: { appId: string; appSecret: string
   return data.access_token
 }
 
+// =================== SALUD DEL TOKEN ===================
+
+/**
+ * Lo que dice Meta de un token (GET /debug_token). `expiresAt` null = no vence
+ * (Meta devuelve expires_at 0: token de system user "permanente", como el que se
+ * pega a mano en connect-manual).
+ */
+export interface WaTokenInfo {
+  isValid: boolean
+  expiresAt: Date | null
+  /** 'SYSTEM_USER', 'USER', 'PAGE'… (tal cual lo manda Meta). */
+  type: string | null
+  /** Codigo de error de Meta si el token no es valido (190 = vencido/revocado). */
+  errorCode: number | null
+  errorMessage: string | null
+}
+
+/**
+ * Inspecciona un token con el app access token (APP_ID|APP_SECRET), que es lo
+ * que pide /debug_token. input_token tiene que ir como parametro: es una
+ * llamada servidor a servidor, igual que el canje del code.
+ * https://developers.facebook.com/docs/graph-api/reference/debug_token/
+ */
+export async function debugWhatsappToken(p: { appId: string; appSecret: string; token: string }): Promise<WaTokenInfo> {
+  const data = await graphFetch<{ data?: {
+    is_valid?: boolean; expires_at?: number; type?: string
+    error?: { code?: number; message?: string }
+  } }>('debug_token', {
+    token: `${p.appId}|${p.appSecret}`,
+    query: { input_token: p.token },
+  })
+  const d = data.data || {}
+  const exp = Number(d.expires_at || 0)
+  return {
+    isValid: d.is_valid === true,
+    expiresAt: exp > 0 ? new Date(exp * 1000) : null,
+    type: d.type || null,
+    errorCode: d.error?.code ?? null,
+    errorMessage: d.error?.message ?? null,
+  }
+}
+
+/**
+ * Renueva un token de system user que vence (los de Embedded Signup de una
+ * configuracion con vencimiento a 60 dias): devuelve uno nuevo valido por otros
+ * 60 dias. Solo funciona mientras el token actual siga vigente.
+ * https://developers.facebook.com/docs/business-management-apis/system-users/install-apps-and-generate-tokens
+ *   GET /oauth/access_token?grant_type=fb_exchange_token&client_id&client_secret
+ *       &set_token_expires_in_60_days=true&fb_exchange_token={token}
+ * OJO: NO llamarlo con un token que no vence: lo convertiria en uno de 60 dias.
+ */
+export async function refreshWhatsappToken(p: { appId: string; appSecret: string; token: string }): Promise<{ token: string; expiresIn: number | null }> {
+  const data = await graphFetch<{ access_token?: string; expires_in?: number }>('oauth/access_token', {
+    query: {
+      grant_type: 'fb_exchange_token',
+      client_id: p.appId,
+      client_secret: p.appSecret,
+      set_token_expires_in_60_days: 'true',
+      fb_exchange_token: p.token,
+    },
+  })
+  if (!data.access_token) throw new MetaError('Meta no devolvio el token renovado')
+  const expiresIn = Number(data.expires_in || 0)
+  return { token: data.access_token, expiresIn: expiresIn > 0 ? expiresIn : null }
+}
+
+/** 190 = token invalido (vencido, revocado o de una sesion cerrada). */
+export const isTokenInvalidError = (e: unknown) => e instanceof MetaError && e.metaCode === 190
+
 export interface WaPhoneInfo {
   id: string
   display_phone_number?: string
@@ -724,6 +793,15 @@ export async function listWabaPhoneNumbers(p: { token: string; wabaId: string })
 /** Suscribe nuestra app a los webhooks de la WABA del cliente. */
 export async function subscribeAppToWaba(p: { token: string; wabaId: string }) {
   await graphFetch(`${p.wabaId}/subscribed_apps`, { token: p.token, method: 'POST' })
+}
+
+/**
+ * Des-suscribe la app de la WABA: Meta deja de mandar webhooks de esa cuenta.
+ * Se usa al desconectar y al eliminar la cuenta (best effort: quien llama
+ * decide si ignora el error).
+ */
+export async function unsubscribeAppFromWaba(p: { token: string; wabaId: string }) {
+  await graphFetch(`${p.wabaId}/subscribed_apps`, { token: p.token, method: 'DELETE' })
 }
 
 /**

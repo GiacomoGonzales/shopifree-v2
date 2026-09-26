@@ -6,6 +6,7 @@ import { getAuth, type DecodedIdToken } from 'firebase-admin/auth'
 import { isAdminToken } from './_shared/admin.js'
 import { checkRateLimit } from './_shared/orderTotal.js'
 import { shouldDowngradeExpiredTrial, LIVE_SUBSCRIPTION_STATUSES, type StoreCompData } from './_shared/plan.js'
+import { checkAllWhatsappTokens } from './_shared/whatsappTokenHealth.js'
 
 let db: Firestore
 
@@ -259,6 +260,19 @@ function getExpiredHtml(storeName: string, lang: string): EmailTemplate {
   }
 }
 
+// ── Cron: tokens de WhatsApp (ShopiChat) ─────────────────────────────
+
+// Renueva los tokens por vencer y avisa (mail + push, una vez) a los dueños
+// cuyo token no se pudo renovar o ya no sirve. Ver _shared/whatsappTokenHealth.ts.
+async function runWhatsappTokenCheck() {
+  try {
+    return await checkAllWhatsappTokens()
+  } catch (err) {
+    console.error('[cron] whatsapp token check error:', err)
+    return null
+  }
+}
+
 // ── Cron: scan stores and send trial reminder/expired emails ─────────
 
 async function handleCron(req: VercelRequest, res: VercelResponse) {
@@ -282,7 +296,8 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
     } catch (err) {
       console.error('[cron] trial markers backfill error:', err)
     }
-    return res.status(200).json({ ok: true, skipped: true, trialMarkers })
+    const whatsappTokens = await runWhatsappTokenCheck()
+    return res.status(200).json({ ok: true, skipped: true, trialMarkers, whatsappTokens })
   }
 
   const resend = new Resend(apiKey)
@@ -393,7 +408,10 @@ async function handleCron(req: VercelRequest, res: VercelResponse) {
     console.error('[cron] trial markers backfill error:', err)
   }
 
-  return res.status(200).json({ ok: true, remindersSent, expiredSent, downgraded, trialMarkers })
+  // 5. Tokens de WhatsApp de ShopiChat
+  const whatsappTokens = await runWhatsappTokenCheck()
+
+  return res.status(200).json({ ok: true, remindersSent, expiredSent, downgraded, trialMarkers, whatsappTokens })
 }
 
 // ── Main handler ─────────────────────────────────────────────────────

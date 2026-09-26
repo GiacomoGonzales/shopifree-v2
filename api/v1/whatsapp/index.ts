@@ -32,6 +32,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { FieldValue, Timestamp, type DocumentData } from 'firebase-admin/firestore'
 import { hasBusinessEffectivePlan, type StorePlanData } from '../../_shared/plan.js'
 import { MetaError, isSafeDocId, isValidWaId, normalizePhone } from '../../_shared/whatsappGraph.js'
+import { flagTokenError } from '../../_shared/whatsappTokenHealth.js'
 import { getDb, storeRef, convRef, getPrivateWa, type PrivateWa } from '../../_shared/whatsappInbox.js'
 import { handOffConversation, sendAiText, sendProductCard } from '../../_shared/shopichatAutopilot.js'
 import { conversationOut, messageOut } from '../../_shared/shopichatBotWebhook.js'
@@ -266,6 +267,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     else if (route[0] === 'messages') result = await postMessage(storeId, store, body)
     else if (route[0] === 'templates') result = await postTemplate(storeId, body)
     else result = await postHandoff(storeId, body)
+    // 190 = token de Meta vencido/revocado: se marca y se avisa al dueño.
+    if (result.data.metaCode === 190) await flagTokenError(storeId, new MetaError('token', { code: 190 }))
     return res.status(result.status).json(result.data)
   } catch (err) {
     console.error(`[v1/whatsapp] ${route.join('/')} fallo:`, (err as Error).message)
