@@ -1091,12 +1091,18 @@ export default function Thread({
                 </span>
               </button>
             )}
-            {(m.type === 'template' || m.sentBy === 'auto' || m.sentBy === 'ai') && (
+            {(m.type === 'template' || m.sentBy === 'auto' || m.sentBy === 'ai' || m.sentBy === 'bot') && (
               <span className="flex items-center gap-1.5 mb-1">
                 {/* Enviado por el piloto automático */}
                 {m.sentBy === 'ai' && (
                   <span className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full bg-[#F3E8FF] text-[#7C3AED] text-[10px] font-semibold uppercase tracking-wide" title={t('shopichat.ai.autopilot.sentByAi')}>
                     <IconBot className="w-2.5 h-2.5" />{t('shopichat.ai.autopilot.badge')}
+                  </span>
+                )}
+                {/* Enviado por el bot propio de la tienda (fase 3C) */}
+                {m.sentBy === 'bot' && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full bg-[#E0F2FE] text-[#0284C7] text-[10px] font-semibold uppercase tracking-wide" title={t('shopichat.bot.sentByBot')}>
+                    <IconBot className="w-2.5 h-2.5" />{t('shopichat.bot.badge')}
                   </span>
                 )}
                 {m.type === 'template' && (

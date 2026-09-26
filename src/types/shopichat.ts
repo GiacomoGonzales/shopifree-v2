@@ -130,12 +130,50 @@ export interface WaAiSuggestion {
 
 export type WaAiRewriteMode = 'friendlier' | 'shorter' | 'formal' | 'fix'
 
+/** Eventos que se le pueden mandar al bot propio (fase 3C). */
+export type WaBotEvent = 'message.received' | 'message.status' | 'conversation.handoff'
+
+/** 'notify' = solo avisa; 'bot' = el bot responde (reemplaza al piloto automático). */
+export type WaBotMode = 'notify' | 'bot'
+
+/**
+ * stores/{storeId}/waSettings/automations.botWebhook — "conecta tu propio bot".
+ * El secreto de firma NO vive acá: está en stores/{id}/private/botWebhook.
+ */
+export interface WaBotWebhook {
+  enabled: boolean
+  url: string
+  events: WaBotEvent[]
+  mode: WaBotMode
+}
+
+/** automations.botWebhookStatus — lo escribe el servidor. */
+export interface WaBotWebhookStatus {
+  lastDelivery?: {
+    at?: Timestamp | null
+    event?: string
+    ok?: boolean
+    status?: number
+    error?: string | null
+    durationMs?: number
+    attempts?: number
+  } | null
+  consecutiveFailures?: number
+  /** Se apagó solo tras muchos fallos seguidos. */
+  autoDisabledAt?: Timestamp | null
+  /** 'sfwhsec_…abcd' */
+  secretHint?: string | null
+  secretCreatedAt?: Timestamp | null
+}
+
 /** stores/{storeId}/waSettings/automations */
 export interface WaAutomations {
   quickReplies: WaQuickReply[]
   orderNotifications: WaOrderNotifications
   ai: WaAiSettings
   aiStatus?: WaAiStatus | null
+  botWebhook: WaBotWebhook
+  botWebhookStatus?: WaBotWebhookStatus | null
 }
 
 export type WaConversationStatus = 'open' | 'pending' | 'done'
@@ -238,4 +276,4 @@ export interface WaPendingMessage extends WaMessage {
 export type WaApiAction =
   | 'status' | 'connect' | 'disconnect' | 'send-text' | 'send-media' | 'mark-read'
   | 'react' | 'sync-templates' | 'send-template' | 'retry-media' | 'upload-url' | 'connect-manual'
-  | 'setup-order-templates'
+  | 'setup-order-templates' | 'bot-webhook-secret' | 'bot-webhook-test'

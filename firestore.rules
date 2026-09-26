@@ -256,11 +256,34 @@ service cloud.firestore {
         allow read, write: if false;
       }
 
+      // Bot propio de ShopiChat (fase 3C): automations.botWebhook. El secreto
+      // de firma vive en private/botWebhook (negado arriba), nunca acá.
+      function validBotWebhook(b) {
+        return b is map
+          && b.keys().hasOnly(['enabled', 'url', 'events', 'mode'])
+          && b.get('enabled', false) is bool
+          && b.get('url', '') is string
+          && b.get('url', '').size() <= 2000
+          && (b.get('url', '') == '' || b.get('url', '').matches('^https://[^\\s]+$'))
+          && b.get('events', []) is list
+          && b.get('events', []).size() <= 3
+          && b.get('events', []).hasOnly(['message.received', 'message.status', 'conversation.handoff'])
+          && b.get('mode', 'notify') in ['notify', 'bot'];
+      }
+
+      // botWebhookStatus (último envío, contador de fallos, pista del secreto)
+      // lo escribe solo el servidor.
+      function botStatusUntouched() {
+        return resource == null
+          ? !('botWebhookStatus' in request.resource.data)
+          : !request.resource.data.diff(resource.data).affectedKeys().hasAny(['botWebhookStatus']);
+      }
+
       // ShopiChat (WhatsApp). Todo lo escribe el servidor (api/whatsapp.ts y
       // api/whatsapp-webhook.ts con el Admin SDK). El token de Meta vive en
       // private/whatsapp (negado arriba).
       //  - account / templates: el dueño solo lee.
-      //  - automations: respuestas rapidas, las edita el dueño.
+      //  - automations: respuestas rapidas, IA y bot propio, las edita el dueño.
       match /waSettings/{docId} {
         allow read: if isStoreOwnerOrAdmin(storeId);
         allow write: if docId == 'automations' && isStoreOwner(storeId)
@@ -271,6 +294,8 @@ service cloud.firestore {
             && request.resource.data.get('ai', {}) is map
             // La clave de IA propia vive en private/ai: nunca en este doc legible.
             && !('apiKey' in request.resource.data.get('ai', {}))
+            && validBotWebhook(request.resource.data.get('botWebhook', {}))
+            && botStatusUntouched()
           ));
       }
 

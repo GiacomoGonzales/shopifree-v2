@@ -2422,6 +2422,73 @@
           "AI_ERROR": "the AI is unavailable"
         }
       }
+    },
+    "bot": {
+      "title": "Connect your own bot",
+      "help": "Send WhatsApp messages to your own tool (n8n, Make, Zapier, Dialogflow or your code) and reply from it.",
+      "enable": "Enable the bot webhook",
+      "saved": "Bot saved",
+      "saveError": "Couldn't save the bot settings.",
+      "needUrl": "Save a valid https URL first.",
+      "needSecret": "Generate the signing secret first.",
+      "autoDisabled": "We turned it off automatically because your URL failed too many times in a row. Check your bot, test it and turn it back on.",
+      "url": "Webhook URL",
+      "urlHelp": "https and public addresses only. We send a POST with signed JSON.",
+      "urlInvalid": "The URL must be https and public (no localhost or private IPs).",
+      "mode": "Mode",
+      "modes": {
+        "notify": "Notify only",
+        "notifyHelp": "We tell you what happens; replies keep working as they do now.",
+        "bot": "The bot replies",
+        "botHelp": "Your bot answers customers (in the webhook response or via the API). It replaces the autopilot."
+      },
+      "precedence": "The AI autopilot is on: with \"The bot replies\", your bot answers and the autopilot stays quiet.",
+      "events": "Events",
+      "eventHelp": {
+        "message_received": "Every new customer message (always sent in \"The bot replies\" mode).",
+        "message_status": "Sent, delivered, read or failed for outgoing messages.",
+        "conversation_handoff": "When a chat is handed off to a person."
+      },
+      "secret": "Signing secret",
+      "noSecret": "not generated",
+      "generateSecret": "Generate secret",
+      "rotateSecret": "Rotate secret",
+      "rotateConfirm": "A new secret is generated and the old one stops working. Continue?",
+      "secretOnce": "Copy it now: we won't show it again.",
+      "secretSaved": "I've saved it",
+      "secretHelp": "Use it to verify the X-Shopifree-Signature header: t=<unix>,v1=<HMAC-SHA256 of \"t.body\">.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "test": "Send test",
+      "testing": "Sending…",
+      "saveFirst": "Save your changes to test the new URL.",
+      "lastDelivery": "Last delivery:",
+      "never": "none yet",
+      "failing": "{{count}} failed delivery(ies) in a row. At 20 we turn it off automatically.",
+      "howTitle": "How it works (examples)",
+      "howPayload": "For each event we POST this JSON (headers X-Shopifree-Event and X-Shopifree-Signature). Reply 2xx within 5 s; on failure we retry twice.",
+      "howSignature": "Verify the signature: compute HMAC-SHA256 with your secret over \"t.body\" (the raw body) and compare it with v1. Reject if t is older than 5 minutes.",
+      "howReply": "In \"The bot replies\" mode you can answer in the response body itself (within 5 s):",
+      "howApi": "Or reply later through the public API with your store's API key:",
+      "apiKeysLink": "Create or view your API key",
+      "docsLink": "API documentation",
+      "badge": "Bot",
+      "sentByBot": "Sent by your bot",
+      "errors": {
+        "INVALID_URL": "invalid URL",
+        "HTTPS_REQUIRED": "the URL must be https",
+        "PRIVATE_ADDRESS": "the URL points to a private address",
+        "DNS_ERROR": "domain not found",
+        "TIMEOUT": "your server took more than 5 s",
+        "CONNECTION_ERROR": "couldn't connect",
+        "TLS_ERROR": "invalid https certificate",
+        "MISSING_URL": "save the URL first",
+        "NO_SECRET": "generate the secret first",
+        "PLAN_REQUIRED": "requires the Business plan",
+        "NETWORK": "no connection",
+        "HTTP": "your server answered HTTP {{status}}",
+        "generic": "something went wrong"
+      }
     }
   },
   "customerProfile": {

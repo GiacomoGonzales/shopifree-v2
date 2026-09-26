@@ -2,9 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
 import { verifyWhatsappSignature, parseWhatsappWebhook, type WaAccountRef } from './_shared/whatsappGraph.js'
 import {
-  getDb, saveIncomingMessage, saveIncomingReaction, applyStatus, applyContactSyncs, saveUnprocessed, getWaitUntil,
+  getDb, convRef, saveIncomingMessage, saveIncomingReaction, applyStatus, applyContactSyncs, saveUnprocessed, getWaitUntil,
 } from './_shared/whatsappInbox.js'
-import { runAutopilot } from './_shared/shopichatAutopilot.js'
+import { runAutopilot, runBotForMessage } from './_shared/shopichatAutopilot.js'
+import { emitBotEvent, conversationOut, messageOut } from './_shared/shopichatBotWebhook.js'
 
 /**
  * ShopiChat — webhook de la WhatsApp Cloud API (multi-tienda).
@@ -23,8 +24,8 @@ import { runAutopilot } from './_shared/shopichatAutopilot.js'
  * falle: un webhook que devuelve error entra en reintentos y, si insiste, Meta
  * lo da de baja. Lo que falla queda en waUnprocessed.
  *
- * Lo lento (bajar adjuntos a R2, miniaturas, push, piloto automatico de IA)
- * va despues del 200 con
+ * Lo lento (bajar adjuntos a R2, miniaturas, push, piloto automatico de IA,
+ * eventos al bot propio de la fase 3C) va despues del 200 con
  * waitUntil de Vercel cuando el runtime lo expone; si no, se espera con un
  * presupuesto de tiempo antes de responder.
  *
@@ -136,6 +137,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (m.type !== 'reaction' && m.origin === 'in' && !r.duplicate && r.convId) {
           const sid = storeId
           followUps.push(() => runAutopilot(sid, r.convId, m.waMessageId))
+          // Bot propio (fase 3C): evento message.received y, en modo 'bot',
+          // su respuesta. Con el bot en modo 'bot' el piloto no responde.
+          followUps.push(() => runBotForMessage(sid, r.convId, m.waMessageId))
         }
       } catch (error) {
         await saveUnprocessed({
@@ -150,7 +154,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         storeId = await resolveStore(s.account)
         if (!storeId) continue
-        await applyStatus(storeId, s)
+        const convId = await applyStatus(storeId, s)
+        // Bot propio (fase 3C): message.status, si la tienda lo pidio.
+        if (convId) {
+          const sid = storeId
+          followUps.push(() => emitBotEvent(sid, 'message.status', async () => {
+            const cRef = convRef(sid, convId)
+            const [cSnap, mSnap] = await Promise.all([cRef.get(), cRef.collection('messages').doc(s.waMessageId).get()])
+            if (!cSnap.exists) return null
+            return {
+              conversation: conversationOut(convId, cSnap.data() || {}),
+              message: {
+                ...(mSnap.exists ? messageOut(mSnap.id, mSnap.data() || {}) : { id: s.waMessageId }),
+                status: s.status,
+                ...(s.status === 'failed' ? { error: s.error || null, errorCode: s.errorCode ?? null } : {}),
+                statusAt: new Date(s.timestamp).toISOString(),
+              },
+            }
+          }))
+        }
       } catch (error) {
         await saveUnprocessed({
           storeId, phoneNumberId: s.account.phoneNumberId, waMessageId: s.waMessageId,
@@ -200,10 +222,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // Cuerpo crudo para verificar la firma (mismo patron que stripe-webhook) y
 // margen para que waitUntil termine de bajar adjuntos grandes y el piloto
-// automatico (12 s de espera + hasta 4 llamadas al modelo + envios).
+// automatico (12 s de espera + hasta 4 llamadas al modelo de hasta 40 s cada
+// una, con un reintento del SDK + envios). Con 120 s el peor caso quedaba
+// cortado a mitad (cupo gastado, sin aiStatus). El bucle del piloto corta las
+// rondas con herramientas a los 120 s (AUTOPILOT_TOOLS_BUDGET_MS).
 export const config = {
   api: {
     bodyParser: false,
   },
-  maxDuration: 120,
+  maxDuration: 300,
 }

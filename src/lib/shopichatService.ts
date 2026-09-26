@@ -43,6 +43,9 @@ import type {
   WaAiTone,
   WaApiAction,
   WaAutomations,
+  WaBotEvent,
+  WaBotWebhook,
+  WaBotWebhookStatus,
   WaOrderNotifications,
   WaConversation,
   WaConversationStatus,
@@ -190,6 +193,8 @@ export function subscribeAutomations(
         orderNotifications: normalizeOrderNotifications(data.orderNotifications),
         ai: normalizeAiSettings(data.ai),
         aiStatus: (data.aiStatus && typeof data.aiStatus === 'object' ? data.aiStatus : null) as WaAiStatus | null,
+        botWebhook: normalizeBotWebhook(data.botWebhook),
+        botWebhookStatus: (data.botWebhookStatus && typeof data.botWebhookStatus === 'object' ? data.botWebhookStatus : null) as WaBotWebhookStatus | null,
       })
     },
     error => console.warn('[shopichat] automatizaciones:', error.message)
@@ -393,6 +398,58 @@ export function normalizeAiSettings(raw: unknown): WaAiSettings {
 export function saveAiSettings(storeId: string, ai: WaAiSettings) {
   return setDoc(settingsRef(storeId, 'automations'), { ai: normalizeAiSettings(ai), updatedAt: serverTimestamp() }, { merge: true })
 }
+
+// ---- Bot propio (fase 3C): webhooks salientes + API pública
+
+export const BOT_EVENTS: WaBotEvent[] = ['message.received', 'message.status', 'conversation.handoff']
+export const BOT_URL_MAX = 2000
+
+export const DEFAULT_BOT_WEBHOOK: WaBotWebhook = { enabled: false, url: '', events: ['message.received'], mode: 'notify' }
+
+export function normalizeBotWebhook(raw: unknown): WaBotWebhook {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<WaBotWebhook>
+  const events = (Array.isArray(r.events) ? r.events : DEFAULT_BOT_WEBHOOK.events).filter(e => BOT_EVENTS.includes(e))
+  return {
+    enabled: r.enabled === true,
+    url: typeof r.url === 'string' ? r.url.trim().slice(0, BOT_URL_MAX) : '',
+    events: [...new Set(events)],
+    mode: r.mode === 'bot' ? 'bot' : 'notify',
+  }
+}
+
+/**
+ * Validación de forma en el navegador (https, sin localhost ni IPs privadas
+ * literales). El servidor vuelve a validar resolviendo el DNS en cada envío.
+ */
+export function isValidBotUrl(raw: string): boolean {
+  let u: URL
+  try { u = new URL(raw.trim()) } catch { return false }
+  if (u.protocol !== 'https:' || u.username || u.password) return false
+  const host = u.hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  if (!host.includes('.') && !host.includes(':')) return false
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return false
+  const v4 = host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    if (a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
+      || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)) return false
+  }
+  if (host.includes(':')) return false // IPv6 literal: mejor un nombre de dominio
+  return true
+}
+
+export function saveBotWebhook(storeId: string, botWebhook: WaBotWebhook) {
+  return setDoc(settingsRef(storeId, 'automations'), { botWebhook: normalizeBotWebhook(botWebhook), updatedAt: serverTimestamp() }, { merge: true })
+}
+
+/** Genera o rota el secreto de firma. El secreto en claro llega SOLO acá. */
+export const rotateBotSecret = (storeId: string) =>
+  callWhatsappApi<{ secret: string; hint: string; createdAt: string }>('bot-webhook-secret', storeId)
+
+export interface BotTestResult { delivered: boolean; status: number; error: string | null; durationMs: number; response: string }
+
+/** "Enviar prueba" a la URL guardada. */
+export const testBotWebhook = (storeId: string) => callWhatsappApi<BotTestResult>('bot-webhook-test', storeId)
 
 export interface AiQuota { remaining: number; limit: number }
 

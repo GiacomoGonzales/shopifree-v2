@@ -24,6 +24,12 @@ const TOC = [
   { id: 'products-delete', label: 'DELETE /products' },
   { id: 'orders-get', label: 'GET /orders' },
   { id: 'orders-sync', label: 'POST /orders (sync)' },
+  { id: 'whatsapp', label: 'Bots de WhatsApp' },
+  { id: 'wa-webhooks', label: 'Webhooks y firma' },
+  { id: 'wa-messages', label: 'POST /whatsapp/messages' },
+  { id: 'wa-templates', label: 'POST /whatsapp/templates' },
+  { id: 'wa-handoff', label: 'POST /whatsapp/handoff' },
+  { id: 'wa-history', label: 'GET /whatsapp/…/messages' },
   { id: 'errors', label: 'Códigos de error' },
   { id: 'limits', label: 'Límites' },
   { id: 'best-practices', label: 'Buenas prácticas' },
@@ -42,7 +48,7 @@ function MethodBadge({ method }: { method: 'GET' | 'POST' | 'DELETE' }) {
   )
 }
 
-function CodeBlock({ children, language = 'bash' }: { children: string; language?: 'bash' | 'json' }) {
+function CodeBlock({ children, language = 'bash' }: { children: string; language?: 'bash' | 'json' | 'js' }) {
   const [copied, setCopied] = useState(false)
   const handleCopy = async () => {
     try {
@@ -404,6 +410,198 @@ export default function ApiDocs() {
             </p>
           </Endpoint>
 
+          {/* ───────────────── WhatsApp bots (ShopiChat fase 3C) ───────────────── */}
+          <Section id="whatsapp" title="Bots de WhatsApp (ShopiChat)">
+            <p>
+              Conectá tu propio bot (n8n, Make, Zapier, Dialogflow o código propio) a la bandeja de WhatsApp
+              de la tienda. Requiere el <strong>plan Business</strong> y WhatsApp conectado en ShopiChat.
+            </p>
+            <ol className="list-decimal pl-5 space-y-1">
+              <li>En ShopiChat → Configuración → <em>Conectar tu propio bot</em>: pegá la URL (https) de tu bot, elegí eventos y modo, y generá el secreto de firma</li>
+              <li>Shopifree te manda un <code className="bg-gray-100 px-1.5 py-0.5 rounded">POST</code> firmado por cada evento</li>
+              <li>Tu bot responde en el mismo HTTP response (modo <code>bot</code>, dentro de 5 s) o más tarde con los endpoints de abajo</li>
+            </ol>
+            <h4 className="font-medium text-gray-900 mt-4">Modos</h4>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><code>notify</code> — solo avisa. Las respuestas siguen como estaban (personas, piloto automático de IA)</li>
+              <li>
+                <code>bot</code> — tu bot responde a los mensajes nuevos de clientes y <strong>reemplaza al piloto automático</strong>:
+                si los dos están prendidos, gana el bot. En este modo <code>message.received</code> se envía siempre
+              </li>
+            </ul>
+            <h4 className="font-medium text-gray-900 mt-4">Reglas de envío (las mismas que el piloto automático)</h4>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Texto y tarjetas solo con la <strong>ventana de 24 h</strong> abierta (el cliente escribió en las últimas 24 h). Fuera de ventana, solo plantillas aprobadas</li>
+              <li>Nunca a contactos que pidieron la baja (<code>OPTED_OUT</code>)</li>
+              <li>Si una persona respondió en los últimos 30 min o el chat está derivado (<code>aiPaused</code>), la respuesta síncrona del bot se descarta</li>
+              <li>Máx. 20 respuestas síncronas por conversación y hora (compartido con el piloto) y 30 envíos por API por conversación y hora</li>
+              <li>Todo lo que manda el bot queda en la bandeja con la etiqueta <em>Bot</em></li>
+            </ul>
+          </Section>
+
+          <Section id="wa-webhooks" title="Webhooks salientes y verificación de firma">
+            <p>Eventos: <code>message.received</code>, <code>message.status</code>, <code>conversation.handoff</code> (y <code>test</code> desde el botón "Enviar prueba").</p>
+            <h4 className="font-medium text-gray-900 mt-4">Cabeceras</h4>
+            <CodeBlock>
+{`Content-Type: application/json
+X-Shopifree-Event: message.received
+X-Shopifree-Delivery: evt_4b1f...        // mismo id en los reintentos: usalo para deduplicar
+X-Shopifree-Signature: t=1790000000,v1=5f2a...  // hex(HMAC-SHA256(secreto, t + "." + cuerpo))`}
+            </CodeBlock>
+            <h4 className="font-medium text-gray-900 mt-4">Payload de message.received</h4>
+            <CodeBlock language="json">
+{`{
+  "id": "evt_4b1f0c2a9e7d...",
+  "type": "message.received",
+  "storeId": "abc123",
+  "createdAt": "2026-09-25T15:04:05.000Z",
+  "mode": "bot",
+  "expectsReply": true,                 // false si la respuesta se descartaría (ver replyBlockedReason)
+  "conversation": {
+    "waId": "51987654321",
+    "phone": "51987654321",
+    "name": "Ana",
+    "status": "open",                   // open | pending | done
+    "labels": ["VIP"],
+    "aiPaused": false,
+    "optOut": false,
+    "windowExpiresAt": "2026-09-26T15:04:03.000Z"
+  },
+  "message": {
+    "id": "wamid.HBgL...",
+    "direction": "in",
+    "from": "customer",
+    "type": "image",                    // text | image | audio | video | document | location | ...
+    "text": "¿Tienen esta en talla M?",
+    "media": { "url": "https://...", "mimeType": "image/jpeg", "filename": null },
+    "timestamp": "2026-09-25T15:04:03.000Z"
+  },
+  "customer": { "orders": { "count": 2, "lastOrderNumber": "1042", "lastStatus": "delivered" } }
+}`}
+            </CodeBlock>
+            <p>
+              <code>message.status</code> trae <code>conversation</code> y <code>message</code> con <code>status</code>{' '}
+              (<code>sent</code>, <code>delivered</code>, <code>read</code>, <code>failed</code>) y <code>statusAt</code>.{' '}
+              <code>conversation.handoff</code> trae <code>conversation</code> y <code>handoff: {'{'} reason, by {'}'}</code>.
+            </p>
+            <h4 className="font-medium text-gray-900 mt-4">Respuesta síncrona (modo bot)</h4>
+            <p>Respondé 2xx en menos de <strong>5 segundos</strong>. Opcionalmente, con este JSON:</p>
+            <CodeBlock language="json">
+{`{ "reply": { "text": "¡Sí! Te paso el producto", "productIds": ["prod_123"] } }
+
+{ "handoff": { "reason": "Pide factura" } }   // deriva a una persona (pausa el bot, pending, etiqueta, push)`}
+            </CodeBlock>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Hasta 2 <code>productIds</code> (se mandan como tarjeta con foto, precio y link)</li>
+              <li>Con <code>handoff</code>, el <code>reply.text</code> (si viene) se usa como mensaje al cliente</li>
+              <li>Entrega: timeout de 5 s, 2 reintentos (1 s y 3 s) ante error de red, timeout, 408, 429 o 5xx. Es <em>al menos una vez</em>: deduplicá por <code>id</code></li>
+              <li>Con 20 entregas fallidas seguidas el webhook se apaga solo y el dueño ve el aviso en Configuración</li>
+              <li>Solo URLs https públicas (se rechazan localhost e IPs privadas); no se siguen redirecciones</li>
+            </ul>
+            <h4 className="font-medium text-gray-900 mt-4">Verificar la firma (Node.js)</h4>
+            <CodeBlock language="js">
+{`import crypto from 'crypto'
+import express from 'express'
+
+const app = express()
+const SECRET = process.env.SHOPIFREE_WEBHOOK_SECRET   // sfwhsec_...
+
+// Cuerpo CRUDO: la firma se calcula sobre los bytes exactos.
+app.post('/webhook/shopichat', express.raw({ type: 'application/json' }), (req, res) => {
+  const header = req.get('X-Shopifree-Signature') || ''
+  const parts = Object.fromEntries(header.split(',').map(p => p.split('=')))
+  const t = Number(parts.t)
+  const expected = crypto.createHmac('sha256', SECRET).update(\`\${t}.\${req.body}\`).digest('hex')
+  const valid = typeof parts.v1 === 'string' && parts.v1.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(parts.v1), Buffer.from(expected))
+  // Rechazá firmas inválidas o viejas (anti-replay).
+  if (!valid || Math.abs(Date.now() / 1000 - t) > 300) return res.status(401).end()
+
+  const event = JSON.parse(req.body.toString('utf8'))
+  if (event.type === 'message.received' && event.expectsReply) {
+    return res.json({ reply: { text: \`¡Hola \${event.conversation.name || ''}! ¿En qué te ayudo?\` } })
+  }
+  res.status(200).end()
+})
+
+app.listen(3000)`}
+            </CodeBlock>
+          </Section>
+
+          <Endpoint method="POST" path="/whatsapp/messages" id="wa-messages">
+            <p>Manda un texto y/o un producto como tarjeta a una conversación existente (ventana de 24 h abierta).</p>
+            <CodeBlock>
+{`curl -X POST https://shopifree.app/api/v1/whatsapp/messages \\
+  -H "Authorization: Bearer sfk_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"waId":"51987654321","text":"¡Hola! ¿En qué te ayudo?"}'
+
+# Tarjeta de producto (foto + precio + link)
+  -d '{"waId":"51987654321","productId":"prod_123"}'`}
+            </CodeBlock>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><code>waId</code> — teléfono con código de país (solo dígitos) o BSUID, como llega en el webhook</li>
+              <li><code>text</code> — hasta 4096 caracteres. <code>productId</code> — id de un producto activo de la tienda</li>
+              <li><code>ignorePause</code> — <code>true</code> para escribir aunque el chat esté derivado a una persona</li>
+            </ul>
+            <CodeBlock language="json">
+{`// 200
+{ "ok": true, "messageId": "wamid.HBgL...", "messageIds": ["wamid.HBgL..."] }
+
+// 409 — ventana cerrada: usá POST /whatsapp/templates
+{ "error": "WINDOW_CLOSED", "message": "...", "windowExpiredAt": "2026-09-24T10:00:00.000Z" }`}
+            </CodeBlock>
+            <p>
+              Otros errores: <code>400 MISSING_WAID|MISSING_TEXT</code>, <code>404 CONVERSATION_NOT_FOUND|PRODUCT_NOT_FOUND</code>,{' '}
+              <code>409 OPTED_OUT|CONVERSATION_PAUSED|NOT_CONNECTED</code>, <code>429 CONVERSATION_RATE_LIMITED</code>, <code>502 META_ERROR</code>.
+            </p>
+          </Endpoint>
+
+          <Endpoint method="POST" path="/whatsapp/templates" id="wa-templates">
+            <p>Manda una plantilla aprobada por Meta. Funciona fuera de la ventana de 24 h; con <code>phone</code> crea la conversación si no existe.</p>
+            <CodeBlock>
+{`curl -X POST https://shopifree.app/api/v1/whatsapp/templates \\
+  -H "Authorization: Bearer sfk_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"phone":"51987654321","name":"seguimiento_pedido","language":"es","params":["Ana","1042"]}'`}
+            </CodeBlock>
+            <CodeBlock language="json">{`{ "ok": true, "messageId": "wamid.HBgL...", "waId": "51987654321" }`}</CodeBlock>
+            <p>Errores: <code>400 INVALID_PHONE|MISSING_TEMPLATE|TEMPLATE_NOT_APPROVED</code>, <code>404 TEMPLATE_NOT_FOUND</code>, <code>409 OPTED_OUT</code>.</p>
+          </Endpoint>
+
+          <Endpoint method="POST" path="/whatsapp/handoff" id="wa-handoff">
+            <p>
+              Deriva la conversación a una persona, igual que el piloto automático: manda la nota de derivación (si la ventana está abierta),
+              pausa el bot en ese chat, lo deja <code>pending</code> con la etiqueta <em>Atención humana</em> y avisa al dueño por push.
+            </p>
+            <CodeBlock>
+{`curl -X POST https://shopifree.app/api/v1/whatsapp/handoff \\
+  -H "Authorization: Bearer sfk_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"waId":"51987654321","reason":"Quiere hablar con ventas"}'`}
+            </CodeBlock>
+            <CodeBlock language="json">{`{ "ok": true, "handedOff": true }`}</CodeBlock>
+          </Endpoint>
+
+          <Endpoint method="GET" path="/whatsapp/conversations/{waId}/messages?limit=20" id="wa-history">
+            <p>Últimos mensajes de la conversación (del más viejo al más nuevo). <code>limit</code> máx. 50, default 20.</p>
+            <CodeBlock>
+{`curl "https://shopifree.app/api/v1/whatsapp/conversations/51987654321/messages?limit=20" \\
+  -H "Authorization: Bearer sfk_..."`}
+            </CodeBlock>
+            <CodeBlock language="json">
+{`{
+  "ok": true,
+  "conversation": { "waId": "51987654321", "name": "Ana", "status": "open", "labels": [], "aiPaused": false, ... },
+  "messages": [
+    { "id": "wamid...", "direction": "in", "from": "customer", "type": "text", "text": "Hola", "timestamp": "..." },
+    { "id": "wamid...", "direction": "out", "from": "bot", "type": "text", "text": "¡Hola!", "timestamp": "...", "status": "read" }
+  ]
+}`}
+            </CodeBlock>
+            <p><code>from</code>: <code>customer</code>, <code>human</code>, <code>ai</code> (piloto automático), <code>bot</code> o <code>auto</code> (avisos de pedidos).</p>
+          </Endpoint>
+
           {/* ───────────────── Errors ───────────────── */}
           <Section id="errors" title="Códigos de error">
             <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
@@ -431,6 +629,11 @@ export default function ApiDocs() {
                   <td className="px-3 py-2">Validar que el ID existe</td>
                 </tr>
                 <tr>
+                  <td className="px-3 py-2 font-mono">403</td>
+                  <td className="px-3 py-2">La tienda no tiene el plan requerido (<code>PLAN_REQUIRED</code>, endpoints de WhatsApp)</td>
+                  <td className="px-3 py-2">El dueño tiene que pasar al plan Business</td>
+                </tr>
+                <tr>
                   <td className="px-3 py-2 font-mono">405</td>
                   <td className="px-3 py-2">Método HTTP no soportado en ese path</td>
                   <td className="px-3 py-2">Revisar GET/POST/DELETE arriba</td>
@@ -444,6 +647,10 @@ export default function ApiDocs() {
             </table>
             <p>El body de error siempre tiene la forma:</p>
             <CodeBlock language="json">{`{ "error": "Mensaje legible" }`}</CodeBlock>
+            <p>
+              En <code>/whatsapp/*</code>, <code>error</code> es un código estable (<code>WINDOW_CLOSED</code>, <code>OPTED_OUT</code>, ...)
+              y <code>message</code> el texto legible. También se usan <code>409</code> (conflicto de estado) y <code>429</code> (límite).
+            </p>
           </Section>
 
           {/* ───────────────── Limits ───────────────── */}
@@ -451,7 +658,8 @@ export default function ApiDocs() {
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>200 productos</strong> por request en POST /products</li>
               <li><strong>500 pedidos</strong> por request en GET /orders (default 100)</li>
-              <li>Sin rate limit explícito por ahora, pero usá polling sensato (cada 2-5 min, no cada segundo)</li>
+              <li>Sin rate limit explícito en productos y pedidos, pero usá polling sensato (cada 2-5 min, no cada segundo)</li>
+              <li><strong>60 requests por minuto</strong> por API key en <code>/whatsapp/*</code> (429 <code>RATE_LIMITED</code> con cabecera <code>Retry-After</code>)</li>
               <li>Timeouts: las funciones tienen 60s. Batches grandes pueden tardar varios segundos — diseñá retries con timeout amplio</li>
             </ul>
           </Section>

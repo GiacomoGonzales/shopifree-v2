@@ -5,10 +5,10 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { hasBusinessEffectivePlan, type StorePlanData } from './_shared/plan.js'
 import { isAdminToken } from './_shared/admin.js'
 import {
-  MetaError, MEDIA_PERMITIDOS, mimeBase, extensionFromMime, normalizePhone, renderTemplateText,
+  MetaError, MEDIA_PERMITIDOS, mimeBase, extensionFromMime, normalizePhone,
   exchangeCodeForToken, listWabaPhoneNumbers, subscribeAppToWaba, registerPhoneNumber, requestSmbAppDataSync,
-  sendWhatsappText, sendWhatsappMedia, sendWhatsappReaction, sendWhatsappTemplate, markWhatsappMessageRead,
-  listWhatsappTemplates, isValidWaId, isSafeDocId, type WaTemplate,
+  sendWhatsappText, sendWhatsappMedia, sendWhatsappReaction, markWhatsappMessageRead,
+  isValidWaId, isSafeDocId,
 } from './_shared/whatsappGraph.js'
 import {
   getDb, storeRef, privateWaRef, waSettingsRef, convRef, waNumberRef, getPrivateWa,
@@ -16,6 +16,10 @@ import {
   previewText, storeMediaPrefix, outgoingUploadKey, presignR2Put, getWaitUntil, fetchProductImage, type PrivateWa,
 } from './_shared/whatsappInbox.js'
 import { setupOrderTemplates } from './_shared/whatsappOrderNotify.js'
+import { parseTemplateBody, sendTemplateMessage, syncTemplatesFor } from './_shared/whatsappTemplateSend.js'
+import {
+  assertPublicHost, checkBotUrl, deliver, getBotSecret, newEventId, readBotWebhook, recordDelivery, rotateBotSecret, type BotPayload,
+} from './_shared/shopichatBotWebhook.js'
 
 /**
  * ShopiChat — acciones del comerciante sobre su WhatsApp.
@@ -28,7 +32,8 @@ import { setupOrderTemplates } from './_shared/whatsappOrderNotify.js'
  *
  * Acciones: status, connect, connect-manual (solo admin), disconnect,
  * send-text, send-media, upload-url, mark-read, react, sync-templates,
- * send-template, retry-media, setup-order-templates.
+ * send-template, retry-media, setup-order-templates, bot-webhook-secret,
+ * bot-webhook-test (fase 3C: "conecta tu propio bot").
  *
  * send-media acepta ademas { productId, mediaUrl } para mandar un producto
  * como tarjeta: la foto tiene que ser una de las de ese producto de la tienda
@@ -298,12 +303,6 @@ async function finishConnect(p: {
   const { lastError: _le, updatedAt: _ua, ...publicAccount } = account
   void _le; void _ua
   return ok({ account: serialize(publicAccount) })
-}
-
-async function syncTemplatesFor(storeId: string, token: string, wabaId: string): Promise<WaTemplate[]> {
-  const items = await listWhatsappTemplates({ token, wabaId })
-  await waSettingsRef(storeId, 'templates').set({ items, syncedAt: FieldValue.serverTimestamp() })
-  return items
 }
 
 /** Plantillas de avisos despues de conectar. Nunca lanza: la conexion ya quedo hecha. */
@@ -602,21 +601,8 @@ async function actionSyncTemplates(ctx: Ctx): Promise<Result> {
  * y no hay conversacion, la crea. Respeta la baja voluntaria.
  */
 async function actionSendTemplate(ctx: Ctx): Promise<Result> {
-  const name = str(ctx.body.name, 512)
-  const language = str(ctx.body.language, 20)
-  // params: string[] (contrato) o { body: string[], header?, headerImageUrl? }
-  // (forma que manda src/lib/shopichatService.ts). Se aceptan las dos.
-  const rawParams = ctx.body.params
-  const pObj = rawParams && typeof rawParams === 'object' && !Array.isArray(rawParams) ? (rawParams as Record<string, unknown>) : null
-  const bodyList = Array.isArray(rawParams) ? rawParams : Array.isArray(pObj?.body) ? (pObj!.body as unknown[]) : []
-  const params = bodyList.slice(0, 20).map(v => String(v ?? '').slice(0, 1000))
-  const headerText = str(ctx.body.headerText ?? pObj?.header ?? pObj?.headerText, 60) || null
-  const headerImageUrl = str(ctx.body.headerImageUrl ?? pObj?.headerImageUrl, 2000) || null
-  if (!name) return fail(400, 'MISSING_TEMPLATE')
-  // Se guarda como media.url y la bandeja la pinta: solo https.
-  if (headerImageUrl && !/^https:\/\/[^\s]+$/i.test(headerImageUrl)) {
-    return fail(400, 'INVALID_HEADER_IMAGE', { message: 'La imagen de encabezado tiene que ser una URL https' })
-  }
+  const parsed = parseTemplateBody(ctx.body)
+  if (!parsed.ok) return fail(parsed.status, parsed.error, parsed.message ? { message: parsed.message } : {})
 
   let waId = waIdOf(ctx.body.waId)
   if (!waId) {
@@ -628,52 +614,22 @@ async function actionSendTemplate(ctx: Ctx): Promise<Result> {
   const wa = await requireConnected(ctx.storeId)
   if (isResult(wa)) return wa
 
-  const cRef = convRef(ctx.storeId, waId)
-  const cSnap = await cRef.get()
-  if (!cSnap.exists && ctx.body.waId && !ctx.body.phone) return fail(404, 'CONVERSATION_NOT_FOUND')
-  if (cSnap.data()?.optOut === true) return fail(409, 'OPTED_OUT', { message: 'Este contacto pidio no recibir mas mensajes' })
-
-  // La plantilla sale del catalogo sincronizado; si no esta, se sincroniza una vez.
-  const pick = (items: WaTemplate[]) =>
-    items.find(t => t.name === name && (!language || t.language === language))
-  const tSnap = await waSettingsRef(ctx.storeId, 'templates').get()
-  let template = pick((tSnap.data()?.items as WaTemplate[]) || [])
-  if (!template) {
-    try {
-      template = pick(await syncTemplatesFor(ctx.storeId, wa.accessToken, wa.wabaId))
-    } catch (e) {
-      return metaFail(e)
-    }
-  }
-  if (!template) return fail(404, 'TEMPLATE_NOT_FOUND')
-  if (template.status !== 'APPROVED') {
-    return fail(400, 'TEMPLATE_NOT_APPROVED', { message: `La plantilla esta en estado ${template.status}` })
-  }
-
-  let waMessageId: string
   try {
-    ({ waMessageId } = await sendWhatsappTemplate({
-      token: wa.accessToken, phoneNumberId: wa.phoneNumberId, to: waId,
-      name: template.name, language: template.language, bodyValues: params, headerText, headerImageUrl,
-    }))
+    const r = await sendTemplateMessage(ctx.storeId, wa, {
+      waId,
+      requireExisting: Boolean(ctx.body.waId && !ctx.body.phone),
+      name: parsed.name,
+      language: parsed.language,
+      params: parsed.params,
+      headerText: parsed.headerText,
+      headerImageUrl: parsed.headerImageUrl,
+      sentBy: ctx.uid,
+    })
+    if (!r.ok) return fail(r.status, r.error, r.message ? { message: r.message } : {})
+    return ok({ messageId: r.messageId, waId: r.waId })
   } catch (e) {
     return metaFail(e)
   }
-
-  const text = renderTemplateText(template.components, params, headerText)
-  const convDefaults = cSnap.exists ? {} : {
-    waId, phone: /^\d+$/.test(waId) ? waId : null, name: null, labels: [], note: '', optOut: false,
-    status: 'open', windowExpiresAt: null, createdAt: FieldValue.serverTimestamp(),
-  }
-  await saveOutgoingMessage(ctx.storeId, waId, waMessageId, {
-    type: 'template',
-    text,
-    template: { name: template.name, language: template.language },
-    ...(headerImageUrl ? { media: { url: headerImageUrl, mimeType: 'image/jpeg' } } : {}),
-    status: 'sent',
-    sentBy: ctx.uid,
-  }, { ...convDefaults, lastMessage: previewText('template', text), lastTemplateAt: Timestamp.now() })
-  return ok({ messageId: waMessageId, waId })
 }
 
 /**
@@ -714,6 +670,50 @@ async function actionRetryMedia(ctx: Ctx): Promise<Result> {
   return ok({ media: after.data()?.media || null })
 }
 
+// =================== BOT PROPIO (fase 3C) ===================
+
+/**
+ * Genera o rota el secreto de firma del webhook del bot. Se devuelve en claro
+ * SOLO acá; después Configuración muestra "sfwhsec_…abcd" (botWebhookStatus.secretHint).
+ */
+async function actionBotWebhookSecret(ctx: Ctx): Promise<Result> {
+  const r = await rotateBotSecret(ctx.storeId)
+  return ok({ secret: r.secret, hint: r.hint, createdAt: r.createdAt })
+}
+
+/**
+ * "Enviar prueba": manda un evento 'test' firmado a la URL GUARDADA (sin
+ * reintentos) y devuelve el código HTTP. No suma al contador de fallos.
+ */
+async function actionBotWebhookTest(ctx: Ctx): Promise<Result> {
+  const cfg = readBotWebhook((await waSettingsRef(ctx.storeId, 'automations').get()).data()?.botWebhook)
+  if (!cfg.url) return fail(400, 'MISSING_URL')
+  const checked = checkBotUrl(cfg.url)
+  if ('error' in checked) return fail(400, checked.error)
+  try {
+    await assertPublicHost(checked.url)
+  } catch (e) {
+    return fail(400, (e as { code?: string }).code || 'DNS_ERROR')
+  }
+  const secret = await getBotSecret(ctx.storeId)
+  if (!secret) return fail(409, 'NO_SECRET', { message: 'Genera el secreto de firma primero' })
+  const now = new Date().toISOString()
+  const payload: BotPayload = {
+    id: newEventId(),
+    type: 'test',
+    storeId: ctx.storeId,
+    createdAt: now,
+    test: true,
+    mode: cfg.mode,
+    conversation: { waId: '5491100000000', phone: '5491100000000', name: 'Cliente de prueba', status: 'open', labels: [], aiPaused: false, optOut: false, windowExpiresAt: null },
+    message: { id: 'wamid.TEST', direction: 'in', from: 'customer', type: 'text', text: 'Hola, esta es una prueba de Shopifree', timestamp: now },
+    customer: { orders: { count: 0, lastOrderNumber: null, lastStatus: null } },
+  }
+  const r = await deliver(cfg.url, secret, payload, 0)
+  await recordDelivery(ctx.storeId, 'test', r, false)
+  return ok({ delivered: r.ok, status: r.status, error: r.error, durationMs: r.durationMs, response: r.text.slice(0, 300) })
+}
+
 // =================== HANDLER ===================
 
 const ACTIONS: Record<string, (ctx: Ctx) => Promise<Result>> = {
@@ -730,6 +730,8 @@ const ACTIONS: Record<string, (ctx: Ctx) => Promise<Result>> = {
   'send-template': actionSendTemplate,
   'retry-media': actionRetryMedia,
   'setup-order-templates': actionSetupOrderTemplates,
+  'bot-webhook-secret': actionBotWebhookSecret,
+  'bot-webhook-test': actionBotWebhookTest,
 }
 
 // Acciones que no exigen plan Business.

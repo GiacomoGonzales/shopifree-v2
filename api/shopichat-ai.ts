@@ -198,5 +198,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // Hasta 4 llamadas al modelo (3 rondas de herramientas + la final).
 export const config = {
-  maxDuration: 60,
+  maxDuration: 120, // rondas de herramientas con plazo de 45 s + respuesta final
 }

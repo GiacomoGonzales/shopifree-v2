@@ -536,8 +536,9 @@ export async function saveIncomingReaction(storeId: string, m: ParsedMessage): P
 
 // =================== ESTADOS (sent / delivered / read / failed) ===================
 
-export async function applyStatus(storeId: string, s: ParsedStatus) {
-  if (!s.waId || !s.waMessageId || !s.status) return
+/** Devuelve el id de la conversacion (o null si el estado no se pudo aplicar). */
+export async function applyStatus(storeId: string, s: ParsedStatus): Promise<string | null> {
+  if (!s.waId || !s.waMessageId || !s.status) return null
   if (!isValidWaId(s.waId) || !isSafeDocId(s.waMessageId)) throw new Error('Estado con ids invalidos')
   const convId = (await resolveConversationId(storeId, {
     phone: isBsuid(s.waId) ? null : s.waId,
@@ -548,30 +549,34 @@ export async function applyStatus(storeId: string, s: ParsedStatus) {
   const mRef = cRef.collection('messages').doc(s.waMessageId)
   const newStatus: string = s.status
 
-  await getDb().runTransaction(async tx => {
+  // true solo si el estado se aplico de verdad: un reintento de Meta o un
+  // estado que no avanza no dispara de nuevo el evento message.status (3C).
+  const applied = await getDb().runTransaction(async tx => {
     const [mSnap, cSnap] = await Promise.all([tx.get(mRef), tx.get(cRef)])
-    if (!cSnap.exists) return // conversacion desconocida: no se crean huerfanos
+    if (!cSnap.exists) return false // conversacion desconocida: no se crean huerfanos
     const prev = mSnap.exists ? mSnap.data() || {} : null
     const prevStatus: string | undefined = prev?.status
 
     if (newStatus === 'failed') {
-      if (prevStatus === 'failed') return
+      if (prevStatus === 'failed') return false
       tx.set(mRef, {
         status: 'failed',
         error: s.error || 'No se pudo entregar',
         ...(s.errorCode != null ? { errorCode: s.errorCode, permanent: PERMANENT_FAILURE_CODES.has(Number(s.errorCode)) } : {}),
         statusAt: Timestamp.fromMillis(s.timestamp),
       }, { merge: true })
-      return
+      return true
     }
-    if (!(newStatus in STATUS_RANK)) return
-    if (prevStatus === 'failed') return
-    if (prevStatus && (STATUS_RANK[prevStatus] ?? -1) >= STATUS_RANK[newStatus]) return
+    if (!(newStatus in STATUS_RANK)) return false
+    if (prevStatus === 'failed') return false
+    if (prevStatus && (STATUS_RANK[prevStatus] ?? -1) >= STATUS_RANK[newStatus]) return false
     // merge: el estado puede llegar ANTES que el mensaje que lo origino. Queda
     // un stub sin `timestamp` (no aparece en la UI ordenada por timestamp)
     // hasta que se escriba el mensaje, que respeta este estado.
     tx.set(mRef, { status: newStatus, statusAt: Timestamp.fromMillis(s.timestamp) }, { merge: true })
+    return true
   })
+  return applied ? convId : null
 }
 
 // =================== CONTACTOS (coexistencia) ===================

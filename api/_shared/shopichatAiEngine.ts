@@ -212,6 +212,8 @@ export async function loadTranscript(storeId: string, waId: string, count: numbe
     if (m.direction === 'in') lastIn = at
     const label = m.type && m.type !== 'text' ? MEDIA_LABEL[m.type] || `[${oneLine(m.type, 20)}]` : ''
     let body = asData(m.text, MESSAGE_MAX_CHARS)
+    // En una sola línea: un cliente no puede fingir líneas "[..] Tienda: ..." en la transcripción.
+    if (m.direction === 'in') body = body.replace(/\s*[\r\n]+\s*/g, ' ⏎ ')
     if (m.type === 'location' && m.location) body = oneLine(m.location.name || m.location.address || '', 120)
     const content = [label, body].filter(Boolean).join(' ') || '[vacío]'
     return `[${stamp(at)}] ${who}: ${content}`
@@ -287,7 +289,7 @@ const STATUS_ES: Record<string, string> = {
 const PAY_ES: Record<string, string> = { pending: 'pago pendiente', paid: 'pagado', failed: 'pago fallido', refunded: 'reembolsado' }
 
 /** Pedidos de este cliente (por teléfono o creados desde este chat), del más nuevo al más viejo. */
-async function customerOrders(storeId: string, waId: string, phone: string): Promise<DocumentData[]> {
+export async function customerOrders(storeId: string, waId: string, phone: string): Promise<DocumentData[]> {
   const snap = await storeRef(storeId).collection('orders').orderBy('createdAt', 'desc').limit(ORDERS_SCAN)
     .select('orderNumber', 'customer', 'items', 'subtotal', 'shippingCost', 'discount', 'total', 'status',
       'paymentMethod', 'paymentStatus', 'deliveryMethod', 'deliveryAddress', 'createdAt', 'isTest', 'waId',
@@ -600,12 +602,14 @@ const MODE_TEXT: Record<Mode, string> = {
  * Bucle de herramientas, igual para todos los proveedores: hasta
  * MAX_TOOL_ROUNDS rondas con herramientas y una final sin ellas; como mucho
  * MAX_TOOL_CALLS llamadas en total. Devuelve el JSON final (o null).
+ * `deadline` (epoch ms, opcional): pasado ese momento la siguiente ronda es la
+ * final (sin herramientas), para no pasarse del maxDuration de la función.
  */
-async function runLoop(provider: AiProvider, req: AiChatRequest, env: ToolEnv | null, usage: AiUsage): Promise<unknown | null> {
+async function runLoop(provider: AiProvider, req: AiChatRequest, env: ToolEnv | null, usage: AiUsage, deadline?: number): Promise<unknown | null> {
   const session = provider.start(req, usage)
   let toolCalls = 0
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const lastRound = round === MAX_TOOL_ROUNDS || toolCalls >= MAX_TOOL_CALLS
+    const lastRound = round === MAX_TOOL_ROUNDS || toolCalls >= MAX_TOOL_CALLS || (deadline !== undefined && Date.now() >= deadline)
     const turn = await session.next(!lastRound && req.tools.length > 0)
     if (turn.toolCalls.length && !lastRound && env) {
       const allowed = turn.toolCalls.slice(0, Math.max(0, MAX_TOOL_CALLS - toolCalls))
@@ -649,7 +653,8 @@ interface CustomerCtx {
   conv: DocumentData
 }
 
-async function customerContext(c: CustomerCtx) {
+async function customerContext(c: CustomerCtx, opts: { includeNote?: boolean } = {}) {
+  const includeNote = opts.includeNote !== false
   const phone = String(c.conv.phone || c.waId)
   const [{ text: transcript, lastIn }, orders] = await Promise.all([
     loadTranscript(c.storeId, c.waId, HISTORY_MESSAGES),
@@ -661,7 +666,7 @@ async function customerContext(c: CustomerCtx) {
   const header = [
     `Ahora: ${stamp(new Date())}.${lastIn ? ` Último mensaje del cliente: ${stamp(lastIn)}.` : ''}`,
     `Cliente: ${customerName ? asData(customerName, 60) : 'sin nombre'}${Array.isArray(c.conv.labels) && c.conv.labels.length ? ` · etiquetas: ${c.conv.labels.slice(0, 8).map((l: unknown) => oneLine(l, 30)).join(', ')}` : ''}`,
-    c.conv.note ? `Nota interna del comerciante sobre este cliente (no la cites):\n<nota_interna>\n${asData(c.conv.note, 500)}\n</nota_interna>` : '',
+    includeNote && c.conv.note ? `Nota interna del comerciante sobre este cliente (no la cites):\n<nota_interna>\n${asData(c.conv.note, 500)}\n</nota_interna>` : '',
     recent.length
       ? `<pedidos_del_cliente>\n${recent.map(o => orderLine(o, currency)).join('\n')}\n</pedidos_del_cliente>`
       : 'El cliente no tiene pedidos registrados en la tienda.',
@@ -693,7 +698,7 @@ export async function suggestReplies(provider: AiProvider, c: CustomerCtx & { dr
     tools: COPILOT_TOOLS,
     output: { name: 'suggestions', schema: SUGGEST_SCHEMA },
     maxTokens: 1500,
-  }, env, usage) as { suggestions?: unknown } | null
+  }, env, usage, Date.now() + COPILOT_TOOLS_BUDGET_MS) as { suggestions?: unknown } | null
   const raw = Array.isArray(parsed?.suggestions) ? parsed.suggestions : []
   const seen = new Set<string>()
   const suggestions = raw
@@ -740,9 +745,21 @@ export interface AutopilotResult {
   handoff: string | null
 }
 
+/**
+ * Tiempo para rondas con herramientas del piloto; después va la final. Con el
+ * debounce (12 s), una última llamada lenta (40 s + 1 reintento del SDK) y los
+ * envíos, entra en el maxDuration de api/whatsapp-webhook.ts (300 s).
+ */
+const AUTOPILOT_TOOLS_BUDGET_MS = 120_000
+// Copiloto: el comerciante espera la sugerencia; pasado esto se pide la respuesta final.
+const COPILOT_TOOLS_BUDGET_MS = 45_000
+
 /** Piloto automático: la respuesta que se ENVÍA al cliente (o la derivación). */
 export async function autopilotReply(provider: AiProvider, c: CustomerCtx, usage: AiUsage): Promise<AutopilotResult> {
-  const { header, env } = await customerContext(c)
+  const deadline = Date.now() + AUTOPILOT_TOOLS_BUDGET_MS
+  // Sin la nota interna: lo que se envía solo, sin revisión, no debe poder filtrarla
+  // (un cliente podría pedirle a la IA que la repita).
+  const { header, env } = await customerContext(c, { includeNote: false })
   const userText = [
     ...header,
     'Escribe la respuesta que se le enviará ahora mismo al cliente (en reply). Si corresponde derivar, llama a handoff_to_human o devuelve handoff=true con el motivo en handoffReason y reply vacío.',
@@ -754,7 +771,7 @@ export async function autopilotReply(provider: AiProvider, c: CustomerCtx, usage
     tools: AUTOPILOT_TOOLS,
     output: { name: 'autopilot_reply', schema: AUTOPILOT_SCHEMA },
     maxTokens: 1000,
-  }, env, usage) as Record<string, unknown> | null
+  }, env, usage, deadline) as Record<string, unknown> | null
   const flagged = parsed?.handoff === true
   const handoff = env.handoff || (flagged ? oneLine(parsed?.handoffReason, 200) || 'Sin motivo' : null)
   const reply = handoff ? '' : cleanReply(parsed?.reply)
@@ -796,7 +813,12 @@ export async function claimQuota(storeId: string, action: string, byo: boolean):
   })
 }
 
-/** Tokens consumidos (para ver costos más adelante). Si la llamada falló, se devuelve el cupo. */
+/**
+ * Tokens consumidos (para ver costos más adelante). Si la llamada falló, se
+ * devuelve el cupo, pero SOLO si ninguna llamada al modelo llegó a completarse:
+ * un error después de gastar tokens (EMPTY, REFUSED en la 2ª ronda, etc.) no
+ * se reintegra, así no se puede forzar un fallo para usar el modelo gratis.
+ */
 export async function recordUsage(storeId: string, usage: AiUsage, refund: boolean, byo: boolean) {
   const prefix = byo ? 'shopichatByo' : 'shopichat'
   const data: Record<string, unknown> = {
@@ -807,6 +829,6 @@ export async function recordUsage(storeId: string, usage: AiUsage, refund: boole
     [`${prefix}ModelCalls`]: FieldValue.increment(usage.calls),
     updatedAt: FieldValue.serverTimestamp(),
   }
-  if (refund) data[counter(byo).field] = FieldValue.increment(-1)
+  if (refund && usage.calls === 0) data[counter(byo).field] = FieldValue.increment(-1)
   await usageRef(storeId).set(data, { merge: true }).catch(e => console.warn('[shopichat-ai] no se pudo guardar el uso:', (e as Error).message))
 }

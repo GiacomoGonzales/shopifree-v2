@@ -2423,6 +2423,73 @@
           "AI_ERROR": "la IA no está disponible"
         }
       }
+    },
+    "bot": {
+      "title": "Conectar tu propio bot",
+      "help": "Envía los mensajes de WhatsApp a tu propia herramienta (n8n, Make, Zapier, Dialogflow o tu código) y responde desde ella.",
+      "enable": "Activar el webhook del bot",
+      "saved": "Bot guardado",
+      "saveError": "No se pudo guardar la configuración del bot.",
+      "needUrl": "Primero guarda una URL https válida.",
+      "needSecret": "Primero genera el secreto de firma.",
+      "autoDisabled": "Lo apagamos automáticamente porque tu URL falló muchas veces seguidas. Revisa tu bot, prueba de nuevo y vuelve a activarlo.",
+      "url": "URL del webhook",
+      "urlHelp": "Solo https y direcciones públicas. Te enviamos un POST con JSON firmado.",
+      "urlInvalid": "La URL tiene que ser https y pública (nada de localhost ni IPs privadas).",
+      "mode": "Modo",
+      "modes": {
+        "notify": "Solo notificar",
+        "notifyHelp": "Te avisamos de lo que pasa; las respuestas siguen como hasta ahora.",
+        "bot": "El bot responde",
+        "botHelp": "Tu bot contesta a los clientes (en la respuesta del webhook o por la API). Reemplaza al piloto automático."
+      },
+      "precedence": "Tienes el piloto automático de IA prendido: con \"El bot responde\", contesta tu bot y el piloto no responde.",
+      "events": "Eventos",
+      "eventHelp": {
+        "message_received": "Cada mensaje nuevo de un cliente (en modo \"El bot responde\" se envía siempre).",
+        "message_status": "Enviado, entregado, leído o fallido de los mensajes que salen.",
+        "conversation_handoff": "Cuando un chat se deriva a una persona."
+      },
+      "secret": "Secreto de firma",
+      "noSecret": "sin generar",
+      "generateSecret": "Generar secreto",
+      "rotateSecret": "Rotar secreto",
+      "rotateConfirm": "Se genera un secreto nuevo y el anterior deja de valer. ¿Seguimos?",
+      "secretOnce": "Cópialo ahora: no lo volveremos a mostrar.",
+      "secretSaved": "Ya lo guardé",
+      "secretHelp": "Úsalo para verificar la cabecera X-Shopifree-Signature: t=<unix>,v1=<HMAC-SHA256 de \"t.cuerpo\">.",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "test": "Enviar prueba",
+      "testing": "Enviando…",
+      "saveFirst": "Guarda los cambios para probar la URL nueva.",
+      "lastDelivery": "Último envío:",
+      "never": "todavía ninguno",
+      "failing": "{{count}} envío(s) fallido(s) seguidos. Con 20 lo apagamos automáticamente.",
+      "howTitle": "Cómo funciona (ejemplos)",
+      "howPayload": "Por cada evento te enviamos un POST con este JSON (cabeceras X-Shopifree-Event y X-Shopifree-Signature). Responde 2xx en menos de 5 s; si falla reintentamos 2 veces.",
+      "howSignature": "Verifica la firma: calcula HMAC-SHA256 con tu secreto sobre \"t.cuerpo\" (el cuerpo crudo) y compáralo con v1. Rechaza si t tiene más de 5 minutos.",
+      "howReply": "En modo \"El bot responde\" puedes contestar en el mismo cuerpo de la respuesta (dentro de los 5 s):",
+      "howApi": "O responder después por la API pública con la API key de tu tienda:",
+      "apiKeysLink": "Crear o ver tu API key",
+      "docsLink": "Documentación de la API",
+      "badge": "Bot",
+      "sentByBot": "Enviado por tu bot",
+      "errors": {
+        "INVALID_URL": "URL inválida",
+        "HTTPS_REQUIRED": "la URL tiene que ser https",
+        "PRIVATE_ADDRESS": "la URL apunta a una dirección privada",
+        "DNS_ERROR": "no se encontró el dominio",
+        "TIMEOUT": "tu servidor tardó más de 5 s",
+        "CONNECTION_ERROR": "no se pudo conectar",
+        "TLS_ERROR": "certificado https inválido",
+        "MISSING_URL": "falta guardar la URL",
+        "NO_SECRET": "falta generar el secreto",
+        "PLAN_REQUIRED": "requiere el plan Business",
+        "NETWORK": "sin conexión",
+        "HTTP": "tu servidor respondió HTTP {{status}}",
+        "generic": "algo salió mal"
+      }
     }
   },
   "customerProfile": {

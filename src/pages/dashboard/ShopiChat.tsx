@@ -27,6 +27,7 @@ import { canSeeShopiChat } from '../../lib/shopichatAccess'
 import { useToast } from '../../components/ui/Toast'
 import {
   DEFAULT_AI_SETTINGS,
+  DEFAULT_BOT_WEBHOOK,
   DEFAULT_ORDER_NOTIFICATIONS,
   MAX_CONVERSATIONS,
   formatPhone,
@@ -46,6 +47,8 @@ import type {
   WaAccount,
   WaAiSettings,
   WaAiStatus,
+  WaBotWebhook,
+  WaBotWebhookStatus,
   WaConversation,
   WaConversationStatus,
   WaOrderNotifications,
@@ -196,6 +199,8 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
   const [orderNotifications, setOrderNotifications] = useState<WaOrderNotifications>(DEFAULT_ORDER_NOTIFICATIONS)
   const [aiSettings, setAiSettings] = useState<WaAiSettings>(DEFAULT_AI_SETTINGS)
   const [aiStatus, setAiStatus] = useState<WaAiStatus | null>(null)
+  const [botWebhook, setBotWebhook] = useState<WaBotWebhook>(DEFAULT_BOT_WEBHOOK)
+  const [botWebhookStatus, setBotWebhookStatus] = useState<WaBotWebhookStatus | null>(null)
   const [tab, setTab] = useState<WaConversationStatus>('open')
   const [search, setSearch] = useState('')
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
@@ -219,6 +224,8 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
     setOrderNotifications(a.orderNotifications)
     setAiSettings(a.ai)
     setAiStatus(a.aiStatus || null)
+    setBotWebhook(a.botWebhook)
+    setBotWebhookStatus(a.botWebhookStatus || null)
   }), [storeId])
 
   // El panel suena distinto si el mensaje entra en la conversación que se está mirando.
@@ -542,6 +549,8 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
               orderNotifications={orderNotifications}
               aiSettings={aiSettings}
               aiStatus={aiStatus}
+              botWebhook={botWebhook}
+              botWebhookStatus={botWebhookStatus}
               templates={templates}
               storeLanguage={store.language}
               onBack={() => setSettingsOpen(false)}
@@ -555,7 +564,7 @@ function Inbox({ store, account }: { store: Store; account: WaAccount }) {
               templates={templates}
               quickReplies={quickReplies}
               aiEnabled={aiSettings.enabled}
-              autopilot={aiSettings.enabled && aiSettings.mode === 'autopilot'}
+              autopilot={(aiSettings.enabled && aiSettings.mode === 'autopilot') || (botWebhook.enabled && botWebhook.mode === 'bot' && !!botWebhook.url)}
               allLabels={allLabels}
               now={now}
               onBack={() => openConversation(null)}
