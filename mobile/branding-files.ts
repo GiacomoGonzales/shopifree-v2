@@ -21,6 +21,16 @@ export const BRANDING_FILES = [
   'android/app/src/main/res/values/ic_launcher_background.xml',
   'android/app/src/main/res/drawable/ic_launcher_background.xml',
 
+  // Android — push: config de Firebase del paquete de la tienda
+  // (mobile/ci/firebase-android-config.ts) e ícono + color de la notificación
+  'android/app/google-services.json',
+  'android/app/src/main/res/values/colors.xml',
+  'android/app/src/main/res/drawable-mdpi/ic_stat_notification.png',
+  'android/app/src/main/res/drawable-hdpi/ic_stat_notification.png',
+  'android/app/src/main/res/drawable-xhdpi/ic_stat_notification.png',
+  'android/app/src/main/res/drawable-xxhdpi/ic_stat_notification.png',
+  'android/app/src/main/res/drawable-xxxhdpi/ic_stat_notification.png',
+
   // Android — splash icon (Android 12+ system splash)
   'android/app/src/main/res/drawable/ic_splash_icon.png',
 

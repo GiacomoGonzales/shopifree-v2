@@ -4,6 +4,7 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
 import { createHash } from 'crypto'
+import { sendApns } from './_shared/apns.js'
 
 let db: Firestore
 
@@ -65,6 +66,15 @@ async function uidFromRequest(req: VercelRequest): Promise<string | null> {
 }
 
 /**
+ * Bundle id / applicationId que manda la app al registrar. En iOS es el
+ * `apns-topic` del envío (ver _shared/apns.ts), así que solo se guarda si
+ * tiene forma de identificador.
+ */
+function cleanAppId(appId: unknown): { appId?: string } {
+  return typeof appId === 'string' && /^[A-Za-z0-9.-]{1,155}$/.test(appId) ? { appId } : {}
+}
+
+/**
  * Token del DUEÑO de la tienda, para avisarle de pedidos nuevos.
  *
  * Va a `users/{uid}/pushTokens`, deliberadamente SEPARADO de
@@ -72,7 +82,7 @@ async function uidFromRequest(req: VercelRequest): Promise<string | null> {
  * navegan el catálogo. Mezclarlos haría que un "tenés un pedido nuevo" le
  * llegue a toda la clientela.
  */
-async function registerOwnerToken(body: { token: string; platform: string }, uid: string) {
+async function registerOwnerToken(body: { token: string; platform: string; appId?: string }, uid: string) {
   const { token, platform } = body
   if (!token || !platform) {
     return { status: 400, data: { error: 'Missing required parameters: token, platform' } }
@@ -86,12 +96,12 @@ async function registerOwnerToken(body: { token: string; platform: string }, uid
     .doc(uid)
     .collection('pushTokens')
     .doc(tokenHash)
-    .set({ token, platform, updatedAt: new Date() }, { merge: true })
+    .set({ token, platform, ...cleanAppId(body.appId), updatedAt: new Date() }, { merge: true })
 
   return { status: 200, data: { success: true } }
 }
 
-async function registerToken(body: { storeId: string; token: string; platform: string }) {
+async function registerToken(body: { storeId: string; token: string; platform: string; appId?: string }) {
   const { storeId, token, platform } = body
 
   if (!storeId || !token || !platform) {
@@ -106,7 +116,7 @@ async function registerToken(body: { storeId: string; token: string; platform: s
     .doc(storeId)
     .collection('pushTokens')
     .doc(tokenHash)
-    .set({ token, platform, storeId, createdAt: new Date() }, { merge: true })
+    .set({ token, platform, ...cleanAppId(body.appId), storeId, createdAt: new Date() }, { merge: true })
 
   return { status: 200, data: { success: true } }
 }
@@ -149,17 +159,18 @@ async function sendNotification(body: { storeId: string; title: string; body: st
     return { status: 200, data: { success: true, sent: 0, message: 'No tokens registered' } }
   }
 
-  const tokens = tokensSnap.docs.map(doc => doc.data().token as string)
-  const messaging = getMessaging()
-
   let totalSuccess = 0
   let totalFailure = 0
   const staleTokenIds: string[] = []
 
-  for (let i = 0; i < tokens.length; i += 500) {
-    const batch = tokens.slice(i, i + 500)
+  // Android: FCM.
+  const fcmDocs = tokensSnap.docs.filter(doc => doc.data().platform !== 'ios')
+  const messaging = getMessaging()
+
+  for (let i = 0; i < fcmDocs.length; i += 500) {
+    const batch = fcmDocs.slice(i, i + 500)
     const response = await messaging.sendEachForMulticast({
-      tokens: batch,
+      tokens: batch.map(doc => doc.data().token as string),
       notification: { title, body: notifBody }
     })
 
@@ -168,17 +179,43 @@ async function sendNotification(body: { storeId: string; title: string; body: st
 
     response.responses.forEach((resp, idx) => {
       if (!resp.success && resp.error?.code === 'messaging/registration-token-not-registered') {
-        const globalIdx = i + idx
-        const doc = tokensSnap.docs[globalIdx]
-        if (doc) staleTokenIds.push(doc.id)
+        staleTokenIds.push(batch[idx].id)
       }
     })
   }
 
-  // Clean up stale tokens
-  if (staleTokenIds.length > 0) {
+  // iOS: directo a APNs, con el bundle id de la app de la tienda como topic.
+  // Un token sin appId no tiene a dónde ir; se borra y la app lo vuelve a
+  // registrar completo en el próximo arranque.
+  const iosDocs = tokensSnap.docs.filter(doc => doc.data().platform === 'ios')
+  const apnsDocs = iosDocs.filter(doc => typeof doc.data().appId === 'string')
+  iosDocs.filter(doc => typeof doc.data().appId !== 'string').forEach(doc => staleTokenIds.push(doc.id))
+
+  if (apnsDocs.length > 0) {
+    try {
+      const results = await sendApns(
+        apnsDocs.map(doc => ({ token: doc.data().token as string, topic: doc.data().appId as string })),
+        { title, body: notifBody }
+      )
+      results.forEach((result, idx) => {
+        if (result.ok) {
+          totalSuccess++
+          return
+        }
+        totalFailure++
+        if (result.stale) staleTokenIds.push(apnsDocs[idx].id)
+      })
+    } catch (err) {
+      // Sin credenciales de APNs: Android igual sale, iOS cuenta como fallido.
+      console.error('[push] APNs error:', err)
+      totalFailure += apnsDocs.length
+    }
+  }
+
+  // Clean up stale tokens (un batch de Firestore admite hasta 500 escrituras)
+  for (let i = 0; i < staleTokenIds.length; i += 500) {
     const writeBatch = firestore.batch()
-    for (const tokenId of staleTokenIds) {
+    for (const tokenId of staleTokenIds.slice(i, i + 500)) {
       writeBatch.delete(
         firestore.collection('stores').doc(storeId).collection('pushTokens').doc(tokenId)
       )

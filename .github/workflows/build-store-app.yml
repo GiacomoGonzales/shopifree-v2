@@ -60,6 +60,16 @@ jobs:
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
         run: npx tsx mobile/build-config.ts ${{ github.event.inputs.storeId }}
 
+      # Registra el paquete de la tienda en Firebase y escribe su
+      # google-services.json. Sin esto la app no tiene push. Si falla, deja una
+      # advertencia y la build sigue sin push.
+      - name: Firebase config for push (FCM)
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: npx tsx mobile/ci/firebase-android-config.ts
+
       - name: Build web assets (white-label mode)
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
