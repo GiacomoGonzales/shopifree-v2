@@ -119,7 +119,8 @@ IMPORTANTE sobre la prueba gratis (esta es la ÚNICA oferta de prueba que existe
 - Link compartible (tutienda.shopifree.app)
 - Código QR de tu catálogo
 - Temas gratuitos, logo y banner/portada
-Nota: los temas premium, las estadísticas, la barra de anuncios, el flash sale y los badges de confianza NO están en el plan Gratis; requieren Pro o Business.
+- Barra de anuncios fija (el modo marquesina, con el texto en movimiento, requiere Pro o Business)
+Nota: los temas premium, las estadísticas, el modo marquesina de la barra de anuncios, el flash sale y los badges de confianza NO están en el plan Gratis; requieren Pro o Business.
 
 ### Plan Pro (${money(P.pro.price)} USD/mes o ${money(P.pro.priceYearly)} USD/año) - El más popular
 - Todo lo del plan Gratis
@@ -144,8 +145,8 @@ ${shopiChat ? '- ShopiChat: el WhatsApp de la tienda dentro de Shopifree, con as
 - No tiene prueba gratis
 
 ## Qué desbloquea cada plan (referencia rápida)
-- GRATIS: catálogo, hasta ${lim(P.free.limits.products)} productos, pedidos por WhatsApp, link + QR, temas gratuitos.
-- PRO o BUSINESS (cualquiera de los dos): cobrar con tarjeta, cupones, dominio propio, estadísticas, temas premium, barra de anuncios, flash sale, badges de confianza, subir videos.
+- GRATIS: catálogo, hasta ${lim(P.free.limits.products)} productos, pedidos por WhatsApp, link + QR, temas gratuitos, barra de anuncios fija.
+- PRO o BUSINESS (cualquiera de los dos): cobrar con tarjeta, cupones, dominio propio, estadísticas, temas premium, barra de anuncios en modo marquesina, flash sale, badges de confianza, subir videos.
 - SOLO BUSINESS: quitar la marca Shopifree, app móvil propia, soporte prioritario${shopiChat ? ', ShopiChat (WhatsApp con IA y avisos de pedidos)' : ''}.
 - PRÓXIMAMENTE (todavía no disponible en ningún plan): dropshipping (CJ/Printful)${shopiChat ? '' : ' y ShopiChat (llegará al plan Business)'}. Si preguntan, decí que está en desarrollo y que todavía no se puede usar.
 Regla clave: las pasarelas de pago con tarjeta funcionan en PRO y en BUSINESS (no son exclusivas de Business). Solo la app móvil y quitar la marca son exclusivos de Business.
@@ -201,7 +202,8 @@ El menú lateral (de arriba hacia abajo): Inicio, Productos, Dropshipping, Pedid
 - Elegir tema visual (más de 80 temas, con filtros por rubro y buscador)
 - Logo, banner/portada para escritorio y móvil (con recorte)
 - Los temas gratuitos están disponibles para todos; algunos temas premium requieren Pro o Business
-- Barra de anuncios, badges de confianza, flash sale con cuenta regresiva y prueba social (testimonios): estas personalizaciones requieren Pro o Business
+- Barra de anuncios fija: disponible en todos los planes. El modo marquesina (texto en movimiento) requiere Pro o Business
+- Badges de confianza, flash sale con cuenta regresiva y prueba social (testimonios): estas personalizaciones requieren Pro o Business
 
 - Botón "Editar en vivo" (arriba a la derecha en Apariencia): abre el Editor en vivo (ver abajo)
 

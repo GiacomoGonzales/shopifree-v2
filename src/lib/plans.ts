@@ -53,7 +53,7 @@ export const PLAN_FEATURES = {
       'Cupones de descuento',
       'Tu propio dominio .com',
       '5 fotos por producto',
-      'Conoce a tus clientes'
+      'Estadisticas de visitas y ventas'
     ] as string[],
     comingSoon: [] as string[],
     limits: {

@@ -577,7 +577,7 @@ export default function Branding() {
         </Link>
       </div>
 
-      {/* Selector de tema. Son 86: antes se pintaban todos, repartidos en seis
+      {/* Selector de tema. Son 87: antes se pintaban todos, repartidos en seis
           carruseles de hasta 31 tarjetas. Ahora hay filtros, buscador y se
           muestran de a 12, empezando por los del rubro de la tienda. */}
       <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
@@ -1470,20 +1470,17 @@ export default function Branding() {
                       <input
                         type="checkbox"
                         checked={announcement.enabled}
-                        disabled={isFreePlan}
                         onChange={(e) => setAnnouncement({ ...announcement, enabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-                        isFreePlan
-                          ? 'bg-[#E1E8EF] cursor-not-allowed'
-                          : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
-                      }`}></div>
+                      {/* La barra fija esta en todos los planes (igual que en el editor en vivo
+                          y en AnnouncementBar); solo el modo marquee es de pago. */}
+                      <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
                     </label>
                   </div>
                   <p className="text-sm text-[#8898AA] mb-4">{t('branding.announcement.description')}</p>
 
-                  {announcement.enabled && !isFreePlan && (
+                  {announcement.enabled && (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-[#1e3a5f] mb-1">{t('branding.announcement.message')}</label>
@@ -1548,6 +1545,11 @@ export default function Branding() {
                         <div className="flex-1 mr-4">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-[#1e3a5f]">{t('branding.announcement.marquee')}</span>
+                            {isFreePlan && (
+                              <span className="px-2 py-0.5 bg-gradient-to-r from-[#38bdf8] to-[#0284C7] text-white text-[10px] font-bold rounded-full uppercase">
+                                PRO
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-[#8898AA] mt-0.5">{t('branding.announcement.marqueeDesc')}</p>
                         </div>
@@ -1555,10 +1557,15 @@ export default function Branding() {
                           <input
                             type="checkbox"
                             checked={announcement.mode === 'marquee'}
+                            disabled={isFreePlan}
                             onChange={(e) => setAnnouncement({ ...announcement, mode: e.target.checked ? 'marquee' : 'static' })}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]"></div>
+                          <div className={`w-11 h-6 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D8E2EC] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                            isFreePlan
+                              ? 'bg-[#E1E8EF] cursor-not-allowed'
+                              : 'bg-[#E1E8EF] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#38bdf8] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-gradient-to-r peer-checked:from-[#1e3a5f] peer-checked:to-[#2d6cb5]'
+                          }`}></div>
                         </label>
                       </div>
 
@@ -1573,7 +1580,8 @@ export default function Branding() {
                               color: announcement.textColor
                             }}
                           >
-                            {announcement.mode === 'marquee' ? (
+                            {/* Misma regla que AnnouncementBar: en Gratis la tienda la muestra fija */}
+                            {announcement.mode === 'marquee' && !isFreePlan ? (
                               <div className="overflow-hidden">
                                 <div className="animate-marquee">
                                   {[0, 1, 2].map((i) => (

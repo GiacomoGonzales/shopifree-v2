@@ -45,19 +45,19 @@
   "features": {
     "title": "Todo lo que necesitas para vender",
     "subtitle": "Funciones pensadas para emprendedores",
-    "note": "Todo incluido desde el plan Gratis. Las funciones avanzadas se activan con Pro o Business.",
+    "note": "Empiezas gratis con tu catálogo, pedidos por WhatsApp y la gestión de tu negocio. El cobro con tarjeta, los cupones, el dominio propio, las estadísticas, las ofertas flash, los sellos de confianza y los temas premium son del plan Pro. La app de tu tienda es del plan Business.",
     "groups": [
       {
         "title": "Tu tienda online",
         "items": [
           "Catálogo optimizado para celular",
-          "Más de 100 temas para elegir",
+          "Más de 80 temas para elegir",
           "Tu logo, portada y colores",
           "Link propio: tutienda.shopifree.app",
           "Dominio propio .com",
           "Código QR para tu local",
           "Barra de anuncios, ofertas flash y sellos de confianza",
-          "App Android y iPhone con notificaciones push"
+          "App Android y iPhone de tu tienda"
         ]
       },
       {
@@ -66,10 +66,9 @@
           "Pedidos directo a tu WhatsApp",
           "Cobra con tarjeta: MercadoPago, Stripe y PayPal",
           "Go Cuotas: cuotas sin tarjeta (Argentina)",
-          "Transferencia bancaria",
           "Cupones de descuento con vencimiento y tope de usos",
           "Envío gratis desde cierto monto o retiro en tienda",
-          "Zonas de entrega con costo por distrito",
+          "Elige a qué zonas entregas, con costo local y nacional",
           "Cobra en tu moneda: PEN, USD, MXN, COP, ARS y más"
         ]
       },
@@ -92,11 +91,10 @@
           "Visitas, productos más vistos y embudo de conversión",
           "De dónde vienen tus clientes: WhatsApp, Instagram, Google",
           "Google Analytics, Meta Pixel y TikTok Pixel",
-          "Dropshipping con CJ y Printful",
           "Inventario, almacenes y proveedores",
           "Compras, producción y gastos",
           "Flujo de caja de tu negocio",
-          "API y webhooks para conectar tu POS o ERP"
+          "API para conectar tu POS o ERP"
         ]
       }
     ]
@@ -127,7 +125,7 @@
         "coupons": "Cupones de descuento",
         "customDomain": "Tu propio dominio .com",
         "multiplePhotos": "5 fotos por producto",
-        "advancedStats": "Conoce a tus clientes"
+        "advancedStats": "Estadísticas de visitas y ventas"
       }
     },
     "business": {
@@ -264,12 +262,12 @@
     "legal": "Legal"
   },
   "storesShowcase": {
-    "subtitle": "Mas de 100 temas",
+    "subtitle": "Más de 80 temas",
     "title": "La misma tienda, con el estilo que va contigo",
     "description": "Cambia de tema con un clic: tus productos se reacomodan solos. Sin disenador y sin tocar codigo.",
     "desktopAlt": "Tienda de ejemplo con el tema {{theme}} vista en computadora",
     "desktopCaption": "La misma tienda cambiando de tema — toca cualquiera de abajo para verlo completo",
     "themeAlt": "Tema {{theme}}",
-    "more": "Y estos son solo 10. Dentro del panel tienes mas de 100 temas listos para usar."
+    "more": "Y estos son solo 10. Dentro del panel tienes más de 80 temas listos para usar."
   }
 }

@@ -45,19 +45,19 @@
   "features": {
     "title": "Everything you need to sell",
     "subtitle": "Built for small businesses",
-    "note": "All included from the Free plan. Advanced features unlock with Pro or Business.",
+    "note": "Start free with your catalog, WhatsApp orders and business management. Card payments, coupons, your own domain, analytics, flash sales, trust badges and premium themes come with Pro. Your store's app comes with Business.",
     "groups": [
       {
         "title": "Your online store",
         "items": [
           "Catalog optimized for phones",
-          "100+ themes to choose from",
+          "80+ themes to choose from",
           "Your logo, cover image and colors",
           "Your own link: yourstore.shopifree.app",
           "Your own .com domain",
           "QR code for your shop",
           "Announcement bar, flash sales and trust badges",
-          "Android and iPhone app with push notifications"
+          "Your store's Android and iPhone app"
         ]
       },
       {
@@ -66,10 +66,9 @@
           "Orders straight to your WhatsApp",
           "Card payments: MercadoPago, Stripe and PayPal",
           "Go Cuotas: installments without a card (Argentina)",
-          "Bank transfer",
           "Discount coupons with expiry and usage limits",
           "Free shipping over an amount, or store pickup",
-          "Delivery zones with per-area pricing",
+          "Choose where you deliver, with local and national rates",
           "Charge in your currency: PEN, USD, MXN, COP, ARS and more"
         ]
       },
@@ -92,11 +91,10 @@
           "Visits, most-viewed products and conversion funnel",
           "Where your customers come from: WhatsApp, Instagram, Google",
           "Google Analytics, Meta Pixel and TikTok Pixel",
-          "Dropshipping with CJ and Printful",
           "Inventory, warehouses and suppliers",
           "Purchases, production and expenses",
           "Your business cash flow",
-          "API and webhooks to connect your POS or ERP"
+          "API to connect your POS or ERP"
         ]
       }
     ]
@@ -127,7 +125,7 @@
         "coupons": "Discount coupons",
         "customDomain": "Your own .com domain",
         "multiplePhotos": "5 photos per product",
-        "advancedStats": "Know your customers"
+        "advancedStats": "Visit and sales analytics"
       }
     },
     "business": {
@@ -264,12 +262,12 @@
     "legal": "Legal"
   },
   "storesShowcase": {
-    "subtitle": "100+ themes",
+    "subtitle": "80+ themes",
     "title": "The same store, in the style that fits you",
     "description": "Switch themes in one click — your products rearrange themselves. No designer, no code.",
     "desktopAlt": "Example store with the {{theme}} theme on desktop",
     "desktopCaption": "The same store switching themes — tap any below to see it in full",
     "themeAlt": "{{theme}} theme",
-    "more": "And these are just 10. Inside the dashboard you get 100+ ready-to-use themes."
+    "more": "And these are just 10. Inside the dashboard you get 80+ ready-to-use themes."
   }
 }
