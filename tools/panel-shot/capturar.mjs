@@ -94,9 +94,9 @@ const p = movil.page
 if (quiere('resumen')) {
   await ir(p, '/es/finance', 'Estado de resultados')
   await foto(p, 'resumen')
-  await bajarHasta(p, 'Ingresos vs gastos por dia')
+  await bajarHasta(p, 'Ingresos vs gastos por día')
   await foto(p, 'resumen-2')
-  await bajarHasta(p, 'Gastos operativos por categoria')
+  await bajarHasta(p, 'Gastos operativos por categoría')
   await foto(p, 'resumen-3')
 }
 
@@ -108,7 +108,7 @@ if (quiere('inventario')) {
   // Detalle de un producto: stock por almacen y por talla/color
   await p.evaluate(() => window.scrollTo(0, 0))
   await p.getByText('Blusa Bordada Flores', { exact: true }).first().click()
-  await p.getByText('Stock por Sucursal y Almacen').first().waitFor()
+  await p.getByText('Stock por Sucursal y Almacén').first().waitFor()
   await p.waitForTimeout(400)
   await bajarHasta(p, 'Blusa Bordada Flores', 4)
   await foto(p, 'inventario-3')
@@ -124,7 +124,7 @@ if (quiere('gastos')) {
 if (quiere('flujo-de-caja')) {
   await ir(p, '/es/finance/cashflow', 'Estado de resultados')
   await foto(p, 'flujo-de-caja')
-  await bajarHasta(p, 'Gastos operativos por categoria')
+  await bajarHasta(p, 'Gastos operativos por categoría')
   await foto(p, 'flujo-de-caja-2')
 }
 
