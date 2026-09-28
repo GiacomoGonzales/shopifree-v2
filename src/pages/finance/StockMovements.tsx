@@ -11,7 +11,7 @@ const TYPE_LABELS: Record<string, string> = {
   sale: 'Venta',
   purchase: 'Compra',
   adjustment: 'Ajuste',
-  production: 'Produccion',
+  production: 'Producción',
   transfer: 'Transferencia',
 }
 
@@ -97,14 +97,14 @@ export default function StockMovements() {
     { key: 'sale', label: 'Ventas' },
     { key: 'purchase', label: 'Compras' },
     { key: 'adjustment', label: 'Ajustes' },
-    { key: 'production', label: 'Produccion' },
+    { key: 'production', label: 'Producción' },
     { key: 'transfer', label: 'Transferencias' },
   ]
 
   const periodFilters: { key: PeriodFilter; label: string }[] = [
-    { key: '7d', label: '7 dias' },
-    { key: '30d', label: '30 dias' },
-    { key: '90d', label: '90 dias' },
+    { key: '7d', label: '7 días' },
+    { key: '30d', label: '30 días' },
+    { key: '90d', label: '90 días' },
     { key: 'all', label: 'Todo' },
   ]
 
@@ -186,7 +186,7 @@ export default function StockMovements() {
               {movements.length === 0 ? 'Sin movimientos de stock registrados' : 'Sin resultados para los filtros seleccionados'}
             </p>
             {movements.length === 0 && (
-              <p className="text-xs text-[#C3CFDB] mt-1">Los movimientos se crean automaticamente al ajustar stock, registrar compras o recibir pedidos</p>
+              <p className="text-xs text-[#C3CFDB] mt-1">Los movimientos se crean automáticamente al ajustar stock, registrar compras o recibir pedidos</p>
             )}
           </div>
         ) : (

@@ -130,11 +130,11 @@ export default function Inventory() {
     if (!store || !firebaseUser) return
     const defaultWId = await getDefaultWarehouseId()
     if (!defaultWId) {
-      alert('No hay un almacen marcado como principal. Marca uno en Almacenes primero.')
+      alert('No hay un almacén marcado como principal. Marca uno en Almacenes primero.')
       return
     }
     const defaultW = warehouses.find(w => w.id === defaultWId)
-    const defaultWName = defaultW?.name || 'Almacen principal'
+    const defaultWName = defaultW?.name || 'Almacén principal'
 
     const toFix = products.filter(isDesynced)
     if (toFix.length === 0) return
@@ -176,7 +176,7 @@ export default function Inventory() {
               variationName: Object.keys(c.options).join(' / '), optionValue: comboLabel,
               type: 'adjustment', quantity: now - prev,
               previousStock: prev, newStock: now,
-              referenceType: 'manual', reason: `Sincronizacion: asignado a ${defaultWName}`,
+              referenceType: 'manual', reason: `Sincronización: asignado a ${defaultWName}`,
               warehouseId: defaultWId, warehouseName: defaultWName,
               createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
             })
@@ -192,7 +192,7 @@ export default function Inventory() {
               productId: product.id, productName: product.name,
               type: 'adjustment', quantity: newQty - prevQty,
               previousStock: prevQty, newStock: newQty,
-              referenceType: 'manual', reason: `Sincronizacion: stock huerfano removido (sin variante asignada)`,
+              referenceType: 'manual', reason: `Sincronización: stock huérfano removido (sin variante asignada)`,
               warehouseId: wid, warehouseName: wh?.name,
               createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
             })
@@ -209,7 +209,7 @@ export default function Inventory() {
             productId: product.id, productName: product.name,
             type: 'adjustment', quantity: 0,
             previousStock: 0, newStock: total,
-            referenceType: 'manual', reason: `Sincronizacion: asignado a ${defaultWName}`,
+            referenceType: 'manual', reason: `Sincronización: asignado a ${defaultWName}`,
             warehouseId: defaultWId, warehouseName: defaultWName,
             createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
           })
@@ -294,7 +294,7 @@ export default function Inventory() {
         type: 'adjustment', quantity: delta,
         previousStock: warehouseForMovement ? (prevWs[warehouseForMovement.id] ?? 0) : prevTotal,
         newStock: warehouseForMovement ? (newWs[warehouseForMovement.id] ?? 0) : newStockNum,
-        referenceType: 'manual', reason: 'Ajuste rapido',
+        referenceType: 'manual', reason: 'Ajuste rápido',
         createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
       }
       if (warehouseForMovement) {
@@ -513,7 +513,7 @@ export default function Inventory() {
             variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
             type: 'transfer', quantity: -qty,
             previousStock: prevFrom, newStock: prevFrom - qty,
-            reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`,
+            reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacén'}`,
             warehouseId: transferFrom, warehouseName: fromW?.name,
             createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
           })
@@ -522,7 +522,7 @@ export default function Inventory() {
             variationName: Object.keys(combo.options).join(' / '), optionValue: comboLabel,
             type: 'transfer', quantity: qty,
             previousStock: prevTo, newStock: prevTo + qty,
-            reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacen'}`,
+            reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacén'}`,
             warehouseId: transferTo, warehouseName: toW?.name,
             createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
           })
@@ -532,7 +532,7 @@ export default function Inventory() {
           productId: transferProduct.id, productName: transferProduct.name,
           type: 'transfer', quantity: -transferTotalQty,
           previousStock: prevFromTotal, newStock: prevFromTotal - transferTotalQty,
-          reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacen'}`,
+          reason: transferNote.trim() || `Transferencia a ${toW?.name || 'otro almacén'}`,
           warehouseId: transferFrom, warehouseName: fromW?.name,
           createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
         })
@@ -540,7 +540,7 @@ export default function Inventory() {
           productId: transferProduct.id, productName: transferProduct.name,
           type: 'transfer', quantity: transferTotalQty,
           previousStock: prevToTotal, newStock: prevToTotal + transferTotalQty,
-          reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacen'}`,
+          reason: transferNote.trim() || `Transferencia desde ${fromW?.name || 'otro almacén'}`,
           warehouseId: transferTo, warehouseName: toW?.name,
           createdBy: firebaseUser.uid, createdAt: Timestamp.now(),
         })
@@ -644,7 +644,7 @@ export default function Inventory() {
             <>
               <Link to={localePath('/finance/inventory/diagnostic')}
                 className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm text-[#425466] hover:bg-[#F6F9FC] transition-colors">
-                Diagnostico
+                Diagnóstico
               </Link>
               <button onClick={() => setBulkMode(true)}
                 className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
@@ -667,7 +667,7 @@ export default function Inventory() {
                 {desyncedCount} {desyncedCount === 1 ? 'producto tiene' : 'productos tienen'} stock desincronizado
               </p>
               <p className="text-xs text-amber-700 mt-0.5">
-                Stock sin asignar a almacenes o stock general huerfano tras agregar variantes. Sincroniza para asignarlo al almacen principal o limpiar el residuo.
+                Stock sin asignar a almacenes o stock general huérfano tras agregar variantes. Sincroniza para asignarlo al almacén principal o limpiar el residuo.
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {desyncedProducts.slice(0, 8).map(p => (
@@ -678,7 +678,7 @@ export default function Inventory() {
                 ))}
                 {desyncedProducts.length > 8 && (
                   <span className="inline-flex items-center px-2 py-0.5 text-[11px] text-amber-700 font-medium">
-                    +{desyncedProducts.length - 8} mas
+                    +{desyncedProducts.length - 8} más
                   </span>
                 )}
               </div>
@@ -700,18 +700,18 @@ export default function Inventory() {
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm text-[#0369A1]">
               {bulkWarehouseId
-                ? 'Modo recuento: edita el stock de cada combinacion en el almacen seleccionado.'
-                : 'Selecciona un almacen para empezar el recuento.'}
+                ? 'Modo recuento: edita el stock de cada combinación en el almacén seleccionado.'
+                : 'Selecciona un almacén para empezar el recuento.'}
             </p>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-[#0369A1] font-medium">Almacen:</label>
+              <label className="text-xs text-[#0369A1] font-medium">Almacén:</label>
               <div className="relative">
                 <select
                   value={bulkWarehouseId}
                   onChange={e => { setBulkWarehouseId(e.target.value); setBulkChanges({}); setBulkComboChanges({}) }}
                   className="appearance-none pl-3 pr-8 py-1.5 border border-blue-200 bg-white rounded-lg text-sm text-[#425466] focus:outline-none focus:ring-2 focus:ring-blue-300/40 focus:border-[#38bdf8] transition-colors cursor-pointer min-w-[180px]"
                 >
-                  <option value="">Seleccionar almacen...</option>
+                  <option value="">Seleccionar almacén...</option>
                   {warehouses.map(w => (
                     <option key={w.id} value={w.id}>{w.name}</option>
                   ))}
@@ -751,12 +751,12 @@ export default function Inventory() {
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B6C6]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre, SKU o codigo..."
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre, SKU o código..."
             className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
         </div>
         <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
           className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
-          <option value="">Todas las categorias</option>
+          <option value="">Todas las categorías</option>
           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
@@ -1024,7 +1024,7 @@ export default function Inventory() {
                     {/* Expanded: Sucursales > Almacenes > Variantes */}
                     {isExpanded && !bulkMode && (
                       <div className="border-t border-[#EEF2F6] bg-[#F6F9FC]/20 px-4 py-3 space-y-2 animate-[slideDown_0.15s_ease-out]">
-                        <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium pl-1">Stock por Sucursal y Almacen</p>
+                        <p className="text-[11px] text-[#A9B6C6] uppercase tracking-wider font-medium pl-1">Stock por Sucursal y Almacén</p>
                         {branches.length === 0 ? (
                           <p className="text-xs text-[#A9B6C6] pl-1">Sin sucursales configuradas</p>
                         ) : (
@@ -1181,7 +1181,7 @@ export default function Inventory() {
                     <label className="text-xs text-[#8898AA] mb-1 block">Desde</label>
                     <select value={transferFrom} onChange={e => { setTransferFrom(e.target.value); setTransferQty(''); setTransferComboQtys({}); setTransferSearch('') }}
                       className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
-                      <option value="">Seleccionar almacen</option>
+                      <option value="">Seleccionar almacén</option>
                       {warehouses.map(w => {
                         const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
                         const whStock = transferProduct.combinations && transferProduct.combinations.length > 0
@@ -1195,7 +1195,7 @@ export default function Inventory() {
                     <label className="text-xs text-[#8898AA] mb-1 block">Hacia</label>
                     <select value={transferTo} onChange={e => setTransferTo(e.target.value)}
                       className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
-                      <option value="">Seleccionar almacen</option>
+                      <option value="">Seleccionar almacén</option>
                       {warehouses.filter(w => w.id !== transferFrom).map(w => {
                         const pws = (transferProduct as Product & { warehouseStock?: Record<string, number> }).warehouseStock
                         const whStock = transferProduct.combinations && transferProduct.combinations.length > 0
@@ -1210,7 +1210,7 @@ export default function Inventory() {
                 {/* Note */}
                 <div>
                   <label className="text-xs text-[#8898AA] mb-1 block">Motivo (opcional)</label>
-                  <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Ej: Reposicion sucursal norte"
+                  <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Ej: Reposición sucursal norte"
                     className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                 </div>
 
@@ -1243,7 +1243,7 @@ export default function Inventory() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                       </svg>
                       <input type="text" value={transferSearch} onChange={e => setTransferSearch(e.target.value)}
-                        placeholder="Buscar combinacion..."
+                        placeholder="Buscar combinación..."
                         className="w-full pl-8 pr-3 py-1.5 border border-[#E6EBF1] rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                     </div>
                     <div className="border border-[#E6EBF1] rounded-lg overflow-hidden">

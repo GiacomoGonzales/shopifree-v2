@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { collection, query, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { expenseCategoryLabel } from '../../lib/expenseCategories'
 
 interface Expense {
   id: string
@@ -159,7 +160,7 @@ export default function Expenses() {
 
   const handleDelete = async (id: string) => {
     if (!store) return
-    if (!confirm('Eliminar este gasto? Esta accion no se puede deshacer.')) return
+    if (!confirm('¿Eliminar este gasto? Esta acción no se puede deshacer.')) return
     try {
       await deleteDoc(doc(db, `stores/${store.id}/expenses`, id))
       setExpenses(prev => prev.filter(e => e.id !== id))
@@ -174,7 +175,7 @@ export default function Expenses() {
       if (categoryFilter !== 'all' && e.category !== categoryFilter) return false
       if (search.trim()) {
         const q = search.trim().toLowerCase()
-        if (!e.description.toLowerCase().includes(q) && !e.category.toLowerCase().includes(q)) return false
+        if (!e.description.toLowerCase().includes(q) && !e.category.toLowerCase().includes(q) && !expenseCategoryLabel(e.category).toLowerCase().includes(q)) return false
       }
       return true
     })
@@ -236,7 +237,7 @@ export default function Expenses() {
           <h3 className="text-sm font-medium text-[#1e3a5f]">{editingId ? 'Editar gasto' : 'Nuevo gasto'}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Descripcion</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Descripción</label>
               <input
                 type="text"
                 value={description}
@@ -257,13 +258,13 @@ export default function Expenses() {
               />
             </div>
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Categoria</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Categoría</label>
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
               >
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c} value={c}>{expenseCategoryLabel(c)}</option>)}
               </select>
             </div>
             <div>
@@ -334,7 +335,7 @@ export default function Expenses() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar por descripcion o categoria..."
+              placeholder="Buscar por descripción o categoría..."
               className="w-full pl-9 pr-4 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all"
             />
           </div>
@@ -343,8 +344,8 @@ export default function Expenses() {
             onChange={e => setCategoryFilter(e.target.value as CategoryFilter)}
             className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40"
           >
-            <option value="all">Todas las categorias</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="all">Todas las categorías</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{expenseCategoryLabel(c)}</option>)}
           </select>
         </div>
       )}
@@ -370,7 +371,7 @@ export default function Expenses() {
               <div key={expense.id} className="px-4 py-3 flex items-center justify-between hover:bg-[#F6F9FC] transition-colors group">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span className="px-2 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded-md flex-shrink-0">
-                    {expense.category}
+                    {expenseCategoryLabel(expense.category)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
