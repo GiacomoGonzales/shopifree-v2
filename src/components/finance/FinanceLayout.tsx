@@ -73,7 +73,7 @@ export default function FinanceLayout() {
     'separator',
     { name: 'Proveedores', href: localePath('/finance/suppliers'), icon: SupplierIcon },
     { name: 'Compras', href: localePath('/finance/purchases'), icon: PurchaseIcon },
-    { name: 'Produccion', href: localePath('/finance/production'), icon: ProductionIcon },
+    { name: 'Producción', href: localePath('/finance/production'), icon: ProductionIcon },
     'separator',
     { name: 'Gastos', href: localePath('/finance/expenses'), icon: ExpenseIcon },
     { name: 'Flujo de caja', href: localePath('/finance/cashflow'), icon: CashFlowIcon },
@@ -81,7 +81,7 @@ export default function FinanceLayout() {
     { name: 'Reportes', href: localePath('/finance/reports'), icon: ReportsIcon },
     'separator',
     ...(showUpgrade
-      ? [{ name: 'Suscripcion', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem]
+      ? [{ name: 'Suscripción', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem]
       : []),
     { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
     ...(isAdmin ? [{ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon }] : []),
