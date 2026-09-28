@@ -416,7 +416,7 @@ export default function Purchases() {
   const periods: { key: Period; label: string }[] = [
     { key: '30d', label: '30 dias' },
     { key: '90d', label: '90 dias' },
-    { key: 'year', label: '1 ano' },
+    { key: 'year', label: '1 año' },
     { key: 'all', label: 'Todo' },
   ]
 

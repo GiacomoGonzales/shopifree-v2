@@ -220,14 +220,18 @@ export default function FinanceDashboard() {
         : new Date(raw as string)
     }
 
+    // Cada barra es un dia de la hora local, igual que su etiqueta. Con el dia UTC
+    // (toISOString) una venta de la tarde en America caia en la barra del dia siguiente.
+    const localDay = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+
     for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-      const dayStr = date.toISOString().split('T')[0]
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+      const dayKey = localDay(date)
       const income = orders
-        .filter(o => o.status === 'delivered' && orderDate(o).toISOString().split('T')[0] === dayStr)
+        .filter(o => o.status === 'delivered' && localDay(orderDate(o)) === dayKey)
         .reduce((s, o) => s + (o.total || 0), 0)
       const dayExpenses = expenses
-        .filter(e => e.category !== 'Inventario' && e.date.toISOString().split('T')[0] === dayStr)
+        .filter(e => e.category !== 'Inventario' && localDay(e.date) === dayKey)
         .reduce((s, e) => s + e.amount, 0)
       data.push({
         label: date.toLocaleDateString('es', { day: '2-digit', month: 'short' }),
@@ -373,12 +377,14 @@ export default function FinanceDashboard() {
               {chartData.length === 0 || maxBar === 0 ? (
                 <div className="flex items-center justify-center h-40 text-sm text-[#A9B6C6]">Sin datos</div>
               ) : (
-                <div className="flex items-end gap-1 h-40">
+                <div className="flex items-end gap-0.5 sm:gap-1 h-40 mb-5">
                   {chartData.map((d, i) => {
                     const incomeH = (d.income / maxBar) * 100
                     const expenseH = (d.expenses / maxBar) * 100
                     return (
-                      <div key={i} className="flex-1 flex flex-col items-center justify-end group relative">
+                      // min-w-0: sin el, la fecha de las columnas con etiqueta les fijaba el ancho y
+                      // en el celular las demas quedaban en cero (se veian 6 barras de 30).
+                      <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end group relative">
                         <div className="absolute bottom-full mb-2 hidden group-hover:block z-10">
                           <div className="bg-[#1e3a5f] text-white text-[10px] px-2 py-1 rounded-md whitespace-nowrap">
                             <div>{d.label}</div>
@@ -397,8 +403,9 @@ export default function FinanceDashboard() {
                             style={{ height: `${Math.max(expenseH, d.expenses > 0 ? 4 : 2)}px`, minHeight: d.expenses > 0 ? 4 : 0 }}
                           />
                         </div>
+                        {/* La fecha cuelga debajo de la barra sin ocupar ancho (el grafico le deja mb-5). */}
                         {(chartData.length <= 7 || i % Math.ceil(chartData.length / 7) === 0) && (
-                          <p className="text-[9px] text-[#A9B6C6] mt-1 truncate w-full text-center">{d.label}</p>
+                          <p className="absolute top-full mt-1 left-1/2 -translate-x-1/2 text-[9px] text-[#A9B6C6] whitespace-nowrap">{d.label}</p>
                         )}
                       </div>
                     )

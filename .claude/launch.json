@@ -8,6 +8,12 @@
       "port": 5199
     },
     {
+      "name": "panel-shot",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--config", "tools/panel-shot/vite.config.ts", "--port", "5198", "--strictPort"],
+      "port": 5198
+    },
+    {
       "name": "preview",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "preview", "--port", "4173", "--strictPort"],
