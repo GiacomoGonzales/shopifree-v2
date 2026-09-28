@@ -129,7 +129,21 @@ Una vez que una app ya está publicada:
 3. En App Store Connect, promovés el nuevo build de TestFlight a producción con 2 clicks.
 4. Apple revisa 24-48 hs.
 
+## Push notifications
+
+No usan Firebase: el servidor manda directo a APNs con la clave `.p8` del
+equipo. La configuración está en `mobile/SETUP.md` → "Notificaciones push".
+Fastlane activa la capacidad Push en el bundle id de cada build (el perfil de
+match se regenera la vez que la activa). `App.entitlements` dice
+`aps-environment = development`; Xcode lo cambia a `production` al firmar con
+el perfil de App Store.
+
 ## Troubleshooting
+
+**"Provisioning profile ... doesn't include the aps-environment entitlement"**
+→ El perfil de match es anterior a la capacidad Push. Volver a correr el build
+con `force: true` en `match` (o borrar el perfil de ese bundle id en el
+Developer Portal) para que match genere uno nuevo.
 
 **"No valid signing identities found"**
 → Match no pudo descargar los certs. Verificar `MATCH_PASSWORD` y `MATCH_GIT_BASIC_AUTHORIZATION`.

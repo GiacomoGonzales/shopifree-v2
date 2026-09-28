@@ -91,6 +91,14 @@ async function main() {
     const cfg = await runStreaming('npx', ['tsx', resolve('mobile/build-config.ts'), storeId])
     if (cfg !== 0) throw new Error('build-config.ts failed')
 
+    // Tiene que ir antes de Vite: deja VITE_ANDROID_FCM en .env.whitelabel.
+    // Pisa android/app/google-services.json; el restore del final lo devuelve.
+    if (platform !== 'ios') {
+      step('1b/4 Firebase config for push (Android)')
+      const fcm = await runStreaming('npx', ['tsx', resolve('mobile/ci/firebase-android-config.ts')])
+      if (fcm !== 0) console.error('⚠ Firebase config failed — the Android build will have no push')
+    }
+
     step('2/4 Build web bundle (Vite, white-label mode)')
     const web = await runStreaming('npx', ['vite', 'build', '--mode', 'whitelabel'])
     if (web !== 0) throw new Error('vite build failed')

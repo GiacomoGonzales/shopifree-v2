@@ -18,12 +18,24 @@ import { auth } from '../lib/firebase'
 
 type TapHandler = (data: Record<string, unknown>) => void
 
+interface PushToken {
+  token: string
+  platform: 'ios' | 'android'
+  /**
+   * Bundle id / applicationId de la app que registró el token. En iOS el
+   * servidor lo necesita como `apns-topic`: el token es de APNs (no de FCM) y
+   * cada tienda tiene su propia app.
+   */
+  appId?: string
+}
+
 /**
- * Núcleo compartido: pide permiso, registra en FCM/APNs y entrega el token.
- * Devuelve una función de limpieza, o undefined si no corresponde registrar.
+ * Núcleo compartido: pide permiso, registra en FCM (Android) / APNs (iOS) y
+ * entrega el token. Devuelve una función de limpieza, o undefined si no
+ * corresponde registrar.
  */
 async function setupPush(
-  onToken: (token: string, platform: 'ios' | 'android') => Promise<void>,
+  onToken: (token: PushToken) => Promise<void>,
   onTap?: TapHandler
 ): Promise<(() => void) | undefined> {
   try {
@@ -32,11 +44,21 @@ async function setupPush(
     const permResult = await PushNotifications.requestPermissions()
     if (permResult.receive !== 'granted') return undefined
 
-    await PushNotifications.register()
+    let appId: string | undefined
+    try {
+      const { App } = await import('@capacitor/app')
+      appId = (await App.getInfo()).id
+    } catch (err) {
+      console.error('[push] App.getInfo failed:', err)
+    }
 
     const regListener = await PushNotifications.addListener('registration', async (token) => {
       try {
-        await onToken(token.value, Capacitor.getPlatform() as 'ios' | 'android')
+        await onToken({
+          token: token.value,
+          platform: Capacitor.getPlatform() as 'ios' | 'android',
+          appId,
+        })
       } catch (err) {
         console.error('[push] Failed to register token:', err)
       }
@@ -60,6 +82,9 @@ async function setupPush(
       }
     )
 
+    // Después de los listeners, para no perder el evento `registration`.
+    await PushNotifications.register()
+
     return () => {
       regListener.remove()
       errorListener.remove()
@@ -73,14 +98,20 @@ async function setupPush(
 }
 
 /**
- * Las builds white-label corren con un applicationId por tienda que todavía no
- * está en google-services.json, así que el plugin de FCM se omite al compilar.
- * Llamar a register() en esa condición lanza "Default FirebaseApp is not
- * initialized" de forma nativa y mata el proceso antes de que Capacitor pueda
- * mostrar el error. Se salta hasta que cada paquete tenga su propia config.
+ * Android de marca blanca: cada tienda compila con su propio applicationId, y
+ * FCM solo arranca si ese paquete está en google-services.json. Lo registra
+ * mobile/ci/firebase-android-config.ts antes de compilar y deja la marca
+ * VITE_ANDROID_FCM; si esa build no la tiene, el plugin de Firebase se omitió
+ * y register() lanza "Default FirebaseApp is not initialized" de forma nativa,
+ * matando el proceso antes de que Capacitor pueda mostrar el error.
+ *
+ * iOS no tiene ese problema: no usa Firebase, el token va directo a APNs.
  */
 function pushUnavailable(): boolean {
-  return !Capacitor.isNativePlatform() || import.meta.env.VITE_WHITELABEL === 'true'
+  if (!Capacitor.isNativePlatform()) return true
+  return import.meta.env.VITE_WHITELABEL === 'true'
+    && Capacitor.getPlatform() === 'android'
+    && import.meta.env.VITE_ANDROID_FCM !== 'true'
 }
 
 /** Dispositivo de un cliente del catálogo. */
@@ -91,13 +122,13 @@ export function usePushNotifications(storeId?: string) {
     if (pushUnavailable() || !storeId || registered.current) return
 
     let cleanup: (() => void) | undefined
-    setupPush(async (token, platform) => {
+    setupPush(async ({ token, platform, appId }) => {
       if (registered.current) return
       registered.current = true
       await fetch(apiUrl('/api/push'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'register-token', storeId, token, platform }),
+        body: JSON.stringify({ action: 'register-token', storeId, token, platform, appId }),
       })
     }).then(fn => { cleanup = fn })
 
@@ -122,7 +153,7 @@ export function useOwnerPushNotifications(ownerId?: string, onTap?: TapHandler) 
 
     let cleanup: (() => void) | undefined
     setupPush(
-      async (token, platform) => {
+      async ({ token, platform, appId }) => {
         if (registered.current) return
         registered.current = true
         const idToken = await auth?.currentUser?.getIdToken()
@@ -137,7 +168,7 @@ export function useOwnerPushNotifications(ownerId?: string, onTap?: TapHandler) 
             'Content-Type': 'application/json',
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ action: 'register-owner-token', token, platform }),
+          body: JSON.stringify({ action: 'register-owner-token', token, platform, appId }),
         })
       },
       (data) => tapRef.current?.(data)

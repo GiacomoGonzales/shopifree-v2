@@ -94,11 +94,12 @@ configurations.all {
 
 apply from: 'capacitor.build.gradle'
 
-// google-services.json is registered for the main Shopifree package only.
-// For white-label builds (different applicationId) the plugin would fail
-// because the JSON has no matching client. Skip it in that case — push
-// notifications and native Google Sign-in won't work for those builds until
-// each white-label package is registered in the Firebase Console.
+// The committed google-services.json is registered for the main Shopifree
+// package only. White-label builds get their own from
+// mobile/ci/firebase-android-config.ts, which registers the store package in
+// Firebase before the build. If that step failed the JSON has no matching
+// client and the plugin would fail, so skip it — that build ships without push
+// (the JS side only registers when the build set VITE_ANDROID_FCM).
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text && servicesJSON.text.contains("\"package_name\": \"${whitelabelAppId}\"")) {

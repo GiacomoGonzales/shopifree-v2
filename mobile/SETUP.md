@@ -15,6 +15,8 @@ Admin click "Generar build" en /admin/app-builds
            ▼
 GitHub Actions: build-store-app.yml
    1. mobile/build-config.ts <storeId>     → genera icons/splash/strings
+      mobile/ci/firebase-android-config.ts → registra el paquete en Firebase
+                                              (push) y escribe google-services.json
    2. npm run wl:build                      → compila web assets con subdomain
    3. npx cap sync android
    4. ./gradlew bundleRelease               → firma con keystore único
@@ -73,6 +75,42 @@ base64 -i shopifree-release.jks > keystore.base64.txt
 
 ⚠️ **Guardar el `.jks` original en un lugar seguro** (1Password, etc.). Si se
 pierde, todas las apps firmadas con él quedan huérfanas y no se pueden actualizar.
+
+## Notificaciones push
+
+Los dos lados usan cosas distintas; ninguno necesita pasos manuales por tienda.
+
+**Android (FCM).** Cada tienda compila con su propio `applicationId`
+(`app.shopifree.store.{subdomain}`) y FCM solo funciona si ese paquete está
+registrado como app en el proyecto de Firebase. El paso
+`mobile/ci/firebase-android-config.ts` lo busca, lo crea si falta y escribe su
+`google-services.json` antes de compilar. Requisitos:
+
+- La cuenta de servicio de `FIREBASE_CLIENT_EMAIL` necesita permiso para crear
+  apps en Firebase (rol **Firebase Admin** en IAM de Google Cloud).
+- **Límite: 30 apps por proyecto de Firebase**, sumando todas las plataformas
+  (hoy la web y la app principal de Android e iOS ya usan varias). Solo Android
+  gasta lugares; iOS no. Cerca del límite hay que mover las apps de tiendas a
+  otro proyecto de Firebase.
+
+Si el paso falla, la build **no** se corta: el run muestra la advertencia
+"App sin notificaciones push" y esa versión sale sin push (la app no intenta
+registrarse, que sin Firebase la cerraría).
+
+**iOS (APNs directo).** Las apps de iOS no usan Firebase. El servidor manda a
+Apple con una sola clave `.p8` del equipo, que sirve para todos los bundle ids.
+Fastlane activa la capacidad Push en cada bundle id. Configuración única:
+
+1. developer.apple.com → Certificates, Identifiers & Profiles → **Keys** → `+`,
+   marcar **Apple Push Notifications service (APNs)**, bajar el `.p8`.
+2. En **Vercel**: `APNS_KEY_ID`, `APNS_KEY` (contenido del `.p8`),
+   `APPLE_TEAM_ID`.
+3. En **Cloud Functions** (para el aviso de pedido nuevo al dueño):
+   `firebase functions:secrets:set APNS_KEY` (y `APNS_KEY_ID`,
+   `APPLE_TEAM_ID`). Sin estos secretos el deploy de Functions falla.
+
+Los dispositivos se registran recién cuando el cliente abre una versión de la
+app que tenga esto: las apps ya publicadas necesitan una build nueva.
 
 ## Flujo por tienda nueva
 

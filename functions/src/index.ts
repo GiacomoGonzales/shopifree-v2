@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import { defineSecret } from 'firebase-functions/params'
+import { sendApns } from './apns'
 
 // Initialize Firebase Admin
 admin.initializeApp()
@@ -172,9 +173,24 @@ export const adminGetDashboardStats = functions.https.onCall(async (data, contex
  *
  * Los tokens salen de `users/{ownerId}/pushTokens`, que son los dispositivos
  * del dueño. NO de `stores/{storeId}/pushTokens`, que son los clientes.
+ *
+ * Android va por FCM; iOS directo a APNs (ver apns.ts), con la clave .p8 del
+ * equipo cargada como secretos:
+ *   firebase functions:secrets:set APNS_KEY      (contenido del .p8)
+ *   firebase functions:secrets:set APNS_KEY_ID
+ *   firebase functions:secrets:set APPLE_TEAM_ID
  */
-export const notifyNewOrder = functions.firestore
-  .document('stores/{storeId}/orders/{orderId}')
+const APNS_KEY = defineSecret('APNS_KEY')
+const APNS_KEY_ID = defineSecret('APNS_KEY_ID')
+const APPLE_TEAM_ID = defineSecret('APPLE_TEAM_ID')
+
+// El dueño usa la app principal de Shopifree. Los tokens de iOS registrados
+// antes de guardar el bundle id no lo traen.
+const MAIN_APP_BUNDLE_ID = 'app.shopifree.mobile'
+
+export const notifyNewOrder = functions
+  .runWith({ secrets: [APNS_KEY, APNS_KEY_ID, APPLE_TEAM_ID] })
+  .firestore.document('stores/{storeId}/orders/{orderId}')
   .onCreate(async (snap, context) => {
     const { storeId, orderId } = context.params
     const order = snap.data()
@@ -221,29 +237,50 @@ export const notifyNewOrder = functions.firestore
       const title = 'Nuevo pedido'
       const body = `${order.orderNumber || 'Pedido'}${customerName ? ` de ${customerName}` : ''} · ${itemsLabel}${amount}`
 
-      const tokens = tokensSnap.docs.map(d => d.data().token as string).filter(Boolean)
-      if (tokens.length === 0) return null
+      const docs = tokensSnap.docs.filter(d => typeof d.data().token === 'string' && d.data().token)
+      if (docs.length === 0) return null
 
-      const messaging = admin.messaging()
+      // Lo lee el handler de "tap" en la app para abrir el pedido.
+      const data = { type: 'new-order', storeId, orderId }
       const staleDocIds: string[] = []
 
-      for (let i = 0; i < tokens.length; i += 500) {
-        const batch = tokens.slice(i, i + 500)
+      // Android: FCM.
+      const fcmDocs = docs.filter(d => d.data().platform !== 'ios')
+      const messaging = admin.messaging()
+      for (let i = 0; i < fcmDocs.length; i += 500) {
+        const batch = fcmDocs.slice(i, i + 500)
         const response = await messaging.sendEachForMulticast({
-          tokens: batch,
+          tokens: batch.map(d => d.data().token as string),
           notification: { title, body },
-          // Lo lee el handler de "tap" en la app para abrir el pedido.
-          data: { type: 'new-order', storeId, orderId },
-          android: { priority: 'high', notification: { sound: 'default' } },
-          apns: { payload: { aps: { sound: 'default' } } }
+          data,
+          android: { priority: 'high', notification: { sound: 'default' } }
         })
 
         response.responses.forEach((resp, idx) => {
           if (!resp.success && resp.error?.code === 'messaging/registration-token-not-registered') {
-            const doc = tokensSnap.docs[i + idx]
-            if (doc) staleDocIds.push(doc.id)
+            staleDocIds.push(batch[idx].id)
           }
         })
+      }
+
+      // iOS: directo a APNs. Si fallan las credenciales, Android ya salió.
+      const iosDocs = docs.filter(d => d.data().platform === 'ios')
+      if (iosDocs.length > 0) {
+        try {
+          const results = await sendApns(
+            iosDocs.map(d => ({
+              token: d.data().token as string,
+              topic: typeof d.data().appId === 'string' ? d.data().appId as string : MAIN_APP_BUNDLE_ID
+            })),
+            { title, body, data }
+          )
+          results.forEach((result, idx) => {
+            if (result.stale) staleDocIds.push(iosDocs[idx].id)
+            else if (!result.ok) console.warn(`[notifyNewOrder] APNs ${result.reason}`)
+          })
+        } catch (err) {
+          console.error('[notifyNewOrder] APNs error:', err)
+        }
       }
 
       // Limpia los tokens de apps desinstaladas para no reintentar por siempre.
@@ -257,7 +294,7 @@ export const notifyNewOrder = functions.firestore
         await writeBatch.commit()
       }
 
-      console.log(`[notifyNewOrder] ${orderId} → ${tokens.length} devices, ${staleDocIds.length} stale`)
+      console.log(`[notifyNewOrder] ${orderId} → ${docs.length} devices (${iosDocs.length} iOS), ${staleDocIds.length} stale`)
       return null
     } catch (err) {
       // Nunca reventar: el pedido ya está guardado y la notificación es

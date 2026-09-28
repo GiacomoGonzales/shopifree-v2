@@ -79,15 +79,38 @@ platform :ios do
       UI.message("App record already exists in App Store Connect.")
     end
 
+    # 3b) Push notifications. App.entitlements pide aps-environment, asi que el
+    # perfil tiene que salir de un bundle id con la capacidad Push activa. Los
+    # que registra el paso 3 nacen sin ella, y los de tiendas (y la app
+    # principal) creados antes de esto tampoco la tienen. El valor
+    # "development" del archivo lo reemplaza Xcode por "production" al firmar
+    # con el perfil de App Store.
+    # Al activarla, el perfil que ya estaba en match queda sin push: esa vez se
+    # fuerza a match a generar uno nuevo.
+    push_type = Spaceship::ConnectAPI::BundleIdCapability::Type::PUSH_NOTIFICATIONS
+    bundle = Spaceship::ConnectAPI::BundleId.find(bundle_id)
+    UI.user_error!("Bundle id #{bundle_id} not found in Developer Portal") if bundle.nil?
+    push_just_enabled = false
+    if bundle.get_capabilities.any? { |capability| capability.is_type?(push_type) }
+      UI.message("Push Notifications already enabled for #{bundle_id}.")
+    else
+      UI.message("Enabling Push Notifications for #{bundle_id}…")
+      bundle.create_capability(push_type)
+      push_just_enabled = true
+      UI.success("Push Notifications enabled; the match profile will be regenerated.")
+    end
+
     # 4) Sync signing certs + provisioning profiles via Match.
     # readonly=false so match can create a per-bundle provisioning profile
     # on first build of each store. The existing distribution cert in the
-    # match repo is reused — match only ever creates missing profiles.
+    # match repo is reused — match only ever creates missing profiles (or, with
+    # force, replaces this bundle's profile; the cert is never touched).
     match(
       type: "appstore",
       app_identifier: bundle_id,
       readonly: false,
-      api_key: api_key
+      api_key: api_key,
+      force: push_just_enabled
     )
 
     # 5) Bump build + version

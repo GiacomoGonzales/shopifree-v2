@@ -34,6 +34,18 @@ const ANDROID_DENSITIES = [
   { name: 'mipmap-xxxhdpi', launcher: 192, foreground: 432 },
 ]
 
+// Ícono chico de las notificaciones: 24dp en las cinco densidades
+const NOTIFICATION_ICON_SIZES = [
+  { dir: 'drawable-mdpi',    size: 24 },
+  { dir: 'drawable-hdpi',    size: 36 },
+  { dir: 'drawable-xhdpi',   size: 48 },
+  { dir: 'drawable-xxhdpi',  size: 72 },
+  { dir: 'drawable-xxxhdpi', size: 96 },
+]
+
+// Color de acento de la notificación si la tienda no tiene uno que se vea
+const DEFAULT_NOTIFICATION_COLOR = '#333333'
+
 function downloadImage(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http
@@ -121,6 +133,8 @@ async function generateIcons(logoUrl: string, bgColor: string) {
     console.log(`    ✓ ${density.name} (${lSize}px / ${fgSize}px)`)
   }
 
+  await generateNotificationIcon(trimmedLogo, resDir)
+
   // Update background color in values/
   const bgColorXml = `<?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -196,6 +210,60 @@ async function generateIcons(logoUrl: string, bgColor: string) {
   }
 
   console.log(`    ✓ Background color: ${bgColor}`)
+}
+
+// ic_stat_notification: el ícono de la barra de estado para las push. Android
+// solo usa el canal alfa y pinta todo de blanco, así que sirve la silueta del
+// logo cuando el logo trae transparencia. Si es opaco (JPG, fondo sólido) la
+// silueta sería un cuadrado blanco y va un círculo. El que está en el repo es
+// la bolsa de Shopifree: sin esto las apps de las tiendas la mostrarían.
+// Sin logo (null) también va el círculo.
+async function generateNotificationIcon(trimmedLogo: Buffer | null, resDir: string) {
+  let useSilhouette = false
+  if (trimmedLogo) {
+    const alpha = await sharp(trimmedLogo).ensureAlpha().extractChannel(3).raw().toBuffer()
+    let transparent = 0
+    for (const a of alpha) if (a < 128) transparent++
+    const transparentRatio = transparent / alpha.length
+    useSilhouette = transparentRatio >= 0.05 && transparentRatio <= 0.95
+  }
+
+  for (const { dir, size } of NOTIFICATION_ICON_SIZES) {
+    const out = resolve(resDir, dir, 'ic_stat_notification.png')
+    if (!trimmedLogo || !useSilhouette) {
+      const r = size * 0.42
+      const circle = Buffer.from(
+        `<svg width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="white"/></svg>`
+      )
+      await sharp(circle).png().toFile(out)
+      continue
+    }
+
+    const inner = Math.round(size * 0.92)
+    const { data: px, info } = await sharp(trimmedLogo)
+      .ensureAlpha()
+      .resize(inner, inner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    for (let i = 0; i < px.length; i += 4) {
+      px[i] = 255
+      px[i + 1] = 255
+      px[i + 2] = 255
+    }
+    const padX = size - info.width
+    const padY = size - info.height
+    await sharp(px, { raw: { width: info.width, height: info.height, channels: 4 } })
+      .extend({
+        top: Math.floor(padY / 2),
+        bottom: Math.ceil(padY / 2),
+        left: Math.floor(padX / 2),
+        right: Math.ceil(padX / 2),
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .png()
+      .toFile(out)
+  }
+  console.log(`    ✓ ic_stat_notification (${useSilhouette ? 'silueta del logo' : 'círculo: el logo no tiene transparencia'})`)
 }
 
 // Build a splash image: a centered logo on a solid background. Kept
@@ -409,6 +477,24 @@ export default config;
   const stringsPath = resolve(process.cwd(), 'android/app/src/main/res/values/strings.xml')
   writeFileSync(stringsPath, stringsXml, 'utf-8')
 
+  // Color de acento de las push (tiñe el ícono y el encabezado de la
+  // notificación). El del repo es el azul de Shopifree; acá va el de la
+  // tienda, salvo que sea tan claro que el ícono no se vería sobre blanco.
+  const primaryColor = typeof appConfig.primaryColor === 'string' ? appConfig.primaryColor : ''
+  let notificationColor = DEFAULT_NOTIFICATION_COLOR
+  if (/^#[0-9a-fA-F]{6}$/.test(primaryColor)) {
+    const { r, g, b } = hexToRgba(primaryColor)
+    if ((r * 299 + g * 587 + b * 114) / 1000 < 200) notificationColor = primaryColor
+  }
+  const colorsXml = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de acento de las notificaciones (generado por build-config.ts) -->
+    <color name="notification_color">${notificationColor}</color>
+</resources>
+`
+  writeFileSync(resolve(process.cwd(), 'android/app/src/main/res/values/colors.xml'), colorsXml, 'utf-8')
+  console.log(`  ✓ Android notification_color → ${notificationColor}`)
+
   // Write per-tenant Gradle properties so the Android build picks up the
   // store-specific applicationId. Without this, every white-label AAB would
   // ship with the main Shopifree applicationId and collide with it on Play
@@ -510,6 +596,7 @@ export default config;
     await generateSplashScreens(logoUrl, splashColor, appName)
   } else {
     console.log('\n  ⚠ No store logo found, keeping default icons/splash')
+    await generateNotificationIcon(null, resolve(process.cwd(), 'android/app/src/main/res'))
   }
 
   console.log(`\n  Store:   ${store.name}`)
