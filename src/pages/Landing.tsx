@@ -163,8 +163,8 @@ export default function Landing() {
           ? 'Crea tu Tienda Online Gratis en Minutos | Shopifree'
           : 'Create your Online Store for Free in Minutes | Shopifree'}
         description={isEs
-          ? 'Crea tu catálogo online gratis y recibe pedidos por WhatsApp. Sin comisiones por venta y sin conocimientos técnicos. Más de 100 temas, cobros con tarjeta y dominio propio.'
-          : 'Create your online catalog for free and take orders on WhatsApp. No sales commission, no technical skills needed. 100+ themes, card payments and your own domain.'}
+          ? 'Crea tu catálogo online gratis y recibe pedidos por WhatsApp. Sin comisiones por venta y sin conocimientos técnicos. Más de 80 temas, cobros con tarjeta y dominio propio.'
+          : 'Create your online catalog for free and take orders on WhatsApp. No sales commission, no technical skills needed. 80+ themes, card payments and your own domain.'}
         canonical={canonical}
         locale={isEs ? 'es_LA' : 'en_US'}
         schemas={[
@@ -191,7 +191,7 @@ export default function Landing() {
               'Catálogo online optimizado para celular',
               'Pedidos por WhatsApp sin comisión',
               'Cobros con MercadoPago, Stripe, PayPal y Go Cuotas',
-              'Más de 100 temas personalizables',
+              'Más de 80 temas personalizables',
               'Dominio propio y código QR',
               'Control de stock por variante y almacén',
               'App Android y iPhone de la tienda',
