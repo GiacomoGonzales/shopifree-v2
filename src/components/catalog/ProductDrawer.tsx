@@ -234,9 +234,13 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       />
 
+      {/* paddingTop: en la app nativa la franja de la barra de estado
+          (body.native-app::before) queda por encima de todo; sin este margen
+          tapaba la parte de arriba de la foto y la etiqueta de descuento. En
+          la web el inset vale 0. El botón de cerrar ya se corre por su cuenta. */}
       <div
         className="absolute right-0 top-0 bottom-0 w-full max-w-md shadow-2xl animate-slideLeft flex flex-col"
-        style={{ backgroundColor: theme.colors.surface }}
+        style={{ backgroundColor: theme.colors.surface, paddingTop: 'env(safe-area-inset-top, 0px)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
