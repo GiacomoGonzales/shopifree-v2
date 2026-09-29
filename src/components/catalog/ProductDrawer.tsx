@@ -229,8 +229,11 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
   return (
     // data-sf-ui: parte de la compra; las tipografias decorativas no la tocan (ver ThemeContext).
     <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={handleCloseDrawer} data-sf-ui="">
+      {/* El desenfoque solo en pantallas grandes: en el celular el panel ocupa
+          todo el ancho (no se ve) y el WebView de Android lo recalcula en cada
+          cuadro del deslizamiento, que es lo que entrecortaba la apertura. */}
       <div
-        className="absolute inset-0 backdrop-blur-sm"
+        className="absolute inset-0 md:backdrop-blur-sm"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       />
 
@@ -240,7 +243,7 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
           la web el inset vale 0. El botón de cerrar ya se corre por su cuenta. */}
       <div
         className="absolute right-0 top-0 bottom-0 w-full max-w-md shadow-2xl animate-slideLeft flex flex-col"
-        style={{ backgroundColor: theme.colors.surface, paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        style={{ backgroundColor: theme.colors.surface, paddingTop: 'env(safe-area-inset-top, 0px)', willChange: 'transform' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
