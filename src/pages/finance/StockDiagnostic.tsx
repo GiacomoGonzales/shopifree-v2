@@ -61,7 +61,7 @@ export default function StockDiagnostic() {
           type: 'missing_combinations',
           description: 'Tiene variantes pero no combinaciones. El stock no se puede distribuir por variante.',
           currentValue: `${p.variations!.length} variante(s), ${stock} uds stock global`,
-          action: 'Generar combinaciones automaticamente',
+          action: 'Generar combinaciones automáticamente',
         })
       }
 
@@ -73,7 +73,7 @@ export default function StockDiagnostic() {
             id: `orphan-stock-${p.id}`,
             productId: p.id, productName: p.name, productImage: p.image,
             type: 'orphan_stock',
-            description: `Tiene ${stock} uds en stock global pero las combinaciones estan en 0. El stock no esta asignado a ninguna combinacion.`,
+            description: `Tiene ${stock} uds en stock global pero las combinaciones están en 0. El stock no está asignado a ninguna combinación.`,
             currentValue: `Global: ${stock}, Combinaciones: ${comboTotal}`,
             action: 'Distribuir equitativamente entre combinaciones',
           })
@@ -95,8 +95,8 @@ export default function StockDiagnostic() {
           id: `no-warehouse-${p.id}`,
           productId: p.id, productName: p.name, productImage: p.image,
           type: 'no_warehouse',
-          description: 'Tiene stock pero no esta asignado a ningun almacen.',
-          currentValue: `${stock} uds sin almacen`,
+          description: 'Tiene stock pero no está asignado a ningún almacén.',
+          currentValue: `${stock} uds sin almacén`,
           action: `Asignar a ${defaultWarehouse.name}`,
         })
       }
@@ -109,8 +109,8 @@ export default function StockDiagnostic() {
               id: `dead-wh-${p.id}-${wId}`,
               productId: p.id, productName: p.name, productImage: p.image,
               type: 'dead_warehouse',
-              description: `Tiene stock asignado a un almacen que ya no existe (${wId}).`,
-              currentValue: `${ws[wId]} uds en almacen eliminado`,
+              description: `Tiene stock asignado a un almacén que ya no existe (${wId}).`,
+              currentValue: `${ws[wId]} uds en almacén eliminado`,
               action: defaultWarehouse ? `Mover a ${defaultWarehouse.name}` : 'Eliminar referencia',
             })
           }
@@ -222,11 +222,11 @@ export default function StockDiagnostic() {
   }
 
   const typeLabels: Record<string, { label: string; color: string }> = {
-    orphan_stock: { label: 'Stock huerfano', color: 'bg-red-50 text-red-600' },
-    no_warehouse: { label: 'Sin almacen', color: 'bg-amber-50 text-amber-600' },
+    orphan_stock: { label: 'Stock huérfano', color: 'bg-red-50 text-red-600' },
+    no_warehouse: { label: 'Sin almacén', color: 'bg-amber-50 text-amber-600' },
     missing_combinations: { label: 'Sin combinaciones', color: 'bg-purple-50 text-purple-600' },
     stock_mismatch: { label: 'No coincide', color: 'bg-[#F0F9FF] text-[#0284C7]' },
-    dead_warehouse: { label: 'Almacen eliminado', color: 'bg-[#F1F5F9] text-[#425466]' },
+    dead_warehouse: { label: 'Almacén eliminado', color: 'bg-[#F1F5F9] text-[#425466]' },
   }
 
   const unresolvedCount = issues.filter(i => !fixed.has(i.id)).length
@@ -239,7 +239,7 @@ export default function StockDiagnostic() {
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-[#1e3a5f]">Diagnostico de stock</h1>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Diagnóstico de stock</h1>
           <p className="text-sm text-[#8898AA] mt-0.5">
             {unresolvedCount === 0 ? 'Todo en orden' : `${unresolvedCount} problema${unresolvedCount !== 1 ? 's' : ''} encontrado${unresolvedCount !== 1 ? 's' : ''}`}
           </p>

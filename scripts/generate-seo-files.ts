@@ -75,7 +75,7 @@ Shopifree permite publicar un catálogo de productos en minutos, sin conocimient
 
 ## Qué ofrece
 
-- Catálogo online optimizado para celular, con más de 100 temas visuales
+- Catálogo online optimizado para celular, con más de 80 temas visuales
 - Pedidos directos por WhatsApp, sin intermediarios ni comisión por venta
 - Cobros con tarjeta vía MercadoPago, Stripe, PayPal y Go Cuotas (Argentina)
 - Dominio propio, código QR y app Android/iPhone de la tienda
@@ -83,13 +83,12 @@ Shopifree permite publicar un catálogo de productos en minutos, sin conocimient
 - Cupones de descuento, zonas de envío y envío gratis desde cierto monto
 - Estadísticas de visitas, fuentes de tráfico y embudo de conversión
 - Módulo de finanzas: inventario, proveedores, compras, gastos y flujo de caja
-- Dropshipping con CJ Dropshipping y Printful
 
 ## Planes
 
 - **Gratis** ($0): 10 productos, 1 foto por producto, 3 categorías, pedidos por WhatsApp
 - **Pro** ($4.99/mes, $49.99/año): 200 productos, 5 fotos, categorías ilimitadas, cobros con tarjeta, cupones, dominio propio y estadísticas
-- **Business** ($9.99/mes, $99.99/año): productos ilimitados, 10 fotos, sin marca Shopifree, app móvil propia, dropshipping y soporte prioritario
+- **Business** ($9.99/mes, $99.99/año): productos ilimitados, 10 fotos, sin marca Shopifree, app móvil propia y soporte prioritario
 
 Al registrarse se otorgan 7 días de prueba del plan Pro, sin tarjeta de crédito.
 

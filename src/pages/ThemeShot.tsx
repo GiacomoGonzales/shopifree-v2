@@ -11,6 +11,10 @@
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Store, Product, Category } from '../types'
 import { getThemeComponent } from '../themes/components'
+import { themes } from '../themes'
+import { isDarkColor } from '../themes/shared/themeColors'
+import { FONT_PAIRS } from '../themes/shared/fonts'
+import { PALETTES, paletteEntries } from './dashboard/palettes'
 
 // Fotos de producto locales (Unsplash, licencia de uso comercial). Antes esto
 // usaba picsum.photos, que devuelve paisajes aleatorios: los temas se veian como
@@ -57,16 +61,51 @@ export default function ThemeShot() {
   // usa el generador de miniaturas, asi que no altera ningun artefacto.
   const noHero = params.get('nohero') === '1'
 
+  // ?paleta=ocean y ?fuentes=elegant: una de las paletas y uno de los pares de
+  // fuentes del editor en vivo, aplicados igual que los aplica el editor (los
+  // videos de Shopifree ensenan la misma tienda con otros colores). Opt-in.
+  const tema = themeId || 'minimal'
+  const themeSettings: Record<string, unknown> = { hideFilters: false, ...(params.get('layout') ? { productLayout: params.get('layout') } : {}) }
+  const poner = (ruta: string, valor: unknown) => {
+    const partes = ruta.replace(/^themeSettings\./, '').split('.')
+    let nodo = themeSettings
+    partes.slice(0, -1).forEach(p => { nodo = (nodo[p] ??= {}) as Record<string, unknown> })
+    nodo[partes[partes.length - 1]] = valor
+  }
+  const paleta = PALETTES.find(p => p.id === params.get('paleta'))
+  if (paleta) {
+    const fondoDelTema = themes.find(t => t.id === tema)?.colors?.background || '#ffffff'
+    paletteEntries(tema, paleta, isDarkColor(fondoDelTema)).forEach(([ruta, valor]) => poner(ruta, valor))
+  }
+  const fuentes = FONT_PAIRS.find(f => f.id === params.get('fuentes'))
+  if (fuentes) {
+    poner(`headingFonts.${tema}`, fuentes.heading)
+    poner(`bodyFonts.${tema}`, fuentes.body)
+  }
+
   const demoStore = {
     id: 'demo', name: 'AURELIA', subdomain: 'aurelia',
     about: { slogan: 'Diseño que enamora a primera vista' },
     heroImage: noHero ? undefined : img('hero'),
     heroImageMobile: noHero ? undefined : img('hero-mobile'),
-    currency: 'PEN', language: lang, whatsapp: '51999999999',
+    // ?currency=USD: la moneda de la tienda de ejemplo (los videos de Shopifree
+    // van en dolares). Opt-in: las miniaturas siguen en PEN.
+    currency: params.get('currency') || 'PEN', language: lang, whatsapp: '51999999999',
     // ?layout=sections|masonry|...: fuerza un productLayout para verificar
     // layouts en cualquier tema. Igual que ?nohero: opt-in, el generador de
     // miniaturas no lo usa y el render por defecto queda identico.
-    plan: 'business', themeId, themeSettings: { hideFilters: false, ...(params.get('layout') ? { productLayout: params.get('layout') as 'grid' } : {}) },
+    // ?pagos=1: el checkout muestra MercadoPago, Stripe y PayPal (los videos de
+    // Shopifree ensenan la pasarela). Solo pinta las opciones: esta tienda de
+    // ejemplo no existe en la base, asi que ningun pago puede completarse.
+    ...(params.get('pagos') === '1' ? {
+      payments: {
+        whatsapp: { enabled: true },
+        mercadopago: { enabled: true },
+        stripe: { enabled: true },
+        paypal: { enabled: true, clientId: 'demo', secretConfigured: true },
+      },
+    } : {}),
+    plan: 'business', themeId, themeSettings,
     shipping: { enabled: true }, createdAt: new Date('2021-01-01'),
   } as unknown as Store
 

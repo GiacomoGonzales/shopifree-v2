@@ -7,11 +7,11 @@ import { db } from '../../lib/firebase'
 import type { Product } from '../../types'
 
 const REASONS = [
-  'Conteo fisico',
-  'Dano o merma',
-  'Devolucion',
-  'Correccion de error',
-  'Robo o perdida',
+  'Conteo físico',
+  'Daño o merma',
+  'Devolución',
+  'Corrección de error',
+  'Robo o pérdida',
   'Otro',
 ]
 
@@ -31,7 +31,7 @@ export default function InventoryAdjust() {
   const [selectedProductId, setSelectedProductId] = useState(preselectedId || '')
   const [search, setSearch] = useState('')
   const [newStock, setNewStock] = useState('')
-  const [reason, setReason] = useState('Conteo fisico')
+  const [reason, setReason] = useState('Conteo físico')
   const [notes, setNotes] = useState('')
 
   // Variant adjustment

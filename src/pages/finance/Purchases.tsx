@@ -252,7 +252,7 @@ export default function Purchases() {
     if (!store || !firebaseUser) return
     if (purchase.status === 'cancelled') return
     const ok = confirm(
-      `Cancelar esta compra revertira el stock agregado y eliminara el gasto asociado. Continuar?\n\nProveedor: ${purchase.supplierName}\nTotal: ${fmt(purchase.total)}`
+      `Cancelar esta compra revertirá el stock agregado y eliminará el gasto asociado. ¿Continuar?\n\nProveedor: ${purchase.supplierName}\nTotal: ${fmt(purchase.total)}`
     )
     if (!ok) return
 
@@ -309,7 +309,7 @@ export default function Purchases() {
           newStock: Math.max(0, (product.stock ?? 0) - item.quantity),
           referenceType: 'purchase',
           referenceId: purchase.id,
-          reason: `Cancelacion de compra a ${purchase.supplierName}`,
+          reason: `Cancelación de compra a ${purchase.supplierName}`,
           createdBy: firebaseUser.uid,
           createdAt: Timestamp.now(),
         }
@@ -414,9 +414,9 @@ export default function Purchases() {
   }, [filtered])
 
   const periods: { key: Period; label: string }[] = [
-    { key: '30d', label: '30 dias' },
-    { key: '90d', label: '90 dias' },
-    { key: 'year', label: '1 ano' },
+    { key: '30d', label: '30 días' },
+    { key: '90d', label: '90 días' },
+    { key: 'year', label: '1 año' },
     { key: 'all', label: 'Todo' },
   ]
 
@@ -460,7 +460,7 @@ export default function Purchases() {
           <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
             <p className="text-[11px] text-[#A9B6C6] mb-1">Total gastado</p>
             <p className="text-xl font-semibold text-[#1e3a5f] tabular-nums">{fmt(stats.totalSpend)}</p>
-            <p className="text-[11px] text-[#A9B6C6] mt-0.5">en el periodo</p>
+            <p className="text-[11px] text-[#A9B6C6] mt-0.5">en el período</p>
           </div>
           <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
             <p className="text-[11px] text-[#A9B6C6] mb-1">Compras</p>
@@ -523,7 +523,7 @@ export default function Purchases() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Almacen destino</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Almacén destino</label>
               <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)}
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                 {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
@@ -652,7 +652,7 @@ export default function Purchases() {
           {/* Notes */}
           <div>
             <label className="text-xs text-[#8898AA] mb-1 block">Notas (opcional)</label>
-            <input type="text" value={purchaseNotes} onChange={e => setPurchaseNotes(e.target.value)} placeholder="Numero de factura, observaciones..."
+            <input type="text" value={purchaseNotes} onChange={e => setPurchaseNotes(e.target.value)} placeholder="Número de factura, observaciones..."
               className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
           </div>
 

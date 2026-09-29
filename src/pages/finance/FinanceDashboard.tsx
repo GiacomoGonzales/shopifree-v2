@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { expenseCategoryLabel } from '../../lib/expenseCategories'
 import type { Order, Product } from '../../types'
 
 type Period = 'today' | '7d' | '30d' | 'month'
@@ -220,14 +221,18 @@ export default function FinanceDashboard() {
         : new Date(raw as string)
     }
 
+    // Cada barra es un dia de la hora local, igual que su etiqueta. Con el dia UTC
+    // (toISOString) una venta de la tarde en America caia en la barra del dia siguiente.
+    const localDay = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+
     for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-      const dayStr = date.toISOString().split('T')[0]
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+      const dayKey = localDay(date)
       const income = orders
-        .filter(o => o.status === 'delivered' && orderDate(o).toISOString().split('T')[0] === dayStr)
+        .filter(o => o.status === 'delivered' && localDay(orderDate(o)) === dayKey)
         .reduce((s, o) => s + (o.total || 0), 0)
       const dayExpenses = expenses
-        .filter(e => e.category !== 'Inventario' && e.date.toISOString().split('T')[0] === dayStr)
+        .filter(e => e.category !== 'Inventario' && localDay(e.date) === dayKey)
         .reduce((s, e) => s + e.amount, 0)
       data.push({
         label: date.toLocaleDateString('es', { day: '2-digit', month: 'short' }),
@@ -270,8 +275,8 @@ export default function FinanceDashboard() {
 
   const periods: { key: Period; label: string }[] = [
     { key: 'today', label: 'Hoy' },
-    { key: '7d', label: '7 dias' },
-    { key: '30d', label: '30 dias' },
+    { key: '7d', label: '7 días' },
+    { key: '30d', label: '30 días' },
     { key: 'month', label: 'Este mes' },
   ]
 
@@ -323,7 +328,7 @@ export default function FinanceDashboard() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <MiniStat label="Pedidos" value={String(orders.length)} />
             <MiniStat label="Pendientes" value={String(current.pendingCount)} amount={fmt(current.pendingRevenue)} highlight={current.pendingCount > 0 ? 'amber' : undefined} />
-            <MiniStat label="Conversion" value={`${conversionPct.toFixed(0)}%`} sub={`${current.deliveredCount}/${orders.length}`} />
+            <MiniStat label="Conversión" value={`${conversionPct.toFixed(0)}%`} sub={`${current.deliveredCount}/${orders.length}`} />
             <MiniStat label="Gasto fijo mensual" value={fmt(fixedMonthly)} sub={`${allRecurringExpenses.length} recurrente${allRecurringExpenses.length !== 1 ? 's' : ''}`} />
           </div>
 
@@ -349,7 +354,7 @@ export default function FinanceDashboard() {
               </div>
               {cancelPct > 0 && (
                 <div className="flex justify-between sm:block">
-                  <span className="text-[#A9B6C6]">Cancelacion</span>
+                  <span className="text-[#A9B6C6]">Cancelación</span>
                   <span className="text-[#425466] sm:ml-2 tabular-nums">{cancelPct.toFixed(1)}%</span>
                 </div>
               )}
@@ -360,7 +365,7 @@ export default function FinanceDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <div className="lg:col-span-2 bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-medium text-[#1e3a5f]">Ingresos vs gastos por dia</h2>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Ingresos vs gastos por día</h2>
                 <div className="flex items-center gap-3">
                   <span className="inline-flex items-center gap-1 text-[11px] text-[#8898AA]">
                     <span className="w-2 h-2 rounded-sm bg-[#1e3a5f]" /> Ingresos
@@ -373,12 +378,14 @@ export default function FinanceDashboard() {
               {chartData.length === 0 || maxBar === 0 ? (
                 <div className="flex items-center justify-center h-40 text-sm text-[#A9B6C6]">Sin datos</div>
               ) : (
-                <div className="flex items-end gap-1 h-40">
+                <div className="flex items-end gap-0.5 sm:gap-1 h-40 mb-5">
                   {chartData.map((d, i) => {
                     const incomeH = (d.income / maxBar) * 100
                     const expenseH = (d.expenses / maxBar) * 100
                     return (
-                      <div key={i} className="flex-1 flex flex-col items-center justify-end group relative">
+                      // min-w-0: sin el, la fecha de las columnas con etiqueta les fijaba el ancho y
+                      // en el celular las demas quedaban en cero (se veian 6 barras de 30).
+                      <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end group relative">
                         <div className="absolute bottom-full mb-2 hidden group-hover:block z-10">
                           <div className="bg-[#1e3a5f] text-white text-[10px] px-2 py-1 rounded-md whitespace-nowrap">
                             <div>{d.label}</div>
@@ -397,8 +404,9 @@ export default function FinanceDashboard() {
                             style={{ height: `${Math.max(expenseH, d.expenses > 0 ? 4 : 2)}px`, minHeight: d.expenses > 0 ? 4 : 0 }}
                           />
                         </div>
+                        {/* La fecha cuelga debajo de la barra sin ocupar ancho (el grafico le deja mb-5). */}
                         {(chartData.length <= 7 || i % Math.ceil(chartData.length / 7) === 0) && (
-                          <p className="text-[9px] text-[#A9B6C6] mt-1 truncate w-full text-center">{d.label}</p>
+                          <p className="absolute top-full mt-1 left-1/2 -translate-x-1/2 text-[9px] text-[#A9B6C6] whitespace-nowrap">{d.label}</p>
                         )}
                       </div>
                     )
@@ -411,7 +419,7 @@ export default function FinanceDashboard() {
             <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-medium text-[#1e3a5f]">Top productos</h2>
-                <Link to={localePath('/dashboard/analytics')} className="text-[11px] text-[#0284C7] hover:text-[#0369A1]">Ver mas →</Link>
+                <Link to={localePath('/dashboard/analytics')} className="text-[11px] text-[#0284C7] hover:text-[#0369A1]">Ver más →</Link>
               </div>
               {topProducts.length === 0 ? (
                 <p className="text-sm text-[#A9B6C6] text-center py-8">Sin ventas</p>
@@ -438,7 +446,7 @@ export default function FinanceDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-[#1e3a5f]">Gastos operativos por categoria</h2>
+                <h2 className="text-sm font-medium text-[#1e3a5f]">Gastos operativos por categoría</h2>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-[#A9B6C6]">{fmt(current.opex)}</p>
                   <Link to={localePath('/finance/expenses')} className="text-[11px] text-[#0284C7] hover:text-[#0369A1]">Gestionar →</Link>
@@ -451,7 +459,7 @@ export default function FinanceDashboard() {
                   {opexByCategory.map(([cat, amount]) => (
                     <div key={cat}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-[#425466]">{cat}</span>
+                        <span className="text-xs text-[#425466]">{expenseCategoryLabel(cat)}</span>
                         <span className="text-xs font-medium text-[#425466] tabular-nums">
                           {fmt(amount)}
                           <span className="ml-2 text-[#A9B6C6] font-normal">{((amount / current.opex) * 100).toFixed(0)}%</span>
@@ -493,7 +501,7 @@ export default function FinanceDashboard() {
                   })}
                   {pendingOrders.length > 5 && (
                     <Link to={localePath('/dashboard/orders')} className="block text-center text-[11px] text-[#0284C7] hover:text-[#0369A1] pt-2">
-                      Ver {pendingOrders.length - 5} mas →
+                      Ver {pendingOrders.length - 5} más →
                     </Link>
                   )}
                 </div>

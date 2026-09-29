@@ -315,7 +315,7 @@ export default function Suppliers() {
             </p>
           </div>
           <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4">
-            <p className="text-[11px] text-[#A9B6C6] mb-1">Compras ultimos 30 dias</p>
+            <p className="text-[11px] text-[#A9B6C6] mb-1">Compras últimos 30 días</p>
             <p className="text-xl font-semibold text-[#1e3a5f]">{fmt(summary.spendLast30)}</p>
             <p className="text-[11px] text-[#A9B6C6] mt-0.5">
               <Link to={localePath('/finance/purchases')} className="text-[#0284C7] hover:text-[#0369A1]">Ver compras →</Link>
@@ -342,8 +342,8 @@ export default function Suppliers() {
           <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)}
             className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
             <option value="spend">Mayor gasto</option>
-            <option value="recent">Mas recientes</option>
-            <option value="name">Alfabetico</option>
+            <option value="recent">Más recientes</option>
+            <option value="name">Alfabético</option>
           </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)}
             className="px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
@@ -366,11 +366,11 @@ export default function Suppliers() {
             </div>
             <div>
               <label className="text-xs text-[#8898AA] mb-1 block">Persona de contacto</label>
-              <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Ej: Carlos Perez"
+              <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Ej: Carlos Pérez"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Telefono</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Teléfono</label>
               <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+51 999 999 999"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
@@ -380,7 +380,7 @@ export default function Suppliers() {
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs text-[#8898AA] mb-1 block">Direccion</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Dirección</label>
               <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Av. Principal 123, Lima"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
@@ -446,7 +446,7 @@ export default function Suppliers() {
                       <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
                         <InlineStat label="Gastado" value={st.totalSpend > 0 ? fmt(st.totalSpend) : '—'} />
                         <InlineStat label="Compras" value={String(st.purchaseCount)} />
-                        <InlineStat label="Ultima" value={daysSince(st.lastPurchaseDate)} />
+                        <InlineStat label="Última" value={daysSince(st.lastPurchaseDate)} />
                       </div>
 
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -493,16 +493,16 @@ export default function Suppliers() {
                       {st.purchaseCount > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3">
                           <DetailStat label="Gastado total" value={fmt(st.totalSpend)} />
-                          <DetailStat label="Ultimos 30 dias" value={fmt(st.spendLast30)} />
+                          <DetailStat label="Últimos 30 días" value={fmt(st.spendLast30)} />
                           <DetailStat label="Compras" value={String(st.purchaseCount)} />
-                          <DetailStat label="Ultima compra" value={st.lastPurchaseDate ? fmtDate(st.lastPurchaseDate) : '—'} />
+                          <DetailStat label="Última compra" value={st.lastPurchaseDate ? fmtDate(st.lastPurchaseDate) : '—'} />
                         </div>
                       )}
 
                       {/* Top product */}
                       {st.topProduct && (
                         <div className="bg-white border border-[#EEF2F6] rounded-lg px-3 py-2">
-                          <p className="text-[11px] text-[#A9B6C6] mb-0.5">Producto mas comprado</p>
+                          <p className="text-[11px] text-[#A9B6C6] mb-0.5">Producto más comprado</p>
                           <div className="flex items-center justify-between">
                             <p className="text-sm text-[#1e3a5f] truncate">{st.topProduct.name}</p>
                             <p className="text-xs text-[#8898AA] tabular-nums flex-shrink-0 ml-2">{st.topProduct.quantity} uds</p>
@@ -541,9 +541,9 @@ export default function Suppliers() {
                           {(s.contactName || s.phone || s.email || s.address) ? (
                             <>
                               {s.contactName && <ContactRow label="Persona" value={s.contactName} />}
-                              {s.phone && <ContactRow label="Telefono" value={<a href={`tel:${s.phone}`} className="text-[#0284C7] hover:text-[#0369A1]">{s.phone}</a>} />}
+                              {s.phone && <ContactRow label="Teléfono" value={<a href={`tel:${s.phone}`} className="text-[#0284C7] hover:text-[#0369A1]">{s.phone}</a>} />}
                               {s.email && <ContactRow label="Email" value={<a href={`mailto:${s.email}`} className="text-[#0284C7] hover:text-[#0369A1]">{s.email}</a>} />}
-                              {s.address && <ContactRow label="Direccion" value={s.address} />}
+                              {s.address && <ContactRow label="Dirección" value={s.address} />}
                             </>
                           ) : (
                             <p className="text-xs text-[#A9B6C6]">Sin datos de contacto</p>

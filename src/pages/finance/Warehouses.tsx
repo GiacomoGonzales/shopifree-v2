@@ -286,7 +286,7 @@ export default function WarehousesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[#1e3a5f]">Almacenes y Sucursales</h1>
-          <p className="text-sm text-[#8898AA] mt-0.5">{branches.length} sucursal{branches.length !== 1 ? 'es' : ''}, {warehouses.length} almacen{warehouses.length !== 1 ? 'es' : ''}</p>
+          <p className="text-sm text-[#8898AA] mt-0.5">{branches.length} sucursal{branches.length !== 1 ? 'es' : ''}, {warehouses.length} {warehouses.length !== 1 ? 'almacenes' : 'almacén'}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -316,12 +316,12 @@ export default function WarehousesPage() {
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Direccion</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Dirección</label>
               <input type="text" value={bAddress} onChange={e => setBAddress(e.target.value)} placeholder="Opcional"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Telefono</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Teléfono</label>
               <input type="text" value={bPhone} onChange={e => setBPhone(e.target.value)} placeholder="Opcional"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
@@ -339,15 +339,15 @@ export default function WarehousesPage() {
       {/* Warehouse form */}
       {showWForm && (
         <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 space-y-3 animate-[slideDown_0.2s_ease-out]">
-          <h3 className="text-sm font-medium text-[#1e3a5f]">{editingW ? 'Editar almacen' : 'Nuevo almacen'}</h3>
+          <h3 className="text-sm font-medium text-[#1e3a5f]">{editingW ? 'Editar almacén' : 'Nuevo almacén'}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-[#8898AA] mb-1 block">Nombre</label>
-              <input type="text" value={wName} onChange={e => setWName(e.target.value)} placeholder="Ej: Almacen Norte"
+              <input type="text" value={wName} onChange={e => setWName(e.target.value)} placeholder="Ej: Almacén Norte"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
             <div>
-              <label className="text-xs text-[#8898AA] mb-1 block">Direccion</label>
+              <label className="text-xs text-[#8898AA] mb-1 block">Dirección</label>
               <input type="text" value={wAddress} onChange={e => setWAddress(e.target.value)} placeholder="Opcional"
                 className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40 transition-all" />
             </div>
@@ -384,7 +384,7 @@ export default function WarehousesPage() {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-[#1e3a5f]">{branch.name}</p>
                       <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded-md">
-                        {branchWarehouses.length} almacen{branchWarehouses.length !== 1 ? 'es' : ''}
+                        {branchWarehouses.length} {branchWarehouses.length !== 1 ? 'almacenes' : 'almacén'}
                       </span>
                     </div>
                     {branch.address && <p className="text-xs text-[#A9B6C6] mt-0.5">{branch.address}</p>}
@@ -505,7 +505,7 @@ export default function WarehousesPage() {
                       onClick={() => openWForm(branch.id)}
                       className="text-xs text-[#A9B6C6] hover:text-[#425466] transition-colors pl-8"
                     >
-                      + Agregar almacen
+                      + Agregar almacén
                     </button>
                   </div>
                 </div>

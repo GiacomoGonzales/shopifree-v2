@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { expenseCategoryLabel } from '../../lib/expenseCategories'
 import type { Order, Product } from '../../types'
 
 interface Expense {
@@ -185,12 +186,12 @@ export default function CashFlow() {
   const netDelta = delta(current.netProfit, previous.netProfit)
 
   const periods: { key: Period; label: string }[] = [
-    { key: '7d', label: '7 dias' },
-    { key: '30d', label: '30 dias' },
-    { key: '90d', label: '90 dias' },
+    { key: '7d', label: '7 días' },
+    { key: '30d', label: '30 días' },
+    { key: '90d', label: '90 días' },
   ]
 
-  const periodLabel = period === '7d' ? 'ultimos 7 dias' : period === '30d' ? 'ultimos 30 dias' : 'ultimos 90 dias'
+  const periodLabel = period === '7d' ? 'últimos 7 días' : period === '30d' ? 'últimos 30 días' : 'últimos 90 días'
 
   return (
     <div className="space-y-6">
@@ -233,7 +234,7 @@ export default function CashFlow() {
             <SummaryCard label="Gastos operativos" value={fmt(current.opex)} delta={opexDelta} fmtPct={fmtPct} accent="red" inverted />
             <SummaryCard label="Utilidad neta" value={fmt(current.netProfit)} delta={netDelta} fmtPct={fmtPct} accent={current.netProfit >= 0 ? 'blue' : 'red'} />
             <SummaryCard
-              label={current.receivable > 0 ? 'Por cobrar' : 'Balance del periodo'}
+              label={current.receivable > 0 ? 'Por cobrar' : 'Balance del período'}
               value={current.receivable > 0 ? fmt(current.receivable) : fmt(balance)}
               delta={balanceDelta}
               fmtPct={fmtPct}
@@ -294,17 +295,17 @@ export default function CashFlow() {
           {/* OPEX breakdown */}
           <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium text-[#1e3a5f]">Gastos operativos por categoria</h2>
+              <h2 className="text-sm font-medium text-[#1e3a5f]">Gastos operativos por categoría</h2>
               <p className="text-[11px] text-[#A9B6C6]">{fmt(current.opex)} total</p>
             </div>
             {current.opexByCategory.length === 0 ? (
-              <p className="text-sm text-[#A9B6C6] text-center py-6">Sin gastos operativos en este periodo</p>
+              <p className="text-sm text-[#A9B6C6] text-center py-6">Sin gastos operativos en este período</p>
             ) : (
               <div className="space-y-3">
                 {current.opexByCategory.map(cat => (
                   <div key={cat.name}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-[#425466]">{cat.name}</span>
+                      <span className="text-sm text-[#425466]">{expenseCategoryLabel(cat.name)}</span>
                       <span className="text-sm font-medium text-[#1e3a5f] tabular-nums">
                         {fmt(cat.amount)}
                         <span className="ml-2 text-[11px] font-normal text-[#A9B6C6]">{cat.pct.toFixed(0)}%</span>
@@ -322,12 +323,12 @@ export default function CashFlow() {
           {/* Top expenses */}
           {current.topExpenses.length > 0 && (
             <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 sm:p-5">
-              <h2 className="text-sm font-medium text-[#1e3a5f] mb-3">Gastos mas grandes del periodo</h2>
+              <h2 className="text-sm font-medium text-[#1e3a5f] mb-3">Gastos más grandes del período</h2>
               <div className="divide-y divide-gray-50">
                 {current.topExpenses.map(e => (
                   <div key={e.id} className="py-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded">{e.category}</span>
+                      <span className="px-1.5 py-0.5 bg-[#F1F5F9] text-[#8898AA] text-[10px] font-medium rounded">{expenseCategoryLabel(e.category)}</span>
                       <p className="text-sm text-[#425466] truncate">{e.description}</p>
                     </div>
                     <p className="text-sm font-medium text-red-500 tabular-nums flex-shrink-0">−{fmt(e.amount)}</p>
@@ -376,7 +377,7 @@ function SummaryCard({
       <p className={`text-xl font-semibold ${accentClass}`}>{value}</p>
       {hint && <p className="text-[10px] text-[#A9B6C6] mt-0.5">{hint}</p>}
       <p className={`text-[11px] mt-1 ${deltaClass}`}>
-        {arrow} {fmtPct(delta.pct)} <span className="text-[#A9B6C6] font-normal">vs periodo previo</span>
+        {arrow} {fmtPct(delta.pct)} <span className="text-[#A9B6C6] font-normal">vs período previo</span>
       </p>
     </div>
   )

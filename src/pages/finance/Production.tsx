@@ -170,7 +170,7 @@ export default function Production() {
         newStock: (product.stock ?? 0) + order.quantity,
         referenceType: 'production_order',
         referenceId: order.id,
-        reason: `Produccion completada${order.notes ? ` - ${order.notes}` : ''}`,
+        reason: `Producción completada${order.notes ? ` - ${order.notes}` : ''}`,
         warehouseId: order.warehouseId || undefined,
         warehouseName: order.warehouseName || undefined,
         createdBy: firebaseUser.uid,
@@ -222,19 +222,19 @@ export default function Production() {
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-[#1e3a5f]">Produccion</h1>
-          <p className="text-sm text-[#8898AA] mt-0.5">Registra produccion para reponer stock</p>
+          <h1 className="text-xl font-semibold text-[#1e3a5f]">Producción</h1>
+          <p className="text-sm text-[#8898AA] mt-0.5">Registra producción para reponer stock</p>
         </div>
         <button onClick={() => { setShowForm(!showForm); if (showForm) resetForm() }}
           className="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d6cb5] transition-colors text-sm font-medium">
-          {showForm ? 'Cancelar' : '+ Nueva produccion'}
+          {showForm ? 'Cancelar' : '+ Nueva producción'}
         </button>
       </div>
 
       {/* Form */}
       {showForm && (
         <div className="bg-white rounded-[14px] border border-[#E6EBF1] p-4 space-y-4 animate-[slideDown_0.2s_ease-out]">
-          <h3 className="text-sm font-medium text-[#1e3a5f]">Nueva orden de produccion</h3>
+          <h3 className="text-sm font-medium text-[#1e3a5f]">Nueva orden de producción</h3>
 
           {/* Product selector */}
           <div>
@@ -294,7 +294,7 @@ export default function Production() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
                   <input type="text" value={comboSearch} onChange={e => setComboSearch(e.target.value)}
-                    placeholder="Buscar combinacion..."
+                    placeholder="Buscar combinación..."
                     className="w-full pl-8 pr-3 py-1.5 border border-[#E6EBF1] rounded-lg text-xs focus:ring-1 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40" />
                 </div>
               )}
@@ -333,7 +333,7 @@ export default function Production() {
                 <span className="text-[#A9B6C6]">
                   {(() => {
                     const n = selectedProduct.combinations!.filter(c => (parseInt(comboQuantities[c.id]) || 0) > 0).length
-                    return `${n} combinacion${n === 1 ? '' : 'es'} seleccionada${n === 1 ? '' : 's'}`
+                    return `${n} ${n === 1 ? 'combinación' : 'combinaciones'} seleccionada${n === 1 ? '' : 's'}`
                   })()}
                 </span>
                 <span className="text-[#425466] font-medium">Total: {comboQtyTotal} uds</span>
@@ -352,7 +352,7 @@ export default function Production() {
                 </div>
               )}
               <div>
-                <label className="text-xs text-[#8898AA] mb-1 block">Almacen destino</label>
+                <label className="text-xs text-[#8898AA] mb-1 block">Almacén destino</label>
                 <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)}
                   className="w-full px-3 py-2 border border-[#E6EBF1] rounded-lg text-sm focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f]/40">
                   {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.isDefault ? ' (Principal)' : ''}</option>)}
@@ -382,7 +382,7 @@ export default function Production() {
       <div className="bg-white rounded-[14px] border border-[#E6EBF1] overflow-hidden">
         {orders.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm text-[#A9B6C6]">Sin ordenes de produccion</p>
+            <p className="text-sm text-[#A9B6C6]">Sin órdenes de producción</p>
             <p className="text-xs text-[#C3CFDB] mt-1">Crea una orden para reponer stock de productos que produces internamente</p>
           </div>
         ) : (

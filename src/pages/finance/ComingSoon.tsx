@@ -7,7 +7,7 @@ const PAGE_NAMES: Record<string, string> = {
   warehouses: 'Almacenes',
   suppliers: 'Proveedores',
   purchases: 'Compras',
-  production: 'Produccion',
+  production: 'Producción',
   branches: 'Sucursales',
   reports: 'Reportes',
   dropshipping: 'Dropshipping',
@@ -16,7 +16,7 @@ const PAGE_NAMES: Record<string, string> = {
 export default function ComingSoon() {
   const location = useLocation()
   const segment = location.pathname.split('/').pop() || ''
-  const pageName = PAGE_NAMES[segment] || 'Esta seccion'
+  const pageName = PAGE_NAMES[segment] || 'Esta sección'
 
   return (
     <div className="flex flex-col items-center justify-center py-24 px-4">
@@ -27,7 +27,7 @@ export default function ComingSoon() {
       </div>
       <h2 className="text-lg font-semibold text-[#1e3a5f] mb-1">{pageName}</h2>
       <p className="text-sm text-[#A9B6C6] text-center max-w-xs">
-        Estamos trabajando en esta seccion. Pronto estara disponible.
+        Estamos trabajando en esta sección. Pronto estará disponible.
       </p>
     </div>
   )
