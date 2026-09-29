@@ -6,6 +6,35 @@ import { optimizeImage, getGallerySrcSet } from '../../utils/media'
 // gallery column and a product info column.
 const GALLERY_SIZES = '(max-width: 768px) 100vw, 600px'
 
+// Foto del modal de producto. Mientras llega la versión grande (en un celular
+// el srcset elige la de 1500px) muestra de fondo la de la tarjeta del catálogo
+// (600px, ya en caché porque el cliente la acaba de tocar), y decodifica fuera
+// del hilo principal. Sin esto la foto aparecía de golpe y la decodificación
+// trababa la animación de apertura.
+function GalleryImage({ src, alt, eager }: { src: string; alt: string; eager: boolean }) {
+  const [loaded, setLoaded] = useState(false)
+  const placeholder = optimizeImage(src, 'card')
+  return (
+    <img
+      src={optimizeImage(src, 'gallery')}
+      srcSet={getGallerySrcSet(src)}
+      sizes={GALLERY_SIZES}
+      alt={alt}
+      className="w-full h-full object-contain"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchPriority={eager ? 'high' : 'auto'}
+      onLoad={() => setLoaded(true)}
+      style={loaded || !placeholder ? undefined : {
+        backgroundImage: `url("${placeholder}")`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+  )
+}
+
 interface ProductGalleryProps {
   images: string[]
   productName: string
@@ -74,13 +103,7 @@ export default function ProductGallery({ images, productName, variant = 'light',
     return (
       <div className={`aspect-square relative ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
         {images[0] ? (
-          <img
-            src={optimizeImage(images[0], 'gallery')}
-            srcSet={getGallerySrcSet(images[0])}
-            sizes={GALLERY_SIZES}
-            alt={productName}
-            className="w-full h-full object-contain"
-          />
+          <GalleryImage src={images[0]} alt={productName} eager />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg
@@ -113,14 +136,7 @@ export default function ProductGallery({ images, productName, variant = 'light',
             ref={(el) => { imageRefs.current[index] = el }}
             className="w-full flex-shrink-0 snap-center aspect-square"
           >
-            <img
-              src={optimizeImage(image, 'gallery')}
-              srcSet={getGallerySrcSet(image)}
-              sizes={GALLERY_SIZES}
-              alt={`${productName} - ${index + 1}`}
-              className="w-full h-full object-contain"
-              loading={index === 0 ? 'eager' : 'lazy'}
-            />
+            <GalleryImage src={image} alt={`${productName} - ${index + 1}`} eager={index === 0} />
           </div>
         ))}
       </div>
