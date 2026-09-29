@@ -39,9 +39,12 @@ export default function CartDrawer({
 
   return (
     // data-sf-ui: parte de la compra; las tipografias decorativas no la tocan (ver ThemeContext).
-    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={onClose} data-sf-ui="">
+    <div className="fixed inset-0 z-[60]" onClick={onClose} data-sf-ui="">
+      {/* Como en el modal de producto: el fundido solo en el fondo oscuro (el
+          panel entra desde el costado ya opaco) y el desenfoque solo en
+          pantallas grandes, porque en el celular traba el deslizamiento. */}
       <div
-        className="absolute inset-0 backdrop-blur-sm"
+        className="absolute inset-0 md:backdrop-blur-sm animate-fadeIn"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       />
 

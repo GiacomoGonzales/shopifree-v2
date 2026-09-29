@@ -228,12 +228,13 @@ export default function ProductDrawer({ product, onClose, onAddToCart }: Product
 
   return (
     // data-sf-ui: parte de la compra; las tipografias decorativas no la tocan (ver ThemeContext).
-    <div className="fixed inset-0 z-[60] animate-fadeIn" onClick={handleCloseDrawer} data-sf-ui="">
-      {/* El desenfoque solo en pantallas grandes: en el celular el panel ocupa
-          todo el ancho (no se ve) y el WebView de Android lo recalcula en cada
-          cuadro del deslizamiento, que es lo que entrecortaba la apertura. */}
+    <div className="fixed inset-0 z-[60]" onClick={handleCloseDrawer} data-sf-ui="">
+      {/* El fundido va solo en el fondo oscuro: el panel entra desde el costado
+          ya opaco, sin ir apareciendo. El desenfoque, solo en pantallas
+          grandes: en el celular el panel ocupa todo el ancho (no se ve) y el
+          WebView de Android lo recalcula en cada cuadro del deslizamiento. */}
       <div
-        className="absolute inset-0 md:backdrop-blur-sm"
+        className="absolute inset-0 md:backdrop-blur-sm animate-fadeIn"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       />
 
