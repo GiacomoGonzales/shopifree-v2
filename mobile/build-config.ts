@@ -46,6 +46,10 @@ const NOTIFICATION_ICON_SIZES = [
 // Color de acento de la notificación si la tienda no tiene uno que se vea
 const DEFAULT_NOTIFICATION_COLOR = '#333333'
 
+// Color principal que Mi App pone por defecto (el azul de Shopifree): si la
+// tienda no lo cambió, no es su color.
+const SHOPIFREE_DEFAULT_PRIMARY = '#1e3a5f'
+
 function downloadImage(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http
@@ -91,6 +95,32 @@ interface BrandImage {
   opaque: boolean
   /** Color promedio de las esquinas; fondo del ícono adaptativo si es opaca. */
   edgeColor: string
+  /** Color promedio del dibujo (lo que no es fondo). */
+  accentColor: string
+}
+
+function toHex(rgb: number[]): string {
+  return '#' + rgb.map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
+}
+
+// Color promedio del dibujo: en un diseño opaco, los píxeles lejos del color
+// de los bordes; en un logo transparente, los píxeles visibles.
+async function accentOf(buffer: Buffer, opaque: boolean, edgeColor: string): Promise<string> {
+  const { data } = await sharp(buffer).resize(64, 64, { fit: 'fill' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const edge = hexToRgba(edgeColor)
+  const sum = [0, 0, 0]
+  let n = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const isForeground = opaque
+      ? Math.hypot(data[i] - edge.r, data[i + 1] - edge.g, data[i + 2] - edge.b) > 90
+      : data[i + 3] >= 128
+    if (!isForeground) continue
+    sum[0] += data[i]
+    sum[1] += data[i + 1]
+    sum[2] += data[i + 2]
+    n++
+  }
+  return n ? toHex(sum.map(v => v / n)) : edgeColor
 }
 
 async function prepareBrandImage(url: string): Promise<BrandImage> {
@@ -115,10 +145,7 @@ async function prepareBrandImage(url: string): Promise<BrandImage> {
     pixel(m, info.height - 1 - m),
     pixel(info.width - 1 - m, info.height - 1 - m),
   ]
-  const edgeColor = '#' + [0, 1, 2]
-    .map(c => Math.round(corners.reduce((sum, p) => sum + p[c], 0) / corners.length))
-    .map(v => v.toString(16).padStart(2, '0'))
-    .join('')
+  const edgeColor = toHex([0, 1, 2].map(c => corners.reduce((sum, p) => sum + p[c], 0) / corners.length))
 
   // Un diseño opaco que no es cuadrado se completa con su color de borde
   // para no recortarlo al llenar el ícono.
@@ -130,7 +157,8 @@ async function prepareBrandImage(url: string): Promise<BrandImage> {
       .toBuffer()
   }
 
-  return { buffer, opaque, edgeColor }
+  const accentColor = await accentOf(buffer, opaque, edgeColor)
+  return { buffer, opaque, edgeColor, accentColor }
 }
 
 // El diseño con esquinas redondeadas (radio 22%, como un ícono de app), para
@@ -157,7 +185,7 @@ async function generateIcons(brand: BrandImage, bgColor: string) {
   } else {
     await generateLogoIcons(trimmedLogo, bgColor, resDir)
   }
-  await generateNotificationIcon(trimmedLogo, resDir)
+  await generateNotificationIcon(brand, resDir)
 }
 
 // Diseño opaco: el ícono es la imagen completa. Cada launcher le aplica su
@@ -365,16 +393,56 @@ async function generateLogoIcons(trimmedLogo: Buffer, bgColor: string, resDir: s
 // silueta sería un cuadrado blanco y va un círculo. El que está en el repo es
 // la bolsa de Shopifree: sin esto las apps de las tiendas la mostrarían.
 // Sin logo (null) también va el círculo.
-async function generateNotificationIcon(trimmedLogo: Buffer | null, resDir: string) {
-  let useSilhouette = false
-  if (trimmedLogo) {
-    const ratio = await transparentRatio(trimmedLogo)
-    useSilhouette = ratio >= 0.05 && ratio <= 0.95
+// Silueta blanca (lo único que usa Android: el canal alfa) para el ícono de
+// notificación, recortada a su contorno. Logo transparente: su propio alfa.
+// Diseño opaco: el dibujo se separa del fondo por la distancia al color de
+// los bordes, con un borde suave; así el alien sobre fondo morado da la
+// silueta del alien (con los ojos calados) y no un cuadrado. null si no sale
+// una silueta usable (casi vacía o casi llena, p. ej. una foto).
+async function notificationSilhouette(brand: BrandImage): Promise<Buffer | null> {
+  const S = 256
+  const { data, info } = await sharp(brand.buffer)
+    .resize(S, S, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  const edge = hexToRgba(brand.edgeColor)
+  const out = Buffer.alloc(info.width * info.height * 4)
+  let solid = 0
+  let minX = info.width, minY = info.height, maxX = -1, maxY = -1
+  for (let p = 0; p < info.width * info.height; p++) {
+    const i = p * 4
+    let a = data[i + 3]
+    if (brand.opaque && a > 0) {
+      const d = Math.hypot(data[i] - edge.r, data[i + 1] - edge.g, data[i + 2] - edge.b)
+      a = Math.max(0, Math.min(255, Math.round(((d - 40) / 50) * 255)))
+    }
+    out[i] = out[i + 1] = out[i + 2] = 255
+    out[i + 3] = a
+    if (a >= 128) {
+      solid++
+      const x = p % info.width
+      const y = Math.floor(p / info.width)
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+    }
   }
+  const ratio = solid / (info.width * info.height)
+  if (maxX < 0 || ratio < 0.05 || ratio > 0.9) return null
+  return sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .extract({ left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 })
+    .png()
+    .toBuffer()
+}
+
+async function generateNotificationIcon(brand: BrandImage | null, resDir: string) {
+  const silhouette = brand ? await notificationSilhouette(brand) : null
 
   for (const { dir, size } of NOTIFICATION_ICON_SIZES) {
     const out = resolve(resDir, dir, 'ic_stat_notification.png')
-    if (!trimmedLogo || !useSilhouette) {
+    if (!silhouette) {
       const r = size * 0.42
       const circle = Buffer.from(
         `<svg width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="white"/></svg>`
@@ -384,30 +452,19 @@ async function generateNotificationIcon(trimmedLogo: Buffer | null, resDir: stri
     }
 
     const inner = Math.round(size * 0.92)
-    const { data: px, info } = await sharp(trimmedLogo)
-      .ensureAlpha()
+    const scaled = await sharp(silhouette)
       .resize(inner, inner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .raw()
-      .toBuffer({ resolveWithObject: true })
-    for (let i = 0; i < px.length; i += 4) {
-      px[i] = 255
-      px[i + 1] = 255
-      px[i + 2] = 255
-    }
-    const padX = size - info.width
-    const padY = size - info.height
-    await sharp(px, { raw: { width: info.width, height: info.height, channels: 4 } })
-      .extend({
-        top: Math.floor(padY / 2),
-        bottom: Math.ceil(padY / 2),
-        left: Math.floor(padX / 2),
-        right: Math.ceil(padX / 2),
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      })
+      .png()
+      .toBuffer()
+    await sharp({ create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite([{ input: scaled, gravity: 'centre' }])
       .png()
       .toFile(out)
   }
-  console.log(`    ✓ ic_stat_notification (${useSilhouette ? 'silueta del logo' : 'círculo: el logo no tiene transparencia'})`)
+  const kind = !silhouette ? 'círculo: no salió una silueta del logo'
+    : brand?.opaque ? 'silueta del dibujo, separado de su fondo'
+    : 'silueta del logo'
+  console.log(`    ✓ ic_stat_notification (${kind})`)
 }
 
 // Build a splash image: a centered logo on a solid background. Kept
@@ -618,15 +675,28 @@ export default config;
   const stringsPath = resolve(process.cwd(), 'android/app/src/main/res/values/strings.xml')
   writeFileSync(stringsPath, stringsXml, 'utf-8')
 
+  // El "Ícono de la app" que se sube en Mi App es el diseño pensado para el
+  // ícono (el mismo que va a la ficha de Play Store); el logo de la tienda
+  // queda de respaldo. Se prepara acá porque también da el color de acento.
+  const brandUrl: string | undefined = appConfig.icon || store.logo
+  const brand = brandUrl ? await prepareBrandImage(brandUrl) : null
+
   // Color de acento de las push (tiñe el ícono y el encabezado de la
-  // notificación). El del repo es el azul de Shopifree; acá va el de la
-  // tienda, salvo que sea tan claro que el ícono no se vería sobre blanco.
-  const primaryColor = typeof appConfig.primaryColor === 'string' ? appConfig.primaryColor : ''
-  let notificationColor = DEFAULT_NOTIFICATION_COLOR
-  if (/^#[0-9a-fA-F]{6}$/.test(primaryColor)) {
-    const { r, g, b } = hexToRgba(primaryColor)
-    if ((r * 299 + g * 587 + b * 114) / 1000 < 200) notificationColor = primaryColor
+  // notificación). El del repo es el azul de Shopifree. Va el color principal
+  // de la tienda si lo eligió; si quedó el azul por defecto, el color del
+  // dibujo de su ícono. Nunca uno tan claro que el ícono no se vea sobre blanco.
+  const readable = (hex: string) => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false
+    const { r, g, b } = hexToRgba(hex)
+    return (r * 299 + g * 587 + b * 114) / 1000 < 200
   }
+  const primaryColor = typeof appConfig.primaryColor === 'string' ? appConfig.primaryColor : ''
+  const isDefaultPrimary = primaryColor.toLowerCase() === SHOPIFREE_DEFAULT_PRIMARY
+  const notificationColor =
+    readable(primaryColor) && !isDefaultPrimary ? primaryColor
+    : brand && readable(brand.accentColor) ? brand.accentColor
+    : readable(primaryColor) ? primaryColor
+    : DEFAULT_NOTIFICATION_COLOR
   const colorsXml = `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Color de acento de las notificaciones (generado por build-config.ts) -->
@@ -731,13 +801,8 @@ export default config;
   }
 
   // Generate app icons and splash screens from store logo
-  // El "Ícono de la app" que se sube en Mi App es el diseño pensado para el
-  // ícono (el mismo que va a la ficha de Play Store); el logo de la tienda
-  // queda de respaldo.
-  const brandUrl = appConfig.icon || store.logo
-  if (brandUrl) {
+  if (brand) {
     console.log(`\n  Imagen de marca: ${appConfig.icon ? 'ícono de la app (Mi App)' : 'logo de la tienda'} → ${brandUrl}`)
-    const brand = await prepareBrandImage(brandUrl)
     console.log(`    ${brand.opaque ? 'Diseño opaco: imagen completa, esquinas redondeadas en el splash' : 'Logo transparente: centrado sobre el color del splash'}`)
     await generateIcons(brand, splashColor)
     await generateSplashScreens(brand, splashColor, appName)
