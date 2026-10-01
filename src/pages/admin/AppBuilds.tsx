@@ -7,6 +7,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { useToast } from '../../components/ui/Toast'
 import { apiUrl } from '../../utils/apiBase'
 import { transformR2 } from '../../utils/media'
+import { uploadImage } from '../../utils/uploadImage'
 
 interface BuildInfo {
   status?: 'idle' | 'queued' | 'running' | 'success' | 'failed'
@@ -711,6 +712,30 @@ function buildFeatureGraphic(
 }
 
 function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot }: DetailsModalProps) {
+  const { showToast } = useToast()
+  const [replacingIcon, setReplacingIcon] = useState(false)
+
+  // Reemplaza el ícono de la app cuando el dueño manda uno nuevo por el chat
+  // o el correo en vez de subirlo en Mi App. Mismo destino y formato que
+  // MiApp.tsx (PNG en shopifree/app-icons), así el build y el 512×512 de
+  // Play Console lo toman igual que si lo hubiera subido el dueño.
+  const handleReplaceIcon = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setReplacingIcon(true)
+    try {
+      const url = await uploadImage(file, { folder: 'shopifree/app-icons', mimeType: 'image/png' })
+      await updateDoc(doc(db, 'stores', store.id), { 'appConfig.icon': url })
+      showToast('Ícono actualizado', 'success')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      showToast(`No se pudo cambiar el ícono: ${msg}`, 'error')
+    } finally {
+      setReplacingIcon(false)
+    }
+  }
+
   const testers = store.appConfig?.publishInfo?.testers ?? []
   const appIcon = store.appConfig?.icon
   const appName = store.appConfig?.appName || store.name
@@ -802,6 +827,20 @@ function DetailsModal({ store, copiedField, onCopy, onClose, onTriggerScreenshot
             ) : (
               <p className="text-xs text-gray-400 italic">No subió ícono. Cae al logo general de la tienda al construir el AAB.</p>
             )}
+            <label
+              className={`mt-2 inline-flex items-center px-2.5 py-1 border border-gray-200 text-gray-700 rounded-md text-[11px] font-medium transition-colors ${
+                replacingIcon ? 'opacity-50' : 'cursor-pointer hover:bg-gray-50'
+              }`}
+            >
+              {replacingIcon ? 'Subiendo…' : 'Cambiar ícono'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleReplaceIcon}
+                disabled={replacingIcon}
+                className="hidden"
+              />
+            </label>
           </section>
 
           {/* Feature graphic — auto-generated banner for Play Store listing */}
