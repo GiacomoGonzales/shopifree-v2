@@ -84,7 +84,7 @@ export default function FinanceLayout() {
       ? [{ name: 'Suscripción', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem]
       : []),
     { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
-    ...(isAdmin ? [{ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon }] : []),
+    ...(isAdmin ? [{ name: 'Chats', href: localePath('/admin/soporte'), icon: ChatNavIcon }] : []),
   ] as NavElement[], [localePath, isAdmin, showUpgrade])
 
   useEffect(() => {

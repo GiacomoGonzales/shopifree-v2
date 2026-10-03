@@ -115,7 +115,7 @@ export default function DashboardLayout() {
       { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
     ]
     if (isAdmin) {
-      items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
+      items.push({ name: 'Chats', href: localePath('/admin/soporte'), icon: ChatIcon })
     }
     return items
   }, [t, localePath, isAdmin, newOrders, shopichatUnread, shopichatVisible])
@@ -183,7 +183,7 @@ export default function DashboardLayout() {
       onLogout={handleLogout}
       logoutLabel={t('nav.logout')}
       // Los chats de admin llevan su propio contador global, no el del item.
-      badgeFor={item => (item.href.includes('support-chats') ? totalUnread : undefined)}
+      badgeFor={item => (item.href.includes('/admin/soporte') ? totalUnread : undefined)}
       topBarLeft={
         store && (() => {
           // Plan efectivo (una prueba vencida ya se ve como Free). En la app

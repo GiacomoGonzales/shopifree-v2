@@ -10,8 +10,11 @@
  *   array-contains, array-contains-any), orderBy, limit/limitToLast y cursores.
  *   Como Firestore, un orderBy deja fuera los documentos que no tienen ese campo.
  * - Escrituras: no hacen nada (resuelven). Nunca hay red: nada llega a Firestore.
+ * - En rutas /admin se cargan ademas los datos de demo-admin.ts (60 tiendas,
+ *   usuarios, feedback, chats, adminStats/resumen...).
  */
 import { DEMO_COLLECTIONS } from './demo-data'
+import { ADMIN_COLLECTIONS, esRutaAdmin } from './demo-admin'
 
 type Data = Record<string, unknown>
 
@@ -112,8 +115,10 @@ export async function loadBundle() { return { bytesLoaded: 0, documentsLoaded: 0
 export async function namedQuery() { return null }
 
 // ── Datos ────────────────────────────────────────────────────────────────────
+// En /admin se suman (y pisan stores/users con) los datos del panel admin.
+const COLLECTIONS = esRutaAdmin() ? { ...DEMO_COLLECTIONS, ...ADMIN_COLLECTIONS } : DEMO_COLLECTIONS
 const STORE = new Map<string, Map<string, Data>>()
-for (const [path, docs] of Object.entries(DEMO_COLLECTIONS)) {
+for (const [path, docs] of Object.entries(COLLECTIONS)) {
   const m = new Map<string, Data>()
   for (const { id, ...rest } of docs) m.set(id, rest)
   STORE.set(path, m)

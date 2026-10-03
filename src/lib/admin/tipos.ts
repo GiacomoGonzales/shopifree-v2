@@ -75,7 +75,7 @@ export interface ResumenAdmin {
   /** Tiendas por país (código ISO; '' = sin país), de mayor a menor. */
   paises: Array<{ pais: string; tiendas: number; pagando: number }>
 
-  /** Top 10 por métrica (de siempre). Los ingresos, cada uno en su moneda. */
+  /** Top 10 por métrica (de siempre). Ingresos: top 10 dentro de CADA moneda. */
   top: { visitas: TopItem[]; pedidos: TopItem[]; whatsapp: TopItem[]; ingresos: TopItem[]; error?: string }
 
   /** Vencen en los próximos 7 días (pagando, cortesía o prueba). */

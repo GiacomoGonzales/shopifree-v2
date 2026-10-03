@@ -1,70 +1,44 @@
 /**
- * El modelo comercial de una tienda, en UN solo lugar.
+ * Modelo comercial de una tienda, versión servidor.
  *
- * Antes cada página del admin decidía por su cuenta qué era "pagando" o
- * "activa" (Dashboard contaba plan == 'pro' con las pruebas de 7 días adentro,
- * Pagadas sumaba trialing, Planes no), así que las cifras no cuadraban entre
- * pantallas. Todo el admin —y el cálculo del Resumen en el servidor
- * (api/_shared/adminModelo.ts, que es una copia de esta lógica)— usa esto.
- * Si cambias una regla aquí, cámbiala también en api/_shared/adminModelo.ts.
+ * COPIA de src/lib/admin/modelo.ts (estadoComercial, planEfectivo,
+ * fechaVencimiento) y de aFecha (src/lib/admin/formato.ts). Las funciones de
+ * api/ no pueden importar de src/ en Vercel, así que la lógica vive en los dos
+ * lados: si cambias una regla aquí, cámbiala allá (y al revés). Si no, el
+ * Resumen (calculado aquí) y las listas del admin (calculadas en el navegador)
+ * vuelven a contar distinto, que es justo lo que este modelo vino a arreglar.
  */
-import { aFecha } from './formato'
 
 export type Plan = 'free' | 'pro' | 'business'
 
-/**
- * - pagando: suscripción de Stripe al día (active o trialing de Stripe, con tarjeta).
- * - pago_pendiente: Stripe intentando cobrar (past_due, unpaid, incomplete).
- * - cancelada: tuvo suscripción y se canceló.
- * - prueba: prueba gratis de Shopifree vigente (sin tarjeta).
- * - prueba_vencida: la prueba terminó y no pagó.
- * - cortesia: plan pago puesto a mano por el admin, sin Stripe.
- * - cortesia_vencida: el acceso manual tenía fecha y ya pasó.
- * - gratis: plan free.
- */
 export type EstadoComercial = 'pagando' | 'pago_pendiente' | 'cancelada' | 'prueba' | 'prueba_vencida' | 'cortesia' | 'cortesia_vencida' | 'gratis'
 
-export const ETIQUETA_ESTADO: Record<EstadoComercial, string> = {
-  pagando: 'Pagando',
-  pago_pendiente: 'Pago pendiente',
-  cancelada: 'Cancelada',
-  prueba: 'En prueba',
-  prueba_vencida: 'Prueba vencida',
-  cortesia: 'Cortesía',
-  cortesia_vencida: 'Cortesía vencida',
-  gratis: 'Gratis',
-}
-
-/** Tono del estado en pantalla: rojo solo lo que pide acción. */
-export const TONO_ESTADO: Record<EstadoComercial, 'normal' | 'tenue' | 'rojo'> = {
-  pagando: 'normal',
-  pago_pendiente: 'rojo',
-  cancelada: 'tenue',
-  prueba: 'tenue',
-  prueba_vencida: 'tenue',
-  cortesia: 'normal',
-  cortesia_vencida: 'tenue',
-  gratis: 'tenue',
-}
-
-export const ETIQUETA_PLAN: Record<Plan, string> = { free: 'Free', pro: 'Pro', business: 'Business' }
-
-export const ETIQUETA_STRIPE: Record<string, string> = {
-  active: 'Activa',
-  trialing: 'Activa (prueba Stripe)',
-  past_due: 'Pago atrasado',
-  unpaid: 'Impaga',
-  canceled: 'Cancelada',
-  incomplete: 'Incompleta',
-  incomplete_expired: 'Expirada',
-  paused: 'Pausada',
-}
+export const ESTADOS: EstadoComercial[] = ['pagando', 'pago_pendiente', 'cancelada', 'prueba', 'prueba_vencida', 'cortesia', 'cortesia_vencida', 'gratis']
 
 export interface DatosPlan {
   plan?: string | null
   trialEndsAt?: unknown
   planExpiresAt?: unknown
   subscription?: { status?: string | null; currentPeriodEnd?: unknown; cancelAtPeriodEnd?: boolean | null } | null
+}
+
+/** Convierte cualquier fecha de Firestore / Stripe / JSON a Date (o null). */
+export function aFecha(v: unknown): Date | null {
+  if (v === null || v === undefined || v === '') return null
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    if (typeof o.toDate === 'function') return (o.toDate as () => Date)()
+    if (typeof o.seconds === 'number') return new Date(o.seconds * 1000)
+    if (typeof o._seconds === 'number') return new Date(o._seconds * 1000)
+    return null
+  }
+  if (typeof v === 'number') {
+    // Stripe manda segundos; JS, milisegundos.
+    return new Date(v < 1e12 ? v * 1000 : v)
+  }
+  const d = new Date(String(v))
+  return isNaN(d.getTime()) ? null : d
 }
 
 export function normalizarPlan(p?: string | null): Plan {
@@ -95,11 +69,7 @@ export function estadoComercial(t: DatosPlan, ahora = Date.now()): EstadoComerci
   return 'cortesia'
 }
 
-/**
- * El plan que la tienda usa de verdad hoy. Espejo exacto de
- * hasPaidEffectivePlan del servidor: con suscripción de Stripe (aunque esté
- * atrasada o cancelada) se respeta el plan guardado; el webhook decide la baja.
- */
+/** El plan que la tienda usa de verdad hoy (espejo de hasPaidEffectivePlan). */
 export function planEfectivo(t: DatosPlan, ahora = Date.now()): Plan {
   const plan = normalizarPlan(t.plan)
   if (plan === 'free') return 'free'
