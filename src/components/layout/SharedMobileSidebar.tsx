@@ -18,8 +18,8 @@ import {
   PurchaseIcon, ProductionIcon, ExpenseIcon, CashFlowIcon, ReportsIcon, AccountIcon,
   SubscriptionIcon, ChatNavIcon, CloseIcon,
 } from './sharedIcons'
+import { isAdminUser } from '../../lib/adminAccess'
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 interface NavItem {
   name: string
@@ -50,7 +50,7 @@ export default function SharedMobileSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const isAdmin = isAdminUser(firebaseUser)
   const showUpgrade = useShowUpgradeUI()
   const mode: 'ecommerce' | 'finance' = isFinanceRoute(location.pathname) ? 'finance' : 'ecommerce'
 
@@ -97,7 +97,7 @@ export default function SharedMobileSidebar() {
         ...(showUpgrade ? [{ name: 'Suscripción', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem] : []),
         { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
       ]
-      if (isAdmin) items.push({ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon })
+      if (isAdmin) items.push({ name: 'Chats', href: localePath('/admin/soporte'), icon: ChatNavIcon })
       return items
     }
     // Dashboard (ecommerce)
@@ -120,7 +120,7 @@ export default function SharedMobileSidebar() {
       'separator',
       { name: t('nav.myAccount'), href: localePath('/dashboard/account'), icon: UserIcon },
     ]
-    if (isAdmin) items.push({ name: 'Chats', href: localePath('/dashboard/support-chats'), icon: ChatIcon })
+    if (isAdmin) items.push({ name: 'Chats', href: localePath('/admin/soporte'), icon: ChatIcon })
     return items
   }, [mode, t, localePath, isAdmin, showUpgrade, newOrders, shopichatUnread, shopichatVisible])
 

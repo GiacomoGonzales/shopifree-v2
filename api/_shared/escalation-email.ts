@@ -9,7 +9,9 @@
 import { Resend } from 'resend'
 import { ADMIN_EMAILS } from './admin.js'
 
-export const SUPPORT_CHATS_URL = 'https://shopifree.app/es/dashboard/support-chats'
+// La bandeja vive en el panel admin (Soporte > Chats); la ruta vieja
+// /dashboard/support-chats solo redirige.
+export const SUPPORT_CHATS_URL = 'https://shopifree.app/es/admin/soporte'
 
 export interface EscalationEmailData {
   storeName: string

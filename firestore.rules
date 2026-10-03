@@ -17,7 +17,7 @@ service cloud.firestore {
     // verificarlo) y pasar como admin.
     function isAdmin() {
       return isAuthenticated()
-        && request.auth.token.email == 'giiacomo@gmail.com'
+        && request.auth.token.email in ['giiacomo@gmail.com', 'admin@shopifree.app']
         && request.auth.token.email_verified == true;
     }
 
@@ -477,11 +477,26 @@ service cloud.firestore {
       allow write: if false; // Only backend handles tokens
     }
 
+    // Cifras del Resumen del admin: las calcula api/admin-stats (Admin SDK) y
+    // el panel solo las lee.
+    match /adminStats/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Notas internas del admin sobre cada tienda (Ficha > Notas). Nadie más
+    // las ve: ni el dueño de la tienda.
+    match /adminNotes/{storeId} {
+      allow read, write: if isAdmin();
+    }
+
     // Feedback from dashboard users
     match /feedback/{feedbackId} {
       allow read: if isAdmin();
       allow create: if isAuthenticated();
-      allow update, delete: if false;
+      // El admin marca leído / resuelto y borra desde el panel (Soporte >
+      // Feedback). Antes era `if false` y los botones fallaban en silencio.
+      allow update, delete: if isAdmin();
     }
 
     // Demo stores for landing carousel

@@ -75,16 +75,15 @@ const AppShell = lazy(() => import('./components/layout/AppShell'))
 
 // Admin
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
-const AdminAppBuilds = lazy(() => import('./pages/admin/AppBuilds'))
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
-const AdminStores = lazy(() => import('./pages/admin/Stores'))
-const AdminStoreDetail = lazy(() => import('./pages/admin/StoreDetail'))
-const AdminUsers = lazy(() => import('./pages/admin/Users'))
-const AdminPlans = lazy(() => import('./pages/admin/Plans'))
-const AdminPaidStores = lazy(() => import('./pages/admin/PaidStores'))
-const AdminFeedback = lazy(() => import('./pages/admin/Feedback'))
-const AdminMediaStats = lazy(() => import('./pages/admin/MediaStats'))
-const AdminStoreAppPreview = lazy(() => import('./pages/admin/StoreAppPreview'))
+const AdminResumen = lazy(() => import('./pages/admin/Resumen'))
+const AdminTiendas = lazy(() => import('./pages/admin/Tiendas'))
+const AdminTiendaFicha = lazy(() => import('./pages/admin/TiendaFicha'))
+const AdminCobros = lazy(() => import('./pages/admin/Cobros'))
+const AdminApps = lazy(() => import('./pages/admin/Apps'))
+const AdminAppVista = lazy(() => import('./pages/admin/AppVista'))
+const AdminSoporte = lazy(() => import('./pages/admin/Soporte'))
+const AdminConfiguracion = lazy(() => import('./pages/admin/Configuracion'))
+const RedirigirAdmin = lazy(() => import('./components/admin/RedirigirAdmin'))
 
 // Payment return pages (also used by storefronts)
 const PaymentSuccess = lazy(() => import('./pages/payment/PaymentSuccess'))
@@ -312,18 +311,26 @@ function AppRoutes() {
           </Route>
         </Route>
 
-        {/* Admin routes (protected for admin@shopifree.app) */}
+        {/* Panel admin (solo ADMIN_EMAILS verificados, ver lib/adminAccess) */}
         <Route path="admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="stores" element={<AdminStores />} />
-          <Route path="stores/:storeId" element={<AdminStoreDetail />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="paid-stores" element={<AdminPaidStores />} />
-          <Route path="plans" element={<AdminPlans />} />
-          <Route path="feedback" element={<AdminFeedback />} />
-          <Route path="app-builds" element={<AdminAppBuilds />} />
-          <Route path="stores/:storeId/app-preview" element={<AdminStoreAppPreview />} />
-          <Route path="media" element={<AdminMediaStats />} />
+          <Route index element={<AdminResumen />} />
+          <Route path="tiendas" element={<AdminTiendas />} />
+          <Route path="tiendas/:storeId" element={<AdminTiendaFicha />} />
+          <Route path="cobros" element={<AdminCobros />} />
+          <Route path="apps" element={<AdminApps />} />
+          <Route path="apps/:storeId" element={<AdminAppVista />} />
+          <Route path="soporte" element={<AdminSoporte />} />
+          <Route path="configuracion" element={<AdminConfiguracion />} />
+          {/* Rutas viejas → secciones nuevas */}
+          <Route path="stores" element={<RedirigirAdmin a="/admin/tiendas" />} />
+          <Route path="stores/:storeId" element={<RedirigirAdmin a="/admin/tiendas/:storeId" />} />
+          <Route path="stores/:storeId/app-preview" element={<RedirigirAdmin a="/admin/apps/:storeId" />} />
+          <Route path="users" element={<RedirigirAdmin a="/admin/tiendas" />} />
+          <Route path="paid-stores" element={<RedirigirAdmin a="/admin/cobros" />} />
+          <Route path="plans" element={<RedirigirAdmin a="/admin/cobros" />} />
+          <Route path="feedback" element={<RedirigirAdmin a="/admin/soporte?vista=feedback" />} />
+          <Route path="app-builds" element={<RedirigirAdmin a="/admin/apps" />} />
+          <Route path="media" element={<RedirigirAdmin a="/admin" />} />
         </Route>
       </Route>
 

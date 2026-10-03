@@ -6,10 +6,10 @@
  * Business (Plan.tsx + landing) y la pregunta en Ayuda. Sofia (api) no ve las
  * variables VITE_*: usa SHOPICHAT_PUBLIC=true (servidor). Poner las dos juntas.
  */
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
+import { isAdminEmail } from './adminAccess'
 
 export const SHOPICHAT_PUBLIC = import.meta.env.VITE_SHOPICHAT_PUBLIC === 'true'
 
 export function canSeeShopiChat(email?: string | null): boolean {
-  return SHOPICHAT_PUBLIC || ADMIN_EMAILS.includes(email || '')
+  return SHOPICHAT_PUBLIC || isAdminEmail(email)
 }

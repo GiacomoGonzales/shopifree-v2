@@ -230,6 +230,9 @@ async function handleSync(req: VercelRequest, res: VercelResponse) {
   })
 }
 
+// Monedas sin decimales en Stripe (amount_paid ya viene en unidades enteras).
+const SIN_DECIMALES = new Set(['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'])
+
 // POST /api/sync-subscription { action: 'list-payments', limit?, starting_after? } - List paid invoices (admin only)
 async function handleListPayments(req: VercelRequest, res: VercelResponse) {
   const isAdmin = await verifyAdmin(req)
@@ -238,14 +241,17 @@ async function handleListPayments(req: VercelRequest, res: VercelResponse) {
   }
 
   const stripe = getStripe()
-  const { limit: rawLimit, starting_after } = req.body
+  const { limit: rawLimit, starting_after, customer } = req.body
   const limit = Math.min(Number(rawLimit) || 50, 100)
+  // customer (cus_…): solo los pagos de esa tienda, para su ficha en el admin.
+  const customerId = typeof customer === 'string' && customer.startsWith('cus_') ? customer : undefined
 
   // Fetch paid invoices from Stripe
   const invoices = await stripe.invoices.list({
     limit,
     status: 'paid',
     ...(starting_after && { starting_after }),
+    ...(customerId && { customer: customerId }),
   })
 
   // Get all stores with subscriptions to map customer IDs to store names
@@ -272,7 +278,8 @@ async function handleListPayments(req: VercelRequest, res: VercelResponse) {
 
     return {
       id: inv.id,
-      amount: inv.amount_paid / 100,
+      // Monedas sin decimales (CLP, JPY…): amount_paid ya está en unidades.
+      amount: SIN_DECIMALES.has((inv.currency || '').toLowerCase()) ? inv.amount_paid : inv.amount_paid / 100,
       currency: inv.currency,
       status: inv.status,
       created: inv.created,
@@ -315,17 +322,24 @@ async function handlePaymentsTotal(req: VercelRequest, res: VercelResponse) {
 
   let totalAmount = 0
   let totalCount = 0
+  // Por moneda: sumar USD con PEN no significa nada. totalAmount queda por
+  // compatibilidad (el admin viejo lo leía) pero el panel usa porMoneda.
+  const porMoneda: Record<string, number> = {}
 
   // autoPagingEach handles pagination transparently — keeps fetching pages of
-  // 100 until Stripe says has_more=false. amount_paid is in cents.
+  // 100 until Stripe says has_more=false.
   for await (const inv of stripe.invoices.list({ status: 'paid', limit: 100 })) {
-    totalAmount += inv.amount_paid / 100
+    const moneda = (inv.currency || 'usd').toLowerCase()
+    const monto = SIN_DECIMALES.has(moneda) ? inv.amount_paid : inv.amount_paid / 100
+    porMoneda[moneda] = (porMoneda[moneda] || 0) + monto
+    totalAmount += monto
     totalCount += 1
   }
 
   return res.status(200).json({
     totalAmount,
     totalCount,
+    porMoneda,
   })
 }
 

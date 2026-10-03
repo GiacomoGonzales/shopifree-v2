@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useShowUpgradeUI } from '../../hooks/useShowUpgradeUI'
 import AppChrome, { type NavElement, type NavItem } from '../layout/AppChrome'
+import { isAdminUser } from '../../lib/adminAccess'
 
 function Icon({ d, active }: { d: string; active?: boolean }) {
   return (
@@ -53,13 +54,12 @@ const ChatNavIcon = ({ active }: { active?: boolean }) => (
   </svg>
 )
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 export default function FinanceLayout() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
   const { user, firebaseUser, store, loading, logout } = useAuth()
-  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const isAdmin = isAdminUser(firebaseUser)
   const navigate = useNavigate()
   const location = useLocation()
   const showUpgrade = useShowUpgradeUI()
@@ -84,7 +84,7 @@ export default function FinanceLayout() {
       ? [{ name: 'Suscripción', href: localePath('/finance/subscription'), icon: SubscriptionIcon } as NavItem]
       : []),
     { name: 'Mi cuenta', href: localePath('/finance/account'), icon: AccountIcon },
-    ...(isAdmin ? [{ name: 'Chats', href: localePath('/finance/support-chats'), icon: ChatNavIcon }] : []),
+    ...(isAdmin ? [{ name: 'Chats', href: localePath('/admin/soporte'), icon: ChatNavIcon }] : []),
   ] as NavElement[], [localePath, isAdmin, showUpgrade])
 
   useEffect(() => {

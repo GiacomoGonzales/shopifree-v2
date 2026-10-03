@@ -1,327 +1,192 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../hooks/useLanguage'
+import { isAdminUser } from '../../lib/adminAccess'
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
+/**
+ * Marco del panel admin (rediseño oct-2026, mismas reglas que el admin de
+ * Cobrify): menú plano solo texto, cabecera con el título de la página y un
+ * buscador global (`/` lo enfoca, Enter abre Tiendas filtrado). Letra Inter
+ * solo aquí (clase .admin), gris + un azul + rojo para lo malo.
+ */
 
-// Icons
-function DashboardIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  )
+// Inter solo para el admin: el resto de la app usa Plus Jakarta Sans.
+const INTER_URL = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap'
+function useInter() {
+  useEffect(() => {
+    if (document.querySelector(`link[href="${INTER_URL}"]`)) return
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = INTER_URL
+    document.head.appendChild(link)
+  }, [])
 }
 
-function StoresIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-  )
-}
-
-function UsersIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-  )
-}
-
-function PaidStoresIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  )
-}
-
-function PlansIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-  )
-}
-
-function FeedbackIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-    </svg>
-  )
-}
-
-function AppBuildsIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-    </svg>
-  )
-}
-
-function MediaIcon() {
-  return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  )
-}
-
-function BackIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M15 19l-7-7 7-7" />
-    </svg>
-  )
-}
-
-function MenuIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  )
-}
-
-function CloseIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  )
-}
+interface ItemMenu { nombre: string; ruta: string }
 
 export default function AdminLayout() {
   const { firebaseUser, loading, logout } = useAuth()
   const { localePath } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
+  const buscador = useRef<HTMLInputElement>(null)
+  useInter()
 
-  // Dynamic navigation with language prefix
-  const navigation = useMemo(() => [
-    { name: 'Dashboard', path: localePath('/admin'), icon: DashboardIcon },
-    { name: 'Tiendas', path: localePath('/admin/stores'), icon: StoresIcon },
-    { name: 'Pagadas', path: localePath('/admin/paid-stores'), icon: PaidStoresIcon },
-    { name: 'Usuarios', path: localePath('/admin/users'), icon: UsersIcon },
-    { name: 'Planes', path: localePath('/admin/plans'), icon: PlansIcon },
-    { name: 'App Builds', path: localePath('/admin/app-builds'), icon: AppBuildsIcon },
-    { name: 'Media', path: localePath('/admin/media'), icon: MediaIcon },
-    { name: 'Feedback', path: localePath('/admin/feedback'), icon: FeedbackIcon },
+  const menu: ItemMenu[] = useMemo(() => [
+    { nombre: 'Resumen', ruta: localePath('/admin') },
+    { nombre: 'Tiendas', ruta: localePath('/admin/tiendas') },
+    { nombre: 'Cobros', ruta: localePath('/admin/cobros') },
+    { nombre: 'Apps', ruta: localePath('/admin/apps') },
+    { nombre: 'Soporte', ruta: localePath('/admin/soporte') },
+    { nombre: 'Configuración', ruta: localePath('/admin/configuracion') },
   ], [localePath])
 
-  // Barra de estado en nativo. Sin esto, en Android 15 (edge-to-edge forzado
-  // para targetSdk 35+) la WebView dibuja debajo de la barra de estado y la
-  // cabecera móvil —con el botón del menú— queda tapada: el admin se veía sin
-  // ninguna navegación. Mismo tratamiento que DashboardLayout, incluido el
-  // re-aplicar al rotar, porque el sistema lo resetea.
+  const raiz = localePath('/admin')
+  const activo = (ruta: string) => ruta === raiz ? location.pathname === raiz || location.pathname === raiz + '/' : location.pathname.startsWith(ruta)
+
+  // Título de la cabecera: el ítem activo, o "Ficha de tienda" en una ficha.
+  const titulo = useMemo(() => {
+    if (/\/admin\/tiendas\/[^/]+/.test(location.pathname)) return 'Ficha de tienda'
+    if (/\/admin\/apps\/[^/]+/.test(location.pathname)) return 'Vista de la app'
+    return menu.find(m => activo(m.ruta))?.nombre || 'Admin'
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, menu])
+
+  useEffect(() => { document.title = `${titulo} · Admin Shopifree` }, [titulo])
+
+  // Barra de estado en nativo (Android 15 edge-to-edge tapaba la cabecera).
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return
-    const applyStatusBar = () => {
+    const aplicar = () => {
       import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
         StatusBar.setStyle({ style: Style.Light })
         StatusBar.setOverlaysWebView({ overlay: false })
         StatusBar.setBackgroundColor({ color: '#ffffff' })
       })
     }
-    applyStatusBar()
-    window.addEventListener('resize', applyStatusBar)
-    return () => window.removeEventListener('resize', applyStatusBar)
+    aplicar()
+    window.addEventListener('resize', aplicar)
+    return () => window.removeEventListener('resize', aplicar)
   }, [])
 
-  // Check admin access
+  const esAdmin = isAdminUser(firebaseUser)
   useEffect(() => {
-    if (!loading && (!firebaseUser || !ADMIN_EMAILS.includes(firebaseUser.email || ''))) {
-      navigate(localePath('/'))
+    if (!loading && !esAdmin) navigate(localePath('/'))
+  }, [esAdmin, loading, navigate, localePath])
+
+  useEffect(() => { setMenuAbierto(false) }, [location.pathname])
+
+  // "/" enfoca el buscador (salvo que ya estés escribiendo en otro campo).
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey) return
+      const t = e.target as HTMLElement
+      if (t.closest('input, textarea, select, [contenteditable="true"]')) return
+      e.preventDefault()
+      buscador.current?.focus()
     }
-  }, [firebaseUser, loading, navigate, localePath])
+    document.addEventListener('keydown', alTeclear)
+    return () => document.removeEventListener('keydown', alTeclear)
+  }, [])
 
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [location.pathname])
+  const buscar = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = busqueda.trim()
+    navigate(`${localePath('/admin/tiendas')}${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+    setBusqueda('')
+    buscador.current?.blur()
+  }
 
-  const handleLogout = async () => {
+  const salir = async () => {
     await logout()
     navigate(localePath('/login'))
   }
 
-  const adminPath = localePath('/admin')
-
-  const isItemActive = (path: string) => {
-    if (path === adminPath) {
-      return location.pathname === adminPath
-    }
-    return location.pathname.startsWith(path)
-  }
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-gray-900" />
-      </div>
-    )
+    return <div className="admin min-h-screen bg-gray-50 flex items-center justify-center text-[12.5px] text-gray-500">Cargando…</div>
   }
+  if (!esAdmin || !firebaseUser) return null
 
-  if (!firebaseUser || !ADMIN_EMAILS.includes(firebaseUser.email || '')) {
-    return null
-  }
+  // Funciones (no componentes): un componente definido aquí adentro se
+  // remontaría en cada tecla y el buscador perdería el foco.
+  const pintarBuscador = (className = '') => (
+    <form onSubmit={buscar} className={`relative ${className}`}>
+      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" /></svg>
+      <input
+        ref={el => { if (el && el.getClientRects().length > 0) buscador.current = el }}
+        type="search"
+        value={busqueda}
+        onChange={e => setBusqueda(e.target.value)}
+        placeholder="Buscar tienda, subdominio o correo"
+        className="h-8 w-full rounded-md border border-gray-300 bg-white pl-8 pr-8 text-[12.5px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500"
+      />
+      <kbd className="hidden sm:block absolute right-2 top-1/2 -translate-y-1/2 text-[10.5px] text-gray-400 border border-gray-200 rounded px-1">/</kbd>
+    </form>
+  )
 
-  const SidebarContent = () => (
-    <>
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive = isItemActive(item.path)
-          return (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                isActive
-                  ? 'bg-gray-100 text-gray-900 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <item.icon />
-              {item.name}
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* Back to Dashboard link */}
-      <div className="px-3 pb-3">
-        <Link
-          to={localePath('/dashboard')}
-          className="block w-full text-center text-xs font-medium py-2 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-        >
-          Ir al Dashboard
-        </Link>
+  const pintarMenu = () => (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 h-12 px-4 border-b border-gray-200 shrink-0">
+        <span className="text-[13px] font-semibold text-gray-900">Shopifree</span>
+        <span className="text-[11.5px] text-gray-500">Admin</span>
       </div>
-
-      {/* User section */}
-      <div className="p-3 border-t border-gray-200">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-gray-900 rounded-md flex items-center justify-center flex-shrink-0">
-            <span className="text-[12px] font-semibold text-white">
-              {firebaseUser.email?.[0].toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 truncate leading-tight">
-              {firebaseUser.email}
-            </p>
-            <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Super admin</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-gray-400 hover:text-gray-900 transition-colors p-1.5 rounded-md hover:bg-gray-100"
-            title="Cerrar sesion"
+      <div className="lg:hidden px-3 pt-3">{pintarBuscador()}</div>
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+        {menu.map(item => (
+          <Link
+            key={item.ruta}
+            to={item.ruta}
+            className={`block px-3 py-1.5 rounded-md text-[13px] transition-colors ${activo(item.ruta) ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'}`}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
+            {item.nombre}
+          </Link>
+        ))}
+      </nav>
+      <div className="px-2 py-2 border-t border-gray-200 space-y-0.5">
+        <Link to={localePath('/dashboard')} className="block px-3 py-1.5 rounded-md text-[12.5px] text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+          Ir a mi tienda ↗
+        </Link>
+        <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+          <span className="text-[11.5px] text-gray-500 truncate" title={firebaseUser.email || ''}>{firebaseUser.email}</span>
+          <button onClick={salir} className="text-[11.5px] text-gray-500 hover:text-gray-900 shrink-0">Salir</button>
         </div>
       </div>
-    </>
+    </div>
   )
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Mobile header. El padding de área segura es el cinturón por si la
-          barra de estado igual se superpone (en ese caso env() > 0); cuando no
-          se superpone vale 0 y no cambia nada. */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40 pt-[env(safe-area-inset-top)]">
-        <div className="h-12 flex items-center justify-between px-4">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Abrir menú"
-            className="p-1.5 -ml-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <MenuIcon />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-gray-900">Shopifree</span>
-            <span className="px-1.5 py-0.5 bg-black text-white text-[10px] rounded-sm font-medium tracking-wide">
-              ADMIN
-            </span>
-          </div>
-          {/* Salida rápida al panel del comerciante: sin esto, desde el admin
-              en el teléfono no había forma de volver sin abrir el menú. */}
-          <Link
-            to={localePath('/dashboard')}
-            aria-label="Volver al panel"
-            className="p-1.5 -mr-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <BackIcon />
-          </Link>
-        </div>
-      </div>
+    <div className="admin min-h-screen bg-gray-50 text-[13px] text-gray-900" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+      {/* Menú de escritorio: fijo, claro, 224 px. */}
+      <aside className="hidden lg:block fixed inset-y-0 left-0 w-56 bg-white border-r border-gray-200 z-30">
+        {pintarMenu()}
+      </aside>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/30 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Menú del celular: cajón. */}
+      {menuAbierto && <div className="lg:hidden fixed inset-0 bg-gray-900/30 z-40" onClick={() => setMenuAbierto(false)} />}
+      <aside className={`lg:hidden fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 pt-[env(safe-area-inset-top)] transform transition-transform duration-200 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+        {pintarMenu()}
+      </aside>
 
-      {/* Sidebar - Mobile */}
-      <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-200 ease-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex flex-col h-full pt-[env(safe-area-inset-top)]">
-          {/* Logo + Close */}
-          <div className="flex items-center justify-between h-12 px-4 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-semibold text-gray-900">Shopifree</span>
-              <span className="px-1.5 py-0.5 bg-black text-white text-[10px] rounded-sm font-medium tracking-wide">
-                ADMIN
-              </span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-1.5 -mr-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <CloseIcon />
+      <div className="lg:pl-56">
+        {/* Cabecera: título de la página + buscador global. */}
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 pt-[env(safe-area-inset-top)]">
+          <div className="h-12 flex items-center gap-3 px-4 sm:px-6">
+            <button onClick={() => setMenuAbierto(true)} aria-label="Abrir menú" className="lg:hidden p-1.5 -ml-1.5 rounded-md text-gray-600 hover:bg-gray-100">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
+            <h1 className="text-[14px] font-semibold text-gray-900 truncate flex-1">{titulo}</h1>
+            {pintarBuscador('hidden lg:block w-80')}
           </div>
+        </header>
 
-          <SidebarContent />
-        </div>
-      </aside>
-
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 bg-white border-r border-gray-200">
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center h-14 px-5 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <span className="text-[14px] font-semibold text-gray-900">Shopifree</span>
-              <span className="px-1.5 py-0.5 bg-black text-white text-[10px] rounded-sm font-medium tracking-wide">
-                ADMIN
-              </span>
-            </div>
-          </div>
-
-          <SidebarContent />
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="lg:pl-60 pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0">
-        <div className="p-4 sm:p-6 lg:p-8">
+        <main className="px-4 py-4 sm:px-6 sm:py-5 max-w-[1400px]">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
