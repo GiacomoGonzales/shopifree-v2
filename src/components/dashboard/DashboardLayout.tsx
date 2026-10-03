@@ -22,8 +22,8 @@ import {
   PaletteIcon, SettingsIcon, GlobeIcon, TagIcon, CreditCardIcon, PhoneIcon,
   IntegrationsIcon, UserIcon, ChatIcon, HelpIcon, ShopiChatIcon,
 } from '../layout/sharedIcons'
+import { isAdminUser } from '../../lib/adminAccess'
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 export default function DashboardLayout() {
   const { t } = useTranslation('dashboard')
@@ -57,7 +57,7 @@ export default function DashboardLayout() {
   const shopichatUnread = useShopiChatAlerts(store?.id, shopichatEnabled, openShopiChat)
 
   // Track presence for any user with a store
-  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const isAdmin = isAdminUser(firebaseUser)
   usePresence(store?.id)
   const newOrders = useNewOrdersCount(store?.id)
   // La alarma vive en el layout, no en Pedidos: en modo recepcion tiene que

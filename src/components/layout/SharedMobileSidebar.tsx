@@ -18,8 +18,8 @@ import {
   PurchaseIcon, ProductionIcon, ExpenseIcon, CashFlowIcon, ReportsIcon, AccountIcon,
   SubscriptionIcon, ChatNavIcon, CloseIcon,
 } from './sharedIcons'
+import { isAdminUser } from '../../lib/adminAccess'
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 interface NavItem {
   name: string
@@ -50,7 +50,7 @@ export default function SharedMobileSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const isAdmin = isAdminUser(firebaseUser)
   const showUpgrade = useShowUpgradeUI()
   const mode: 'ecommerce' | 'finance' = isFinanceRoute(location.pathname) ? 'finance' : 'ecommerce'
 

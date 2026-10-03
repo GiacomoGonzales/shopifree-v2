@@ -6,15 +6,15 @@ import { getEffectivePlan } from '../../lib/stripe'
 import { useLanguage } from '../../hooks/useLanguage'
 import { useShopiChatUnread } from '../../hooks/useShopiChatAlerts'
 import { canSeeShopiChat } from '../../lib/shopichatAccess'
+import { isAdminUser } from '../../lib/adminAccess'
 
-const ADMIN_EMAILS = ['giiacomo@gmail.com', 'admin@shopifree.app']
 
 export default function MoreMenu() {
   const { t } = useTranslation('dashboard')
   const { localePath } = useLanguage()
   const { user, firebaseUser, store, logout } = useAuth()
 
-  const isAdmin = ADMIN_EMAILS.includes(firebaseUser?.email || '')
+  const isAdmin = isAdminUser(firebaseUser)
   const shopichatVisible = canSeeShopiChat(firebaseUser?.email)
   const shopichatUnread = useShopiChatUnread(store?.id, shopichatVisible && !!store && getEffectivePlan(store) === 'business')
 
