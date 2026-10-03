@@ -21,6 +21,8 @@ import { MAIN_DOMAINS } from '../hooks/useSubdomain'
  *    real conversion — this is what META campaigns should optimize for).
  */
 
+// Dataset "Shopifree web" in Events Manager (Shopifree portfolio). Set in
+// Vercel Production; it's a VITE_ var, so changing it needs a new build.
 const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID as string | undefined
 
 let pixelReady = false
