@@ -230,6 +230,9 @@ async function handleSync(req: VercelRequest, res: VercelResponse) {
   })
 }
 
+// Monedas sin decimales en Stripe (amount_paid ya viene en unidades enteras).
+const SIN_DECIMALES = new Set(['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'])
+
 // POST /api/sync-subscription { action: 'list-payments', limit?, starting_after? } - List paid invoices (admin only)
 async function handleListPayments(req: VercelRequest, res: VercelResponse) {
   const isAdmin = await verifyAdmin(req)
@@ -275,7 +278,8 @@ async function handleListPayments(req: VercelRequest, res: VercelResponse) {
 
     return {
       id: inv.id,
-      amount: inv.amount_paid / 100,
+      // Monedas sin decimales (CLP, JPY…): amount_paid ya está en unidades.
+      amount: SIN_DECIMALES.has((inv.currency || '').toLowerCase()) ? inv.amount_paid : inv.amount_paid / 100,
       currency: inv.currency,
       status: inv.status,
       created: inv.created,
@@ -321,8 +325,6 @@ async function handlePaymentsTotal(req: VercelRequest, res: VercelResponse) {
   // Por moneda: sumar USD con PEN no significa nada. totalAmount queda por
   // compatibilidad (el admin viejo lo leía) pero el panel usa porMoneda.
   const porMoneda: Record<string, number> = {}
-  // Monedas sin decimales en Stripe (amount_paid ya viene en unidades enteras).
-  const SIN_DECIMALES = new Set(['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'])
 
   // autoPagingEach handles pagination transparently — keeps fetching pages of
   // 100 until Stripe says has_more=false.

@@ -103,18 +103,22 @@ let usuariosCache: Promise<AdminUsuario[]> | null = null
 
 export function cargarTiendas(forzar = false): Promise<AdminTienda[]> {
   if (!tiendasCache || forzar) {
-    tiendasCache = getDocs(collection(db, 'stores'))
+    // Si falla, se borra la caché solo si sigue siendo ESTA lectura (una
+    // lectura forzada posterior no debe perderse por el error de una vieja).
+    const lectura: Promise<AdminTienda[]> = getDocs(collection(db, 'stores'))
       .then(snap => snap.docs.map(doc => armarTienda(doc.id, doc.data())))
-      .catch(err => { tiendasCache = null; throw err })
+      .catch(err => { if (tiendasCache === lectura) tiendasCache = null; throw err })
+    tiendasCache = lectura
   }
   return tiendasCache
 }
 
 export function cargarUsuarios(forzar = false): Promise<AdminUsuario[]> {
   if (!usuariosCache || forzar) {
-    usuariosCache = getDocs(collection(db, 'users'))
+    const lectura: Promise<AdminUsuario[]> = getDocs(collection(db, 'users'))
       .then(snap => snap.docs.map(doc => armarUsuario(doc.id, doc.data())))
-      .catch(err => { usuariosCache = null; throw err })
+      .catch(err => { if (usuariosCache === lectura) usuariosCache = null; throw err })
+    usuariosCache = lectura
   }
   return usuariosCache
 }

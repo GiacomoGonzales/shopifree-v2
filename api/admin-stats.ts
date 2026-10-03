@@ -133,6 +133,15 @@ function claveMes(ms: number): string {
   return `${y}-${String(m + 1).padStart(2, '0')}`
 }
 
+// Monedas sin decimales en Stripe: el monto ya viene en unidades enteras
+// (dividir entre 100 mostraría 1/100 de lo cobrado).
+const SIN_DECIMALES = new Set(['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'])
+
+/** Monto de Stripe (unidad mínima) a unidades de la moneda. */
+function deStripe(monto: number, moneda: string): number {
+  return SIN_DECIMALES.has(moneda.toLowerCase()) ? monto : monto / 100
+}
+
 function sumar(obj: PorMoneda, moneda: string, monto: number) {
   obj[moneda] = Math.round(((obj[moneda] || 0) + monto) * 100) / 100
 }
@@ -233,7 +242,7 @@ async function calcularMrr(stripe: Stripe, ahora: number): Promise<ResumenAdmin[
       const precio = item.price
       const rec = precio.recurring
       if (rec?.interval === 'year') esAnual = true
-      mensual += ((precio.unit_amount || 0) * (item.quantity ?? 1) / 100) * factorMensual(rec?.interval, rec?.interval_count)
+      mensual += deStripe((precio.unit_amount || 0) * (item.quantity ?? 1), moneda) * factorMensual(rec?.interval, rec?.interval_count)
     }
     if (esAnual) anuales++
 
@@ -247,7 +256,7 @@ async function calcularMrr(stripe: Stripe, ahora: number): Promise<ResumenAdmin[
       const c = await cupon(desc.source?.coupon)
       if (!c) continue
       if (c.percent_off) mensual *= 1 - c.percent_off / 100
-      else if (c.amount_off && c.currency === moneda) mensual -= (c.amount_off / 100) * factorMensual(rec0?.interval, rec0?.interval_count)
+      else if (c.amount_off && c.currency === moneda) mensual -= deStripe(c.amount_off, moneda) * factorMensual(rec0?.interval, rec0?.interval_count)
     }
     sumar(porMoneda, moneda, Math.max(0, mensual))
   }
@@ -283,8 +292,8 @@ async function calcularCobros(stripe: Stripe, ahora: number): Promise<Cobros> {
     if (!inv.amount_paid) continue
     const pagada = (inv.status_transitions?.paid_at || inv.created) * 1000
     if (pagada < inicioVentana) continue
-    const monto = inv.amount_paid / 100
     const moneda = inv.currency
+    const monto = deStripe(inv.amount_paid, moneda)
     const mes = claveMes(pagada)
 
     const delMes = cobradoPorMes.get(mes) || {}

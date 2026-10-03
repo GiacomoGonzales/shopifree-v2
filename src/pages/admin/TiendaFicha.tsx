@@ -585,6 +585,7 @@ function PestanaNotas({ storeId, autor }: { storeId: string; autor: string }) {
   const [original, setOriginal] = useState('')
   const [meta, setMeta] = useState<{ cuando: Date | null; autor: string }>({ cuando: null, autor: '' })
   const [guardando, setGuardando] = useState(false)
+  const [errorLectura, setErrorLectura] = useState(false)
 
   useEffect(() => {
     let vivo = true
@@ -596,7 +597,9 @@ function PestanaNotas({ storeId, autor }: { storeId: string; autor: string }) {
         setOriginal(String(d.texto || ''))
         setMeta({ cuando: aFecha(d.actualizadoEn), autor: String(d.autor || '') })
       })
-      .catch(err => { console.error('Error al leer notas:', err); if (vivo) setTexto('') })
+      // Si la lectura falla NO se muestra el editor vacío: guardar pisaría la
+      // nota que ya existe con un texto en blanco.
+      .catch(err => { console.error('Error al leer notas:', err); if (vivo) setErrorLectura(true) })
     return () => { vivo = false }
   }, [storeId])
 
@@ -616,6 +619,7 @@ function PestanaNotas({ storeId, autor }: { storeId: string; autor: string }) {
     }
   }
 
+  if (errorLectura) return <Aviso tipo="error">No se pudieron leer las notas. Recarga la página para intentarlo de nuevo.</Aviso>
   if (texto === null) return <Cargando />
   return (
     <Seccion titulo="Notas internas" descripcion="Solo las ve el equipo admin; el dueño de la tienda no.">
